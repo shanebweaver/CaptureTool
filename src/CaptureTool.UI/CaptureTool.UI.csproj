@@ -74,6 +74,11 @@
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
   </ItemGroup>
+  <ItemGroup>
+    <Page Update="Xaml\Pages\SettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
 
   <!-- XAML definitions -->
   <ItemGroup>

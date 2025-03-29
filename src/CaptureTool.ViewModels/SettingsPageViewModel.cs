@@ -3,21 +3,17 @@ using System.Threading.Tasks;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class HomePageViewModel : ViewModelBase
+public sealed partial class SettingsPageViewModel : ViewModelBase
 {
     private readonly IFeatureManager _featureManager;
     private readonly INavigationService _navigationService;
     private readonly ISettingsService _settingsService;
 
-    [ObservableProperty]
-    private string? _buttonContent;
-
-    public HomePageViewModel(
+    public SettingsPageViewModel(
         IFeatureManager featureManager,
         INavigationService navigationService,
         ISettingsService settingsService)
@@ -31,34 +27,17 @@ public sealed partial class HomePageViewModel : ViewModelBase
     {
         StartLoading();
 
-        bool isAlpha = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Alpha);
-        bool isBeta = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Beta);
-        bool isClicked = _settingsService.Get(CaptureToolSettings.ButtonClickedSetting);
-
-        string newContent = $"Alpha: {isAlpha}, Beta: {isBeta}, ";
-        newContent += isClicked ? "Clicked" : "Click me";
-
-        ButtonContent = newContent;
-
         await base.LoadAsync(parameter, cancellationToken);
     }
 
     public override void Unload()
     {
-        ButtonContent = null;
         base.Unload();
     }
 
     [RelayCommand]
-    private void ClickMe()
+    private void GoBack()
     {
-        _settingsService.Set(CaptureToolSettings.ButtonClickedSetting, true);
-        ButtonContent = "Clicked";
-    }
-
-    [RelayCommand]
-    private void GoToSettings()
-    {
-        _navigationService.Navigate(NavigationKeys.Settings);
+        _navigationService.GoBack();
     }
 }

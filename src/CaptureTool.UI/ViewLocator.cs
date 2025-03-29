@@ -1,5 +1,5 @@
 ﻿using System;
-using CaptureTool.Common;
+using CaptureTool.Services.Navigation;
 using CaptureTool.UI.Xaml.Pages;
 
 namespace CaptureTool.UI;
@@ -11,7 +11,7 @@ internal class ViewLocator
         return key switch
         {
             NavigationKeys.Home => typeof(HomePage),
-            //NavigationKeys.Settings => typeof(SettingsPage),
+            NavigationKeys.Settings => typeof(SettingsPage),
             _ => throw new ArgumentOutOfRangeException(nameof(key)),
         };
     }

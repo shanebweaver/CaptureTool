@@ -38,6 +38,7 @@ public partial class Ioc
         // ViewModels
         collection.AddSingleton<MainWindowViewModel>();
         collection.AddSingleton<HomePageViewModel>();
+        collection.AddSingleton<SettingsPageViewModel>();
 
         _serviceProvider = collection.BuildServiceProvider();
     }

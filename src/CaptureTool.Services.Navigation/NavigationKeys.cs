@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Common;
+﻿namespace CaptureTool.Services.Navigation;
 
 public static partial class NavigationKeys
 {

@@ -9,5 +9,5 @@ public sealed partial class HomePage : HomePageBase
         InitializeComponent();
     }
 
-    public override HomePageViewModel ViewModel { get; } = App.Current.Ioc.GetService<HomePageViewModel>();
+    public override HomePageViewModel ViewModel { get; } = ViewModelLocator.HomePage;
 }
