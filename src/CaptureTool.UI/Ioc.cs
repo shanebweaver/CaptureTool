@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Common;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
@@ -23,6 +24,9 @@ public partial class Ioc
     public Ioc()
     {
         ServiceCollection collection = new();
+
+        // Feature management
+        collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
 
         // Services
         collection.AddSingleton<ICancellationService, CancellationService>();

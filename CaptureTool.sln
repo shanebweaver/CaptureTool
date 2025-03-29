@@ -38,6 +38,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Teleme
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Cancellation", "src\CaptureTool.Services.Cancellation\CaptureTool.Services.Cancellation.csproj", "{CF5343B8-D49D-4FCD-B266-770EC43DCA49}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.FeatureManagement", "src\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj", "{33752AAD-81FA-4575-825B-1D87DDCA7B09}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -186,6 +188,18 @@ Global
 		{CF5343B8-D49D-4FCD-B266-770EC43DCA49}.Release|x64.Build.0 = Release|Any CPU
 		{CF5343B8-D49D-4FCD-B266-770EC43DCA49}.Release|x86.ActiveCfg = Release|Any CPU
 		{CF5343B8-D49D-4FCD-B266-770EC43DCA49}.Release|x86.Build.0 = Release|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Debug|x64.Build.0 = Debug|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Debug|x86.Build.0 = Debug|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Release|ARM64.Build.0 = Release|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Release|x64.ActiveCfg = Release|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Release|x64.Build.0 = Release|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Release|x86.ActiveCfg = Release|Any CPU
+		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
