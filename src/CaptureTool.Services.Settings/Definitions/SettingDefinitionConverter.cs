@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Services.Settings;
+﻿namespace CaptureTool.Services.Settings.Definitions;
 
 using System;
 using System.Text.Json;
@@ -15,7 +15,7 @@ public class SettingDefinitionConverter : JsonConverter<SettingDefinition>
         String,
         Point,
         Size,
-        StringList
+        StringArray
     }
 
     public override bool CanConvert(Type typeToConvert) => typeof(SettingDefinition).IsAssignableFrom(typeToConvert);
@@ -60,8 +60,8 @@ public class SettingDefinitionConverter : JsonConverter<SettingDefinition>
             case SizeSettingDefinition sizeSettingDefinition:
                 WriteSettingDefinition(ref writer, TypeDiscriminator.Size, sizeSettingDefinition, SettingDefinitionContext.Default.SizeSettingDefinition);
                 break;
-            case StringListSettingDefinition stringListSettingDefinition:
-                WriteSettingDefinition(ref writer, TypeDiscriminator.StringList, stringListSettingDefinition, SettingDefinitionContext.Default.StringListSettingDefinition);
+            case StringArraySettingDefinition stringListSettingDefinition:
+                WriteSettingDefinition(ref writer, TypeDiscriminator.StringArray, stringListSettingDefinition, SettingDefinitionContext.Default.StringArraySettingDefinition);
                 break;
             default:
                 throw new NotSupportedException();
@@ -86,7 +86,7 @@ public class SettingDefinitionConverter : JsonConverter<SettingDefinition>
                 TypeDiscriminator.String => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.StringSettingDefinition),
                 TypeDiscriminator.Point => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.PointSettingDefinition),
                 TypeDiscriminator.Size => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.SizeSettingDefinition),
-                TypeDiscriminator.StringList => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.StringListSettingDefinition),
+                TypeDiscriminator.StringArray => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.StringArraySettingDefinition),
                 _ => throw new JsonException("Unknown TypeDiscriminator value")
             };
 

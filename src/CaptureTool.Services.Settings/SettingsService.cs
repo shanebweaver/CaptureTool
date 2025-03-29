@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Services.Logging;
+using CaptureTool.Services.Settings.Definitions;
 using CaptureTool.Services.Storage;
 
 public partial class SettingsService : ISettingsService
@@ -63,7 +64,7 @@ public partial class SettingsService : ISettingsService
     public void Set(StringSettingDefinition settingDefinition, string newValue) => LockAndSet(new StringSettingDefinition(settingDefinition.Key, newValue));
     public void Set(PointSettingDefinition settingDefinition, Point newValue) => LockAndSet(new PointSettingDefinition(settingDefinition.Key, newValue));
     public void Set(SizeSettingDefinition settingDefinition, Size newValue) => LockAndSet(new SizeSettingDefinition(settingDefinition.Key, newValue));
-    public void Set(StringListSettingDefinition settingDefinition, string[] newValue) => LockAndSet(new StringListSettingDefinition(settingDefinition.Key, newValue));
+    public void Set(StringArraySettingDefinition settingDefinition, string[] newValue) => LockAndSet(new StringArraySettingDefinition(settingDefinition.Key, newValue));
 
     public async Task InitializeAsync(string filePath, CancellationToken cancellationToken)
     {

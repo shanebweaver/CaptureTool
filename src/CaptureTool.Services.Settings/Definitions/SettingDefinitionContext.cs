@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Services.Settings;
+﻿namespace CaptureTool.Services.Settings.Definitions;
 
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -11,5 +11,5 @@ using System.Text.Json.Serialization;
 [JsonSerializable(typeof(StringSettingDefinition))]
 [JsonSerializable(typeof(PointSettingDefinition))]
 [JsonSerializable(typeof(SizeSettingDefinition))]
-[JsonSerializable(typeof(StringListSettingDefinition))]
+[JsonSerializable(typeof(StringArraySettingDefinition))]
 public partial class SettingDefinitionContext : JsonSerializerContext { }

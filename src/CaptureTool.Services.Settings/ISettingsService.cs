@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
+using CaptureTool.Services.Settings.Definitions;
 
 public interface ISettingsService : IDisposable
 {
@@ -19,7 +20,7 @@ public interface ISettingsService : IDisposable
     void Set(StringSettingDefinition settingDefinition, string newValue);
     void Set(PointSettingDefinition settingDefinition, Point newValue);
     void Set(SizeSettingDefinition settingDefinition, Size newValue);
-    void Set(StringListSettingDefinition settingDefinition, string[] newValue);
+    void Set(StringArraySettingDefinition settingDefinition, string[] newValue);
 
     void Unset(SettingDefinition settingDefinition);
     void Unset(ICollection<SettingDefinition> settingDefinitions);

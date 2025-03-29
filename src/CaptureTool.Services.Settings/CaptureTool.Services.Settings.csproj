@@ -1,13 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <!-- Project properties -->
-  <PropertyGroup>
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
-  </PropertyGroup>
-
-  <!-- Project references -->
   <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Services.Logging\CaptureTool.Services.Logging.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Storage\CaptureTool.Services.Storage.csproj" />
   </ItemGroup>
-
 </Project>
