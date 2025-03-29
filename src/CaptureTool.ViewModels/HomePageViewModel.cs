@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Settings;
-using CaptureTool.Services.Settings.Definitions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -10,8 +9,6 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class HomePageViewModel : ViewModelBase
 {
-    private static readonly BoolSettingDefinition buttonClickedSetting = new("ButtonClicked", false);
-
     private readonly IFeatureManager _featureManager;
     private readonly ISettingsService _settingsService;
 
@@ -30,9 +27,9 @@ public sealed partial class HomePageViewModel : ViewModelBase
     {
         StartLoading();
 
-        bool isAlpha = await _featureManager.IsEnabledAsync(Features.Feature_Alpha);
-        bool isBeta = await _featureManager.IsEnabledAsync(Features.Feature_Beta);
-        bool isClicked = _settingsService.Get(buttonClickedSetting);
+        bool isAlpha = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Alpha);
+        bool isBeta = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Beta);
+        bool isClicked = _settingsService.Get(CaptureToolSettings.ButtonClickedSetting);
 
         string newContent = $"Alpha: {isAlpha}, Beta: {isBeta}, ";
         newContent += isClicked ? "Clicked" : "Click me";
@@ -51,7 +48,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
     [RelayCommand]
     private void ClickMe()
     {
-        _settingsService.Set(buttonClickedSetting, true);
+        _settingsService.Set(CaptureToolSettings.ButtonClickedSetting, true);
         ButtonContent = "Clicked";
     }
 }
