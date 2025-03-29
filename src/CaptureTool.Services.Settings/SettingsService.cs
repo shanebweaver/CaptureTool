@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,12 +16,12 @@ public partial class SettingsService : ISettingsService, IDisposable
     private readonly ILogService _logService;
     private readonly IJsonStorageService _jsonStorageService;
 
-    private volatile bool _isInitialized;
-    private volatile string? _filePath;
-    private volatile Dictionary<string, SettingDefinition> _settings;
+    private Dictionary<string, SettingDefinition> _settings;
+    private string? _filePath;
+    private bool _isInitialized;
     private bool _disposed;
 
-    public event Action<ICollection<SettingDefinition>>? SettingsChanged;
+    public event Action<SettingDefinition[]>? SettingsChanged;
 
     public SettingsService(
         ILogService logService, 
@@ -58,13 +57,10 @@ public partial class SettingsService : ISettingsService, IDisposable
         }
     }
 
-    public void Set(BoolSettingDefinition settingDefinition, bool newValue) => LockAndSet(new BoolSettingDefinition(settingDefinition.Key, newValue));
-    public void Set(DoubleSettingDefinition settingDefinition, double newValue) => LockAndSet(new DoubleSettingDefinition(settingDefinition.Key, newValue));
-    public void Set(IntSettingDefinition settingDefinition, int newValue) => LockAndSet(new IntSettingDefinition(settingDefinition.Key, newValue));
-    public void Set(StringSettingDefinition settingDefinition, string newValue) => LockAndSet(new StringSettingDefinition(settingDefinition.Key, newValue));
-    public void Set(PointSettingDefinition settingDefinition, Point newValue) => LockAndSet(new PointSettingDefinition(settingDefinition.Key, newValue));
-    public void Set(SizeSettingDefinition settingDefinition, Size newValue) => LockAndSet(new SizeSettingDefinition(settingDefinition.Key, newValue));
-    public void Set(StringArraySettingDefinition settingDefinition, string[] newValue) => LockAndSet(new StringArraySettingDefinition(settingDefinition.Key, newValue));
+    public void Set<T, V>(T settingDefinition, V value) where T : SettingDefinition<V>
+    {
+        LockAndSet((T)Activator.CreateInstance(typeof(T), settingDefinition.Key, value)!);
+    }
 
     public async Task InitializeAsync(string filePath)
     {
@@ -106,7 +102,7 @@ public partial class SettingsService : ISettingsService, IDisposable
             Interlocked.Exchange(ref _settings, settings);
             Interlocked.Exchange(ref _filePath, filePath);
 
-            FireSettingsChangedEvent(_settings.Values);
+            FireSettingsChangedEvent([.. _settings.Values]);
 
             _isInitialized = true;
         }
@@ -130,7 +126,7 @@ public partial class SettingsService : ISettingsService, IDisposable
         }
     }
 
-    public void Unset(ICollection<SettingDefinition> settingDefinitions)
+    public void Unset(SettingDefinition[] settingDefinitions)
     {
         lock (_accessLock)
         {
@@ -147,7 +143,7 @@ public partial class SettingsService : ISettingsService, IDisposable
 
             if (preCount > _settings.Count)
             {
-                FireSettingsChangedEvent(settingDefinitions);
+                FireSettingsChangedEvent([.. settingDefinitions]);
             }
         }
     }
@@ -223,8 +219,8 @@ public partial class SettingsService : ISettingsService, IDisposable
 
     private void LogException(Exception e, string? message = null) => _logService.LogException(e, message);
 
-    private void FireSettingsChangedEvent(SettingDefinition settingDefinition) => SettingsChanged?.Invoke(new List<SettingDefinition>() { settingDefinition });
-    private void FireSettingsChangedEvent(ICollection<SettingDefinition> settingDefinitions) => SettingsChanged?.Invoke(settingDefinitions);
+    private void FireSettingsChangedEvent(SettingDefinition settingDefinition) => SettingsChanged?.Invoke([settingDefinition]);
+    private void FireSettingsChangedEvent(SettingDefinition[] settingDefinitions) => SettingsChanged?.Invoke(settingDefinitions);
 
     protected virtual void Dispose(bool disposing)
     {

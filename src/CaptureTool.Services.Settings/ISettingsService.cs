@@ -9,21 +9,13 @@ using CaptureTool.Services.Settings.Definitions;
 
 public interface ISettingsService
 {
-    event Action<ICollection<SettingDefinition>>? SettingsChanged;
+    event Action<SettingDefinition[]>? SettingsChanged;
 
     T Get<T>(SettingDefinition<T> settingDefinition);
     bool IsSet(SettingDefinition settingDefinition);
-
-    void Set(BoolSettingDefinition settingDefinition, bool newValue);
-    void Set(DoubleSettingDefinition settingDefinition, double newValue);
-    void Set(IntSettingDefinition settingDefinition, int newValue);
-    void Set(StringSettingDefinition settingDefinition, string newValue);
-    void Set(PointSettingDefinition settingDefinition, Point newValue);
-    void Set(SizeSettingDefinition settingDefinition, Size newValue);
-    void Set(StringArraySettingDefinition settingDefinition, string[] newValue);
-
+    void Set<T, V>(T settingDefinition, V value) where T : SettingDefinition<V>;
     void Unset(SettingDefinition settingDefinition);
-    void Unset(ICollection<SettingDefinition> settingDefinitions);
+    void Unset(SettingDefinition[] settingDefinitions);
 
     Task InitializeAsync(string filePath);
     Task<bool> TrySaveAsync();
