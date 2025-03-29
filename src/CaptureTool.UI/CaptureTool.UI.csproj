@@ -1,4 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Project properties -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
@@ -12,6 +14,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
 
+  <!-- Project assets -->
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
@@ -22,9 +25,39 @@
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
 
+  <!-- App manifest -->
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
+
+  <!-- Package dependencies -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
+  </ItemGroup>
+
+  <!-- Empty folders -->
+  <ItemGroup>
+    <Folder Include="Xaml\UserControls\" />
+    <Folder Include="Xaml\Views\" />
+  </ItemGroup>
+
+  <!-- Project dependencies -->
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Storage.Windows\CaptureTool.Services.Storage.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
+    <ProjectReference Include="..\CaptureTool.ViewModels\CaptureTool.ViewModels.csproj" />
+  </ItemGroup>
+
+  <!-- 
+    Don't generate the XAML main function and use the one in Program.cs instead.
+    https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/applifecycle/applifecycle-single-instance
+  -->
+  <PropertyGroup>
+    <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+  </PropertyGroup>
 
   <!--
     Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
@@ -34,18 +67,12 @@
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
   </ItemGroup>
+
+  <!-- XAML definitions -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250310001" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Xaml\UserControls\" />
-    <Folder Include="Xaml\Views\" />
-    <Folder Include="Xaml\Pages\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
-    <ProjectReference Include="..\CaptureTool.ViewModels\CaptureTool.ViewModels.csproj" />
+    <Page Update="Xaml\Pages\HomePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <!--

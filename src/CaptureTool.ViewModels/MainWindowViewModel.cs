@@ -1,19 +1,33 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
+using CaptureTool.Common;
+using CaptureTool.Services.Navigation;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class MainWindowViewModel : ViewModelBase
+public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHandler
 {
-    public MainWindowViewModel()
-    {
+    private readonly INavigationService _navigationService;
 
+    public event Action<NavigationRequest>? NavigationRequested;
+
+    public MainWindowViewModel(
+        INavigationService navigationService)
+    {
+        _navigationService = navigationService;
     }
 
-    public override Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    public void HandleNavigationRequest(NavigationRequest request)
     {
-        StartLoading();
-        return base.LoadAsync(parameter, cancellationToken);
+        NavigationRequested?.Invoke(request);
+    }
+
+    public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    {
+        _navigationService.SetNavigationHandler(this);
+        _navigationService.Navigate(NavigationKeys.Home);
+        await base.LoadAsync(parameter, cancellationToken);
     }
 
     public override void Unload()

@@ -1,36 +1,48 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
+using CaptureTool.Services.Navigation;
+using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+namespace CaptureTool.UI;
 
-namespace CaptureTool
+public sealed partial class MainWindow : Window
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class MainWindow : Window
-    {
-        public MainWindow()
-        {
-            this.InitializeComponent();
-        }
+    private readonly CancellationTokenSource _activationCancellationTokenSource = new();
 
-        private void myButton_Click(object sender, RoutedEventArgs e)
+    public MainWindowViewModel ViewModel { get; } = ViewModelLocator.MainWindow;
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        Activated += OnActivated;
+        Closed += OnClosed;
+    }
+
+    private void OnClosed(object sender, WindowEventArgs args)
+    {
+        Activated -= OnActivated;
+        Closed -= OnClosed;
+
+        ViewModel.NavigationRequested -= OnViewModelNavigationRequested;
+
+        _activationCancellationTokenSource.Dispose();
+    }
+
+    private async void OnActivated(object sender, WindowActivatedEventArgs args)
+    {
+        if (args.WindowActivationState == WindowActivationState.CodeActivated)
         {
-            myButton.Content = "Clicked";
+            Activated -= OnActivated;
+
+            ViewModel.NavigationRequested += OnViewModelNavigationRequested;
+            await ViewModel.LoadAsync(null, _activationCancellationTokenSource.Token);
         }
+    }
+
+    private void OnViewModelNavigationRequested(NavigationRequest navigationRequest)
+    {
+        Type viewType = ViewLocator.GetViewType(navigationRequest.Key);
+        NavigationFrame.Navigate(viewType, navigationRequest.Parameter);
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using CaptureTool.Common.Loading;
+using CaptureTool.ViewModels.Loading;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace CaptureTool.ViewModels;

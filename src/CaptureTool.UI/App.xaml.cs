@@ -1,50 +1,65 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using Microsoft.Windows.AppLifecycle;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+namespace CaptureTool.UI;
 
-namespace CaptureTool
+public partial class App : Application
 {
-    /// <summary>
-    /// Provides application-specific behavior to supplement the default Application class.
-    /// </summary>
-    public partial class App : Application
+    public new static App Current => (App)Application.Current;
+ 
+    public Ioc Ioc => m_ioc;
+
+    private readonly Ioc m_ioc;
+    private Window? m_window;
+
+    public App()
     {
-        /// <summary>
-        /// Initializes the singleton application object.  This is the first line of authored code
-        /// executed, and as such is the logical equivalent of main() or WinMain().
-        /// </summary>
-        public App()
-        {
-            this.InitializeComponent();
-        }
+        m_ioc = new();
+        InitializeComponent();
+    }
 
-        /// <summary>
-        /// Invoked when the application is launched.
-        /// </summary>
-        /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
-        {
-            m_window = new MainWindow();
-            m_window.Activate();
-        }
+    protected override void OnLaunched(LaunchActivatedEventArgs launchArgs)
+    {
+        AppActivationArguments args = AppInstance.GetCurrent().GetActivatedEventArgs();
+        _ = ActivateAsync(args, CancellationToken.None); // TODO: Prevent competing activations
+    }
 
-        private Window? m_window;
+    public async Task ActivateAsync(AppActivationArguments args, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await m_ioc.InitializeServicesAsync(cancellationToken);
+
+            switch (args.Kind)
+            {
+                case ExtendedActivationKind.Launch:
+                    HandleLaunchActivation(args);
+                    break;
+                default:
+                    throw new InvalidOperationException("Unexpected activation kind");
+            }
+        }
+        catch (Exception e)
+        {
+            ServiceLocator.Logging.LogException(e, "Activation failed.");
+            CheckExit();
+        }
+    }
+
+    private void HandleLaunchActivation(AppActivationArguments args)
+    {
+        m_window ??= new MainWindow();
+        m_window.Activate();
+    }
+
+    private static void CheckExit()
+    {
+        if (Window.Current == null)
+        {
+            Application.Current.Exit();
+        }
     }
 }

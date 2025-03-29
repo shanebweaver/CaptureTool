@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Common.Loading;
+﻿namespace CaptureTool.ViewModels.Loading;
 
 public enum LoadState
 {

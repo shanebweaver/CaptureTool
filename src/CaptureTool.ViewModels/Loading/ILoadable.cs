@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace CaptureTool.Common.Loading;
+namespace CaptureTool.ViewModels.Loading;
 
 public interface ILoadable
 {
