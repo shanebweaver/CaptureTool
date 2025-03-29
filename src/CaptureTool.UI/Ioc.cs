@@ -67,7 +67,7 @@ public partial class Ioc : IAsyncDisposable
             // Settings
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string settingsFilePath = Path.Combine(appDataPath, "CaptureTool", "Settings.json");
-            await GetService<ISettingsService>().InitializeAsync(settingsFilePath, cancellationToken);
+            await GetService<ISettingsService>().InitializeAsync(settingsFilePath);
 
             _isInitalized = true;
         }

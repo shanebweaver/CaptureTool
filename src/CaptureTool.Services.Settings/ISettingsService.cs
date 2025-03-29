@@ -25,5 +25,6 @@ public interface ISettingsService
     void Unset(SettingDefinition settingDefinition);
     void Unset(ICollection<SettingDefinition> settingDefinitions);
 
-    Task InitializeAsync(string filePath, CancellationToken cancellationToken);
+    Task InitializeAsync(string filePath);
+    Task<bool> TrySaveAsync();
 }

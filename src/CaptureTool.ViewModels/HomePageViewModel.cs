@@ -50,9 +50,11 @@ public sealed partial class HomePageViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void ClickMe()
+    private async Task ClickMe()
     {
         _settingsService.Set(CaptureToolSettings.ButtonClickedSetting, true);
+        await _settingsService.TrySaveAsync();
+
         ButtonContent = "Clicked";
     }
 

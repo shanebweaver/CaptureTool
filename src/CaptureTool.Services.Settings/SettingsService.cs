@@ -14,7 +14,6 @@ public partial class SettingsService : ISettingsService, IDisposable
 {
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly object _accessLock = new();
-    private readonly bool _autoSave = true;
     private readonly ILogService _logService;
     private readonly IJsonStorageService _jsonStorageService;
 
@@ -67,9 +66,9 @@ public partial class SettingsService : ISettingsService, IDisposable
     public void Set(SizeSettingDefinition settingDefinition, Size newValue) => LockAndSet(new SizeSettingDefinition(settingDefinition.Key, newValue));
     public void Set(StringArraySettingDefinition settingDefinition, string[] newValue) => LockAndSet(new StringArraySettingDefinition(settingDefinition.Key, newValue));
 
-    public async Task InitializeAsync(string filePath, CancellationToken cancellationToken)
+    public async Task InitializeAsync(string filePath)
     {
-        await _semaphore.WaitAsync(cancellationToken);
+        await _semaphore.WaitAsync();
 
         try
         {
@@ -127,7 +126,6 @@ public partial class SettingsService : ISettingsService, IDisposable
             {
                 _settings.Remove(settingDefinition.Key);
                 FireSettingsChangedEvent(settingDefinition);
-                TryAutoSave();
             }
         }
     }
@@ -150,36 +148,35 @@ public partial class SettingsService : ISettingsService, IDisposable
             if (preCount > _settings.Count)
             {
                 FireSettingsChangedEvent(settingDefinitions);
-                TryAutoSave();
             }
         }
     }
 
-    private void TryAutoSave()
+    public async Task<bool> TrySaveAsync()
     {
-        if (_autoSave)
-        {
-            _ = TrySaveInternalAsync();
-        }
-    }
-
-    private async Task<bool> TrySaveInternalAsync()
-    {
-        ThrowIfNotInitialized();
+        await _semaphore.WaitAsync();
 
         try
         {
-            List<SettingDefinition> settingsList = [.. _settings.Values];
-            await _jsonStorageService.WriteAsync(GetFilePath(), settingsList, SettingDefinitionContext.Default.ListSettingDefinition);
+            ThrowIfNotInitialized();
 
-            return true;
+            try
+            {
+                List<SettingDefinition> settingsList = [.. _settings.Values];
+                await _jsonStorageService.WriteAsync(GetFilePath(), settingsList, SettingDefinitionContext.Default.ListSettingDefinition);
+                return true;
+            }
+            catch (Exception e)
+            {
+                LogException(e, "Unable to perform save operation.");
+            }
+
+            return false;
         }
-        catch (Exception e)
+        finally
         {
-            LogException(e, "Unable to perform save operation.");
+            _semaphore.Release();
         }
-
-        return false;
     }
 
     private void LockAndSet<T>(SettingDefinition<T> settingDefinition)
@@ -200,7 +197,6 @@ public partial class SettingsService : ISettingsService, IDisposable
 
                 _settings[settingDefinition.Key] = settingDefinition;
                 FireSettingsChangedEvent(settingDefinition);
-                TryAutoSave();
             }
         }
     }
