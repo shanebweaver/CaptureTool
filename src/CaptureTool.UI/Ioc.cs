@@ -2,7 +2,6 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using CaptureTool.Common;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Logging;
@@ -15,8 +14,24 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.UI;
 
-public partial class Ioc
+public partial class Ioc : IAsyncDisposable
 {
+    private class ServiceMapping(Type serviceType, Type implementationType)
+    {
+        public Type ServiceType { get; } = serviceType;
+        public Type ImplementationType { get; } = implementationType;
+    }
+
+    // Services
+    private static readonly ServiceMapping[] serviceMappings = [
+        new ServiceMapping(typeof(IFeatureManager), typeof(CaptureToolFeatureManager)),
+        new ServiceMapping(typeof(ICancellationService), typeof(CancellationService)),
+        new ServiceMapping(typeof(IJsonStorageService), typeof(WindowsJsonStorageService)),
+        new ServiceMapping(typeof(ILogService), typeof(DebugLogService)),
+        new ServiceMapping(typeof(INavigationService), typeof(NavigationService)),
+        new ServiceMapping(typeof(ISettingsService), typeof(SettingsService)),
+    ];
+
     private readonly ServiceProvider _serviceProvider;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _isInitalized;
@@ -25,15 +40,10 @@ public partial class Ioc
     {
         ServiceCollection collection = new();
 
-        // Feature management
-        collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
-
-        // Services
-        collection.AddSingleton<ICancellationService, CancellationService>();
-        collection.AddSingleton<ILogService, DebugLogService>();
-        collection.AddSingleton<INavigationService, NavigationService>();
-        collection.AddSingleton<ISettingsService, SettingsService>();
-        collection.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
+        foreach (var mapping in serviceMappings)
+        {
+            collection.AddSingleton(mapping.ServiceType, mapping.ImplementationType);
+        }
 
         // ViewModels
         collection.AddSingleton<MainWindowViewModel>();
@@ -56,7 +66,7 @@ public partial class Ioc
 
             // Settings
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string settingsFilePath = Path.Combine(appDataPath, "CaptureTool", Constants.SettingsFileName);
+            string settingsFilePath = Path.Combine(appDataPath, "CaptureTool", "Settings.json");
             await GetService<ISettingsService>().InitializeAsync(settingsFilePath, cancellationToken);
 
             _isInitalized = true;
@@ -68,4 +78,26 @@ public partial class Ioc
     }
 
     public T GetService<T>() where T : notnull => _serviceProvider.GetRequiredService<T>();
+    public object GetService(Type t) => _serviceProvider.GetRequiredService(t);
+
+    public async ValueTask DisposeAsync()
+    {
+        _semaphore?.Dispose();
+
+        foreach (var mapping in serviceMappings)
+        {
+            object service = GetService(mapping.ServiceType);
+            if (service is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+            else if (service is IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync();
+            }
+        }
+
+        await _serviceProvider.DisposeAsync();
+        GC.SuppressFinalize(this);
+    }
 }

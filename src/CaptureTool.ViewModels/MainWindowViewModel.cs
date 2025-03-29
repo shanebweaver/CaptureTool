@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using CaptureTool.Common;
 using CaptureTool.Services.Navigation;
 
 namespace CaptureTool.ViewModels;

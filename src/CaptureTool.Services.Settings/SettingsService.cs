@@ -10,7 +10,7 @@ using CaptureTool.Services.Logging;
 using CaptureTool.Services.Settings.Definitions;
 using CaptureTool.Services.Storage;
 
-public partial class SettingsService : ISettingsService
+public partial class SettingsService : ISettingsService, IDisposable
 {
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly object _accessLock = new();
@@ -18,9 +18,10 @@ public partial class SettingsService : ISettingsService
     private readonly ILogService _logService;
     private readonly IJsonStorageService _jsonStorageService;
 
-    private volatile bool _isInitialized = false;
+    private volatile bool _isInitialized;
     private volatile string? _filePath;
     private volatile Dictionary<string, SettingDefinition> _settings;
+    private bool _disposed;
 
     public event Action<ICollection<SettingDefinition>>? SettingsChanged;
 
@@ -204,12 +205,6 @@ public partial class SettingsService : ISettingsService
         }
     }
 
-    public void Dispose()
-    {
-        _settings.Clear();
-        GC.SuppressFinalize(this);
-    }
-
     private string GetFilePath()
     {
         ThrowIfNotInitialized();
@@ -234,4 +229,24 @@ public partial class SettingsService : ISettingsService
 
     private void FireSettingsChangedEvent(SettingDefinition settingDefinition) => SettingsChanged?.Invoke(new List<SettingDefinition>() { settingDefinition });
     private void FireSettingsChangedEvent(ICollection<SettingDefinition> settingDefinitions) => SettingsChanged?.Invoke(settingDefinitions);
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _semaphore.Dispose();
+            }
+
+            _disposed = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 }

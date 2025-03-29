@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Services.Settings.Definitions;
 
-public interface ISettingsService : IDisposable
+public interface ISettingsService
 {
     event Action<ICollection<SettingDefinition>>? SettingsChanged;
 
