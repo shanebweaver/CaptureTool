@@ -40,6 +40,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Cancel
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.FeatureManagement", "src\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj", "{33752AAD-81FA-4575-825B-1D87DDCA7B09}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Localization", "src\CaptureTool.Services.Localization\CaptureTool.Services.Localization.csproj", "{D332328F-8703-468A-8A54-48D376DDC2B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Globalization", "src\CaptureTool.Services.Globalization\CaptureTool.Services.Globalization.csproj", "{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -200,6 +204,30 @@ Global
 		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Release|x64.Build.0 = Release|Any CPU
 		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Release|x86.ActiveCfg = Release|Any CPU
 		{33752AAD-81FA-4575-825B-1D87DDCA7B09}.Release|x86.Build.0 = Release|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Debug|x64.Build.0 = Debug|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Debug|x86.Build.0 = Debug|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Release|ARM64.Build.0 = Release|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Release|x64.ActiveCfg = Release|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Release|x64.Build.0 = Release|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Release|x86.ActiveCfg = Release|Any CPU
+		{D332328F-8703-468A-8A54-48D376DDC2B7}.Release|x86.Build.0 = Release|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Debug|x64.Build.0 = Debug|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Debug|x86.Build.0 = Debug|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Release|ARM64.Build.0 = Release|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Release|x64.ActiveCfg = Release|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Release|x64.Build.0 = Release|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Release|x86.ActiveCfg = Release|Any CPU
+		{CAB9194E-CB62-413A-8E2C-80D7F44DD78D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

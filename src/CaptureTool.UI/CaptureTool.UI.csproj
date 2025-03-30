@@ -48,6 +48,8 @@
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Cancellation\CaptureTool.Services.Cancellation.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Globalization\CaptureTool.Services.Globalization.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Localization\CaptureTool.Services.Localization.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Logging\CaptureTool.Services.Logging.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Navigation\CaptureTool.Services.Navigation.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Settings\CaptureTool.Services.Settings.csproj" />

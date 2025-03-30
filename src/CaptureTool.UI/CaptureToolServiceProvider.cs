@@ -1,11 +1,14 @@
 ﻿using System;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Globalization;
+using CaptureTool.Services.Localization;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Storage.Windows;
+using CaptureTool.Services.Telemetry;
 using CaptureTool.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,12 +26,16 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
     private static readonly ServiceMapping[] _serviceMappings = [
         new ServiceMapping(typeof(IFeatureManager), typeof(CaptureToolFeatureManager)),
         new ServiceMapping(typeof(ICancellationService), typeof(CancellationService)),
+        new ServiceMapping(typeof(IGlobalizationService), typeof(GlobalizationService)),
         new ServiceMapping(typeof(IJsonStorageService), typeof(WindowsJsonStorageService)),
+        new ServiceMapping(typeof(ILocalizationService), typeof(LocalizationService)),
         new ServiceMapping(typeof(ILogService), typeof(DebugLogService)),
         new ServiceMapping(typeof(INavigationService), typeof(NavigationService)),
         new ServiceMapping(typeof(ISettingsService), typeof(SettingsService)),
+        new ServiceMapping(typeof(ITelemetryService), typeof(TelemetryService)),
     ];
 
+    // ViewModels
     private static readonly Type[] _viewModelMappings = [
         typeof(MainWindowViewModel),
         typeof(HomePageViewModel),
@@ -54,11 +61,6 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         }
 
         _serviceProvider = collection.BuildServiceProvider();
-    }
-
-    ~CaptureToolServiceProvider()
-    {
-        _serviceProvider.Dispose();
     }
 
     public T GetService<T>() where T : notnull => _serviceProvider.GetRequiredService<T>();
