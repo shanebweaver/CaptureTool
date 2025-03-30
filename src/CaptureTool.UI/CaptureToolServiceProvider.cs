@@ -17,23 +17,24 @@ namespace CaptureTool.UI;
 
 public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
 {
-    private class ServiceMapping(Type serviceType, Type implementationType)
+    private class ServiceMapping(Type serviceType, Type implementationType) 
+        : Tuple<Type, Type>(serviceType, implementationType)
     {
-        public Type ServiceType { get; } = serviceType;
-        public Type ImplementationType { get; } = implementationType;
+        public Type ServiceType => Item1;
+        public Type ImplementationType => Item2;
     }
 
     // Services
     private static readonly ServiceMapping[] _serviceMappings = [
-        new ServiceMapping(typeof(IFeatureManager), typeof(CaptureToolFeatureManager)),
-        new ServiceMapping(typeof(ICancellationService), typeof(CancellationService)),
-        new ServiceMapping(typeof(IGlobalizationService), typeof(GlobalizationService)),
-        new ServiceMapping(typeof(IJsonStorageService), typeof(WindowsJsonStorageService)),
-        new ServiceMapping(typeof(ILocalizationService), typeof(WindowsLocalizationService)),
-        new ServiceMapping(typeof(ILogService), typeof(DebugLogService)),
-        new ServiceMapping(typeof(INavigationService), typeof(NavigationService)),
-        new ServiceMapping(typeof(ISettingsService), typeof(SettingsService)),
-        new ServiceMapping(typeof(ITelemetryService), typeof(TelemetryService)),
+        new(typeof(IFeatureManager), typeof(CaptureToolFeatureManager)),
+        new(typeof(ICancellationService), typeof(CancellationService)),
+        new(typeof(IGlobalizationService), typeof(GlobalizationService)),
+        new(typeof(IJsonStorageService), typeof(WindowsJsonStorageService)),
+        new(typeof(ILocalizationService), typeof(WindowsLocalizationService)),
+        new(typeof(ILogService), typeof(DebugLogService)),
+        new(typeof(INavigationService), typeof(NavigationService)),
+        new(typeof(ISettingsService), typeof(SettingsService)),
+        new(typeof(ITelemetryService), typeof(TelemetryService)),
     ];
 
     // ViewModels
