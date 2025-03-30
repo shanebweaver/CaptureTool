@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 
 namespace CaptureTool.Services.Globalization;
 
 public sealed partial class GlobalizationService : IGlobalizationService
 {
+    public bool IsRightToLeft => CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
 }

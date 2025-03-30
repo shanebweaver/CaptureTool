@@ -2,5 +2,5 @@
 
 public interface IGlobalizationService
 {
-
+    bool IsRightToLeft { get; }
 }
