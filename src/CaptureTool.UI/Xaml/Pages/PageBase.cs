@@ -1,7 +1,5 @@
 using System;
-using System.Diagnostics;
 using System.Threading;
-using System.Threading.Tasks;
 using CaptureTool.ViewModels;
 using CaptureTool.ViewModels.Loading;
 using Microsoft.UI.Xaml.Controls;
@@ -11,40 +9,35 @@ namespace CaptureTool.UI.Xaml.Pages;
 
 public abstract class PageBase<VM> : Page where VM : ViewModelBase
 {
-    private CancellationTokenSource? _loadCancellationTokenSource;
+    private readonly CancellationTokenSource _navigationCts = new();
 
     public abstract VM ViewModel { get; }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        //DispatcherQueue.TryEnqueue(() =>
-        //{
-            try
+        try
+        {
+            if (ViewModel.LoadState != LoadState.Loaded)
             {
-                _loadCancellationTokenSource ??= new();
-                if (ViewModel.LoadState != LoadState.Loaded)
-                {
-                    ViewModel.LoadAsync(e.Parameter, _loadCancellationTokenSource.Token);
-                }
+                _ = ViewModel.LoadAsync(e.Parameter, _navigationCts.Token);
             }
-            catch (TaskCanceledException)
-            {
-                //Debug.Fail("Task was canceled.");
-            }
-            catch (Exception)
-            {
-                //Debug.Fail("Page navigation failed.");
-            }
-        //});
+        }
+        catch (OperationCanceledException ex)
+        {
+            ServiceLocator.Logging.LogException(ex, "Page load canceled.");
+        }
+        catch (Exception ex)
+        {
+            ServiceLocator.Logging.LogException(ex, "Failed to load page.");
+        }
 
         base.OnNavigatedTo(e);
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
-        _loadCancellationTokenSource?.Cancel();
-        _loadCancellationTokenSource?.Dispose();
-        _loadCancellationTokenSource = null;
+        _navigationCts.Cancel();
+        _navigationCts.Dispose();
 
         if (e.NavigationMode == NavigationMode.Back)
         {

@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
@@ -35,14 +36,26 @@ public sealed partial class HomePageViewModel : ViewModelBase
     {
         StartLoading();
 
-        bool isAlpha = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Alpha);
-        bool isBeta = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Beta);
-        bool isClicked = _settingsService.Get(CaptureToolSettings.ButtonClickedSetting);
+        var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
+        try
+        {
+            bool isAlpha = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Alpha);
+            bool isBeta = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Beta);
+            bool isClicked = _settingsService.Get(CaptureToolSettings.ButtonClickedSetting);
 
-        string newContent = $"Alpha: {isAlpha}, Beta: {isBeta}, ";
-        newContent += isClicked ? "Clicked" : "Click me";
+            string newContent = $"Alpha: {isAlpha}, Beta: {isBeta}, ";
+            newContent += isClicked ? "Clicked" : "Click me";
 
-        ButtonContent = newContent;
+            ButtonContent = newContent;
+        }
+        catch (OperationCanceledException)
+        {
+            // Load canceled
+        }
+        finally
+        {
+            cts.Dispose();
+        }
 
         await base.LoadAsync(parameter, cancellationToken);
     }

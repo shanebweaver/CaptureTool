@@ -27,6 +27,8 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
     {
         StartLoading();
 
+        await Task.Delay(10000, cancellationToken);
+
         await base.LoadAsync(parameter, cancellationToken);
     }
 

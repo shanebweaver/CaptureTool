@@ -82,9 +82,6 @@ public partial class App : Application
 
                 // Dispose all services
                 ServiceProvider.Dispose();
-
-                // Close the window
-                _window?.Close();
             }
             catch (Exception e)
             {
