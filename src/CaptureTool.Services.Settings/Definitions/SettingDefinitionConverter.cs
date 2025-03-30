@@ -12,10 +12,7 @@ public class SettingDefinitionConverter : JsonConverter<SettingDefinition>
         Bool = 0,
         Double,
         Int,
-        Point,
-        Size,
         String,
-        StringArray,
     }
 
     public override bool CanConvert(Type typeToConvert) => typeof(SettingDefinition).IsAssignableFrom(typeToConvert);
@@ -51,17 +48,8 @@ public class SettingDefinitionConverter : JsonConverter<SettingDefinition>
             case IntSettingDefinition intSettingDefinition:
                 WriteSettingDefinition(ref writer, TypeDiscriminator.Int, intSettingDefinition, SettingDefinitionContext.Default.IntSettingDefinition);
                 break;
-            case PointSettingDefinition pointSettingDefinition:
-                WriteSettingDefinition(ref writer, TypeDiscriminator.Point, pointSettingDefinition, SettingDefinitionContext.Default.PointSettingDefinition);
-                break;
-            case SizeSettingDefinition sizeSettingDefinition:
-                WriteSettingDefinition(ref writer, TypeDiscriminator.Size, sizeSettingDefinition, SettingDefinitionContext.Default.SizeSettingDefinition);
-                break;
             case StringSettingDefinition stringSettingDefinition:
                 WriteSettingDefinition(ref writer, TypeDiscriminator.String, stringSettingDefinition, SettingDefinitionContext.Default.StringSettingDefinition);
-                break;
-            case StringArraySettingDefinition stringListSettingDefinition:
-                WriteSettingDefinition(ref writer, TypeDiscriminator.StringArray, stringListSettingDefinition, SettingDefinitionContext.Default.StringArraySettingDefinition);
                 break;
             default:
                 throw new NotSupportedException();
@@ -83,10 +71,7 @@ public class SettingDefinitionConverter : JsonConverter<SettingDefinition>
                 TypeDiscriminator.Bool => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.BoolSettingDefinition),
                 TypeDiscriminator.Double => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.DoubleSettingDefinition),
                 TypeDiscriminator.Int => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.IntSettingDefinition),
-                TypeDiscriminator.Point => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.PointSettingDefinition),
-                TypeDiscriminator.Size => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.SizeSettingDefinition),
                 TypeDiscriminator.String => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.StringSettingDefinition),
-                TypeDiscriminator.StringArray => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.StringArraySettingDefinition),
                 _ => throw new JsonException("Unknown TypeDiscriminator value")
             };
 
