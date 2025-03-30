@@ -62,9 +62,14 @@ public partial class SettingsService : ISettingsService, IDisposable
         LockAndSet((T)Activator.CreateInstance(typeof(T), settingDefinition.Key, value)!);
     }
 
-    public async Task InitializeAsync(string filePath)
+    public async Task InitializeAsync(string filePath, CancellationToken cancellationToken)
     {
-        await _semaphore.WaitAsync();
+        if (_disposed)
+        {
+            return;
+        }
+
+        await _semaphore.WaitAsync(cancellationToken);
 
         try
         {
@@ -148,9 +153,14 @@ public partial class SettingsService : ISettingsService, IDisposable
         }
     }
 
-    public async Task<bool> TrySaveAsync()
+    public async Task<bool> TrySaveAsync(CancellationToken cancellationToken)
     {
-        await _semaphore.WaitAsync();
+        if (_disposed)
+        {
+            return false;
+        }
+
+        await _semaphore.WaitAsync(cancellationToken);
 
         try
         {

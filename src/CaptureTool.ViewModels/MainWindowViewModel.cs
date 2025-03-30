@@ -1,20 +1,29 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
+using CaptureTool.Services.Settings;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHandler
 {
+    private readonly ICancellationService _cancellationService;
     private readonly INavigationService _navigationService;
+    private readonly ISettingsService _settingsService;
 
     public event Action<NavigationRequest>? NavigationRequested;
 
     public MainWindowViewModel(
+        ICancellationService cancellationService,
+        ISettingsService settingsService,
         INavigationService navigationService)
     {
+        _cancellationService = cancellationService;
         _navigationService = navigationService;
+        _settingsService = settingsService;
     }
 
     public void HandleNavigationRequest(NavigationRequest request)
@@ -24,8 +33,35 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        _navigationService.SetNavigationHandler(this);
-        _navigationService.Navigate(NavigationKeys.Home);
+        var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
+        try
+        {
+            // Navigation handler
+            _navigationService.SetNavigationHandler(this);
+            cts.Token.ThrowIfCancellationRequested();
+
+            // Do any other initialization work here
+            await Task.Delay(3000, cts.Token);
+            cts.Token.ThrowIfCancellationRequested();
+
+            // Settings service
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string settingsFilePath = Path.Combine(appDataPath, "CaptureTool", "Settings.json");
+            await _settingsService.InitializeAsync(settingsFilePath, cts.Token);
+            cts.Token.ThrowIfCancellationRequested();
+
+            // Go home
+            _navigationService.Navigate(NavigationKeys.Home);
+        }
+        catch (OperationCanceledException)
+        {
+            // Load canceled
+        }
+        finally
+        {
+            cts.Dispose();
+        }
+
         await base.LoadAsync(parameter, cancellationToken);
     }
 

@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Project properties -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+  </PropertyGroup>
+  
   <!-- Package dependencies -->
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />
@@ -9,9 +14,13 @@
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Cancellation\CaptureTool.Services.Cancellation.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Logging\CaptureTool.Services.Logging.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Navigation\CaptureTool.Services.Navigation.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Settings\CaptureTool.Services.Settings.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Storage.Windows\CaptureTool.Services.Storage.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Storage\CaptureTool.Services.Storage.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Telemetry\CaptureTool.Services.Telemetry.csproj" />
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
   </ItemGroup>
 

@@ -7,5 +7,5 @@ public interface ICancellationService
 {
     void CancelAll();
     Task CancelAllAsync();
-    CancellationTokenSource GetLinkedCancellationTokenSource();
+    CancellationTokenSource GetLinkedCancellationTokenSource(CancellationToken? cancellationToken = null);
 }

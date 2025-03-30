@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using CaptureTool.Services.Cancellation;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 
@@ -12,32 +11,26 @@ public partial class App : Application
 {
     public new static App Current => (App)Application.Current;
  
-    public Ioc Ioc => _ioc;
+    public CaptureToolServiceProvider ServiceProvider { get; }
 
-    private readonly Ioc _ioc;
-    private readonly SemaphoreSlim _shutdownSemaphore;
-    private bool _isShuttingDown;
     private Window? _window;
 
     public App()
     {
-        _ioc = new();
-        _shutdownSemaphore = new(1, 1);
+        ServiceProvider = new();
         InitializeComponent();
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs launchArgs)
     {
         AppActivationArguments args = AppInstance.GetCurrent().GetActivatedEventArgs();
-        _ = ActivateAsync(args, CancellationToken.None);
+        Activate(args);
     }
 
-    public async Task ActivateAsync(AppActivationArguments args, CancellationToken cancellationToken)
+    public void Activate(AppActivationArguments args)
     {
         try
         {
-            await _ioc.InitializeServicesAsync(cancellationToken);
-
             switch (args.Kind)
             {
                 case ExtendedActivationKind.Launch:
@@ -74,40 +67,32 @@ public partial class App : Application
     {
         if (_window == null)
         {
-            _ = ShutdownAsync();
+            Shutdown();
         }
     }
 
-    private async Task ShutdownAsync()
+    private void Shutdown()
     {
-        await _shutdownSemaphore.WaitAsync();
-        try
+        lock (this)
         {
-            if (_isShuttingDown)
+            try
             {
-                return;
+                // Cancel all running tasks
+                ServiceProvider.GetRequiredService<ICancellationService>().CancelAll();
+
+                // Dispose all services
+                ServiceProvider.Dispose();
+
+                // Close the window
+                _window?.Close();
+            }
+            catch (Exception e)
+            {
+                // Error during shutdown.
+                Debug.Fail($"Error during shutdown: {e.Message}");
             }
 
-            _isShuttingDown = true;
-
-            // TODO: Show teardown UI
-
-            await _ioc.GetService<ICancellationService>().CancelAllAsync();
-            await _ioc.DisposeAsync();
-
-            _window?.Close();
+            Application.Current.Exit();
         }
-        catch (Exception e)
-        {
-            // Error during shutdown.
-            Debug.Fail($"Error during shutdown: {e.Message}");
-        }
-        finally 
-        {
-            _shutdownSemaphore.Release();
-        }
-
-        _shutdownSemaphore.Dispose();
-        Application.Current.Exit();
     }
 }

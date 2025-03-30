@@ -97,6 +97,6 @@ public class Program
 
     private static void OnActivated(object? sender, AppActivationArguments args)
     {
-        _ = App.Current.ActivateAsync(args, CancellationToken.None);
+        App.Current.Activate(args);
     }
 }

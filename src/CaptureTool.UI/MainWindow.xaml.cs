@@ -8,8 +8,6 @@ namespace CaptureTool.UI;
 
 public sealed partial class MainWindow : Window
 {
-    private readonly CancellationTokenSource _activationCancellationTokenSource = new();
-
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.MainWindow;
 
     public MainWindow()
@@ -25,8 +23,6 @@ public sealed partial class MainWindow : Window
         Closed -= OnClosed;
 
         ViewModel.NavigationRequested -= OnViewModelNavigationRequested;
-
-        _activationCancellationTokenSource.Dispose();
     }
 
     private async void OnActivated(object sender, WindowActivatedEventArgs args)
@@ -36,7 +32,7 @@ public sealed partial class MainWindow : Window
             Activated -= OnActivated;
 
             ViewModel.NavigationRequested += OnViewModelNavigationRequested;
-            await ViewModel.LoadAsync(null, _activationCancellationTokenSource.Token);
+            await ViewModel.LoadAsync(null, CancellationToken.None);
         }
     }
 

@@ -75,6 +75,11 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Xaml\Pages\StartupPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
     <Page Update="Xaml\Pages\SettingsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

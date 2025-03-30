@@ -1,8 +1,6 @@
 ﻿namespace CaptureTool.Services.Settings;
 
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Services.Settings.Definitions;
@@ -17,6 +15,6 @@ public interface ISettingsService
     void Unset(SettingDefinition settingDefinition);
     void Unset(SettingDefinition[] settingDefinitions);
 
-    Task InitializeAsync(string filePath);
-    Task<bool> TrySaveAsync();
+    Task InitializeAsync(string filePath, CancellationToken cancellationToken);
+    Task<bool> TrySaveAsync(CancellationToken cancellationToken);
 }

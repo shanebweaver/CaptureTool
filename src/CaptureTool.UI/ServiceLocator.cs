@@ -7,5 +7,5 @@ internal class ServiceLocator
 {
     public static ISettingsService Settings => GetService<ISettingsService>();
     public static ILogService Logging => GetService<ILogService>();
-    private static T GetService<T>() where T : notnull => App.Current.Ioc.GetService<T>();
+    private static T GetService<T>() where T : notnull => App.Current.ServiceProvider.GetService<T>();
 }

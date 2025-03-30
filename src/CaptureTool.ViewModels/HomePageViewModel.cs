@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.FeatureManagement;
+using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,6 +11,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class HomePageViewModel : ViewModelBase
 {
+    private readonly ICancellationService _cancellationService;
     private readonly IFeatureManager _featureManager;
     private readonly INavigationService _navigationService;
     private readonly ISettingsService _settingsService;
@@ -18,10 +20,12 @@ public sealed partial class HomePageViewModel : ViewModelBase
     private string? _buttonContent;
 
     public HomePageViewModel(
+        ICancellationService cancellationService,
         IFeatureManager featureManager,
         INavigationService navigationService,
         ISettingsService settingsService)
     {
+        _cancellationService = cancellationService;
         _featureManager = featureManager;
         _navigationService = navigationService;
         _settingsService = settingsService;
@@ -52,8 +56,10 @@ public sealed partial class HomePageViewModel : ViewModelBase
     [RelayCommand]
     private async Task ClickMe()
     {
+        var cts = _cancellationService.GetLinkedCancellationTokenSource();
+
         _settingsService.Set(CaptureToolSettings.ButtonClickedSetting, true);
-        await _settingsService.TrySaveAsync();
+        await _settingsService.TrySaveAsync(cts.Token);
 
         ButtonContent = "Clicked";
     }

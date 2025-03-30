@@ -14,8 +14,13 @@ public sealed partial class CancellationService : ICancellationService, IDisposa
         _rootTokenSource = new();
     }
 
-    public CancellationTokenSource GetLinkedCancellationTokenSource()
+    public CancellationTokenSource GetLinkedCancellationTokenSource(CancellationToken? cancellationToken = null)
     {
+        if (cancellationToken is not null)
+        {
+            return CancellationTokenSource.CreateLinkedTokenSource(_rootTokenSource.Token, cancellationToken.Value);
+        }
+
         return CancellationTokenSource.CreateLinkedTokenSource(_rootTokenSource.Token);
     }
 
