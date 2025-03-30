@@ -1,13 +1,11 @@
-using CaptureTool.ViewModels;
+using Microsoft.UI.Xaml.Controls;
 
 namespace CaptureTool.UI.Xaml.Pages;
 
-public sealed partial class StartupPage : StartupPageBase
+public sealed partial class StartupPage : Page
 {
     public StartupPage()
     {
         InitializeComponent();
     }
-
-    public override StartupPageViewModel ViewModel { get; } = ViewModelLocator.StartupPage;
 }

@@ -32,7 +32,6 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
     private static readonly Type[] _viewModelMappings = [
         typeof(MainWindowViewModel),
         typeof(HomePageViewModel),
-        typeof(StartupPageViewModel),
         typeof(SettingsPageViewModel),
     ];
 

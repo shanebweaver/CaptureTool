@@ -1,5 +1,4 @@
 ﻿using CaptureTool.Services.Logging;
-using CaptureTool.Services.Settings;
 
 namespace CaptureTool.UI;
 

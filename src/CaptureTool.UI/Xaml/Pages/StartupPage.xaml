@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<local:StartupPageBase
+<Page
     x:Class="CaptureTool.UI.Xaml.Pages.StartupPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -12,4 +12,4 @@
     <Grid>
         <TextBlock Text="Startup Page" />
     </Grid>
-</local:StartupPageBase>
+</Page>
