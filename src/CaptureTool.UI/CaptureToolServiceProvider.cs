@@ -3,6 +3,7 @@ using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Globalization;
 using CaptureTool.Services.Localization;
+using CaptureTool.Services.Localization.Windows;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
@@ -28,7 +29,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         new ServiceMapping(typeof(ICancellationService), typeof(CancellationService)),
         new ServiceMapping(typeof(IGlobalizationService), typeof(GlobalizationService)),
         new ServiceMapping(typeof(IJsonStorageService), typeof(WindowsJsonStorageService)),
-        new ServiceMapping(typeof(ILocalizationService), typeof(LocalizationService)),
+        new ServiceMapping(typeof(ILocalizationService), typeof(WindowsLocalizationService)),
         new ServiceMapping(typeof(ILogService), typeof(DebugLogService)),
         new ServiceMapping(typeof(INavigationService), typeof(NavigationService)),
         new ServiceMapping(typeof(ISettingsService), typeof(SettingsService)),

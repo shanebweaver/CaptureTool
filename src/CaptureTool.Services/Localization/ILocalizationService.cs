@@ -2,5 +2,5 @@
 
 public interface ILocalizationService
 {
-
+    public string GetString(string resourceKey);
 }

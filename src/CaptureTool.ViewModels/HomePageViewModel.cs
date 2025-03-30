@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,6 +15,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 {
     private readonly ICancellationService _cancellationService;
     private readonly IFeatureManager _featureManager;
+    private readonly ILocalizationService _localizationService;
     private readonly INavigationService _navigationService;
     private readonly ISettingsService _settingsService;
 
@@ -23,11 +25,13 @@ public sealed partial class HomePageViewModel : ViewModelBase
     public HomePageViewModel(
         ICancellationService cancellationService,
         IFeatureManager featureManager,
+        ILocalizationService localizationService,
         INavigationService navigationService,
         ISettingsService settingsService)
     {
         _cancellationService = cancellationService;
         _featureManager = featureManager;
+        _localizationService = localizationService;
         _navigationService = navigationService;
         _settingsService = settingsService;
     }
@@ -43,8 +47,11 @@ public sealed partial class HomePageViewModel : ViewModelBase
             bool isBeta = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Beta);
             bool isClicked = _settingsService.Get(CaptureToolSettings.ButtonClickedSetting);
 
+            string clickedContent = _localizationService.GetString("Clicked");
+            string clickMeContent = _localizationService.GetString("ClickMe");
+
             string newContent = $"Alpha: {isAlpha}, Beta: {isBeta}, ";
-            newContent += isClicked ? "Clicked" : "Click me";
+            newContent += isClicked ? clickedContent : clickMeContent;
 
             ButtonContent = newContent;
         }
@@ -74,7 +81,8 @@ public sealed partial class HomePageViewModel : ViewModelBase
         _settingsService.Set(CaptureToolSettings.ButtonClickedSetting, true);
         await _settingsService.TrySaveAsync(cts.Token);
 
-        ButtonContent = "Clicked";
+        string clickedContent = _localizationService.GetString("Clicked");
+        ButtonContent = clickedContent;
     }
 
     [RelayCommand]

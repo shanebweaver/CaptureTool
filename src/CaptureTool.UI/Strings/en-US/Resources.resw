@@ -120,4 +120,10 @@
   <data name="BackButton.Content" xml:space="preserve">
     <value>Back</value>
   </data>
+  <data name="Clicked" xml:space="preserve">
+    <value>Clicked</value>
+  </data>
+  <data name="ClickMe" xml:space="preserve">
+    <value>Click me</value>
+  </data>
 </root>

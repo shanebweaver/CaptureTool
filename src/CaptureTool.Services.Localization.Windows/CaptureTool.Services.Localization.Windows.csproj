@@ -9,5 +9,5 @@
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
   </ItemGroup>
-
+  
 </Project>
