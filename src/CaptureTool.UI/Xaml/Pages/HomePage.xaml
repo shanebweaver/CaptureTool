@@ -6,15 +6,59 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    xmlns:viewmodels="using:CaptureTool.ViewModels"
+    xmlns:views="using:CaptureTool.UI.Xaml.Views"
+    d:DataContext="{d:DesignInstance Type=viewmodels:HomePageViewModel}"
     mc:Ignorable="d">
 
-    <StackPanel
-        HorizontalAlignment="Center"
-        VerticalAlignment="Center"
-        Orientation="Horizontal">
-        <Button Command="{x:Bind ViewModel.ClickMeCommand}" Content="{x:Bind ViewModel.ButtonContent, Mode=OneWay}" />
-        <Button Command="{x:Bind ViewModel.GoToSettingsCommand}" Content="Settings" />
-    </StackPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <!--  Menu  -->
+        <views:AppMenuView />
+
+        <!--  Content  -->
+        <Grid
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            ColumnSpacing="8"
+            Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <Grid>
+                <Button
+                    Width="96"
+                    Height="96"
+                    CornerRadius="12">
+                    <SymbolIcon Symbol="Camera" />
+                </Button>
+            </Grid>
+
+            <Grid Column="1">
+                <Button
+                    Width="96"
+                    Height="96"
+                    CornerRadius="12">
+                    <SymbolIcon Symbol="Video" />
+                </Button>
+            </Grid>
+
+            <Grid Column="2">
+                <Button
+                    Width="96"
+                    Height="96"
+                    CornerRadius="12">
+                    <SymbolIcon Symbol="Microphone" />
+                </Button>
+            </Grid>
+        </Grid>
+    </Grid>
 
 </local:HomePageBase>

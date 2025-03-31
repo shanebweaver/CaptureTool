@@ -6,10 +6,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mc:Ignorable="d">
 
     <Grid>
-        <TextBlock Text="Startup Page" />
+        <ProgressRing
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsActive="True" />
     </Grid>
 </Page>

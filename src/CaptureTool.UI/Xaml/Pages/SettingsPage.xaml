@@ -6,7 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    xmlns:viewmodels="using:CaptureTool.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:SettingsPageViewModel}"
     mc:Ignorable="d">
 
     <Grid>

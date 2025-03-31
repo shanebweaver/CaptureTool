@@ -18,16 +18,6 @@ public sealed partial class HomePageViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly ISettingsService _settingsService;
 
-    public RelayCommand ClickMeCommand => new(ClickMe);
-    public RelayCommand GoToSettingsCommand => new(GoToSettings);
-
-    private string? _buttonContent;
-    public string? ButtonContent
-    {
-        get => _buttonContent;
-        set => Set(ref _buttonContent, value);
-    }
-
     public HomePageViewModel(
         ICancellationService cancellationService,
         IFeatureManager featureManager,
@@ -50,17 +40,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            bool isAlpha = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Alpha);
-            bool isBeta = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Beta);
-            bool isClicked = _settingsService.Get(CaptureToolSettings.ButtonClickedSetting);
-
-            string clickedContent = _localizationService.GetString("Clicked");
-            string clickMeContent = _localizationService.GetString("ClickMe");
-
-            string newContent = $"Alpha: {isAlpha}, Beta: {isBeta}, ";
-            newContent += isClicked ? clickedContent : clickMeContent;
-
-            ButtonContent = newContent;
+            // Load here
         }
         catch (OperationCanceledException)
         {
@@ -76,23 +56,6 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     public override void Unload()
     {
-        ButtonContent = null;
         base.Unload();
-    }
-
-    private async void ClickMe()
-    {
-        var cts = _cancellationService.GetLinkedCancellationTokenSource();
-
-        _settingsService.Set(CaptureToolSettings.ButtonClickedSetting, true);
-        await _settingsService.TrySaveAsync(cts.Token);
-
-        string clickedContent = _localizationService.GetString("Clicked");
-        ButtonContent = clickedContent;
-    }
-
-    private void GoToSettings()
-    {
-        _navigationService.Navigate(NavigationKeys.Settings);
     }
 }

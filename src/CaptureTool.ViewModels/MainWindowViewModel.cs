@@ -44,10 +44,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
             await _settingsService.InitializeAsync(settingsFilePath, cts.Token);
             cts.Token.ThrowIfCancellationRequested();
 
-            // Do any other initialization work here
-            await Task.Delay(3000, cts.Token);
-            cts.Token.ThrowIfCancellationRequested();
-
             // Go home
             _navigationService.Navigate(NavigationKeys.Home);
         }

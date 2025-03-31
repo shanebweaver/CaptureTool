@@ -8,9 +8,14 @@ namespace CaptureTool.UI.Xaml.Pages;
 
 public abstract class PageBase<VM> : Page where VM : ViewModelBase
 {
-    private readonly CancellationTokenSource _navigationCts = new();
+    private readonly CancellationTokenSource _loadCts = new();
 
     public abstract VM ViewModel { get; }
+
+    public PageBase()
+    {
+        DataContext = ViewModel;
+    }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -18,7 +23,7 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
         {
             if (ViewModel.IsUnloaded)
             {
-                _ = ViewModel.LoadAsync(e.Parameter, _navigationCts.Token);
+                _ = ViewModel.LoadAsync(e.Parameter, _loadCts.Token);
             }
         }
         catch (OperationCanceledException ex)
@@ -35,8 +40,8 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
-        _navigationCts.Cancel();
-        _navigationCts.Dispose();
+        _loadCts.Cancel();
+        _loadCts.Dispose();
 
         if (e.NavigationMode == NavigationMode.Back)
         {

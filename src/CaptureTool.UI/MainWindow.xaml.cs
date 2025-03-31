@@ -25,6 +25,8 @@ public sealed partial class MainWindow : Window
 
     private async void OnActivated(object sender, WindowActivatedEventArgs args)
     {
+        AppWindow.MoveAndResize(new(48, 48, 540, 320), Microsoft.UI.Windowing.DisplayArea.Primary);
+
         if (args.WindowActivationState == WindowActivationState.CodeActivated && ViewModel.IsUnloaded)
         {
             await ViewModel.LoadAsync(null, _activationCts.Token);

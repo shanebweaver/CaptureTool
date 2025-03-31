@@ -9,5 +9,7 @@ internal static partial class ViewModelLocator
     public static HomePageViewModel HomePage => GetService<HomePageViewModel>();
     public static SettingsPageViewModel SettingsPage => GetService<SettingsPageViewModel>();
 
+    public static AppMenuViewModel AppMenuView => GetService<AppMenuViewModel>();
+
     private static T GetService<T>() where T : notnull => App.Current.ServiceProvider.GetRequiredService<T>();
 }

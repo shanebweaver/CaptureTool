@@ -40,7 +40,6 @@
   <!-- Empty folders -->
   <ItemGroup>
     <Folder Include="Xaml\UserControls\" />
-    <Folder Include="Xaml\Views\" />
   </ItemGroup>
 
   <!-- Project dependencies -->
@@ -74,6 +73,11 @@
   -->
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Xaml\Views\AppMenuView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Xaml\Pages\StartupPage.xaml">
