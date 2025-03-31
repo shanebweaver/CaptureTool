@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.FeatureManagement;
@@ -6,8 +7,6 @@ using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.ViewModels;
 
@@ -19,8 +18,15 @@ public sealed partial class HomePageViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly ISettingsService _settingsService;
 
-    [ObservableProperty]
+    public RelayCommand ClickMeCommand => new(ClickMe);
+    public RelayCommand GoToSettingsCommand => new(GoToSettings);
+
     private string? _buttonContent;
+    public string? ButtonContent
+    {
+        get => _buttonContent;
+        set => Set(ref _buttonContent, value);
+    }
 
     public HomePageViewModel(
         ICancellationService cancellationService,
@@ -38,6 +44,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
+        Debug.Assert(IsUnloaded);
         StartLoading();
 
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
@@ -73,8 +80,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
         base.Unload();
     }
 
-    [RelayCommand]
-    private async Task ClickMe()
+    private async void ClickMe()
     {
         var cts = _cancellationService.GetLinkedCancellationTokenSource();
 
@@ -85,7 +91,6 @@ public sealed partial class HomePageViewModel : ViewModelBase
         ButtonContent = clickedContent;
     }
 
-    [RelayCommand]
     private void GoToSettings()
     {
         _navigationService.Navigate(NavigationKeys.Settings);

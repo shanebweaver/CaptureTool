@@ -5,4 +5,6 @@ namespace CaptureTool.Services.Settings;
 public static partial class CaptureToolSettings
 {
     public static readonly BoolSettingDefinition ButtonClickedSetting = new("ButtonClicked", false);
+
+    public static readonly IntSettingDefinition ThemeSetting = new("Theme", 0);
 }

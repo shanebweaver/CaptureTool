@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,13 +27,10 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
         _settingsService = settingsService;
     }
 
-    public void HandleNavigationRequest(NavigationRequest request)
-    {
-        NavigationRequested?.Invoke(request);
-    }
-
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
+        Debug.Assert(IsUnloaded);
+
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
@@ -40,14 +38,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
             _navigationService.SetNavigationHandler(this);
             cts.Token.ThrowIfCancellationRequested();
 
-            // Do any other initialization work here
-            await Task.Delay(3000, cts.Token);
-            cts.Token.ThrowIfCancellationRequested();
-
             // Settings service
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string settingsFilePath = Path.Combine(appDataPath, "CaptureTool", "Settings.json");
             await _settingsService.InitializeAsync(settingsFilePath, cts.Token);
+            cts.Token.ThrowIfCancellationRequested();
+
+            // Do any other initialization work here
+            await Task.Delay(3000, cts.Token);
             cts.Token.ThrowIfCancellationRequested();
 
             // Go home
@@ -68,5 +66,10 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
     public override void Unload()
     {
         base.Unload();
+    }
+
+    public void HandleNavigationRequest(NavigationRequest request)
+    {
+        NavigationRequested?.Invoke(request);
     }
 }

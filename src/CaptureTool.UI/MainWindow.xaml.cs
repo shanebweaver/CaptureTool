@@ -3,6 +3,7 @@ using System.Threading;
 using CaptureTool.Services.Navigation;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;
+using Windows.Foundation;
 
 namespace CaptureTool.UI;
 
@@ -17,6 +18,17 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         Activated += OnActivated;
         Closed += OnClosed;
+        SizeChanged += OnSizeChanged;
+        VisibilityChanged += OnVisibilityChanged;
+        ViewModel.NavigationRequested += OnViewModelNavigationRequested;
+    }
+
+    private async void OnActivated(object sender, WindowActivatedEventArgs args)
+    {
+        if (args.WindowActivationState == WindowActivationState.CodeActivated && ViewModel.IsUnloaded)
+        {
+            await ViewModel.LoadAsync(null, _activationCts.Token);
+        }
     }
 
     private void OnClosed(object sender, WindowEventArgs args)
@@ -30,15 +42,15 @@ public sealed partial class MainWindow : Window
         _activationCts.Dispose();
     }
 
-    private async void OnActivated(object sender, WindowActivatedEventArgs args)
+    private void OnSizeChanged(object sender, WindowSizeChangedEventArgs args)
     {
-        if (args.WindowActivationState == WindowActivationState.CodeActivated)
-        {
-            Activated -= OnActivated;
+        Size newSize = args.Size;
+        // TODO: Save size to settings
+    }
 
-            ViewModel.NavigationRequested += OnViewModelNavigationRequested;
-            await ViewModel.LoadAsync(null, _activationCts.Token);
-        }
+    private void OnVisibilityChanged(object sender, WindowVisibilityChangedEventArgs args)
+    {
+        // TODO: Figure out how this affects the size. We don't want to restore a minimized window to the previous size (0,0).
     }
 
     private void OnViewModelNavigationRequested(NavigationRequest navigationRequest)

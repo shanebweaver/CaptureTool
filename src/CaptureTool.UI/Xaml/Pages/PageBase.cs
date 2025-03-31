@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using CaptureTool.ViewModels;
-using CaptureTool.ViewModels.Loading;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -17,7 +16,7 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
     {
         try
         {
-            if (ViewModel.LoadState != LoadState.Loaded)
+            if (ViewModel.IsUnloaded)
             {
                 _ = ViewModel.LoadAsync(e.Parameter, _navigationCts.Token);
             }

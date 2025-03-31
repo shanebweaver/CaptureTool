@@ -10,7 +10,7 @@
     Title="CaptureTool"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Frame
             x:Name="NavigationFrame"
             IsNavigationStackEnabled="False"
