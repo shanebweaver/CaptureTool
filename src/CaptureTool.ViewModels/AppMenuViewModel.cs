@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using CaptureTool.Core;
 using CaptureTool.Services.Navigation;
 
 namespace CaptureTool.ViewModels;

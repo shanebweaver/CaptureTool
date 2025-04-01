@@ -1,5 +1,5 @@
 ﻿using System;
-using CaptureTool.Services.Navigation;
+using CaptureTool.Core;
 using CaptureTool.UI.Xaml.Pages;
 
 namespace CaptureTool.UI;

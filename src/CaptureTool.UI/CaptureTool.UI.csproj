@@ -48,6 +48,7 @@
   <!-- Project dependencies -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
+    <ProjectReference Include="..\CaptureTool.Core\CaptureTool.Core.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Cancellation\CaptureTool.Services.Cancellation.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Globalization\CaptureTool.Services.Globalization.csproj" />

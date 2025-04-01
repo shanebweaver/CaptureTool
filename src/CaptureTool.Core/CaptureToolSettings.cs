@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Services.Settings.Definitions;
 
-namespace CaptureTool.Services.Settings;
+namespace CaptureTool.Core;
 
 public static partial class CaptureToolSettings
 {
