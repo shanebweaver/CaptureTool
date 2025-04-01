@@ -7,6 +7,7 @@ public sealed partial class AppMenuView : AppMenuViewBase
     public AppMenuView()
     {
         InitializeComponent();
+
     }
 
     public override AppMenuViewModel ViewModel { get; } = ViewModelLocator.AppMenuView;

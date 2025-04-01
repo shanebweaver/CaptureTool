@@ -11,6 +11,9 @@
     mc:Ignorable="d">
 
     <Grid>
-        <Button x:Uid="BackButton" Command="{x:Bind ViewModel.GoBackCommand}" />
+        <TextBlock
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Text="Settings" />
     </Grid>
 </local:SettingsPageBase>

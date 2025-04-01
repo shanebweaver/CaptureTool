@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
     d:DataContext="{d:DesignInstance Type=viewmodels:AppMenuViewModel}"
+    Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
     mc:Ignorable="d">
 
     <MenuBar>
@@ -15,7 +16,7 @@
         <MenuBarItem Title="File">
             <!--  New capture  -->
             <MenuFlyoutSubItem Icon="Add" Text="New capture">
-                <MenuFlyoutItem Icon="Camera" Text="Screenshot" />
+                <MenuFlyoutItem Icon="Camera" Text="Image" />
                 <MenuFlyoutItem Icon="Video" Text="Video" />
                 <MenuFlyoutItem Icon="Microphone" Text="Audio" />
             </MenuFlyoutSubItem>

@@ -8,6 +8,8 @@ public class NavigationService : INavigationService
     private readonly Stack<NavigationRequest> _navigationStack = new();
     private INavigationHandler? _navigationHandler;
 
+    public event EventHandler<NavigationEventArgs>? Navigated;
+
     public bool CanGoBack => _navigationStack.Count > 1;
 
     public void SetNavigationHandler(INavigationHandler navigationHandler)
@@ -44,5 +46,6 @@ public class NavigationService : INavigationService
         }
 
         _navigationHandler.HandleNavigationRequest(request);
+        Navigated?.Invoke(this, new NavigationEventArgs(request));
     }
 }

@@ -43,6 +43,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         typeof(HomePageViewModel),
         typeof(SettingsPageViewModel),
         typeof(AppMenuViewModel),
+        typeof(AppTitleBarViewModel),
     ];
 
     private readonly ServiceProvider _serviceProvider;

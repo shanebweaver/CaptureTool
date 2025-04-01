@@ -21,43 +21,58 @@
         <views:AppMenuView />
 
         <!--  Content  -->
-        <Grid
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            ColumnSpacing="8"
-            Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
+        <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Row="1">
 
-            <Grid>
-                <Button
-                    Width="96"
-                    Height="96"
-                    CornerRadius="12">
-                    <SymbolIcon Symbol="Camera" />
-                </Button>
-            </Grid>
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="12">
+                <TextBlock HorizontalAlignment="Center" Text="Start a new capture" />
 
-            <Grid Column="1">
-                <Button
-                    Width="96"
-                    Height="96"
-                    CornerRadius="12">
-                    <SymbolIcon Symbol="Video" />
-                </Button>
-            </Grid>
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
 
-            <Grid Column="2">
-                <Button
-                    Width="96"
-                    Height="96"
-                    CornerRadius="12">
-                    <SymbolIcon Symbol="Microphone" />
-                </Button>
-            </Grid>
+                    <Grid>
+                        <Button
+                            Width="96"
+                            Height="96"
+                            CornerRadius="12">
+                            <StackPanel>
+                                <SymbolIcon Symbol="Camera" />
+                                <TextBlock Text="Image" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <Grid Column="1">
+                        <Button
+                            Width="96"
+                            Height="96"
+                            CornerRadius="12">
+                            <StackPanel>
+                                <SymbolIcon Symbol="Video" />
+                                <TextBlock Text="Video" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <Grid Column="2">
+                        <Button
+                            Width="96"
+                            Height="96"
+                            CornerRadius="12">
+                            <StackPanel>
+                                <SymbolIcon Symbol="Microphone" />
+                                <TextBlock Text="Audio" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </StackPanel>
         </Grid>
     </Grid>
 
