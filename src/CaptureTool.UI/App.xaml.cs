@@ -9,9 +9,9 @@ namespace CaptureTool.UI;
 
 public partial class App : Application
 {
-    public new static App Current => (App)Application.Current;
- 
-    public CaptureToolServiceProvider ServiceProvider { get; }
+    internal new static App Current => (App)Application.Current;
+
+    internal CaptureToolServiceProvider ServiceProvider { get; }
 
     private Window? _window;
 
@@ -27,7 +27,7 @@ public partial class App : Application
         Activate(args);
     }
 
-    public void Activate(AppActivationArguments args)
+    internal void Activate(AppActivationArguments args)
     {
         try
         {
@@ -59,7 +59,7 @@ public partial class App : Application
 
     private void OnWindowClosed(object sender, WindowEventArgs args)
     {
-        _window = null;
+        CleanupWindow();
         CheckExit();
     }
 
@@ -71,12 +71,24 @@ public partial class App : Application
         }
     }
 
-    private void Shutdown()
+    private void CleanupWindow()
+    {
+        if (_window != null)
+        {
+            _window.Closed -= OnWindowClosed;
+            _window.Close();
+            _window = null;
+        }
+    }
+
+    internal void Shutdown()
     {
         lock (this)
         {
             try
             {
+                CleanupWindow();
+
                 // Cancel all running tasks
                 ServiceProvider.GetRequiredService<ICancellationService>().CancelAll();
 

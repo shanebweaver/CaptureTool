@@ -36,7 +36,7 @@
                 Text="Settings" />
 
             <!--  Exit  -->
-            <MenuFlyoutItem Text="Exit">
+            <MenuFlyoutItem Command="{x:Bind ViewModel.ExitApplicationCommand}" Text="Exit">
                 <MenuFlyoutItem.KeyboardAccelerators>
                     <KeyboardAccelerator Key="F4" Modifiers="Menu" />
                 </MenuFlyoutItem.KeyboardAccelerators>
@@ -45,7 +45,8 @@
 
         <!--  Help  -->
         <MenuBarItem Title="Help">
-            <MenuFlyoutItem Text="About" />
+            <!--  About  -->
+            <MenuFlyoutItem Command="{x:Bind ViewModel.GoToAboutCommand}" Text="About" />
         </MenuBarItem>
     </MenuBar>
 </local:AppMenuViewBase>

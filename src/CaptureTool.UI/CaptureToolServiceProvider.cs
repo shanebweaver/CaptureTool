@@ -1,5 +1,6 @@
 ﻿using System;
 using CaptureTool.FeatureManagement;
+using CaptureTool.Services.AppController;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Globalization;
 using CaptureTool.Services.Localization;
@@ -26,6 +27,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
 
     // Services
     private static readonly ServiceMapping[] _serviceMappings = [
+        new(typeof(IAppController), typeof(CaptureToolAppController)),
         new(typeof(IFeatureManager), typeof(CaptureToolFeatureManager)),
         new(typeof(ICancellationService), typeof(CancellationService)),
         new(typeof(IGlobalizationService), typeof(GlobalizationService)),
