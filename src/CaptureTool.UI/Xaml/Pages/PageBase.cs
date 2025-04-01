@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using CaptureTool.ViewModels;
- Viewusing Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 
