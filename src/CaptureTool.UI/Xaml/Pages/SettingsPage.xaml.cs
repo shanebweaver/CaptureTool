@@ -1,5 +1,3 @@
-using CaptureTool.ViewModels;
-
 namespace CaptureTool.UI.Xaml.Pages;
 
 public sealed partial class SettingsPage : SettingsPageBase
@@ -8,6 +6,4 @@ public sealed partial class SettingsPage : SettingsPageBase
     {
         InitializeComponent();
     }
-
-    public override SettingsPageViewModel ViewModel { get; } = ViewModelLocator.SettingsPage;
 }

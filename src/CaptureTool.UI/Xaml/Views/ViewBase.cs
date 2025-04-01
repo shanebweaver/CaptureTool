@@ -9,7 +9,7 @@ namespace CaptureTool.UI.Xaml.Views;
 public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBase
 {
     private readonly CancellationTokenSource _loadCts = new();
-    public abstract VM ViewModel { get; }
+    public VM ViewModel { get; } = App.Current.ServiceProvider.GetService<VM>();
 
     public ViewBase()
     {

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using CaptureTool.ViewModels;
+ Viewusing Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -10,7 +11,7 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
 {
     private readonly CancellationTokenSource _loadCts = new();
 
-    public abstract VM ViewModel { get; }
+    public VM ViewModel { get; } = App.Current.ServiceProvider.GetService<VM>();
 
     public PageBase()
     {

@@ -1,5 +1,3 @@
-using CaptureTool.ViewModels;
-
 namespace CaptureTool.UI.Xaml.Pages;
 
 public sealed partial class HomePage : HomePageBase
@@ -8,6 +6,4 @@ public sealed partial class HomePage : HomePageBase
     {
         InitializeComponent();
     }
-
-    public override HomePageViewModel ViewModel { get; } = ViewModelLocator.HomePage;
 }
