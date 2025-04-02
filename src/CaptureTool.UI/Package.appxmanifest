@@ -15,7 +15,7 @@
   <mp:PhoneIdentity PhoneProductId="8e7e1342-0598-4af8-ba19-9f8c3b8d65c4" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>CaptureTool</DisplayName>
+    <DisplayName>Capture Tool</DisplayName>
     <PublisherDisplayName>shane</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -42,6 +42,14 @@
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
+      <Extensions>
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="capture-tool">
+            <uap:DisplayName>Capture Tool</uap:DisplayName>
+            <uap:Logo>Assets\StoreLogo.png</uap:Logo>
+          </uap:Protocol>
+        </uap:Extension>
+      </Extensions>
     </Application>
   </Applications>
 

@@ -11,7 +11,7 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:HomePageViewModel}"
     mc:Ignorable="d">
 
-    <Grid>
+    <Grid x:Name="BackgroundGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition />
@@ -40,10 +40,11 @@
                         <Button
                             Width="96"
                             Height="96"
+                            Command="{x:Bind ViewModel.NewDesktopCaptureCommand}"
                             CornerRadius="12">
                             <StackPanel>
-                                <SymbolIcon Symbol="Camera" />
-                                <TextBlock Text="Image" />
+                                <SymbolIcon Symbol="NewWindow" />
+                                <TextBlock Text="Desktop" />
                             </StackPanel>
                         </Button>
                     </Grid>
@@ -52,6 +53,7 @@
                         <Button
                             Width="96"
                             Height="96"
+                            Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
                             CornerRadius="12">
                             <StackPanel>
                                 <SymbolIcon Symbol="Video" />
@@ -64,6 +66,7 @@
                         <Button
                             Width="96"
                             Height="96"
+                            Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
                             CornerRadius="12">
                             <StackPanel>
                                 <SymbolIcon Symbol="Microphone" />

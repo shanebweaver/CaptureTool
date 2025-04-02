@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Services.AppController;
 using CaptureTool.Services.Logging;
+using CaptureTool.Services.SnippingTool;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel.Core;
 
@@ -8,10 +9,14 @@ namespace CaptureTool.UI;
 internal class CaptureToolAppController : IAppController
 {
     private readonly ILogService _logService;
+    private readonly ISnippingToolService _snippingToolService;
 
-    public CaptureToolAppController(ILogService logService) 
+    public CaptureToolAppController(
+        ILogService logService,
+        ISnippingToolService snippingToolService) 
     {
         _logService = logService;
+        _snippingToolService = snippingToolService;
     }
 
     public bool TryRestart()
@@ -40,5 +45,20 @@ internal class CaptureToolAppController : IAppController
     public void Shutdown()
     {
         App.Current.Shutdown();
+    }
+
+    public async void NewDesktopCapture()
+    {
+        await _snippingToolService.LaunchSnippingToolRequestAsync();
+    }
+
+    public void NewVideoCapture()
+    {
+
+    }
+
+    public void NewAudioCapture()
+    {
+
     }
 }

@@ -10,5 +10,6 @@ public readonly struct NavigationRequest
     {
         Key = key;
         Parameter = parameter;
+        IsBackNavigation = isBackNavigation;
     }
 }

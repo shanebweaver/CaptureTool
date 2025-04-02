@@ -8,6 +8,7 @@ internal static partial class ViewModelLocator
     public static MainWindowViewModel MainWindow => GetService<MainWindowViewModel>();
     public static HomePageViewModel HomePage => GetService<HomePageViewModel>();
     public static SettingsPageViewModel SettingsPage => GetService<SettingsPageViewModel>();
+    public static DesktopCaptureResultsViewModel DesktopCaptureResultsPage => GetService<DesktopCaptureResultsViewModel>();
 
     public static AppMenuViewModel AppMenuView => GetService<AppMenuViewModel>();
     public static AppTitleBarViewModel AppTitleBarView => GetService<AppTitleBarViewModel>();

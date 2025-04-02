@@ -16,6 +16,7 @@
     <ProjectReference Include="..\CaptureTool.Services.Logging\CaptureTool.Services.Logging.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Navigation\CaptureTool.Services.Navigation.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Settings\CaptureTool.Services.Settings.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.SnippingTool\CaptureTool.Services.SnippingTool.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Storage.Windows\CaptureTool.Services.Storage.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Telemetry\CaptureTool.Services.Telemetry.csproj" />
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />

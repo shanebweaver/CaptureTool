@@ -13,6 +13,7 @@ internal class ViewLocator
             NavigationKeys.Home => typeof(HomePage),
             NavigationKeys.Settings => typeof(SettingsPage),
             NavigationKeys.About => typeof(AboutPage),
+            NavigationKeys.DesktopCaptureResults => typeof(DesktopCaptureResultsPage),
             _ => throw new ArgumentOutOfRangeException(nameof(key)),
         };
     }

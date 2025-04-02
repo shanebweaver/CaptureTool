@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace CaptureTool.ViewModels;
+namespace CaptureTool.ViewModels.Commands;
 
-public class RelayCommand<T>(Action<T?> commandAction, Func<bool>? canExecute = null) : ICommand
+public class RelayCommand<T, P>(Action<T?> commandAction, Func<P?, bool>? canExecute = null) : ICommand
 {
     public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute(object? parameter)
     {
-        return canExecute?.Invoke() ?? true;
+        return canExecute?.Invoke((P?)parameter) ?? true;
     }
 
-    public bool CanExecute()
+    public bool CanExecute(P? parameter)
     {
-        return canExecute?.Invoke() ?? true;
+        return canExecute?.Invoke(parameter) ?? true;
     }
 
     public void Execute(object? parameter)

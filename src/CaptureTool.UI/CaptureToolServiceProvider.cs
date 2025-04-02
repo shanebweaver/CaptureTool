@@ -8,8 +8,11 @@ using CaptureTool.Services.Localization.Windows;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
+using CaptureTool.Services.SnippingTool;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Storage.Windows;
+using CaptureTool.Services.TaskEnvironment;
+using CaptureTool.Services.TaskEnvironment.WinUI;
 using CaptureTool.Services.Telemetry;
 using CaptureTool.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +40,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         new(typeof(INavigationService), typeof(NavigationService)),
         new(typeof(ISettingsService), typeof(SettingsService)),
         new(typeof(ITelemetryService), typeof(TelemetryService)),
+        new(typeof(ISnippingToolService), typeof(SnippingToolService)),
     ];
 
     // ViewModels
@@ -44,6 +48,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         typeof(MainWindowViewModel),
         typeof(HomePageViewModel),
         typeof(SettingsPageViewModel),
+        typeof(DesktopCaptureResultsViewModel),
         typeof(AppMenuViewModel),
         typeof(AppTitleBarViewModel),
     ];
@@ -53,6 +58,9 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
     public CaptureToolServiceProvider()
     {
         ServiceCollection collection = new();
+
+        // TaskEnvironment
+        collection.AddSingleton(GetTaskEnvironment);
 
         // Services
         foreach (var mapping in _serviceMappings)
@@ -76,5 +84,10 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
     {
         _serviceProvider.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private ITaskEnvironment GetTaskEnvironment(IServiceProvider serviceProvider)
+    {
+        return new WinUITaskEnvironment(App.Current.DispatcherQueue);
     }
 }

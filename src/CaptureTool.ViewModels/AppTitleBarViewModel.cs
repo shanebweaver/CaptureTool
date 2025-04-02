@@ -2,6 +2,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Services.Navigation;
+using CaptureTool.Services.TaskEnvironment;
+using CaptureTool.ViewModels.Commands;
 using Windows.ApplicationModel;
 
 namespace CaptureTool.ViewModels;
@@ -9,6 +11,7 @@ namespace CaptureTool.ViewModels;
 public sealed partial class AppTitleBarViewModel : ViewModelBase
 {
     private readonly INavigationService _navigationService;
+    private readonly ITaskEnvironment _taskEnvironment;
 
     public RelayCommand GoBackCommand => new(GoBack);
 
@@ -33,9 +36,12 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
         set => Set(ref _title, value);
     }
 
-    public AppTitleBarViewModel(INavigationService navigationService)
+    public AppTitleBarViewModel(
+        INavigationService navigationService,
+        ITaskEnvironment taskEnvironment)
     {
         _navigationService = navigationService;
+        _taskEnvironment = taskEnvironment;
         _icon = "ms-appx:///Assets/StoreLogo.png";
         _title = AppInfo.Current.DisplayInfo.DisplayName;
     }
@@ -53,7 +59,10 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
 
     private void OnNavigated(object? sender, NavigationEventArgs e)
     {
-        CanGoBack = _navigationService.CanGoBack;
+        _taskEnvironment.TryExecute(() =>
+        {
+            CanGoBack = _navigationService.CanGoBack;
+        });
     }
 
     public override void Unload()

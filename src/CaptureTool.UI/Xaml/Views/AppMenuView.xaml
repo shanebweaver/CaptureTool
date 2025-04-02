@@ -16,9 +16,18 @@
         <MenuBarItem Title="File">
             <!--  New capture  -->
             <MenuFlyoutSubItem Icon="Add" Text="New capture">
-                <MenuFlyoutItem Icon="Camera" Text="Image" />
-                <MenuFlyoutItem Icon="Video" Text="Video" />
-                <MenuFlyoutItem Icon="Microphone" Text="Audio" />
+                <MenuFlyoutItem
+                    Command="{x:Bind ViewModel.NewDesktopCaptureCommand}"
+                    Icon="NewWindow"
+                    Text="Desktop" />
+                <MenuFlyoutItem
+                    Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
+                    Icon="Video"
+                    Text="Video" />
+                <MenuFlyoutItem
+                    Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
+                    Icon="Microphone"
+                    Text="Audio" />
             </MenuFlyoutSubItem>
 
             <!--  Open  -->

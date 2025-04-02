@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.UI.Activation;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 
@@ -12,12 +14,14 @@ public partial class App : Application
     internal new static App Current => (App)Application.Current;
 
     internal CaptureToolServiceProvider ServiceProvider { get; }
+    internal DispatcherQueue DispatcherQueue { get; }
 
     private Window? _window;
 
     public App()
     {
         ServiceProvider = new();
+        DispatcherQueue = DispatcherQueue.GetForCurrentThread();
         InitializeComponent();
     }
 
@@ -35,6 +39,9 @@ public partial class App : Application
             {
                 case ExtendedActivationKind.Launch:
                     HandleLaunchActivation(args);
+                    break;
+                case ExtendedActivationKind.Protocol:
+                    ProtocolActivationHandler.HandleActivation(args);
                     break;
                 default:
                     throw new InvalidOperationException("Unexpected activation kind");

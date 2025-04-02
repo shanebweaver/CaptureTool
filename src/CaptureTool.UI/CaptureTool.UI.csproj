@@ -15,6 +15,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Xaml\Pages\AboutPage.xaml" />
+    <None Remove="Xaml\Pages\DesktopCaptureResultsPage.xaml" />
     <None Remove="Xaml\Views\AppTitleBarView.xaml" />
   </ItemGroup>
 
@@ -57,7 +58,9 @@
     <ProjectReference Include="..\CaptureTool.Services.Logging\CaptureTool.Services.Logging.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Navigation\CaptureTool.Services.Navigation.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Settings\CaptureTool.Services.Settings.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.SnippingTool\CaptureTool.Services.SnippingTool.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Storage.Windows\CaptureTool.Services.Storage.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.TaskEnvironment.WinUI\CaptureTool.Services.TaskEnvironment.WinUI.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Telemetry\CaptureTool.Services.Telemetry.csproj" />
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
     <ProjectReference Include="..\CaptureTool.ViewModels\CaptureTool.ViewModels.csproj" />
@@ -78,6 +81,11 @@
   -->
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Xaml\Pages\DesktopCaptureResultsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Xaml\Pages\AboutPage.xaml">
