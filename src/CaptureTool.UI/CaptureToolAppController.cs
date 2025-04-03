@@ -1,5 +1,8 @@
-﻿using CaptureTool.Services.AppController;
+﻿using System;
+using CaptureTool.Core;
+using CaptureTool.Services.AppController;
 using CaptureTool.Services.Logging;
+using CaptureTool.Services.Navigation;
 using CaptureTool.Services.SnippingTool;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel.Core;
@@ -9,13 +12,18 @@ namespace CaptureTool.UI;
 internal class CaptureToolAppController : IAppController
 {
     private readonly ILogService _logService;
+    private readonly INavigationService _navigationService;
     private readonly ISnippingToolService _snippingToolService;
+
+    public event EventHandler<AppWindowPresenterAction>? AppWindowPresentationUpdateRequested;
 
     public CaptureToolAppController(
         ILogService logService,
+        INavigationService navigationService,
         ISnippingToolService snippingToolService) 
     {
         _logService = logService;
+        _navigationService = navigationService;
         _snippingToolService = snippingToolService;
     }
 
@@ -49,6 +57,9 @@ internal class CaptureToolAppController : IAppController
 
     public async void NewDesktopCapture()
     {
+        // Show loading screen
+        _navigationService.Navigate(NavigationRoutes.Loading, null);
+        UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
         await _snippingToolService.LaunchSnippingToolRequestAsync();
     }
 
@@ -60,5 +71,10 @@ internal class CaptureToolAppController : IAppController
     public void NewAudioCapture()
     {
 
+    }
+
+    public void UpdateAppWindowPresentation(AppWindowPresenterAction action)
+    {
+        AppWindowPresentationUpdateRequested?.Invoke(this, action);
     }
 }

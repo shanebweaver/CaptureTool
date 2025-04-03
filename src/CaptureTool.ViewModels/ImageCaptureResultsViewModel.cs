@@ -7,7 +7,7 @@ using Windows.Storage;
 
 namespace CaptureTool.ViewModels;
 
-public class DesktopCaptureResultsViewModel : ViewModelBase
+public class ImageCaptureResultsViewModel : ViewModelBase
 {
     private readonly ICancellationService _cancellationService;
 
@@ -18,7 +18,7 @@ public class DesktopCaptureResultsViewModel : ViewModelBase
         set => Set(ref _imageFile, value);
     }
 
-    public DesktopCaptureResultsViewModel(
+    public ImageCaptureResultsViewModel(
         ICancellationService cancellationService)
     {
         _cancellationService = cancellationService;

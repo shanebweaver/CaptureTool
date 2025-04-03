@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using CaptureTool.Services.AppController;
 using Windows.System;
 
 namespace CaptureTool.Services.SnippingTool;

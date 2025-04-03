@@ -28,12 +28,12 @@ public class NavigationService : INavigationService
     {
         _navigationStack.Pop();
         NavigationRequest backRequest = _navigationStack.Peek();
-        Navigate(new NavigationRequest(backRequest.Key, backRequest.Parameter, true));
+        Navigate(new NavigationRequest(backRequest.Route, backRequest.Parameter, true));
     }
 
-    public void Navigate(string key, object? parameter = null)
+    public void Navigate(NavigationRoute route, object? parameter = null)
     {
-        NavigationRequest request = new(key, parameter);
+        NavigationRequest request = new(route, parameter);
         _navigationStack.Push(request);
         Navigate(request);
     }

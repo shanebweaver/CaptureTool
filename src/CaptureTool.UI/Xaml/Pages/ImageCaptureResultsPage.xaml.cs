@@ -6,11 +6,11 @@ using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace CaptureTool.UI.Xaml.Pages;
 
-public sealed partial class DesktopCaptureResultsPage : DesktopCaptureResultsPageBase
+public sealed partial class ImageCaptureResultsPage : ImageCaptureResultsPageBase
 {
-    public DesktopCaptureResultsPage()
+    public ImageCaptureResultsPage()
     {
-        this.InitializeComponent();
+        InitializeComponent();
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
@@ -18,7 +18,7 @@ public sealed partial class DesktopCaptureResultsPage : DesktopCaptureResultsPag
     {
         switch (e.PropertyName)
         {
-            case nameof(DesktopCaptureResultsViewModel.ImageFile):
+            case nameof(ImageCaptureResultsViewModel.ImageFile):
 
                 DispatcherQueue.TryEnqueue(HandleImageFileUpdated);
                 break;
@@ -33,7 +33,7 @@ public sealed partial class DesktopCaptureResultsPage : DesktopCaptureResultsPag
             {
                 BitmapImage bitmapImage = new(new Uri(ViewModel.ImageFile.Path, UriKind.RelativeOrAbsolute));
                 Brush backgroundBrush = new ImageBrush() { ImageSource = bitmapImage };
-                this.Background = backgroundBrush;
+                Background = backgroundBrush;
             }
             catch (Exception ex)
             {

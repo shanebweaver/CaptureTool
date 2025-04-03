@@ -57,12 +57,12 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     private void GoToSettings()
     {
-        _navigationService.Navigate(NavigationKeys.Settings);
+        _navigationService.Navigate(NavigationRoutes.Settings);
     }
 
     private void GoToAbout()
     {
-        _navigationService.Navigate(NavigationKeys.About);
+        _navigationService.Navigate(NavigationRoutes.About);
     }
 
     private void ExitApplication()

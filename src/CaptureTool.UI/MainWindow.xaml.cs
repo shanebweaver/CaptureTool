@@ -1,12 +1,12 @@
 using System;
 using System.Threading;
+using CaptureTool.Services.AppController;
 using CaptureTool.Services.Navigation;
+using CaptureTool.UI.Xaml.Pages;
 using CaptureTool.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Media.Animation;
-using Windows.Foundation;
 using WinRT.Interop;
 
 namespace CaptureTool.UI;
@@ -32,6 +32,7 @@ public sealed partial class MainWindow : Window
         SizeChanged += OnSizeChanged;
         VisibilityChanged += OnVisibilityChanged;
         ViewModel.NavigationRequested += OnViewModelNavigationRequested;
+        ViewModel.PresentationUpdateRequested += OnViewModelPresentationUpdateRequested;
     }
 
     private AppWindow GetAppWindowForCurrentWindow()
@@ -43,10 +44,9 @@ public sealed partial class MainWindow : Window
 
     private async void OnActivated(object sender, WindowActivatedEventArgs args)
     {
-        AppWindow.MoveAndResize(new(48, 48, 540, 320), DisplayArea.Primary);
-
         if (args.WindowActivationState == WindowActivationState.CodeActivated && ViewModel.IsUnloaded)
         {
+            AppWindow.MoveAndResize(new(48, 48, 540, 320), DisplayArea.Primary);
             await ViewModel.LoadAsync(null, _activationCts.Token);
         }
     }
@@ -57,6 +57,7 @@ public sealed partial class MainWindow : Window
         Closed -= OnClosed;
 
         ViewModel.NavigationRequested -= OnViewModelNavigationRequested;
+        ViewModel.PresentationUpdateRequested -= OnViewModelPresentationUpdateRequested;
 
         _activationCts.Cancel();
         _activationCts.Dispose();
@@ -64,7 +65,7 @@ public sealed partial class MainWindow : Window
 
     private void OnSizeChanged(object sender, WindowSizeChangedEventArgs args)
     {
-        Size newSize = args.Size;
+        //Size newSize = args.Size;
         // TODO: Save size to settings
     }
 
@@ -83,8 +84,30 @@ public sealed partial class MainWindow : Window
             }
             else
             {
-                Type viewType = ViewLocator.GetViewType(navigationRequest.Key);
-                NavigationFrame.Navigate(viewType, navigationRequest.Parameter);
+                Type pageType = PageLocator.GetPageType(navigationRequest.Route);
+                NavigationFrame.Navigate(pageType, navigationRequest.Parameter);
+            }
+        });
+    }
+
+    private void OnViewModelPresentationUpdateRequested(AppWindowPresenterAction action)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (AppWindow.Presenter is OverlappedPresenter presenter)
+            {
+                switch (action)
+                {
+                    case AppWindowPresenterAction.Restore:
+                        presenter.Restore();
+                        break;
+                    case AppWindowPresenterAction.Minimize:
+                        presenter.Minimize();
+                        break;
+                    case AppWindowPresenterAction.Maximize:
+                        presenter.Maximize();
+                        break;
+                }
             }
         });
     }

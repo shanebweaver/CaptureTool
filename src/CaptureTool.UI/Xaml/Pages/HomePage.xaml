@@ -11,72 +11,60 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:HomePageViewModel}"
     mc:Ignorable="d">
 
-    <Grid x:Name="BackgroundGrid">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition />
-        </Grid.RowDefinitions>
+    <Grid Row="1">
+        <StackPanel
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="12">
+            <TextBlock HorizontalAlignment="Center" Text="Start a new capture" />
 
-        <!--  Menu  -->
-        <views:AppMenuView />
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
 
-        <!--  Content  -->
-        <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Row="1">
-
-            <StackPanel
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Spacing="12">
-                <TextBlock HorizontalAlignment="Center" Text="Start a new capture" />
-
-                <Grid ColumnSpacing="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-
-                    <Grid>
-                        <Button
-                            Width="96"
-                            Height="96"
-                            Command="{x:Bind ViewModel.NewDesktopCaptureCommand}"
-                            CornerRadius="12">
-                            <StackPanel>
-                                <SymbolIcon Symbol="NewWindow" />
-                                <TextBlock Text="Desktop" />
-                            </StackPanel>
-                        </Button>
-                    </Grid>
-
-                    <Grid Column="1">
-                        <Button
-                            Width="96"
-                            Height="96"
-                            Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
-                            CornerRadius="12">
-                            <StackPanel>
-                                <SymbolIcon Symbol="Video" />
-                                <TextBlock Text="Video" />
-                            </StackPanel>
-                        </Button>
-                    </Grid>
-
-                    <Grid Column="2">
-                        <Button
-                            Width="96"
-                            Height="96"
-                            Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
-                            CornerRadius="12">
-                            <StackPanel>
-                                <SymbolIcon Symbol="Microphone" />
-                                <TextBlock Text="Audio" />
-                            </StackPanel>
-                        </Button>
-                    </Grid>
+                <Grid>
+                    <Button
+                        Width="96"
+                        Height="96"
+                        Command="{x:Bind ViewModel.NewDesktopCaptureCommand}"
+                        CornerRadius="12">
+                        <StackPanel>
+                            <SymbolIcon Symbol="NewWindow" />
+                            <TextBlock Text="Desktop" />
+                        </StackPanel>
+                    </Button>
                 </Grid>
-            </StackPanel>
-        </Grid>
+
+                <Grid Column="1">
+                    <Button
+                        Width="96"
+                        Height="96"
+                        Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
+                        CornerRadius="12">
+                        <StackPanel>
+                            <SymbolIcon Symbol="Video" />
+                            <TextBlock Text="Video" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <Grid Column="2">
+                    <Button
+                        Width="96"
+                        Height="96"
+                        Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
+                        CornerRadius="12">
+                        <StackPanel>
+                            <SymbolIcon Symbol="Microphone" />
+                            <TextBlock Text="Audio" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Grid>
+        </StackPanel>
     </Grid>
 
 </local:HomePageBase>

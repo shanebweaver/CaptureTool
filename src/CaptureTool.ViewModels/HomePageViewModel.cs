@@ -72,8 +72,9 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     private async void OnSnippingToolResponseReceived(object? sender, SnippingToolResponse e)
     {
+        _appController.UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
         var file = await e.GetFileAsync();
-        _navigationService.Navigate(NavigationKeys.DesktopCaptureResults, file);
+        _navigationService.Navigate(NavigationRoutes.ImageCaptureResults, file);
     }
 
     public override void Unload()

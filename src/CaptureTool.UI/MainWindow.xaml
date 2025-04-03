@@ -14,13 +14,18 @@
     <Grid x:Name="RootGrid" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
 
         <views:AppTitleBarView />
 
         <Grid Row="1">
-            <Frame x:Name="NavigationFrame" SourcePageType="pages:StartupPage" />
+            <views:AppMenuView />
+        </Grid>
+
+        <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Row="2">
+            <Frame x:Name="NavigationFrame" SourcePageType="pages:LoadingPage" />
         </Grid>
     </Grid>
 </Window>

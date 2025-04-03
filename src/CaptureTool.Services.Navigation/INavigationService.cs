@@ -7,7 +7,7 @@ public interface INavigationService
     event EventHandler<NavigationEventArgs> Navigated;
     bool CanGoBack { get; }
     void SetNavigationHandler(INavigationHandler handler);
-    void Navigate(string key, object? parameter = null);
+    void Navigate(NavigationRoute route, object? parameter = null);
     void GoBack();
     void ClearNavigationHistory();
 }

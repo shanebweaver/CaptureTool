@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Core;
+using CaptureTool.Services.AppController;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
@@ -12,17 +13,21 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHandler
 {
+    private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
     private readonly INavigationService _navigationService;
     private readonly ISettingsService _settingsService;
 
     public event Action<NavigationRequest>? NavigationRequested;
+    public event Action<AppWindowPresenterAction>? PresentationUpdateRequested;
 
     public MainWindowViewModel(
+        IAppController appController,
         ICancellationService cancellationService,
         ISettingsService settingsService,
         INavigationService navigationService)
     {
+        _appController = appController;
         _cancellationService = cancellationService;
         _navigationService = navigationService;
         _settingsService = settingsService;
@@ -39,6 +44,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
             _navigationService.SetNavigationHandler(this);
             cts.Token.ThrowIfCancellationRequested();
 
+            _appController.AppWindowPresentationUpdateRequested += OnAppWindowPresentationUpdateRequested;
+
             // Settings service
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string settingsFilePath = Path.Combine(appDataPath, "CaptureTool", "Settings.json");
@@ -46,7 +53,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
             cts.Token.ThrowIfCancellationRequested();
 
             // Go home
-            _navigationService.Navigate(NavigationKeys.Home);
+            _navigationService.Navigate(NavigationRoutes.Home);
         }
         catch (OperationCanceledException)
         {
@@ -58,6 +65,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
         }
 
         await base.LoadAsync(parameter, cancellationToken);
+    }
+
+    private void OnAppWindowPresentationUpdateRequested(object? sender, AppWindowPresenterAction e)
+    {
+        PresentationUpdateRequested?.Invoke(e);
     }
 
     public override void Unload()
