@@ -15,8 +15,6 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Xaml\Pages\AboutPage.xaml" />
-    <None Remove="Xaml\Pages\AudioCaptureResultsPage.xaml" />
-    <None Remove="Xaml\Pages\VideoCaptureResultsPage.xaml" />
     <None Remove="Xaml\Views\AppTitleBarView.xaml" />
   </ItemGroup>
 
@@ -84,17 +82,7 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Xaml\Pages\VideoCaptureResultsPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Xaml\Pages\AudioCaptureResultsPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Xaml\Pages\ImageCaptureResultsPage.xaml">
+    <Page Update="Xaml\Pages\ImageEditPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

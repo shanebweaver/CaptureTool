@@ -5,7 +5,5 @@ namespace CaptureTool.UI;
 
 internal static partial class ViewModelLocator
 {
-    public static MainWindowViewModel MainWindow => GetService<MainWindowViewModel>();
-
-    private static T GetService<T>() where T : notnull => App.Current.ServiceProvider.GetRequiredService<T>();
+    public static T GetViewModel<T>() where T : ViewModelBase => App.Current.ServiceProvider.GetRequiredService<T>();
 }

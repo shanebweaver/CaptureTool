@@ -6,9 +6,9 @@ using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace CaptureTool.UI.Xaml.Pages;
 
-public sealed partial class ImageCaptureResultsPage : ImageCaptureResultsPageBase
+public sealed partial class ImageEditPage : ImageEditPageBase
 {
-    public ImageCaptureResultsPage()
+    public ImageEditPage()
     {
         InitializeComponent();
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
@@ -18,7 +18,7 @@ public sealed partial class ImageCaptureResultsPage : ImageCaptureResultsPageBas
     {
         switch (e.PropertyName)
         {
-            case nameof(ImageCaptureResultsViewModel.ImageFile):
+            case nameof(ImageEditPageViewModel.ImageFile):
 
                 DispatcherQueue.TryEnqueue(HandleImageFileUpdated);
                 break;

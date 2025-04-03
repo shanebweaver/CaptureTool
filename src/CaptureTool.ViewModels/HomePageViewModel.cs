@@ -25,9 +25,30 @@ public sealed partial class HomePageViewModel : ViewModelBase
     private readonly ISettingsService _settingsService;
     private readonly ISnippingToolService _snippingToolService;
 
-    public ICommand NewDesktopCaptureCommand => new RelayCommand(NewDesktopCapture);
-    public ICommand NewVideoCaptureCommand => new RelayCommand(NewVideoCapture);
-    public ICommand NewAudioCaptureCommand => new RelayCommand(NewAudioCapture);
+    public ICommand NewDesktopCaptureCommand => new RelayCommand(NewDesktopCapture, () => IsDesktopCaptureEnabled);
+    public ICommand NewAudioCaptureCommand => new RelayCommand(NewAudioCapture, () => IsAudioCaptureEnabled);
+    public ICommand NewVideoCaptureCommand => new RelayCommand(NewVideoCapture, () => IsVideoCaptureEnabled);
+
+    private bool _isDesktopCaptureEnabled;
+    public bool IsDesktopCaptureEnabled
+    {
+        get => _isDesktopCaptureEnabled;
+        set => Set(ref _isDesktopCaptureEnabled, value);
+    }
+
+    private bool _isAudioCaptureEnabled;
+    public bool IsAudioCaptureEnabled
+    {
+        get => _isAudioCaptureEnabled;
+        set => Set(ref _isAudioCaptureEnabled, value);
+    }
+
+    private bool _isVideoCaptureEnabled;
+    public bool IsVideoCaptureEnabled
+    {
+        get => _isVideoCaptureEnabled;
+        set => Set(ref _isVideoCaptureEnabled, value);
+    }
 
     public HomePageViewModel(
         IAppController appController,
@@ -55,8 +76,11 @@ public sealed partial class HomePageViewModel : ViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            // Load here
             _snippingToolService.ResponseReceived += OnSnippingToolResponseReceived;
+
+            IsDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
+            IsAudioCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_AudioCapture);
+            IsVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_VideoCapture);
         }
         catch (OperationCanceledException)
         {
@@ -73,12 +97,27 @@ public sealed partial class HomePageViewModel : ViewModelBase
     private async void OnSnippingToolResponseReceived(object? sender, SnippingToolResponse e)
     {
         _appController.UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
-        var file = await e.GetFileAsync();
-        _navigationService.Navigate(NavigationRoutes.ImageCaptureResults, file);
+
+        if (e.Code == 200)
+        {
+            var file = await e.GetFileAsync();
+            _navigationService.Navigate(NavigationRoutes.ImageEdit, file);
+        }
+        else
+        {
+            _navigationService.ClearNavigationHistory();
+            _navigationService.Navigate(NavigationRoutes.Home, null); // TODO: Do something with the error.
+        }
     }
 
     public override void Unload()
     {
+        _snippingToolService.ResponseReceived -= OnSnippingToolResponseReceived;
+
+        _isDesktopCaptureEnabled = false;
+        _isAudioCaptureEnabled = false;
+        _isVideoCaptureEnabled = false;
+
         base.Unload();
     }
 

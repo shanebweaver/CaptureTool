@@ -20,9 +20,9 @@ internal class PageLocator
         {
             return typeof(AboutPage);
         }
-        else if (route == NavigationRoutes.ImageCaptureResults)
+        else if (route == NavigationRoutes.ImageEdit)
         {
-            return typeof(ImageCaptureResultsPage);
+            return typeof(ImageEditPage);
         }
         else if (route == NavigationRoutes.Loading)
         {

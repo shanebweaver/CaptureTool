@@ -13,7 +13,7 @@ namespace CaptureTool.UI;
 
 public sealed partial class MainWindow : Window
 {
-    public MainWindowViewModel ViewModel { get; } = ViewModelLocator.MainWindow;
+    public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
 
     private readonly CancellationTokenSource _activationCts = new();
 
