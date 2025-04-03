@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.AppController;
@@ -18,12 +19,12 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     private readonly IAppController _appController;
     private readonly IFeatureManager _featureManager;
 
-    public RelayCommand NewDesktopCaptureCommand => new(NewDesktopCapture, () => IsDesktopCaptureEnabled);
-    public RelayCommand NewAudioCaptureCommand => new(NewAudioCapture, () => IsAudioCaptureEnabled);
-    public RelayCommand NewVideoCaptureCommand => new(NewVideoCapture, () => IsVideoCaptureEnabled);
-    public RelayCommand GoToSettingsCommand => new(GoToSettings);
-    public RelayCommand GoToAboutCommand => new(GoToAbout);
-    public RelayCommand ExitApplicationCommand => new(ExitApplication);
+    public ICommand NewDesktopCaptureCommand => new RelayCommand(NewDesktopCapture, () => IsDesktopCaptureEnabled);
+    public ICommand NewAudioCaptureCommand => new RelayCommand(NewAudioCapture, () => IsAudioCaptureEnabled);
+    public ICommand NewVideoCaptureCommand => new RelayCommand(NewVideoCapture, () => IsVideoCaptureEnabled);
+    public ICommand GoToSettingsCommand => new RelayCommand(GoToSettings);
+    public ICommand GoToAboutCommand => new RelayCommand(GoToAbout);
+    public ICommand ExitApplicationCommand => new RelayCommand(ExitApplication);
 
     private bool _isDesktopCaptureEnabled;
     public bool IsDesktopCaptureEnabled

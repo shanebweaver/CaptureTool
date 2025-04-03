@@ -82,6 +82,11 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Xaml\Pages\DesktopCaptureOptionsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
     <Page Update="Xaml\Pages\ImageEditPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -50,6 +50,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         typeof(SettingsPageViewModel),
         typeof(LoadingPageViewModel),
         typeof(ImageEditPageViewModel),
+        typeof(DesktopCaptureOptionsPageViewModel),
         typeof(AppMenuViewModel),
         typeof(AppTitleBarViewModel),
     ];

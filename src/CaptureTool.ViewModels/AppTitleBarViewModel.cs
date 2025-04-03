@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.ViewModels.Commands;
@@ -13,7 +14,7 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly ITaskEnvironment _taskEnvironment;
 
-    public RelayCommand GoBackCommand => new(GoBack);
+    public ICommand GoBackCommand => new RelayCommand(GoBack);
 
     private bool _canGoBack;
     public bool CanGoBack

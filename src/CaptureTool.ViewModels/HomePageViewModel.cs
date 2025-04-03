@@ -28,6 +28,9 @@ public sealed partial class HomePageViewModel : ViewModelBase
     public ICommand NewDesktopCaptureCommand => new RelayCommand(NewDesktopCapture, () => IsDesktopCaptureEnabled);
     public ICommand NewAudioCaptureCommand => new RelayCommand(NewAudioCapture, () => IsAudioCaptureEnabled);
     public ICommand NewVideoCaptureCommand => new RelayCommand(NewVideoCapture, () => IsVideoCaptureEnabled);
+    public ICommand DesktopCaptureOptionsCommand => new RelayCommand(DesktopCaptureOptions, () => IsDesktopCaptureOptionsEnabled);
+    public ICommand AudioCaptureOptionsCommand => new RelayCommand(AudioCaptureOptions, () => IsAudioCaptureOptionsEnabled);
+    public ICommand VideoCaptureOptionsCommand => new RelayCommand(VideoCaptureOptions, () => IsVideoCaptureOptionsEnabled);
 
     private bool _isDesktopCaptureEnabled;
     public bool IsDesktopCaptureEnabled
@@ -48,6 +51,27 @@ public sealed partial class HomePageViewModel : ViewModelBase
     {
         get => _isVideoCaptureEnabled;
         set => Set(ref _isVideoCaptureEnabled, value);
+    }
+
+    private bool _isDesktopCaptureOptionsEnabled;
+    public bool IsDesktopCaptureOptionsEnabled
+    {
+        get => _isDesktopCaptureOptionsEnabled;
+        set => Set(ref _isDesktopCaptureOptionsEnabled, value);
+    }
+
+    private bool _isAudioCaptureOptionsEnabled;
+    public bool IsAudioCaptureOptionsEnabled
+    {
+        get => _isAudioCaptureOptionsEnabled;
+        set => Set(ref _isAudioCaptureOptionsEnabled, value);
+    }
+
+    private bool _isVideoCaptureOptionsEnabled;
+    public bool IsVideoCaptureOptionsEnabled
+    {
+        get => _isVideoCaptureOptionsEnabled;
+        set => Set(ref _isVideoCaptureOptionsEnabled, value);
     }
 
     public HomePageViewModel(
@@ -81,6 +105,9 @@ public sealed partial class HomePageViewModel : ViewModelBase
             IsDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
             IsAudioCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_AudioCapture);
             IsVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_VideoCapture);
+            IsDesktopCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCaptureOptions);
+            IsAudioCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_AudioCaptureOptions);
+            IsVideoCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_VideoCaptureOptions);
         }
         catch (OperationCanceledException)
         {
@@ -134,5 +161,20 @@ public sealed partial class HomePageViewModel : ViewModelBase
     private void NewAudioCapture()
     {
         _appController.NewAudioCapture();
+    }
+
+    private void DesktopCaptureOptions()
+    {
+        _navigationService.Navigate(NavigationRoutes.DesktopCaptureOptions, null);
+    }
+
+    private void AudioCaptureOptions()
+    {
+        throw new NotImplementedException();
+    }
+
+    private void VideoCaptureOptions()
+    {
+        throw new NotImplementedException();
     }
 }

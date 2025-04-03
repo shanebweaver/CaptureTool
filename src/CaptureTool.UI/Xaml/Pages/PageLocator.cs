@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CaptureTool.Core;
 using CaptureTool.Services.Navigation;
 
@@ -6,31 +7,22 @@ namespace CaptureTool.UI.Xaml.Pages;
 
 internal class PageLocator
 {
+    private static readonly Dictionary<string, Type> _routeMappings = new() {
+        { NavigationRoutes.Home.RouteName, typeof(HomePage) },
+        { NavigationRoutes.About.RouteName, typeof(AboutPage) },
+        { NavigationRoutes.Settings.RouteName, typeof(SettingsPage) },
+        { NavigationRoutes.Loading.RouteName, typeof(LoadingPage) },
+        { NavigationRoutes.DesktopCaptureOptions.RouteName, typeof(DesktopCaptureOptionsPage) },
+        { NavigationRoutes.ImageEdit.RouteName, typeof(ImageEditPage) },
+    };
+
     public static Type GetPageType(NavigationRoute route)
     {
-        if (route == NavigationRoutes.Home)
+        if (_routeMappings.TryGetValue(route.RouteName, out var pageType))
         {
-            return typeof(HomePage);
+            return pageType;
         }
-        else if (route == NavigationRoutes.Settings)
-        {
-            return typeof(SettingsPage);
-        }
-        else if (route == NavigationRoutes.About)
-        {
-            return typeof(AboutPage);
-        }
-        else if (route == NavigationRoutes.ImageEdit)
-        {
-            return typeof(ImageEditPage);
-        }
-        else if (route == NavigationRoutes.Loading)
-        {
-            return typeof(LoadingPage);
-        }
-        else
-        {
-            throw new ArgumentOutOfRangeException(route.RouteName);
-        };
+
+        throw new ArgumentOutOfRangeException(route.RouteName);
     }
 }

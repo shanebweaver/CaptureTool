@@ -57,6 +57,8 @@ internal class CaptureToolAppController : IAppController
 
     public async void NewDesktopCapture()
     {
+        // TODO: Check the feature state
+
         // Show loading screen
         _navigationService.Navigate(NavigationRoutes.Loading, null);
         UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
