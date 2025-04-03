@@ -27,6 +27,7 @@
 
                 <StackPanel Spacing="4">
                     <Button
+                        x:Name="NewDesktopCaptureButton"
                         Width="96"
                         Height="96"
                         HorizontalAlignment="Center"

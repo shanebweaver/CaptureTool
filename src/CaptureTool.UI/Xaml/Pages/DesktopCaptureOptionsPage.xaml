@@ -13,6 +13,7 @@
 
     <Grid>
         <Button
+            x:Name="NewDesktopCaptureButton"
             Width="96"
             Height="96"
             Command="{x:Bind ViewModel.NewDesktopCaptureCommand}"
