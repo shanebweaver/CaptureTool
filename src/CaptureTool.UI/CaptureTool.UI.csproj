@@ -13,10 +13,6 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="Xaml\Pages\AboutPage.xaml" />
-    <None Remove="Xaml\Views\AppTitleBarView.xaml" />
-  </ItemGroup>
 
   <!-- Project assets -->
   <ItemGroup>
@@ -39,11 +35,6 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
     <PackageReference Include="Microsoft.WindowsAppSDK" />
-  </ItemGroup>
-
-  <!-- Empty folders -->
-  <ItemGroup>
-    <Folder Include="Xaml\UserControls\" />
   </ItemGroup>
 
   <!-- Project dependencies -->
@@ -81,44 +72,36 @@
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
   </ItemGroup>
+
+  <!-- XAML resources -->
   <ItemGroup>
+    <Page Update="Xaml\UserControls\NewCaptureButton.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Xaml\Pages\DesktopCaptureOptionsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
     <Page Update="Xaml\Pages\ImageEditPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
     <Page Update="Xaml\Pages\AboutPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
     <Page Update="Xaml\Views\AppTitleBarView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
     <Page Update="Xaml\Views\AppMenuView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
     <Page Update="Xaml\Pages\LoadingPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
     <Page Update="Xaml\Pages\SettingsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-
-  <!-- XAML definitions -->
-  <ItemGroup>
     <Page Update="Xaml\Pages\HomePage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

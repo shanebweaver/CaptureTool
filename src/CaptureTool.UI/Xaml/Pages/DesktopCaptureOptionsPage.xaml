@@ -6,22 +6,17 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:usercontrols="using:CaptureTool.UI.Xaml.UserControls"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
     d:DataContext="{d:DesignInstance Type=viewmodels:DesktopCaptureOptionsPageViewModel}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mc:Ignorable="d">
 
     <Grid>
-        <Button
+        <usercontrols:NewCaptureButton
             x:Name="NewDesktopCaptureButton"
-            Width="96"
-            Height="96"
+            x:Uid="NewCaptureButton_Desktop"
             Command="{x:Bind ViewModel.NewDesktopCaptureCommand}"
-            CornerRadius="12">
-            <StackPanel>
-                <SymbolIcon Symbol="NewWindow" />
-                <TextBlock Text="Desktop" />
-            </StackPanel>
-        </Button>
+            Symbol="{StaticResource NewDesktopCaptureSymbol}" />
     </Grid>
 </local:DesktopCaptureOptionsPageBase>

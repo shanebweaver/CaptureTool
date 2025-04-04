@@ -21,7 +21,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     public ICommand NewDesktopCaptureCommand => new RelayCommand(NewDesktopCapture, () => IsDesktopCaptureEnabled);
     public ICommand NewAudioCaptureCommand => new RelayCommand(NewAudioCapture, () => IsAudioCaptureEnabled);
-    public ICommand NewVideoCaptureCommand => new RelayCommand(NewVideoCapture, () => IsVideoCaptureEnabled);
+    public ICommand NewCameraCaptureCommand => new RelayCommand(NewCameraCapture, () => IsCameraCaptureEnabled);
     public ICommand GoToSettingsCommand => new RelayCommand(GoToSettings);
     public ICommand GoToAboutCommand => new RelayCommand(GoToAbout);
     public ICommand ExitApplicationCommand => new RelayCommand(ExitApplication);
@@ -40,11 +40,11 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         set => Set(ref _isAudioCaptureEnabled, value);
     }
 
-    private bool _isVideoCaptureEnabled;
-    public bool IsVideoCaptureEnabled
+    private bool _isCameraCaptureEnabled;
+    public bool IsCameraCaptureEnabled
     {
-        get => _isVideoCaptureEnabled;
-        set => Set(ref _isVideoCaptureEnabled, value);
+        get => _isCameraCaptureEnabled;
+        set => Set(ref _isCameraCaptureEnabled, value);
     }
 
     public AppMenuViewModel(
@@ -69,7 +69,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         {
             IsDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
             IsAudioCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_AudioCapture);
-            IsVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_VideoCapture);
+            IsCameraCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_CameraCapture);
         }
         catch (OperationCanceledException)
         {
@@ -93,9 +93,9 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         _appController.NewDesktopCapture();
     }
 
-    private void NewVideoCapture()
+    private void NewCameraCapture()
     {
-        _appController.NewVideoCapture();
+        _appController.NewCameraCapture();
     }
 
     private void NewAudioCapture()

@@ -1,3 +1,4 @@
+using CaptureTool.Core;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -12,14 +13,22 @@ public sealed partial class HomePage : HomePageBase
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("backAnimation");
-        animation?.TryStart(NewDesktopCaptureButton);
+        if (e.NavigationMode == NavigationMode.Back)
+        {
+            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("backAnimation");
+            animation?.TryStart(NewDesktopCaptureButton);
+        }
+
         base.OnNavigatedTo(e);
     }
 
     protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
     {
-        ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation", NewDesktopCaptureButton);
+        if (e.SourcePageType == PageLocator.GetPageType(NavigationRoutes.DesktopCaptureOptions))
+        {
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation", NewDesktopCaptureButton);
+        }
+
         base.OnNavigatingFrom(e);
     }
 }

@@ -27,10 +27,10 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     public ICommand NewDesktopCaptureCommand => new RelayCommand(NewDesktopCapture, () => IsDesktopCaptureEnabled);
     public ICommand NewAudioCaptureCommand => new RelayCommand(NewAudioCapture, () => IsAudioCaptureEnabled);
-    public ICommand NewVideoCaptureCommand => new RelayCommand(NewVideoCapture, () => IsVideoCaptureEnabled);
+    public ICommand NewCameraCaptureCommand => new RelayCommand(NewCameraCapture, () => IsCameraCaptureEnabled);
     public ICommand DesktopCaptureOptionsCommand => new RelayCommand(DesktopCaptureOptions, () => IsDesktopCaptureOptionsEnabled);
     public ICommand AudioCaptureOptionsCommand => new RelayCommand(AudioCaptureOptions, () => IsAudioCaptureOptionsEnabled);
-    public ICommand VideoCaptureOptionsCommand => new RelayCommand(VideoCaptureOptions, () => IsVideoCaptureOptionsEnabled);
+    public ICommand CameraCaptureOptionsCommand => new RelayCommand(CameraCaptureOptions, () => IsCameraCaptureOptionsEnabled);
 
     private bool _isDesktopCaptureEnabled;
     public bool IsDesktopCaptureEnabled
@@ -46,11 +46,11 @@ public sealed partial class HomePageViewModel : ViewModelBase
         set => Set(ref _isAudioCaptureEnabled, value);
     }
 
-    private bool _isVideoCaptureEnabled;
-    public bool IsVideoCaptureEnabled
+    private bool _isCameraCaptureEnabled;
+    public bool IsCameraCaptureEnabled
     {
-        get => _isVideoCaptureEnabled;
-        set => Set(ref _isVideoCaptureEnabled, value);
+        get => _isCameraCaptureEnabled;
+        set => Set(ref _isCameraCaptureEnabled, value);
     }
 
     private bool _isDesktopCaptureOptionsEnabled;
@@ -67,11 +67,11 @@ public sealed partial class HomePageViewModel : ViewModelBase
         set => Set(ref _isAudioCaptureOptionsEnabled, value);
     }
 
-    private bool _isVideoCaptureOptionsEnabled;
-    public bool IsVideoCaptureOptionsEnabled
+    private bool _isCameraCaptureOptionsEnabled;
+    public bool IsCameraCaptureOptionsEnabled
     {
-        get => _isVideoCaptureOptionsEnabled;
-        set => Set(ref _isVideoCaptureOptionsEnabled, value);
+        get => _isCameraCaptureOptionsEnabled;
+        set => Set(ref _isCameraCaptureOptionsEnabled, value);
     }
 
     public HomePageViewModel(
@@ -104,10 +104,10 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
             IsDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
             IsAudioCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_AudioCapture);
-            IsVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_VideoCapture);
+            IsCameraCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_CameraCapture);
             IsDesktopCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCaptureOptions);
             IsAudioCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_AudioCaptureOptions);
-            IsVideoCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_VideoCaptureOptions);
+            IsCameraCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_CameraCaptureOptions);
         }
         catch (OperationCanceledException)
         {
@@ -143,7 +143,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
         _isDesktopCaptureEnabled = false;
         _isAudioCaptureEnabled = false;
-        _isVideoCaptureEnabled = false;
+        _isCameraCaptureEnabled = false;
 
         base.Unload();
     }
@@ -153,9 +153,9 @@ public sealed partial class HomePageViewModel : ViewModelBase
         _appController.NewDesktopCapture();
     }
 
-    private void NewVideoCapture()
+    private void NewCameraCapture()
     {
-        _appController.NewVideoCapture();
+        _appController.NewCameraCapture();
     }
 
     private void NewAudioCapture()
@@ -173,7 +173,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
         throw new NotImplementedException();
     }
 
-    private void VideoCaptureOptions()
+    private void CameraCaptureOptions()
     {
         throw new NotImplementedException();
     }

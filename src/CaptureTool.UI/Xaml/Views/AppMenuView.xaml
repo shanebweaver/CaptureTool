@@ -21,9 +21,9 @@
                     Icon="NewWindow"
                     Text="Desktop" />
                 <MenuFlyoutItem
-                    Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
-                    Icon="Video"
-                    Text="Video" />
+                    Command="{x:Bind ViewModel.NewCameraCaptureCommand}"
+                    Icon="Camera"
+                    Text="Camera" />
                 <MenuFlyoutItem
                     Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
                     Icon="Microphone"

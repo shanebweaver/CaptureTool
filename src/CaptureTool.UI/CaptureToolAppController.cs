@@ -65,7 +65,7 @@ internal class CaptureToolAppController : IAppController
         await _snippingToolService.LaunchSnippingToolRequestAsync();
     }
 
-    public void NewVideoCapture()
+    public void NewCameraCapture()
     {
 
     }

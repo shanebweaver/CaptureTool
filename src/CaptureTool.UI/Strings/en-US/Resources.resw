@@ -120,10 +120,13 @@
   <data name="BackButton.Content" xml:space="preserve">
     <value>Back</value>
   </data>
-  <data name="Clicked" xml:space="preserve">
-    <value>Clicked</value>
+  <data name="NewCaptureButton_Audio.Text" xml:space="preserve">
+    <value>Audio</value>
   </data>
-  <data name="ClickMe" xml:space="preserve">
-    <value>Click me</value>
+  <data name="NewCaptureButton_Desktop.Text" xml:space="preserve">
+    <value>Desktop</value>
+  </data>
+  <data name="NewCaptureButton_Camera.Text" xml:space="preserve">
+    <value>Camera</value>
   </data>
 </root>

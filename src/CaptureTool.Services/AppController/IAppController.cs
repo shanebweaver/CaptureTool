@@ -10,7 +10,7 @@ public interface IAppController
     bool TryRestart();
 
     void NewDesktopCapture();
-    void NewVideoCapture();
+    void NewCameraCapture();
     void NewAudioCapture();
 
     void UpdateAppWindowPresentation(AppWindowPresenterAction action);

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:usercontrols="using:CaptureTool.UI.Xaml.UserControls">
+
+    <ResourceDictionary.ThemeDictionaries>
+        <!--  Light theme  -->
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="TextForegroundBrush" Color="{StaticResource TextFillColorPrimary}" />
+        </ResourceDictionary>
+
+        <!--  Dark theme  -->
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="TextForegroundBrush" Color="{StaticResource TextFillColorPrimary}" />
+        </ResourceDictionary>
+
+        <!--  High contrast theme  -->
+        <ResourceDictionary x:Key="HighContrast">
+            <SolidColorBrush x:Key="TextForegroundBrush" Color="{StaticResource SystemColorWindowTextColor}" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <Symbol x:Key="NewDesktopCaptureSymbol">NewWindow</Symbol>
+    <Symbol x:Key="NewAudioCaptureSymbol">Microphone</Symbol>
+    <Symbol x:Key="NewCameraCaptureSymbol">Camera</Symbol>
+
+</ResourceDictionary>
