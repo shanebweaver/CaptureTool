@@ -1,27 +1,92 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using CaptureTool.Services.AppController;
+using CaptureTool.FeatureManagement;
 using Windows.System;
 
 namespace CaptureTool.Services.SnippingTool;
 
+public enum SnippingToolEnabledMode
+{
+    RectangleSnip,
+    WindowSnip,
+    FreeformSnip,
+    FullscreenSnip,
+    SnippingAllModes,
+    RectangleRecord,
+    RecordAllModes,
+    All
+}
+
+public enum SnippingToolDefaultMode
+{
+    Rectangle,
+    Window,
+    Freeform,
+    Fullscreen
+}
+
+public enum SnippingToolHost
+{
+    Capture,
+    Discover
+}
+
+public enum SnippingToolPath
+{
+    Image,
+    Video
+}
+
 public class SnippingToolService : ISnippingToolService
 {
+    public const string CaptureToolRedirectUri = "capture-tool://response";
+
+    private readonly IFeatureManager _featureManager;
+
     public event EventHandler<SnippingToolResponse>? ResponseReceived;
+
+    public SnippingToolService(IFeatureManager featureManager)
+    {
+        _featureManager = featureManager;
+    }
 
     public void HandleSnippingToolResponse(SnippingToolResponse response)
     {
         ResponseReceived?.Invoke(this, response);
     }
 
-    public async Task LaunchSnippingToolRequestAsync()
+    public async Task DiscoverSupportAsync()
     {
-        // TODO:  Create SnippingToolRequest object
-        string scheme = "ms-screenclip";
-        string host = "capture";
-        string path = "image";
-        string query = "rectangle&redirect-uri=capture-tool://response";
-        Uri launchUri = new($"{scheme}://{host}/{path}?{query}");
-        await Launcher.LaunchUriAsync(launchUri);
+        SnippingToolRequest request = SnippingToolRequest.DiscoverSupport(CaptureToolRedirectUri);
+        Uri requestUri = new(request.ToString());
+        await Launcher.LaunchUriAsync(requestUri);
+    }
+
+    public async Task CaptureImageAsync()
+    {
+        bool isImageDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Image);
+        bool isVideoDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Video);
+
+        List<SnippingToolEnabledMode> enabledModes = [];
+        if (isImageDesktopCaptureEnabled)
+        {
+            enabledModes.Add(SnippingToolEnabledMode.SnippingAllModes);
+        }
+        if (isVideoDesktopCaptureEnabled)
+        {
+            enabledModes.Add(SnippingToolEnabledMode.RecordAllModes);
+        }
+
+        SnippingToolRequest request = SnippingToolRequest.CaptureImage(SnippingToolDefaultMode.Rectangle, [.. enabledModes], CaptureToolRedirectUri);
+        Uri requestUri = new(request.ToString());
+        await Launcher.LaunchUriAsync(requestUri);
+    }
+
+    public async Task CaptureVideoAsync()
+    {
+        SnippingToolRequest request = SnippingToolRequest.CaptureVideo([SnippingToolEnabledMode.All], CaptureToolRedirectUri);
+        Uri requestUri = new(request.ToString());
+        await Launcher.LaunchUriAsync(requestUri);
     }
 }

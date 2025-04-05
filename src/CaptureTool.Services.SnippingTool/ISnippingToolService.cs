@@ -8,5 +8,8 @@ public interface ISnippingToolService
     event EventHandler<SnippingToolResponse>? ResponseReceived;
 
     void HandleSnippingToolResponse(SnippingToolResponse response);
-    Task LaunchSnippingToolRequestAsync();
+
+    Task DiscoverSupportAsync();
+    Task CaptureImageAsync();
+    Task CaptureVideoAsync();
 }

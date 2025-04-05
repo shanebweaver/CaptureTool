@@ -62,7 +62,7 @@ internal class CaptureToolAppController : IAppController
         // Show loading screen
         _navigationService.Navigate(NavigationRoutes.Loading, null);
         UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
-        await _snippingToolService.LaunchSnippingToolRequestAsync();
+        await _snippingToolService.CaptureImageAsync();
     }
 
     public void NewCameraCapture()
