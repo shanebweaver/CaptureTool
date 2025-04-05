@@ -9,5 +9,4 @@ public interface INavigationService
     void SetNavigationHandler(INavigationHandler handler);
     void Navigate(NavigationRoute route, object? parameter = null);
     void GoBack();
-    void ClearNavigationHistory();
 }

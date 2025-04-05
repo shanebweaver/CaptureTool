@@ -132,8 +132,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
         }
         else
         {
-            _navigationService.ClearNavigationHistory();
-            _navigationService.Navigate(NavigationRoutes.Home, null); // TODO: Do something with the error.
+            _navigationService.GoBack();
         }
     }
 

@@ -17,13 +17,6 @@ public class NavigationService : INavigationService
         _navigationHandler = navigationHandler;
     }
 
-    public void ClearNavigationHistory()
-    {
-        NavigationRequest current = _navigationStack.Pop();
-        _navigationStack.Clear();
-        _navigationStack.Push(current);
-    }
-
     public void GoBack()
     {
         _navigationStack.Pop();
