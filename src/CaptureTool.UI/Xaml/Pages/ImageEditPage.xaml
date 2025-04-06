@@ -11,6 +11,6 @@
     mc:Ignorable="d">
 
     <Grid>
-        <TextBlock Text="Desktop capture results" />
+        <Canvas x:Name="ImageCanvas" />
     </Grid>
 </local:ImageEditPageBase>

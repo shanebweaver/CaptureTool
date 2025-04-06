@@ -32,8 +32,12 @@ public sealed partial class ImageEditPage : ImageEditPageBase
             try
             {
                 BitmapImage bitmapImage = new(new Uri(ViewModel.ImageFile.Path, UriKind.RelativeOrAbsolute));
-                Brush backgroundBrush = new ImageBrush() { ImageSource = bitmapImage };
-                Background = backgroundBrush;
+                Brush backgroundBrush = new ImageBrush() 
+                { 
+                    ImageSource = bitmapImage, 
+                    Stretch = Stretch.Uniform 
+                };
+                ImageCanvas.Background = backgroundBrush;
             }
             catch (Exception ex)
             {
