@@ -26,6 +26,7 @@ public class ImageEditPageViewModel : ViewModelBase
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
+        Unload();
         Debug.Assert(IsUnloaded);
         StartLoading();
 
@@ -52,7 +53,7 @@ public class ImageEditPageViewModel : ViewModelBase
 
     public override void Unload()
     {
-        _imageFile = null;
+        ImageFile = null;
         base.Unload();
     }
 }

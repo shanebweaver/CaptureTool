@@ -34,7 +34,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
+        Unload();
         Debug.Assert(IsUnloaded);
+        StartLoading();
 
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try

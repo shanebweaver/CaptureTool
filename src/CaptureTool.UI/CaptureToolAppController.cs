@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop;
 using CaptureTool.Core;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.SnippingTool;
+using Microsoft.Extensions.Options;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel.Core;
 
@@ -11,6 +15,7 @@ namespace CaptureTool.UI;
 
 internal class CaptureToolAppController : IAppController
 {
+    private readonly IFeatureManager _featureManager;
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
     private readonly ISnippingToolService _snippingToolService;
@@ -18,10 +23,12 @@ internal class CaptureToolAppController : IAppController
     public event EventHandler<AppWindowPresenterAction>? AppWindowPresentationUpdateRequested;
 
     public CaptureToolAppController(
+        IFeatureManager featureManager,
         ILogService logService,
         INavigationService navigationService,
         ISnippingToolService snippingToolService) 
     {
+        _featureManager = featureManager;
         _logService = logService;
         _navigationService = navigationService;
         _snippingToolService = snippingToolService;
@@ -55,25 +62,68 @@ internal class CaptureToolAppController : IAppController
         App.Current.Shutdown();
     }
 
-    public async void NewDesktopCapture(DesktopCaptureOptions options)
+    public async Task NewDesktopCaptureAsync(DesktopCaptureOptions options)
     {
-        // TODO: Check the feature state
-        // TODO: Convert options into SnippingToolCaptureOptions
+        // Feature check
+        bool isDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
+        bool isImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Image);
+        bool isVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Video);
+        if (!isDesktopCaptureEnabled
+            || (options.CaptureMode == DesktopCaptureMode.Image && !isImageCaptureEnabled)
+            || (options.CaptureMode == DesktopCaptureMode.Video && !isVideoCaptureEnabled))
+        {
+            Trace.Fail("Feature is not enabled");
+        }
 
-        // Show loading screen
+        // Show loading screen and minimize
         _navigationService.Navigate(NavigationRoutes.Loading, null);
         UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
-        await _snippingToolService.CaptureImageAsync();
+
+        if (options.CaptureMode == DesktopCaptureMode.Image)
+        {
+            SnippingToolCaptureMode captureMode = ParseImageCaptureMode(options.ImageCaptureMode);
+            SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
+            await _snippingToolService.CaptureImageAsync(snippingToolOptions);
+        }
+        else if (options.CaptureMode == DesktopCaptureMode.Video)
+        {
+            SnippingToolCaptureMode captureMode = ParseVideoCaptureMode(options.VideoCaptureMode);
+            SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
+            await _snippingToolService.CaptureVideoAsync(snippingToolOptions);
+        }
     }
 
-    public void NewCameraCapture()
+    private static SnippingToolCaptureMode ParseImageCaptureMode(DesktopImageCaptureMode? desktopImageCaptureMode)
     {
-
+        SnippingToolCaptureMode snippingToolCaptureMode = desktopImageCaptureMode switch
+        {
+            DesktopImageCaptureMode.Rectangle => SnippingToolCaptureMode.Rectangle,
+            DesktopImageCaptureMode.Window => SnippingToolCaptureMode.Window,
+            DesktopImageCaptureMode.Fullscreen => SnippingToolCaptureMode.Fullscreen,
+            DesktopImageCaptureMode.Freeform => SnippingToolCaptureMode.Freeform,
+            _ => throw new ArgumentOutOfRangeException(nameof(desktopImageCaptureMode), "Unexpected image capture mode.")
+        };
+        return snippingToolCaptureMode;
     }
 
-    public void NewAudioCapture()
+    private static SnippingToolCaptureMode ParseVideoCaptureMode(DesktopVideoCaptureMode? desktopVideoCaptureMode)
     {
+        SnippingToolCaptureMode snippingToolCaptureMode = desktopVideoCaptureMode switch
+        {
+            DesktopVideoCaptureMode.Rectangle => SnippingToolCaptureMode.Rectangle,
+            _ => throw new ArgumentOutOfRangeException(nameof(desktopVideoCaptureMode), "Unexpected video capture mode.")
+        };
+        return snippingToolCaptureMode;
+    }
 
+    public Task NewCameraCaptureAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task NewAudioCaptureAsync()
+    {
+        throw new NotImplementedException();
     }
 
     public void UpdateAppWindowPresentation(AppWindowPresenterAction action)

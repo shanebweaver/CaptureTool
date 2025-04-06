@@ -10,6 +10,6 @@ public interface ISnippingToolService
     void HandleSnippingToolResponse(SnippingToolResponse response);
 
     Task DiscoverSupportAsync();
-    Task CaptureImageAsync();
-    Task CaptureVideoAsync();
+    Task CaptureImageAsync(SnippingToolCaptureOptions options);
+    Task CaptureVideoAsync(SnippingToolCaptureOptions options);
 }

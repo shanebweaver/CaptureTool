@@ -21,9 +21,9 @@ public sealed partial class SnippingToolRequest
         return new SnippingToolRequest(query);
     }
 
-    public static SnippingToolRequest CaptureVideo(SnippingToolEnabledMode[] enabledModes, string redirectUri)
+    public static SnippingToolRequest CaptureVideo(SnippingToolCaptureMode defaultMode, SnippingToolEnabledMode[] enabledModes, string redirectUri)
     {
-        SnippingToolCaptureQuery query = new(SnippingToolPath.Video, SnippingToolCaptureMode.Rectangle, enabledModes, redirectUri);
+        SnippingToolCaptureQuery query = new(SnippingToolPath.Video, defaultMode, enabledModes, redirectUri);
         return new SnippingToolRequest(query);
     }
 

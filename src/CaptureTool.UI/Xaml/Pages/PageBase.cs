@@ -21,10 +21,7 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
     {
         try
         {
-            if (ViewModel.IsUnloaded)
-            {
-                _ = ViewModel.LoadAsync(e.Parameter, _loadCts.Token);
-            }
+            _ = ViewModel.LoadAsync(e.Parameter, _loadCts.Token);
         }
         catch (OperationCanceledException ex)
         {

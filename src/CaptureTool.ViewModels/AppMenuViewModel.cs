@@ -61,6 +61,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
+        Unload();
         Debug.Assert(IsUnloaded);
         StartLoading();
 
@@ -91,17 +92,17 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     private void NewDesktopCapture()
     {
         DesktopCaptureOptions options = new(DesktopImageCaptureMode.Rectangle, ImageFileType.Png, true);
-        _appController.NewDesktopCapture(options);
+        _ = _appController.NewDesktopCaptureAsync(options);
     }
 
     private void NewCameraCapture()
     {
-        _appController.NewCameraCapture();
+        _ = _appController.NewCameraCaptureAsync();
     }
 
     private void NewAudioCapture()
     {
-        _appController.NewAudioCapture();
+        _ = _appController.NewAudioCaptureAsync();
     }
 
     private void GoToSettings()

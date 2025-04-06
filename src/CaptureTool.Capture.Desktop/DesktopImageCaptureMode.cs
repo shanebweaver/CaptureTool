@@ -4,6 +4,6 @@ public enum DesktopImageCaptureMode
 {
     Rectangle,
     Window,
-    FullScreen,
+    Fullscreen,
     Freeform
 }

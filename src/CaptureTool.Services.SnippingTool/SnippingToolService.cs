@@ -8,7 +8,7 @@ namespace CaptureTool.Services.SnippingTool;
 
 public class SnippingToolService : ISnippingToolService
 {
-    public const string CaptureToolRedirectUri = "capture-tool://response";
+    private const string CaptureToolRedirectUri = "capture-tool://response";
 
     private readonly IFeatureManager _featureManager;
 
@@ -31,30 +31,36 @@ public class SnippingToolService : ISnippingToolService
         await Launcher.LaunchUriAsync(requestUri);
     }
 
-    public async Task CaptureImageAsync()
+    public async Task CaptureImageAsync(SnippingToolCaptureOptions options)
     {
-        bool isImageDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Image);
-        bool isVideoDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Video);
+        SnippingToolEnabledMode[] enabledModes = await GetEnabledModesAsync();
+        SnippingToolRequest request = SnippingToolRequest.CaptureImage(options.CaptureMode, enabledModes, CaptureToolRedirectUri);
+        Uri requestUri = new(request.ToString());
+        await Launcher.LaunchUriAsync(requestUri);
+    }
 
+    public async Task CaptureVideoAsync(SnippingToolCaptureOptions options)
+    {
+        SnippingToolEnabledMode[] enabledModes = await GetEnabledModesAsync();
+        SnippingToolRequest request = SnippingToolRequest.CaptureVideo(options.CaptureMode, enabledModes, CaptureToolRedirectUri);
+        Uri requestUri = new(request.ToString());
+        await Launcher.LaunchUriAsync(requestUri);
+    }
+
+    private async Task<SnippingToolEnabledMode[]> GetEnabledModesAsync()
+    {
         List<SnippingToolEnabledMode> enabledModes = [];
+        bool isImageDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Image);
         if (isImageDesktopCaptureEnabled)
         {
             enabledModes.Add(SnippingToolEnabledMode.SnippingAllModes);
         }
+        bool isVideoDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Video);
         if (isVideoDesktopCaptureEnabled)
         {
             enabledModes.Add(SnippingToolEnabledMode.RecordAllModes);
         }
 
-        SnippingToolRequest request = SnippingToolRequest.CaptureImage(SnippingToolCaptureMode.Rectangle, [.. enabledModes], CaptureToolRedirectUri);
-        Uri requestUri = new(request.ToString());
-        await Launcher.LaunchUriAsync(requestUri);
-    }
-
-    public async Task CaptureVideoAsync()
-    {
-        SnippingToolRequest request = SnippingToolRequest.CaptureVideo([SnippingToolEnabledMode.All], CaptureToolRedirectUri);
-        Uri requestUri = new(request.ToString());
-        await Launcher.LaunchUriAsync(requestUri);
+        return enabledModes.ToArray();
     }
 }

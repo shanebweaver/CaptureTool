@@ -18,6 +18,12 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
         Unloaded += OnUnloaded;
     }
 
+    ~ViewBase()
+    {
+        Loaded -= OnLoaded;
+        Unloaded -= OnUnloaded;
+    }
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         try

@@ -14,6 +14,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
+    ~ImageEditPage()
+    {
+        ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+    }
+
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)

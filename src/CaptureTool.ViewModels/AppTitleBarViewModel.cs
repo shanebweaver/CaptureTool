@@ -1,7 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.ViewModels.Commands;
@@ -11,6 +13,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class AppTitleBarViewModel : ViewModelBase
 {
+    private readonly ICancellationService _cancellationService;
     private readonly INavigationService _navigationService;
     private readonly ITaskEnvironment _taskEnvironment;
 
@@ -38,9 +41,11 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
     }
 
     public AppTitleBarViewModel(
+        ICancellationService cancellationService,
         INavigationService navigationService,
         ITaskEnvironment taskEnvironment)
     {
+        _cancellationService = cancellationService;
         _navigationService = navigationService;
         _taskEnvironment = taskEnvironment;
         _icon = "ms-appx:///Assets/StoreLogo.png";
@@ -49,11 +54,24 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
 
     public override Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
+        Unload();
         Debug.Assert(IsUnloaded);
         StartLoading();
 
-        CanGoBack = _navigationService.CanGoBack;
-        _navigationService.Navigated += OnNavigated;
+        var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
+        try
+        {
+            CanGoBack = _navigationService.CanGoBack;
+            _navigationService.Navigated += OnNavigated;
+        }
+        catch (OperationCanceledException)
+        {
+            // Load canceled
+        }
+        finally
+        {
+            cts.Dispose();
+        }
 
         return base.LoadAsync(parameter, cancellationToken);
     }
