@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace CaptureTool.ViewModels.Commands;
 
-public class RelayCommand<T, P>(Action<T?> commandAction, Func<P?, bool>? canExecute = null) : ICommand
+public sealed partial class RelayCommand<T, P>(Action<T?> commandAction, Func<P?, bool>? canExecute = null) : ICommand
 {
     public event EventHandler? CanExecuteChanged;
 

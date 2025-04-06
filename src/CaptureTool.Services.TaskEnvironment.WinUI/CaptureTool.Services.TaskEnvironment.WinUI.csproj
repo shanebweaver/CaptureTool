@@ -2,7 +2,7 @@
 
   <!-- Project properties -->
   <PropertyGroup>
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
   </PropertyGroup>
 
   <!-- Project references -->
@@ -12,7 +12,7 @@
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
   </ItemGroup>
 
-  <!-- Package dependencies -->
+  <!-- Package references -->
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" />
   </ItemGroup>

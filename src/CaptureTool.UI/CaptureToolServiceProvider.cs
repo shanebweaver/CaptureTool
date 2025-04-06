@@ -23,41 +23,6 @@ namespace CaptureTool.UI;
 
 public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
 {
-    private class ServiceMapping(Type serviceType, Type implementationType) 
-        : Tuple<Type, Type>(serviceType, implementationType)
-    {
-        public Type ServiceType => Item1;
-        public Type ImplementationType => Item2;
-    }
-
-    // Services
-    private static readonly ServiceMapping[] _serviceMappings = [
-        new(typeof(IAppController), typeof(CaptureToolAppController)),
-        new(typeof(IFeatureManager), typeof(CaptureToolFeatureManager)),
-        new(typeof(ICancellationService), typeof(CancellationService)),
-        new(typeof(IGlobalizationService), typeof(GlobalizationService)),
-        new(typeof(IJsonStorageService), typeof(WindowsJsonStorageService)),
-        new(typeof(ILocalizationService), typeof(WindowsLocalizationService)),
-        new(typeof(ILogService), typeof(DebugLogService)),
-        new(typeof(INavigationService), typeof(NavigationService)),
-        new(typeof(ISettingsService), typeof(SettingsService)),
-        new(typeof(ITelemetryService), typeof(TelemetryService)),
-        new(typeof(ISnippingToolService), typeof(SnippingToolService)),
-        new(typeof(IFactoryService<DesktopCaptureModeViewModel>), typeof(DesktopCaptureModeViewModelFactory)),
-    ];
-
-    // ViewModels
-    private static readonly Type[] _viewModelMappings = [
-        typeof(MainWindowViewModel),
-        typeof(HomePageViewModel),
-        typeof(SettingsPageViewModel),
-        typeof(LoadingPageViewModel),
-        typeof(ImageEditPageViewModel),
-        typeof(DesktopCaptureOptionsPageViewModel),
-        typeof(AppMenuViewModel),
-        typeof(AppTitleBarViewModel),
-    ];
-
     private readonly ServiceProvider _serviceProvider;
 
     public CaptureToolServiceProvider()
@@ -68,16 +33,28 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton(GetTaskEnvironment);
 
         // Services
-        foreach (var mapping in _serviceMappings)
-        {
-            collection.AddSingleton(mapping.ServiceType, mapping.ImplementationType);
-        }
+        collection.AddSingleton<IAppController, CaptureToolAppController>();
+        collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
+        collection.AddSingleton<ICancellationService, CancellationService>();
+        collection.AddSingleton<IGlobalizationService, GlobalizationService>();
+        collection.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
+        collection.AddSingleton<ILocalizationService, WindowsLocalizationService>();
+        collection.AddSingleton<ILogService, DebugLogService>();
+        collection.AddSingleton<INavigationService, NavigationService>();
+        collection.AddSingleton<ISettingsService, SettingsService>();
+        collection.AddSingleton<ITelemetryService, TelemetryService>();
+        collection.AddSingleton<ISnippingToolService, SnippingToolService>();
+        collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel>, DesktopCaptureModeViewModelFactory>();
 
         // ViewModels
-        foreach (Type viewModelType in _viewModelMappings)
-        {
-            collection.AddSingleton(viewModelType);
-        }
+        collection.AddSingleton<MainWindowViewModel>();
+        collection.AddSingleton<HomePageViewModel>();
+        collection.AddSingleton<SettingsPageViewModel>();
+        collection.AddSingleton<LoadingPageViewModel>();
+        collection.AddSingleton<ImageEditPageViewModel>();
+        collection.AddSingleton<DesktopCaptureOptionsPageViewModel>();
+        collection.AddSingleton<AppMenuViewModel>();
+        collection.AddSingleton<AppTitleBarViewModel>();
 
         _serviceProvider = collection.BuildServiceProvider();
     }

@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using CaptureTool.Capture.Desktop;
 using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
@@ -25,12 +24,12 @@ public sealed partial class HomePageViewModel : ViewModelBase
     private readonly ISettingsService _settingsService;
     private readonly ISnippingToolService _snippingToolService;
 
-    public ICommand NewDesktopCaptureCommand => new RelayCommand(NewDesktopCapture, () => IsDesktopCaptureEnabled);
-    public ICommand NewAudioCaptureCommand => new RelayCommand(NewAudioCapture, () => IsAudioCaptureEnabled);
-    public ICommand NewCameraCaptureCommand => new RelayCommand(NewCameraCapture, () => IsCameraCaptureEnabled);
-    public ICommand DesktopCaptureOptionsCommand => new RelayCommand(DesktopCaptureOptions, () => IsDesktopCaptureOptionsEnabled);
-    public ICommand AudioCaptureOptionsCommand => new RelayCommand(AudioCaptureOptions, () => IsAudioCaptureOptionsEnabled);
-    public ICommand CameraCaptureOptionsCommand => new RelayCommand(CameraCaptureOptions, () => IsCameraCaptureOptionsEnabled);
+    public RelayCommand NewDesktopCaptureCommand => new(NewDesktopCapture, () => IsDesktopCaptureEnabled);
+    public RelayCommand NewAudioCaptureCommand => new(NewAudioCapture, () => IsAudioCaptureEnabled);
+    public RelayCommand NewCameraCaptureCommand => new(NewCameraCapture, () => IsCameraCaptureEnabled);
+    public RelayCommand DesktopCaptureOptionsCommand => new(DesktopCaptureOptions, () => IsDesktopCaptureOptionsEnabled);
+    public RelayCommand AudioCaptureOptionsCommand => new(AudioCaptureOptions, () => IsAudioCaptureOptionsEnabled);
+    public RelayCommand CameraCaptureOptionsCommand => new(CameraCaptureOptions, () => IsCameraCaptureOptionsEnabled);
 
     private bool _isDesktopCaptureEnabled;
     public bool IsDesktopCaptureEnabled

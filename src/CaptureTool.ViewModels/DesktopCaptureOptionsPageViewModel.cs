@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using CaptureTool.Capture.Desktop;
 using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
@@ -20,7 +19,7 @@ public sealed partial class DesktopCaptureOptionsPageViewModel : ViewModelBase
     private readonly IFeatureManager _featureManager;
     private readonly IFactoryService<DesktopCaptureModeViewModel> _desktopCaptureModeViewModelfactory;
 
-    public ICommand NewDesktopCaptureCommand => new RelayCommand(NewDesktopCapture, () => IsDesktopCaptureEnabled);
+    public RelayCommand NewDesktopCaptureCommand => new(NewDesktopCapture, () => IsDesktopCaptureEnabled);
     
     private bool _isDesktopCaptureEnabled;
     public bool IsDesktopCaptureEnabled

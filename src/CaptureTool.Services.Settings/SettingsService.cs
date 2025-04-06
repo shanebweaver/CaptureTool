@@ -57,10 +57,17 @@ public partial class SettingsService : ISettingsService, IDisposable
         }
     }
 
-    public void Set<T, V>(T settingDefinition, V value) where T : SettingDefinition<V>
-    {
-        LockAndSet((T)Activator.CreateInstance(typeof(T), settingDefinition.Key, value)!);
-    }
+    public void Set(BoolSettingDefinition settingDefinition, bool value) =>
+        LockAndSet(new BoolSettingDefinition(settingDefinition.Key, value));
+
+    public void Set(DoubleSettingDefinition settingDefinition, double value)
+        => LockAndSet(new DoubleSettingDefinition(settingDefinition.Key, value));
+
+    public void Set(IntSettingDefinition settingDefinition, int value)
+        => LockAndSet(new IntSettingDefinition(settingDefinition.Key, value));
+
+    public void Set(StringSettingDefinition settingDefinition, string value)
+        => LockAndSet(new StringSettingDefinition(settingDefinition.Key, value));
 
     public async Task InitializeAsync(string filePath, CancellationToken cancellationToken)
     {

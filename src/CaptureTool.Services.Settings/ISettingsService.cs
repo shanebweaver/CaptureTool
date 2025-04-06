@@ -11,7 +11,10 @@ public interface ISettingsService
 
     T Get<T>(SettingDefinition<T> settingDefinition);
     bool IsSet(SettingDefinition settingDefinition);
-    void Set<T, V>(T settingDefinition, V value) where T : SettingDefinition<V>;
+    void Set(BoolSettingDefinition settingDefinition, bool value);
+    void Set(DoubleSettingDefinition settingDefinition, double value);
+    void Set(IntSettingDefinition settingDefinition, int value);
+    void Set(StringSettingDefinition settingDefinition, string value);
     void Unset(SettingDefinition settingDefinition);
     void Unset(SettingDefinition[] settingDefinitions);
 
