@@ -13,10 +13,101 @@
     mc:Ignorable="d">
 
     <Grid>
-        <usercontrols:NewCaptureButton
-            x:Name="NewDesktopCaptureButton"
-            x:Uid="NewCaptureButton_Desktop"
-            Command="{x:Bind ViewModel.NewDesktopCaptureCommand}"
-            Symbol="{StaticResource NewDesktopCaptureSymbol}" />
+        <Grid
+            HorizontalAlignment="Center"
+            VerticalAlignment="Stretch"
+            ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <usercontrols:NewCaptureButton
+                x:Name="NewDesktopCaptureButton"
+                x:Uid="NewCaptureButton_Desktop"
+                Command="{x:Bind ViewModel.NewDesktopCaptureCommand}"
+                Symbol="{StaticResource NewDesktopCaptureSymbol}" />
+
+            <Grid
+                VerticalAlignment="Center"
+                Column="1"
+                ColumnSpacing="12"
+                RowSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="124" />
+                    <ColumnDefinition Width="124" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <ComboBox HorizontalAlignment="Stretch" SelectedIndex="0">
+                    <ComboBoxItem>
+                        <TextBlock Text="Image" />
+                    </ComboBoxItem>
+                    <ComboBoxItem>
+                        <TextBlock Text="Video" />
+                    </ComboBoxItem>
+                </ComboBox>
+                <ComboBox
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"
+                    SelectedIndex="0">
+                    <ComboBoxItem>
+                        <TextBlock Text="Rectangle" />
+                    </ComboBoxItem>
+                    <ComboBoxItem>
+                        <TextBlock Text="Window" />
+                    </ComboBoxItem>
+                    <ComboBoxItem>
+                        <TextBlock Text="Full screen" />
+                    </ComboBoxItem>
+                    <ComboBoxItem>
+                        <TextBlock Text="Freeform" />
+                    </ComboBoxItem>
+                </ComboBox>
+
+                <CheckBox
+                    Grid.Row="1"
+                    HorizontalAlignment="Stretch"
+                    IsChecked="True">
+                    <TextBlock Text="Autosave?" />
+                </CheckBox>
+                <ComboBox
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"
+                    SelectedIndex="0">
+                    <ComboBoxItem>
+                        <TextBlock Text="PNG" />
+                    </ComboBoxItem>
+                </ComboBox>
+
+                <Grid
+                    Grid.Row="2"
+                    Grid.ColumnSpan="2"
+                    ColumnSpacing="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox
+                        HorizontalAlignment="Stretch"
+                        Header="Save location:"
+                        Text="../Pictures/Screenshots/Screenshot.png"
+                        TextWrapping="NoWrap" />
+                    <Button
+                        Grid.Column="1"
+                        Width="32"
+                        Height="32"
+                        Padding="0"
+                        VerticalAlignment="Bottom">
+                        <SymbolIcon Symbol="Folder" />
+                    </Button>
+                </Grid>
+            </Grid>
+        </Grid>
     </Grid>
 </local:DesktopCaptureOptionsPageBase>
