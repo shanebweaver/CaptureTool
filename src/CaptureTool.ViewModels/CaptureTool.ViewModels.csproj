@@ -5,8 +5,9 @@
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
   </PropertyGroup>
 
-  <!-- Project dependencies -->
+  <!-- Project referenfces -->
   <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Capture.Desktop\CaptureTool.Capture.Desktop.csproj" />
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
     <ProjectReference Include="..\CaptureTool.Core\CaptureTool.Core.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />

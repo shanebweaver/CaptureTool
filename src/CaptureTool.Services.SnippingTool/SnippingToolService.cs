@@ -6,38 +6,6 @@ using Windows.System;
 
 namespace CaptureTool.Services.SnippingTool;
 
-public enum SnippingToolEnabledMode
-{
-    RectangleSnip,
-    WindowSnip,
-    FreeformSnip,
-    FullscreenSnip,
-    SnippingAllModes,
-    RectangleRecord,
-    RecordAllModes,
-    All
-}
-
-public enum SnippingToolDefaultMode
-{
-    Rectangle,
-    Window,
-    Freeform,
-    Fullscreen
-}
-
-public enum SnippingToolHost
-{
-    Capture,
-    Discover
-}
-
-public enum SnippingToolPath
-{
-    Image,
-    Video
-}
-
 public class SnippingToolService : ISnippingToolService
 {
     public const string CaptureToolRedirectUri = "capture-tool://response";
@@ -78,7 +46,7 @@ public class SnippingToolService : ISnippingToolService
             enabledModes.Add(SnippingToolEnabledMode.RecordAllModes);
         }
 
-        SnippingToolRequest request = SnippingToolRequest.CaptureImage(SnippingToolDefaultMode.Rectangle, [.. enabledModes], CaptureToolRedirectUri);
+        SnippingToolRequest request = SnippingToolRequest.CaptureImage(SnippingToolCaptureMode.Rectangle, [.. enabledModes], CaptureToolRedirectUri);
         Uri requestUri = new(request.ToString());
         await Launcher.LaunchUriAsync(requestUri);
     }

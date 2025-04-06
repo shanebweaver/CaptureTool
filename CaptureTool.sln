@@ -48,6 +48,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Snippi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.TaskEnvironment.WinUI", "src\CaptureTool.Services.TaskEnvironment.WinUI\CaptureTool.Services.TaskEnvironment.WinUI.csproj", "{70D8948A-0941-43A0-BEB5-68A026E9BB5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Capture.Desktop", "src\CaptureTool.Capture.Desktop\CaptureTool.Capture.Desktop.csproj", "{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -256,6 +258,18 @@ Global
 		{70D8948A-0941-43A0-BEB5-68A026E9BB5E}.Release|x64.Build.0 = Release|Any CPU
 		{70D8948A-0941-43A0-BEB5-68A026E9BB5E}.Release|x86.ActiveCfg = Release|Any CPU
 		{70D8948A-0941-43A0-BEB5-68A026E9BB5E}.Release|x86.Build.0 = Release|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Debug|x64.Build.0 = Debug|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Debug|x86.Build.0 = Debug|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Release|ARM64.Build.0 = Release|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Release|x64.ActiveCfg = Release|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Release|x64.Build.0 = Release|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Release|x86.ActiveCfg = Release|Any CPU
+		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

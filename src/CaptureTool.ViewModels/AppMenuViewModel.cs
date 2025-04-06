@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using CaptureTool.Capture.Desktop;
 using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Services.AppController;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.ViewModels.Commands;
@@ -90,7 +90,8 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     private void NewDesktopCapture()
     {
-        _appController.NewDesktopCapture();
+        DesktopCaptureOptions options = new(DesktopImageCaptureMode.Rectangle, ImageFileType.Png, true);
+        _appController.NewDesktopCapture(options);
     }
 
     private void NewCameraCapture()

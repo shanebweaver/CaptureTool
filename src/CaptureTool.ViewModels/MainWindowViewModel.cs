@@ -4,7 +4,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Core;
-using CaptureTool.Services.AppController;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;

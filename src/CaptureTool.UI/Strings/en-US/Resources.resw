@@ -129,4 +129,10 @@
   <data name="NewCaptureButton_Camera.Text" xml:space="preserve">
     <value>Camera</value>
   </data>
+  <data name="DesktopCaptureMode_Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="DesktopCaptureMode_Video" xml:space="preserve">
+    <value>Video</value>
+  </data>
 </root>

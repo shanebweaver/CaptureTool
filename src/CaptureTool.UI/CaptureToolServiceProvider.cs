@@ -1,6 +1,7 @@
 ﻿using System;
+using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Services.AppController;
+using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Globalization;
 using CaptureTool.Services.Localization;
@@ -15,6 +16,7 @@ using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.Services.TaskEnvironment.WinUI;
 using CaptureTool.Services.Telemetry;
 using CaptureTool.ViewModels;
+using CaptureTool.ViewModels.Factories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.UI;
@@ -41,6 +43,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         new(typeof(ISettingsService), typeof(SettingsService)),
         new(typeof(ITelemetryService), typeof(TelemetryService)),
         new(typeof(ISnippingToolService), typeof(SnippingToolService)),
+        new(typeof(IFactoryService<DesktopCaptureModeViewModel>), typeof(DesktopCaptureModeViewModelFactory)),
     ];
 
     // ViewModels

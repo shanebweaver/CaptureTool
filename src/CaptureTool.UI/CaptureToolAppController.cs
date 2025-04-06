@@ -1,6 +1,6 @@
 ﻿using System;
+using CaptureTool.Capture.Desktop;
 using CaptureTool.Core;
-using CaptureTool.Services.AppController;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.SnippingTool;
@@ -55,9 +55,10 @@ internal class CaptureToolAppController : IAppController
         App.Current.Shutdown();
     }
 
-    public async void NewDesktopCapture()
+    public async void NewDesktopCapture(DesktopCaptureOptions options)
     {
         // TODO: Check the feature state
+        // TODO: Convert options into SnippingToolCaptureOptions
 
         // Show loading screen
         _navigationService.Navigate(NavigationRoutes.Loading, null);

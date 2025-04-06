@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using CaptureTool.Services.AppController;
+using CaptureTool.Core;
 using CaptureTool.Services.Navigation;
 using CaptureTool.UI.Xaml.Pages;
 using CaptureTool.ViewModels;

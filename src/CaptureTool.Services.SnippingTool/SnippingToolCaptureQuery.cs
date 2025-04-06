@@ -7,7 +7,7 @@ public class SnippingToolCaptureQuery : SnippingToolQuery
 {
     public override SnippingToolHost Host => SnippingToolHost.Capture;
     public SnippingToolPath Path { get; }
-    public SnippingToolDefaultMode? DefaultMode { get; }
+    public SnippingToolCaptureMode? DefaultMode { get; }
     public SnippingToolEnabledMode[] EnabledModes { get; }
     public string? ApiVersion { get; }
     public string? UserAgent { get; }
@@ -16,7 +16,7 @@ public class SnippingToolCaptureQuery : SnippingToolQuery
 
     public SnippingToolCaptureQuery(
         SnippingToolPath path, 
-        SnippingToolDefaultMode? defaultMode,
+        SnippingToolCaptureMode? defaultMode,
         SnippingToolEnabledMode[] enabledModes,
         string redirectUri,
         string? apiVersion = null,
@@ -41,7 +41,7 @@ public class SnippingToolCaptureQuery : SnippingToolQuery
         // Default mode
         if (DefaultMode != null)
         {
-            string? defaultMode = Enum.GetName(typeof(SnippingToolDefaultMode), DefaultMode);
+            string? defaultMode = Enum.GetName(typeof(SnippingToolCaptureMode), DefaultMode);
             ArgumentNullException.ThrowIfNull(defaultMode);
             queryParts.Add(defaultMode);
         }

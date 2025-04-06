@@ -1,6 +1,7 @@
 ﻿using System;
+using CaptureTool.Capture.Desktop;
 
-namespace CaptureTool.Services.AppController;
+namespace CaptureTool.Core;
 
 public interface IAppController
 {
@@ -9,7 +10,7 @@ public interface IAppController
     void Shutdown();
     bool TryRestart();
 
-    void NewDesktopCapture();
+    void NewDesktopCapture(DesktopCaptureOptions options);
     void NewCameraCapture();
     void NewAudioCapture();
 
