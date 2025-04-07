@@ -1,27 +1,38 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
-using Windows.Storage;
+using CaptureTool.Services.TaskEnvironment;
 
 namespace CaptureTool.ViewModels;
 
-public class ImageEditPageViewModel : ViewModelBase
+[WinRT.GeneratedBindableCustomProperty]
+public sealed partial class ImageEditPageViewModel : ViewModelBase
 {
+    private readonly ITaskEnvironment _taskEnvironment;
     private readonly ICancellationService _cancellationService;
+    private readonly IFactoryService<ImageCanvasItemViewModel> _imageCanvasItemViewModelFactory;
 
-    private IStorageFile? _imageFile;
-    public IStorageFile? ImageFile
+    private ObservableCollection<CanvasItemViewModel> _canvasItems;
+    public ObservableCollection<CanvasItemViewModel> CanvasItems
     {
-        get => _imageFile;
-        set => Set(ref _imageFile, value);
+        get => _canvasItems;
+        set => Set(ref _canvasItems, value);
     }
 
     public ImageEditPageViewModel(
-        ICancellationService cancellationService)
+        ITaskEnvironment taskEnvironment,
+        ICancellationService cancellationService,
+        IFactoryService<ImageCanvasItemViewModel> imageCanvasItemViewModelFactory)
     {
+        _taskEnvironment = taskEnvironment;
         _cancellationService = cancellationService;
+        _imageCanvasItemViewModelFactory = imageCanvasItemViewModelFactory;
+
+        _canvasItems = [];
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -33,10 +44,11 @@ public class ImageEditPageViewModel : ViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            // Load here
-            if (parameter is IStorageFile imageFile)
+            if (parameter is ImageFile imageFile)
             {
-                ImageFile = imageFile;
+                ImageCanvasItemViewModel imageCanvasItemViewModel = _imageCanvasItemViewModelFactory.Create();
+                CanvasItems.Add(imageCanvasItemViewModel);
+                _ = imageCanvasItemViewModel.LoadAsync(imageFile, cts.Token);
             }
         }
         catch (OperationCanceledException)
@@ -53,7 +65,7 @@ public class ImageEditPageViewModel : ViewModelBase
 
     public override void Unload()
     {
-        ImageFile = null;
+        CanvasItems.Clear();
         base.Unload();
     }
 }

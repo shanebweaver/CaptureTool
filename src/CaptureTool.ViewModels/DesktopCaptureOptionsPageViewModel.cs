@@ -156,14 +156,14 @@ public sealed partial class DesktopCaptureOptionsPageViewModel : ViewModelBase
                 {
                     DesktopCaptureModeViewModel vm = _desktopCaptureModeViewModelfactory.Create();
                     DesktopCaptureModes.Add(vm);
-                    await vm.LoadAsync(DesktopCaptureMode.Image, cancellationToken);
+                    await vm.LoadAsync(DesktopCaptureMode.Image, cts.Token);
                 }
 
                 if (IsVideoDesktopCaptureEnabled)
                 {
                     DesktopCaptureModeViewModel vm = _desktopCaptureModeViewModelfactory.Create();
                     DesktopCaptureModes.Add(vm);
-                    await vm.LoadAsync(DesktopCaptureMode.Video, cancellationToken);
+                    await vm.LoadAsync(DesktopCaptureMode.Video, cts.Token);
                 }
 
                 SelectedDesktopCaptureModeIndex = 0;

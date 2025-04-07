@@ -32,9 +32,11 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         // TaskEnvironment
         collection.AddSingleton(GetTaskEnvironment);
 
-        // Services
+        // App controller and feature manager
         collection.AddSingleton<IAppController, CaptureToolAppController>();
         collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
+
+        // Services
         collection.AddSingleton<ICancellationService, CancellationService>();
         collection.AddSingleton<IGlobalizationService, GlobalizationService>();
         collection.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
@@ -44,7 +46,6 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<ISettingsService, SettingsService>();
         collection.AddSingleton<ITelemetryService, TelemetryService>();
         collection.AddSingleton<ISnippingToolService, SnippingToolService>();
-        collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel>, DesktopCaptureModeViewModelFactory>();
 
         // ViewModels
         collection.AddSingleton<MainWindowViewModel>();
@@ -55,6 +56,12 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<DesktopCaptureOptionsPageViewModel>();
         collection.AddSingleton<AppMenuViewModel>();
         collection.AddSingleton<AppTitleBarViewModel>();
+        collection.AddSingleton<DesktopCaptureModeViewModel>();
+        collection.AddSingleton<ImageCanvasItemViewModel>();
+
+        // ViewModel factories
+        collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel>, DesktopCaptureModeViewModelFactory>();
+        collection.AddSingleton<IFactoryService<ImageCanvasItemViewModel>, ImageCanvasItemViewModelFactory>();
 
         _serviceProvider = collection.BuildServiceProvider();
     }

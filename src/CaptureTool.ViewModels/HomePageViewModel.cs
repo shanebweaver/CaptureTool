@@ -128,7 +128,8 @@ public sealed partial class HomePageViewModel : ViewModelBase
         if (e.Code == 200)
         {
             var file = await e.GetFileAsync();
-            _navigationService.Navigate(NavigationRoutes.ImageEdit, file);
+            ImageFile imageFile = new(file.Path);
+            _navigationService.Navigate(NavigationRoutes.ImageEdit, imageFile);
         }
         else
         {

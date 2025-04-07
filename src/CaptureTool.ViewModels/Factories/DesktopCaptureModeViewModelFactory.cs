@@ -24,3 +24,11 @@ public sealed partial class DesktopCaptureModeViewModelFactory : IFactoryService
             _localizationService);
     }
 }
+
+public sealed partial class ImageCanvasItemViewModelFactory : IFactoryService<ImageCanvasItemViewModel>
+{
+    public ImageCanvasItemViewModel Create()
+    {
+        return new();
+    }
+}

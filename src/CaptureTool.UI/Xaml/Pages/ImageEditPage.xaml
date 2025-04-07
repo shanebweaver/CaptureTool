@@ -7,8 +7,38 @@
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
+    xmlns:views="using:CaptureTool.UI.Xaml.Views"
     d:DataContext="{d:DesignInstance Type=viewmodels:ImageEditPageViewModel}"
     mc:Ignorable="d">
+
+    <Page.Resources>
+        <!--  Image  -->
+        <DataTemplate x:Key="ImageCanvasItemDataTemplate" x:DataType="viewmodels:ImageCanvasItemViewModel">
+            <views:ImageCanvasItemView ViewModel="{x:Bind Mode=OneWay}">
+                <views:ImageCanvasItemView.RenderTransform>
+                    <CompositeTransform TranslateX="{x:Bind Left, Mode=OneWay}" TranslateY="{x:Bind Top, Mode=OneWay}" />
+                </views:ImageCanvasItemView.RenderTransform>
+            </views:ImageCanvasItemView>
+        </DataTemplate>
+
+        <!--  Rectangle  -->
+        <DataTemplate x:Key="RectangleCanvasItemDataTemplate" x:DataType="viewmodels:RectangleCanvasItemViewModel">
+            <!--  TODO: Create separate view and add render transform  -->
+            <Rectangle Width="{x:Bind Width, Mode=OneWay}" Height="{x:Bind Height, Mode=OneWay}" />
+        </DataTemplate>
+
+        <!--  Text  -->
+        <DataTemplate x:Key="TextCanvasItemDataTemplate" x:DataType="viewmodels:TextCanvasItemViewModel">
+            <!--  TODO: Create separate view and add render transform  -->
+            <TextBlock Text="{x:Bind Text, Mode=OneWay}" />
+        </DataTemplate>
+
+        <local:CanvasItemTemplateSelector
+            x:Key="CanvasItemTemplateSelector"
+            ImageTemplate="{StaticResource ImageCanvasItemDataTemplate}"
+            RectangleTemplate="{StaticResource RectangleCanvasItemDataTemplate}"
+            TextTemplate="{StaticResource TextCanvasItemDataTemplate}" />
+    </Page.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -32,7 +62,13 @@
         </CommandBar>
 
         <Grid Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}" Row="1">
-            <Canvas x:Name="ImageCanvas" />
+            <ItemsControl ItemTemplateSelector="{StaticResource CanvasItemTemplateSelector}" ItemsSource="{x:Bind ViewModel.CanvasItems, Mode=OneWay}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
         </Grid>
     </Grid>
 </local:ImageEditPageBase>

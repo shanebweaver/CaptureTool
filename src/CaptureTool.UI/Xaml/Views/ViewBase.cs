@@ -26,21 +26,24 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        try
+        DispatcherQueue.TryEnqueue(() =>
         {
-            if (ViewModel.IsUnloaded)
+            try
             {
-                _ = ViewModel.LoadAsync(null, _loadCts.Token);
+                if (ViewModel.IsUnloaded)
+                {
+                    _ = ViewModel.LoadAsync(null, _loadCts.Token);
+                }
             }
-        }
-        catch (OperationCanceledException ex)
-        {
-            ServiceLocator.Logging.LogException(ex, "View load canceled.");
-        }
-        catch (Exception ex)
-        {
-            ServiceLocator.Logging.LogException(ex, "Failed to load view.");
-        }
+            catch (OperationCanceledException ex)
+            {
+                ServiceLocator.Logging.LogException(ex, "View load canceled.");
+            }
+            catch (Exception ex)
+            {
+                ServiceLocator.Logging.LogException(ex, "Failed to load view.");
+            }
+        });
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
@@ -48,6 +51,6 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
         _loadCts.Cancel();
         _loadCts.Dispose();
 
-        ViewModel.Unload();
+        DispatcherQueue.TryEnqueue(() => ViewModel.Unload());
     }
 }
