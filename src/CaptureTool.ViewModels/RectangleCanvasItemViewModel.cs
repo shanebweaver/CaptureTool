@@ -1,9 +1,9 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using CaptureTool.Capture.Desktop.Annotation;
 
 namespace CaptureTool.ViewModels;
 
-[WinRT.GeneratedBindableCustomProperty]
 public sealed partial class RectangleCanvasItemViewModel : CanvasItemViewModel
 {
     private double _height;
@@ -27,8 +27,11 @@ public sealed partial class RectangleCanvasItemViewModel : CanvasItemViewModel
 
     public override Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        Left = 50;
-        Top = 100;
+        if (parameter is RectangleShapeAnnotationItem rectangleAnnotation)
+        {
+            Height = rectangleAnnotation.Height;
+            Width = rectangleAnnotation.Width;
+        }
 
         return base.LoadAsync(parameter, cancellationToken);
     }

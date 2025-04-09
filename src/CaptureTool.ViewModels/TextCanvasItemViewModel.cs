@@ -1,9 +1,9 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using CaptureTool.Capture.Desktop.Annotation;
 
 namespace CaptureTool.ViewModels;
 
-[WinRT.GeneratedBindableCustomProperty]
 public sealed partial class TextCanvasItemViewModel : CanvasItemViewModel
 {
     private string? _text;
@@ -18,9 +18,9 @@ public sealed partial class TextCanvasItemViewModel : CanvasItemViewModel
         Left = 50;
         Top = 100;
 
-        if (parameter is string text)
+        if (parameter is TextAnnotationItem textAnnotation)
         {
-            Text = text;
+            Text = textAnnotation.Text;
         }
 
         return base.LoadAsync(parameter, cancellationToken);

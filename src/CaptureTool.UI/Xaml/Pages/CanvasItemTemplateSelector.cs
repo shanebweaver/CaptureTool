@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace CaptureTool.UI.Xaml.Pages;
 
-[WinRT.GeneratedBindableCustomProperty]
 public sealed partial class CanvasItemTemplateSelector : DataTemplateSelector
 {
     public DataTemplate? ImageTemplate { get; set; }

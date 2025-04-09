@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.ViewModels;
+﻿namespace CaptureTool.Capture.Desktop;
 
 public sealed partial class ImageFile
 {

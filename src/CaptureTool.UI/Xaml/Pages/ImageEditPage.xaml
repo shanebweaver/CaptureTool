@@ -3,6 +3,7 @@
     x:Class="CaptureTool.UI.Xaml.Pages.ImageEditPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:canvas="using:CaptureTool.UI.Xaml.Views.ImageEditCanvas"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -14,25 +15,32 @@
     <Page.Resources>
         <!--  Image  -->
         <DataTemplate x:Key="ImageCanvasItemDataTemplate" x:DataType="viewmodels:ImageCanvasItemViewModel">
-            <views:ImageCanvasItemView ViewModel="{x:Bind Mode=OneWay}">
-                <views:ImageCanvasItemView.RenderTransform>
+            <canvas:ImageCanvasItemView ViewModel="{x:Bind Mode=OneWay}">
+                <UserControl.RenderTransform>
                     <CompositeTransform TranslateX="{x:Bind Left, Mode=OneWay}" TranslateY="{x:Bind Top, Mode=OneWay}" />
-                </views:ImageCanvasItemView.RenderTransform>
-            </views:ImageCanvasItemView>
+                </UserControl.RenderTransform>
+            </canvas:ImageCanvasItemView>
         </DataTemplate>
 
         <!--  Rectangle  -->
         <DataTemplate x:Key="RectangleCanvasItemDataTemplate" x:DataType="viewmodels:RectangleCanvasItemViewModel">
-            <!--  TODO: Create separate view and add render transform  -->
-            <Rectangle Width="{x:Bind Width, Mode=OneWay}" Height="{x:Bind Height, Mode=OneWay}" />
+            <canvas:RectangleCanvasItemView ViewModel="{x:Bind Mode=OneWay}">
+                <UserControl.RenderTransform>
+                    <CompositeTransform TranslateX="{x:Bind Left, Mode=OneWay}" TranslateY="{x:Bind Top, Mode=OneWay}" />
+                </UserControl.RenderTransform>
+            </canvas:RectangleCanvasItemView>
         </DataTemplate>
 
         <!--  Text  -->
         <DataTemplate x:Key="TextCanvasItemDataTemplate" x:DataType="viewmodels:TextCanvasItemViewModel">
-            <!--  TODO: Create separate view and add render transform  -->
-            <TextBlock Text="{x:Bind Text, Mode=OneWay}" />
+            <canvas:TextCanvasItemView ViewModel="{x:Bind Mode=OneWay}">
+                <UserControl.RenderTransform>
+                    <CompositeTransform TranslateX="{x:Bind Left, Mode=OneWay}" TranslateY="{x:Bind Top, Mode=OneWay}" />
+                </UserControl.RenderTransform>
+            </canvas:TextCanvasItemView>
         </DataTemplate>
 
+        <!--  Template selector  -->
         <local:CanvasItemTemplateSelector
             x:Key="CanvasItemTemplateSelector"
             ImageTemplate="{StaticResource ImageCanvasItemDataTemplate}"
@@ -48,14 +56,17 @@
 
         <CommandBar DefaultLabelPosition="Right" IsOpen="False">
             <AppBarButton
+                Command="{x:Bind ViewModel.CropCommand}"
                 Icon="Crop"
                 IsEnabled="False"
                 Label="Crop" />
             <AppBarButton
+                Command="{x:Bind ViewModel.CopyCommand}"
                 Icon="Copy"
                 IsEnabled="False"
                 Label="Copy" />
             <AppBarButton
+                Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
                 IsEnabled="False"
                 Label="Save" />

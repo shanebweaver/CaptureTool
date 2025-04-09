@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:RectangleCanvasItemViewBase
+    x:Class="CaptureTool.UI.Xaml.Views.ImageEditCanvas.RectangleCanvasItemView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.UI.Xaml.Views.ImageEditCanvas"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <Rectangle
+            Width="{x:Bind ViewModel.Width, Mode=OneWay}"
+            Height="{x:Bind ViewModel.Height, Mode=OneWay}"
+            Stroke="Red"
+            StrokeThickness="1" />
+    </Grid>
+</local:RectangleCanvasItemViewBase>

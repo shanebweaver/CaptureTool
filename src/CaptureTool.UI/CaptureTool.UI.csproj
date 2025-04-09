@@ -14,6 +14,9 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Xaml\Views\ImageEditCanvas\RectangleCanvasItemView.xaml" />
+  </ItemGroup>
 
   <!-- Project assets -->
   <ItemGroup>
@@ -73,6 +76,16 @@
   -->
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Xaml\Views\ImageEditCanvas\TextCanvasItemView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Xaml\Views\ImageEditCanvas\RectangleCanvasItemView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Xaml\Views\ImageCanvasItemView.xaml">

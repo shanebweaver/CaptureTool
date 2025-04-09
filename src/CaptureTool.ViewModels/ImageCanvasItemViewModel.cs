@@ -1,9 +1,10 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using CaptureTool.Capture.Desktop;
+using CaptureTool.Capture.Desktop.Annotation;
 
 namespace CaptureTool.ViewModels;
 
-[WinRT.GeneratedBindableCustomProperty]
 public sealed partial class ImageCanvasItemViewModel : CanvasItemViewModel
 {
     private ImageFile? _imageFile;
@@ -21,9 +22,9 @@ public sealed partial class ImageCanvasItemViewModel : CanvasItemViewModel
 
     public override Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        if (parameter is ImageFile imageFile)
+        if (parameter is ImageAnnotationItem imageAnnotation)
         {
-            ImageFile = imageFile;
+            ImageFile = imageAnnotation.ImageFile;
         }
 
         return base.LoadAsync(parameter, cancellationToken);

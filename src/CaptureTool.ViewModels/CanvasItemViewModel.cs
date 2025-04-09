@@ -1,4 +1,8 @@
-﻿namespace CaptureTool.ViewModels;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using CaptureTool.Capture.Desktop.Annotation;
+
+namespace CaptureTool.ViewModels;
 
 public abstract partial class CanvasItemViewModel : ViewModelBase
 {
@@ -14,6 +18,17 @@ public abstract partial class CanvasItemViewModel : ViewModelBase
     {
         get => _top;
         set => Set(ref _top, value);
+    }
+
+    public override Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    {
+        if (parameter is AnnotationItem annotationItem)
+        {
+            Left = annotationItem.Left;
+            Top = annotationItem.Top;
+        }
+
+        return base.LoadAsync(parameter, cancellationToken);
     }
 
     public override void Unload()
