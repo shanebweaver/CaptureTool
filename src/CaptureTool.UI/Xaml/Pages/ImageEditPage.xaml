@@ -80,14 +80,11 @@
             <ScrollView
                 x:Name="CanvasScrollView"
                 HorizontalScrollBarVisibility="Auto"
-                HorizontalScrollMode="Enabled"
-                VerticalScrollBarVisibility="Auto"
-                VerticalScrollMode="Enabled"
                 ZoomMode="Enabled">
                 <canvasui:CanvasControl
                     x:Name="AnnotationCanvas"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
                     HorizontalContentAlignment="Center"
                     VerticalContentAlignment="Center"
                     CreateResources="CanvasControl_CreateResources"

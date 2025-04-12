@@ -1,6 +1,5 @@
 using System;
 using System.Numerics;
-using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.ViewModels;
 using Microsoft.Graphics.Canvas;
@@ -24,10 +23,16 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         SizeChanged += OnPageSizeChanged;
     }
 
+    ~ImageEditPage()
+    {
+        AnnotationCanvas.RemoveFromVisualTree();
+        AnnotationCanvas = null;
+    }
+
     private void OnPageSizeChanged(object sender, SizeChangedEventArgs e)
     {
         UpdateCanvasSize();
-        ResetZoomAndCenterCanvas();
+        ZoomAndCenterCanvas();
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -36,12 +41,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         {
             AnnotationCanvas.Invalidate();
         }
-    }
-
-    ~ImageEditPage()
-    {
-        AnnotationCanvas.RemoveFromVisualTree();
-        AnnotationCanvas = null;
     }
 
     private void CanvasControl_Draw(CanvasControl sender, CanvasDrawEventArgs args)
@@ -77,8 +76,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
             // Center dot
             args.DrawingSession.DrawRectangle(new Rect(sceneCenter.X - 1, sceneCenter.Y - 1, 2, 2), Colors.Red);
-
-            CenterCanvas();
         }
     }
 
@@ -112,49 +109,33 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         }
     }
 
-    private void ResetZoomAndCenterCanvas()
+    private void ZoomAndCenterCanvas(float zoomFactor = 1.0f)
     {
         lock (this)
         {
             if (CanvasScrollView == null || AnnotationCanvas == null)
+            {
                 return;
+            }
 
-            CanvasScrollView.ZoomTo(1.0f, null, new(ScrollingAnimationMode.Disabled));
+            CanvasScrollView.ZoomTo(zoomFactor, null, new(ScrollingAnimationMode.Disabled));
 
             // Get the dimensions of the ScrollViewer and CanvasControl
             double scrollViewWidth = CanvasScrollView.ActualWidth;
             double scrollViewHeight = CanvasScrollView.ActualHeight;
-            double canvasWidth = AnnotationCanvas.ActualWidth;
-            double canvasHeight = AnnotationCanvas.ActualHeight;
+            double canvasWidth = AnnotationCanvas.ActualWidth * zoomFactor;
+            double canvasHeight = AnnotationCanvas.ActualHeight * zoomFactor;
 
             // Calculate the offsets to center the canvas
             double horizontalOffset = (canvasWidth - scrollViewWidth) / 2;
             double verticalOffset = (canvasHeight - scrollViewHeight) / 2;
 
-            // Scroll to the calculated offsets
-            CanvasScrollView.ZoomTo(1, new((float)horizontalOffset, (float)verticalOffset));
-        }
-    }
-
-    private void CenterCanvas()
-    {
-        lock (this)
-        {
-            if (CanvasScrollView == null || AnnotationCanvas == null)
-                return;
-
-            // Get the dimensions of the ScrollViewer and CanvasControl
-            double scrollViewWidth = CanvasScrollView.ActualWidth;
-            double scrollViewHeight = CanvasScrollView.ActualHeight;
-            double canvasWidth = AnnotationCanvas.ActualWidth * CanvasScrollView.ZoomFactor;
-            double canvasHeight = AnnotationCanvas.ActualHeight * CanvasScrollView.ZoomFactor;
-
-            // Calculate the offsets to center the canvas
-            double horizontalOffset = (canvasWidth - scrollViewWidth) / 2;
-            double verticalOffset = (canvasHeight - scrollViewHeight) / 2;
+            // Ensure offsets are non-negative (to prevent scrolling out of bounds)
+            horizontalOffset = Math.Max(0, horizontalOffset);
+            verticalOffset = Math.Max(0, verticalOffset);
 
             // Scroll to the calculated offsets
-            CanvasScrollView.ScrollTo((float)horizontalOffset, (float)verticalOffset);
+            CanvasScrollView.ZoomTo(zoomFactor, new((float)horizontalOffset, (float)verticalOffset));
         }
     }
 }
