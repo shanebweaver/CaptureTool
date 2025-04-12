@@ -6,15 +6,15 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class RectangleCanvasItemViewModel : CanvasItemViewModel
 {
-    private double _height;
-    public double Height
+    private float _height;
+    public float Height
     {
         get => _height;
         set => Set(ref _height, value);
     }
 
-    private double _width;
-    public double Width
+    private float _width;
+    public float Width
     {
         get => _width;
         set => Set(ref _width, value);

@@ -29,7 +29,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         set => Set(ref _canvasItems, value);
     }
 
-    private ImageCanvasItemViewModel? _imageCanvasItemViewModel;
+    public ImageCanvasItemViewModel? ImageCanvasItemViewModel { get; private set; }
 
     public ImageEditPageViewModel(
         ITaskEnvironment taskEnvironment,
@@ -54,15 +54,16 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         {
             if (parameter is ImageFile imageFile)
             {
-                _imageCanvasItemViewModel = _imageCanvasItemViewModelFactory.Create();
-                CanvasItems.Add(_imageCanvasItemViewModel);
-
+                ImageCanvasItemViewModel = _imageCanvasItemViewModelFactory.Create();
                 ImageAnnotationItem imageItem = new(imageFile, 0, 0);
-                await _imageCanvasItemViewModel.LoadAsync(imageItem, cancellationToken);
+                await ImageCanvasItemViewModel.LoadAsync(imageItem, cancellationToken);
             }
 
             RectangleShapeAnnotationItem rectangleItem = new(50, 50, 50, 50);
             _ = AddRectangleCanvasItemAsync(rectangleItem, cts.Token);
+
+            RectangleShapeAnnotationItem rectangleItem2 = new(-50, -50, 50, 50);
+            _ = AddRectangleCanvasItemAsync(rectangleItem2, cts.Token);
 
             TextAnnotationItem textItem = new("Hello world", 10, 10);
             _ = AddTextCanvasItemAsync(textItem, cts.Token);

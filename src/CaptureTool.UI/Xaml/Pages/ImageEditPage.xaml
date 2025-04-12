@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:canvas="using:CaptureTool.UI.Xaml.Views.ImageEditCanvas"
+    xmlns:canvasui="using:Microsoft.Graphics.Canvas.UI.Xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -72,14 +73,26 @@
                 Label="Save" />
         </CommandBar>
 
-        <Grid Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}" Row="1">
-            <ItemsControl ItemTemplateSelector="{StaticResource CanvasItemTemplateSelector}" ItemsSource="{x:Bind ViewModel.CanvasItems, Mode=OneWay}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Canvas />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
+        <Grid
+            x:Name="CanvasContainer"
+            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
+            Row="1">
+            <ScrollView
+                x:Name="CanvasScrollView"
+                HorizontalScrollBarVisibility="Auto"
+                HorizontalScrollMode="Enabled"
+                VerticalScrollBarVisibility="Auto"
+                VerticalScrollMode="Enabled"
+                ZoomMode="Enabled">
+                <canvasui:CanvasControl
+                    x:Name="AnnotationCanvas"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    CreateResources="CanvasControl_CreateResources"
+                    Draw="CanvasControl_Draw" />
+            </ScrollView>
         </Grid>
     </Grid>
 </local:ImageEditPageBase>
