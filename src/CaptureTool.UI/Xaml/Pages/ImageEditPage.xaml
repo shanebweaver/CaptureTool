@@ -30,6 +30,23 @@
                 IsEnabled="False"
                 Label="Crop" />
             <AppBarButton
+                Command="{x:Bind ViewModel.RotateCommand}"
+                Icon="Rotate"
+                IsEnabled="False"
+                Label="Rotate" />
+            <AppBarSeparator />
+            <AppBarButton
+                Command="{x:Bind ViewModel.UndoCommand}"
+                Icon="Undo"
+                IsEnabled="False"
+                Label="Undo" />
+            <AppBarButton
+                Command="{x:Bind ViewModel.RedoCommand}"
+                Icon="Redo"
+                IsEnabled="False"
+                Label="Redo" />
+            <AppBarSeparator />
+            <AppBarButton
                 Command="{x:Bind ViewModel.CopyCommand}"
                 Icon="Copy"
                 IsEnabled="False"

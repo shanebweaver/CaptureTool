@@ -24,6 +24,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     public RelayCommand SaveCommand => new(Save);
     public RelayCommand UndoCommand => new(Undo);
     public RelayCommand RedoCommand => new(Redo);
+    public RelayCommand RotateCommand => new(Rotate);
 
     private ObservableCollection<AnnotationItem> _canvasItems;
     public ObservableCollection<AnnotationItem> CanvasItems
@@ -110,6 +111,11 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     }
 
     private void Redo()
+    {
+
+    }
+
+    private void Rotate()
     {
 
     }
