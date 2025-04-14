@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop;
@@ -21,12 +22,21 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     public RelayCommand CopyCommand => new(Copy);
     public RelayCommand CropCommand => new(Crop);
     public RelayCommand SaveCommand => new(Save);
+    public RelayCommand UndoCommand => new(Undo);
+    public RelayCommand RedoCommand => new(Redo);
 
-    private ObservableCollection<CanvasItemViewModel> _canvasItems;
-    public ObservableCollection<CanvasItemViewModel> CanvasItems
+    private ObservableCollection<AnnotationItem> _canvasItems;
+    public ObservableCollection<AnnotationItem> CanvasItems
     {
         get => _canvasItems;
         set => Set(ref _canvasItems, value);
+    }
+
+    private ImageFile? _imageFile;
+    public ImageFile? ImageFile
+    {
+        get => _imageFile;
+        set => Set(ref _imageFile, value);
     }
 
     public ImageCanvasItemViewModel? ImageCanvasItemViewModel { get; private set; }
@@ -54,19 +64,12 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         {
             if (parameter is ImageFile imageFile)
             {
-                ImageCanvasItemViewModel = _imageCanvasItemViewModelFactory.Create();
-                ImageAnnotationItem imageItem = new(imageFile, 0, 0);
-                await ImageCanvasItemViewModel.LoadAsync(imageItem, cancellationToken);
+                ImageFile = imageFile;
             }
 
-            RectangleShapeAnnotationItem rectangleItem = new(50, 50, 50, 50);
-            _ = AddRectangleCanvasItemAsync(rectangleItem, cts.Token);
-
-            RectangleShapeAnnotationItem rectangleItem2 = new(-50, -50, 50, 50);
-            _ = AddRectangleCanvasItemAsync(rectangleItem2, cts.Token);
-
-            TextAnnotationItem textItem = new("Hello world", 10, 10);
-            _ = AddTextCanvasItemAsync(textItem, cts.Token);
+            CanvasItems.Add(new RectangleShapeAnnotationItem(50, 50, 50, 50, Color.Red, 2));
+            CanvasItems.Add(new RectangleShapeAnnotationItem(-50, -50, 50, 50, Color.Blue, 4));
+            CanvasItems.Add(new TextAnnotationItem("Hello world", 10, 10, Color.Yellow));
         }
         catch (OperationCanceledException)
         {
@@ -78,20 +81,6 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
 
         await base.LoadAsync(parameter, cancellationToken);
-    }
-
-    private async Task AddRectangleCanvasItemAsync(RectangleShapeAnnotationItem annotationItem, CancellationToken cancellationToken)
-    {
-        RectangleCanvasItemViewModel itemViewModel = new();
-        CanvasItems.Add(itemViewModel);
-        await itemViewModel.LoadAsync(annotationItem, cancellationToken);
-    }
-
-    private async Task AddTextCanvasItemAsync(TextAnnotationItem annotationItem, CancellationToken cancellationToken)
-    {
-        TextCanvasItemViewModel itemViewModel = new();
-        CanvasItems.Add(itemViewModel);
-        await itemViewModel.LoadAsync(annotationItem, cancellationToken);
     }
 
     public override void Unload()
@@ -111,6 +100,16 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     }
 
     private void Save()
+    {
+
+    }
+
+    private void Undo()
+    {
+
+    }
+
+    private void Redo()
     {
 
     }

@@ -14,9 +14,6 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="Xaml\Views\ImageEditCanvas\RectangleCanvasItemView.xaml" />
-  </ItemGroup>
 
   <!-- Project assets -->
   <ItemGroup>
@@ -79,16 +76,6 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Xaml\Views\ImageEditCanvas\TextCanvasItemView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Xaml\Views\ImageEditCanvas\RectangleCanvasItemView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
     <Page Update="Xaml\Views\ImageCanvasItemView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -144,4 +131,12 @@
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
+  <ItemGroup>
+    <PRIResource Remove="Xaml\Controls\InfiniteCanvas\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Xaml\Controls\ImageCanvas\ImageCanvas.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@ using System.Windows.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-namespace CaptureTool.UI.Xaml.UserControls;
+namespace CaptureTool.UI.Xaml.Controls;
 
 public sealed partial class NewCaptureButton : UserControl
 {
