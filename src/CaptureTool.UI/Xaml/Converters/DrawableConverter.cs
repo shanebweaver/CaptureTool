@@ -9,7 +9,7 @@ using Windows.UI;
 
 namespace CaptureTool.UI.Xaml.Converters;
 
-internal sealed partial class AnnotationItemConverter : IValueConverter
+internal sealed partial class DrawableConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
@@ -34,7 +34,7 @@ internal sealed partial class AnnotationItemConverter : IValueConverter
         throw new NotImplementedException();
     }
 
-    private RectangleDrawable CreateRectangleDrawable(RectangleShapeAnnotationItem rectangleItem)
+    private static RectangleDrawable CreateRectangleDrawable(RectangleShapeAnnotationItem rectangleItem)
     {
         Point position = new(rectangleItem.Left, rectangleItem.Top);
         Size size = new(rectangleItem.Width, rectangleItem.Height);
@@ -42,7 +42,7 @@ internal sealed partial class AnnotationItemConverter : IValueConverter
         return new RectangleDrawable(position, size, color, rectangleItem.StrokeWidth);
     }
 
-    private TextDrawable CreateTextDrawable(TextAnnotationItem textItem)
+    private static TextDrawable CreateTextDrawable(TextAnnotationItem textItem)
     {
         Point position = new(textItem.Left, textItem.Top);
         Color color = ConvertColor(textItem.Color);

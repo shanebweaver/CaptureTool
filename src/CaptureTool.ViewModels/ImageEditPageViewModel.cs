@@ -25,6 +25,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     public RelayCommand UndoCommand => new(Undo);
     public RelayCommand RedoCommand => new(Redo);
     public RelayCommand RotateCommand => new(Rotate);
+    public RelayCommand PrintCommand => new(Print);
 
     private ObservableCollection<AnnotationItem> _canvasItems;
     public ObservableCollection<AnnotationItem> CanvasItems
@@ -69,6 +70,8 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
             }
 
             CanvasItems.Add(new RectangleShapeAnnotationItem(50, 50, 50, 50, Color.Red, 2));
+            // TODO: Add an IImageCanvasCommand to a list as well to support undo/redo.
+
             CanvasItems.Add(new RectangleShapeAnnotationItem(-50, -50, 50, 50, Color.Blue, 4));
             CanvasItems.Add(new TextAnnotationItem("Hello world", 10, 10, Color.Yellow));
         }
@@ -116,6 +119,11 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     }
 
     private void Rotate()
+    {
+
+    }
+
+    private void Print()
     {
 
     }

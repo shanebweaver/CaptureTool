@@ -3,7 +3,9 @@ using Windows.Foundation;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas.Drawable;
 
-internal interface IDrawable
+public interface IDrawable
 {
+    public Point Position { get; set; }
+
     void Draw(CanvasDrawingSession drawingSession, Rect sessionBounds);
 }

@@ -6,6 +6,7 @@
     xmlns:converters="using:CaptureTool.UI.Xaml.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:imagecanvas="using:CaptureTool.UI.Xaml.Controls.ImageCanvas"
+    xmlns:infinitecanvas="using:CaptureTool.UI.Xaml.Controls.InfiniteCanvas"
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
@@ -14,7 +15,7 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        <converters:AnnotationItemConverter x:Key="AnnotationItemConverter" />
+        <converters:DrawableConverter x:Key="DrawableConverter" />
     </Page.Resources>
 
     <Grid>
@@ -56,6 +57,11 @@
                 Icon="Save"
                 IsEnabled="False"
                 Label="Save" />
+            <AppBarButton
+                Command="{x:Bind ViewModel.PrintCommand}"
+                Icon="Print"
+                IsEnabled="False"
+                Label="Print" />
         </CommandBar>
 
         <Grid
@@ -65,7 +71,7 @@
             <imagecanvas:ImageCanvas
                 x:Name="ImageCanvas"
                 ImageSource="{x:Bind ViewModel.ImageFile.Path, Mode=OneWay}"
-                ItemsSource="{x:Bind ViewModel.CanvasItems, Mode=OneWay, Converter={StaticResource AnnotationItemConverter}}" />
+                Drawables="{x:Bind ViewModel.CanvasItems, Mode=OneWay, Converter={StaticResource DrawableConverter}}" />
         </Grid>
     </Grid>
 </local:ImageEditPageBase>

@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using CaptureTool.UI.Xaml.Controls.ImageCanvas.Drawable;
@@ -8,22 +8,23 @@ using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Windows.Foundation;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
 public sealed partial class ImageCanvas : UserControl
 {
-    public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
-        nameof(ItemsSource),
-        typeof(IEnumerable),
+    private static readonly DependencyProperty DrawablesProperty = DependencyProperty.Register(
+        nameof(Drawables),
+        typeof(IEnumerable<IDrawable>),
         typeof(ImageCanvas),
         new PropertyMetadata(null));
 
-    public IEnumerable ItemsSource
+    public IEnumerable<IDrawable> Drawables
     {
-        get => (IEnumerable)GetValue(ItemsSourceProperty);
-        set => SetValue(ItemsSourceProperty, value);
+        get => (IEnumerable<IDrawable>)GetValue(DrawablesProperty);
+        set => SetValue(DrawablesProperty, value);
     }
 
     private static readonly DependencyProperty ImageSourceProperty = DependencyProperty.Register(
@@ -71,22 +72,16 @@ public sealed partial class ImageCanvas : UserControl
                 args.DrawingSession.DrawImage(_canvasImage, sceneTopLeft);
             }
 
-            Rect sceneBounds = new(new Point(sceneTopLeft.X, sceneTopLeft.Y), new Size(AnnotationCanvas.ActualWidth, AnnotationCanvas.ActualHeight));
+            Rect sceneBounds = new(new(sceneTopLeft.X, sceneTopLeft.Y), new Point(AnnotationCanvas.ActualWidth, AnnotationCanvas.ActualHeight));
 
-            if (ItemsSource is IEnumerable items)
+            foreach (var drawable in Drawables)
             {
-                foreach (var item in items)
+                try
                 {
-                    if (item is IDrawable drawable)
-                    {
-                        try
-                        {
-                            drawable.Draw(args.DrawingSession, sceneBounds);
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    }
+                    drawable.Draw(args.DrawingSession, sceneBounds);
+                }
+                catch (Exception)
+                {
                 }
             }
 
@@ -155,14 +150,14 @@ public sealed partial class ImageCanvas : UserControl
         }
     }
 
-    private void CanvasContainer_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    private void CanvasContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = true;
         _lastPointerPosition = e.GetCurrentPoint(CanvasContainer).Position;
         CanvasContainer.CapturePointer(e.Pointer); // Capture the pointer for consistent tracking
     }
 
-    private void CanvasContainer_PointerMoved(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    private void CanvasContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
         if (_isPointerDown)
         {
@@ -190,13 +185,13 @@ public sealed partial class ImageCanvas : UserControl
         }
     }
 
-    private void CanvasContainer_PointerReleased(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    private void CanvasContainer_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = false;
         CanvasContainer.ReleasePointerCaptures();
     }
 
-    private void CanvasContainer_PointerCanceled(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    private void CanvasContainer_PointerCanceled(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = false;
         CanvasContainer.ReleasePointerCaptures();
