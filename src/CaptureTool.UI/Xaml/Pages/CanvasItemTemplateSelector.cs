@@ -1,5 +1,5 @@
 using System;
-using CaptureTool.ViewModels;
+using CaptureTool.ViewModels.Annotation;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -15,9 +15,9 @@ public sealed partial class CanvasItemTemplateSelector : DataTemplateSelector
     {
         DataTemplate? template = item switch
         {
-            ImageCanvasItemViewModel => ImageTemplate,
-            RectangleCanvasItemViewModel => RectangleTemplate,
-            TextCanvasItemViewModel => TextTemplate,
+            ImageAnnotationViewModel => ImageTemplate,
+            RectangleAnnotationViewModel => RectangleTemplate,
+            TextAnnotationViewModel => TextTemplate,
             _ => base.SelectTemplateCore(item, container)
         };
 

@@ -9,7 +9,9 @@ using CaptureTool.Capture.Desktop.Annotation;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.TaskEnvironment;
+using CaptureTool.ViewModels.Annotation;
 using CaptureTool.ViewModels.Commands;
+using Microsoft.Graphics.Canvas;
 
 namespace CaptureTool.ViewModels;
 
@@ -17,7 +19,10 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 {
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ICancellationService _cancellationService;
-    private readonly IFactoryService<ImageCanvasItemViewModel> _imageCanvasItemViewModelFactory;
+    private readonly IFactoryService<ImageAnnotationViewModel> _imageCanvasItemViewModelFactory;
+
+    public event EventHandler? CopyRequested;
+    public event EventHandler? PrintRequested;
 
     public RelayCommand CopyCommand => new(Copy);
     public RelayCommand CropCommand => new(Crop);
@@ -26,6 +31,11 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     public RelayCommand RedoCommand => new(Redo);
     public RelayCommand RotateCommand => new(Rotate);
     public RelayCommand PrintCommand => new(Print);
+
+    // TODO: Add reference to a CanvasRenderTarget that we can manipulate here and then display in the UI.
+    // We should handle the image manipulation upstream from the view to support various interactions with the image data.
+    // Maybe wrap this up in a new class, ImageRenderer or something.
+    private CanvasRenderTarget _canvasRenderTarget;
 
     private ObservableCollection<AnnotationItem> _canvasItems;
     public ObservableCollection<AnnotationItem> CanvasItems
@@ -41,12 +51,12 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         set => Set(ref _imageFile, value);
     }
 
-    public ImageCanvasItemViewModel? ImageCanvasItemViewModel { get; private set; }
+    public ImageAnnotationViewModel? ImageCanvasItemViewModel { get; private set; }
 
     public ImageEditPageViewModel(
         ITaskEnvironment taskEnvironment,
         ICancellationService cancellationService,
-        IFactoryService<ImageCanvasItemViewModel> imageCanvasItemViewModelFactory)
+        IFactoryService<ImageAnnotationViewModel> imageCanvasItemViewModelFactory)
     {
         _taskEnvironment = taskEnvironment;
         _cancellationService = cancellationService;
@@ -95,7 +105,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 
     private void Copy()
     {
-
+        CopyRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void Crop()
@@ -125,6 +135,6 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 
     private void Print()
     {
-
+        PrintRequested?.Invoke(this, EventArgs.Empty);
     }
 }

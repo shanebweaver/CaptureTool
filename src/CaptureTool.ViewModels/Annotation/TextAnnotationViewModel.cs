@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop.Annotation;
 
-namespace CaptureTool.ViewModels;
+namespace CaptureTool.ViewModels.Annotation;
 
-public sealed partial class TextCanvasItemViewModel : CanvasItemViewModel
+public sealed partial class TextAnnotationViewModel : AnnotationItemViewModel
 {
     private string? _text;
     public string? Text

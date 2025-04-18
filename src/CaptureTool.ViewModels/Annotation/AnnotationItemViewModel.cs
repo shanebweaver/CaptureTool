@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop.Annotation;
 
-namespace CaptureTool.ViewModels;
+namespace CaptureTool.ViewModels.Annotation;
 
-public abstract partial class CanvasItemViewModel : ViewModelBase
+public abstract partial class AnnotationItemViewModel : ViewModelBase
 {
     private int _left;
     public int Left

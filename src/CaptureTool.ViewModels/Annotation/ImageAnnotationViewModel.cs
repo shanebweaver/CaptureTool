@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop;
 using CaptureTool.Capture.Desktop.Annotation;
 
-namespace CaptureTool.ViewModels;
+namespace CaptureTool.ViewModels.Annotation;
 
-public sealed partial class ImageCanvasItemViewModel : CanvasItemViewModel
+public sealed partial class ImageAnnotationViewModel : AnnotationItemViewModel
 {
     private ImageFile? _imageFile;
     public ImageFile? ImageFile
@@ -14,7 +14,7 @@ public sealed partial class ImageCanvasItemViewModel : CanvasItemViewModel
         set => Set(ref _imageFile, value);
     }
 
-    public ImageCanvasItemViewModel()
+    public ImageAnnotationViewModel()
     {
         Left = 150;
         Top = 50;

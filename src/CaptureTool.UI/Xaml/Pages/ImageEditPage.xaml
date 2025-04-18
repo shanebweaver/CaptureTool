@@ -6,7 +6,6 @@
     xmlns:converters="using:CaptureTool.UI.Xaml.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:imagecanvas="using:CaptureTool.UI.Xaml.Controls.ImageCanvas"
-    xmlns:infinitecanvas="using:CaptureTool.UI.Xaml.Controls.InfiniteCanvas"
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
@@ -50,7 +49,6 @@
             <AppBarButton
                 Command="{x:Bind ViewModel.CopyCommand}"
                 Icon="Copy"
-                IsEnabled="False"
                 Label="Copy" />
             <AppBarButton
                 Command="{x:Bind ViewModel.SaveCommand}"
@@ -70,8 +68,8 @@
             Row="1">
             <imagecanvas:ImageCanvas
                 x:Name="ImageCanvas"
-                ImageSource="{x:Bind ViewModel.ImageFile.Path, Mode=OneWay}"
-                Drawables="{x:Bind ViewModel.CanvasItems, Mode=OneWay, Converter={StaticResource DrawableConverter}}" />
+                Drawables="{x:Bind ViewModel.CanvasItems, Mode=OneWay, Converter={StaticResource DrawableConverter}}"
+                ImageSource="{x:Bind ViewModel.ImageFile.Path, Mode=OneWay}" />
         </Grid>
     </Grid>
 </local:ImageEditPageBase>

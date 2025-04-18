@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop.Annotation;
 
-namespace CaptureTool.ViewModels;
+namespace CaptureTool.ViewModels.Annotation;
 
-public sealed partial class RectangleCanvasItemViewModel : CanvasItemViewModel
+public sealed partial class RectangleAnnotationViewModel : AnnotationItemViewModel
 {
     private float _height;
     public float Height
@@ -20,7 +20,7 @@ public sealed partial class RectangleCanvasItemViewModel : CanvasItemViewModel
         set => Set(ref _width, value);
     }
 
-    public RectangleCanvasItemViewModel()
+    public RectangleAnnotationViewModel()
     {
 
     }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using CaptureTool.UI.Xaml.Controls.ImageCanvas.Drawable;
 using Microsoft.Graphics.Canvas;
@@ -9,7 +10,10 @@ using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Foundation;
+using Windows.Graphics.Imaging;
+using Windows.Storage.Streams;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
@@ -195,5 +199,47 @@ public sealed partial class ImageCanvas : UserControl
     {
         _isPointerDown = false;
         CanvasContainer.ReleasePointerCaptures();
+    }
+
+    public async Task<IRandomAccessStream> GetCanvasImageStreamAsync()
+    {
+        var renderTargetBitmap = new RenderTargetBitmap();
+        await renderTargetBitmap.RenderAsync(AnnotationCanvas);
+
+        var pixelBuffer = await renderTargetBitmap.GetPixelsAsync();
+        var stream = new InMemoryRandomAccessStream();
+
+        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
+        encoder.SetPixelData(
+            BitmapPixelFormat.Bgra8,
+            BitmapAlphaMode.Premultiplied,
+            (uint)renderTargetBitmap.PixelWidth,
+            (uint)renderTargetBitmap.PixelHeight,
+            96, // DPI X
+            96, // DPI Y
+            pixelBuffer.ToArray()
+        );
+
+        await encoder.FlushAsync();
+
+        stream.Seek(0); // Reset the stream position to the beginning
+        return stream;
+    }
+
+    public Task<SoftwareBitmap> GetCanvasImageAsync()
+    {
+        return GetCanvasImageAsync(AnnotationCanvas);
+    }
+
+    public static async Task<SoftwareBitmap> GetCanvasImageAsync(CanvasControl canvasControl)
+    {
+        var renderTargetBitmap = new RenderTargetBitmap();
+        await renderTargetBitmap.RenderAsync(canvasControl);
+
+        var pixelBuffer = await renderTargetBitmap.GetPixelsAsync();
+        var softwareBitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, renderTargetBitmap.PixelWidth, renderTargetBitmap.PixelHeight);
+        softwareBitmap.CopyFromBuffer(pixelBuffer);
+
+        return softwareBitmap;
     }
 }

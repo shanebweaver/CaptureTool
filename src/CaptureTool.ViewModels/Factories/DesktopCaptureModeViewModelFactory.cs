@@ -1,6 +1,7 @@
 ﻿using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
+using CaptureTool.ViewModels.Annotation;
 
 namespace CaptureTool.ViewModels.Factories;
 
@@ -25,9 +26,9 @@ public sealed partial class DesktopCaptureModeViewModelFactory : IFactoryService
     }
 }
 
-public sealed partial class ImageCanvasItemViewModelFactory : IFactoryService<ImageCanvasItemViewModel>
+public sealed partial class ImageCanvasItemViewModelFactory : IFactoryService<ImageAnnotationViewModel>
 {
-    public ImageCanvasItemViewModel Create()
+    public ImageAnnotationViewModel Create()
     {
         return new();
     }
