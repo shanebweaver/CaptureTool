@@ -8,7 +8,6 @@
     xmlns:local="using:CaptureTool.UI.Xaml.Controls.ImageCanvas"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-
     <Grid
         x:Name="CanvasContainer"
         Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
@@ -22,8 +21,6 @@
             ZoomMode="Enabled">
             <canvasui:CanvasControl
                 x:Name="AnnotationCanvas"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
                 CreateResources="CanvasControl_CreateResources"
                 Draw="CanvasControl_Draw" />
         </ScrollView>

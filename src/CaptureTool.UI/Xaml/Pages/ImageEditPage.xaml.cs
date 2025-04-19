@@ -1,3 +1,4 @@
+using System;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 
@@ -9,11 +10,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         InitializeComponent();
 
-        ViewModel.CopyRequested += OnCopyRequested; ;
+        ViewModel.CopyRequested += OnCopyRequested;
         ViewModel.PrintRequested += OnPrintRequested;
     }
 
-    private async void OnCopyRequested(object? sender, System.EventArgs e)
+    private async void OnCopyRequested(object? sender, EventArgs e)
     {
         var imageStream = await ImageCanvas.GetCanvasImageStreamAsync();
         if (imageStream != null)
@@ -25,7 +26,8 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         }
     }
 
-    private void OnPrintRequested(object? sender, System.EventArgs e)
+    private void OnPrintRequested(object? sender, EventArgs e)
     {
+        DispatcherQueue.TryEnqueue(() => _ = ImageCanvas.ShowPrintUIAsync());
     }
 }

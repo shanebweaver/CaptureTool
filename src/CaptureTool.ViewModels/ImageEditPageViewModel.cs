@@ -11,7 +11,6 @@ using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.ViewModels.Annotation;
 using CaptureTool.ViewModels.Commands;
-using Microsoft.Graphics.Canvas;
 
 namespace CaptureTool.ViewModels;
 
@@ -32,16 +31,11 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     public RelayCommand RotateCommand => new(Rotate);
     public RelayCommand PrintCommand => new(Print);
 
-    // TODO: Add reference to a CanvasRenderTarget that we can manipulate here and then display in the UI.
-    // We should handle the image manipulation upstream from the view to support various interactions with the image data.
-    // Maybe wrap this up in a new class, ImageRenderer or something.
-    private CanvasRenderTarget _canvasRenderTarget;
-
-    private ObservableCollection<AnnotationItem> _canvasItems;
-    public ObservableCollection<AnnotationItem> CanvasItems
+    private ObservableCollection<AnnotationItem> _annotationItems;
+    public ObservableCollection<AnnotationItem> AnnotationItems
     {
-        get => _canvasItems;
-        set => Set(ref _canvasItems, value);
+        get => _annotationItems;
+        set => Set(ref _annotationItems, value);
     }
 
     private ImageFile? _imageFile;
@@ -62,7 +56,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         _cancellationService = cancellationService;
         _imageCanvasItemViewModelFactory = imageCanvasItemViewModelFactory;
 
-        _canvasItems = [];
+        _annotationItems = [];
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -79,11 +73,13 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
                 ImageFile = imageFile;
             }
 
-            CanvasItems.Add(new RectangleShapeAnnotationItem(50, 50, 50, 50, Color.Red, 2));
+            AnnotationItems.Add(new RectangleShapeAnnotationItem(50, 50, 50, 50, Color.Red, 2));
             // TODO: Add an IImageCanvasCommand to a list as well to support undo/redo.
 
-            CanvasItems.Add(new RectangleShapeAnnotationItem(-50, -50, 50, 50, Color.Blue, 4));
-            CanvasItems.Add(new TextAnnotationItem("Hello world", 10, 10, Color.Yellow));
+            // Don't use negative position right now. Now supported until the canvas can handle it.
+            // Causes the copy to render offset.
+            //CanvasItems.Add(new RectangleShapeAnnotationItem(-50, -50, 50, 50, Color.Blue, 4));
+            AnnotationItems.Add(new TextAnnotationItem("Hello world", 10, 10, Color.Yellow));
         }
         catch (OperationCanceledException)
         {
@@ -99,7 +95,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 
     public override void Unload()
     {
-        CanvasItems.Clear();
+        AnnotationItems.Clear();
         base.Unload();
     }
 

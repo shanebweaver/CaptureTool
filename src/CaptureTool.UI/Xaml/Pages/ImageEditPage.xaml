@@ -68,7 +68,7 @@
             Row="1">
             <imagecanvas:ImageCanvas
                 x:Name="ImageCanvas"
-                Drawables="{x:Bind ViewModel.CanvasItems, Mode=OneWay, Converter={StaticResource DrawableConverter}}"
+                Drawables="{x:Bind ViewModel.AnnotationItems, Mode=OneWay, Converter={StaticResource DrawableConverter}}"
                 ImageSource="{x:Bind ViewModel.ImageFile.Path, Mode=OneWay}" />
         </Grid>
     </Grid>

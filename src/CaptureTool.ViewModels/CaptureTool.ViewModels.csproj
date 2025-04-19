@@ -5,11 +5,6 @@
     <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
   </PropertyGroup>
 
-  <!-- Package references -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Graphics.Win2D" />
-  </ItemGroup>
-
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Capture.Desktop\CaptureTool.Capture.Desktop.csproj" />

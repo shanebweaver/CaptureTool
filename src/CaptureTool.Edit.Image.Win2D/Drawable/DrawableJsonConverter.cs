@@ -3,9 +3,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-namespace CaptureTool.UI.Xaml.Controls.ImageCanvas.Drawable;
+namespace CaptureTool.Edit.Image.Win2D.Drawable;
 
-internal class DrawableJsonConverter : JsonConverter<IDrawable>
+public sealed partial class DrawableJsonConverter : JsonConverter<IDrawable>
 {
     private enum TypeDiscriminator
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CaptureTool.Capture.Desktop.Annotation;
-using CaptureTool.UI.Xaml.Controls.ImageCanvas.Drawable;
+using CaptureTool.Edit.Image.Win2D.Drawable;
 using Microsoft.UI.Xaml.Data;
 using Windows.Foundation;
 using Windows.UI;

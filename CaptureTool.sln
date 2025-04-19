@@ -50,6 +50,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.TaskEn
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Capture.Desktop", "src\CaptureTool.Capture.Desktop\CaptureTool.Capture.Desktop.csproj", "{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Edit.Image.Win2D", "src\CaptureTool.Edit.Image.Win2D\CaptureTool.Edit.Image.Win2D.csproj", "{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -270,6 +272,18 @@ Global
 		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Release|x64.Build.0 = Release|Any CPU
 		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Release|x86.ActiveCfg = Release|Any CPU
 		{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}.Release|x86.Build.0 = Release|Any CPU
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Debug|ARM64.Build.0 = Debug|ARM64
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Debug|x64.ActiveCfg = Debug|x64
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Debug|x64.Build.0 = Debug|x64
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Debug|x86.ActiveCfg = Debug|x86
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Debug|x86.Build.0 = Debug|x86
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Release|ARM64.ActiveCfg = Release|ARM64
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Release|ARM64.Build.0 = Release|ARM64
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Release|x64.ActiveCfg = Release|x64
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Release|x64.Build.0 = Release|x64
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Release|x86.ActiveCfg = Release|x86
+		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

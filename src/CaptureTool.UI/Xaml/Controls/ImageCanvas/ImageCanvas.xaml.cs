@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using CaptureTool.UI.Xaml.Controls.ImageCanvas.Drawable;
+using CaptureTool.Edit.Image.Win2D;
+using CaptureTool.Edit.Image.Win2D.Drawable;
 using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Printing;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
@@ -13,6 +17,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
+using Windows.Graphics.Printing;
 using Windows.Storage.Streams;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
@@ -25,17 +30,29 @@ public sealed partial class ImageCanvas : UserControl
         typeof(ImageCanvas),
         new PropertyMetadata(null));
 
+    private static readonly DependencyProperty ImageSourceProperty = DependencyProperty.Register(
+        nameof(ImageSource),
+        typeof(string),
+        typeof(ImageCanvas),
+        new PropertyMetadata(null, OnImageSourcePropertyChanged));
+
+    private static void OnImageSourcePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas canvas)
+        {
+            if (e.NewValue is string imageSource)
+            {
+                Rect imageSize = GetImageSize(imageSource);
+                canvas.UpdateCanvasSize(imageSize);
+            }
+        }
+    }
+
     public IEnumerable<IDrawable> Drawables
     {
         get => (IEnumerable<IDrawable>)GetValue(DrawablesProperty);
         set => SetValue(DrawablesProperty, value);
     }
-
-    private static readonly DependencyProperty ImageSourceProperty = DependencyProperty.Register(
-        nameof(ImageSource),
-        typeof(string),
-        typeof(ImageCanvas),
-        new PropertyMetadata(null));
 
     public string ImageSource
     {
@@ -43,60 +60,84 @@ public sealed partial class ImageCanvas : UserControl
         set => SetValue(ImageSourceProperty, value);
     }
 
-    private CanvasBitmap? _canvasImage;
     private bool _isPointerDown;
     private Point _lastPointerPosition;
+    private ImageCanvasRenderer? _imageCanvasRenderer;
+    private ImageDrawable? _imageDrawable;
+    private CanvasPrintDocument? _printDocument;
 
     public ImageCanvas()
     {
         InitializeComponent();
-        SizeChanged += ImageCanvas_SizeChanged;
+
+        Unloaded += OnUnloaded;
     }
 
-    private void ImageCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
+    private void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        UpdateCanvasSize();
-        ZoomAndCenterCanvas();
+        if (_printDocument != null)
+        {
+            _printDocument.Dispose();
+            _printDocument = null;
+        }
+
+        if (_imageCanvasRenderer != null)
+        {
+            _imageCanvasRenderer.Dispose();
+            _imageCanvasRenderer = null;
+        }
+    }
+
+    public async Task<IRandomAccessStream> GetCanvasImageStreamAsync()
+    {
+        var renderTargetBitmap = new RenderTargetBitmap();
+        await renderTargetBitmap.RenderAsync(AnnotationCanvas);
+
+        var pixelBuffer = await renderTargetBitmap.GetPixelsAsync();
+        var stream = new InMemoryRandomAccessStream();
+
+        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
+        encoder.SetPixelData(
+            BitmapPixelFormat.Bgra8,
+            BitmapAlphaMode.Premultiplied,
+            (uint)renderTargetBitmap.PixelWidth,
+            (uint)renderTargetBitmap.PixelHeight,
+            96, // DPI X
+            96, // DPI Y
+            pixelBuffer.ToArray()
+        );
+
+        await encoder.FlushAsync();
+
+        stream.Seek(0); // Reset the stream position to the beginning
+        return stream;
     }
 
     private void CanvasControl_Draw(CanvasControl sender, CanvasDrawEventArgs args)
     {
         lock (this)
         {
-            UpdateCanvasSize();
-
-            Vector2 sceneTopLeft = new(0, 0);
-            Vector2 sceneCenter = new((int)Math.Floor(AnnotationCanvas.ActualWidth / 2), (int)Math.Floor(AnnotationCanvas.ActualHeight / 2));
-
-            if (_canvasImage != null)
+            if (_imageCanvasRenderer != null)
             {
-                Vector2 imageCenter = new((int)Math.Floor(_canvasImage.Bounds.Width / 2), (int)Math.Floor(_canvasImage.Bounds.Height / 2));
-                sceneTopLeft = sceneCenter - imageCenter;
+                List<IDrawable> toDraw = [_imageDrawable];
+                toDraw.AddRange(Drawables);
+                CanvasCommandList commandList = _imageCanvasRenderer.Render([.. toDraw]);
 
-                args.DrawingSession.DrawImage(_canvasImage, sceneTopLeft);
+                Vector2 sceneTopLeft = new(0, 0);
+                args.DrawingSession.DrawImage(commandList, sceneTopLeft);
             }
-
-            Rect sceneBounds = new(new(sceneTopLeft.X, sceneTopLeft.Y), new Point(AnnotationCanvas.ActualWidth, AnnotationCanvas.ActualHeight));
-
-            foreach (var drawable in Drawables)
-            {
-                try
-                {
-                    drawable.Draw(args.DrawingSession, sceneBounds);
-                }
-                catch (Exception)
-                {
-                }
-            }
-
-            // Center dot
-            //args.DrawingSession.DrawRectangle(new Rect(sceneCenter.X - 1, sceneCenter.Y - 1, 2, 2), Colors.Red);
         }
     }
 
     private void CanvasControl_CreateResources(CanvasControl sender, CanvasCreateResourcesEventArgs args)
     {
         // Create any resources needed by the Draw event handler.
+        if (_imageCanvasRenderer != null)
+        {
+            _imageCanvasRenderer.Dispose();
+            _imageCanvasRenderer = null;
+        }
+        _imageCanvasRenderer = new();
 
         // Asynchronous work can be tracked with TrackAsyncAction:
         args.TrackAsyncAction(CreateResourcesAsync(sender).AsAsyncAction());
@@ -105,55 +146,81 @@ public sealed partial class ImageCanvas : UserControl
     private async Task CreateResourcesAsync(CanvasControl sender)
     {
         // Load bitmaps, create brushes, etc.
-        if (ImageSource != null)
-        {
-            _canvasImage = await CanvasBitmap.LoadAsync(sender, ImageSource);
-        }
-    }
+        _imageDrawable = new(new(0, 0), ImageSource);
 
-    private void UpdateCanvasSize()
-    {
-        lock (this)
-        {
-            double newHeight = CanvasContainer.ActualHeight;
-            double newWidth = CanvasContainer.ActualWidth;
+        List<Task> preparationTasks = [
+            _imageDrawable.PrepareAsync(sender)
+        ];
 
-            AnnotationCanvas.Height = newHeight;
-            AnnotationCanvas.Width = newWidth;
-            AnnotationCanvas.CenterPoint = new((float)(newWidth / 2), (float)(newHeight / 2), 0);
-        }
-    }
-
-    private void ZoomAndCenterCanvas(float zoomFactor = 1.0f)
-    {
-        lock (this)
+        foreach (IDrawable drawable in Drawables)
         {
-            if (CanvasScrollView == null || AnnotationCanvas == null)
+            if (drawable is ImageDrawable imageDrawable)
             {
-                return;
+                Task prepTask = imageDrawable.PrepareAsync(sender);
+                preparationTasks.Add(prepTask);
             }
+        }
 
-            CanvasScrollView.ZoomTo(zoomFactor, null, new(ScrollingAnimationMode.Disabled));
+        await Task.WhenAll(preparationTasks);
+    }
 
-            // Get the dimensions of the ScrollViewer and CanvasControl
-            double scrollViewWidth = CanvasScrollView.ActualWidth;
-            double scrollViewHeight = CanvasScrollView.ActualHeight;
-            double canvasWidth = AnnotationCanvas.ActualWidth * zoomFactor;
-            double canvasHeight = AnnotationCanvas.ActualHeight * zoomFactor;
-
-            // Calculate the offsets to center the canvas
-            double horizontalOffset = (canvasWidth - scrollViewWidth) / 2;
-            double verticalOffset = (canvasHeight - scrollViewHeight) / 2;
-
-            // Ensure offsets are non-negative (to prevent scrolling out of bounds)
-            horizontalOffset = Math.Max(0, horizontalOffset);
-            verticalOffset = Math.Max(0, verticalOffset);
-
-            // Scroll to the calculated offsets
-            CanvasScrollView.ZoomTo(zoomFactor, new((float)horizontalOffset, (float)verticalOffset));
+    private void UpdateCanvasSize(Rect newSize)
+    {
+        lock (this)
+        {
+            AnnotationCanvas.Height = newSize.Height;
+            AnnotationCanvas.Width = newSize.Width;
         }
     }
 
+    #region Printing
+    public async Task ShowPrintUIAsync()
+    {
+        CanvasPrintDocument printDocument = MakePrintDocument();
+
+        void OnPrintTaskRequested(PrintManager sender, PrintTaskRequestedEventArgs args)
+        {
+            args.Request.CreatePrintTask("Capture Tool Image Print", (a) =>
+            {
+                a.SetSource(printDocument);
+            });
+        }
+
+        var printManager = PrintManager.GetForCurrentView(); // TODO: Replace with IPrintManagerInterop::GetForWindow
+        printManager.PrintTaskRequested += OnPrintTaskRequested;
+        await PrintManager.ShowPrintUIAsync();
+        printManager.PrintTaskRequested -= OnPrintTaskRequested;
+    }
+
+    private CanvasPrintDocument MakePrintDocument()
+    {
+        _printDocument?.Dispose();
+        _printDocument = new CanvasPrintDocument();
+
+        _printDocument.Preview += (sender, args) =>
+        {
+            sender.SetPageCount(1);
+            PrintPage(args.DrawingSession, args.PrintTaskOptions.GetPageDescription(1));
+        };
+
+        _printDocument.Print += (sender, args) =>
+        {
+            using var printDrawingSession = args.CreateDrawingSession();
+            PrintPage(printDrawingSession, args.PrintTaskOptions.GetPageDescription(1));
+        };
+
+        return _printDocument;
+    }
+
+    private void PrintPage(CanvasDrawingSession printDrawingSession, PrintPageDescription desc)
+    {
+        List<IDrawable> toDraw = [_imageDrawable];
+        toDraw.AddRange(Drawables);
+        ImageCanvasRenderer.Render([.. toDraw], printDrawingSession);
+    }
+    #endregion
+
+    #region Panning
     private void CanvasContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = true;
@@ -200,46 +267,36 @@ public sealed partial class ImageCanvas : UserControl
         _isPointerDown = false;
         CanvasContainer.ReleasePointerCaptures();
     }
+    #endregion
 
-    public async Task<IRandomAccessStream> GetCanvasImageStreamAsync()
+    private static Rect GetImageSize(string imageFileName)
     {
-        var renderTargetBitmap = new RenderTargetBitmap();
-        await renderTargetBitmap.RenderAsync(AnnotationCanvas);
+        using FileStream file = new(imageFileName, FileMode.Open, FileAccess.Read);
+        var image = System.Drawing.Image.FromStream(
+            stream: file,
+            useEmbeddedColorManagement: false,
+            validateImageData: false);
 
-        var pixelBuffer = await renderTargetBitmap.GetPixelsAsync();
-        var stream = new InMemoryRandomAccessStream();
+        float width = image.PhysicalDimension.Width;
+        float height = image.PhysicalDimension.Height;
 
-        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
-        encoder.SetPixelData(
-            BitmapPixelFormat.Bgra8,
-            BitmapAlphaMode.Premultiplied,
-            (uint)renderTargetBitmap.PixelWidth,
-            (uint)renderTargetBitmap.PixelHeight,
-            96, // DPI X
-            96, // DPI Y
-            pixelBuffer.ToArray()
-        );
-
-        await encoder.FlushAsync();
-
-        stream.Seek(0); // Reset the stream position to the beginning
-        return stream;
+        return new Rect(0, 0, width, height);
     }
 
-    public Task<SoftwareBitmap> GetCanvasImageAsync()
-    {
-        return GetCanvasImageAsync(AnnotationCanvas);
-    }
+    //public Task<SoftwareBitmap> GetCanvasImageAsync()
+    //{
+    //    return GetCanvasImageAsync(AnnotationCanvas);
+    //}
 
-    public static async Task<SoftwareBitmap> GetCanvasImageAsync(CanvasControl canvasControl)
-    {
-        var renderTargetBitmap = new RenderTargetBitmap();
-        await renderTargetBitmap.RenderAsync(canvasControl);
+    //public static async Task<SoftwareBitmap> GetCanvasImageAsync(CanvasControl canvasControl)
+    //{
+    //    var renderTargetBitmap = new RenderTargetBitmap();
+    //    await renderTargetBitmap.RenderAsync(canvasControl);
 
-        var pixelBuffer = await renderTargetBitmap.GetPixelsAsync();
-        var softwareBitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, renderTargetBitmap.PixelWidth, renderTargetBitmap.PixelHeight);
-        softwareBitmap.CopyFromBuffer(pixelBuffer);
+    //    var pixelBuffer = await renderTargetBitmap.GetPixelsAsync();
+    //    var softwareBitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, renderTargetBitmap.PixelWidth, renderTargetBitmap.PixelHeight);
+    //    softwareBitmap.CopyFromBuffer(pixelBuffer);
 
-        return softwareBitmap;
-    }
+    //    return softwareBitmap;
+    //}
 }
