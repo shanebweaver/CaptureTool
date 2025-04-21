@@ -31,11 +31,12 @@ public sealed partial class ImageCanvas : UserControl
 
     private static void OnCanvasSizePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is ImageCanvas canvas)
+        if (d is ImageCanvas control)
         {
-            if (e.NewValue is Size canvasSize)
+            if (e.NewValue is Size newSize)
             {
-                canvas.UpdateCanvasSize(canvasSize);
+                control.AnnotationCanvas.Height = newSize.Height;
+                control.AnnotationCanvas.Width = newSize.Width;
             }
         }
     }
@@ -60,6 +61,7 @@ public sealed partial class ImageCanvas : UserControl
         InitializeComponent();
     }
 
+    #region Drawing
     private void CanvasControl_Draw(CanvasControl sender, CanvasDrawEventArgs args)
     {
         lock (this)
@@ -95,29 +97,21 @@ public sealed partial class ImageCanvas : UserControl
 
         await Task.WhenAll(preparationTasks);
     }
-
-    private void UpdateCanvasSize(Size newSize)
-    {
-        AnnotationCanvas.Height = newSize.Height;
-        AnnotationCanvas.Width = newSize.Width;
-    }
+    #endregion
 
     #region Panning
     private void CanvasContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = true;
         _lastPointerPosition = e.GetCurrentPoint(CanvasContainer).Position;
-        CanvasContainer.CapturePointer(e.Pointer); // Capture the pointer for consistent tracking
+        CanvasContainer.CapturePointer(e.Pointer);
     }
 
     private void CanvasContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
         if (_isPointerDown)
         {
-            // Get the current pointer position
             Point currentPosition = e.GetCurrentPoint(CanvasContainer).Position;
-
-            // Calculate the difference between the current and last pointer positions
             double deltaX = _lastPointerPosition.X - currentPosition.X;
             double deltaY = _lastPointerPosition.Y - currentPosition.Y;
 
@@ -126,14 +120,12 @@ public sealed partial class ImageCanvas : UserControl
                 return;
             }
 
-            // Update the scroll offsets of the CanvasScrollView
             CanvasScrollView.ScrollBy(
                 deltaX,
                 deltaY,
                 new(ScrollingAnimationMode.Disabled)
             );
 
-            // Update the last pointer position
             _lastPointerPosition = currentPosition;
         }
     }
