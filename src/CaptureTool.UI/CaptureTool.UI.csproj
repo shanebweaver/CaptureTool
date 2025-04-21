@@ -77,33 +77,28 @@
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
   </ItemGroup>
-  <ItemGroup>
-    <Page Update="Xaml\Views\ImageCanvasItemView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
 
   <!-- XAML resources -->
   <ItemGroup>
-    <Page Update="Xaml\UserControls\NewCaptureButton.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Update="Themes\Generic.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Xaml\Pages\DesktopCaptureOptionsPage.xaml">
+    <Page Update="Xaml\Controls\ImageCanvas\ImageCanvas.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Xaml\Pages\ImageEditPage.xaml">
+    <Page Update="Xaml\Controls\NewCaptureButton.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Pages\AboutPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Xaml\Views\AppTitleBarView.xaml">
+    <Page Update="Xaml\Pages\DesktopCaptureOptionsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Xaml\Views\AppMenuView.xaml">
+    <Page Update="Xaml\Pages\HomePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Xaml\Pages\ImageEditPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Pages\LoadingPage.xaml">
@@ -112,7 +107,10 @@
     <Page Update="Xaml\Pages\SettingsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Xaml\Pages\HomePage.xaml">
+    <Page Update="Xaml\Views\AppMenuView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Xaml\Views\AppTitleBarView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
@@ -133,12 +131,4 @@
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
-  <ItemGroup>
-    <PRIResource Remove="Xaml\Controls\InfiniteCanvas\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Xaml\Controls\ImageCanvas\ImageCanvas.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
 </Project>

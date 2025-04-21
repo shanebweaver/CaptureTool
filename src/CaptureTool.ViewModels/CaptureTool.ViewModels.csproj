@@ -3,13 +3,20 @@
   <!-- Project properties -->
   <PropertyGroup>
     <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+    <Platforms>x86;x64;ARM64</Platforms>
   </PropertyGroup>
+
+  <!-- Package references -->
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" />
+  </ItemGroup>
 
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Capture.Desktop\CaptureTool.Capture.Desktop.csproj" />
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
     <ProjectReference Include="..\CaptureTool.Core\CaptureTool.Core.csproj" />
+    <ProjectReference Include="..\CaptureTool.Edit.Image.Win2D\CaptureTool.Edit.Image.Win2D.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Cancellation\CaptureTool.Services.Cancellation.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Globalization\CaptureTool.Services.Globalization.csproj" />

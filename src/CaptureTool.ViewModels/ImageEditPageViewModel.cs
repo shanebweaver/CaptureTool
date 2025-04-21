@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Drawing;
+using System.IO;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop;
-using CaptureTool.Capture.Desktop.Annotation;
-using CaptureTool.Services;
+using CaptureTool.Edit.Image.Win2D;
+using CaptureTool.Edit.Image.Win2D.Drawable;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.TaskEnvironment;
-using CaptureTool.ViewModels.Annotation;
 using CaptureTool.ViewModels.Commands;
+using Microsoft.UI;
+using Windows.Foundation;
 
 namespace CaptureTool.ViewModels;
 
@@ -18,10 +20,6 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 {
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ICancellationService _cancellationService;
-    private readonly IFactoryService<ImageAnnotationViewModel> _imageCanvasItemViewModelFactory;
-
-    public event EventHandler? CopyRequested;
-    public event EventHandler? PrintRequested;
 
     public RelayCommand CopyCommand => new(Copy);
     public RelayCommand CropCommand => new(Crop);
@@ -31,11 +29,11 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     public RelayCommand RotateCommand => new(Rotate);
     public RelayCommand PrintCommand => new(Print);
 
-    private ObservableCollection<AnnotationItem> _annotationItems;
-    public ObservableCollection<AnnotationItem> AnnotationItems
+    private ObservableCollection<IDrawable> _drawables;
+    public ObservableCollection<IDrawable> Drawables
     {
-        get => _annotationItems;
-        set => Set(ref _annotationItems, value);
+        get => _drawables;
+        set => Set(ref _drawables, value);
     }
 
     private ImageFile? _imageFile;
@@ -45,18 +43,22 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         set => Set(ref _imageFile, value);
     }
 
-    public ImageAnnotationViewModel? ImageCanvasItemViewModel { get; private set; }
+    private Size _imageSize;
+    public Size ImageSize
+    {
+        get => _imageSize;
+        set => Set(ref _imageSize, value);
+    }
 
     public ImageEditPageViewModel(
         ITaskEnvironment taskEnvironment,
-        ICancellationService cancellationService,
-        IFactoryService<ImageAnnotationViewModel> imageCanvasItemViewModelFactory)
+        ICancellationService cancellationService)
     {
         _taskEnvironment = taskEnvironment;
         _cancellationService = cancellationService;
-        _imageCanvasItemViewModelFactory = imageCanvasItemViewModelFactory;
 
-        _annotationItems = [];
+        _drawables = [];
+        _imageSize = new();
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -68,18 +70,19 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
+            Vector2 topLeft = new(0, 0);
             if (parameter is ImageFile imageFile)
             {
                 ImageFile = imageFile;
+                ImageSize = GetImageSize(imageFile.Path);
+
+                ImageDrawable imageDrawable = new(topLeft, imageFile.Path);
+                Drawables.Add(imageDrawable);
             }
 
-            AnnotationItems.Add(new RectangleShapeAnnotationItem(50, 50, 50, 50, Color.Red, 2));
-            // TODO: Add an IImageCanvasCommand to a list as well to support undo/redo.
-
-            // Don't use negative position right now. Now supported until the canvas can handle it.
-            // Causes the copy to render offset.
-            //CanvasItems.Add(new RectangleShapeAnnotationItem(-50, -50, 50, 50, Color.Blue, 4));
-            AnnotationItems.Add(new TextAnnotationItem("Hello world", 10, 10, Color.Yellow));
+            // Test drawables
+            Drawables.Add(new RectangleDrawable(new(50, 50), new(50, 50), Colors.Red, 2));
+            Drawables.Add(new TextDrawable(new(50, 50), "Hello world", Colors.Yellow));
         }
         catch (OperationCanceledException)
         {
@@ -95,13 +98,16 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 
     public override void Unload()
     {
-        AnnotationItems.Clear();
+        Drawables.Clear();
         base.Unload();
     }
 
     private void Copy()
     {
-        CopyRequested?.Invoke(this, EventArgs.Empty);
+        if (ImageSize.Height > 0 && ImageSize.Width > 0)
+        {
+            _ = ImageCanvasRenderer.CopyImageToClipboardAsync([.. Drawables], (float)ImageSize.Width, (float)ImageSize.Height, 96);
+        }
     }
 
     private void Crop()
@@ -131,6 +137,40 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 
     private void Print()
     {
-        PrintRequested?.Invoke(this, EventArgs.Empty);
+
+    }
+
+
+    //public void ShowPrintUI()
+    //{
+    //    DispatcherQueue.TryEnqueue(async () =>
+    //    {
+    //        IDrawable[] toDraw = GetDrawablesToDraw();
+    //        await ImageCanvasPrinter.ShowPrintUIAsync(toDraw);
+    //    });
+    //}
+
+    //public void SaveImageToFile()
+    //{
+    //    FileSavePicker fileSavePicker = new FileSavePicker()
+    //    { 
+    //        SuggestedStartLocation = PickerLocationId.PicturesLibrary,
+    //        SuggestedFileName = Path.GetFileName(ImageSource),
+    //    };
+
+    //    _ = fileSavePicker.PickSaveFileAsync();
+    //}
+
+    private static Size GetImageSize(string imagePath)
+    {
+        using FileStream file = new(imagePath, FileMode.Open, FileAccess.Read);
+        var image = System.Drawing.Image.FromStream(
+            stream: file,
+            useEmbeddedColorManagement: false,
+            validateImageData: false);
+
+        float width = image.PhysicalDimension.Width;
+        float height = image.PhysicalDimension.Height;
+        return new(width, height);
     }
 }

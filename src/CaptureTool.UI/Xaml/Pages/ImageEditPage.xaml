@@ -3,7 +3,6 @@
     x:Class="CaptureTool.UI.Xaml.Pages.ImageEditPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="using:CaptureTool.UI.Xaml.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:imagecanvas="using:CaptureTool.UI.Xaml.Controls.ImageCanvas"
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
@@ -12,10 +11,6 @@
     xmlns:views="using:CaptureTool.UI.Xaml.Views"
     d:DataContext="{d:DesignInstance Type=viewmodels:ImageEditPageViewModel}"
     mc:Ignorable="d">
-
-    <Page.Resources>
-        <converters:DrawableConverter x:Key="DrawableConverter" />
-    </Page.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -68,8 +63,8 @@
             Row="1">
             <imagecanvas:ImageCanvas
                 x:Name="ImageCanvas"
-                Drawables="{x:Bind ViewModel.AnnotationItems, Mode=OneWay, Converter={StaticResource DrawableConverter}}"
-                ImageSource="{x:Bind ViewModel.ImageFile.Path, Mode=OneWay}" />
+                CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"
+                Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}" />
         </Grid>
     </Grid>
 </local:ImageEditPageBase>

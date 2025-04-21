@@ -3,19 +3,18 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.Graphics.Canvas;
-using Windows.Foundation;
 
 namespace CaptureTool.Edit.Image.Win2D.Drawable;
 
 public sealed partial class ImageDrawable : IDrawable
 {
-    public Point Offset { get; set; }
+    public Vector2 Offset { get; set; }
 
     public string FileName { get; set; }
 
     private ICanvasImage? _canvasImage;
 
-    public ImageDrawable(Point offset, string fileName)
+    public ImageDrawable(Vector2 offset, string fileName)
     {
         Offset = offset;
         FileName = fileName;
@@ -24,8 +23,7 @@ public sealed partial class ImageDrawable : IDrawable
     public void Draw(CanvasDrawingSession drawingSession)
     {
         Debug.Assert(_canvasImage != null);
-        Vector2 offset = new((float)Offset.X, (float)Offset.Y);
-        drawingSession.DrawImage(_canvasImage, offset);
+        drawingSession.DrawImage(_canvasImage, Offset);
     }
 
     public async Task PrepareAsync(ICanvasResourceCreator resourceCreator)

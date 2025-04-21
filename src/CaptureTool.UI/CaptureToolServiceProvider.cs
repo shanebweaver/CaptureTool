@@ -16,7 +16,6 @@ using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.Services.TaskEnvironment.WinUI;
 using CaptureTool.Services.Telemetry;
 using CaptureTool.ViewModels;
-using CaptureTool.ViewModels.Annotation;
 using CaptureTool.ViewModels.Factories;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -58,11 +57,9 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<AppMenuViewModel>();
         collection.AddSingleton<AppTitleBarViewModel>();
         collection.AddSingleton<DesktopCaptureModeViewModel>();
-        collection.AddSingleton<ImageAnnotationViewModel>();
 
         // ViewModel factories
         collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel>, DesktopCaptureModeViewModelFactory>();
-        collection.AddSingleton<IFactoryService<ImageAnnotationViewModel>, ImageCanvasItemViewModelFactory>();
 
         _serviceProvider = collection.BuildServiceProvider();
     }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Graphics.Canvas;
+﻿using System.Numerics;
+using Microsoft.Graphics.Canvas;
 using Windows.Foundation;
 using Windows.UI;
 
@@ -6,12 +7,12 @@ namespace CaptureTool.Edit.Image.Win2D.Drawable;
 
 public sealed partial class RectangleDrawable : IDrawable
 {
-    public Point Offset { get; set; }
+    public Vector2 Offset { get; set; }
     public Size Size { get; set; }
     public Color Color { get; set; }
     public int StrokeWidth { get; set; }
 
-    public RectangleDrawable(Point offset, Size size, Color color, int strokeWidth)
+    public RectangleDrawable(Vector2 offset, Size size, Color color, int strokeWidth)
     {
         Offset = offset;
         Size = size;
