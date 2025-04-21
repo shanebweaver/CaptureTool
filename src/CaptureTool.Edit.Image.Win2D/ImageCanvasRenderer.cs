@@ -1,25 +1,46 @@
 ﻿using System;
+using System.Numerics;
+using System.Threading.Tasks;
 using CaptureTool.Edit.Image.Win2D.Drawable;
 using Microsoft.Graphics.Canvas;
 using Microsoft.UI;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage.Streams;
 using Windows.UI;
 
 namespace CaptureTool.Edit.Image.Win2D;
 
-public sealed partial class ImageCanvasRenderer : IDisposable
+public static partial class ImageCanvasRenderer
 {
-    private static readonly Color ClearColor = Colors.Black;
+    private static readonly Color ClearColor = Colors.White;
 
-    private readonly CanvasDevice _device;
-
-    public ImageCanvasRenderer()
+    public static async Task CopyImageToClipboardAsync(IDrawable[] drawables, float width, float height, float dpi = 96, Vector2? offset = null)
     {
-        _device = CanvasDevice.GetSharedDevice();
+        CanvasCommandList canvasCommandList = Render(drawables);
+        await CopyImageToClipboardAsync(canvasCommandList, width, height, dpi, offset);
     }
 
-    public CanvasCommandList Render(IDrawable[] drawables)
+    public static async Task CopyImageToClipboardAsync(CanvasCommandList commandList, float width, float height, float dpi = 96, Vector2? offset = null)
     {
-        CanvasCommandList commandList = new(_device);
+        using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), width, height, dpi);
+        using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
+
+        Vector2 sceneTopLeft = offset ?? new(0, 0);
+        drawingSession.DrawImage(commandList, sceneTopLeft);
+        drawingSession.Flush();
+
+        using var stream = new InMemoryRandomAccessStream();
+        await renderTarget.SaveAsync(stream, CanvasBitmapFileFormat.Png);
+
+        DataPackage dataPackage = new();
+        dataPackage.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
+        Clipboard.SetContent(dataPackage);
+        Clipboard.Flush();
+    }
+
+    public static CanvasCommandList Render(IDrawable[] drawables)
+    {
+        CanvasCommandList commandList = new(CanvasDevice.GetSharedDevice());
         using CanvasDrawingSession drawingSession = commandList.CreateDrawingSession();
         Render(drawables, drawingSession);
         return commandList;
@@ -37,10 +58,5 @@ public sealed partial class ImageCanvasRenderer : IDisposable
         {
             drawable.Draw(drawingSession);
         }
-    }
-
-    public void Dispose()
-    {
-        _device.Dispose();
     }
 }

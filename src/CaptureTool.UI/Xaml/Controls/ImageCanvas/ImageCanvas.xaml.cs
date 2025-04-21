@@ -1,24 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Numerics;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using CaptureTool.Edit.Image.Win2D;
 using CaptureTool.Edit.Image.Win2D.Drawable;
 using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Printing;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Foundation;
-using Windows.Graphics.Imaging;
-using Windows.Graphics.Printing;
-using Windows.Storage.Streams;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
@@ -62,82 +55,57 @@ public sealed partial class ImageCanvas : UserControl
 
     private bool _isPointerDown;
     private Point _lastPointerPosition;
-    private ImageCanvasRenderer? _imageCanvasRenderer;
     private ImageDrawable? _imageDrawable;
-    private CanvasPrintDocument? _printDocument;
 
     public ImageCanvas()
     {
         InitializeComponent();
-
-        Unloaded += OnUnloaded;
     }
 
-    private void OnUnloaded(object sender, RoutedEventArgs e)
+    public void ShowPrintUI()
     {
-        if (_printDocument != null)
+        DispatcherQueue.TryEnqueue(async () =>
         {
-            _printDocument.Dispose();
-            _printDocument = null;
-        }
-
-        if (_imageCanvasRenderer != null)
-        {
-            _imageCanvasRenderer.Dispose();
-            _imageCanvasRenderer = null;
-        }
+            IDrawable[] toDraw = GetDrawablesToDraw();
+            await ImageCanvasPrinter.ShowPrintUIAsync(toDraw);
+        });
     }
 
-    public async Task<IRandomAccessStream> GetCanvasImageStreamAsync()
+    public void CopyImageToClipboard()
     {
-        var renderTargetBitmap = new RenderTargetBitmap();
-        await renderTargetBitmap.RenderAsync(AnnotationCanvas);
+        DispatcherQueue.TryEnqueue(async () =>
+        {
+            if (_imageDrawable != null)
+            {
+                IDrawable[] toDraw = GetDrawablesToDraw();
+                Rect imageSize = GetImageSize(ImageSource);
+                await ImageCanvasRenderer.CopyImageToClipboardAsync(toDraw, (float)imageSize.Width, (float)imageSize.Height, 96);
+            }
+        });
+    }
 
-        var pixelBuffer = await renderTargetBitmap.GetPixelsAsync();
-        var stream = new InMemoryRandomAccessStream();
-
-        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
-        encoder.SetPixelData(
-            BitmapPixelFormat.Bgra8,
-            BitmapAlphaMode.Premultiplied,
-            (uint)renderTargetBitmap.PixelWidth,
-            (uint)renderTargetBitmap.PixelHeight,
-            96, // DPI X
-            96, // DPI Y
-            pixelBuffer.ToArray()
-        );
-
-        await encoder.FlushAsync();
-
-        stream.Seek(0); // Reset the stream position to the beginning
-        return stream;
+    private IDrawable[] GetDrawablesToDraw()
+    {
+        List<IDrawable> toDraw = [_imageDrawable];
+        toDraw.AddRange(Drawables);
+        return [.. toDraw];
     }
 
     private void CanvasControl_Draw(CanvasControl sender, CanvasDrawEventArgs args)
     {
         lock (this)
         {
-            if (_imageCanvasRenderer != null)
-            {
-                List<IDrawable> toDraw = [_imageDrawable];
-                toDraw.AddRange(Drawables);
-                CanvasCommandList commandList = _imageCanvasRenderer.Render([.. toDraw]);
+            IDrawable[] toDraw = GetDrawablesToDraw();
+            CanvasCommandList commandList = ImageCanvasRenderer.Render(toDraw);
 
-                Vector2 sceneTopLeft = new(0, 0);
-                args.DrawingSession.DrawImage(commandList, sceneTopLeft);
-            }
+            Vector2 sceneTopLeft = new(0, 0);
+            args.DrawingSession.DrawImage(commandList, sceneTopLeft);
         }
     }
 
     private void CanvasControl_CreateResources(CanvasControl sender, CanvasCreateResourcesEventArgs args)
     {
         // Create any resources needed by the Draw event handler.
-        if (_imageCanvasRenderer != null)
-        {
-            _imageCanvasRenderer.Dispose();
-            _imageCanvasRenderer = null;
-        }
-        _imageCanvasRenderer = new();
 
         // Asynchronous work can be tracked with TrackAsyncAction:
         args.TrackAsyncAction(CreateResourcesAsync(sender).AsAsyncAction());
@@ -172,53 +140,6 @@ public sealed partial class ImageCanvas : UserControl
             AnnotationCanvas.Width = newSize.Width;
         }
     }
-
-    #region Printing
-    public async Task ShowPrintUIAsync()
-    {
-        CanvasPrintDocument printDocument = MakePrintDocument();
-
-        void OnPrintTaskRequested(PrintManager sender, PrintTaskRequestedEventArgs args)
-        {
-            args.Request.CreatePrintTask("Capture Tool Image Print", (a) =>
-            {
-                a.SetSource(printDocument);
-            });
-        }
-
-        var printManager = PrintManager.GetForCurrentView(); // TODO: Replace with IPrintManagerInterop::GetForWindow
-        printManager.PrintTaskRequested += OnPrintTaskRequested;
-        await PrintManager.ShowPrintUIAsync();
-        printManager.PrintTaskRequested -= OnPrintTaskRequested;
-    }
-
-    private CanvasPrintDocument MakePrintDocument()
-    {
-        _printDocument?.Dispose();
-        _printDocument = new CanvasPrintDocument();
-
-        _printDocument.Preview += (sender, args) =>
-        {
-            sender.SetPageCount(1);
-            PrintPage(args.DrawingSession, args.PrintTaskOptions.GetPageDescription(1));
-        };
-
-        _printDocument.Print += (sender, args) =>
-        {
-            using var printDrawingSession = args.CreateDrawingSession();
-            PrintPage(printDrawingSession, args.PrintTaskOptions.GetPageDescription(1));
-        };
-
-        return _printDocument;
-    }
-
-    private void PrintPage(CanvasDrawingSession printDrawingSession, PrintPageDescription desc)
-    {
-        List<IDrawable> toDraw = [_imageDrawable];
-        toDraw.AddRange(Drawables);
-        ImageCanvasRenderer.Render([.. toDraw], printDrawingSession);
-    }
-    #endregion
 
     #region Panning
     private void CanvasContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -282,21 +203,4 @@ public sealed partial class ImageCanvas : UserControl
 
         return new Rect(0, 0, width, height);
     }
-
-    //public Task<SoftwareBitmap> GetCanvasImageAsync()
-    //{
-    //    return GetCanvasImageAsync(AnnotationCanvas);
-    //}
-
-    //public static async Task<SoftwareBitmap> GetCanvasImageAsync(CanvasControl canvasControl)
-    //{
-    //    var renderTargetBitmap = new RenderTargetBitmap();
-    //    await renderTargetBitmap.RenderAsync(canvasControl);
-
-    //    var pixelBuffer = await renderTargetBitmap.GetPixelsAsync();
-    //    var softwareBitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, renderTargetBitmap.PixelWidth, renderTargetBitmap.PixelHeight);
-    //    softwareBitmap.CopyFromBuffer(pixelBuffer);
-
-    //    return softwareBitmap;
-    //}
 }

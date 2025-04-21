@@ -1,6 +1,4 @@
 using System;
-using Windows.ApplicationModel.DataTransfer;
-using Windows.Storage.Streams;
 
 namespace CaptureTool.UI.Xaml.Pages;
 
@@ -14,20 +12,13 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.PrintRequested += OnPrintRequested;
     }
 
-    private async void OnCopyRequested(object? sender, EventArgs e)
+    private void OnCopyRequested(object? sender, EventArgs e)
     {
-        var imageStream = await ImageCanvas.GetCanvasImageStreamAsync();
-        if (imageStream != null)
-        {
-            DataPackage clipboardData = new();
-            var streamReference = RandomAccessStreamReference.CreateFromStream(imageStream);
-            clipboardData.SetBitmap(streamReference);
-            Clipboard.SetContent(clipboardData);
-        }
+        ImageCanvas.CopyImageToClipboard();
     }
 
     private void OnPrintRequested(object? sender, EventArgs e)
     {
-        DispatcherQueue.TryEnqueue(() => _ = ImageCanvas.ShowPrintUIAsync());
+        ImageCanvas.ShowPrintUI();
     }
 }
