@@ -20,7 +20,7 @@
             HorizontalScrollBarVisibility="Auto"
             ZoomMode="Enabled">
             <canvasui:CanvasControl
-                x:Name="AnnotationCanvas"
+                x:Name="DrawingCanvas"
                 CreateResources="CanvasControl_CreateResources"
                 Draw="CanvasControl_Draw" />
         </ScrollView>

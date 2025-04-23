@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Numerics;
 using System.Threading;
@@ -11,8 +12,6 @@ using CaptureTool.Edit.Image.Win2D.Drawable;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.ViewModels.Commands;
-using Microsoft.UI;
-using Windows.Foundation;
 
 namespace CaptureTool.ViewModels;
 
@@ -27,6 +26,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     public RelayCommand UndoCommand => new(Undo);
     public RelayCommand RedoCommand => new(Redo);
     public RelayCommand RotateCommand => new(Rotate);
+    public RelayCommand FlipCommand => new(Flip);
     public RelayCommand PrintCommand => new(Print);
 
     private ObservableCollection<IDrawable> _drawables;
@@ -50,6 +50,13 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         set => Set(ref _imageSize, value);
     }
 
+    private RotateFlipType _orientation;
+    public RotateFlipType Orientation
+    {
+        get => _orientation;
+        set => Set(ref _orientation, value);
+    }
+
     public ImageEditPageViewModel(
         ITaskEnvironment taskEnvironment,
         ICancellationService cancellationService)
@@ -59,6 +66,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 
         _drawables = [];
         _imageSize = new();
+        _orientation = RotateFlipType.RotateNoneFlipNone;
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -81,8 +89,8 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
             }
 
             // Test drawables
-            Drawables.Add(new RectangleDrawable(new(50, 50), new(50, 50), Colors.Red, 2));
-            Drawables.Add(new TextDrawable(new(50, 50), "Hello world", Colors.Yellow));
+            Drawables.Add(new RectangleDrawable(new(50, 50), new(50, 50), Color.Red, 2));
+            Drawables.Add(new TextDrawable(new(50, 50), "Hello world", Color.Yellow));
         }
         catch (OperationCanceledException)
         {
@@ -106,7 +114,8 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     {
         if (ImageSize.Height > 0 && ImageSize.Width > 0)
         {
-            _ = ImageCanvasRenderer.CopyImageToClipboardAsync([.. Drawables], (float)ImageSize.Width, (float)ImageSize.Height, 96);
+            ImageCanvasRenderOptions options = new(Orientation, ImageSize);
+            _ = ImageCanvasRenderer.CopyImageToClipboardAsync([.. Drawables], options, ImageSize.Width, ImageSize.Height, 96);
         }
     }
 
@@ -132,14 +141,44 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 
     private void Rotate()
     {
+        Orientation = Orientation switch
+        {
+            RotateFlipType.RotateNoneFlipNone => RotateFlipType.Rotate90FlipNone,
+            RotateFlipType.Rotate90FlipNone => RotateFlipType.Rotate180FlipNone,
+            RotateFlipType.Rotate180FlipNone => RotateFlipType.Rotate270FlipNone,
+            RotateFlipType.Rotate270FlipNone => RotateFlipType.RotateNoneFlipNone,
 
+            RotateFlipType.RotateNoneFlipX => RotateFlipType.Rotate90FlipX,
+            RotateFlipType.Rotate90FlipX => RotateFlipType.Rotate180FlipX,
+            RotateFlipType.Rotate180FlipX => RotateFlipType.Rotate270FlipX,
+            RotateFlipType.Rotate270FlipX => RotateFlipType.RotateNoneFlipX,
+
+            _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
+        };
+    }
+
+    private void Flip()
+    {
+        Orientation = Orientation switch
+        {
+            RotateFlipType.RotateNoneFlipNone => RotateFlipType.RotateNoneFlipX,
+            RotateFlipType.Rotate90FlipNone => RotateFlipType.Rotate90FlipX,
+            RotateFlipType.Rotate180FlipNone => RotateFlipType.Rotate180FlipX,
+            RotateFlipType.Rotate270FlipNone => RotateFlipType.Rotate270FlipX,
+
+            RotateFlipType.RotateNoneFlipX => RotateFlipType.RotateNoneFlipNone,
+            RotateFlipType.Rotate90FlipX => RotateFlipType.Rotate90FlipNone,
+            RotateFlipType.Rotate180FlipX => RotateFlipType.Rotate180FlipNone,
+            RotateFlipType.Rotate270FlipX => RotateFlipType.Rotate270FlipNone,
+
+            _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
+        };
     }
 
     private void Print()
     {
 
     }
-
 
     //public void ShowPrintUI()
     //{
@@ -171,6 +210,6 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 
         float width = image.PhysicalDimension.Width;
         float height = image.PhysicalDimension.Height;
-        return new(width, height);
+        return new(Convert.ToInt32(width), Convert.ToInt32(height));
     }
 }

@@ -1,7 +1,6 @@
-﻿using System.Numerics;
+﻿using System.Drawing;
+using System.Numerics;
 using Microsoft.Graphics.Canvas;
-using Windows.Foundation;
-using Windows.UI;
 
 namespace CaptureTool.Edit.Image.Win2D.Drawable;
 
@@ -22,7 +21,8 @@ public sealed partial class RectangleDrawable : IDrawable
 
     public void Draw(CanvasDrawingSession drawingSession)
     {
-        Rect rectangleRect = new(Offset.X, Offset.Y, Size.Width, Size.Height);
-        drawingSession.DrawRectangle(rectangleRect, Color, StrokeWidth);
+        Windows.Foundation.Rect rectangleRect = new(Offset.X, Offset.Y, Size.Width, Size.Height);
+        Windows.UI.Color color = Windows.UI.Color.FromArgb(Color.A, Color.R, Color.G, Color.B);
+        drawingSession.DrawRectangle(rectangleRect, color, StrokeWidth);
     }
 }

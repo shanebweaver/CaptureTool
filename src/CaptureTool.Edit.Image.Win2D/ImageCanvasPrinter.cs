@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Edit.Image.Win2D.Drawable;
@@ -12,20 +13,20 @@ public static partial class ImageCanvasPrinter
 {
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    public static async Task ShowPrintUIAsync(IDrawable[] drawables)
+    public static async Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
         await _semaphore.WaitAsync();
 
         void PrintDocument_Preview(CanvasPrintDocument sender, CanvasPreviewEventArgs args)
         {
             sender.SetPageCount(1);
-            ImageCanvasRenderer.Render(drawables, args.DrawingSession);
+            ImageCanvasRenderer.Render(drawables, options, args.DrawingSession);
         }
 
         void PrintDocument_Print(CanvasPrintDocument sender, CanvasPrintEventArgs args)
         {
             using var printDrawingSession = args.CreateDrawingSession();
-            ImageCanvasRenderer.Render(drawables, printDrawingSession);
+            ImageCanvasRenderer.Render(drawables, options, printDrawingSession);
         }
 
         CanvasPrintDocument printDocument = new(CanvasDevice.GetSharedDevice());

@@ -1,6 +1,6 @@
-﻿using System.Numerics;
+﻿using System.Drawing;
+using System.Numerics;
 using Microsoft.Graphics.Canvas;
-using Windows.UI;
 
 namespace CaptureTool.Edit.Image.Win2D.Drawable;
 
@@ -20,6 +20,7 @@ public sealed partial class TextDrawable : IDrawable
     public void Draw(CanvasDrawingSession drawingSession)
     {
         Vector2 textPosition = new(Offset.X, Offset.Y);
-        drawingSession.DrawText(Text, textPosition, Color);
+        Windows.UI.Color color = Windows.UI.Color.FromArgb(Color.A, Color.R, Color.G, Color.B);
+        drawingSession.DrawText(Text, textPosition, color);
     }
 }

@@ -1,17 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Numerics;
+using System.Drawing;
 using System.Threading.Tasks;
 using CaptureTool.Edit.Image.Win2D;
 using CaptureTool.Edit.Image.Win2D.Drawable;
-using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Windows.Foundation;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
@@ -23,11 +20,40 @@ public sealed partial class ImageCanvas : UserControl
         typeof(ImageCanvas),
         new PropertyMetadata(null));
 
+    private static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(
+        nameof(Orientation),
+        typeof(RotateFlipType),
+        typeof(ImageCanvas),
+        new PropertyMetadata(RotateFlipType.RotateNoneFlipNone, OnOrientationPropertyChanged));
+
     private static readonly DependencyProperty CanvasSizeProperty = DependencyProperty.Register(
         nameof(CanvasSize),
         typeof(Size),
         typeof(ImageCanvas),
-        new PropertyMetadata(null, OnCanvasSizePropertyChanged));
+        new PropertyMetadata(new Size(0,0), OnCanvasSizePropertyChanged));
+
+    private static void OnOrientationPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control)
+        {
+            if (e.NewValue is RotateFlipType orientation)
+            {
+                // Check if orientation is turned by 90 or 270 degrees
+                bool isTurned =
+                    orientation == RotateFlipType.Rotate90FlipNone ||
+                    orientation == RotateFlipType.Rotate90FlipX ||
+                    orientation == RotateFlipType.Rotate90FlipY ||
+                    orientation == RotateFlipType.Rotate90FlipXY;
+
+                var height = control.CanvasSize.Height;
+                var width = control.CanvasSize.Width;
+
+                control.DrawingCanvas.Height = isTurned ? width : height;
+                control.DrawingCanvas.Width = isTurned ? height : width;
+                control.DrawingCanvas.Invalidate();
+            }
+        }
+    }
 
     private static void OnCanvasSizePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -35,8 +61,16 @@ public sealed partial class ImageCanvas : UserControl
         {
             if (e.NewValue is Size newSize)
             {
-                control.AnnotationCanvas.Height = newSize.Height;
-                control.AnnotationCanvas.Width = newSize.Width;
+                // Check if orientation is turned by 90 or 270 degrees
+                RotateFlipType orientation = control.Orientation;
+                bool isTurned =
+                    orientation == RotateFlipType.Rotate90FlipNone ||
+                    orientation == RotateFlipType.Rotate90FlipX ||
+                    orientation == RotateFlipType.Rotate90FlipY ||
+                    orientation == RotateFlipType.Rotate90FlipXY;
+
+                control.DrawingCanvas.Height = isTurned ? newSize.Width : newSize.Height;
+                control.DrawingCanvas.Width = isTurned ? newSize.Height : newSize.Width;
             }
         }
     }
@@ -47,6 +81,12 @@ public sealed partial class ImageCanvas : UserControl
         set => SetValue(DrawablesProperty, value);
     }
 
+    public RotateFlipType Orientation
+    {
+        get => (RotateFlipType)GetValue(OrientationProperty);
+        set => SetValue(OrientationProperty, value);
+    }
+
     public Size CanvasSize
     {
         get => (Size)GetValue(CanvasSizeProperty);
@@ -54,7 +94,7 @@ public sealed partial class ImageCanvas : UserControl
     }
 
     private bool _isPointerDown;
-    private Point _lastPointerPosition;
+    private Windows.Foundation.Point _lastPointerPosition;
 
     public ImageCanvas()
     {
@@ -66,10 +106,8 @@ public sealed partial class ImageCanvas : UserControl
     {
         lock (this)
         {
-            CanvasCommandList commandList = ImageCanvasRenderer.Render([.. Drawables]);
-
-            Vector2 sceneTopLeft = new(0, 0);
-            args.DrawingSession.DrawImage(commandList, sceneTopLeft);
+            ImageCanvasRenderOptions options = new(Orientation, CanvasSize);
+            ImageCanvasRenderer.Render([.. Drawables], options, args.DrawingSession);
         }
     }
 
@@ -111,7 +149,7 @@ public sealed partial class ImageCanvas : UserControl
     {
         if (_isPointerDown)
         {
-            Point currentPosition = e.GetCurrentPoint(CanvasContainer).Position;
+            var currentPosition = e.GetCurrentPoint(CanvasContainer).Position;
             double deltaX = _lastPointerPosition.X - currentPosition.X;
             double deltaY = _lastPointerPosition.Y - currentPosition.Y;
 
