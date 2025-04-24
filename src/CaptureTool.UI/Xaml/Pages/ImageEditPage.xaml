@@ -28,10 +28,22 @@
                 Command="{x:Bind ViewModel.RotateCommand}"
                 Icon="Rotate"
                 Label="Rotate" />
-            <AppBarButton
-                Command="{x:Bind ViewModel.FlipCommand}"
-                Icon="Orientation"
-                Label="Flip" />
+            <AppBarButton Command="{x:Bind ViewModel.FlipHorizontalCommand}" Label="Flip X">
+                <AppBarButton.Icon>
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        FontSize="32"
+                        Glyph="{StaticResource FlipHorizontal32Regular}" />
+                </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarButton Command="{x:Bind ViewModel.FlipVerticalCommand}" Label="Flip Y">
+                <AppBarButton.Icon>
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        FontSize="32"
+                        Glyph="{StaticResource FlipVertical32Regular}" />
+                </AppBarButton.Icon>
+            </AppBarButton>
             <AppBarSeparator />
             <AppBarButton
                 Command="{x:Bind ViewModel.UndoCommand}"

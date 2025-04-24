@@ -26,7 +26,8 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     public RelayCommand UndoCommand => new(Undo);
     public RelayCommand RedoCommand => new(Redo);
     public RelayCommand RotateCommand => new(Rotate);
-    public RelayCommand FlipCommand => new(Flip);
+    public RelayCommand FlipHorizontalCommand => new(() => Flip(true));
+    public RelayCommand FlipVerticalCommand => new(() => Flip(false));
     public RelayCommand PrintCommand => new(Print);
 
     private ObservableCollection<IDrawable> _drawables;
@@ -157,19 +158,44 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         };
     }
 
-    private void Flip()
+    bool IsTurned =>
+        Orientation == RotateFlipType.Rotate90FlipNone ||
+        Orientation == RotateFlipType.Rotate270FlipNone ||
+        Orientation == RotateFlipType.Rotate90FlipX ||
+        Orientation == RotateFlipType.Rotate270FlipX;
+
+    private void Flip(bool isHorizontal)
     {
+        if (IsTurned)
+        {
+            Orientation = Orientation switch
+            {
+                RotateFlipType.RotateNoneFlipNone => isHorizontal ? RotateFlipType.RotateNoneFlipY : RotateFlipType.RotateNoneFlipX,
+                RotateFlipType.Rotate90FlipNone => isHorizontal ? RotateFlipType.Rotate90FlipY : RotateFlipType.Rotate90FlipX,
+                RotateFlipType.Rotate180FlipNone => isHorizontal ? RotateFlipType.Rotate180FlipY : RotateFlipType.Rotate180FlipX,
+                RotateFlipType.Rotate270FlipNone => isHorizontal ? RotateFlipType.Rotate270FlipY : RotateFlipType.Rotate270FlipX,
+
+                RotateFlipType.RotateNoneFlipY => isHorizontal ? RotateFlipType.RotateNoneFlipNone : RotateFlipType.RotateNoneFlipX,
+                RotateFlipType.Rotate90FlipY => isHorizontal ? RotateFlipType.Rotate90FlipNone : RotateFlipType.Rotate90FlipX,
+                RotateFlipType.Rotate180FlipY => isHorizontal ? RotateFlipType.Rotate180FlipNone : RotateFlipType.Rotate180FlipX,
+                RotateFlipType.Rotate270FlipY => isHorizontal ? RotateFlipType.Rotate270FlipNone : RotateFlipType.Rotate270FlipX,
+
+                _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
+            };
+            return;
+        }
+
         Orientation = Orientation switch
         {
-            RotateFlipType.RotateNoneFlipNone => RotateFlipType.RotateNoneFlipX,
-            RotateFlipType.Rotate90FlipNone => RotateFlipType.Rotate90FlipX,
-            RotateFlipType.Rotate180FlipNone => RotateFlipType.Rotate180FlipX,
-            RotateFlipType.Rotate270FlipNone => RotateFlipType.Rotate270FlipX,
+            RotateFlipType.RotateNoneFlipNone => isHorizontal ? RotateFlipType.RotateNoneFlipX : RotateFlipType.RotateNoneFlipY,
+            RotateFlipType.Rotate90FlipNone => isHorizontal ? RotateFlipType.Rotate90FlipX : RotateFlipType.Rotate90FlipY,
+            RotateFlipType.Rotate180FlipNone => isHorizontal ? RotateFlipType.Rotate180FlipX : RotateFlipType.Rotate180FlipY,
+            RotateFlipType.Rotate270FlipNone => isHorizontal ? RotateFlipType.Rotate270FlipX : RotateFlipType.Rotate270FlipY,
 
-            RotateFlipType.RotateNoneFlipX => RotateFlipType.RotateNoneFlipNone,
-            RotateFlipType.Rotate90FlipX => RotateFlipType.Rotate90FlipNone,
-            RotateFlipType.Rotate180FlipX => RotateFlipType.Rotate180FlipNone,
-            RotateFlipType.Rotate270FlipX => RotateFlipType.Rotate270FlipNone,
+            RotateFlipType.RotateNoneFlipX => isHorizontal ? RotateFlipType.RotateNoneFlipNone : RotateFlipType.RotateNoneFlipY,
+            RotateFlipType.Rotate90FlipX => isHorizontal ? RotateFlipType.Rotate90FlipNone : RotateFlipType.Rotate90FlipY,
+            RotateFlipType.Rotate180FlipX => isHorizontal ? RotateFlipType.Rotate180FlipNone : RotateFlipType.Rotate180FlipY,
+            RotateFlipType.Rotate270FlipX => isHorizontal ? RotateFlipType.Rotate270FlipNone : RotateFlipType.Rotate270FlipY,
 
             _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
         };
