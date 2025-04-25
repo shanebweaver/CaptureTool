@@ -10,14 +10,12 @@ using CaptureTool.Capture.Desktop;
 using CaptureTool.Edit.Image.Win2D;
 using CaptureTool.Edit.Image.Win2D.Drawable;
 using CaptureTool.Services.Cancellation;
-using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.ViewModels.Commands;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class ImageEditPageViewModel : ViewModelBase
 {
-    private readonly ITaskEnvironment _taskEnvironment;
     private readonly ICancellationService _cancellationService;
 
     public RelayCommand CopyCommand => new(Copy);
@@ -59,10 +57,8 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     }
 
     public ImageEditPageViewModel(
-        ITaskEnvironment taskEnvironment,
         ICancellationService cancellationService)
     {
-        _taskEnvironment = taskEnvironment;
         _cancellationService = cancellationService;
 
         _drawables = [];
@@ -90,8 +86,8 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
             }
 
             // Test drawables
-            Drawables.Add(new RectangleDrawable(new(50, 50), new(50, 50), Color.Red, 2));
-            Drawables.Add(new TextDrawable(new(50, 50), "Hello world", Color.Yellow));
+            //Drawables.Add(new RectangleDrawable(new(50, 50), new(50, 50), Color.Red, 2));
+            //Drawables.Add(new TextDrawable(new(50, 50), "Hello world", Color.Yellow));
         }
         catch (OperationCanceledException)
         {
@@ -127,7 +123,8 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 
     private void Save()
     {
-
+        ImageCanvasRenderOptions options = new(Orientation, ImageSize);
+        _ = ImageCanvasRenderer.SaveImageAsync([.. Drawables], options, ImageSize.Width, ImageSize.Height, 96);
     }
 
     private void Undo()
@@ -229,7 +226,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     private static Size GetImageSize(string imagePath)
     {
         using FileStream file = new(imagePath, FileMode.Open, FileAccess.Read);
-        var image = System.Drawing.Image.FromStream(
+        var image = Image.FromStream(
             stream: file,
             useEmbeddedColorManagement: false,
             validateImageData: false);
