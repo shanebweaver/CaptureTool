@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Services.SnippingTool;
+﻿namespace CaptureTool.Capture.Desktop.SnippingTool;
 
 public enum SnippingToolPath
 {

@@ -9,7 +9,7 @@ using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
-using CaptureTool.Services.SnippingTool;
+using CaptureTool.Capture.Desktop.SnippingTool;
 using CaptureTool.ViewModels.Commands;
 
 namespace CaptureTool.ViewModels;

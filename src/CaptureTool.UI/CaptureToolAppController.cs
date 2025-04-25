@@ -6,7 +6,7 @@ using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
-using CaptureTool.Services.SnippingTool;
+using CaptureTool.Capture.Desktop.SnippingTool;
 using Microsoft.Extensions.Options;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel.Core;

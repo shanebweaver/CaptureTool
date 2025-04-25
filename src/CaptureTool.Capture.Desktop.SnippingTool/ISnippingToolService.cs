@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace CaptureTool.Services.SnippingTool;
+namespace CaptureTool.Capture.Desktop.SnippingTool;
 
 public interface ISnippingToolService
 {

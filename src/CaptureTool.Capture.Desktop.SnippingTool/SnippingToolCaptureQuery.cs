@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CaptureTool.Services.SnippingTool;
+namespace CaptureTool.Capture.Desktop.SnippingTool;
 
 public class SnippingToolCaptureQuery : SnippingToolQuery
 {

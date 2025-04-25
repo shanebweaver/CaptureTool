@@ -8,12 +8,14 @@ using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.ViewModels.Commands;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class DesktopCaptureOptionsPageViewModel : ViewModelBase
 {
+    private readonly ITaskEnvironment _taskEnvironment;
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
     private readonly IFeatureManager _featureManager;
@@ -92,11 +94,13 @@ public sealed partial class DesktopCaptureOptionsPageViewModel : ViewModelBase
     }
 
     public DesktopCaptureOptionsPageViewModel(
+        ITaskEnvironment taskEnvironment,
         IAppController appController,
         ICancellationService cancellationService,
         IFeatureManager featureManager,
         IFactoryService<DesktopCaptureModeViewModel> desktopCaptureModeViewModelfactory)
     {
+        _taskEnvironment = taskEnvironment;
         _appController = appController;
         _cancellationService = cancellationService;
         _featureManager = featureManager;
@@ -126,7 +130,11 @@ public sealed partial class DesktopCaptureOptionsPageViewModel : ViewModelBase
                 {
                     foreach (var captureMode in supportedModes)
                     {
-                        ImageCaptureModes.Add(captureMode);
+                        // TODO: Fix exception when loading for second time.
+                        _taskEnvironment.TryExecute(() =>
+                        {
+                            ImageCaptureModes.Add(captureMode);
+                        });
                     }
 
                     SelectedImageCaptureModeIndex = 0;
@@ -139,10 +147,12 @@ public sealed partial class DesktopCaptureOptionsPageViewModel : ViewModelBase
                 DesktopVideoCaptureMode[] supportedModes = Enum.GetValues<DesktopVideoCaptureMode>();
                 if (supportedModes.Length > 0)
                 {
-
                     foreach (var captureMode in supportedModes)
                     {
-                        VideoCaptureModes.Add(captureMode);
+                        _taskEnvironment.TryExecute(() =>
+                        {
+                            VideoCaptureModes.Add(captureMode);
+                        });
                     }
 
                     SelectedVideoCaptureModeIndex = 0;

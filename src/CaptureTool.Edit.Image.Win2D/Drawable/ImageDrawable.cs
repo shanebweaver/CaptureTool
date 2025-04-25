@@ -22,6 +22,10 @@ public sealed partial class ImageDrawable : IDrawable
 
     public void Draw(CanvasDrawingSession drawingSession)
     {
+        if (_canvasImage == null)
+        {
+            return;
+        }
         Debug.Assert(_canvasImage != null);
         drawingSession.DrawImage(_canvasImage, Offset);
     }

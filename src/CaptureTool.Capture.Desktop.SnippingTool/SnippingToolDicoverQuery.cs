@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CaptureTool.Services.SnippingTool;
+namespace CaptureTool.Capture.Desktop.SnippingTool;
 
 public class SnippingToolDicoverQuery : SnippingToolQuery
 {

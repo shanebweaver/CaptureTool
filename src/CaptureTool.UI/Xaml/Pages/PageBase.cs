@@ -23,7 +23,10 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
 
         try
         {
-            _ = ViewModel.LoadAsync(e.Parameter, _loadCts.Token);
+            if (ViewModel.IsUnloaded)
+            {
+                _ = ViewModel.LoadAsync(e.Parameter, _loadCts.Token);
+            }
         }
         catch (OperationCanceledException ex)
         {

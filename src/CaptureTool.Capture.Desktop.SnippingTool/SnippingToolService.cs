@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using CaptureTool.FeatureManagement;
 using Windows.System;
 
-namespace CaptureTool.Services.SnippingTool;
+namespace CaptureTool.Capture.Desktop.SnippingTool;
 
 public class SnippingToolService : ISnippingToolService
 {

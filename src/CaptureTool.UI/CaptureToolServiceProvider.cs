@@ -9,7 +9,7 @@ using CaptureTool.Services.Localization.Windows;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
-using CaptureTool.Services.SnippingTool;
+using CaptureTool.Capture.Desktop.SnippingTool;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Storage.Windows;
 using CaptureTool.Services.TaskEnvironment;
@@ -48,15 +48,15 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<ISnippingToolService, SnippingToolService>();
 
         // ViewModels
-        collection.AddSingleton<MainWindowViewModel>();
-        collection.AddSingleton<HomePageViewModel>();
-        collection.AddSingleton<SettingsPageViewModel>();
-        collection.AddSingleton<LoadingPageViewModel>();
-        collection.AddSingleton<ImageEditPageViewModel>();
-        collection.AddSingleton<DesktopCaptureOptionsPageViewModel>();
-        collection.AddSingleton<AppMenuViewModel>();
-        collection.AddSingleton<AppTitleBarViewModel>();
-        collection.AddSingleton<DesktopCaptureModeViewModel>();
+        collection.AddTransient<MainWindowViewModel>();
+        collection.AddTransient<HomePageViewModel>();
+        collection.AddTransient<SettingsPageViewModel>();
+        collection.AddTransient<LoadingPageViewModel>();
+        collection.AddTransient<ImageEditPageViewModel>();
+        collection.AddTransient<DesktopCaptureOptionsPageViewModel>();
+        collection.AddTransient<AppMenuViewModel>();
+        collection.AddTransient<AppTitleBarViewModel>();
+        collection.AddTransient<DesktopCaptureModeViewModel>();
 
         // ViewModel factories
         collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel>, DesktopCaptureModeViewModelFactory>();
