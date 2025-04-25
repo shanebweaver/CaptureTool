@@ -7,7 +7,6 @@ using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Capture.Desktop.SnippingTool;
-using Microsoft.Extensions.Options;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel.Core;
 
@@ -129,5 +128,10 @@ internal class CaptureToolAppController : IAppController
     public void UpdateAppWindowPresentation(AppWindowPresenterAction action)
     {
         AppWindowPresentationUpdateRequested?.Invoke(this, action);
+    }
+
+    public nint GetMainWindowHandle()
+    {
+        return WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
     }
 }

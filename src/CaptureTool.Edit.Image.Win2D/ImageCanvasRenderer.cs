@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Numerics;
 using System.Threading.Tasks;
 using CaptureTool.Edit.Image.Win2D.Drawable;
 using Microsoft.Graphics.Canvas;
 using Microsoft.UI;
-using Microsoft.UI.Xaml;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
-using Windows.Storage.Pickers;
 using Windows.Storage.Provider;
 using Windows.Storage.Streams;
-using WinRT.Interop;
 
 namespace CaptureTool.Edit.Image.Win2D;
 
@@ -39,7 +35,7 @@ public static partial class ImageCanvasRenderer
         Clipboard.Flush();
     }
 
-    public static async Task SaveImageAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, float width, float height, float dpi = 96)
+    public static async Task SaveImageAsync(string filePath, IDrawable[] drawables, ImageCanvasRenderOptions options, float width, float height, float dpi = 96)
     {
         float renderWidth = options.IsTurned ? height : width;
         float renderHeight = options.IsTurned ? width : height;
@@ -52,25 +48,19 @@ public static partial class ImageCanvasRenderer
         using var stream = new InMemoryRandomAccessStream();
         await renderTarget.SaveAsync(stream, CanvasBitmapFileFormat.Png);
 
-        var savePicker = new FileSavePicker()
+        StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
+        CachedFileManager.DeferUpdates(file);
+
+        using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
         {
-            SuggestedFileName = "New Screenshot",
-            SuggestedStartLocation = PickerLocationId.PicturesLibrary,
-        };
+            stream.Seek(0);
+            await RandomAccessStream.CopyAsync(stream, fileStream);
+        }
 
-        Window win = new();
-        var hWnd = WindowNative.GetWindowHandle(win);
-        InitializeWithWindow.Initialize(savePicker, hWnd);
-
-        IList<string> foo = [".png"];
-        savePicker.FileTypeChoices.Add("PNG", foo); // TODO: Fix error thrown
-
-        StorageFile file = await savePicker.PickSaveFileAsync();
-        if (file != null)
+        FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
+        if (status != FileUpdateStatus.Complete)
         {
-            CachedFileManager.DeferUpdates(file);
-            await FileIO.WriteTextAsync(file, file.Name);
-            FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
+            throw new Exception("File could not be saved.");
         }
     }
 

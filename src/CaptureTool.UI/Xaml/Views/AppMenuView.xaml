@@ -31,7 +31,10 @@
             </MenuFlyoutSubItem>
 
             <!--  Open  -->
-            <MenuFlyoutItem Icon="Folder" Text="Open...">
+            <MenuFlyoutItem
+                Command="{x:Bind ViewModel.OpenFileCommand}"
+                Icon="Folder"
+                Text="Open...">
                 <MenuFlyoutItem.KeyboardAccelerators>
                     <KeyboardAccelerator Key="O" Modifiers="Control" />
                 </MenuFlyoutItem.KeyboardAccelerators>

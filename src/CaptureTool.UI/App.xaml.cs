@@ -15,8 +15,7 @@ public partial class App : Application
 
     internal CaptureToolServiceProvider ServiceProvider { get; }
     internal DispatcherQueue DispatcherQueue { get; }
-
-    private Window? _window;
+    internal MainWindow? MainWindow { get; private set; }
 
     public App()
     {
@@ -56,12 +55,12 @@ public partial class App : Application
 
     private void HandleLaunchActivation(AppActivationArguments args)
     {
-        if (_window == null)
+        if (MainWindow == null)
         {
-            _window = new MainWindow();
-            _window.Closed += OnWindowClosed;
+            MainWindow = new MainWindow();
+            MainWindow.Closed += OnWindowClosed;
         }
-        _window.Activate();
+        MainWindow.Activate();
     }
 
     private void OnWindowClosed(object sender, WindowEventArgs args)
@@ -72,7 +71,7 @@ public partial class App : Application
 
     private void CheckExit()
     {
-        if (_window == null)
+        if (MainWindow == null)
         {
             Shutdown();
         }
@@ -80,11 +79,11 @@ public partial class App : Application
 
     private void CleanupWindow()
     {
-        if (_window != null)
+        if (MainWindow != null)
         {
-            _window.Closed -= OnWindowClosed;
-            _window.Close();
-            _window = null;
+            MainWindow.Closed -= OnWindowClosed;
+            MainWindow.Close();
+            MainWindow = null;
         }
     }
 

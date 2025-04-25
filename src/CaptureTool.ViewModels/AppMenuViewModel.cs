@@ -8,6 +8,8 @@ using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.ViewModels.Commands;
+using Windows.Storage;
+using Windows.Storage.Pickers;
 
 namespace CaptureTool.ViewModels;
 
@@ -21,6 +23,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     public RelayCommand NewDesktopCaptureCommand => new(NewDesktopCapture, () => IsDesktopCaptureEnabled);
     public RelayCommand NewAudioCaptureCommand => new(NewAudioCapture, () => IsAudioCaptureEnabled);
     public RelayCommand NewCameraCaptureCommand => new(NewCameraCapture, () => IsCameraCaptureEnabled);
+    public RelayCommand OpenFileCommand => new(OpenFile);
     public RelayCommand GoToSettingsCommand => new(GoToSettings);
     public RelayCommand GoToAboutCommand => new(GoToAbout);
     public RelayCommand ExitApplicationCommand => new(ExitApplication);
@@ -102,6 +105,26 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     private void NewAudioCapture()
     {
         _ = _appController.NewAudioCaptureAsync();
+    }
+
+    private async void OpenFile()
+    {
+        var filePicker = new FileOpenPicker
+        {
+            ViewMode = PickerViewMode.Thumbnail,
+            SuggestedStartLocation = PickerLocationId.PicturesLibrary
+        };
+        filePicker.FileTypeFilter.Add(".png");
+
+        nint hwnd = _appController.GetMainWindowHandle();
+        WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
+
+        StorageFile file = await filePicker.PickSingleFileAsync();
+        if (file != null)
+        {
+            ImageFile imageFile = new(file.Path);
+            _navigationService.Navigate(NavigationRoutes.ImageEdit, imageFile);
+        }
     }
 
     private void GoToSettings()

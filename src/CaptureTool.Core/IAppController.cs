@@ -16,4 +16,6 @@ public interface IAppController
     Task NewAudioCaptureAsync();
 
     void UpdateAppWindowPresentation(AppWindowPresenterAction action);
+
+    nint GetMainWindowHandle();
 }
