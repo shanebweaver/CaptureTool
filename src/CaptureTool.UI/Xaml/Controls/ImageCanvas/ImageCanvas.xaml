@@ -7,22 +7,134 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Xaml.Controls.ImageCanvas"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
     mc:Ignorable="d">
     <Grid
         x:Name="CanvasContainer"
-        Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
         PointerCanceled="CanvasContainer_PointerCanceled"
+        PointerCaptureLost="CanvasContainer_PointerCaptureLost"
         PointerMoved="CanvasContainer_PointerMoved"
         PointerPressed="CanvasContainer_PointerPressed"
-        PointerReleased="CanvasContainer_PointerReleased">
+        PointerReleased="CanvasContainer_PointerReleased"
+        SizeChanged="CanvasContainer_SizeChanged">
         <ScrollView
             x:Name="CanvasScrollView"
             HorizontalScrollBarVisibility="Auto"
             ZoomMode="Enabled">
-            <canvasui:CanvasControl
-                x:Name="DrawingCanvas"
-                CreateResources="CanvasControl_CreateResources"
-                Draw="CanvasControl_Draw" />
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                <canvasui:CanvasControl
+                    x:Name="DrawingCanvas"
+                    CreateResources="CanvasControl_CreateResources"
+                    Draw="CanvasControl_Draw" />
+
+                <Grid
+                    x:Name="CropBoundary"
+                    PointerMoved="CropBoundary_PointerMoved"
+                    PointerPressed="CropBoundary_PointerPressed"
+                    PointerReleased="CropBoundary_PointerReleased">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Crop anchors  -->
+                    <Polygon
+                        Fill="White"
+                        Points="0,0 20,0 20,4, 4,4 4,20, 0,20"
+                        Stroke="Black"
+                        Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                        <Polygon.RenderTransform>
+                            <TranslateTransform X="-4" Y="-4" />
+                        </Polygon.RenderTransform>
+                    </Polygon>
+                    <Polygon
+                        Grid.Column="2"
+                        Fill="White"
+                        Points="0,0 20,0 20,4 0,4"
+                        Stroke="Black"
+                        Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                        <Polygon.RenderTransform>
+                            <TranslateTransform Y="-4" />
+                        </Polygon.RenderTransform>
+                    </Polygon>
+                    <Polygon
+                        Grid.Column="4"
+                        Fill="White"
+                        Points="0,0 20,0 20,20 16,20 16,4 0,4"
+                        Stroke="Black"
+                        Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                        <Polygon.RenderTransform>
+                            <TranslateTransform X="5" Y="-4" />
+                        </Polygon.RenderTransform>
+                    </Polygon>
+
+                    <Polygon
+                        Grid.Row="2"
+                        Fill="White"
+                        Points="0,0 4,0 4,20 0,20"
+                        Stroke="Black"
+                        Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                        <Polygon.RenderTransform>
+                            <TranslateTransform X="-4" />
+                        </Polygon.RenderTransform>
+                    </Polygon>
+                    <Polygon
+                        Grid.Row="2"
+                        Grid.Column="4"
+                        Fill="White"
+                        Points="16,0 20,0 20,20 16,20"
+                        Stroke="Black"
+                        Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                        <Polygon.RenderTransform>
+                            <TranslateTransform X="5" />
+                        </Polygon.RenderTransform>
+                    </Polygon>
+
+                    <Polygon
+                        Grid.Row="4"
+                        Fill="White"
+                        Points="0,0 4,0 4,16 20,16 20,20 0,20"
+                        Stroke="Black"
+                        Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                        <Polygon.RenderTransform>
+                            <TranslateTransform X="-5" Y="6" />
+                        </Polygon.RenderTransform>
+                    </Polygon>
+                    <Polygon
+                        Grid.Row="4"
+                        Grid.Column="2"
+                        Fill="White"
+                        Points="0,16 20,16 20,20 0,20"
+                        Stroke="Black"
+                        Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                        <Polygon.RenderTransform>
+                            <TranslateTransform Y="6" />
+                        </Polygon.RenderTransform>
+                    </Polygon>
+                    <Polygon
+                        Grid.Row="4"
+                        Grid.Column="4"
+                        Fill="White"
+                        Points="16,0 20,0 20,20 0,20 0,16 16,16"
+                        Stroke="Black"
+                        Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                        <Polygon.RenderTransform>
+                            <TranslateTransform X="6" Y="6" />
+                        </Polygon.RenderTransform>
+                    </Polygon>
+                </Grid>
+            </Grid>
         </ScrollView>
     </Grid>
 </UserControl>

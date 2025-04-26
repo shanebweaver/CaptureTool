@@ -25,7 +25,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         public static readonly string Load = "Load";
         public static readonly string Unload = "Unload";
         public static readonly string Copy = "Copy";
-        public static readonly string Crop = "Crop";
+        public static readonly string ToggleCropMode = "ToggleCropMode";
         public static readonly string Save = "Save";
         public static readonly string Undo = "Undo";
         public static readonly string Redo = "Redo";
@@ -40,7 +40,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     private readonly ITelemetryService _telemetryService;
 
     public RelayCommand CopyCommand => new(Copy);
-    public RelayCommand CropCommand => new(Crop);
+    public RelayCommand ToggleCropModeCommand => new(ToggleCropMode);
     public RelayCommand SaveCommand => new(Save);
     public RelayCommand UndoCommand => new(Undo);
     public RelayCommand RedoCommand => new(Redo);
@@ -75,6 +75,13 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
     {
         get => _orientation;
         set => Set(ref _orientation, value);
+    }
+
+    private bool _isInCropMode;
+    public bool IsInCropMode
+    {
+        get => _isInCropMode;
+        set => Set(ref _isInCropMode, value);
     }
 
     private bool IsTurned =>
@@ -119,8 +126,8 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
             }
 
             // Test drawables
-            //Drawables.Add(new RectangleDrawable(new(50, 50), new(50, 50), Color.Red, 2));
-            //Drawables.Add(new TextDrawable(new(50, 50), "Hello world", Color.Yellow));
+            Drawables.Add(new RectangleDrawable(new(50, 50), new(50, 50), Color.Red, 2));
+            Drawables.Add(new TextDrawable(new(50, 50), "Hello world", Color.Yellow));
 
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -174,13 +181,14 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
     }
 
-    private void Crop()
+    private void ToggleCropMode()
     {
-        string activityId = ActivityIds.Crop;
+        string activityId = ActivityIds.ToggleCropMode;
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            throw new NotImplementedException();
+            IsInCropMode = !IsInCropMode;
+            _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
         {
