@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
@@ -30,21 +32,46 @@ public sealed partial class SnippingToolResponse
     public string? FileAccessToken { get; set; }
 
     private StorageFile? _fileCopy;
+    private readonly SemaphoreSlim _semaphore = new(1,1);
 
     public async Task<StorageFile> GetFileAsync()
     {
-        if (_fileCopy == null)
+        await _semaphore.WaitAsync();
+        try
         {
-            if (string.IsNullOrEmpty(FileAccessToken))
+            if (_fileCopy == null)
             {
-                throw new InvalidOperationException("Failed to retrieve file. FileAccessToken is null");
+                if (string.IsNullOrEmpty(FileAccessToken))
+                {
+                    throw new InvalidOperationException("Failed to retrieve file. FileAccessToken is null");
+                }
+
+                StorageFile imageFile = await SharedStorageAccessManager.RedeemTokenForFileAsync(FileAccessToken);
+
+                int attempt = 0;
+                while (_fileCopy == null)
+                {
+                    try
+                    {
+                        _fileCopy = await imageFile.CopyAsync(ApplicationData.Current.TemporaryFolder);
+                    }
+                    catch (Exception)
+                    {
+                        attempt++;
+                        if (attempt == 3)
+                        {
+                            throw;
+                        }
+                    }
+                }
             }
 
-            StorageFile imageFile = await SharedStorageAccessManager.RedeemTokenForFileAsync(FileAccessToken);
-            _fileCopy = await imageFile.CopyAsync(ApplicationData.Current.TemporaryFolder);
+            return _fileCopy;
         }
-
-        return _fileCopy;
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     public static SnippingToolResponse CreateFromUri(Uri responseUri)

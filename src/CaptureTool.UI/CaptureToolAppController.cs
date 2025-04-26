@@ -134,4 +134,12 @@ internal class CaptureToolAppController : IAppController
     {
         return WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
     }
+
+    public void NavigateHome()
+    {
+        if (_navigationService.CurrentRoute != NavigationRoutes.Home)
+        {
+            _navigationService.Navigate(NavigationRoutes.Home, clearHistory: true);
+        }
+    }
 }

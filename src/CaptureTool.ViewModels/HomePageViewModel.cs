@@ -89,6 +89,13 @@ public sealed partial class HomePageViewModel : ViewModelBase
         _navigationService = navigationService;
         _settingsService = settingsService;
         _snippingToolService = snippingToolService;
+
+        _snippingToolService.ResponseReceived += OnSnippingToolResponseReceived;
+    }
+
+    ~HomePageViewModel()
+    {
+        _snippingToolService.ResponseReceived -= OnSnippingToolResponseReceived;
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -100,8 +107,6 @@ public sealed partial class HomePageViewModel : ViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            _snippingToolService.ResponseReceived += OnSnippingToolResponseReceived;
-
             IsDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
             IsAudioCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_AudioCapture);
             IsCameraCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_CameraCapture);
@@ -127,20 +132,25 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
         if (e.Code == 200)
         {
-            var file = await e.GetFileAsync();
-            ImageFile imageFile = new(file.Path);
-            _navigationService.Navigate(NavigationRoutes.ImageEdit, imageFile);
+            try
+            {
+                var file = await e.GetFileAsync();
+                ImageFile imageFile = new(file.Path);
+                _navigationService.Navigate(NavigationRoutes.ImageEdit, imageFile);
+            }
+            catch (Exception)
+            {
+                _appController.NavigateHome();
+            }
         }
         else
         {
-            _navigationService.GoBack();
+            _appController.NavigateHome();
         }
     }
 
     public override void Unload()
     {
-        _snippingToolService.ResponseReceived -= OnSnippingToolResponseReceived;
-
         _isDesktopCaptureEnabled = false;
         _isAudioCaptureEnabled = false;
         _isCameraCaptureEnabled = false;

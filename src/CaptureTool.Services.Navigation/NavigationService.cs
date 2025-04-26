@@ -12,6 +12,8 @@ public class NavigationService : INavigationService
 
     public bool CanGoBack => _navigationStack.Count > 1;
 
+    public NavigationRoute CurrentRoute => _navigationStack.Peek().Route;
+
     public void SetNavigationHandler(INavigationHandler navigationHandler)
     {
         _navigationHandler = navigationHandler;
@@ -24,8 +26,13 @@ public class NavigationService : INavigationService
         Navigate(new NavigationRequest(backRequest.Route, backRequest.Parameter, true));
     }
 
-    public void Navigate(NavigationRoute route, object? parameter = null)
+    public void Navigate(NavigationRoute route, object? parameter = null, bool clearHistory = false)
     {
+        if (clearHistory)
+        {
+            _navigationStack.Clear();
+        }
+
         NavigationRequest request = new(route, parameter);
         _navigationStack.Push(request);
         Navigate(request);
