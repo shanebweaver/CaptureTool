@@ -43,7 +43,7 @@
 
             <!--  Settings  -->
             <MenuFlyoutItem
-                Command="{x:Bind ViewModel.GoToSettingsCommand}"
+                Command="{x:Bind ViewModel.NavigateToSettingsCommand}"
                 Icon="Setting"
                 Text="Settings" />
 
@@ -58,7 +58,7 @@
         <!--  Help  -->
         <MenuBarItem Title="Help">
             <!--  About  -->
-            <MenuFlyoutItem Command="{x:Bind ViewModel.GoToAboutCommand}" Text="About" />
+            <MenuFlyoutItem Command="{x:Bind ViewModel.ShowAboutDialogCommand}" Text="About" />
         </MenuBarItem>
     </MenuBar>
 </local:AppMenuViewBase>
