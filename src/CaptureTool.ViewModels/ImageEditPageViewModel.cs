@@ -130,7 +130,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e.Message);
+            _telemetryService.ActivityError(activityId, e);
         }
         finally
         {
@@ -142,15 +142,16 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
 
     public override void Unload()
     {
-        _telemetryService.ActivityInitiated(ActivityIds.Unload);
+        string activityId = ActivityIds.Unload;
+        _telemetryService.ActivityInitiated(activityId);
         try
         {
             Drawables.Clear();
-            _telemetryService.ActivityCompleted(ActivityIds.Unload);
+            _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(ActivityIds.Unload, e.Message);
+            _telemetryService.ActivityError(activityId, e);
         }
 
         base.Unload();
@@ -169,7 +170,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e.Message);
+            _telemetryService.ActivityError(activityId, e);
         }
     }
 
@@ -183,7 +184,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e.Message);
+            _telemetryService.ActivityError(activityId, e);
         }
     }
 
@@ -216,7 +217,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e.Message);
+            _telemetryService.ActivityError(activityId, e);
         }
     }
 
@@ -230,7 +231,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e.Message);
+            _telemetryService.ActivityError(activityId, e);
         }
     }
 
@@ -244,7 +245,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e.Message);
+            _telemetryService.ActivityError(activityId, e);
         }
     }
 
@@ -272,7 +273,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e.Message);
+            _telemetryService.ActivityError(activityId, e);
         }
     }
 
@@ -320,7 +321,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e.Message);
+            _telemetryService.ActivityError(activityId, e);
         }
     }
 
@@ -334,7 +335,7 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError(activityId, e.Message);
+            _telemetryService.ActivityError(activityId, e);
         }
     }
 

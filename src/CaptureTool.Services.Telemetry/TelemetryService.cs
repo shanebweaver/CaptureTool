@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -39,8 +40,17 @@ public sealed partial class TelemetryService : ITelemetryService
         Debug.WriteLine(stringBuilder.ToString());
     }
 
-    public void ActivityError(string activityId, string message, [CallerMemberName] string? callerName = null)
+    public void ActivityError(string activityId, Exception exception, string? message = null, [CallerMemberName] string? callerName = null)
     {
-        Debug.WriteLine($"Activity error: {activityId} - {callerName} - {message}");
+        Debug.WriteLine($"Activity error: {activityId}");
+        if (callerName != null)
+        {
+            Debug.WriteLine($"- Caller: {callerName}");
+        }
+        if (message != null)
+        {
+            Debug.WriteLine($"- Message: {message}");
+        }
+        Debug.WriteLine($"- Exception: {exception.Message}");
     }
 }

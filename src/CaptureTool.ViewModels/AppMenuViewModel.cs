@@ -7,6 +7,7 @@ using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
+using CaptureTool.Services.Telemetry;
 using CaptureTool.ViewModels.Commands;
 using Windows.Storage;
 using Windows.Storage.Pickers;
@@ -15,6 +16,20 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class AppMenuViewModel : ViewModelBase
 {
+    private readonly struct ActivityIds
+    {
+        public static readonly string Load = "Load";
+        public static readonly string Unload = "Unload";
+        public static readonly string NewDesktopCapture = "NewDesktopCapture";
+        public static readonly string NewAudioCapture = "NewAudioCapture";
+        public static readonly string NewCameraCapture = "NewCameraCapture";
+        public static readonly string OpenFile = "OpenFile";
+        public static readonly string NavigateToSettings = "NavigateToSettings";
+        public static readonly string ShowAboutDialog = "ShowAboutDialog";
+        public static readonly string ExitApplication = "ExitApplication";
+    }
+
+    private readonly ITelemetryService _telemetryService;
     private readonly ICancellationService _cancellationService;
     private readonly INavigationService _navigationService;
     private readonly IAppController _appController;
@@ -24,8 +39,8 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     public RelayCommand NewAudioCaptureCommand => new(NewAudioCapture, () => IsAudioCaptureEnabled);
     public RelayCommand NewCameraCaptureCommand => new(NewCameraCapture, () => IsCameraCaptureEnabled);
     public RelayCommand OpenFileCommand => new(OpenFile);
-    public RelayCommand GoToSettingsCommand => new(GoToSettings);
-    public RelayCommand GoToAboutCommand => new(GoToAbout);
+    public RelayCommand NavigateToSettingsCommand => new(NavigateToSettings);
+    public RelayCommand ShowAboutDialogCommand => new(ShowAboutDialog);
     public RelayCommand ExitApplicationCommand => new(ExitApplication);
 
     private bool _isDesktopCaptureEnabled;
@@ -50,11 +65,13 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     }
 
     public AppMenuViewModel(
+        ITelemetryService telemetryService,
         ICancellationService cancellationService,
         IAppController appController,
         INavigationService navigationService,
         IFeatureManager featureManager)
     {
+        _telemetryService = telemetryService;
         _cancellationService = cancellationService;
         _appController = appController;
         _navigationService = navigationService;
@@ -67,16 +84,25 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         Debug.Assert(IsUnloaded);
         StartLoading();
 
+        string activityId = ActivityIds.Load;
+        _telemetryService.ActivityInitiated(activityId);
+
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
             IsDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
             IsAudioCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_AudioCapture);
             IsCameraCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_CameraCapture);
+        
+            _telemetryService.ActivityCompleted(activityId);
         }
         catch (OperationCanceledException)
         {
-            // Load canceled
+            _telemetryService.ActivityCanceled(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
         }
         finally
         {
@@ -88,57 +114,151 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     override public void Unload()
     {
+        string activityId = ActivityIds.Unload;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            // cleanup here
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
+
         base.Unload();
     }
 
     private void NewDesktopCapture()
     {
-        DesktopCaptureOptions options = new(DesktopImageCaptureMode.Rectangle, ImageFileType.Png, true);
-        _ = _appController.NewDesktopCaptureAsync(options);
+        string activityId = ActivityIds.NewDesktopCapture;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            DesktopCaptureOptions options = new(DesktopImageCaptureMode.Rectangle, ImageFileType.Png, true);
+            _ = _appController.NewDesktopCaptureAsync(options);
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 
     private void NewCameraCapture()
     {
-        _ = _appController.NewCameraCaptureAsync();
+        string activityId = ActivityIds.NewCameraCapture;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _ = _appController.NewCameraCaptureAsync();
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 
     private void NewAudioCapture()
     {
-        _ = _appController.NewAudioCaptureAsync();
+        string activityId = ActivityIds.NewAudioCapture;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _ = _appController.NewAudioCaptureAsync(); 
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 
     private async void OpenFile()
     {
-        var filePicker = new FileOpenPicker
-        {
-            ViewMode = PickerViewMode.Thumbnail,
-            SuggestedStartLocation = PickerLocationId.PicturesLibrary
-        };
-        filePicker.FileTypeFilter.Add(".png");
+        string activityId = ActivityIds.OpenFile;
+        _telemetryService.ActivityInitiated(activityId);
 
-        nint hwnd = _appController.GetMainWindowHandle();
-        WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
-
-        StorageFile file = await filePicker.PickSingleFileAsync();
-        if (file != null)
+        try
         {
+            var filePicker = new FileOpenPicker
+            {
+                ViewMode = PickerViewMode.Thumbnail,
+                SuggestedStartLocation = PickerLocationId.PicturesLibrary
+            };
+            filePicker.FileTypeFilter.Add(".png");
+
+            nint hwnd = _appController.GetMainWindowHandle();
+            WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
+
+            StorageFile file = await filePicker.PickSingleFileAsync();
+            if (file == null)
+            {
+                _telemetryService.ActivityCanceled(activityId);
+                return;
+            }
+
             ImageFile imageFile = new(file.Path);
             _navigationService.Navigate(NavigationRoutes.ImageEdit, imageFile);
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
         }
     }
 
-    private void GoToSettings()
+    private void NavigateToSettings()
     {
-        _navigationService.Navigate(NavigationRoutes.Settings);
+        string activityId = ActivityIds.NavigateToSettings;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _navigationService.Navigate(NavigationRoutes.Settings);
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 
-    private void GoToAbout()
+    private void ShowAboutDialog()
     {
-        _navigationService.Navigate(NavigationRoutes.About);
+        string activityId = ActivityIds.ShowAboutDialog;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _navigationService.Navigate(NavigationRoutes.About); 
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 
     private void ExitApplication()
     {
-        _appController.Shutdown();
+        string activityId = ActivityIds.ExitApplication;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _appController.Shutdown();
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 }

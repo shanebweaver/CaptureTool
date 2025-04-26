@@ -81,21 +81,41 @@ public static partial class ImageCanvasRenderer
 
     private static Matrix3x2 CalculateTransform(ImageCanvasRenderOptions options)
     {
+        Matrix3x2 transform = Matrix3x2.Identity;
         float canvasWidth = options.CanvasSize.Width;
         float canvasHeight = options.CanvasSize.Height;
-        float heightLessWidth = canvasHeight - canvasWidth;
-        float widthLessHeight = canvasWidth - canvasHeight;
 
+        // Apply rotation
         float maxDimension = Math.Max(canvasHeight, canvasWidth);
         Vector2 rotationPoint = new(maxDimension / 2, maxDimension / 2);
-
-        bool isLandscape = canvasWidth > canvasHeight;
-
-        Matrix3x2 transform = Matrix3x2.Identity;
         switch (options.Orientation)
         {
             case RotateFlipType.Rotate90FlipNone:
+            case RotateFlipType.Rotate90FlipX:
+            case RotateFlipType.Rotate90FlipY:
                 transform *= Matrix3x2.CreateRotation(GetRadians(90), rotationPoint);
+                break;
+
+            case RotateFlipType.Rotate180FlipNone:
+            case RotateFlipType.Rotate180FlipX:
+            case RotateFlipType.Rotate180FlipY:
+                transform *= Matrix3x2.CreateRotation(GetRadians(180), rotationPoint);
+                break;
+
+            case RotateFlipType.Rotate270FlipNone:
+                transform *= Matrix3x2.CreateRotation(GetRadians(270), rotationPoint);
+                break;
+        }
+
+        // Apply translation
+        bool isLandscape = canvasWidth > canvasHeight;
+        float heightLessWidth = canvasHeight - canvasWidth;
+        float widthLessHeight = canvasWidth - canvasHeight;
+        switch (options.Orientation)
+        {
+            case RotateFlipType.Rotate90FlipNone:
+            case RotateFlipType.Rotate90FlipX:
+            case RotateFlipType.Rotate90FlipY:
                 if (isLandscape)
                 {
                     transform *= Matrix3x2.CreateTranslation(heightLessWidth, 0);
@@ -103,7 +123,8 @@ public static partial class ImageCanvasRenderer
                 break;
 
             case RotateFlipType.Rotate180FlipNone:
-                transform *= Matrix3x2.CreateRotation(GetRadians(180), rotationPoint);
+            case RotateFlipType.Rotate180FlipX:
+            case RotateFlipType.Rotate180FlipY:
                 if (isLandscape)
                 {
                     transform *= Matrix3x2.CreateTranslation(0, heightLessWidth);
@@ -115,62 +136,29 @@ public static partial class ImageCanvasRenderer
                 break;
 
             case RotateFlipType.Rotate270FlipNone:
-                transform *= Matrix3x2.CreateRotation(GetRadians(270), rotationPoint);
                 if (!isLandscape)
                 {
                     transform *= Matrix3x2.CreateTranslation(0, widthLessHeight);
                 }
                 break;
+        }
 
+        // Apply scaling
+        switch (options.Orientation)
+        {
             case RotateFlipType.Rotate180FlipY:
-                transform *= Matrix3x2.CreateRotation(GetRadians(180), rotationPoint);
-                if (isLandscape)
-                {
-                    transform *= Matrix3x2.CreateTranslation(0, heightLessWidth);
-                }
-                else
-                {
-                    transform *= Matrix3x2.CreateTranslation(widthLessHeight, 0);
-                }
                 transform *= Matrix3x2.CreateScale(1, -1, new(canvasWidth / 2, canvasHeight / 2));
                 break;
 
             case RotateFlipType.Rotate90FlipX:
-                transform *= Matrix3x2.CreateRotation(GetRadians(90), rotationPoint);
-                if (isLandscape)
-                {
-                    transform *= Matrix3x2.CreateTranslation(heightLessWidth, 0);
-                }
-                else
-                {
-                    //transform *= Matrix3x2.CreateTranslation(0, widthLessHeight);
-                }
                 transform *= Matrix3x2.CreateScale(1, -1, new(canvasHeight / 2, canvasWidth / 2));
                 break;
 
             case RotateFlipType.Rotate180FlipX:
-                transform *= Matrix3x2.CreateRotation(GetRadians(180), rotationPoint);
-                if (isLandscape)
-                {
-                    transform *= Matrix3x2.CreateTranslation(0, heightLessWidth);
-                }
-                else
-                {
-                    transform *= Matrix3x2.CreateTranslation(widthLessHeight, 0);
-                }
                 transform *= Matrix3x2.CreateScale(-1, 1, new(canvasWidth / 2, canvasHeight / 2));
                 break;
 
             case RotateFlipType.Rotate90FlipY:
-                transform *= Matrix3x2.CreateRotation(GetRadians(90), rotationPoint); 
-                if (isLandscape)
-                {
-                    transform *= Matrix3x2.CreateTranslation(heightLessWidth, 0);
-                }
-                else
-                {
-                    //transform *= Matrix3x2.CreateTranslation(0, widthLessHeight);
-                }
                 transform *= Matrix3x2.CreateScale(-1, 1, new(canvasHeight / 2, canvasWidth / 2));
                 break;
         }
