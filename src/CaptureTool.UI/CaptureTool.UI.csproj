@@ -17,6 +17,7 @@
 
   <!-- Project assets -->
   <ItemGroup>
+    <!-- Images -->
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />
@@ -24,6 +25,9 @@
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+
+    <!-- Fonts -->
+    <Content Include="Assets\Fonts\FluentSystemIcons-Regular.ttf" />
   </ItemGroup>
 
   <!-- App manifest -->
@@ -77,11 +81,6 @@
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Update="Assets\Fonts\FluentSystemIcons-Regular.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
 
   <!-- XAML resources -->
   <ItemGroup>
@@ -94,11 +93,8 @@
     <Page Update="Xaml\Controls\NewCaptureButton.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Xaml\Pages\AboutPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Update="Xaml\Pages\DesktopVideoCaptureOptionsPage.xaml">
-      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Pages\DesktopImageCaptureOptionsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -113,6 +109,9 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Pages\SettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Xaml\Views\AppAboutView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Views\AppMenuView.xaml">

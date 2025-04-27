@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Numerics;
 using System.Threading.Tasks;
 using CaptureTool.Edit.Image.Win2D;
 using CaptureTool.Edit.Image.Win2D.Drawable;
@@ -12,7 +11,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Windows.Security.Cryptography.Certificates;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
@@ -111,17 +109,22 @@ public sealed partial class ImageCanvas : UserControl
 
     private void UpdateDrawingCanvasSize()
     {
-        // Check if orientation is turned by 90 or 270 degrees
-        RotateFlipType orientation = Orientation;
-        bool isTurned =
-            orientation == RotateFlipType.Rotate90FlipNone ||
-            orientation == RotateFlipType.Rotate90FlipX ||
-            orientation == RotateFlipType.Rotate90FlipY ||
-            orientation == RotateFlipType.Rotate90FlipXY;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            // Check if orientation is turned by 90 or 270 degrees
+            RotateFlipType orientation = Orientation;
+            bool isTurned =
+                orientation == RotateFlipType.Rotate90FlipNone ||
+                orientation == RotateFlipType.Rotate90FlipX ||
+                orientation == RotateFlipType.Rotate90FlipY ||
+                orientation == RotateFlipType.Rotate90FlipXY;
 
-        DrawingCanvas.Height = isTurned ? CanvasSize.Width : CanvasSize.Height;
-        DrawingCanvas.Width = isTurned ? CanvasSize.Height : CanvasSize.Width;
-        DrawingCanvas.Invalidate();
+            DrawingCanvasPanel.Height = isTurned ? CanvasSize.Width : CanvasSize.Height;
+            DrawingCanvasPanel.Width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+            DrawingCanvas.Height = isTurned ? CanvasSize.Width : CanvasSize.Height;
+            DrawingCanvas.Width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+            DrawingCanvas.Invalidate();
+        });
     }
 
     #region Zoom and Center

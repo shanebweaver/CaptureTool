@@ -58,7 +58,7 @@
         <!--  Help  -->
         <MenuBarItem Title="Help">
             <!--  About  -->
-            <MenuFlyoutItem Command="{x:Bind ViewModel.ShowAboutDialogCommand}" Text="About" />
+            <MenuFlyoutItem Command="{x:Bind ViewModel.ShowAboutAppCommand}" Text="About" />
         </MenuBarItem>
     </MenuBar>
 </local:AppMenuViewBase>

@@ -9,7 +9,6 @@ internal class PageLocator
 {
     private static readonly Dictionary<string, Type> _routeMappings = new() {
         { NavigationRoutes.Home.RouteName, typeof(HomePage) },
-        { NavigationRoutes.About.RouteName, typeof(AboutPage) },
         { NavigationRoutes.Settings.RouteName, typeof(SettingsPage) },
         { NavigationRoutes.Loading.RouteName, typeof(LoadingPage) },
         { NavigationRoutes.DesktopImageCaptureOptions.RouteName, typeof(DesktopImageCaptureOptionsPage) },

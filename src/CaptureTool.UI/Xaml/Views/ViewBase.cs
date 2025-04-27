@@ -8,7 +8,7 @@ namespace CaptureTool.UI.Xaml.Views;
 
 public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBase
 {
-    private readonly CancellationTokenSource _loadCts = new();
+    private CancellationTokenSource? _loadCts;
     public VM ViewModel { get; } = App.Current.ServiceProvider.GetService<VM>();
 
     public ViewBase()
@@ -26,31 +26,34 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        DispatcherQueue.TryEnqueue(() =>
+        _loadCts ??= new();
+
+        try
         {
-            try
+            if (ViewModel.IsUnloaded)
             {
-                if (ViewModel.IsUnloaded)
-                {
-                    _ = ViewModel.LoadAsync(null, _loadCts.Token);
-                }
+                _ = ViewModel.LoadAsync(null, _loadCts.Token);
             }
-            catch (OperationCanceledException ex)
-            {
-                ServiceLocator.Logging.LogException(ex, "View load canceled.");
-            }
-            catch (Exception ex)
-            {
-                ServiceLocator.Logging.LogException(ex, "Failed to load view.");
-            }
-        });
+        }
+        catch (OperationCanceledException ex)
+        {
+            ServiceLocator.Logging.LogException(ex, "View load canceled.");
+        }
+        catch (Exception ex)
+        {
+            ServiceLocator.Logging.LogException(ex, "Failed to load view.");
+        }
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        _loadCts.Cancel();
-        _loadCts.Dispose();
+        if (_loadCts != null)
+        {
+            _loadCts.Cancel();
+            _loadCts.Dispose();
+            _loadCts = null;
+        }
 
-        DispatcherQueue.TryEnqueue(() => ViewModel.Unload());
+        ViewModel.Unload();
     }
 }

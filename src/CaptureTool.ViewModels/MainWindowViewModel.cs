@@ -17,8 +17,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
     private readonly INavigationService _navigationService;
     private readonly ISettingsService _settingsService;
 
-    public event Action<NavigationRequest>? NavigationRequested;
-    public event Action<AppWindowPresenterAction>? PresentationUpdateRequested;
+    public event EventHandler<NavigationRequest>? NavigationRequested;
+    public event EventHandler<AppWindowPresenterAction>? PresentationUpdateRequested;
 
     public MainWindowViewModel(
         IAppController appController,
@@ -30,6 +30,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
         _cancellationService = cancellationService;
         _navigationService = navigationService;
         _settingsService = settingsService;
+
+        _appController.AppWindowPresentationUpdateRequested += OnAppWindowPresentationUpdateRequested;
+    }
+
+    ~MainWindowViewModel()
+    {
+        _appController.AppWindowPresentationUpdateRequested -= OnAppWindowPresentationUpdateRequested;
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -44,9 +51,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
             // Navigation handler
             _navigationService.SetNavigationHandler(this);
             cts.Token.ThrowIfCancellationRequested();
-
-            _appController.AppWindowPresentationUpdateRequested += OnAppWindowPresentationUpdateRequested;
-
             // Settings service
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string settingsFilePath = Path.Combine(appDataPath, "CaptureTool", "Settings.json");
@@ -70,7 +74,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
 
     private void OnAppWindowPresentationUpdateRequested(object? sender, AppWindowPresenterAction e)
     {
-        PresentationUpdateRequested?.Invoke(e);
+        PresentationUpdateRequested?.Invoke(this, e);
     }
 
     public override void Unload()
@@ -80,6 +84,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
 
     public void HandleNavigationRequest(NavigationRequest request)
     {
-        NavigationRequested?.Invoke(request);
+        NavigationRequested?.Invoke(this, request);
     }
 }

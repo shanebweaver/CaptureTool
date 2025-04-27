@@ -57,6 +57,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<DesktopVideoCaptureOptionsPageViewModel>();
         collection.AddTransient<AppMenuViewModel>();
         collection.AddTransient<AppTitleBarViewModel>();
+        collection.AddTransient<AppAboutViewModel>();
         collection.AddTransient<DesktopCaptureModeViewModel>();
 
         // ViewModel factories

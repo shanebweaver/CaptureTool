@@ -25,7 +25,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         public static readonly string NewDesktopAudioCapture = "NewDesktopAudioCapture";
         public static readonly string OpenFile = "OpenFile";
         public static readonly string NavigateToSettings = "NavigateToSettings";
-        public static readonly string ShowAboutDialog = "ShowAboutDialog";
+        public static readonly string ShowAboutApp = "ShowAboutApp";
         public static readonly string ExitApplication = "ExitApplication";
     }
 
@@ -35,12 +35,14 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     private readonly IAppController _appController;
     private readonly IFeatureManager _featureManager;
 
+    public event EventHandler? ShowAboutAppRequested;
+
     public RelayCommand NewDesktopImageCaptureCommand => new(NewDesktopImageCapture, () => IsDesktopImageCaptureEnabled);
     public RelayCommand NewDesktopVideoCaptureCommand => new(NewDesktopVideoCapture, () => IsDesktopVideoCaptureEnabled);
     public RelayCommand NewAudioCaptureCommand => new(NewDesktopAudioCapture, () => IsDesktopAudioCaptureEnabled);
     public RelayCommand OpenFileCommand => new(OpenFile);
     public RelayCommand NavigateToSettingsCommand => new(NavigateToSettings);
-    public RelayCommand ShowAboutDialogCommand => new(ShowAboutDialog);
+    public RelayCommand ShowAboutAppCommand => new(ShowAboutApp);
     public RelayCommand ExitApplicationCommand => new(ExitApplication);
 
     private bool _isDesktopImageCaptureEnabled;
@@ -231,14 +233,14 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         }
     }
 
-    private void ShowAboutDialog()
+    private void ShowAboutApp()
     {
-        string activityId = ActivityIds.ShowAboutDialog;
+        string activityId = ActivityIds.ShowAboutApp;
         _telemetryService.ActivityInitiated(activityId);
 
         try
         {
-            _navigationService.Navigate(NavigationRoutes.About); 
+            ShowAboutAppRequested?.Invoke(this, EventArgs.Empty);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

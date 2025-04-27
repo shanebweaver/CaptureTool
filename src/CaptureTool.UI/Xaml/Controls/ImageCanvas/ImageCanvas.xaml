@@ -21,7 +21,10 @@
             x:Name="CanvasScrollView"
             HorizontalScrollBarVisibility="Auto"
             ZoomMode="Enabled">
-            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid
+                x:Name="DrawingCanvasPanel"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
 
                 <canvasui:CanvasControl
                     x:Name="DrawingCanvas"

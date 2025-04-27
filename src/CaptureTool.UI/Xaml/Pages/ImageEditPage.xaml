@@ -50,13 +50,15 @@
                 Command="{x:Bind ViewModel.UndoCommand}"
                 Icon="Undo"
                 IsEnabled="False"
-                Label="Undo" />
+                Label="Undo"
+                Visibility="Collapsed" />
             <AppBarButton
                 Command="{x:Bind ViewModel.RedoCommand}"
                 Icon="Redo"
                 IsEnabled="False"
-                Label="Redo" />
-            <AppBarSeparator />
+                Label="Redo"
+                Visibility="Collapsed" />
+            <AppBarSeparator Visibility="Collapsed" />
             <AppBarButton
                 Command="{x:Bind ViewModel.CopyCommand}"
                 Icon="Copy"
@@ -65,12 +67,14 @@
                 Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
                 IsEnabled="False"
-                Label="Save" />
+                Label="Save"
+                Visibility="Collapsed" />
             <AppBarButton
                 Command="{x:Bind ViewModel.PrintCommand}"
                 Icon="Print"
                 IsEnabled="False"
-                Label="Print" />
+                Label="Print"
+                Visibility="Collapsed" />
         </CommandBar>
 
         <Grid

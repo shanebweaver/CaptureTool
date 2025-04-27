@@ -74,7 +74,7 @@ public sealed partial class MainWindow : Window
         // TODO: Figure out how this affects the size. We don't want to restore a minimized window to the previous size (0,0).
     }
 
-    private void OnViewModelNavigationRequested(NavigationRequest navigationRequest)
+    private void OnViewModelNavigationRequested(object? sender, NavigationRequest navigationRequest)
     {
         DispatcherQueue.TryEnqueue(() =>
         {
@@ -90,7 +90,7 @@ public sealed partial class MainWindow : Window
         });
     }
 
-    private void OnViewModelPresentationUpdateRequested(AppWindowPresenterAction action)
+    private void OnViewModelPresentationUpdateRequested(object? sender, AppWindowPresenterAction action)
     {
         DispatcherQueue.TryEnqueue(() =>
         {
