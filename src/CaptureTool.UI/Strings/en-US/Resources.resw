@@ -120,19 +120,22 @@
   <data name="BackButton.Content" xml:space="preserve">
     <value>Back</value>
   </data>
-  <data name="NewCaptureButton_Audio.Text" xml:space="preserve">
+  <data name="NewCaptureButton_Desktop_Audio.Text" xml:space="preserve">
     <value>Audio</value>
   </data>
-  <data name="NewCaptureButton_Desktop.Text" xml:space="preserve">
-    <value>Desktop</value>
+  <data name="NewCaptureButton_Desktop_Image.Text" xml:space="preserve">
+    <value>Screenshot</value>
   </data>
-  <data name="NewCaptureButton_Camera.Text" xml:space="preserve">
-    <value>Camera</value>
+  <data name="NewCaptureButton_Desktop_Video.Text" xml:space="preserve">
+    <value>Screen Recording</value>
   </data>
-  <data name="DesktopCaptureMode_Image" xml:space="preserve">
-    <value>Image</value>
+  <data name="CaptureMode_Desktop_Image" xml:space="preserve">
+    <value>Screenshot</value>
   </data>
-  <data name="DesktopCaptureMode_Video" xml:space="preserve">
-    <value>Video</value>
+  <data name="CaptureMode_Desktop_Video" xml:space="preserve">
+    <value>Screen Recording</value>
+  </data>
+  <data name="CaptureMode_Desktop_Audio" xml:space="preserve">
+    <value>Audio</value>
   </data>
 </root>

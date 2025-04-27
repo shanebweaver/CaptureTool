@@ -12,7 +12,8 @@ internal class PageLocator
         { NavigationRoutes.About.RouteName, typeof(AboutPage) },
         { NavigationRoutes.Settings.RouteName, typeof(SettingsPage) },
         { NavigationRoutes.Loading.RouteName, typeof(LoadingPage) },
-        { NavigationRoutes.DesktopCaptureOptions.RouteName, typeof(DesktopCaptureOptionsPage) },
+        { NavigationRoutes.DesktopImageCaptureOptions.RouteName, typeof(DesktopImageCaptureOptionsPage) },
+        { NavigationRoutes.DesktopVideoCaptureOptions.RouteName, typeof(DesktopVideoCaptureOptionsPage) },
         { NavigationRoutes.ImageEdit.RouteName, typeof(ImageEditPage) },
     };
 

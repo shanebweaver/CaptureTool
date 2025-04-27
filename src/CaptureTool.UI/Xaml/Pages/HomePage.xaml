@@ -28,11 +28,11 @@
 
                 <StackPanel Spacing="4">
                     <controls:NewCaptureButton
-                        x:Name="NewDesktopCaptureButton"
-                        x:Uid="NewCaptureButton_Desktop"
-                        Command="{x:Bind ViewModel.NewDesktopCaptureCommand}"
-                        Symbol="{StaticResource NewDesktopCaptureSymbol}" />
-                    <Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.DesktopCaptureOptionsCommand}">
+                        x:Name="NewDesktopImageCaptureButton"
+                        x:Uid="NewCaptureButton_Desktop_Image"
+                        Command="{x:Bind ViewModel.NewDesktopImageCaptureCommand}"
+                        Symbol="{StaticResource NewDesktopImageCaptureSymbol}" />
+                    <Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.DesktopImageCaptureOptionsCommand}">
                         <TextBlock Text="options" />
                     </Button>
                 </StackPanel>
@@ -40,11 +40,11 @@
                 <Grid Column="1">
                     <StackPanel Spacing="4">
                         <controls:NewCaptureButton
-                            x:Name="NewAudioCaptureButton"
-                            x:Uid="NewCaptureButton_Audio"
-                            Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
-                            Symbol="{StaticResource NewAudioCaptureSymbol}" />
-                        <Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.AudioCaptureOptionsCommand}">
+                            x:Name="NewDesktopVideoCaptureButton"
+                            x:Uid="NewCaptureButton_Desktop_Video"
+                            Command="{x:Bind ViewModel.NewDesktopVideoCaptureCommand}"
+                            Symbol="{StaticResource NewDesktopVideoCaptureSymbol}" />
+                        <Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.DesktopVideoCaptureOptionsCommand}">
                             <TextBlock Text="options" />
                         </Button>
                     </StackPanel>
@@ -53,11 +53,11 @@
                 <Grid Column="2">
                     <StackPanel Spacing="4">
                         <controls:NewCaptureButton
-                            x:Name="NewCameraCaptureButton"
-                            x:Uid="NewCaptureButton_Camera"
-                            Command="{x:Bind ViewModel.NewCameraCaptureCommand}"
-                            Symbol="{StaticResource NewCameraCaptureSymbol}" />
-                        <Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.CameraCaptureOptionsCommand}">
+                            x:Name="NewDesktopAudioCaptureButton"
+                            x:Uid="NewCaptureButton_Desktop_Audio"
+                            Command="{x:Bind ViewModel.NewDesktopAudioCaptureCommand}"
+                            Symbol="{StaticResource NewDesktopAudioCaptureSymbol}" />
+                        <Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.DesktopAudioCaptureOptionsCommand}">
                             <TextBlock Text="options" />
                         </Button>
                     </StackPanel>

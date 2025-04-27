@@ -3,9 +3,9 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace CaptureTool.UI.Xaml.Pages;
 
-public sealed partial class DesktopCaptureOptionsPage : DesktopCaptureOptionsPageBase
+public sealed partial class DesktopImageCaptureOptionsPage : DesktopImageCaptureOptionsPageBase
 {
-    public DesktopCaptureOptionsPage()
+    public DesktopImageCaptureOptionsPage()
     {
         InitializeComponent();
     }
@@ -13,7 +13,7 @@ public sealed partial class DesktopCaptureOptionsPage : DesktopCaptureOptionsPag
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("forwardAnimation");
-        animation?.TryStart(NewDesktopCaptureButton);
+        animation?.TryStart(NewDesktopImageCaptureButton);
         base.OnNavigatedTo(e);
     }
 
@@ -21,7 +21,7 @@ public sealed partial class DesktopCaptureOptionsPage : DesktopCaptureOptionsPag
     {
         if (e.NavigationMode == NavigationMode.Back)
         {
-            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("backAnimation", NewDesktopCaptureButton);
+            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("backAnimation", NewDesktopImageCaptureButton);
             animation.Configuration = new DirectConnectedAnimationConfiguration();
         }
         base.OnNavigatingFrom(e);

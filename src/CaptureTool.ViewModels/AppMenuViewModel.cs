@@ -20,9 +20,9 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     {
         public static readonly string Load = "Load";
         public static readonly string Unload = "Unload";
-        public static readonly string NewDesktopCapture = "NewDesktopCapture";
-        public static readonly string NewAudioCapture = "NewAudioCapture";
-        public static readonly string NewCameraCapture = "NewCameraCapture";
+        public static readonly string NewDesktopImageCapture = "NewDesktopImageCapture";
+        public static readonly string NewDesktopVideoCapture = "NewDesktopVideoCapture";
+        public static readonly string NewDesktopAudioCapture = "NewDesktopAudioCapture";
         public static readonly string OpenFile = "OpenFile";
         public static readonly string NavigateToSettings = "NavigateToSettings";
         public static readonly string ShowAboutDialog = "ShowAboutDialog";
@@ -35,33 +35,33 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     private readonly IAppController _appController;
     private readonly IFeatureManager _featureManager;
 
-    public RelayCommand NewDesktopCaptureCommand => new(NewDesktopCapture, () => IsDesktopCaptureEnabled);
-    public RelayCommand NewAudioCaptureCommand => new(NewAudioCapture, () => IsAudioCaptureEnabled);
-    public RelayCommand NewCameraCaptureCommand => new(NewCameraCapture, () => IsCameraCaptureEnabled);
+    public RelayCommand NewDesktopImageCaptureCommand => new(NewDesktopImageCapture, () => IsDesktopImageCaptureEnabled);
+    public RelayCommand NewDesktopVideoCaptureCommand => new(NewDesktopVideoCapture, () => IsDesktopVideoCaptureEnabled);
+    public RelayCommand NewAudioCaptureCommand => new(NewDesktopAudioCapture, () => IsDesktopAudioCaptureEnabled);
     public RelayCommand OpenFileCommand => new(OpenFile);
     public RelayCommand NavigateToSettingsCommand => new(NavigateToSettings);
     public RelayCommand ShowAboutDialogCommand => new(ShowAboutDialog);
     public RelayCommand ExitApplicationCommand => new(ExitApplication);
 
-    private bool _isDesktopCaptureEnabled;
-    public bool IsDesktopCaptureEnabled
+    private bool _isDesktopImageCaptureEnabled;
+    public bool IsDesktopImageCaptureEnabled
     {
-        get => _isDesktopCaptureEnabled;
-        set => Set(ref _isDesktopCaptureEnabled, value);
+        get => _isDesktopImageCaptureEnabled;
+        set => Set(ref _isDesktopImageCaptureEnabled, value);
     }
 
-    private bool _isAudioCaptureEnabled;
-    public bool IsAudioCaptureEnabled
+    private bool _isDesktopVideoCaptureEnabled;
+    public bool IsDesktopVideoCaptureEnabled
     {
-        get => _isAudioCaptureEnabled;
-        set => Set(ref _isAudioCaptureEnabled, value);
+        get => _isDesktopVideoCaptureEnabled;
+        set => Set(ref _isDesktopVideoCaptureEnabled, value);
     }
 
-    private bool _isCameraCaptureEnabled;
-    public bool IsCameraCaptureEnabled
+    private bool _isDesktopAudioCaptureEnabled;
+    public bool IsDesktopAudioCaptureEnabled
     {
-        get => _isCameraCaptureEnabled;
-        set => Set(ref _isCameraCaptureEnabled, value);
+        get => _isDesktopAudioCaptureEnabled;
+        set => Set(ref _isDesktopAudioCaptureEnabled, value);
     }
 
     public AppMenuViewModel(
@@ -90,9 +90,9 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            IsDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
-            IsAudioCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_AudioCapture);
-            IsCameraCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_CameraCapture);
+            IsDesktopImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Image);
+            IsDesktopVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Video);
+            IsDesktopAudioCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Audio);
         
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -130,15 +130,15 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         base.Unload();
     }
 
-    private void NewDesktopCapture()
+    private void NewDesktopImageCapture()
     {
-        string activityId = ActivityIds.NewDesktopCapture;
+        string activityId = ActivityIds.NewDesktopImageCapture;
         _telemetryService.ActivityInitiated(activityId);
 
         try
         {
-            DesktopCaptureOptions options = new(DesktopImageCaptureMode.Rectangle, ImageFileType.Png, true);
-            _ = _appController.NewDesktopCaptureAsync(options);
+            DesktopImageCaptureOptions options = new(DesktopImageCaptureMode.Rectangle, ImageFileType.Png, true);
+            _ = _appController.NewDesktopImageCaptureAsync(options);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -147,14 +147,15 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         }
     }
 
-    private void NewCameraCapture()
+    private void NewDesktopVideoCapture()
     {
-        string activityId = ActivityIds.NewCameraCapture;
+        string activityId = ActivityIds.NewDesktopVideoCapture;
         _telemetryService.ActivityInitiated(activityId);
 
         try
         {
-            _ = _appController.NewCameraCaptureAsync();
+            DesktopVideoCaptureOptions options = new(DesktopVideoCaptureMode.Rectangle, VideoFileType.Mp4, true);
+            _ = _appController.NewDesktopVideoCaptureAsync(options);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -163,14 +164,14 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         }
     }
 
-    private void NewAudioCapture()
+    private void NewDesktopAudioCapture()
     {
-        string activityId = ActivityIds.NewAudioCapture;
+        string activityId = ActivityIds.NewDesktopAudioCapture;
         _telemetryService.ActivityInitiated(activityId);
 
         try
         {
-            _ = _appController.NewAudioCaptureAsync(); 
+            _ = _appController.NewDesktopAudioCaptureAsync(); 
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

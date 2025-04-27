@@ -17,13 +17,13 @@
             <!--  New capture  -->
             <MenuFlyoutSubItem Icon="Add" Text="New capture">
                 <MenuFlyoutItem
-                    Command="{x:Bind ViewModel.NewDesktopCaptureCommand}"
-                    Icon="NewWindow"
-                    Text="Desktop" />
-                <MenuFlyoutItem
-                    Command="{x:Bind ViewModel.NewCameraCaptureCommand}"
+                    Command="{x:Bind ViewModel.NewDesktopImageCaptureCommand}"
                     Icon="Camera"
-                    Text="Camera" />
+                    Text="Screenshot" />
+                <MenuFlyoutItem
+                    Command="{x:Bind ViewModel.NewDesktopVideoCaptureCommand}"
+                    Icon="Video"
+                    Text="Screen recording" />
                 <MenuFlyoutItem
                     Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
                     Icon="Microphone"

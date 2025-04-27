@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop;
+using CaptureTool.Capture.Desktop.SnippingTool;
 using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
-using CaptureTool.Capture.Desktop.SnippingTool;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel.Core;
 
@@ -61,35 +60,42 @@ internal class CaptureToolAppController : IAppController
         App.Current.Shutdown();
     }
 
-    public async Task NewDesktopCaptureAsync(DesktopCaptureOptions options)
+    public async Task NewDesktopImageCaptureAsync(DesktopImageCaptureOptions options)
     {
         // Feature check
         bool isDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
         bool isImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Image);
-        bool isVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Video);
-        if (!isDesktopCaptureEnabled
-            || (options.CaptureMode == DesktopCaptureMode.Image && !isImageCaptureEnabled)
-            || (options.CaptureMode == DesktopCaptureMode.Video && !isVideoCaptureEnabled))
+        if (!isDesktopCaptureEnabled || !isImageCaptureEnabled)
         {
-            Trace.Fail("Feature is not enabled");
+            throw new InvalidOperationException("Feature is not enabled");
         }
 
         // Show loading screen and minimize
         _navigationService.Navigate(NavigationRoutes.Loading, null);
         UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
 
-        if (options.CaptureMode == DesktopCaptureMode.Image)
+        SnippingToolCaptureMode captureMode = ParseImageCaptureMode(options.ImageCaptureMode);
+        SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
+        await _snippingToolService.CaptureImageAsync(snippingToolOptions);
+    }
+
+    public async Task NewDesktopVideoCaptureAsync(DesktopVideoCaptureOptions options)
+    {
+        // Feature check
+        bool isDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
+        bool isVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Video);
+        if (!isDesktopCaptureEnabled || !isVideoCaptureEnabled)
         {
-            SnippingToolCaptureMode captureMode = ParseImageCaptureMode(options.ImageCaptureMode);
-            SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
-            await _snippingToolService.CaptureImageAsync(snippingToolOptions);
+            throw new InvalidOperationException("Feature is not enabled");
         }
-        else if (options.CaptureMode == DesktopCaptureMode.Video)
-        {
-            SnippingToolCaptureMode captureMode = ParseVideoCaptureMode(options.VideoCaptureMode);
-            SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
-            await _snippingToolService.CaptureVideoAsync(snippingToolOptions);
-        }
+
+        // Show loading screen and minimize
+        _navigationService.Navigate(NavigationRoutes.Loading, null);
+        UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
+
+        SnippingToolCaptureMode captureMode = ParseVideoCaptureMode(options.VideoCaptureMode);
+        SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
+        await _snippingToolService.CaptureVideoAsync(snippingToolOptions);
     }
 
     private static SnippingToolCaptureMode ParseImageCaptureMode(DesktopImageCaptureMode? desktopImageCaptureMode)
@@ -115,12 +121,7 @@ internal class CaptureToolAppController : IAppController
         return snippingToolCaptureMode;
     }
 
-    public Task NewCameraCaptureAsync()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task NewAudioCaptureAsync()
+    public Task NewDesktopAudioCaptureAsync()
     {
         throw new NotImplementedException();
     }

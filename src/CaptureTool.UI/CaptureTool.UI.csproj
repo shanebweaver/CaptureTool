@@ -97,7 +97,10 @@
     <Page Update="Xaml\Pages\AboutPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Xaml\Pages\DesktopCaptureOptionsPage.xaml">
+    <Page Update="Xaml\Pages\DesktopVideoCaptureOptionsPage.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Xaml\Pages\DesktopImageCaptureOptionsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Pages\HomePage.xaml">

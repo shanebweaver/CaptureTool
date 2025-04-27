@@ -3,5 +3,6 @@
 public enum DesktopCaptureMode
 {
     Image,
-    Video
+    Video,
+    Audio
 }

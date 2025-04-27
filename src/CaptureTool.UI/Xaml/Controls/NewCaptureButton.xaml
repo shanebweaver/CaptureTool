@@ -9,13 +9,17 @@
     mc:Ignorable="d">
 
     <Button
-        Width="96"
-        Height="96"
+        MinWidth="96"
+        MinHeight="96"
+        MaxHeight="96"
         Command="{x:Bind Command, Mode=OneWay}"
         CornerRadius="12">
-        <StackPanel>
+        <StackPanel Spacing="4">
             <SymbolIcon Symbol="{x:Bind Symbol, Mode=OneWay}" />
-            <TextBlock Text="{x:Bind Text, Mode=OneWay}" />
+            <TextBlock
+                Text="{x:Bind Text, Mode=OneWay}"
+                TextAlignment="Center"
+                TextWrapping="WrapWholeWords" />
         </StackPanel>
     </Button>
 </UserControl>

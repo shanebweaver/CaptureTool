@@ -11,9 +11,9 @@ public interface IAppController
     void Shutdown();
     bool TryRestart();
 
-    Task NewDesktopCaptureAsync(DesktopCaptureOptions options);
-    Task NewCameraCaptureAsync();
-    Task NewAudioCaptureAsync();
+    Task NewDesktopImageCaptureAsync(DesktopImageCaptureOptions options);
+    Task NewDesktopVideoCaptureAsync(DesktopVideoCaptureOptions options);
+    Task NewDesktopAudioCaptureAsync();
 
     void UpdateAppWindowPresentation(AppWindowPresenterAction action);
 
