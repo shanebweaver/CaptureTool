@@ -10,37 +10,115 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:SettingsPageViewModel}"
     mc:Ignorable="d">
 
-    <Grid Padding="24">
-        <Expander
+    <ScrollView>
+        <StackPanel
+            x:Name="ContentPanel"
+            Padding="24"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Top"
-            ExpandDirection="Down">
-            <Expander.Header>
-                <Grid Padding="0,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <FontIcon
-                        FontFamily="{StaticResource FluentSystemIcons}"
-                        FontSize="24"
-                        Glyph="{StaticResource AppThemeRegular}" />
-                    <StackPanel Grid.Column="1" Padding="16,0,0,0">
-                        <TextBlock
-                            Text="App theme"
-                            TextTrimming="WordEllipsis"
-                            TextWrapping="NoWrap" />
-                        <TextBlock
-                            FontSize="12"
-                            Opacity=".75"
-                            Text="Select which app theme to display"
-                            TextTrimming="WordEllipsis"
-                            TextWrapping="NoWrap" />
-                    </StackPanel>
-                </Grid>
-            </Expander.Header>
+            Spacing="12">
+            <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Settings" />
+            <TextBlock Style="{StaticResource BaseTextBlockStyle}" Text="Localization" />
 
-            <TextBlock Text="App themes go here" />
-        </Expander>
-    </Grid>
+            <!--  App language  -->
+            <Expander
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Top"
+                HorizontalContentAlignment="Left"
+                ExpandDirection="Down">
+                <Expander.Header>
+                    <Grid Padding="0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            FontSize="24"
+                            Glyph="{StaticResource LocalLanguage24Regular}" />
+                        <StackPanel Grid.Column="1" Padding="16,0,0,0">
+                            <TextBlock
+                                Text="App language"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="NoWrap" />
+                            <TextBlock
+                                FontSize="12"
+                                Opacity=".75"
+                                Text="Select which app langauge to display"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="NoWrap" />
+                        </StackPanel>
+                    </Grid>
+                </Expander.Header>
+                <Grid Padding="4,0">
+                    <RadioButtons>
+                        <RadioButton Content="English" />
+                        <RadioButton Content="System default" IsChecked="True" />
+                    </RadioButtons>
+                </Grid>
+            </Expander>
+
+            <TextBlock Style="{StaticResource BaseTextBlockStyle}" Text="Appearance" />
+
+            <!--  App theme  -->
+            <Expander
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Top"
+                HorizontalContentAlignment="Left"
+                ExpandDirection="Down">
+                <Expander.Header>
+                    <Grid Padding="0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            FontSize="24"
+                            Glyph="{StaticResource Color16Regular}" />
+                        <StackPanel Grid.Column="1" Padding="16,0,0,0">
+                            <TextBlock
+                                Text="App theme"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="NoWrap" />
+                            <TextBlock
+                                FontSize="12"
+                                Opacity=".75"
+                                Text="Select which app theme to display"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="NoWrap" />
+                        </StackPanel>
+                    </Grid>
+                </Expander.Header>
+                <RadioButtons Padding="4,0">
+                    <RadioButton>
+                        <TextBlock Text="Dark" />
+                    </RadioButton>
+                    <RadioButton>
+                        <TextBlock Text="Light" />
+                    </RadioButton>
+                    <RadioButton IsChecked="True">
+                        <TextBlock Text="System default" />
+                    </RadioButton>
+                </RadioButtons>
+            </Expander>
+        </StackPanel>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Default">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="800" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentPanel.HorizontalAlignment" Value="Left" />
+                        <Setter Target="ContentPanel.MinWidth" Value="800" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+    </ScrollView>
 </local:SettingsPageBase>

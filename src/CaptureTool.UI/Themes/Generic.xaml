@@ -33,7 +33,12 @@
     <x:String x:Key="FlipVertical32Regular">&#xE635;</x:String>
     <x:String x:Key="FlipVertical48Regular">&#xE636;</x:String>
 
-    <x:String x:Key="AppThemeRegular">&#xE3BC;</x:String>
+    <x:String x:Key="Color16Regular">&#xE3BC;</x:String>
+
+    <x:String x:Key="LocalLanguage16Regular">&#xF4F2;</x:String>
+    <x:String x:Key="LocalLanguage20Regular">&#xF4F3;</x:String>
+    <x:String x:Key="LocalLanguage24Regular">&#xF4F4;</x:String>
+    <x:String x:Key="LocalLanguage28Regular">&#xF4F5;</x:String>
 
     <Symbol x:Key="NewDesktopImageCaptureSymbol">Camera</Symbol>
     <Symbol x:Key="NewDesktopVideoCaptureSymbol">Video</Symbol>
