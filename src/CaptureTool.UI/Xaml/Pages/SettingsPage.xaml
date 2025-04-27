@@ -10,10 +10,37 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:SettingsPageViewModel}"
     mc:Ignorable="d">
 
-    <Grid>
-        <TextBlock
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Text="Settings" />
+    <Grid Padding="24">
+        <Expander
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Top"
+            ExpandDirection="Down">
+            <Expander.Header>
+                <Grid Padding="0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        FontSize="24"
+                        Glyph="{StaticResource AppThemeRegular}" />
+                    <StackPanel Grid.Column="1" Padding="16,0,0,0">
+                        <TextBlock
+                            Text="App theme"
+                            TextTrimming="WordEllipsis"
+                            TextWrapping="NoWrap" />
+                        <TextBlock
+                            FontSize="12"
+                            Opacity=".75"
+                            Text="Select which app theme to display"
+                            TextTrimming="WordEllipsis"
+                            TextWrapping="NoWrap" />
+                    </StackPanel>
+                </Grid>
+            </Expander.Header>
+
+            <TextBlock Text="App themes go here" />
+        </Expander>
     </Grid>
 </local:SettingsPageBase>

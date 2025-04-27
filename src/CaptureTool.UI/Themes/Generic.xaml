@@ -33,6 +33,8 @@
     <x:String x:Key="FlipVertical32Regular">&#xE635;</x:String>
     <x:String x:Key="FlipVertical48Regular">&#xE636;</x:String>
 
+    <x:String x:Key="AppThemeRegular">&#xE3BC;</x:String>
+
     <Symbol x:Key="NewDesktopImageCaptureSymbol">Camera</Symbol>
     <Symbol x:Key="NewDesktopVideoCaptureSymbol">Video</Symbol>
     <Symbol x:Key="NewDesktopAudioCaptureSymbol">Microphone</Symbol>
