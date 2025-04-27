@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Themes;
 using CaptureTool.UI.Activation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
@@ -22,6 +23,27 @@ public partial class App : Application
         ServiceProvider = new();
         DispatcherQueue = DispatcherQueue.GetForCurrentThread();
         InitializeComponent();
+        RestoreAppTheme();
+    }
+
+    private void RestoreAppTheme()
+    {
+        IThemeService themeService = ServiceProvider.GetService<IThemeService>();
+        
+        AppTheme defaultTheme = RequestedTheme == ApplicationTheme.Light ? AppTheme.Light : AppTheme.Dark;
+        themeService.SetDefaultTheme(defaultTheme);
+
+        ApplicationTheme? applicationTheme = themeService.CurrentTheme switch
+        {
+            AppTheme.Dark => ApplicationTheme.Dark,
+            AppTheme.Light => ApplicationTheme.Light,
+            _ => null
+        };
+
+        if (applicationTheme != null)
+        {
+            RequestedTheme = applicationTheme.Value;
+        }
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs launchArgs)

@@ -89,17 +89,11 @@
                         </StackPanel>
                     </Grid>
                 </Expander.Header>
-                <RadioButtons Padding="4,0">
-                    <RadioButton>
-                        <TextBlock Text="Dark" />
-                    </RadioButton>
-                    <RadioButton>
-                        <TextBlock Text="Light" />
-                    </RadioButton>
-                    <RadioButton IsChecked="True">
-                        <TextBlock Text="System default" />
-                    </RadioButton>
-                </RadioButtons>
+                <RadioButtons
+                    Padding="4,0"
+                    ItemsSource="{x:Bind ViewModel.AppThemeValues, Mode=OneWay}"
+                    SelectedIndex="{x:Bind ViewModel.SelectedAppThemeIndex, Mode=TwoWay}" />
+
             </Expander>
         </StackPanel>
         <VisualStateManager.VisualStateGroups>

@@ -61,6 +61,7 @@
     <ProjectReference Include="..\CaptureTool.Services.Storage.Windows\CaptureTool.Services.Storage.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.TaskEnvironment.WinUI\CaptureTool.Services.TaskEnvironment.WinUI.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Telemetry\CaptureTool.Services.Telemetry.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Themes.Windows\CaptureTool.Services.Themes.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
     <ProjectReference Include="..\CaptureTool.ViewModels\CaptureTool.ViewModels.csproj" />
   </ItemGroup>

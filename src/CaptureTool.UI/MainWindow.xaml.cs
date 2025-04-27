@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using CaptureTool.Core;
 using CaptureTool.Services.Navigation;
+using CaptureTool.Services.Themes;
 using CaptureTool.UI.Xaml.Pages;
 using CaptureTool.ViewModels;
 using Microsoft.UI;
@@ -33,6 +34,23 @@ public sealed partial class MainWindow : Window
         VisibilityChanged += OnVisibilityChanged;
         ViewModel.NavigationRequested += OnViewModelNavigationRequested;
         ViewModel.PresentationUpdateRequested += OnViewModelPresentationUpdateRequested;
+        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainWindowViewModel.CurrentAppTheme))
+        {
+            object theme = ViewModel.CurrentAppTheme switch
+            {
+                AppTheme.Light => ElementTheme.Light,
+                AppTheme.Dark => ElementTheme.Dark,
+                AppTheme.SystemDefault => ConvertToElementTheme(ViewModel.DefaultAppTheme),
+                _ => DependencyProperty.UnsetValue
+            };
+
+            RootGrid.SetValue(FrameworkElement.RequestedThemeProperty, theme);
+        }
     }
 
     private AppWindow GetAppWindowForCurrentWindow()
@@ -110,5 +128,16 @@ public sealed partial class MainWindow : Window
                 }
             }
         });
+    }
+
+    private static ElementTheme ConvertToElementTheme(AppTheme appTheme)
+    {
+        return appTheme switch
+        {
+            AppTheme.SystemDefault => ElementTheme.Default,
+            AppTheme.Light => ElementTheme.Light,
+            AppTheme.Dark => ElementTheme.Dark,
+            _ => ElementTheme.Default,
+        };
     }
 }

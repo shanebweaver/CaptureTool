@@ -51,7 +51,20 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
+                    <!--  Dashed border  -->
+                    <Rectangle
+                        Grid.RowSpan="5"
+                        Grid.ColumnSpan="5"
+                        Margin="-3"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Stroke="White"
+                        StrokeDashArray="4,4"
+                        StrokeThickness="2"
+                        Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
+
                     <!--  Crop anchors  -->
+                    <!--  Top left  -->
                     <Polygon
                         Fill="White"
                         Points="0,0 20,0 20,4, 4,4 4,20, 0,20"
@@ -61,6 +74,7 @@
                             <TranslateTransform X="-4" Y="-4" />
                         </Polygon.RenderTransform>
                     </Polygon>
+                    <!--  Top  -->
                     <Polygon
                         Grid.Column="2"
                         Fill="White"
@@ -71,6 +85,7 @@
                             <TranslateTransform Y="-4" />
                         </Polygon.RenderTransform>
                     </Polygon>
+                    <!--  Top right  -->
                     <Polygon
                         Grid.Column="4"
                         Fill="White"
@@ -81,7 +96,7 @@
                             <TranslateTransform X="5" Y="-4" />
                         </Polygon.RenderTransform>
                     </Polygon>
-
+                    <!--  Left  -->
                     <Polygon
                         Grid.Row="2"
                         Fill="White"
@@ -92,6 +107,7 @@
                             <TranslateTransform X="-4" />
                         </Polygon.RenderTransform>
                     </Polygon>
+                    <!--  Right  -->
                     <Polygon
                         Grid.Row="2"
                         Grid.Column="4"
@@ -103,7 +119,7 @@
                             <TranslateTransform X="5" />
                         </Polygon.RenderTransform>
                     </Polygon>
-
+                    <!--  Bottom left  -->
                     <Polygon
                         Grid.Row="4"
                         Fill="White"
@@ -114,6 +130,7 @@
                             <TranslateTransform X="-5" Y="6" />
                         </Polygon.RenderTransform>
                     </Polygon>
+                    <!--  Bottom  -->
                     <Polygon
                         Grid.Row="4"
                         Grid.Column="2"
@@ -125,6 +142,7 @@
                             <TranslateTransform Y="6" />
                         </Polygon.RenderTransform>
                     </Polygon>
+                    <!--  Bottom right  -->
                     <Polygon
                         Grid.Row="4"
                         Grid.Column="4"

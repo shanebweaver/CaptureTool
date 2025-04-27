@@ -1,4 +1,5 @@
 ﻿using System;
+using CaptureTool.Capture.Desktop.SnippingTool;
 using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
@@ -9,12 +10,13 @@ using CaptureTool.Services.Localization.Windows;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
-using CaptureTool.Capture.Desktop.SnippingTool;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Storage.Windows;
 using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.Services.TaskEnvironment.WinUI;
 using CaptureTool.Services.Telemetry;
+using CaptureTool.Services.Themes;
+using CaptureTool.Services.Themes.Windows;
 using CaptureTool.ViewModels;
 using CaptureTool.ViewModels.Factories;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,6 +48,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<ISettingsService, SettingsService>();
         collection.AddSingleton<ITelemetryService, TelemetryService>();
         collection.AddSingleton<ISnippingToolService, SnippingToolService>();
+        collection.AddSingleton<IThemeService, WindowsThemeService>();
 
         // ViewModels
         collection.AddTransient<MainWindowViewModel>();
