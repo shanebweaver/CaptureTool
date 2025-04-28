@@ -46,11 +46,11 @@ public sealed partial class ImageCanvas : UserControl
         {
             if (e.NewValue is bool isCropModeEnabled && isCropModeEnabled)
             {
-                control.CanvasContainer.Background = new SolidColorBrush(Colors.Black);
+                control.RootContainer.Background = new SolidColorBrush(Colors.Black);
             }
             else
             {
-                control.CanvasContainer.Background = new SolidColorBrush(Colors.Transparent);
+                control.RootContainer.Background = new SolidColorBrush(Colors.Transparent);
             }
 
             control.ZoomAndCenter();
@@ -119,16 +119,16 @@ public sealed partial class ImageCanvas : UserControl
                 orientation == RotateFlipType.Rotate90FlipY ||
                 orientation == RotateFlipType.Rotate90FlipXY;
 
-            DrawingCanvasPanel.Height = isTurned ? CanvasSize.Width : CanvasSize.Height;
-            DrawingCanvasPanel.Width = isTurned ? CanvasSize.Height : CanvasSize.Width;
-            DrawingCanvas.Height = isTurned ? CanvasSize.Width : CanvasSize.Height;
-            DrawingCanvas.Width = isTurned ? CanvasSize.Height : CanvasSize.Width;
-            DrawingCanvas.Invalidate();
+            CanvasContainer.Height = isTurned ? CanvasSize.Width : CanvasSize.Height;
+            CanvasContainer.Width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+            RenderCanvas.Height = isTurned ? CanvasSize.Width : CanvasSize.Height;
+            RenderCanvas.Width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+            RenderCanvas.Invalidate();
         });
     }
 
     #region Zoom and Center
-    private void CanvasContainer_SizeChanged(object sender, SizeChangedEventArgs e)
+    private void RootContainer_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         ZoomAndCenter();
     }
@@ -137,7 +137,7 @@ public sealed partial class ImageCanvas : UserControl
     {
         lock (this)
         {
-            if (CanvasScrollView == null || CanvasContainer == null || CanvasSize.Width == 0 || CanvasSize.Height == 0)
+            if (CanvasScrollView == null || RootContainer == null || CanvasSize.Width == 0 || CanvasSize.Height == 0)
             {
                 return;
             }
@@ -148,8 +148,8 @@ public sealed partial class ImageCanvas : UserControl
                 Orientation == RotateFlipType.Rotate90FlipY ||
                 Orientation == RotateFlipType.Rotate90FlipXY;
 
-            double containerWidth = CanvasContainer.ActualWidth;
-            double containerHeight = CanvasContainer.ActualHeight;
+            double containerWidth = RootContainer.ActualWidth;
+            double containerHeight = RootContainer.ActualHeight;
 
             double canvasWidth = isTurned ? CanvasSize.Height : CanvasSize.Width;
             double canvasHeight = isTurned ? CanvasSize.Width : CanvasSize.Height;
@@ -210,18 +210,18 @@ public sealed partial class ImageCanvas : UserControl
     #endregion
 
     #region Panning
-    private void CanvasContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
+    private void RootContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = true;
-        _lastPointerPosition = e.GetCurrentPoint(CanvasContainer).Position;
-        CanvasContainer.CapturePointer(e.Pointer);
+        _lastPointerPosition = e.GetCurrentPoint(RootContainer).Position;
+        RootContainer.CapturePointer(e.Pointer);
     }
 
-    private void CanvasContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
+    private void RootContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
         if (_isPointerDown)
         {
-            var currentPosition = e.GetCurrentPoint(CanvasContainer).Position;
+            var currentPosition = e.GetCurrentPoint(RootContainer).Position;
             double deltaX = _lastPointerPosition.X - currentPosition.X;
             double deltaY = _lastPointerPosition.Y - currentPosition.Y;
 
@@ -240,19 +240,19 @@ public sealed partial class ImageCanvas : UserControl
         }
     }
 
-    private void CanvasContainer_PointerReleased(object sender, PointerRoutedEventArgs e)
+    private void RootContainer_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = false;
-        CanvasContainer.ReleasePointerCaptures();
+        RootContainer.ReleasePointerCaptures();
     }
 
-    private void CanvasContainer_PointerCanceled(object sender, PointerRoutedEventArgs e)
+    private void RootContainer_PointerCanceled(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = false;
-        CanvasContainer.ReleasePointerCaptures();
+        RootContainer.ReleasePointerCaptures();
     }
 
-    private void CanvasContainer_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
+    private void RootContainer_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = false;
     }
@@ -265,7 +265,7 @@ public sealed partial class ImageCanvas : UserControl
 
     private void CropBoundary_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        _startPoint = e.GetCurrentPoint(CanvasContainer).Position;
+        _startPoint = e.GetCurrentPoint(RootContainer).Position;
         _isResizing = true;
 
         // Determine which edge or corner is being grabbed
@@ -280,7 +280,7 @@ public sealed partial class ImageCanvas : UserControl
     {
         if (_isResizing && _resizeDirection != null)
         {
-            var currentPoint = e.GetCurrentPoint(CanvasContainer).Position;
+            var currentPoint = e.GetCurrentPoint(RootContainer).Position;
             var deltaX = currentPoint.X - _startPoint.X;
             var deltaY = currentPoint.Y - _startPoint.Y;
 

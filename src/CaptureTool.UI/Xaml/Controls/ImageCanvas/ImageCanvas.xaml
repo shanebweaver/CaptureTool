@@ -10,24 +10,24 @@
     Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
     mc:Ignorable="d">
     <Grid
-        x:Name="CanvasContainer"
-        PointerCanceled="CanvasContainer_PointerCanceled"
-        PointerCaptureLost="CanvasContainer_PointerCaptureLost"
-        PointerMoved="CanvasContainer_PointerMoved"
-        PointerPressed="CanvasContainer_PointerPressed"
-        PointerReleased="CanvasContainer_PointerReleased"
-        SizeChanged="CanvasContainer_SizeChanged">
+        x:Name="RootContainer"
+        PointerCanceled="RootContainer_PointerCanceled"
+        PointerCaptureLost="RootContainer_PointerCaptureLost"
+        PointerMoved="RootContainer_PointerMoved"
+        PointerPressed="RootContainer_PointerPressed"
+        PointerReleased="RootContainer_PointerReleased"
+        SizeChanged="RootContainer_SizeChanged">
         <ScrollView
             x:Name="CanvasScrollView"
             HorizontalScrollBarVisibility="Auto"
             ZoomMode="Enabled">
             <Grid
-                x:Name="DrawingCanvasPanel"
+                x:Name="CanvasContainer"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center">
 
                 <canvasui:CanvasControl
-                    x:Name="DrawingCanvas"
+                    x:Name="RenderCanvas"
                     CreateResources="CanvasControl_CreateResources"
                     Draw="CanvasControl_Draw" />
 
