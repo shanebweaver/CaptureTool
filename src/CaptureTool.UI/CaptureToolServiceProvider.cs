@@ -1,4 +1,5 @@
 ﻿using System;
+using CaptureTool.Capture.Desktop;
 using CaptureTool.Capture.Desktop.SnippingTool;
 using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
@@ -62,9 +63,11 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<AppTitleBarViewModel>();
         collection.AddTransient<AppAboutViewModel>();
         collection.AddTransient<DesktopCaptureModeViewModel>();
+        collection.AddTransient<AppThemeViewModel>();
 
         // ViewModel factories
-        collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel>, DesktopCaptureModeViewModelFactory>();
+        collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel, DesktopCaptureMode>, DesktopCaptureModeViewModelFactory>();
+        collection.AddSingleton<IFactoryService<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
 
         _serviceProvider = collection.BuildServiceProvider();
     }

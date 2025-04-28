@@ -3,12 +3,9 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using CaptureTool.Core;
-using CaptureTool.FeatureManagement;
+using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
-using CaptureTool.Services.Settings;
 using CaptureTool.Services.Themes;
-using Microsoft.Windows.Storage;
 
 namespace CaptureTool.ViewModels;
 
@@ -16,8 +13,7 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
 {
     private readonly IThemeService _themeService;
     private readonly ICancellationService _cancellationService;
-    private readonly IFeatureManager _featureManager;
-    private readonly ISettingsService _settingsService;
+    private readonly IFactoryService<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
     private readonly AppTheme[] SupportedAppThemes = [
         AppTheme.Light,
@@ -25,11 +21,11 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
         AppTheme.SystemDefault,
     ];
 
-    private ObservableCollection<AppTheme> _appThemeValues;
-    public ObservableCollection<AppTheme> AppThemeValues
+    private ObservableCollection<AppThemeViewModel> _appThemes;
+    public ObservableCollection<AppThemeViewModel> AppThemes
     {
-        get => _appThemeValues;
-        set => Set(ref _appThemeValues, value);
+        get => _appThemes;
+        set => Set(ref _appThemes, value);
     }
 
     private int _selectedAppThemeIndex;
@@ -46,15 +42,13 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
     public SettingsPageViewModel(
         IThemeService themeService,
         ICancellationService cancellationService,
-        IFeatureManager featureManager,
-        ISettingsService settingsService)
+        IFactoryService<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
         _themeService = themeService;
         _cancellationService = cancellationService;
-        _featureManager = featureManager;
-        _settingsService = settingsService;
+        _appThemeViewModelFactory = appThemeViewModelFactory;
 
-        _appThemeValues = [];
+        _appThemes = [];
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -66,12 +60,19 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            foreach (AppTheme appTheme in SupportedAppThemes)
-            {
-                AppThemeValues.Add(appTheme);
-            }
+            AppTheme currentTheme = _themeService.CurrentTheme;
 
-            SelectedAppThemeIndex = AppThemeValues.IndexOf(_themeService.CurrentTheme);
+            for(var i = 0; i < SupportedAppThemes.Length; i++)
+            {
+                AppTheme supportedTheme = SupportedAppThemes[i];
+                AppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
+                AppThemes.Add(vm);
+
+                if (supportedTheme == currentTheme)
+                {
+                    SelectedAppThemeIndex = i;
+                }
+            }
         }
         catch (OperationCanceledException)
         {
@@ -88,6 +89,7 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
     public override void Unload()
     {
         SelectedAppThemeIndex = -1;
+        AppThemes.Clear();
         base.Unload();
     }
 
@@ -95,8 +97,8 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
     {
         if (SelectedAppThemeIndex != -1)
         {
-            AppTheme appTheme = SupportedAppThemes[SelectedAppThemeIndex];
-            _themeService.UpdateCurrentTheme(appTheme);
+            AppThemeViewModel vm = AppThemes[SelectedAppThemeIndex];
+            _themeService.UpdateCurrentTheme(vm.AppTheme);
         }
     }
 }

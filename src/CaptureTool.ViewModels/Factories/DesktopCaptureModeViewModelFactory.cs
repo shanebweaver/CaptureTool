@@ -1,26 +1,23 @@
-﻿using CaptureTool.Services;
-using CaptureTool.Services.Cancellation;
+﻿using CaptureTool.Capture.Desktop;
+using CaptureTool.Services;
 using CaptureTool.Services.Localization;
 
 namespace CaptureTool.ViewModels.Factories;
 
-public sealed partial class DesktopCaptureModeViewModelFactory : IFactoryService<DesktopCaptureModeViewModel>
+public sealed partial class DesktopCaptureModeViewModelFactory : IFactoryService<DesktopCaptureModeViewModel, DesktopCaptureMode>
 {
-    private readonly ICancellationService _cancellationService;
     private readonly ILocalizationService _localizationService;
 
-    public DesktopCaptureModeViewModelFactory(
-        ICancellationService cancellationService,
-        ILocalizationService localizationService)
+    public DesktopCaptureModeViewModelFactory(ILocalizationService localizationService)
     {
-        _cancellationService = cancellationService;
         _localizationService = localizationService;
     }
 
-    public DesktopCaptureModeViewModel Create()
+    public DesktopCaptureModeViewModel Create(DesktopCaptureMode desktopCaptureMode)
     {
-        return new(
-            _cancellationService,
-            _localizationService);
+        return new(_localizationService)
+        {
+            CaptureMode = desktopCaptureMode
+        };
     }
 }

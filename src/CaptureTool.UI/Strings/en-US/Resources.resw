@@ -138,4 +138,13 @@
   <data name="CaptureMode_Desktop_Audio" xml:space="preserve">
     <value>Audio</value>
   </data>
+  <data name="AppTheme_Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="AppTheme_Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="AppTheme_SystemDefault" xml:space="preserve">
+    <value>Use system default</value>
+  </data>
 </root>
