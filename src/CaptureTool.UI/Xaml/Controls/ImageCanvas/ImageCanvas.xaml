@@ -67,44 +67,44 @@
                     <!--  Top left  -->
                     <Polygon
                         Fill="White"
-                        Points="0,0 20,0 20,4, 4,4 4,20, 0,20"
+                        Points="0,0 40,0 40,8, 8,8 8,40, 0,40"
                         Stroke="Black"
                         Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
                         <Polygon.RenderTransform>
-                            <TranslateTransform X="-4" Y="-4" />
+                            <TranslateTransform X="-9" Y="-9" />
                         </Polygon.RenderTransform>
                     </Polygon>
                     <!--  Top  -->
                     <Polygon
                         Grid.Column="2"
                         Fill="White"
-                        Points="0,0 20,0 20,4 0,4"
+                        Points="0,0 40,0 40,8 0,8"
                         Stroke="Black"
                         Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
                         <Polygon.RenderTransform>
-                            <TranslateTransform Y="-4" />
+                            <TranslateTransform Y="-9" />
                         </Polygon.RenderTransform>
                     </Polygon>
                     <!--  Top right  -->
                     <Polygon
                         Grid.Column="4"
                         Fill="White"
-                        Points="0,0 20,0 20,20 16,20 16,4 0,4"
+                        Points="0,0 40,0 40,40 32,40 32,8 0,8"
                         Stroke="Black"
                         Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
                         <Polygon.RenderTransform>
-                            <TranslateTransform X="5" Y="-4" />
+                            <TranslateTransform X="10" Y="-9" />
                         </Polygon.RenderTransform>
                     </Polygon>
                     <!--  Left  -->
                     <Polygon
                         Grid.Row="2"
                         Fill="White"
-                        Points="0,0 4,0 4,20 0,20"
+                        Points="0,0 8,0 8,40 0,40"
                         Stroke="Black"
                         Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
                         <Polygon.RenderTransform>
-                            <TranslateTransform X="-4" />
+                            <TranslateTransform X="-9" />
                         </Polygon.RenderTransform>
                     </Polygon>
                     <!--  Right  -->
@@ -112,22 +112,22 @@
                         Grid.Row="2"
                         Grid.Column="4"
                         Fill="White"
-                        Points="16,0 20,0 20,20 16,20"
+                        Points="32,0 40,0 40,40 32,40"
                         Stroke="Black"
                         Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
                         <Polygon.RenderTransform>
-                            <TranslateTransform X="5" />
+                            <TranslateTransform X="10" />
                         </Polygon.RenderTransform>
                     </Polygon>
                     <!--  Bottom left  -->
                     <Polygon
                         Grid.Row="4"
                         Fill="White"
-                        Points="0,0 4,0 4,16 20,16 20,20 0,20"
+                        Points="0,0 8,0 8,32 40,32 40,40 0,40"
                         Stroke="Black"
                         Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
                         <Polygon.RenderTransform>
-                            <TranslateTransform X="-5" Y="6" />
+                            <TranslateTransform X="-9" Y="9" />
                         </Polygon.RenderTransform>
                     </Polygon>
                     <!--  Bottom  -->
@@ -135,11 +135,11 @@
                         Grid.Row="4"
                         Grid.Column="2"
                         Fill="White"
-                        Points="0,16 20,16 20,20 0,20"
+                        Points="0,32 40,32 40,40 0,40"
                         Stroke="Black"
                         Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
                         <Polygon.RenderTransform>
-                            <TranslateTransform Y="6" />
+                            <TranslateTransform Y="10" />
                         </Polygon.RenderTransform>
                     </Polygon>
                     <!--  Bottom right  -->
@@ -147,11 +147,11 @@
                         Grid.Row="4"
                         Grid.Column="4"
                         Fill="White"
-                        Points="16,0 20,0 20,20 0,20 0,16 16,16"
+                        Points="32,0 40,0 40,40 0,40 0,32 32,32"
                         Stroke="Black"
                         Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
                         <Polygon.RenderTransform>
-                            <TranslateTransform X="6" Y="6" />
+                            <TranslateTransform X="10" Y="10" />
                         </Polygon.RenderTransform>
                     </Polygon>
                 </Grid>
