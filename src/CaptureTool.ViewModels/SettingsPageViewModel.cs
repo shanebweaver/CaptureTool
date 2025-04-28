@@ -3,14 +3,17 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using CaptureTool.Core;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Themes;
+using CaptureTool.ViewModels.Commands;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class SettingsPageViewModel : ViewModelBase
 {
+    private readonly IAppController _appController;
     private readonly IThemeService _themeService;
     private readonly ICancellationService _cancellationService;
     private readonly IFactoryService<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
@@ -20,6 +23,8 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
         AppTheme.Dark,
         AppTheme.SystemDefault,
     ];
+
+    public RelayCommand RestartAppCommand => new(RestartApp);
 
     private ObservableCollection<AppThemeViewModel> _appThemes;
     public ObservableCollection<AppThemeViewModel> AppThemes
@@ -39,11 +44,20 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
         }
     }
 
+    private bool _showAppThemeRestartMessage;
+    public bool ShowAppThemeRestartMessage
+    {
+        get => _showAppThemeRestartMessage;
+        set => Set(ref _showAppThemeRestartMessage, value);
+    }
+
     public SettingsPageViewModel(
+        IAppController appController,
         IThemeService themeService,
         ICancellationService cancellationService,
         IFactoryService<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
+        _appController = appController;
         _themeService = themeService;
         _cancellationService = cancellationService;
         _appThemeViewModelFactory = appThemeViewModelFactory;
@@ -73,6 +87,8 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
                     SelectedAppThemeIndex = i;
                 }
             }
+
+            UpdateShowAppThemeRestartMessage();
         }
         catch (OperationCanceledException)
         {
@@ -88,6 +104,7 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
 
     public override void Unload()
     {
+        ShowAppThemeRestartMessage = false;
         SelectedAppThemeIndex = -1;
         AppThemes.Clear();
         base.Unload();
@@ -99,6 +116,33 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
         {
             AppThemeViewModel vm = AppThemes[SelectedAppThemeIndex];
             _themeService.UpdateCurrentTheme(vm.AppTheme);
+            UpdateShowAppThemeRestartMessage();
         }
+    }
+
+    private void UpdateShowAppThemeRestartMessage()
+    {
+        var defaultTheme = _themeService.DefaultTheme;
+        var startupTheme = _themeService.StartupTheme;
+        var currentTheme = _themeService.CurrentTheme;
+
+        // Make sure currentTheme is light or dark.
+        // defaultTheme is never "SystemDefault".
+        if (currentTheme == AppTheme.SystemDefault)
+        {
+            currentTheme = defaultTheme;
+        }
+
+        if (startupTheme == AppTheme.SystemDefault)
+        {
+            startupTheme = defaultTheme;
+        }
+
+        ShowAppThemeRestartMessage = currentTheme != startupTheme;
+    }
+
+    private void RestartApp()
+    {
+        _appController.TryRestart();
     }
 }

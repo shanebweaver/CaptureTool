@@ -31,7 +31,7 @@ public partial class App : Application
         IThemeService themeService = ServiceProvider.GetService<IThemeService>();
         
         AppTheme defaultTheme = RequestedTheme == ApplicationTheme.Light ? AppTheme.Light : AppTheme.Dark;
-        themeService.SetDefaultTheme(defaultTheme);
+        themeService.Initialize(defaultTheme);
 
         ApplicationTheme? applicationTheme = themeService.CurrentTheme switch
         {
