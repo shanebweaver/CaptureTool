@@ -14,7 +14,7 @@ namespace CaptureTool.Edit.Image.Win2D;
 
 public static partial class ImageCanvasRenderer
 {
-    private static readonly Windows.UI.Color ClearColor = Colors.White;
+    private static readonly Windows.UI.Color ClearColor = Colors.Transparent;
 
     public static async Task CopyImageToClipboardAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, float width, float height, float dpi = 96)
     {
