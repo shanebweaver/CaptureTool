@@ -119,10 +119,22 @@ public sealed partial class ImageCanvas : UserControl
                 orientation == RotateFlipType.Rotate90FlipY ||
                 orientation == RotateFlipType.Rotate90FlipXY;
 
-            CanvasContainer.Height = isTurned ? CanvasSize.Width : CanvasSize.Height;
-            CanvasContainer.Width = isTurned ? CanvasSize.Height : CanvasSize.Width;
-            RenderCanvas.Height = isTurned ? CanvasSize.Width : CanvasSize.Height;
-            RenderCanvas.Width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+            var height = isTurned ? CanvasSize.Width : CanvasSize.Height;
+            var width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+
+            CanvasContainer.Height = height;
+            CanvasContainer.Width = width;
+
+            CropCanvas.Height = height;
+            CropCanvas.Width = width;
+            
+            CropBoundary.Height = height;
+            CropBoundary.Width = width;
+            Canvas.SetLeft(CropBoundary, 0);
+            Canvas.SetTop(CropBoundary, 0);
+
+            RenderCanvas.Height = height;
+            RenderCanvas.Width = width;
             RenderCanvas.Invalidate();
         });
     }
@@ -327,45 +339,43 @@ public sealed partial class ImageCanvas : UserControl
 
     private void ResizeCropBoundary(double deltaX, double deltaY, ResizeDirection? direction)
     {
-        // Adjust the CropBoundary size and position based on the direction
         switch (direction)
         {
             case ResizeDirection.TopLeft:
-                CropBoundary.Width = Math.Max(0, CropBoundary.ActualWidth - deltaX);
-                CropBoundary.Height = Math.Max(0, CropBoundary.ActualHeight - deltaY);
-                Canvas.SetLeft(CropBoundary, Canvas.GetLeft(CropBoundary) + deltaX);
-                Canvas.SetTop(CropBoundary, Canvas.GetTop(CropBoundary) + deltaY);
+                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth - deltaX, CanvasSize.Width - Math.Max(0, Canvas.GetLeft(CropBoundary) + deltaX)));
+                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight - deltaY, CanvasSize.Height - Math.Max(0, Canvas.GetTop(CropBoundary) + deltaY)));
+                Canvas.SetLeft(CropBoundary, Math.Max(0, Math.Min(Canvas.GetLeft(CropBoundary) + deltaX, CanvasSize.Width - CropBoundary.Width)));
+                Canvas.SetTop(CropBoundary, Math.Max(0, Math.Min(Canvas.GetTop(CropBoundary) + deltaY, CanvasSize.Height - CropBoundary.Height)));
                 break;
             case ResizeDirection.TopRight:
-                CropBoundary.Width = Math.Max(0, CropBoundary.ActualWidth + deltaX);
-                CropBoundary.Height = Math.Max(0, CropBoundary.ActualHeight - deltaY);
-                Canvas.SetTop(CropBoundary, Canvas.GetTop(CropBoundary) + deltaY);
+                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth + deltaX, CanvasSize.Width - Canvas.GetLeft(CropBoundary)));
+                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight - deltaY, CanvasSize.Height - Math.Max(0, Canvas.GetTop(CropBoundary) + deltaY)));
+                Canvas.SetTop(CropBoundary, Math.Max(0, Math.Min(Canvas.GetTop(CropBoundary) + deltaY, CanvasSize.Height - CropBoundary.Height)));
                 break;
             case ResizeDirection.BottomLeft:
-                CropBoundary.Width = Math.Max(0, CropBoundary.ActualWidth - deltaX);
-                CropBoundary.Height = Math.Max(0, CropBoundary.ActualHeight + deltaY);
-                Canvas.SetLeft(CropBoundary, Canvas.GetLeft(CropBoundary) + deltaX);
+                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth - deltaX, CanvasSize.Width - Math.Max(0, Canvas.GetLeft(CropBoundary) + deltaX)));
+                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight + deltaY, CanvasSize.Height - Canvas.GetTop(CropBoundary)));
+                Canvas.SetLeft(CropBoundary, Math.Max(0, Math.Min(Canvas.GetLeft(CropBoundary) + deltaX, CanvasSize.Width - CropBoundary.Width)));
                 break;
             case ResizeDirection.BottomRight:
-                CropBoundary.Width = Math.Max(0, CropBoundary.ActualWidth + deltaX);
-                CropBoundary.Height = Math.Max(0, CropBoundary.ActualHeight + deltaY);
+                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth + deltaX, CanvasSize.Width - Canvas.GetLeft(CropBoundary)));
+                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight + deltaY, CanvasSize.Height - Canvas.GetTop(CropBoundary)));
                 break;
             case ResizeDirection.Left:
-                CropBoundary.Width = Math.Max(0, CropBoundary.ActualWidth - deltaX);
-                Canvas.SetLeft(CropBoundary, Canvas.GetLeft(CropBoundary) + deltaX);
+                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth - deltaX, CanvasSize.Width - Math.Max(0, Canvas.GetLeft(CropBoundary) + deltaX)));
+                Canvas.SetLeft(CropBoundary, Math.Max(0, Math.Min(Canvas.GetLeft(CropBoundary) + deltaX, CanvasSize.Width - CropBoundary.Width)));
                 break;
             case ResizeDirection.Right:
-                CropBoundary.Width = Math.Max(0, CropBoundary.ActualWidth + deltaX);
+                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth + deltaX, CanvasSize.Width - Canvas.GetLeft(CropBoundary)));
                 break;
             case ResizeDirection.Top:
-                CropBoundary.Height = Math.Max(0, CropBoundary.ActualHeight - deltaY);
-                Canvas.SetTop(CropBoundary, Canvas.GetTop(CropBoundary) + deltaY);
+                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight - deltaY, CanvasSize.Height - Math.Max(0, Canvas.GetTop(CropBoundary) + deltaY)));
+                Canvas.SetTop(CropBoundary, Math.Max(0, Math.Min(Canvas.GetTop(CropBoundary) + deltaY, CanvasSize.Height - CropBoundary.Height)));
                 break;
             case ResizeDirection.Bottom:
-                CropBoundary.Height = Math.Max(0, CropBoundary.ActualHeight + deltaY);
+                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight + deltaY, CanvasSize.Height - Canvas.GetTop(CropBoundary)));
                 break;
         }
     }
     #endregion
-
 }
