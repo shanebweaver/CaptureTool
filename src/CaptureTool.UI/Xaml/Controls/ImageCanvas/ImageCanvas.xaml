@@ -34,6 +34,8 @@
                 <Canvas x:Name="CropCanvas">
                     <Grid
                         x:Name="CropBoundary"
+                        PointerEntered="CropBoundary_PointerEntered"
+                        PointerExited="CropBoundary_PointerExited"
                         PointerMoved="CropBoundary_PointerMoved"
                         PointerPressed="CropBoundary_PointerPressed"
                         PointerReleased="CropBoundary_PointerReleased">

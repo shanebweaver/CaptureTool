@@ -7,10 +7,12 @@ using CaptureTool.Edit.Image.Win2D.Drawable;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Windows.UI.Core;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
@@ -271,6 +273,7 @@ public sealed partial class ImageCanvas : UserControl
     #endregion
 
     #region Cropping
+    private const int _tolerance = 32;
     private bool _isResizing;
     private Windows.Foundation.Point _startPoint;
     private ResizeDirection? _resizeDirection;
@@ -282,25 +285,37 @@ public sealed partial class ImageCanvas : UserControl
 
         // Determine which edge or corner is being grabbed
         var position = e.GetCurrentPoint(CropBoundary).Position;
-        var tolerance = 10; // Tolerance for detecting edges
-        _resizeDirection = GetResizeDirection(position, tolerance);
+        _resizeDirection = GetResizeDirection(position, _tolerance);
 
         (sender as UIElement)?.CapturePointer(e.Pointer);
     }
 
+    private void CropBoundary_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        UpdateCursor(e.GetCurrentPoint(CropBoundary).Position);
+    }
+
     private void CropBoundary_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
-        if (_isResizing && _resizeDirection != null)
+        if (!_isResizing)
+        {
+            UpdateCursor(e.GetCurrentPoint(CropBoundary).Position);
+        }
+        else
         {
             var currentPoint = e.GetCurrentPoint(RootContainer).Position;
             var deltaX = currentPoint.X - _startPoint.X;
             var deltaY = currentPoint.Y - _startPoint.Y;
 
-            // Resize the CropBoundary based on the direction
             ResizeCropBoundary(deltaX, deltaY, _resizeDirection);
 
             _startPoint = currentPoint;
         }
+    }
+
+    private void CropBoundary_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
     }
 
     private void CropBoundary_PointerReleased(object sender, PointerRoutedEventArgs e)
@@ -308,6 +323,23 @@ public sealed partial class ImageCanvas : UserControl
         _isResizing = false;
         _resizeDirection = null;
         (sender as UIElement)?.ReleasePointerCapture(e.Pointer);
+    }
+
+    private void UpdateCursor(Windows.Foundation.Point position)
+    {
+        var direction = GetResizeDirection(position, _tolerance);
+
+        CoreCursorType cursorType = direction switch
+        {
+            ResizeDirection.TopLeft or ResizeDirection.BottomRight => CoreCursorType.SizeNorthwestSoutheast,
+            ResizeDirection.TopRight or ResizeDirection.BottomLeft => CoreCursorType.SizeNortheastSouthwest,
+            ResizeDirection.Top or ResizeDirection.Bottom => CoreCursorType.SizeNorthSouth,
+            ResizeDirection.Left or ResizeDirection.Right => CoreCursorType.SizeWestEast,
+            _ => CoreCursorType.Arrow
+        };
+
+        // Set the cursor on the CropBoundary
+        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(cursorType, 0));
     }
 
     private ResizeDirection? GetResizeDirection(Windows.Foundation.Point position, double tolerance)
