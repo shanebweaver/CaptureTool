@@ -10,6 +10,8 @@ public sealed partial class WindowsLocalizationService : ILocalizationService
     private ResourceLoader _resourceLoader;
     private CultureInfo _culture;
 
+    public string CurrentLanguage { get; }
+    public string StartupLanguage { get; }
     public string[] SupportedLanguages { get; }
 
     public WindowsLocalizationService()
@@ -18,6 +20,7 @@ public sealed partial class WindowsLocalizationService : ILocalizationService
         Debug.Assert(_resourceLoader != null);
         Debug.Assert(_culture != null);
 
+        StartupLanguage = CurrentLanguage = _culture.Name;
         SupportedLanguages = [.. ApplicationLanguages.Languages];
     }
 
@@ -26,7 +29,7 @@ public sealed partial class WindowsLocalizationService : ILocalizationService
         return _resourceLoader.GetString(resourceKey);
     }
 
-    public void UpdatePrimaryLanguage(string language)
+    public void UpdateCurrentLanguage(string language)
     {
         ApplicationLanguages.PrimaryLanguageOverride = language;
         InitializeResourceLoader();

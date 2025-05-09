@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Core;
@@ -10,6 +11,7 @@ using CaptureTool.Services.Localization;
 using CaptureTool.Services.Themes;
 using CaptureTool.ViewModels.Commands;
 using CaptureTool.ViewModels.Factories;
+using Microsoft.Windows.Globalization;
 
 namespace CaptureTool.ViewModels;
 
@@ -46,6 +48,13 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
             Set(ref _selectedAppLanguageIndex, value);
             UpdateAppLanguage();
         }
+    }
+
+    private bool _showAppLanguageRestartMessage;
+    public bool ShowAppLanguageRestartMessage
+    {
+        get => _showAppLanguageRestartMessage;
+        set => Set(ref _showAppLanguageRestartMessage, value);
     }
 
     private ObservableCollection<AppThemeViewModel> _appThemes;
@@ -110,6 +119,11 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
                 string language = languages[i];
                 AppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
                 AppLanguages.Add(vm);
+
+                if (language == _localizationService.CurrentLanguage)
+                {
+                    SelectedAppLanguageIndex = i;
+                }
             }
 
             // Themes
@@ -141,9 +155,14 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
 
     public override void Unload()
     {
+        ShowAppLanguageRestartMessage = false;
+        SelectedAppLanguageIndex = -1;
+        AppLanguages.Clear();
+
         ShowAppThemeRestartMessage = false;
         SelectedAppThemeIndex = -1;
         AppThemes.Clear();
+
         base.Unload();
     }
 
@@ -154,7 +173,8 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
             AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
             if (vm.Language != null)
             {
-                _localizationService.UpdatePrimaryLanguage(vm.Language);
+                _localizationService.UpdateCurrentLanguage(vm.Language);
+                ShowAppLanguageRestartMessage = vm.Language != _localizationService.StartupLanguage;
             }
         }
     }

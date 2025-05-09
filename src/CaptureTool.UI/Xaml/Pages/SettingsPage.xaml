@@ -51,6 +51,10 @@
                     </Grid>
                 </Expander.Header>
                 <Grid Padding="4,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
                     <RadioButtons
                         Padding="4,0"
                         ItemsSource="{x:Bind ViewModel.AppLanguages, Mode=OneWay}"
@@ -63,6 +67,32 @@
                             </DataTemplate>
                         </RadioButtons.ItemTemplate>
                     </RadioButtons>
+                    <Grid
+                        Margin="0,12,0,0"
+                        Padding="0,12,0,0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center"
+                        BorderBrush="{ThemeResource SystemBaseLowColor}"
+                        BorderThickness="0,1,0,0"
+                        ColumnSpacing="12"
+                        Row="1"
+                        Visibility="{x:Bind ViewModel.ShowAppLanguageRestartMessage, Mode=OneWay}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Button VerticalAlignment="Center" Command="{x:Bind ViewModel.RestartAppCommand}">
+                            <TextBlock Text="Restart app" />
+                        </Button>
+                        <TextBlock
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Opacity=".8"
+                            Text="Full changes will take affect on app restart."
+                            TextAlignment="Center"
+                            TextTrimming="WordEllipsis"
+                            TextWrapping="NoWrap" />
+                    </Grid>
                 </Grid>
             </Expander>
 
