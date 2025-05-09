@@ -70,6 +70,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
 
         // ViewModel factories
         collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel, DesktopCaptureMode>, DesktopCaptureModeViewModelFactory>();
+        collection.AddSingleton<IFactoryService<AppLanguageViewModel, string>, AppLanguageViewModelFactory>();
         collection.AddSingleton<IFactoryService<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
 
         _serviceProvider = collection.BuildServiceProvider();

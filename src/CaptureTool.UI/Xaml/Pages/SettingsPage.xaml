@@ -51,9 +51,17 @@
                     </Grid>
                 </Expander.Header>
                 <Grid Padding="4,0">
-                    <RadioButtons>
-                        <RadioButton Content="English" />
-                        <RadioButton Content="System default" IsChecked="True" />
+                    <RadioButtons
+                        Padding="4,0"
+                        ItemsSource="{x:Bind ViewModel.AppLanguages, Mode=OneWay}"
+                        SelectedIndex="{x:Bind ViewModel.SelectedAppLanguageIndex, Mode=TwoWay}">
+                        <RadioButtons.ItemTemplate>
+                            <DataTemplate x:DataType="viewmodels:AppLanguageViewModel">
+                                <Grid>
+                                    <TextBlock Margin="12,0,0,0" Text="{x:Bind DisplayName, Mode=OneWay}" />
+                                </Grid>
+                            </DataTemplate>
+                        </RadioButtons.ItemTemplate>
                     </RadioButtons>
                 </Grid>
             </Expander>

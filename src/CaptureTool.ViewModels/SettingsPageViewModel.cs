@@ -6,16 +6,20 @@ using System.Threading.Tasks;
 using CaptureTool.Core;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Localization;
 using CaptureTool.Services.Themes;
 using CaptureTool.ViewModels.Commands;
+using CaptureTool.ViewModels.Factories;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class SettingsPageViewModel : ViewModelBase
 {
     private readonly IAppController _appController;
+    private readonly ILocalizationService _localizationService;
     private readonly IThemeService _themeService;
     private readonly ICancellationService _cancellationService;
+    private readonly IFactoryService<AppLanguageViewModel, string> _appLanguageViewModelFactory;
     private readonly IFactoryService<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
     private readonly AppTheme[] SupportedAppThemes = [
@@ -25,6 +29,24 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
     ];
 
     public RelayCommand RestartAppCommand => new(RestartApp);
+
+    private ObservableCollection<AppLanguageViewModel> _appLanguages;
+    public ObservableCollection<AppLanguageViewModel> AppLanguages
+    {
+        get => _appLanguages;
+        set => Set(ref _appLanguages, value);
+    }
+
+    private int _selectedAppLanguageIndex;
+    public int SelectedAppLanguageIndex
+    {
+        get => _selectedAppLanguageIndex;
+        set
+        {
+            Set(ref _selectedAppLanguageIndex, value);
+            UpdateAppLanguage();
+        }
+    }
 
     private ObservableCollection<AppThemeViewModel> _appThemes;
     public ObservableCollection<AppThemeViewModel> AppThemes
@@ -53,16 +75,21 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
 
     public SettingsPageViewModel(
         IAppController appController,
+        ILocalizationService localizationService,
         IThemeService themeService,
         ICancellationService cancellationService,
+        IFactoryService<AppLanguageViewModel, string> appLanguageViewModelFactory,
         IFactoryService<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
         _appController = appController;
+        _localizationService = localizationService;
         _themeService = themeService;
         _cancellationService = cancellationService;
+        _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
 
         _appThemes = [];
+        _appLanguages = [];
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -76,7 +103,17 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
         {
             AppTheme currentTheme = _themeService.CurrentTheme;
 
-            for(var i = 0; i < SupportedAppThemes.Length; i++)
+            // Languages
+            string[] languages = _localizationService.SupportedLanguages;
+            for (var i = 0; i < languages.Length; i++)
+            {
+                string language = languages[i];
+                AppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
+                AppLanguages.Add(vm);
+            }
+
+            // Themes
+            for (var i = 0; i < SupportedAppThemes.Length; i++)
             {
                 AppTheme supportedTheme = SupportedAppThemes[i];
                 AppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
@@ -108,6 +145,18 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
         SelectedAppThemeIndex = -1;
         AppThemes.Clear();
         base.Unload();
+    }
+
+    private void UpdateAppLanguage()
+    {
+        if (SelectedAppLanguageIndex != -1)
+        {
+            AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
+            if (vm.Language != null)
+            {
+                _localizationService.UpdatePrimaryLanguage(vm.Language);
+            }
+        }
     }
 
     private void UpdateAppTheme()

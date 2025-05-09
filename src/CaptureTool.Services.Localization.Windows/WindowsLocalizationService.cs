@@ -1,17 +1,49 @@
-﻿using Windows.ApplicationModel.Resources;
+﻿using System.Diagnostics;
+using System.Globalization;
+using Windows.ApplicationModel.Resources;
+using Windows.Globalization;
 
 namespace CaptureTool.Services.Localization.Windows;
 
 public sealed partial class WindowsLocalizationService : ILocalizationService
 {
-    private readonly ResourceLoader _resourceLoader;
+    private ResourceLoader _resourceLoader;
+    private CultureInfo _culture;
+
+    public string[] SupportedLanguages { get; }
+
     public WindowsLocalizationService()
     {
-        _resourceLoader = new ResourceLoader();
+        InitializeResourceLoader();
+        Debug.Assert(_resourceLoader != null);
+        Debug.Assert(_culture != null);
+
+        SupportedLanguages = [.. ApplicationLanguages.Languages];
     }
 
     public string GetString(string resourceKey)
     {
         return _resourceLoader.GetString(resourceKey);
+    }
+
+    public void UpdatePrimaryLanguage(string language)
+    {
+        ApplicationLanguages.PrimaryLanguageOverride = language;
+        InitializeResourceLoader();
+    }
+
+    private void InitializeResourceLoader()
+    {
+        _resourceLoader = new ResourceLoader();
+
+        string languageOverride = ApplicationLanguages.PrimaryLanguageOverride;
+        if (!string.IsNullOrEmpty(languageOverride))
+        {
+            _culture = new CultureInfo(languageOverride);
+        }
+        else
+        {
+            _culture = CultureInfo.InstalledUICulture;
+        }
     }
 }
