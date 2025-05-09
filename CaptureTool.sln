@@ -26,8 +26,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Storage.Windows", "src\CaptureTool.Services.Storage.Windows\CaptureTool.Services.Storage.Windows.csproj", "{25E4EC49-DF94-4DA2-9BE2-0F4666C2A8C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Settings", "src\CaptureTool.Services.Settings\CaptureTool.Services.Settings.csproj", "{4C823D98-037C-4052-9B30-8D4E4DF836EF}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Telemetry", "src\CaptureTool.Services.Telemetry\CaptureTool.Services.Telemetry.csproj", "{8CBA6951-9E10-437F-B85F-F718A9423D13}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.FeatureManagement", "src\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj", "{33752AAD-81FA-4575-825B-1D87DDCA7B09}"
@@ -122,18 +120,6 @@ Global
 		{25E4EC49-DF94-4DA2-9BE2-0F4666C2A8C8}.Release|x64.Build.0 = Release|Any CPU
 		{25E4EC49-DF94-4DA2-9BE2-0F4666C2A8C8}.Release|x86.ActiveCfg = Release|Any CPU
 		{25E4EC49-DF94-4DA2-9BE2-0F4666C2A8C8}.Release|x86.Build.0 = Release|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Debug|x64.Build.0 = Debug|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Debug|x86.Build.0 = Debug|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Release|ARM64.Build.0 = Release|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Release|x64.ActiveCfg = Release|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Release|x64.Build.0 = Release|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Release|x86.ActiveCfg = Release|Any CPU
-		{4C823D98-037C-4052-9B30-8D4E4DF836EF}.Release|x86.Build.0 = Release|Any CPU
 		{8CBA6951-9E10-437F-B85F-F718A9423D13}.Debug|ARM64.ActiveCfg = Debug|Any CPU
 		{8CBA6951-9E10-437F-B85F-F718A9423D13}.Debug|ARM64.Build.0 = Debug|Any CPU
 		{8CBA6951-9E10-437F-B85F-F718A9423D13}.Debug|x64.ActiveCfg = Debug|Any CPU
