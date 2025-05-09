@@ -11,7 +11,7 @@ public sealed partial class SnippingToolRequest
 
     public static SnippingToolRequest DiscoverSupport(string redirectUri)
     {
-        SnippingToolDicoverQuery query = new(redirectUri);
+        SnippingToolDiscoverQuery query = new(redirectUri);
         return new(query);
     }
 

@@ -2,11 +2,11 @@
 
 namespace CaptureTool.Capture.Desktop.SnippingTool;
 
-public class SnippingToolDicoverQuery : SnippingToolQuery
+public class SnippingToolDiscoverQuery : SnippingToolQuery
 {
     public override SnippingToolHost Host => SnippingToolHost.Discover;
 
-    public SnippingToolDicoverQuery(string redirectUri)
+    public SnippingToolDiscoverQuery(string redirectUri)
         : base(redirectUri)
     {
     }
