@@ -11,6 +11,7 @@
     <Button
         MinWidth="96"
         MinHeight="96"
+        MaxWidth="96"
         MaxHeight="96"
         Command="{x:Bind Command, Mode=OneWay}"
         CornerRadius="12">

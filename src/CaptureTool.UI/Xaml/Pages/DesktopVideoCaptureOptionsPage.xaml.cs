@@ -12,7 +12,7 @@ public sealed partial class DesktopVideoCaptureOptionsPage : DesktopVideoCapture
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("forwardAnimation");
+        ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("forwardAnimation_Video");
         animation?.TryStart(NewDesktopVideoCaptureButton);
         base.OnNavigatedTo(e);
     }
@@ -21,7 +21,7 @@ public sealed partial class DesktopVideoCaptureOptionsPage : DesktopVideoCapture
     {
         if (e.NavigationMode == NavigationMode.Back)
         {
-            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("backAnimation", NewDesktopVideoCaptureButton);
+            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("backAnimation_Video", NewDesktopVideoCaptureButton);
             animation.Configuration = new DirectConnectedAnimationConfiguration();
         }
         base.OnNavigatingFrom(e);

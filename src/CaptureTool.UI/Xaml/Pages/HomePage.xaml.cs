@@ -15,9 +15,11 @@ public sealed partial class HomePage : HomePageBase
     {
         if (e.NavigationMode == NavigationMode.Back)
         {
-            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("backAnimation");
-            animation?.TryStart(NewDesktopImageCaptureButton);
-            animation?.TryStart(NewDesktopVideoCaptureButton);
+            ConnectedAnimation imageAnimation = ConnectedAnimationService.GetForCurrentView().GetAnimation("backAnimation_Image");
+            imageAnimation?.TryStart(NewDesktopImageCaptureButton);
+
+            ConnectedAnimation videoAnimation = ConnectedAnimationService.GetForCurrentView().GetAnimation("backAnimation_Video");
+            videoAnimation?.TryStart(NewDesktopVideoCaptureButton);
         }
 
         base.OnNavigatedTo(e);
@@ -27,11 +29,11 @@ public sealed partial class HomePage : HomePageBase
     {
         if (e.SourcePageType == PageLocator.GetPageType(NavigationRoutes.DesktopImageCaptureOptions))
         {
-            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation", NewDesktopImageCaptureButton);
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation_Image", NewDesktopImageCaptureButton);
         }
         else if (e.SourcePageType == PageLocator.GetPageType(NavigationRoutes.DesktopVideoCaptureOptions))
         {
-            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation", NewDesktopVideoCaptureButton);
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation_Video", NewDesktopVideoCaptureButton);
         }
 
         base.OnNavigatingFrom(e);

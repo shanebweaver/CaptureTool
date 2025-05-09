@@ -13,10 +13,18 @@
     mc:Ignorable="d">
 
     <Grid Row="1">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="4*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="6*" />
+        </Grid.RowDefinitions>
+
         <StackPanel
+            Grid.Row="1"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Spacing="12">
+
             <TextBlock HorizontalAlignment="Center" Text="Start a new capture" />
 
             <Grid ColumnSpacing="8">
