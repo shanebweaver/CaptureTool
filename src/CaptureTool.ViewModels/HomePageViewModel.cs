@@ -140,8 +140,17 @@ public sealed partial class HomePageViewModel : ViewModelBase
             try
             {
                 var file = await e.GetFileAsync();
-                ImageFile imageFile = new(file.Path);
-                _navigationService.Navigate(NavigationRoutes.ImageEdit, imageFile);
+                string mimeType = file.ContentType;
+                if (mimeType.StartsWith("image"))
+                {
+                    ImageFile imageFile = new(file.Path);
+                    _navigationService.Navigate(NavigationRoutes.ImageEdit, imageFile);
+                }
+                else if (mimeType.StartsWith("video"))
+                {
+                    VideoFile videoFile = new(file.Path);
+                    _navigationService.Navigate(NavigationRoutes.VideoEdit, videoFile);
+                }
             }
             catch (Exception)
             {

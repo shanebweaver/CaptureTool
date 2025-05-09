@@ -10,5 +10,7 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:VideoEditPageViewModel}"
     mc:Ignorable="d">
 
-    <Grid />
+    <Grid>
+        <MediaPlayerElement x:Name="VideoMediaPlayer" AreTransportControlsEnabled="True" />
+    </Grid>
 </local:VideoEditPageBase>

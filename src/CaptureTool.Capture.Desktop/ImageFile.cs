@@ -1,11 +1,6 @@
 ﻿namespace CaptureTool.Capture.Desktop;
 
-public sealed partial class ImageFile
+public sealed partial class ImageFile : FileBase
 {
-    public string Path { get; set; }
-
-    public ImageFile(string path)
-    {
-        Path = path;
-    }
+    public ImageFile(string path) : base(path) { }
 }

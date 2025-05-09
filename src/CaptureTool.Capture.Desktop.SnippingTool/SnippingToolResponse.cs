@@ -46,14 +46,14 @@ public sealed partial class SnippingToolResponse
                     throw new InvalidOperationException("Failed to retrieve file. FileAccessToken is null");
                 }
 
-                StorageFile imageFile = await SharedStorageAccessManager.RedeemTokenForFileAsync(FileAccessToken);
+                StorageFile file = await SharedStorageAccessManager.RedeemTokenForFileAsync(FileAccessToken);
 
                 int attempt = 0;
                 while (_fileCopy == null)
                 {
                     try
                     {
-                        _fileCopy = await imageFile.CopyAsync(ApplicationData.Current.TemporaryFolder);
+                        _fileCopy = await file.CopyAsync(ApplicationData.Current.TemporaryFolder);
                     }
                     catch (Exception)
                     {
