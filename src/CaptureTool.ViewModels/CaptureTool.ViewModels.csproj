@@ -18,11 +18,7 @@
     <ProjectReference Include="..\CaptureTool.Core\CaptureTool.Core.csproj" />
     <ProjectReference Include="..\CaptureTool.Edit.Image.Win2D\CaptureTool.Edit.Image.Win2D.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Cancellation\CaptureTool.Services.Cancellation.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Globalization\CaptureTool.Services.Globalization.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Localization.Windows\CaptureTool.Services.Localization.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Logging\CaptureTool.Services.Logging.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Navigation\CaptureTool.Services.Navigation.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Settings\CaptureTool.Services.Settings.csproj" />
     <ProjectReference Include="..\CaptureTool.Capture.Desktop.SnippingTool\CaptureTool.Capture.Desktop.SnippingTool.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Storage.Windows\CaptureTool.Services.Storage.Windows.csproj" />

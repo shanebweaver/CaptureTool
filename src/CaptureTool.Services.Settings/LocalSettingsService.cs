@@ -9,10 +9,10 @@ using CaptureTool.Services.Logging;
 using CaptureTool.Services.Settings.Definitions;
 using CaptureTool.Services.Storage;
 
-public partial class SettingsService : ISettingsService, IDisposable
+public partial class LocalSettingsService : ISettingsService, IDisposable
 {
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-    private readonly object _accessLock = new();
+    private readonly Lock _accessLock = new();
     private readonly ILogService _logService;
     private readonly IJsonStorageService _jsonStorageService;
 
@@ -23,7 +23,7 @@ public partial class SettingsService : ISettingsService, IDisposable
 
     public event Action<SettingDefinition[]>? SettingsChanged;
 
-    public SettingsService(
+    public LocalSettingsService(
         ILogService logService, 
         IJsonStorageService jsonStorageService)
     {

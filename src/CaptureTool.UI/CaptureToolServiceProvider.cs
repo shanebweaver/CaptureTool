@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+using System.Threading;
 using CaptureTool.Capture.Desktop;
 using CaptureTool.Capture.Desktop.SnippingTool;
 using CaptureTool.Core;
@@ -46,7 +48,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<ILocalizationService, WindowsLocalizationService>();
         collection.AddSingleton<ILogService, DebugLogService>();
         collection.AddSingleton<INavigationService, NavigationService>();
-        collection.AddSingleton<ISettingsService, SettingsService>();
+        collection.AddSingleton<ISettingsService, LocalSettingsService>();
         collection.AddSingleton<ITelemetryService, TelemetryService>();
         collection.AddSingleton<ISnippingToolService, SnippingToolService>();
         collection.AddSingleton<IThemeService, WindowsThemeService>();
@@ -57,6 +59,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<SettingsPageViewModel>();
         collection.AddTransient<LoadingPageViewModel>();
         collection.AddTransient<ImageEditPageViewModel>();
+        collection.AddTransient<VideoEditPageViewModel>();
         collection.AddTransient<DesktopImageCaptureOptionsPageViewModel>();
         collection.AddTransient<DesktopVideoCaptureOptionsPageViewModel>();
         collection.AddTransient<AppMenuViewModel>();

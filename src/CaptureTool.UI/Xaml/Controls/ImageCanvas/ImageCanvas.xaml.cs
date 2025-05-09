@@ -48,11 +48,11 @@ public sealed partial class ImageCanvas : UserControl
         {
             if (e.NewValue is bool isCropModeEnabled && isCropModeEnabled)
             {
-                control.RootContainer.Background = new SolidColorBrush(Colors.Black);
+                //control.RootContainer.Background = new SolidColorBrush(Colors.Black);
             }
             else
             {
-                control.RootContainer.Background = new SolidColorBrush(Colors.Transparent);
+                //control.RootContainer.Background = new SolidColorBrush(Colors.Transparent);
             }
 
             control.ZoomAndCenter();
@@ -121,15 +121,15 @@ public sealed partial class ImageCanvas : UserControl
                 orientation == RotateFlipType.Rotate90FlipY ||
                 orientation == RotateFlipType.Rotate90FlipXY;
 
-            var height = isTurned ? CanvasSize.Width : CanvasSize.Height;
-            var width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+            double height = isTurned ? CanvasSize.Width : CanvasSize.Height;
+            double width = isTurned ? CanvasSize.Height : CanvasSize.Width;
 
             CanvasContainer.Height = height;
             CanvasContainer.Width = width;
-
+            
             CropCanvas.Height = height;
             CropCanvas.Width = width;
-            
+
             CropBoundary.Height = height;
             CropBoundary.Width = width;
             Canvas.SetLeft(CropBoundary, 0);
@@ -144,6 +144,7 @@ public sealed partial class ImageCanvas : UserControl
     #region Zoom and Center
     private void RootContainer_SizeChanged(object sender, SizeChangedEventArgs e)
     {
+        UpdateDrawingCanvasSize();
         ZoomAndCenter();
     }
 
@@ -273,141 +274,208 @@ public sealed partial class ImageCanvas : UserControl
     #endregion
 
     #region Cropping
-    private const int _tolerance = 32;
-    private bool _isResizing;
-    private Windows.Foundation.Point _startPoint;
-    private ResizeDirection? _resizeDirection;
+    //private const int _tolerance = 12;
+    //private bool _isResizing;
+    //private bool _isDragging;
+    //private Windows.Foundation.Point _startPoint;
+    //private ResizeDirection? _resizeDirection;
 
-    private void CropBoundary_PointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        _startPoint = e.GetCurrentPoint(RootContainer).Position;
-        _isResizing = true;
+    //private void CropCanvas_PointerPressed(object sender, PointerRoutedEventArgs e)
+    //{
+    //    _isResizing = false;
+    //    _isDragging = false;
+    //    _startPoint = e.GetCurrentPoint(RootContainer).Position;
 
-        // Determine which edge or corner is being grabbed
-        var position = e.GetCurrentPoint(CropBoundary).Position;
-        _resizeDirection = GetResizeDirection(position, _tolerance);
+    //    var position = e.GetCurrentPoint(CropBoundary).Position;
 
-        (sender as UIElement)?.CapturePointer(e.Pointer);
-    }
+    //    // Check if the pointer is outside the CropBoundary  
+    //    if (position.X < 0 - _tolerance || position.Y < 0 - _tolerance || position.X > CropBoundary.ActualWidth + _tolerance || position.Y > CropBoundary.ActualHeight + _tolerance)
+    //    {
+    //        return;
+    //    }
 
-    private void CropBoundary_PointerEntered(object sender, PointerRoutedEventArgs e)
-    {
-        UpdateCursor(e.GetCurrentPoint(CropBoundary).Position);
-    }
+    //    _resizeDirection = GetResizeDirection(position, _tolerance);
 
-    private void CropBoundary_PointerMoved(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_isResizing)
-        {
-            UpdateCursor(e.GetCurrentPoint(CropBoundary).Position);
-        }
-        else
-        {
-            var currentPoint = e.GetCurrentPoint(RootContainer).Position;
-            var deltaX = currentPoint.X - _startPoint.X;
-            var deltaY = currentPoint.Y - _startPoint.Y;
+    //    if (_resizeDirection == null)
+    //    {
+    //        _isDragging = true;
+    //    }
+    //    else
+    //    {
+    //        _isResizing = true;
+    //    }
 
-            ResizeCropBoundary(deltaX, deltaY, _resizeDirection);
+    //   (sender as UIElement)?.CapturePointer(e.Pointer);
+    //}
 
-            _startPoint = currentPoint;
-        }
-    }
+    //private void CropCanvas_PointerEntered(object sender, PointerRoutedEventArgs e)
+    //{
+    //    UpdateCursor(e.GetCurrentPoint(CropBoundary).Position);
+    //}
 
-    private void CropBoundary_PointerExited(object sender, PointerRoutedEventArgs e)
-    {
-        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
-    }
+    //private void CropCanvas_PointerMoved(object sender, PointerRoutedEventArgs e)
+    //{
+    //    if (_isDragging)
+    //    {
+    //        var currentPoint = e.GetCurrentPoint(RootContainer).Position;
 
-    private void CropBoundary_PointerReleased(object sender, PointerRoutedEventArgs e)
-    {
-        _isResizing = false;
-        _resizeDirection = null;
-        (sender as UIElement)?.ReleasePointerCapture(e.Pointer);
-    }
+    //        // Adjust deltaX and deltaY based on the current zoom factor
+    //        double zoomFactor = CanvasScrollView.ZoomFactor;
+    //        var deltaX = (currentPoint.X - _startPoint.X) / zoomFactor;
+    //        var deltaY = (currentPoint.Y - _startPoint.Y) / zoomFactor;
 
-    private void UpdateCursor(Windows.Foundation.Point position)
-    {
-        var direction = GetResizeDirection(position, _tolerance);
+    //        // Translate the CropBoundary
+    //        var newLeft = Math.Max(0, Math.Min(Canvas.GetLeft(CropBoundary) + deltaX, CanvasSize.Width - CropBoundary.ActualWidth));
+    //        var newTop = Math.Max(0, Math.Min(Canvas.GetTop(CropBoundary) + deltaY, CanvasSize.Height - CropBoundary.ActualHeight));
 
-        CoreCursorType cursorType = direction switch
-        {
-            ResizeDirection.TopLeft or ResizeDirection.BottomRight => CoreCursorType.SizeNorthwestSoutheast,
-            ResizeDirection.TopRight or ResizeDirection.BottomLeft => CoreCursorType.SizeNortheastSouthwest,
-            ResizeDirection.Top or ResizeDirection.Bottom => CoreCursorType.SizeNorthSouth,
-            ResizeDirection.Left or ResizeDirection.Right => CoreCursorType.SizeWestEast,
-            _ => CoreCursorType.Arrow
-        };
+    //        Canvas.SetLeft(CropBoundary, newLeft);
+    //        Canvas.SetTop(CropBoundary, newTop);
 
-        // Set the cursor on the CropBoundary
-        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(cursorType, 0));
-    }
+    //        _startPoint = currentPoint;
+    //    }
+    //    else if (_isResizing)
+    //    {
+    //        var currentPoint = e.GetCurrentPoint(RootContainer).Position;
 
-    private ResizeDirection? GetResizeDirection(Windows.Foundation.Point position, double tolerance)
-    {
-        // Check if the pointer is near an edge or corner
-        if (position.X <= tolerance && position.Y <= tolerance) return ResizeDirection.TopLeft;
-        if (position.X >= CropBoundary.ActualWidth - tolerance && position.Y <= tolerance) return ResizeDirection.TopRight;
-        if (position.X <= tolerance && position.Y >= CropBoundary.ActualHeight - tolerance) return ResizeDirection.BottomLeft;
-        if (position.X >= CropBoundary.ActualWidth - tolerance && position.Y >= CropBoundary.ActualHeight - tolerance) return ResizeDirection.BottomRight;
-        if (position.X <= tolerance) return ResizeDirection.Left;
-        if (position.X >= CropBoundary.ActualWidth - tolerance) return ResizeDirection.Right;
-        if (position.Y <= tolerance) return ResizeDirection.Top;
-        if (position.Y >= CropBoundary.ActualHeight - tolerance) return ResizeDirection.Bottom;
+    //        // Adjust deltaX and deltaY based on the current zoom factor
+    //        double zoomFactor = CanvasScrollView.ZoomFactor;
+    //        var deltaX = (currentPoint.X - _startPoint.X) / zoomFactor;
+    //        var deltaY = (currentPoint.Y - _startPoint.Y) / zoomFactor;
 
-        return null;
-    }
+    //        ResizeCropBoundary(deltaX, deltaY, _resizeDirection);
 
-    private enum ResizeDirection
-    {
-        TopLeft,
-        Top,
-        TopRight,
-        Left,
-        Right,
-        BottomLeft,
-        Bottom,
-        BottomRight
-    }
+    //        _startPoint = currentPoint;
+    //    }
+    //    else
+    //    {
+    //        UpdateCursor(e.GetCurrentPoint(CropBoundary).Position);
+    //    }
+    //}
 
-    private void ResizeCropBoundary(double deltaX, double deltaY, ResizeDirection? direction)
-    {
-        switch (direction)
-        {
-            case ResizeDirection.TopLeft:
-                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth - deltaX, CanvasSize.Width - Math.Max(0, Canvas.GetLeft(CropBoundary) + deltaX)));
-                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight - deltaY, CanvasSize.Height - Math.Max(0, Canvas.GetTop(CropBoundary) + deltaY)));
-                Canvas.SetLeft(CropBoundary, Math.Max(0, Math.Min(Canvas.GetLeft(CropBoundary) + deltaX, CanvasSize.Width - CropBoundary.Width)));
-                Canvas.SetTop(CropBoundary, Math.Max(0, Math.Min(Canvas.GetTop(CropBoundary) + deltaY, CanvasSize.Height - CropBoundary.Height)));
-                break;
-            case ResizeDirection.TopRight:
-                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth + deltaX, CanvasSize.Width - Canvas.GetLeft(CropBoundary)));
-                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight - deltaY, CanvasSize.Height - Math.Max(0, Canvas.GetTop(CropBoundary) + deltaY)));
-                Canvas.SetTop(CropBoundary, Math.Max(0, Math.Min(Canvas.GetTop(CropBoundary) + deltaY, CanvasSize.Height - CropBoundary.Height)));
-                break;
-            case ResizeDirection.BottomLeft:
-                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth - deltaX, CanvasSize.Width - Math.Max(0, Canvas.GetLeft(CropBoundary) + deltaX)));
-                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight + deltaY, CanvasSize.Height - Canvas.GetTop(CropBoundary)));
-                Canvas.SetLeft(CropBoundary, Math.Max(0, Math.Min(Canvas.GetLeft(CropBoundary) + deltaX, CanvasSize.Width - CropBoundary.Width)));
-                break;
-            case ResizeDirection.BottomRight:
-                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth + deltaX, CanvasSize.Width - Canvas.GetLeft(CropBoundary)));
-                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight + deltaY, CanvasSize.Height - Canvas.GetTop(CropBoundary)));
-                break;
-            case ResizeDirection.Left:
-                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth - deltaX, CanvasSize.Width - Math.Max(0, Canvas.GetLeft(CropBoundary) + deltaX)));
-                Canvas.SetLeft(CropBoundary, Math.Max(0, Math.Min(Canvas.GetLeft(CropBoundary) + deltaX, CanvasSize.Width - CropBoundary.Width)));
-                break;
-            case ResizeDirection.Right:
-                CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth + deltaX, CanvasSize.Width - Canvas.GetLeft(CropBoundary)));
-                break;
-            case ResizeDirection.Top:
-                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight - deltaY, CanvasSize.Height - Math.Max(0, Canvas.GetTop(CropBoundary) + deltaY)));
-                Canvas.SetTop(CropBoundary, Math.Max(0, Math.Min(Canvas.GetTop(CropBoundary) + deltaY, CanvasSize.Height - CropBoundary.Height)));
-                break;
-            case ResizeDirection.Bottom:
-                CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight + deltaY, CanvasSize.Height - Canvas.GetTop(CropBoundary)));
-                break;
-        }
-    }
+
+    //private void CropCanvas_PointerExited(object sender, PointerRoutedEventArgs e)
+    //{
+    //    ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
+    //}
+
+    //private void CropCanvas_PointerReleased(object sender, PointerRoutedEventArgs e)
+    //{
+    //    _isResizing = false;
+    //    _isDragging = false;
+    //    _resizeDirection = null;
+    //    (sender as UIElement)?.ReleasePointerCapture(e.Pointer);
+    //}
+
+    //private void UpdateCursor(Windows.Foundation.Point position)
+    //{
+    //    var direction = GetResizeDirection(position, _tolerance);
+
+    //    CoreCursorType cursorType;
+
+    //    if (direction != null)
+    //    {
+    //        cursorType = direction switch
+    //        {
+    //            ResizeDirection.TopLeft or ResizeDirection.BottomRight => CoreCursorType.SizeNorthwestSoutheast,
+    //            ResizeDirection.TopRight or ResizeDirection.BottomLeft => CoreCursorType.SizeNortheastSouthwest,
+    //            ResizeDirection.Top or ResizeDirection.Bottom => CoreCursorType.SizeNorthSouth,
+    //            ResizeDirection.Left or ResizeDirection.Right => CoreCursorType.SizeWestEast,
+    //            _ => CoreCursorType.Arrow
+    //        };
+    //    }
+    //    else if (IsCursorInsideBoundary(position, _tolerance))
+    //    {
+    //        cursorType = CoreCursorType.SizeAll; // Move cursor
+    //    }
+    //    else
+    //    {
+    //        cursorType = CoreCursorType.Arrow; // Normal pointer
+    //    }
+
+    //    // Set the cursor on the CropBoundary
+    //    ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(cursorType, 0));
+    //}
+
+    //private bool IsCursorInsideBoundary(Windows.Foundation.Point position, double tolerance)
+    //{
+    //    return position.X >= -tolerance &&
+    //           position.Y >= -tolerance &&
+    //           position.X <= CropBoundary.ActualWidth + tolerance &&
+    //           position.Y <= CropBoundary.ActualHeight + tolerance;
+    //}
+
+    //private ResizeDirection? GetResizeDirection(Windows.Foundation.Point position, double tolerance)
+    //{
+    //    // Check if the pointer is near an edge or corner within the tolerance
+    //    bool isNearLeft = position.X >= -tolerance && position.X <= tolerance;
+    //    bool isNearRight = position.X >= CropBoundary.ActualWidth - tolerance && position.X <= CropBoundary.ActualWidth + tolerance;
+    //    bool isNearTop = position.Y >= -tolerance && position.Y <= tolerance;
+    //    bool isNearBottom = position.Y >= CropBoundary.ActualHeight - tolerance && position.Y <= CropBoundary.ActualHeight + tolerance;
+
+    //    if (isNearLeft && isNearTop) return ResizeDirection.TopLeft;
+    //    if (isNearRight && isNearTop) return ResizeDirection.TopRight;
+    //    if (isNearLeft && isNearBottom) return ResizeDirection.BottomLeft;
+    //    if (isNearRight && isNearBottom) return ResizeDirection.BottomRight;
+    //    if (isNearLeft) return ResizeDirection.Left;
+    //    if (isNearRight) return ResizeDirection.Right;
+    //    if (isNearTop) return ResizeDirection.Top;
+    //    if (isNearBottom) return ResizeDirection.Bottom;
+
+    //    // Return null if the position is not within the tolerance of any border
+    //    return null;
+    //}
+
+    //private enum ResizeDirection
+    //{
+    //    TopLeft,
+    //    Top,
+    //    TopRight,
+    //    Left,
+    //    Right,
+    //    BottomLeft,
+    //    Bottom,
+    //    BottomRight
+    //}
+
+    //private void ResizeCropBoundary(double deltaX, double deltaY, ResizeDirection? direction)
+    //{
+    //    switch (direction)
+    //    {
+    //        case ResizeDirection.TopLeft:
+    //            CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth - deltaX, CanvasSize.Width - Math.Max(0, Canvas.GetLeft(CropBoundary) + deltaX)));
+    //            CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight - deltaY, CanvasSize.Height - Math.Max(0, Canvas.GetTop(CropBoundary) + deltaY)));
+    //            Canvas.SetLeft(CropBoundary, Math.Max(0, Math.Min(Canvas.GetLeft(CropBoundary) + deltaX, CanvasSize.Width - CropBoundary.Width)));
+    //            Canvas.SetTop(CropBoundary, Math.Max(0, Math.Min(Canvas.GetTop(CropBoundary) + deltaY, CanvasSize.Height - CropBoundary.Height)));
+    //            break;
+    //        case ResizeDirection.TopRight:
+    //            CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth + deltaX, CanvasSize.Width - Canvas.GetLeft(CropBoundary)));
+    //            CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight - deltaY, CanvasSize.Height - Math.Max(0, Canvas.GetTop(CropBoundary) + deltaY)));
+    //            Canvas.SetTop(CropBoundary, Math.Max(0, Math.Min(Canvas.GetTop(CropBoundary) + deltaY, CanvasSize.Height - CropBoundary.Height)));
+    //            break;
+    //        case ResizeDirection.BottomLeft:
+    //            CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth - deltaX, CanvasSize.Width - Math.Max(0, Canvas.GetLeft(CropBoundary) + deltaX)));
+    //            CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight + deltaY, CanvasSize.Height - Canvas.GetTop(CropBoundary)));
+    //            Canvas.SetLeft(CropBoundary, Math.Max(0, Math.Min(Canvas.GetLeft(CropBoundary) + deltaX, CanvasSize.Width - CropBoundary.Width)));
+    //            break;
+    //        case ResizeDirection.BottomRight:
+    //            CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth + deltaX, CanvasSize.Width - Canvas.GetLeft(CropBoundary)));
+    //            CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight + deltaY, CanvasSize.Height - Canvas.GetTop(CropBoundary)));
+    //            break;
+    //        case ResizeDirection.Left:
+    //            CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth - deltaX, CanvasSize.Width - Math.Max(0, Canvas.GetLeft(CropBoundary) + deltaX)));
+    //            Canvas.SetLeft(CropBoundary, Math.Max(0, Math.Min(Canvas.GetLeft(CropBoundary) + deltaX, CanvasSize.Width - CropBoundary.Width)));
+    //            break;
+    //        case ResizeDirection.Right:
+    //            CropBoundary.Width = Math.Max(0, Math.Min(CropBoundary.ActualWidth + deltaX, CanvasSize.Width - Canvas.GetLeft(CropBoundary)));
+    //            break;
+    //        case ResizeDirection.Top:
+    //            CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight - deltaY, CanvasSize.Height - Math.Max(0, Canvas.GetTop(CropBoundary) + deltaY)));
+    //            Canvas.SetTop(CropBoundary, Math.Max(0, Math.Min(Canvas.GetTop(CropBoundary) + deltaY, CanvasSize.Height - CropBoundary.Height)));
+    //            break;
+    //        case ResizeDirection.Bottom:
+    //            CropBoundary.Height = Math.Max(0, Math.Min(CropBoundary.ActualHeight + deltaY, CanvasSize.Height - Canvas.GetTop(CropBoundary)));
+    //            break;
+    //    }
+    //}
     #endregion
 }

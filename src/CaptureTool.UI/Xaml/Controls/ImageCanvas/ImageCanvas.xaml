@@ -17,149 +17,187 @@
         PointerPressed="RootContainer_PointerPressed"
         PointerReleased="RootContainer_PointerReleased"
         SizeChanged="RootContainer_SizeChanged">
-        <ScrollView
-            x:Name="CanvasScrollView"
-            HorizontalScrollBarVisibility="Auto"
-            ZoomMode="Enabled">
-            <Grid
-                x:Name="CanvasContainer"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-                <canvasui:CanvasControl
-                    x:Name="RenderCanvas"
-                    CreateResources="CanvasControl_CreateResources"
-                    Draw="CanvasControl_Draw" />
+        <Grid ColumnSpan="3" RowSpan="3">
+            <ScrollView
+                x:Name="CanvasScrollView"
+                HorizontalScrollBarVisibility="Auto"
+                ZoomMode="Enabled">
+                <Grid
+                    x:Name="CanvasContainer"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
 
-                <Canvas x:Name="CropCanvas">
-                    <Grid
-                        x:Name="CropBoundary"
-                        PointerEntered="CropBoundary_PointerEntered"
-                        PointerExited="CropBoundary_PointerExited"
-                        PointerMoved="CropBoundary_PointerMoved"
-                        PointerPressed="CropBoundary_PointerPressed"
-                        PointerReleased="CropBoundary_PointerReleased">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+                    <canvasui:CanvasControl
+                        x:Name="RenderCanvas"
+                        CreateResources="CanvasControl_CreateResources"
+                        Draw="CanvasControl_Draw" />
 
-                        <!--  Dashed border  -->
-                        <Rectangle
-                            Grid.RowSpan="5"
-                            Grid.ColumnSpan="5"
-                            Margin="-3"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            Stroke="White"
-                            StrokeDashArray="4,4"
-                            StrokeThickness="2"
-                            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
+                    <Canvas x:Name="CropCanvas">
+                        <Grid x:Name="CropBoundary" Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                        <!--  Crop anchors  -->
-                        <!--  Top left  -->
-                        <Polygon
-                            Fill="White"
-                            Points="0,0 40,0 40,8, 8,8 8,40, 0,40"
-                            Stroke="Black"
-                            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
-                            <Polygon.RenderTransform>
-                                <TranslateTransform X="-9" Y="-9" />
-                            </Polygon.RenderTransform>
-                        </Polygon>
-                        <!--  Top  -->
-                        <Polygon
-                            Grid.Column="2"
-                            Fill="White"
-                            Points="0,0 40,0 40,8 0,8"
-                            Stroke="Black"
-                            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
-                            <Polygon.RenderTransform>
-                                <TranslateTransform Y="-9" />
-                            </Polygon.RenderTransform>
-                        </Polygon>
-                        <!--  Top right  -->
-                        <Polygon
-                            Grid.Column="4"
-                            Fill="White"
-                            Points="0,0 40,0 40,40 32,40 32,8 0,8"
-                            Stroke="Black"
-                            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
-                            <Polygon.RenderTransform>
-                                <TranslateTransform X="10" Y="-9" />
-                            </Polygon.RenderTransform>
-                        </Polygon>
-                        <!--  Left  -->
-                        <Polygon
-                            Grid.Row="2"
-                            Fill="White"
-                            Points="0,0 8,0 8,40 0,40"
-                            Stroke="Black"
-                            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
-                            <Polygon.RenderTransform>
-                                <TranslateTransform X="-9" />
-                            </Polygon.RenderTransform>
-                        </Polygon>
-                        <!--  Right  -->
-                        <Polygon
-                            Grid.Row="2"
-                            Grid.Column="4"
-                            Fill="White"
-                            Points="32,0 40,0 40,40 32,40"
-                            Stroke="Black"
-                            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
-                            <Polygon.RenderTransform>
-                                <TranslateTransform X="10" />
-                            </Polygon.RenderTransform>
-                        </Polygon>
-                        <!--  Bottom left  -->
-                        <Polygon
-                            Grid.Row="4"
-                            Fill="White"
-                            Points="0,0 8,0 8,32 40,32 40,40 0,40"
-                            Stroke="Black"
-                            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
-                            <Polygon.RenderTransform>
-                                <TranslateTransform X="-9" Y="9" />
-                            </Polygon.RenderTransform>
-                        </Polygon>
-                        <!--  Bottom  -->
-                        <Polygon
-                            Grid.Row="4"
-                            Grid.Column="2"
-                            Fill="White"
-                            Points="0,32 40,32 40,40 0,40"
-                            Stroke="Black"
-                            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
-                            <Polygon.RenderTransform>
-                                <TranslateTransform Y="10" />
-                            </Polygon.RenderTransform>
-                        </Polygon>
-                        <!--  Bottom right  -->
-                        <Polygon
-                            Grid.Row="4"
-                            Grid.Column="4"
-                            Fill="White"
-                            Points="32,0 40,0 40,40 0,40 0,32 32,32"
-                            Stroke="Black"
-                            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
-                            <Polygon.RenderTransform>
-                                <TranslateTransform X="10" Y="10" />
-                            </Polygon.RenderTransform>
-                        </Polygon>
-                    </Grid>
-                </Canvas>
-            </Grid>
-        </ScrollView>
+                            <!--  Border  -->
+                            <Rectangle
+                                Grid.RowSpan="5"
+                                Grid.ColumnSpan="5"
+                                Margin="-3"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Stroke="White"
+                                StrokeThickness="1" />
+
+                            <!--  Crop anchors  -->
+                            <!--  Top left  -->
+                            <Polygon
+                                Fill="White"
+                                IsTabStop="True"
+                                Points="0,0 40,0 40,8, 8,8 8,40, 0,40"
+                                Stroke="Black"
+                                UseSystemFocusVisuals="True"
+                                Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                                <Polygon.RenderTransform>
+                                    <TranslateTransform X="-9" Y="-9" />
+                                </Polygon.RenderTransform>
+                            </Polygon>
+                            <!--  Top  -->
+                            <Polygon
+                                Grid.Column="2"
+                                Fill="White"
+                                IsTabStop="True"
+                                Points="0,0 40,0 40,8 0,8"
+                                Stroke="Black"
+                                UseSystemFocusVisuals="True"
+                                Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                                <Polygon.RenderTransform>
+                                    <TranslateTransform Y="-9" />
+                                </Polygon.RenderTransform>
+                            </Polygon>
+                            <!--  Top right  -->
+                            <Polygon
+                                Grid.Column="4"
+                                Fill="White"
+                                Points="0,0 40,0 40,40 32,40 32,8 0,8"
+                                Stroke="Black"
+                                Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                                <Polygon.RenderTransform>
+                                    <TranslateTransform X="10" Y="-9" />
+                                </Polygon.RenderTransform>
+                            </Polygon>
+                            <!--  Left  -->
+                            <Polygon
+                                Grid.Row="2"
+                                Fill="White"
+                                Points="0,0 8,0 8,40 0,40"
+                                Stroke="Black"
+                                Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                                <Polygon.RenderTransform>
+                                    <TranslateTransform X="-9" />
+                                </Polygon.RenderTransform>
+                            </Polygon>
+                            <!--  Right  -->
+                            <Polygon
+                                Grid.Row="2"
+                                Grid.Column="4"
+                                Fill="White"
+                                Points="32,0 40,0 40,40 32,40"
+                                Stroke="Black"
+                                Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                                <Polygon.RenderTransform>
+                                    <TranslateTransform X="10" />
+                                </Polygon.RenderTransform>
+                            </Polygon>
+                            <!--  Bottom left  -->
+                            <Polygon
+                                Grid.Row="4"
+                                Fill="White"
+                                Points="0,0 8,0 8,32 40,32 40,40 0,40"
+                                Stroke="Black"
+                                Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                                <Polygon.RenderTransform>
+                                    <TranslateTransform X="-9" Y="9" />
+                                </Polygon.RenderTransform>
+                            </Polygon>
+                            <!--  Bottom  -->
+                            <Polygon
+                                Grid.Row="4"
+                                Grid.Column="2"
+                                Fill="White"
+                                Points="0,32 40,32 40,40 0,40"
+                                Stroke="Black"
+                                Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                                <Polygon.RenderTransform>
+                                    <TranslateTransform Y="10" />
+                                </Polygon.RenderTransform>
+                            </Polygon>
+                            <!--  Bottom right  -->
+                            <Polygon
+                                Grid.Row="4"
+                                Grid.Column="4"
+                                Fill="White"
+                                Points="32,0 40,0 40,40 0,40 0,32 32,32"
+                                Stroke="Black"
+                                Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
+                                <Polygon.RenderTransform>
+                                    <TranslateTransform X="10" Y="10" />
+                                </Polygon.RenderTransform>
+                            </Polygon>
+                        </Grid>
+                    </Canvas>
+                </Grid>
+            </ScrollView>
+        </Grid>
+
+        <!--  Dimmed overlay  -->
+        <Rectangle
+            Grid.ColumnSpan="3"
+            Fill="Blue"
+            Opacity=".5"
+            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
+        <Rectangle
+            Grid.Row="1"
+            Fill="Yellow"
+            Opacity=".5"
+            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="2"
+            Fill="Green"
+            Opacity=".5"
+            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
+        <Rectangle
+            Grid.Row="2"
+            Grid.ColumnSpan="3"
+            Fill="Red"
+            Opacity=".5"
+            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
+        <Rectangle
+            x:Name="CropOverlayCutout"
+            Grid.Row="1"
+            Grid.Column="1"
+            Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
     </Grid>
 </UserControl>
