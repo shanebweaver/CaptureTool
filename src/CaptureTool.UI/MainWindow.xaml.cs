@@ -15,6 +15,11 @@ namespace CaptureTool.UI;
 
 public sealed partial class MainWindow : Window
 {
+    private const string MainWindow_X = "MainWindow_X";
+    private const string MainWindow_Y = "MainWindow_Y";
+    private const string MainWindow_Width = "MainWindow_Width";
+    private const string MainWindow_Height = "MainWindow_Height";
+
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
 
     private readonly CancellationTokenSource _activationCts = new();
@@ -127,10 +132,10 @@ public sealed partial class MainWindow : Window
     {
         var data = ApplicationData.GetDefault().LocalSettings;
         var appWindowRect = new Windows.Graphics.RectInt32(
-            (data.Values.TryGetValue("MainWindow_X", out object? oX) && (oX is int x) && x >= 0) ? x : 48,
-            (data.Values.TryGetValue("MainWindow_Y", out object? oY) && (oY is int y) && y >= 0) ? y : 48,
-            (data.Values.TryGetValue("MainWindow_Width", out object? oW) && (oW is int w) && w > 0) ? w : 540,
-            (data.Values.TryGetValue("MainWindow_Height", out object? oH) && (oH is int h) && h > 0) ? h : 320);
+            (data.Values.TryGetValue(MainWindow_X, out object? oX) && (oX is int x) && x >= 0) ? x : 48,
+            (data.Values.TryGetValue(MainWindow_Y, out object? oY) && (oY is int y) && y >= 0) ? y : 48,
+            (data.Values.TryGetValue(MainWindow_Width, out object? oW) && (oW is int w) && w > 0) ? w : 540,
+            (data.Values.TryGetValue(MainWindow_Height, out object? oH) && (oH is int h) && h > 0) ? h : 320);
 
         AppWindow.MoveAndResize(appWindowRect, DisplayArea.Primary);
     }
@@ -144,17 +149,17 @@ public sealed partial class MainWindow : Window
             bool isMinimized = presenter.State == OverlappedPresenterState.Minimized;
             if (!isMinimized && !isMaximized)
             {
-                data.Values["MainWindow_X"] = AppWindow.Position.X;
-                data.Values["MainWindow_Y"] = AppWindow.Position.Y;
-                data.Values["MainWindow_Width"] = AppWindow.Size.Width;
-                data.Values["MainWindow_Height"] = AppWindow.Size.Height;
+                data.Values[MainWindow_X] = AppWindow.Position.X;
+                data.Values[MainWindow_Y] = AppWindow.Position.Y;
+                data.Values[MainWindow_Width] = AppWindow.Size.Width;
+                data.Values[MainWindow_Height] = AppWindow.Size.Height;
             }
             else
             {
-                data.Values["MainWindow_X"] = null;
-                data.Values["MainWindow_Y"] = null;
-                data.Values["MainWindow_Width"] = null;
-                data.Values["MainWindow_Height"] = null;
+                data.Values[MainWindow_X] = null;
+                data.Values[MainWindow_Y] = null;
+                data.Values[MainWindow_Width] = null;
+                data.Values[MainWindow_Height] = null;
             }
         }
     }
