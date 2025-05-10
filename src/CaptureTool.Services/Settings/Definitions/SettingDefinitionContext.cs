@@ -9,4 +9,6 @@ using System.Text.Json.Serialization;
 [JsonSerializable(typeof(DoubleSettingDefinition))]
 [JsonSerializable(typeof(IntSettingDefinition))]
 [JsonSerializable(typeof(StringSettingDefinition))]
-public partial class SettingDefinitionContext : JsonSerializerContext { }
+[JsonSerializable(typeof(PointSettingDefinition))]
+[JsonSerializable(typeof(SizeSettingDefinition))]
+public sealed partial class SettingDefinitionContext : JsonSerializerContext { }

@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-public class SettingDefinitionConverter : JsonConverter<SettingDefinition>
+public sealed partial class SettingDefinitionConverter : JsonConverter<SettingDefinition>
 {
     private enum TypeDiscriminator
     {
@@ -13,6 +13,8 @@ public class SettingDefinitionConverter : JsonConverter<SettingDefinition>
         Double,
         Int,
         String,
+        Point,
+        Size
     }
 
     public override bool CanConvert(Type typeToConvert) => typeof(SettingDefinition).IsAssignableFrom(typeToConvert);
@@ -51,6 +53,12 @@ public class SettingDefinitionConverter : JsonConverter<SettingDefinition>
             case StringSettingDefinition stringSettingDefinition:
                 WriteSettingDefinition(ref writer, TypeDiscriminator.String, stringSettingDefinition, SettingDefinitionContext.Default.StringSettingDefinition);
                 break;
+            case PointSettingDefinition pointSettingDefinition:
+                WriteSettingDefinition(ref writer, TypeDiscriminator.Point, pointSettingDefinition, SettingDefinitionContext.Default.PointSettingDefinition);
+                break;
+            case SizeSettingDefinition sizeSettingDefinition:
+                WriteSettingDefinition(ref writer, TypeDiscriminator.Size, sizeSettingDefinition, SettingDefinitionContext.Default.SizeSettingDefinition);
+                break;
             default:
                 throw new NotSupportedException();
         }
@@ -72,6 +80,8 @@ public class SettingDefinitionConverter : JsonConverter<SettingDefinition>
                 TypeDiscriminator.Double => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.DoubleSettingDefinition),
                 TypeDiscriminator.Int => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.IntSettingDefinition),
                 TypeDiscriminator.String => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.StringSettingDefinition),
+                TypeDiscriminator.Point => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.PointSettingDefinition),
+                TypeDiscriminator.Size => JsonSerializer.Deserialize(ref reader, SettingDefinitionContext.Default.SizeSettingDefinition),
                 _ => throw new JsonException("Unknown TypeDiscriminator value")
             };
 
