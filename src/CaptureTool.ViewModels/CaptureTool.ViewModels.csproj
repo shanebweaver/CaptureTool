@@ -9,6 +9,7 @@
   <!-- Package references -->
   <ItemGroup>
     <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" />
   </ItemGroup>
 
   <!-- Project references -->

@@ -66,9 +66,7 @@
             <AppBarButton
                 Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
-                IsEnabled="False"
-                Label="Save"
-                Visibility="Collapsed" />
+                Label="Save" />
             <AppBarButton
                 Command="{x:Bind ViewModel.PrintCommand}"
                 Icon="Print"

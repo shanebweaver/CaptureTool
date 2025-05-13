@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Threading;
 using CaptureTool.Core;
 using CaptureTool.Services.Navigation;
@@ -15,6 +16,8 @@ namespace CaptureTool.UI;
 
 public sealed partial class MainWindow : Window
 {
+    private static readonly Windows.Graphics.RectInt32 DefaultWindowRect = new(48, 48, 540, 320);
+
     private const string MainWindow_X = "MainWindow_X";
     private const string MainWindow_Y = "MainWindow_Y";
     private const string MainWindow_Width = "MainWindow_Width";
@@ -132,10 +135,10 @@ public sealed partial class MainWindow : Window
     {
         var data = ApplicationData.GetDefault().LocalSettings;
         var appWindowRect = new Windows.Graphics.RectInt32(
-            (data.Values.TryGetValue(MainWindow_X, out object? oX) && (oX is int x) && x >= 0) ? x : 48,
-            (data.Values.TryGetValue(MainWindow_Y, out object? oY) && (oY is int y) && y >= 0) ? y : 48,
-            (data.Values.TryGetValue(MainWindow_Width, out object? oW) && (oW is int w) && w > 0) ? w : 540,
-            (data.Values.TryGetValue(MainWindow_Height, out object? oH) && (oH is int h) && h > 0) ? h : 320);
+            (data.Values.TryGetValue(MainWindow_X, out object? oX) && (oX is int x) && x >= 0) ? x : DefaultWindowRect.X,
+            (data.Values.TryGetValue(MainWindow_Y, out object? oY) && (oY is int y) && y >= 0) ? y : DefaultWindowRect.Y,
+            (data.Values.TryGetValue(MainWindow_Width, out object? oW) && (oW is int w) && w > 0) ? w : DefaultWindowRect.Width,
+            (data.Values.TryGetValue(MainWindow_Height, out object? oH) && (oH is int h) && h > 0) ? h : DefaultWindowRect.Height);
 
         AppWindow.MoveAndResize(appWindowRect, DisplayArea.Primary);
     }

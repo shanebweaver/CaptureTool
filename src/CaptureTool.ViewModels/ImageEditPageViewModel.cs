@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -206,7 +207,10 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
             {
                 SuggestedStartLocation = PickerLocationId.PicturesLibrary
             };
-            filePicker.FileTypeChoices.Add("PNG", [".png"]);
+
+#pragma warning disable IDE0028 // Simplify collection initialization
+            filePicker.FileTypeChoices.Add("PNG", new List<string>() { ".png" });
+#pragma warning restore IDE0028 // Simplify collection initialization
 
             nint hwnd = _appController.GetMainWindowHandle();
             WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
