@@ -337,13 +337,14 @@ public sealed partial class ImageEditPageViewModel : ViewModelBase
         }
     }
 
-    private void Print()
+    private async void Print()
     {
         string activityId = ActivityIds.Print;
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            throw new NotImplementedException();
+            nint hwnd = _appController.GetMainWindowHandle();
+            await ImageCanvasPrinter.ShowPrintUIAsync([.. Drawables], new ImageCanvasRenderOptions(Orientation, ImageSize), hwnd);
         }
         catch (Exception e)
         {

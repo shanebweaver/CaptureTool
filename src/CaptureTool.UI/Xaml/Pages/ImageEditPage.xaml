@@ -70,9 +70,7 @@
             <AppBarButton
                 Command="{x:Bind ViewModel.PrintCommand}"
                 Icon="Print"
-                IsEnabled="False"
-                Label="Print"
-                Visibility="Collapsed" />
+                Label="Print" />
         </CommandBar>
 
         <Grid

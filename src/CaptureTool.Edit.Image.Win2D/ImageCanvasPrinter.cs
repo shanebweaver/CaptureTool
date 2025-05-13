@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Drawing;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Edit.Image.Win2D.Drawable;
@@ -13,7 +13,7 @@ public static partial class ImageCanvasPrinter
 {
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    public static async Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
+    public static async Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, nint hwnd)
     {
         await _semaphore.WaitAsync();
 
@@ -43,17 +43,21 @@ public static partial class ImageCanvasPrinter
 
         try
         {
-            var printManager = PrintManager.GetForCurrentView();
+            PrintManager printManager = PrintManagerInterop.GetForWindow(hwnd);
             printManager.PrintTaskRequested += OnPrintTaskRequested;
 
             try
             {
-                bool success = await PrintManager.ShowPrintUIAsync();
+                bool success = await PrintManagerInterop.ShowPrintUIForWindowAsync(hwnd);
             }
             finally
             {
                 printManager.PrintTaskRequested -= OnPrintTaskRequested;
             }
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e.Message);
         }
         finally
         {
