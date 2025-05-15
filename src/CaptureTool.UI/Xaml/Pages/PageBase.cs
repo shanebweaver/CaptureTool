@@ -49,7 +49,7 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
             _loadCts = null;
         }
 
-        if (e.NavigationMode == NavigationMode.Back)
+        if (ViewModel.IsLoaded)
         {
             ViewModel.Unload();
         }
