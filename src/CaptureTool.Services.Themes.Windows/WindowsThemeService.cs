@@ -28,7 +28,7 @@ public sealed partial class WindowsThemeService : IThemeService
         }
         else
         {
-            CurrentTheme = DefaultTheme;
+            CurrentTheme = AppTheme.SystemDefault;
         }
 
         StartupTheme = CurrentTheme;

@@ -6,12 +6,14 @@ using CaptureTool.Capture.Desktop;
 using CaptureTool.Core;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Settings;
 using CaptureTool.ViewModels.Commands;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class DesktopImageCaptureOptionsPageViewModel : ViewModelBase
 {
+    private readonly ISettingsService _settingsService;
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
     private readonly IFeatureManager _featureManager;
@@ -47,10 +49,12 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : ViewModelB
     public RelayCommand NewDesktopImageCaptureCommand => new(NewDesktopImageCapture, () => IsImageDesktopCaptureEnabled);
 
     public DesktopImageCaptureOptionsPageViewModel(
+        ISettingsService settingsService,
         IAppController appController,
         ICancellationService cancellationService,
         IFeatureManager featureManager)
     {
+        _settingsService = settingsService;
         _appController = appController;
         _cancellationService = cancellationService;
         _featureManager = featureManager;
@@ -78,6 +82,8 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : ViewModelB
 
                 SelectedImageCaptureModeIndex = 0;
             }
+
+            AutoSave = _settingsService.Get(CaptureToolSettings.DesktopImageCapture_Options_AutoSave);
         }
         catch (OperationCanceledException)
         {
@@ -96,7 +102,7 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : ViewModelB
         IsImageDesktopCaptureEnabled = false;
         CaptureModes.Clear();
         SelectedImageCaptureModeIndex = 0;
-
+        AutoSave = false;
         base.Unload();
     }
 
