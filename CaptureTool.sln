@@ -36,6 +36,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Capture.Desktop
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Edit.Image.Win2D", "src\CaptureTool.Edit.Image.Win2D\CaptureTool.Edit.Image.Win2D.csproj", "{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Tests", "src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj", "{7C067745-CD5D-4665-8EF9-79730477C4BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -172,6 +174,18 @@ Global
 		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Release|x64.Build.0 = Release|x64
 		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Release|x86.ActiveCfg = Release|x86
 		{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}.Release|x86.Build.0 = Release|x86
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Debug|x64.Build.0 = Debug|Any CPU
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Debug|x86.Build.0 = Debug|Any CPU
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Release|ARM64.Build.0 = Release|Any CPU
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Release|x64.ActiveCfg = Release|Any CPU
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Release|x64.Build.0 = Release|Any CPU
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Release|x86.ActiveCfg = Release|Any CPU
+		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
