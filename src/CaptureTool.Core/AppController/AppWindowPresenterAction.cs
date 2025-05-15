@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Core;
+﻿namespace CaptureTool.Core.AppController;
 
 public enum AppWindowPresenterAction
 {

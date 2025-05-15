@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Core;
+using CaptureTool.Core.AppController;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
@@ -83,7 +84,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
             CurrentAppTheme = _themeService.CurrentTheme;
 
             // Go home
-            _navigationService.Navigate(NavigationRoutes.Home);
+            _navigationService.Navigate(CaptureToolNavigationRoutes.Home);
         }
         catch (OperationCanceledException)
         {

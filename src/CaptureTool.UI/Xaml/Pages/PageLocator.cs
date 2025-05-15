@@ -8,13 +8,13 @@ namespace CaptureTool.UI.Xaml.Pages;
 internal static partial class PageLocator
 {
     private static readonly Dictionary<string, Type> _routeMappings = new() {
-        { NavigationRoutes.Home.RouteName, typeof(HomePage) },
-        { NavigationRoutes.Settings.RouteName, typeof(SettingsPage) },
-        { NavigationRoutes.Loading.RouteName, typeof(LoadingPage) },
-        { NavigationRoutes.DesktopImageCaptureOptions.RouteName, typeof(DesktopImageCaptureOptionsPage) },
-        { NavigationRoutes.DesktopVideoCaptureOptions.RouteName, typeof(DesktopVideoCaptureOptionsPage) },
-        { NavigationRoutes.ImageEdit.RouteName, typeof(ImageEditPage) },
-        { NavigationRoutes.VideoEdit.RouteName, typeof(VideoEditPage) },
+        { CaptureToolNavigationRoutes.Home.RouteName, typeof(HomePage) },
+        { CaptureToolNavigationRoutes.Settings.RouteName, typeof(SettingsPage) },
+        { CaptureToolNavigationRoutes.Loading.RouteName, typeof(LoadingPage) },
+        { CaptureToolNavigationRoutes.DesktopImageCaptureOptions.RouteName, typeof(DesktopImageCaptureOptionsPage) },
+        { CaptureToolNavigationRoutes.DesktopVideoCaptureOptions.RouteName, typeof(DesktopVideoCaptureOptionsPage) },
+        { CaptureToolNavigationRoutes.ImageEdit.RouteName, typeof(ImageEditPage) },
+        { CaptureToolNavigationRoutes.VideoEdit.RouteName, typeof(VideoEditPage) },
     };
 
     public static Type GetPageType(NavigationRoute route)

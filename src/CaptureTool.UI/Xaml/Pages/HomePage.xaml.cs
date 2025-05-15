@@ -27,11 +27,11 @@ public sealed partial class HomePage : HomePageBase
 
     protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
     {
-        if (e.SourcePageType == PageLocator.GetPageType(NavigationRoutes.DesktopImageCaptureOptions))
+        if (e.SourcePageType == PageLocator.GetPageType(CaptureToolNavigationRoutes.DesktopImageCaptureOptions))
         {
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation_Image", NewDesktopImageCaptureButton);
         }
-        else if (e.SourcePageType == PageLocator.GetPageType(NavigationRoutes.DesktopVideoCaptureOptions))
+        else if (e.SourcePageType == PageLocator.GetPageType(CaptureToolNavigationRoutes.DesktopVideoCaptureOptions))
         {
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation_Video", NewDesktopVideoCaptureButton);
         }

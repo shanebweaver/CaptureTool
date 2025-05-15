@@ -1,5 +1,6 @@
 using CaptureTool.Capture.Desktop;
 using CaptureTool.Core;
+using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Settings;

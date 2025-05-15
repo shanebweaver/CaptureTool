@@ -1,9 +1,10 @@
-﻿using System.Diagnostics;
+﻿using CaptureTool.Services.Localization;
+using System.Diagnostics;
 using System.Globalization;
 using Windows.ApplicationModel.Resources;
 using Windows.Globalization;
 
-namespace CaptureTool.Services.Localization.Windows;
+namespace CaptureTool.Services.Windows.Localization;
 
 public sealed partial class WindowsLocalizationService : ILocalizationService
 {

@@ -1,7 +1,8 @@
 ﻿using System;
+using CaptureTool.Services.TaskEnvironment;
 using Microsoft.UI.Dispatching;
 
-namespace CaptureTool.Services.TaskEnvironment.WinUI;
+namespace CaptureTool.Services.Windows.TaskEnvironment;
 
 public class WinUITaskEnvironment : ITaskEnvironment
 {

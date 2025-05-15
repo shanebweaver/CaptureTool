@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using CaptureTool.Services.Themes;
 using Microsoft.Windows.Storage;
 
-namespace CaptureTool.Services.Themes.Windows;
+namespace CaptureTool.Services.Windows.Themes;
 
 public sealed partial class WindowsThemeService : IThemeService
 {

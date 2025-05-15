@@ -8,7 +8,7 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop;
-using CaptureTool.Core;
+using CaptureTool.Core.AppController;
 using CaptureTool.Edit.Image.Win2D;
 using CaptureTool.Edit.Image.Win2D.Drawable;
 using CaptureTool.Services.Cancellation;

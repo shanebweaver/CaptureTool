@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 using System.Threading;
-using CaptureTool.Core;
+using CaptureTool.Core.AppController;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using CaptureTool.UI.Xaml.Pages;

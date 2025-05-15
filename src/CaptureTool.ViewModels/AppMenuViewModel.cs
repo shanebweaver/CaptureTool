@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop;
 using CaptureTool.Core;
+using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
@@ -207,7 +208,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
             }
 
             ImageFile imageFile = new(file.Path);
-            _navigationService.Navigate(NavigationRoutes.ImageEdit, imageFile);
+            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
 
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -224,7 +225,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
         try
         {
-            _navigationService.Navigate(NavigationRoutes.Settings);
+            _navigationService.Navigate(CaptureToolNavigationRoutes.Settings);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

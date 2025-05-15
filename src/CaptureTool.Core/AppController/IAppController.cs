@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop;
 
-namespace CaptureTool.Core;
+namespace CaptureTool.Core.AppController;
 
 public interface IAppController
 {

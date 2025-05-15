@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop;
 using CaptureTool.Capture.Desktop.SnippingTool;
 using CaptureTool.Core;
+using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
@@ -71,7 +72,7 @@ internal class CaptureToolAppController : IAppController
         }
 
         // Show loading screen and minimize
-        _navigationService.Navigate(NavigationRoutes.Loading, null);
+        _navigationService.Navigate(CaptureToolNavigationRoutes.Loading, null);
         UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
 
         SnippingToolCaptureMode captureMode = ParseImageCaptureMode(options.ImageCaptureMode);
@@ -90,7 +91,7 @@ internal class CaptureToolAppController : IAppController
         }
 
         // Show loading screen and minimize
-        _navigationService.Navigate(NavigationRoutes.Loading, null);
+        _navigationService.Navigate(CaptureToolNavigationRoutes.Loading, null);
         UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
 
         SnippingToolCaptureMode captureMode = ParseVideoCaptureMode(options.VideoCaptureMode);
@@ -138,9 +139,9 @@ internal class CaptureToolAppController : IAppController
 
     public void NavigateHome()
     {
-        if (_navigationService.CurrentRoute != NavigationRoutes.Home)
+        if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.Home)
         {
-            _navigationService.Navigate(NavigationRoutes.Home, clearHistory: true);
+            _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
         }
     }
 }

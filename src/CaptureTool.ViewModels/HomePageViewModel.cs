@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CaptureTool.Capture.Desktop;
 using CaptureTool.Capture.Desktop.SnippingTool;
 using CaptureTool.Core;
+using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
@@ -144,12 +145,12 @@ public sealed partial class HomePageViewModel : ViewModelBase
                 if (mimeType.StartsWith("image"))
                 {
                     ImageFile imageFile = new(file.Path);
-                    _navigationService.Navigate(NavigationRoutes.ImageEdit, imageFile);
+                    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
                 }
                 else if (mimeType.StartsWith("video"))
                 {
                     VideoFile videoFile = new(file.Path);
-                    _navigationService.Navigate(NavigationRoutes.VideoEdit, videoFile);
+                    _navigationService.Navigate(CaptureToolNavigationRoutes.VideoEdit, videoFile);
                 }
             }
             catch (Exception)
@@ -193,12 +194,12 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     private void DesktopImageCaptureOptions()
     {
-        _navigationService.Navigate(NavigationRoutes.DesktopImageCaptureOptions, null);
+        _navigationService.Navigate(CaptureToolNavigationRoutes.DesktopImageCaptureOptions, null);
     }
 
     private void DesktopVideoCaptureOptions()
     {
-        _navigationService.Navigate(NavigationRoutes.DesktopVideoCaptureOptions, null);
+        _navigationService.Navigate(CaptureToolNavigationRoutes.DesktopVideoCaptureOptions, null);
     }
 
     private void DesktopAudioCaptureOptions()

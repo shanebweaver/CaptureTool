@@ -1,11 +1,12 @@
-﻿using System;
+﻿using CaptureTool.Services.Storage;
+using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 using Windows.Storage;
 
-namespace CaptureTool.Services.Storage.Windows;
+namespace CaptureTool.Services.Windows.Storage;
 
 public sealed partial class WindowsJsonStorageService : IJsonStorageService
 {

@@ -1,28 +1,26 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.Threading;
-using CaptureTool.Capture.Desktop;
+﻿using CaptureTool.Capture.Desktop;
 using CaptureTool.Capture.Desktop.SnippingTool;
-using CaptureTool.Core;
+using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Globalization;
 using CaptureTool.Services.Localization;
-using CaptureTool.Services.Localization.Windows;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
 using CaptureTool.Services.Storage;
-using CaptureTool.Services.Storage.Windows;
 using CaptureTool.Services.TaskEnvironment;
-using CaptureTool.Services.TaskEnvironment.WinUI;
 using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
-using CaptureTool.Services.Themes.Windows;
+using CaptureTool.Services.Windows.Localization;
+using CaptureTool.Services.Windows.Storage;
+using CaptureTool.Services.Windows.TaskEnvironment;
+using CaptureTool.Services.Windows.Themes;
 using CaptureTool.ViewModels;
 using CaptureTool.ViewModels.Factories;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace CaptureTool.UI;
 
@@ -34,9 +32,6 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
     {
         ServiceCollection collection = new();
 
-        // TaskEnvironment
-        collection.AddSingleton(GetTaskEnvironment);
-
         // App controller and feature manager
         collection.AddSingleton<IAppController, CaptureToolAppController>();
         collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
@@ -44,14 +39,17 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         // Services
         collection.AddSingleton<ICancellationService, CancellationService>();
         collection.AddSingleton<IGlobalizationService, GlobalizationService>();
-        collection.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
-        collection.AddSingleton<ILocalizationService, WindowsLocalizationService>();
         collection.AddSingleton<ILogService, DebugLogService>();
         collection.AddSingleton<INavigationService, NavigationService>();
         collection.AddSingleton<ISettingsService, LocalSettingsService>();
         collection.AddSingleton<ITelemetryService, TelemetryService>();
+
+        // Windows Services
         collection.AddSingleton<ISnippingToolService, SnippingToolService>();
         collection.AddSingleton<IThemeService, WindowsThemeService>();
+        collection.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
+        collection.AddSingleton<ILocalizationService, WindowsLocalizationService>();
+        collection.AddSingleton(GetTaskEnvironment);
 
         // ViewModels
         collection.AddTransient<MainWindowViewModel>();
