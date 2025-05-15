@@ -1,4 +1,7 @@
-﻿namespace CaptureTool.Services;
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace CaptureTool.Services;
 
 public interface IFactoryService<T>
 {
@@ -7,5 +10,5 @@ public interface IFactoryService<T>
 
 public interface IFactoryService<T, A>
 {
-    T Create(A args);
+    Task<T> CreateAsync(A args, CancellationToken cancellationToken);
 }

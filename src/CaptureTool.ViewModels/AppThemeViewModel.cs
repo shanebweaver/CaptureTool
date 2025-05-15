@@ -1,22 +1,31 @@
-﻿using System;
+﻿using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
+using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
+using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class AppThemeViewModel : ViewModelBase
 {
-    private readonly ILocalizationService _localizationService;
+    private readonly struct ActivityIds
+    {
+        public static readonly string Load = "Load";
+        public static readonly string Unload = "Unload";
+    }
 
-    private AppTheme _appTheme;
-    public AppTheme AppTheme
+    private readonly ILocalizationService _localizationService;
+    private readonly ITelemetryService _telemetryService;
+    private readonly ICancellationService _cancellationService;
+
+    private AppTheme? _appTheme;
+    public AppTheme? AppTheme
     {
         get => _appTheme;
-        set
-        {
-            Set(ref _appTheme, value);
-            UpdateDisplayName();
-        }
+        set => Set(ref _appTheme, value);
     }
 
     private string? _displayName;
@@ -26,13 +35,68 @@ public sealed partial class AppThemeViewModel : ViewModelBase
         set => Set(ref _displayName, value);
     }
 
-    public AppThemeViewModel(ILocalizationService localizationService)
+    public AppThemeViewModel(
+        ILocalizationService localizationService,
+        ITelemetryService telemetryService,
+        ICancellationService cancellationService)
     {
         _localizationService = localizationService;
+        _telemetryService = telemetryService;
+        _cancellationService = cancellationService;
     }
 
-    private void UpdateDisplayName()
+    public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        DisplayName = _localizationService.GetString($"AppTheme_{Enum.GetName(AppTheme)}");
+        Debug.Assert(IsUnloaded);
+        StartLoading();
+
+        string activityId = ActivityIds.Load;
+        _telemetryService.ActivityInitiated(activityId);
+
+        var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
+        try
+        {
+            if (parameter is AppTheme appTheme)
+            {
+                AppTheme = appTheme;
+                DisplayName = _localizationService.GetString($"AppTheme_{Enum.GetName(appTheme)}");
+            }
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (OperationCanceledException)
+        {
+            _telemetryService.ActivityCanceled(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
+        finally
+        {
+            cts.Dispose();
+        }
+
+        await base.LoadAsync(parameter, cancellationToken);
+    }
+
+    public override void Unload()
+    {
+        string activityId = ActivityIds.Unload;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            AppTheme = null;
+            DisplayName = null;
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
+
+        base.Unload();
     }
 }

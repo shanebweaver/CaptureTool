@@ -11,12 +11,20 @@ using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
+using CaptureTool.Services.Telemetry;
 using CaptureTool.ViewModels.Commands;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class HomePageViewModel : ViewModelBase
 {
+    private readonly struct ActivityIds
+    {
+        public static readonly string Load = "Load";
+        public static readonly string Unload = "Unload";
+    }
+
+    private readonly ITelemetryService _telemetryService;
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
     private readonly IFeatureManager _featureManager;
@@ -72,11 +80,13 @@ public sealed partial class HomePageViewModel : ViewModelBase
     }
 
     public HomePageViewModel(
+        ITelemetryService telemetryService,
         IAppController appController,
         ICancellationService cancellationService,
         IFeatureManager featureManager,
         INavigationService navigationService)
     {
+        _telemetryService = telemetryService;
         _appController = appController;
         _cancellationService = cancellationService;
         _featureManager = featureManager;
@@ -85,9 +95,11 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        Unload();
         Debug.Assert(IsUnloaded);
         StartLoading();
+
+        string activityId = ActivityIds.Load;
+        _telemetryService.ActivityInitiated(activityId);
 
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
@@ -103,10 +115,16 @@ public sealed partial class HomePageViewModel : ViewModelBase
             // Desktop Audio
             IsDesktopAudioCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Audio);
             IsDesktopAudioCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Audio_Options);
+        
+            _telemetryService.ActivityCompleted(activityId);
         }
         catch (OperationCanceledException)
         {
-            // Load canceled
+            _telemetryService.ActivityCanceled(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
         }
         finally
         {
@@ -118,9 +136,21 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     public override void Unload()
     {
-        _isDesktopImageCaptureEnabled = false;
-        _isDesktopVideoCaptureEnabled = false;
-        _isDesktopAudioCaptureEnabled = false;
+        string activityId = ActivityIds.Unload;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _isDesktopImageCaptureEnabled = false;
+            _isDesktopVideoCaptureEnabled = false;
+            _isDesktopAudioCaptureEnabled = false;
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
 
         base.Unload();
     }

@@ -117,7 +117,7 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
             for (var i = 0; i < languages.Length; i++)
             {
                 string language = languages[i];
-                AppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
+                AppLanguageViewModel vm = await _appLanguageViewModelFactory.CreateAsync(language, cts.Token);
                 AppLanguages.Add(vm);
 
                 if (language == _localizationService.CurrentLanguage)
@@ -130,7 +130,7 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
             for (var i = 0; i < SupportedAppThemes.Length; i++)
             {
                 AppTheme supportedTheme = SupportedAppThemes[i];
-                AppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
+                AppThemeViewModel vm = await _appThemeViewModelFactory.CreateAsync(supportedTheme, cancellationToken);
                 AppThemes.Add(vm);
 
                 if (supportedTheme == currentTheme)
@@ -184,8 +184,11 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
         if (SelectedAppThemeIndex != -1)
         {
             AppThemeViewModel vm = AppThemes[SelectedAppThemeIndex];
-            _themeService.UpdateCurrentTheme(vm.AppTheme);
-            UpdateShowAppThemeRestartMessage();
+            if (vm.AppTheme != null)
+            {
+                _themeService.UpdateCurrentTheme(vm.AppTheme.Value);
+                UpdateShowAppThemeRestartMessage();
+            }
         }
     }
 

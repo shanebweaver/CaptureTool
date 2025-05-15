@@ -53,4 +53,15 @@ public sealed partial class TelemetryService : ITelemetryService
         }
         Debug.WriteLine($"- Exception: {exception.Message}");
     }
+
+    public void ButtonInvoked(string buttonId, string? message)
+    {
+        StringBuilder stringBuilder = new($"Button invoked: {buttonId}");
+        if (message != null)
+        {
+            stringBuilder.Append(message);
+        }
+
+        Debug.WriteLine(stringBuilder.ToString());
+    }
 }

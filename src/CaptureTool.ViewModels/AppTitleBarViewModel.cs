@@ -1,17 +1,25 @@
-﻿using System;
+﻿using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Navigation;
+using CaptureTool.Services.TaskEnvironment;
+using CaptureTool.Services.Telemetry;
+using CaptureTool.ViewModels.Commands;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using CaptureTool.Services.Cancellation;
-using CaptureTool.Services.Navigation;
-using CaptureTool.Services.TaskEnvironment;
-using CaptureTool.ViewModels.Commands;
 using Windows.ApplicationModel;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class AppTitleBarViewModel : ViewModelBase
 {
+    private readonly struct ActivityIds
+    {
+        public static readonly string Load = "Load";
+        public static readonly string Unload = "Unload";
+    }
+
+    private readonly ITelemetryService _telemetryService;
     private readonly ICancellationService _cancellationService;
     private readonly INavigationService _navigationService;
     private readonly ITaskEnvironment _taskEnvironment;
@@ -40,10 +48,13 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
     }
 
     public AppTitleBarViewModel(
+        ITelemetryService telemetryService,
         ICancellationService cancellationService,
         INavigationService navigationService,
         ITaskEnvironment taskEnvironment)
     {
+
+        _telemetryService = telemetryService;
         _cancellationService = cancellationService;
         _navigationService = navigationService;
         _taskEnvironment = taskEnvironment;
@@ -53,19 +64,27 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
 
     public override Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        Unload();
         Debug.Assert(IsUnloaded);
         StartLoading();
+
+        string activityId = ActivityIds.Load;
+        _telemetryService.ActivityInitiated(activityId);
 
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
             CanGoBack = _navigationService.CanGoBack;
             _navigationService.Navigated += OnNavigated;
+
+            _telemetryService.ActivityCompleted(activityId);
         }
         catch (OperationCanceledException)
         {
-            // Load canceled
+            _telemetryService.ActivityCanceled(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
         }
         finally
         {
@@ -85,10 +104,23 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
 
     public override void Unload()
     {
-        _navigationService.Navigated -= OnNavigated;
-        Icon = null;
-        Title = null;
-        CanGoBack = false;
+        string activityId = ActivityIds.Unload;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _navigationService.Navigated -= OnNavigated;
+            Icon = null;
+            Title = null;
+            CanGoBack = false;
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
+
         base.Unload();
     }
 
