@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using CaptureTool.Capture.Desktop;
+﻿using CaptureTool.Capture.Desktop;
 using CaptureTool.Capture.Desktop.SnippingTool;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
@@ -8,6 +6,9 @@ using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using Microsoft.Windows.AppLifecycle;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 
 namespace CaptureTool.UI;
@@ -31,6 +32,8 @@ internal class CaptureToolAppController : IAppController
         _logService = logService;
         _navigationService = navigationService;
         _snippingToolService = snippingToolService;
+
+        _snippingToolService.ResponseReceived += OnSnippingToolResponseReceived;
     }
 
     public bool TryRestart()
@@ -137,11 +140,44 @@ internal class CaptureToolAppController : IAppController
         return WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
     }
 
-    public void NavigateHome()
+    private void NavigateHome()
     {
         if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.Home)
         {
             _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
+        }
+    }
+
+    private async void OnSnippingToolResponseReceived(object? sender, SnippingToolResponse e)
+    {
+        Debug.WriteLine($"SnippingToolResponse: {e.Code} - {e.Reason}");
+        UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
+
+        if (e.Code == 200)
+        {
+            try
+            {
+                var file = await e.GetFileAsync();
+                string mimeType = file.ContentType;
+                if (mimeType.StartsWith("image"))
+                {
+                    ImageFile imageFile = new(file.Path);
+                    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
+                }
+                else if (mimeType.StartsWith("video"))
+                {
+                    VideoFile videoFile = new(file.Path);
+                    _navigationService.Navigate(CaptureToolNavigationRoutes.VideoEdit, videoFile);
+                }
+            }
+            catch (Exception)
+            {
+                NavigateHome();
+            }
+        }
+        else
+        {
+            NavigateHome();
         }
     }
 }

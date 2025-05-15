@@ -18,6 +18,4 @@ public interface IAppController
     void UpdateAppWindowPresentation(AppWindowPresenterAction action);
 
     nint GetMainWindowHandle();
-
-    void NavigateHome();
 }

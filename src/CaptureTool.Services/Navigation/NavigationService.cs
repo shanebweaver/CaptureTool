@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace CaptureTool.Services.Navigation;
 
 public class NavigationService : INavigationService
 {
     private readonly Stack<NavigationRequest> _navigationStack = new();
+    private readonly Lock _navigationLock = new();
     private INavigationHandler? _navigationHandler;
 
     public event EventHandler<NavigationEventArgs>? Navigated;
@@ -21,21 +23,30 @@ public class NavigationService : INavigationService
 
     public void GoBack()
     {
-        _navigationStack.Pop();
-        NavigationRequest backRequest = _navigationStack.Peek();
-        Navigate(new NavigationRequest(backRequest.Route, backRequest.Parameter, true));
+        lock (_navigationLock)
+        {
+            if (_navigationStack.Count <= 1)
+                throw new InvalidOperationException("Cannot go back. No previous navigation entry exists.");
+
+            _navigationStack.Pop();
+            NavigationRequest backRequest = _navigationStack.Peek();
+            Navigate(new NavigationRequest(backRequest.Route, backRequest.Parameter, true));
+        }
     }
 
     public void Navigate(NavigationRoute route, object? parameter = null, bool clearHistory = false)
     {
-        if (clearHistory)
+        lock (_navigationLock)
         {
-            _navigationStack.Clear();
-        }
+            if (clearHistory)
+            {
+                _navigationStack.Clear();
+            }
 
-        NavigationRequest request = new(route, parameter);
-        _navigationStack.Push(request);
-        Navigate(request);
+            NavigationRequest request = new(route, parameter);
+            _navigationStack.Push(request);
+            Navigate(request);
+        }
     }
 
     private void Navigate(NavigationRequest request)

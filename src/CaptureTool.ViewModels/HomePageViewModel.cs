@@ -20,10 +20,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
     private readonly IFeatureManager _featureManager;
-    private readonly ILocalizationService _localizationService;
     private readonly INavigationService _navigationService;
-    private readonly ISettingsService _settingsService;
-    private readonly ISnippingToolService _snippingToolService;
 
     public RelayCommand NewDesktopImageCaptureCommand => new(NewDesktopImageCapture, () => IsDesktopImageCaptureEnabled);
     public RelayCommand NewDesktopVideoCaptureCommand => new(NewDesktopVideoCapture, () => IsDesktopVideoCaptureEnabled);
@@ -78,25 +75,12 @@ public sealed partial class HomePageViewModel : ViewModelBase
         IAppController appController,
         ICancellationService cancellationService,
         IFeatureManager featureManager,
-        ILocalizationService localizationService,
-        INavigationService navigationService,
-        ISettingsService settingsService,
-        ISnippingToolService snippingToolService)
+        INavigationService navigationService)
     {
         _appController = appController;
         _cancellationService = cancellationService;
         _featureManager = featureManager;
-        _localizationService = localizationService;
         _navigationService = navigationService;
-        _settingsService = settingsService;
-        _snippingToolService = snippingToolService;
-
-        _snippingToolService.ResponseReceived += OnSnippingToolResponseReceived;
-    }
-
-    ~HomePageViewModel()
-    {
-        _snippingToolService.ResponseReceived -= OnSnippingToolResponseReceived;
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -130,38 +114,6 @@ public sealed partial class HomePageViewModel : ViewModelBase
         }
 
         await base.LoadAsync(parameter, cancellationToken);
-    }
-
-    private async void OnSnippingToolResponseReceived(object? sender, SnippingToolResponse e)
-    {
-        _appController.UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
-
-        if (e.Code == 200)
-        {
-            try
-            {
-                var file = await e.GetFileAsync();
-                string mimeType = file.ContentType;
-                if (mimeType.StartsWith("image"))
-                {
-                    ImageFile imageFile = new(file.Path);
-                    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
-                }
-                else if (mimeType.StartsWith("video"))
-                {
-                    VideoFile videoFile = new(file.Path);
-                    _navigationService.Navigate(CaptureToolNavigationRoutes.VideoEdit, videoFile);
-                }
-            }
-            catch (Exception)
-            {
-                _appController.NavigateHome();
-            }
-        }
-        else
-        {
-            _appController.NavigateHome();
-        }
     }
 
     public override void Unload()

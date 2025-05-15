@@ -32,10 +32,6 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
     {
         ServiceCollection collection = new();
 
-        // App controller and feature manager
-        collection.AddSingleton<IAppController, CaptureToolAppController>();
-        collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
-
         // Services
         collection.AddSingleton<ICancellationService, CancellationService>();
         collection.AddSingleton<IGlobalizationService, GlobalizationService>();
@@ -51,6 +47,11 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<ILocalizationService, WindowsLocalizationService>();
         collection.AddSingleton(GetTaskEnvironment);
 
+        // ViewModel factories
+        collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel, DesktopCaptureMode>, DesktopCaptureModeViewModelFactory>();
+        collection.AddSingleton<IFactoryService<AppLanguageViewModel, string>, AppLanguageViewModelFactory>();
+        collection.AddSingleton<IFactoryService<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
+
         // ViewModels
         collection.AddTransient<MainWindowViewModel>();
         collection.AddTransient<HomePageViewModel>();
@@ -63,13 +64,10 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<AppMenuViewModel>();
         collection.AddTransient<AppTitleBarViewModel>();
         collection.AddTransient<AppAboutViewModel>();
-        collection.AddTransient<DesktopCaptureModeViewModel>();
-        collection.AddTransient<AppThemeViewModel>();
 
-        // ViewModel factories
-        collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel, DesktopCaptureMode>, DesktopCaptureModeViewModelFactory>();
-        collection.AddSingleton<IFactoryService<AppLanguageViewModel, string>, AppLanguageViewModelFactory>();
-        collection.AddSingleton<IFactoryService<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
+        // App controller and feature manager
+        collection.AddSingleton<IAppController, CaptureToolAppController>();
+        collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
 
         _serviceProvider = collection.BuildServiceProvider();
     }
