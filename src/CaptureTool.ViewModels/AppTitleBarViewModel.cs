@@ -17,6 +17,7 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
     {
         public static readonly string Load = "Load";
         public static readonly string Unload = "Unload";
+        public static readonly string GoBack = "GoBack";
     }
 
     private readonly ITelemetryService _telemetryService;
@@ -53,7 +54,6 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
         INavigationService navigationService,
         ITaskEnvironment taskEnvironment)
     {
-
         _telemetryService = telemetryService;
         _cancellationService = cancellationService;
         _navigationService = navigationService;
@@ -109,10 +109,10 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
 
         try
         {
-            _navigationService.Navigated -= OnNavigated;
             Icon = null;
             Title = null;
             CanGoBack = false;
+            _navigationService.Navigated -= OnNavigated;
 
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -126,7 +126,19 @@ public sealed partial class AppTitleBarViewModel : ViewModelBase
 
     private void GoBack()
     {
-        Debug.Assert(_navigationService.CanGoBack);
-        _navigationService.GoBack();
+        string activityId = ActivityIds.GoBack;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            Debug.Assert(_navigationService.CanGoBack);
+            _navigationService.GoBack();
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 }

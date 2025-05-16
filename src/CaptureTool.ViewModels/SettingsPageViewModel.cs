@@ -19,6 +19,10 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
     {
         public static readonly string Load = "Load";
         public static readonly string Unload = "Unload";
+        public static readonly string RestartApp = "RestartApp";
+        public static readonly string UpdateAppLanguage = "UpdateAppLanguage";
+        public static readonly string UpdateAppTheme = "UpdateAppTheme";
+        public static readonly string UpdateShowAppThemeRestartMessage = "UpdateShowAppThemeRestartMessage";
     }
 
     private readonly ITelemetryService _telemetryService;
@@ -195,53 +199,101 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
 
     private void UpdateAppLanguage()
     {
-        if (SelectedAppLanguageIndex != -1)
+        string activityId = ActivityIds.UpdateAppLanguage;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
         {
-            AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
-            if (vm.Language != null)
+            if (SelectedAppLanguageIndex != -1)
             {
-                _localizationService.UpdateCurrentLanguage(vm.Language);
-                ShowAppLanguageRestartMessage = vm.Language != _localizationService.StartupLanguage;
+                AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
+                if (vm.Language != null)
+                {
+                    _localizationService.UpdateCurrentLanguage(vm.Language);
+                    ShowAppLanguageRestartMessage = vm.Language != _localizationService.StartupLanguage;
+                }
             }
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
         }
     }
 
     private void UpdateAppTheme()
     {
-        if (SelectedAppThemeIndex != -1)
+        string activityId = ActivityIds.UpdateAppLanguage;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
         {
-            AppThemeViewModel vm = AppThemes[SelectedAppThemeIndex];
-            if (vm.AppTheme != null)
+            if (SelectedAppThemeIndex != -1)
             {
-                _themeService.UpdateCurrentTheme(vm.AppTheme.Value);
-                UpdateShowAppThemeRestartMessage();
+                AppThemeViewModel vm = AppThemes[SelectedAppThemeIndex];
+                if (vm.AppTheme != null)
+                {
+                    _themeService.UpdateCurrentTheme(vm.AppTheme.Value);
+                    UpdateShowAppThemeRestartMessage();
+                }
             }
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
         }
     }
 
     private void UpdateShowAppThemeRestartMessage()
     {
-        var defaultTheme = _themeService.DefaultTheme;
-        var startupTheme = _themeService.StartupTheme;
-        var currentTheme = _themeService.CurrentTheme;
+        string activityId = ActivityIds.UpdateShowAppThemeRestartMessage;
+        _telemetryService.ActivityInitiated(activityId);
 
-        // Make sure currentTheme is light or dark.
-        // defaultTheme is never "SystemDefault".
-        if (currentTheme == AppTheme.SystemDefault)
+        try
         {
-            currentTheme = defaultTheme;
-        }
+            var defaultTheme = _themeService.DefaultTheme;
+            var startupTheme = _themeService.StartupTheme;
+            var currentTheme = _themeService.CurrentTheme;
 
-        if (startupTheme == AppTheme.SystemDefault)
+            // Make sure currentTheme is light or dark.
+            // defaultTheme is never "SystemDefault".
+            if (currentTheme == AppTheme.SystemDefault)
+            {
+                currentTheme = defaultTheme;
+            }
+
+            if (startupTheme == AppTheme.SystemDefault)
+            {
+                startupTheme = defaultTheme;
+            }
+
+            ShowAppThemeRestartMessage = currentTheme != startupTheme;
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
         {
-            startupTheme = defaultTheme;
+            _telemetryService.ActivityError(activityId, e);
         }
-
-        ShowAppThemeRestartMessage = currentTheme != startupTheme;
     }
 
     private void RestartApp()
     {
-        _appController.TryRestart();
+        string activityId = ActivityIds.RestartApp;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _appController.TryRestart();
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 }

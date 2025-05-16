@@ -20,6 +20,7 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : ViewModelB
     {
         public static readonly string Load = "Load";
         public static readonly string Unload = "Unload";
+        public static readonly string NewDesktopImageCapture = "NewDesktopImageCapture";
     }
 
     private readonly ITelemetryService _telemetryService;
@@ -27,6 +28,8 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : ViewModelB
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
     private readonly IFeatureManager _featureManager;
+
+    public RelayCommand NewDesktopImageCaptureCommand => new(NewDesktopImageCapture, () => IsImageDesktopCaptureEnabled);
 
     private ObservableCollection<DesktopImageCaptureMode> _captureModes;
     public ObservableCollection<DesktopImageCaptureMode> CaptureModes
@@ -55,8 +58,6 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : ViewModelB
         get => _autoSave;
         set => Set(ref _autoSave, value);
     }
-
-    public RelayCommand NewDesktopImageCaptureCommand => new(NewDesktopImageCapture, () => IsImageDesktopCaptureEnabled);
 
     public DesktopImageCaptureOptionsPageViewModel(
         ITelemetryService telemetryService,
@@ -127,7 +128,7 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : ViewModelB
         {
             IsImageDesktopCaptureEnabled = false;
             CaptureModes.Clear();
-            SelectedImageCaptureModeIndex = 0;
+            SelectedImageCaptureModeIndex = -1;
             AutoSave = false;
 
             _telemetryService.ActivityCompleted(activityId);
@@ -140,10 +141,24 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : ViewModelB
         base.Unload();
     }
 
-    private void NewDesktopImageCapture()
+    private async void NewDesktopImageCapture()
     {
-        var imageCaptureMode = CaptureModes[SelectedImageCaptureModeIndex];
-        DesktopImageCaptureOptions options = new(imageCaptureMode, ImageFileType.Png, _autoSave);
-        _ = _appController.NewDesktopImageCaptureAsync(options);
+        string activityId = ActivityIds.NewDesktopImageCapture;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            var imageCaptureMode = CaptureModes[SelectedImageCaptureModeIndex];
+            DesktopImageCaptureOptions options = new(imageCaptureMode, ImageFileType.Png, _autoSave);
+            await _appController.NewDesktopImageCaptureAsync(options);
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
+
+        base.Unload();
     }
 }

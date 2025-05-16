@@ -19,6 +19,12 @@ public sealed partial class HomePageViewModel : ViewModelBase
     {
         public static readonly string Load = "Load";
         public static readonly string Unload = "Unload";
+        public static readonly string NewDesktopImageCapture = "NewDesktopImageCapture";
+        public static readonly string NewDesktopVideoCapture = "NewDesktopVideoCapture";
+        public static readonly string NewDesktopAudioCapture = "NewDesktopAudioCapture";
+        public static readonly string DesktopImageCaptureOptions = "DesktopImageCaptureOptions";
+        public static readonly string DesktopVideoCaptureOptions = "DesktopVideoCaptureOptions";
+        public static readonly string DesktopAudioCaptureOptions = "DesktopAudioCaptureOptions";
     }
 
     private readonly ITelemetryService _telemetryService;
@@ -152,37 +158,108 @@ public sealed partial class HomePageViewModel : ViewModelBase
         base.Unload();
     }
 
-    private void NewDesktopImageCapture()
+    private async void NewDesktopImageCapture()
     {
-        // TODO: Remember last used options
-        DesktopImageCaptureOptions options = new(DesktopImageCaptureMode.Rectangle, ImageFileType.Png, true);
-        _ = _appController.NewDesktopImageCaptureAsync(options);
+        string activityId = ActivityIds.NewDesktopImageCapture;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            // TODO: Remember last used options
+            DesktopImageCaptureOptions options = new(DesktopImageCaptureMode.Rectangle, ImageFileType.Png, true);
+            await _appController.NewDesktopImageCaptureAsync(options);
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 
-    private void NewDesktopVideoCapture()
+    private async void NewDesktopVideoCapture()
     {
-        // TODO: Remember last used options
-        DesktopVideoCaptureOptions options = new(DesktopVideoCaptureMode.Rectangle, VideoFileType.Mp4, true);
-        _ = _appController.NewDesktopVideoCaptureAsync(options);
+        string activityId = ActivityIds.NewDesktopVideoCapture;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            // TODO: Remember last used options
+            DesktopVideoCaptureOptions options = new(DesktopVideoCaptureMode.Rectangle, VideoFileType.Mp4, true);
+            await _appController.NewDesktopVideoCaptureAsync(options);
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 
-    private void NewDesktopAudioCapture()
+    private async void NewDesktopAudioCapture()
     {
-        _ = _appController.NewDesktopAudioCaptureAsync();
+        string activityId = ActivityIds.NewDesktopAudioCapture;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            await _appController.NewDesktopAudioCaptureAsync();
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 
     private void DesktopImageCaptureOptions()
     {
-        _navigationService.Navigate(CaptureToolNavigationRoutes.DesktopImageCaptureOptions, null);
+        string activityId = ActivityIds.DesktopImageCaptureOptions;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _navigationService.Navigate(CaptureToolNavigationRoutes.DesktopImageCaptureOptions, null);
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 
     private void DesktopVideoCaptureOptions()
     {
-        _navigationService.Navigate(CaptureToolNavigationRoutes.DesktopVideoCaptureOptions, null);
+        string activityId = ActivityIds.DesktopVideoCaptureOptions;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _navigationService.Navigate(CaptureToolNavigationRoutes.DesktopVideoCaptureOptions, null);
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 
     private void DesktopAudioCaptureOptions()
     {
-        throw new NotImplementedException();
+        string activityId = ActivityIds.DesktopAudioCaptureOptions;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            // Not implemented yet
+            throw new NotImplementedException();
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 }

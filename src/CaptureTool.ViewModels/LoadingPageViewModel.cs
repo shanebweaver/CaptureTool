@@ -9,12 +9,13 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public class LoadingPageViewModel : ViewModelBase
+public sealed partial class LoadingPageViewModel : ViewModelBase
 {
     private readonly struct ActivityIds
     {
         public static readonly string Load = "Load";
         public static readonly string Unload = "Unload";
+        public static readonly string GoBack = "GoBack";
     }
 
     private readonly ITelemetryService _telemetryService;
@@ -81,6 +82,17 @@ public class LoadingPageViewModel : ViewModelBase
 
     private void GoBack()
     {
-        _navigationService.GoBack();
+        string activityId = ActivityIds.GoBack;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _navigationService.GoBack();
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 }

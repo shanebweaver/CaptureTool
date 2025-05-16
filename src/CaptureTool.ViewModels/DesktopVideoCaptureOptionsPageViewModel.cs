@@ -20,6 +20,7 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : ViewModelB
     {
         public static readonly string Load = "Load";
         public static readonly string Unload = "Unload";
+        public static readonly string NewDesktopVideoCapture = "NewDesktopVideoCapture";
     }
 
     private readonly ITelemetryService _telemetryService;
@@ -27,6 +28,8 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : ViewModelB
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
     private readonly IFeatureManager _featureManager;
+
+    public RelayCommand NewDesktopVideoCaptureCommand => new(NewDesktopVideoCapture, () => IsVideoDesktopCaptureEnabled);
 
     private ObservableCollection<DesktopVideoCaptureMode> _captureModes;
     public ObservableCollection<DesktopVideoCaptureMode> CaptureModes
@@ -55,8 +58,6 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : ViewModelB
         get => _autoSave;
         set => Set(ref _autoSave, value);
     }
-
-    public RelayCommand NewDesktopVideoCaptureCommand => new(NewDesktopVideoCapture, () => IsVideoDesktopCaptureEnabled);
 
     public DesktopVideoCaptureOptionsPageViewModel(
         ITelemetryService telemetryService,
@@ -136,10 +137,22 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : ViewModelB
         base.Unload();
     }
 
-    private void NewDesktopVideoCapture()
+    private async void NewDesktopVideoCapture()
     {
-        var videoCaptureMode = CaptureModes[SelectedCaptureModeIndex];
-        DesktopVideoCaptureOptions options = new(videoCaptureMode, VideoFileType.Mp4, _autoSave);
-        _ = _appController.NewDesktopVideoCaptureAsync(options);
+        string activityId = ActivityIds.NewDesktopVideoCapture;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            var videoCaptureMode = CaptureModes[SelectedCaptureModeIndex];
+            DesktopVideoCaptureOptions options = new(videoCaptureMode, VideoFileType.Mp4, _autoSave);
+            await _appController.NewDesktopVideoCaptureAsync(options);
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
     }
 }
