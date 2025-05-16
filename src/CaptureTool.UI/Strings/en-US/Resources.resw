@@ -147,4 +147,7 @@
   <data name="AppTheme_SystemDefault" xml:space="preserve">
     <value>Use system default</value>
   </data>
+  <data name="CaptureOptions_AutoSaveCheckBoxLabel.Text" xml:space="preserve">
+    <value>Auto save?</value>
+  </data>
 </root>

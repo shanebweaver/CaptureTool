@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Localization;
 using CaptureTool.Services.Telemetry;
 using System;
 using System.Diagnostics;
@@ -19,8 +20,8 @@ public sealed partial class AppLanguageViewModel : LoadableViewModelBase
     private readonly ITelemetryService _telemetryService;
     private readonly ICancellationService _cancellationService;
 
-    private string? _language;
-    public string? Language
+    private AppLanguage? _language;
+    public AppLanguage? Language
     {
         get => _language;
         set => Set(ref _language, value);
@@ -52,11 +53,11 @@ public sealed partial class AppLanguageViewModel : LoadableViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            if (parameter is string language)
+            if (parameter is AppLanguage language)
             {
                 Language = language;
 
-                CultureInfo langInfo = new(language);
+                CultureInfo langInfo = new(language.Value);
                 DisplayName = langInfo.NativeName;
             }
 

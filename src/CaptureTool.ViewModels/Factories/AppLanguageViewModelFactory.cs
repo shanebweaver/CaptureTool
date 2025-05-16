@@ -1,12 +1,13 @@
 ﻿using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Localization;
 using CaptureTool.Services.Telemetry;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels.Factories;
 
-public sealed partial class AppLanguageViewModelFactory : IFactoryService<AppLanguageViewModel, string>
+public sealed partial class AppLanguageViewModelFactory : IFactoryService<AppLanguageViewModel, AppLanguage>
 {
     private readonly ITelemetryService _telemetryService;
     private readonly ICancellationService _cancellationService;
@@ -19,7 +20,7 @@ public sealed partial class AppLanguageViewModelFactory : IFactoryService<AppLan
         _cancellationService = cancellationService;
     }
 
-    public async Task<AppLanguageViewModel> CreateAsync(string language, CancellationToken cancellationToken)
+    public async Task<AppLanguageViewModel> CreateAsync(AppLanguage language, CancellationToken cancellationToken)
     {
         AppLanguageViewModel vm = new(
             _telemetryService,

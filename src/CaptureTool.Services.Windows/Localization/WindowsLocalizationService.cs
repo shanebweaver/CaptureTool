@@ -1,6 +1,8 @@
 ﻿using CaptureTool.Services.Localization;
+using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using Windows.ApplicationModel.Resources;
 using Windows.Globalization;
 
@@ -11,9 +13,9 @@ public sealed partial class WindowsLocalizationService : ILocalizationService
     private ResourceLoader _resourceLoader;
     private CultureInfo _culture;
 
-    public string CurrentLanguage { get; }
-    public string StartupLanguage { get; }
-    public string[] SupportedLanguages { get; }
+    public AppLanguage CurrentLanguage { get; }
+    public AppLanguage StartupLanguage { get; }
+    public AppLanguage[] SupportedLanguages { get; }
 
     public WindowsLocalizationService()
     {
@@ -21,8 +23,8 @@ public sealed partial class WindowsLocalizationService : ILocalizationService
         Debug.Assert(_resourceLoader != null);
         Debug.Assert(_culture != null);
 
-        StartupLanguage = CurrentLanguage = _culture.Name;
-        SupportedLanguages = [.. ApplicationLanguages.Languages];
+        StartupLanguage = CurrentLanguage = new(_culture.Name);
+        SupportedLanguages = [.. ApplicationLanguages.Languages.Select(l => new AppLanguage(l))];
     }
 
     public string GetString(string resourceKey)
@@ -30,9 +32,9 @@ public sealed partial class WindowsLocalizationService : ILocalizationService
         return _resourceLoader.GetString(resourceKey);
     }
 
-    public void UpdateCurrentLanguage(string language)
+    public void UpdateCurrentLanguage(AppLanguage language)
     {
-        ApplicationLanguages.PrimaryLanguageOverride = language;
+        ApplicationLanguages.PrimaryLanguageOverride = language.Value;
         InitializeResourceLoader();
     }
 

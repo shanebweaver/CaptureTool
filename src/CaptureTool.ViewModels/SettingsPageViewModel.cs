@@ -30,7 +30,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
     private readonly ILocalizationService _localizationService;
     private readonly IThemeService _themeService;
     private readonly ICancellationService _cancellationService;
-    private readonly IFactoryService<AppLanguageViewModel, string> _appLanguageViewModelFactory;
+    private readonly IFactoryService<AppLanguageViewModel, AppLanguage> _appLanguageViewModelFactory;
     private readonly IFactoryService<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
     private readonly AppTheme[] SupportedAppThemes = [
@@ -97,7 +97,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         ILocalizationService localizationService,
         IThemeService themeService,
         ICancellationService cancellationService,
-        IFactoryService<AppLanguageViewModel, string> appLanguageViewModelFactory,
+        IFactoryService<AppLanguageViewModel, AppLanguage> appLanguageViewModelFactory,
         IFactoryService<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
         _telemetryService = telemetryService;
@@ -126,10 +126,10 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
             AppTheme currentTheme = _themeService.CurrentTheme;
 
             // Languages
-            string[] languages = _localizationService.SupportedLanguages;
+            AppLanguage[] languages = _localizationService.SupportedLanguages;
             for (var i = 0; i < languages.Length; i++)
             {
-                string language = languages[i];
+                AppLanguage language = languages[i];
                 AppLanguageViewModel vm = await _appLanguageViewModelFactory.CreateAsync(language, cts.Token);
                 AppLanguages.Add(vm);
 
@@ -211,7 +211,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
                 AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
                 if (vm.Language != null)
                 {
-                    _localizationService.UpdateCurrentLanguage(vm.Language);
+                    _localizationService.UpdateCurrentLanguage(vm.Language.Value);
                     ShowAppLanguageRestartMessage = vm.Language != _localizationService.StartupLanguage;
                 }
             }

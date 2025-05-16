@@ -2,11 +2,11 @@
 
 public interface ILocalizationService
 {
-    public string CurrentLanguage { get; }
-    public string StartupLanguage { get; }
-    string[] SupportedLanguages { get; }
+    public AppLanguage CurrentLanguage { get; }
+    public AppLanguage StartupLanguage { get; }
+    AppLanguage[] SupportedLanguages { get; }
 
     public string GetString(string resourceKey);
 
-    void UpdateCurrentLanguage(string language);
+    void UpdateCurrentLanguage(AppLanguage language);
 }

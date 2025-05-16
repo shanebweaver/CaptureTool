@@ -9,7 +9,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
     d:DataContext="{d:DesignInstance Type=viewmodels:DesktopImageCaptureOptionsPageViewModel}"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mc:Ignorable="d">
 
     <Grid>
@@ -44,7 +43,7 @@
                     Grid.Row="1"
                     HorizontalAlignment="Stretch"
                     IsChecked="{x:Bind ViewModel.AutoSave, Mode=TwoWay}">
-                    <TextBlock Text="Autosave?" />
+                    <TextBlock x:Uid="CaptureOptions_AutoSaveCheckBoxLabel" />
                 </CheckBox>
             </Grid>
         </Grid>
