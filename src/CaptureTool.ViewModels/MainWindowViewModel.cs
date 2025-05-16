@@ -17,8 +17,8 @@ public sealed partial class MainWindowViewModel : LoadableViewModelBase, INaviga
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
+        public static readonly string Load = "MainWindowViewModel_Load";
+        public static readonly string Unload = "MainWindowViewModel_Unload";
     }
 
     private readonly ITelemetryService _telemetryService;

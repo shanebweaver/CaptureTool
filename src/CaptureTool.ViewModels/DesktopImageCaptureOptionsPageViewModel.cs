@@ -18,9 +18,9 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : LoadableVi
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
-        public static readonly string NewDesktopImageCapture = "NewDesktopImageCapture";
+        public static readonly string Load = "DesktopImageCaptureOptionsPageViewModel_Load";
+        public static readonly string Unload = "DesktopImageCaptureOptionsPageViewModel_Unload";
+        public static readonly string NewDesktopImageCapture = "DesktopImageCaptureOptionsPageViewModel_NewDesktopImageCapture";
     }
 
     private readonly ITelemetryService _telemetryService;

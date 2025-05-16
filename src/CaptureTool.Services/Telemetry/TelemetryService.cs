@@ -42,16 +42,18 @@ public sealed partial class TelemetryService : ITelemetryService
 
     public void ActivityError(string activityId, Exception exception, string? message = null, [CallerMemberName] string? callerName = null)
     {
-        Debug.WriteLine($"Activity error: {activityId}");
+        StringBuilder stringBuilder = new($"Activity error: {activityId}");
         if (callerName != null)
         {
-            Debug.WriteLine($"- Caller: {callerName}");
+            stringBuilder.Append($"- Caller: {callerName}");
         }
         if (message != null)
         {
-            Debug.WriteLine($"- Message: {message}");
+            stringBuilder.Append($"- Message: {message}");
         }
-        Debug.WriteLine($"- Exception: {exception.Message}");
+        stringBuilder.Append($"- Exception: {exception.Message}");
+
+        Debug.WriteLine(stringBuilder.ToString());
     }
 
     public void ButtonInvoked(string buttonId, string? message)

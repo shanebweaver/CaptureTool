@@ -13,8 +13,8 @@ public sealed partial class AppThemeViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
+        public static readonly string Load = "AppThemeViewModel_Load";
+        public static readonly string Unload = "AppThemeViewModel_Unload";
     }
 
     private readonly ILocalizationService _localizationService;

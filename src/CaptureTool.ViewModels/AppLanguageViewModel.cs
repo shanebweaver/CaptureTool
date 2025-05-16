@@ -12,8 +12,8 @@ public sealed partial class AppLanguageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
+        public static readonly string Load = "AppLanguageViewModel_Load";
+        public static readonly string Unload = "AppLanguageViewModel_Unload";
     }
 
     private readonly ITelemetryService _telemetryService;

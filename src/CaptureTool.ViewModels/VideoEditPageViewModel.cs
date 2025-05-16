@@ -12,8 +12,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
+        public static readonly string Load = "VideoEditPageViewModel_Load";
+        public static readonly string Unload = "VideoEditPageViewModel_Unload";
     }
 
     private readonly ITelemetryService _telemetryService;

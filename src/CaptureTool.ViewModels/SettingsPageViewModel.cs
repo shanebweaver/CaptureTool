@@ -17,12 +17,12 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
-        public static readonly string RestartApp = "RestartApp";
-        public static readonly string UpdateAppLanguage = "UpdateAppLanguage";
-        public static readonly string UpdateAppTheme = "UpdateAppTheme";
-        public static readonly string UpdateShowAppThemeRestartMessage = "UpdateShowAppThemeRestartMessage";
+        public static readonly string Load = "SettingsPageViewModel_Load";
+        public static readonly string Unload = "SettingsPageViewModel_Unload";
+        public static readonly string RestartApp = "SettingsPageViewModel_RestartApp";
+        public static readonly string UpdateAppLanguage = "SettingsPageViewModel_UpdateAppLanguage";
+        public static readonly string UpdateAppTheme = "SettingsPageViewModel_UpdateAppTheme";
+        public static readonly string UpdateShowAppThemeRestartMessage = "SettingsPageViewModel_UpdateShowAppThemeRestartMessage";
     }
 
     private readonly ITelemetryService _telemetryService;

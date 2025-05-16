@@ -18,9 +18,9 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableVi
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
-        public static readonly string NewDesktopVideoCapture = "NewDesktopVideoCapture";
+        public static readonly string Load = "DesktopVideoCaptureOptionsPageViewModel_Load";
+        public static readonly string Unload = "DesktopVideoCaptureOptionsPageViewModel_Unload";
+        public static readonly string NewDesktopVideoCapture = "DesktopVideoCaptureOptionsPageViewModel_NewDesktopVideoCapture";
     }
 
     private readonly ITelemetryService _telemetryService;

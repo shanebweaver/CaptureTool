@@ -13,8 +13,8 @@ public sealed partial class DesktopCaptureModeViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
+        public static readonly string Load = "DesktopCaptureModeViewModel_Load";
+        public static readonly string Unload = "DesktopCaptureModeViewModel_Unload";
     }
 
     private readonly ITelemetryService _telemetryService;

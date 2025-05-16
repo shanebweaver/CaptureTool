@@ -15,9 +15,9 @@ public sealed partial class AppTitleBarViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
-        public static readonly string GoBack = "GoBack";
+        public static readonly string Load = "AppTitleBarViewModel_Load";
+        public static readonly string Unload = "AppTitleBarViewModel_Unload";
+        public static readonly string GoBack = "AppTitleBarViewModel_GoBack";
     }
 
     private readonly ITelemetryService _telemetryService;

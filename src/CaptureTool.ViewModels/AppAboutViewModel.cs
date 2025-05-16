@@ -11,8 +11,8 @@ public sealed partial class AppAboutViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
+        public static readonly string Load = "AppAboutViewModel_Load";
+        public static readonly string Unload = "AppAboutViewModel_Unload";
     }
 
     private readonly ITelemetryService _telemetryService;

@@ -13,9 +13,9 @@ public sealed partial class LoadingPageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
-        public static readonly string GoBack = "GoBack";
+        public static readonly string Load = "LoadingPageViewModel_Load";
+        public static readonly string Unload = "LoadingPageViewModel_Unload";
+        public static readonly string GoBack = "LoadingPageViewModel_GoBack";
     }
 
     private readonly ITelemetryService _telemetryService;

@@ -17,14 +17,14 @@ public sealed partial class HomePageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
-        public static readonly string NewDesktopImageCapture = "NewDesktopImageCapture";
-        public static readonly string NewDesktopVideoCapture = "NewDesktopVideoCapture";
-        public static readonly string NewDesktopAudioCapture = "NewDesktopAudioCapture";
-        public static readonly string DesktopImageCaptureOptions = "DesktopImageCaptureOptions";
-        public static readonly string DesktopVideoCaptureOptions = "DesktopVideoCaptureOptions";
-        public static readonly string DesktopAudioCaptureOptions = "DesktopAudioCaptureOptions";
+        public static readonly string Load = "HomePageViewModel_Load";
+        public static readonly string Unload = "HomePageViewModel_Unload";
+        public static readonly string NewDesktopImageCapture = "HomePageViewModel_NewDesktopImageCapture";
+        public static readonly string NewDesktopVideoCapture = "HomePageViewModel_NewDesktopVideoCapture";
+        public static readonly string NewDesktopAudioCapture = "HomePageViewModel_NewDesktopAudioCapture";
+        public static readonly string DesktopImageCaptureOptions = "HomePageViewModel_DesktopImageCaptureOptions";
+        public static readonly string DesktopVideoCaptureOptions = "HomePageViewModel_DesktopVideoCaptureOptions";
+        public static readonly string DesktopAudioCaptureOptions = "HomePageViewModel_DesktopAudioCaptureOptions";
     }
 
     private readonly ITelemetryService _telemetryService;

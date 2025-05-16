@@ -19,15 +19,15 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "Load";
-        public static readonly string Unload = "Unload";
-        public static readonly string NewDesktopImageCapture = "NewDesktopImageCapture";
-        public static readonly string NewDesktopVideoCapture = "NewDesktopVideoCapture";
-        public static readonly string NewDesktopAudioCapture = "NewDesktopAudioCapture";
-        public static readonly string OpenFile = "OpenFile";
-        public static readonly string NavigateToSettings = "NavigateToSettings";
-        public static readonly string ShowAboutApp = "ShowAboutApp";
-        public static readonly string ExitApplication = "ExitApplication";
+        public static readonly string Load = "AppMenuViewModel_Load";
+        public static readonly string Unload = "AppMenuViewModel_Unload";
+        public static readonly string NewDesktopImageCapture = "AppMenuViewModel_NewDesktopImageCapture";
+        public static readonly string NewDesktopVideoCapture = "AppMenuViewModel_NewDesktopVideoCapture";
+        public static readonly string NewDesktopAudioCapture = "AppMenuViewModel_NewDesktopAudioCapture";
+        public static readonly string OpenFile = "AppMenuViewModel_OpenFile";
+        public static readonly string NavigateToSettings = "AppMenuViewModel_NavigateToSettings";
+        public static readonly string ShowAboutApp = "AppMenuViewModel_ShowAboutApp";
+        public static readonly string ExitApplication = "AppMenuViewModel_ExitApplication";
     }
 
     private readonly ITelemetryService _telemetryService;
