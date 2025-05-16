@@ -16,8 +16,8 @@
             Padding="24"
             HorizontalAlignment="Stretch"
             Spacing="12">
-            <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Settings" />
-            <TextBlock Style="{StaticResource BaseTextBlockStyle}" Text="Localization" />
+            <TextBlock x:Uid="SettingsPage_HeaderLabel" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock x:Uid="SettingsPage_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
 
             <!--  App language  -->
             <Expander
@@ -38,13 +38,13 @@
                             Glyph="{StaticResource LocalLanguage24Regular}" />
                         <StackPanel Grid.Column="1" Padding="16,0,0,0">
                             <TextBlock
-                                Text="App language"
+                                x:Uid="SettingsPage_AppLanguageHeaderLabel"
                                 TextTrimming="WordEllipsis"
                                 TextWrapping="NoWrap" />
                             <TextBlock
+                                x:Uid="SettingsPage_AppLanguageSubtitleLabel"
                                 FontSize="12"
                                 Opacity=".75"
-                                Text="Select which app langauge to display"
                                 TextTrimming="WordEllipsis"
                                 TextWrapping="NoWrap" />
                         </StackPanel>
@@ -82,13 +82,13 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <Button VerticalAlignment="Center" Command="{x:Bind ViewModel.RestartAppCommand}">
-                            <TextBlock Text="Restart app" />
+                            <TextBlock x:Uid="SettingsPage_RestartAppButtonLabel" />
                         </Button>
                         <TextBlock
+                            x:Uid="SettingsPage_FullChangesWillTakeAffectLabel"
                             Grid.Column="1"
                             VerticalAlignment="Center"
                             Opacity=".8"
-                            Text="Full changes will take affect on app restart."
                             TextAlignment="Center"
                             TextTrimming="WordEllipsis"
                             TextWrapping="NoWrap" />
@@ -96,7 +96,7 @@
                 </Grid>
             </Expander>
 
-            <TextBlock Style="{StaticResource BaseTextBlockStyle}" Text="Appearance" />
+            <TextBlock x:Uid="SettingsPage_AppearanceHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
 
             <!--  App theme  -->
             <Expander
@@ -117,13 +117,13 @@
                             Glyph="{StaticResource Color16Regular}" />
                         <StackPanel Grid.Column="1" Padding="16,0,0,0">
                             <TextBlock
-                                Text="App theme"
+                                x:Uid="SettingsPage_AppThemeHeaderLabel"
                                 TextTrimming="WordEllipsis"
                                 TextWrapping="NoWrap" />
                             <TextBlock
+                                x:Uid="SettingsPage_AppThemeSubtitleLabel"
                                 FontSize="12"
                                 Opacity=".8"
-                                Text="Select which app theme to display"
                                 TextTrimming="WordEllipsis"
                                 TextWrapping="NoWrap" />
                         </StackPanel>
@@ -161,13 +161,13 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <Button VerticalAlignment="Center" Command="{x:Bind ViewModel.RestartAppCommand}">
-                            <TextBlock Text="Restart app" />
+                            <TextBlock x:Uid="SettingsPage_RestartAppButtonLabel" />
                         </Button>
                         <TextBlock
+                            x:Uid="SettingsPage_FullChangesWillTakeAffectLabel"
                             Grid.Column="1"
                             VerticalAlignment="Center"
                             Opacity=".8"
-                            Text="Full changes will take affect on app restart."
                             TextAlignment="Center"
                             TextTrimming="WordEllipsis"
                             TextWrapping="NoWrap" />

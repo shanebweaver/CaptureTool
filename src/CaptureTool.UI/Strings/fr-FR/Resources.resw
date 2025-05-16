@@ -117,26 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="BackButton.Content" xml:space="preserve">
-    <value>Retour</value>
-  </data>
-  <data name="NewCaptureButton_Desktop_Audio.Text" xml:space="preserve">
+  <data name="NewCaptureButton_DesktopAudio.Text" xml:space="preserve">
     <value>Audio</value>
   </data>
-  <data name="NewCaptureButton_Desktop_Image.Text" xml:space="preserve">
+  <data name="NewCaptureButton_DesktopImage.Text" xml:space="preserve">
     <value>Capture d'écran</value>
   </data>
-  <data name="NewCaptureButton_Desktop_Video.Text" xml:space="preserve">
+  <data name="NewCaptureButton_DesktopVideo.Text" xml:space="preserve">
     <value>Enregistrement d'écran</value>
-  </data>
-  <data name="CaptureMode_Desktop_Image" xml:space="preserve">
-    <value>Capture d'écran</value>
-  </data>
-  <data name="CaptureMode_Desktop_Video" xml:space="preserve">
-    <value>Enregistrement d'écran</value>
-  </data>
-  <data name="CaptureMode_Desktop_Audio" xml:space="preserve">
-    <value>Audio</value>
   </data>
   <data name="AppTheme_Dark" xml:space="preserve">
     <value>Dark</value>
@@ -147,7 +135,76 @@
   <data name="AppTheme_SystemDefault" xml:space="preserve">
     <value>Utiliser les paramètres par défaut du système</value>
   </data>
-  <data name="CaptureOptions_AutoSaveCheckBoxLabel.Text" xml:space="preserve">
+  <data name="NewCaptureOptions_AutoSaveCheckBoxLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="HomePage_StartCaptureLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="HomePage_CaptureOptionsLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ErrorPage_RestartAppButtonLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SettingsPage_HeaderLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SettingsPage_LocalizationHeaderLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SettingsPage_AppLanguageHeaderLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SettingsPage_AppLanguageSubtitleLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SettingsPage_RestartAppButtonLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SettingsPage_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SettingsPage_AppearanceHeaderLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SettingsPage_AppThemeHeaderLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SettingsPage_AppThemeSubtitleLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_NewCaptureLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_NewCapture_DesktopAudioLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_NewCapture_DesktopVideoLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_NewCapture_DesktopImageLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_OpenFileLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_SettingsLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_ExitLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_AboutLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_HelpMenuItem.Title" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_FileMenuItem.Title" xml:space="preserve">
     <value />
   </data>
 </root>

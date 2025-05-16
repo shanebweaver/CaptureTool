@@ -1,24 +1,22 @@
-﻿using CaptureTool.Services.Navigation;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using CaptureTool.Common.Commands;
+using CaptureTool.Core.AppController;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class ErrorPageViewModel : LoadableViewModelBase
 {
-    private readonly INavigationService _navigationService;
+    private readonly IAppController _appController;
 
-    public ErrorPageViewModel(INavigationService navigationService)
+    public RelayCommand RestartAppCommand => new(RestartApp);
+
+    public ErrorPageViewModel(
+        IAppController appController)
     {
-        _navigationService = navigationService;
+        _appController = appController;
     }
 
-    public override Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    private void RestartApp()
     {
-        Debug.Assert(IsUnloaded);
-        StartLoading();
-
-        return LoadAsync(parameter, cancellationToken);
+        _appController.TryRestart();
     }
 }

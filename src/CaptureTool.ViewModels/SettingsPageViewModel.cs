@@ -130,7 +130,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
             for (var i = 0; i < languages.Length; i++)
             {
                 AppLanguage language = languages[i];
-                AppLanguageViewModel vm = await _appLanguageViewModelFactory.CreateAsync(language, cts.Token);
+                AppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
                 AppLanguages.Add(vm);
 
                 if (language == _localizationService.CurrentLanguage)
@@ -143,7 +143,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
             for (var i = 0; i < SupportedAppThemes.Length; i++)
             {
                 AppTheme supportedTheme = SupportedAppThemes[i];
-                AppThemeViewModel vm = await _appThemeViewModelFactory.CreateAsync(supportedTheme, cancellationToken);
+                AppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
                 AppThemes.Add(vm);
 
                 if (supportedTheme == currentTheme)
@@ -209,11 +209,8 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
             if (SelectedAppLanguageIndex != -1)
             {
                 AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
-                if (vm.Language != null)
-                {
-                    _localizationService.UpdateCurrentLanguage(vm.Language.Value);
-                    ShowAppLanguageRestartMessage = vm.Language != _localizationService.StartupLanguage;
-                }
+                _localizationService.UpdateCurrentLanguage(vm.Language);
+                ShowAppLanguageRestartMessage = vm.Language != _localizationService.StartupLanguage;
             }
 
             _telemetryService.ActivityCompleted(activityId);
@@ -234,11 +231,8 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
             if (SelectedAppThemeIndex != -1)
             {
                 AppThemeViewModel vm = AppThemes[SelectedAppThemeIndex];
-                if (vm.AppTheme != null)
-                {
-                    _themeService.UpdateCurrentTheme(vm.AppTheme.Value);
-                    UpdateShowAppThemeRestartMessage();
-                }
+                _themeService.UpdateCurrentTheme(vm.AppTheme);
+                UpdateShowAppThemeRestartMessage();
             }
 
             _telemetryService.ActivityCompleted(activityId);

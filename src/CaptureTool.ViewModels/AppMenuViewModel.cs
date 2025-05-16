@@ -40,7 +40,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     public RelayCommand NewDesktopImageCaptureCommand => new(NewDesktopImageCapture, () => IsDesktopImageCaptureEnabled);
     public RelayCommand NewDesktopVideoCaptureCommand => new(NewDesktopVideoCapture, () => IsDesktopVideoCaptureEnabled);
-    public RelayCommand NewAudioCaptureCommand => new(NewDesktopAudioCapture, () => IsDesktopAudioCaptureEnabled);
+    public RelayCommand NewDesktopAudioCaptureCommand => new(NewDesktopAudioCapture, () => IsDesktopAudioCaptureEnabled);
     public RelayCommand OpenFileCommand => new(OpenFile);
     public RelayCommand NavigateToSettingsCommand => new(NavigateToSettings);
     public RelayCommand ShowAboutAppCommand => new(ShowAboutApp);
