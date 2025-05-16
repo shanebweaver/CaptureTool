@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class DesktopCaptureModeViewModel : ViewModelBase
+public sealed partial class DesktopCaptureModeViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {

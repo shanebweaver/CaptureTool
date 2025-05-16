@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class VideoEditPageViewModel : ViewModelBase
+public sealed partial class VideoEditPageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {

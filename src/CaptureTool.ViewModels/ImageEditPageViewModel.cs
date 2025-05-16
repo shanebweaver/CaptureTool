@@ -1,4 +1,11 @@
-﻿using System;
+﻿using CaptureTool.Capture.Desktop;
+using CaptureTool.Common.Commands;
+using CaptureTool.Core.AppController;
+using CaptureTool.Edit.Image.Win2D;
+using CaptureTool.Edit.Image.Win2D.Drawable;
+using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Telemetry;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -7,19 +14,12 @@ using System.IO;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using CaptureTool.Capture.Desktop;
-using CaptureTool.Core.AppController;
-using CaptureTool.Edit.Image.Win2D;
-using CaptureTool.Edit.Image.Win2D.Drawable;
-using CaptureTool.Services.Cancellation;
-using CaptureTool.Services.Telemetry;
-using CaptureTool.ViewModels.Commands;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class ImageEditPageViewModel : ViewModelBase
+public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {

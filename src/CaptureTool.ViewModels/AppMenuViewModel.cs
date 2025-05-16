@@ -1,21 +1,21 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using CaptureTool.Capture.Desktop;
+﻿using CaptureTool.Capture.Desktop;
+using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;
-using CaptureTool.ViewModels.Commands;
+using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class AppMenuViewModel : ViewModelBase
+public sealed partial class AppMenuViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {

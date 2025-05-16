@@ -1,11 +1,11 @@
 ﻿using CaptureTool.Capture.Desktop;
+using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;
-using CaptureTool.ViewModels.Commands;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class HomePageViewModel : ViewModelBase
+public sealed partial class HomePageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {

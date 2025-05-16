@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class AppAboutViewModel : ViewModelBase
+public sealed partial class AppAboutViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {

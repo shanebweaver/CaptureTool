@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace CaptureTool.ViewModels.Commands;
+namespace CaptureTool.Common.Commands;
 
 public sealed partial class RelayCommand<T, P>(Action<T?> commandAction, Func<P?, bool>? canExecute = null) : ICommand
 {

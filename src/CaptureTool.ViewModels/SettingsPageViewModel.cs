@@ -1,10 +1,10 @@
-﻿using CaptureTool.Core.AppController;
+﻿using CaptureTool.Common.Commands;
+using CaptureTool.Core.AppController;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
-using CaptureTool.ViewModels.Commands;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class SettingsPageViewModel : ViewModelBase
+public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHandler
+public sealed partial class MainWindowViewModel : LoadableViewModelBase, INavigationHandler
 {
     private readonly struct ActivityIds
     {

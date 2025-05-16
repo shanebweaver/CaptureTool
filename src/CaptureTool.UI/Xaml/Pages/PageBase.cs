@@ -1,8 +1,9 @@
-using System;
-using System.Threading;
+using CaptureTool.Common.Loading;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using System;
+using System.Threading;
 
 namespace CaptureTool.UI.Xaml.Pages;
 
@@ -17,15 +18,15 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
         DataContext = ViewModel;
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         _loadCts ??= new();
 
         try
         {
-            if (ViewModel.IsUnloaded)
+            if (ViewModel is ILoadable loadable && loadable.IsUnloaded)
             {
-                _ = ViewModel.LoadAsync(e.Parameter, _loadCts.Token);
+                await loadable.LoadAsync(e.Parameter, _loadCts.Token);
             }
         }
         catch (OperationCanceledException ex)
@@ -49,9 +50,9 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
             _loadCts = null;
         }
 
-        if (ViewModel.IsLoaded)
+        if (ViewModel is ILoadable loadable && loadable.IsLoaded)
         {
-            ViewModel.Unload();
+            loadable.Unload();
         }
 
         base.OnNavigatedFrom(e);

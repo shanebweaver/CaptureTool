@@ -1,8 +1,8 @@
-﻿using CaptureTool.Services.Cancellation;
+﻿using CaptureTool.Common.Commands;
+using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.Services.Telemetry;
-using CaptureTool.ViewModels.Commands;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -11,7 +11,7 @@ using Windows.ApplicationModel;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class AppTitleBarViewModel : ViewModelBase
+public sealed partial class AppTitleBarViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {

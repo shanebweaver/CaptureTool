@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class AppThemeViewModel : ViewModelBase
+public sealed partial class AppThemeViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {

@@ -1,7 +1,7 @@
-﻿using CaptureTool.Services.Cancellation;
+﻿using CaptureTool.Common.Commands;
+using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;
-using CaptureTool.ViewModels.Commands;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class LoadingPageViewModel : ViewModelBase
+public sealed partial class LoadingPageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
