@@ -10,6 +10,12 @@ namespace CaptureTool.ViewModels.Factories;
 
 public sealed partial class DesktopCaptureModeViewModelFactory : IFactoryService<DesktopCaptureModeViewModel, DesktopCaptureMode>
 {
+    private readonly struct ActivityIds
+    {
+        public static readonly string Load = "Load";
+        public static readonly string Unload = "Unload";
+    }
+
     private readonly ITelemetryService _telemetryService;
     private readonly ICancellationService _cancellationService;
     private readonly ILocalizationService _localizationService;

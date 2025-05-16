@@ -4,9 +4,11 @@ using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Settings;
+using CaptureTool.Services.Telemetry;
 using CaptureTool.ViewModels.Commands;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,6 +16,13 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class DesktopVideoCaptureOptionsPageViewModel : ViewModelBase
 {
+    private readonly struct ActivityIds
+    {
+        public static readonly string Load = "Load";
+        public static readonly string Unload = "Unload";
+    }
+
+    private readonly ITelemetryService _telemetryService;
     private readonly ISettingsService _settingsService;
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
@@ -50,11 +59,13 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : ViewModelB
     public RelayCommand NewDesktopVideoCaptureCommand => new(NewDesktopVideoCapture, () => IsVideoDesktopCaptureEnabled);
 
     public DesktopVideoCaptureOptionsPageViewModel(
+        ITelemetryService telemetryService,
         ISettingsService settingsService,
         IAppController appController,
         ICancellationService cancellationService,
         IFeatureManager featureManager)
     {
+        _telemetryService = telemetryService;
         _settingsService = settingsService;
         _appController = appController;
         _cancellationService = cancellationService;
@@ -66,8 +77,11 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : ViewModelB
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        Unload();
+        Debug.Assert(IsUnloaded);
         StartLoading();
+
+        string activityId = ActivityIds.Load;
+        _telemetryService.ActivityInitiated(activityId);
 
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
@@ -80,12 +94,17 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : ViewModelB
             }
 
             SelectedCaptureModeIndex = 0;
-
             AutoSave = _settingsService.Get(CaptureToolSettings.DesktopVideoCapture_Options_AutoSave);
+
+            _telemetryService.ActivityCompleted(activityId);
         }
         catch (OperationCanceledException)
         {
-            // Load canceled
+            _telemetryService.ActivityCanceled(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
         }
         finally
         {
@@ -97,10 +116,23 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : ViewModelB
 
     public override void Unload()
     {
-        IsVideoDesktopCaptureEnabled = false;
-        CaptureModes.Clear();
-        SelectedCaptureModeIndex = 0;
-        AutoSave = false;
+        string activityId = ActivityIds.Unload;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            IsVideoDesktopCaptureEnabled = false;
+            CaptureModes.Clear();
+            SelectedCaptureModeIndex = 0;
+            AutoSave = false;
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
+
         base.Unload();
     }
 

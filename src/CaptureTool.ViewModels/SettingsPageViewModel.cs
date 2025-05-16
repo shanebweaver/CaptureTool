@@ -1,22 +1,27 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Globalization;
-using System.Threading;
-using System.Threading.Tasks;
-using CaptureTool.Core.AppController;
+﻿using CaptureTool.Core.AppController;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
+using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
 using CaptureTool.ViewModels.Commands;
-using CaptureTool.ViewModels.Factories;
-using Microsoft.Windows.Globalization;
+using System;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class SettingsPageViewModel : ViewModelBase
 {
+    private readonly struct ActivityIds
+    {
+        public static readonly string Load = "Load";
+        public static readonly string Unload = "Unload";
+    }
+
+    private readonly ITelemetryService _telemetryService;
     private readonly IAppController _appController;
     private readonly ILocalizationService _localizationService;
     private readonly IThemeService _themeService;
@@ -83,6 +88,7 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
     }
 
     public SettingsPageViewModel(
+        ITelemetryService telemetryService,
         IAppController appController,
         ILocalizationService localizationService,
         IThemeService themeService,
@@ -90,6 +96,7 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
         IFactoryService<AppLanguageViewModel, string> appLanguageViewModelFactory,
         IFactoryService<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
+        _telemetryService = telemetryService;
         _appController = appController;
         _localizationService = localizationService;
         _themeService = themeService;
@@ -103,9 +110,11 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        Unload();
         Debug.Assert(IsUnloaded);
         StartLoading();
+
+        string activityId = ActivityIds.Load;
+        _telemetryService.ActivityInitiated(activityId);
 
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
@@ -140,10 +149,16 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
             }
 
             UpdateShowAppThemeRestartMessage();
+
+            _telemetryService.ActivityCompleted(activityId);
         }
         catch (OperationCanceledException)
         {
-            // Load canceled
+            _telemetryService.ActivityCanceled(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
         }
         finally
         {
@@ -155,13 +170,25 @@ public sealed partial class SettingsPageViewModel : ViewModelBase
 
     public override void Unload()
     {
-        ShowAppLanguageRestartMessage = false;
-        SelectedAppLanguageIndex = -1;
-        AppLanguages.Clear();
+        string activityId = ActivityIds.Unload;
+        _telemetryService.ActivityInitiated(activityId);
 
-        ShowAppThemeRestartMessage = false;
-        SelectedAppThemeIndex = -1;
-        AppThemes.Clear();
+        try
+        {
+            ShowAppLanguageRestartMessage = false;
+            SelectedAppLanguageIndex = -1;
+            AppLanguages.Clear();
+
+            ShowAppThemeRestartMessage = false;
+            SelectedAppThemeIndex = -1;
+            AppThemes.Clear();
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
 
         base.Unload();
     }

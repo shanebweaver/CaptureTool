@@ -1,19 +1,27 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using CaptureTool.Core;
+﻿using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
+using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHandler
 {
+    private readonly struct ActivityIds
+    {
+        public static readonly string Load = "Load";
+        public static readonly string Unload = "Unload";
+    }
+
+    private readonly ITelemetryService _telemetryService;
     private readonly IThemeService _themeService;
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
@@ -38,12 +46,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
     }
 
     public MainWindowViewModel(
+        ITelemetryService telemetryService,
         IThemeService themeService,
         IAppController appController,
         ICancellationService cancellationService,
         ISettingsService settingsService,
         INavigationService navigationService)
     {
+        _telemetryService = telemetryService;
         _themeService = themeService;
         _appController = appController;
         _cancellationService = cancellationService;
@@ -62,9 +72,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        Unload();
         Debug.Assert(IsUnloaded);
         StartLoading();
+
+        string activityId = ActivityIds.Load;
+        _telemetryService.ActivityInitiated(activityId);
 
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
@@ -85,10 +97,16 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
 
             // Go home
             _navigationService.Navigate(CaptureToolNavigationRoutes.Home);
+
+            _telemetryService.ActivityCompleted(activityId);
         }
         catch (OperationCanceledException)
         {
-            // Load canceled
+            _telemetryService.ActivityCanceled(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
         }
         finally
         {
@@ -110,8 +128,21 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
 
     public override void Unload()
     {
-        DefaultAppTheme = 0;
-        CurrentAppTheme = 0;
+        string activityId = ActivityIds.Unload;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            DefaultAppTheme = 0;
+            CurrentAppTheme = 0;
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
+
         base.Unload();
     }
 
