@@ -103,10 +103,12 @@ public sealed partial class MainWindowViewModel : LoadableViewModelBase, INaviga
         catch (OperationCanceledException)
         {
             _telemetryService.ActivityCanceled(activityId);
+            throw;
         }
         catch (Exception e)
         {
             _telemetryService.ActivityError(activityId, e);
+            throw;
         }
         finally
         {

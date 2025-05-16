@@ -5,6 +5,7 @@ namespace CaptureTool.Core;
 public static partial class CaptureToolNavigationRoutes
 {
     public static readonly NavigationRoute Loading = new("Loading");
+    public static readonly NavigationRoute Error = new("Error");
     public static readonly NavigationRoute Home = new("Home");
     public static readonly NavigationRoute Settings = new("Settings");
     public static readonly NavigationRoute About = new("About");

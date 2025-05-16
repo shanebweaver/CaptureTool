@@ -135,10 +135,12 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         catch (OperationCanceledException)
         {
             _telemetryService.ActivityCanceled(activityId);
+            throw;
         }
         catch (Exception e)
         {
             _telemetryService.ActivityError(activityId, e);
+            throw;
         }
         finally
         {

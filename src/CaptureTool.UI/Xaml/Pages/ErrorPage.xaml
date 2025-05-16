@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="CaptureTool.UI.Xaml.Pages.ErrorPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:CaptureTool.UI.Xaml.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <TextBlock Text="An error occurred while loading the page." 
+                   HorizontalAlignment="Center" VerticalAlignment="Center" 
+                   FontSize="24" Foreground="Red" FontWeight="Bold" />
+    </Grid>
+</Page>

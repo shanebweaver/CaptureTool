@@ -1,4 +1,5 @@
 using CaptureTool.Common.Loading;
+using CaptureTool.Core;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -36,6 +37,7 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
         catch (Exception ex)
         {
             ServiceLocator.Logging.LogException(ex, "Failed to load page.");
+            ServiceLocator.Navigation.Navigate(CaptureToolNavigationRoutes.Error, ex, true);
         }
 
         base.OnNavigatedTo(e);

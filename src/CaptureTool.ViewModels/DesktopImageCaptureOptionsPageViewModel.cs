@@ -106,10 +106,12 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : LoadableVi
         catch (OperationCanceledException)
         {
             _telemetryService.ActivityCanceled(activityId);
+            throw;
         }
         catch (Exception e)
         {
             _telemetryService.ActivityError(activityId, e);
+            throw;
         }
         finally
         {

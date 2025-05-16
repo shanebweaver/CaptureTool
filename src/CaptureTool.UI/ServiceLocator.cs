@@ -1,12 +1,14 @@
 ﻿using CaptureTool.Services.Localization;
 using CaptureTool.Services.Logging;
 using CaptureTool.Capture.Desktop.SnippingTool;
+using CaptureTool.Services.Navigation;
 
 namespace CaptureTool.UI;
 
 internal class ServiceLocator
 {
     public static ILogService Logging => GetService<ILogService>();
+    public static INavigationService Navigation => GetService<INavigationService>();
     public static ILocalizationService Localization => GetService<ILocalizationService>();
     public static ISnippingToolService SnippingToolService => GetService<ISnippingToolService>();
     private static T GetService<T>() where T : notnull => App.Current.ServiceProvider.GetService<T>();

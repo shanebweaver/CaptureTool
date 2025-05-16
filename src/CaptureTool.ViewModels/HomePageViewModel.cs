@@ -107,6 +107,7 @@ public sealed partial class HomePageViewModel : LoadableViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
+
             // Desktop Image
             IsDesktopImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Image);
             IsDesktopImageCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Image_Options);
@@ -118,16 +119,18 @@ public sealed partial class HomePageViewModel : LoadableViewModelBase
             // Desktop Audio
             IsDesktopAudioCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Audio);
             IsDesktopAudioCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Audio_Options);
-        
+
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (OperationCanceledException)
         {
             _telemetryService.ActivityCanceled(activityId);
+            throw;
         }
         catch (Exception e)
         {
             _telemetryService.ActivityError(activityId, e);
+            throw;
         }
         finally
         {
