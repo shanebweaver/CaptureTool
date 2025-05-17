@@ -36,6 +36,8 @@
                     <Grid
                         x:Name="CropBoundary"
                         Background="Transparent"
+                        BorderBrush="Red"
+                        BorderThickness="0"
                         IsTabStop="True"
                         Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}">
                         <!--  Border  -->
