@@ -4,12 +4,27 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Shapes;
 using System;
+using Windows.Foundation;
 using Windows.UI.Core;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
 public sealed partial class CropOverlay : UserControl
 {
+    private enum CursorContext 
+    { 
+        None,
+        Anchor,
+        Boundary
+    }
+
+    private Point _cropAnchorLastPointerPosition;
+    private Point _cropBoundaryLastPointerPosition;
+    private Polygon? _activeCropAnchor = null;
+    private bool _isCropBoundaryDragging = false;
+    private CursorContext _currentCursorContext = CursorContext.None;
+    private Thickness _cropOffsets = new(0, 0, 0, 0);
+
     public CropOverlay()
     {
         InitializeComponent();
@@ -44,20 +59,6 @@ public sealed partial class CropOverlay : UserControl
             CropAnchor_Right
         ];
     }
-
-    // Add pointer events for crop anchors so that they can be moved within the bounds of the crop canvas.
-    // Update the cursor to the appropriate type when hovering over crop anchors.
-    // Add pointer events for crop anchors so that they can be moved within the bounds of the crop canvas.
-    // Update the cursor to the appropriate type when hovering over crop anchors.
-
-    private Polygon? _activeCropAnchor = null;
-    private Windows.Foundation.Point _cropAnchorLastPointerPosition;
-    private enum CursorContext { None, Anchor, Boundary }
-    private CursorContext _currentCursorContext = CursorContext.None;
-    private bool _isCropBoundaryDragging = false;
-    private Windows.Foundation.Point _cropBoundaryLastPointerPosition;
-
-    private Thickness _cropOffsets = new(0, 0, 0, 0); // left, top, right, bottom
 
     private void AttachCropAnchorEvents()
     {
@@ -229,18 +230,8 @@ public sealed partial class CropOverlay : UserControl
     {
         if (_activeCropAnchor == null)
         {
-            _currentCursorContext = CursorContext.None;
-            // If pointer is also over boundary, set boundary cursor
-            var pointerPos = e.GetCurrentPoint(CropCanvas).Position;
-            if (IsPointerOverBoundary(pointerPos))
-            {
-                _currentCursorContext = CursorContext.Boundary;
-                ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeAll, 0));
-            }
-            else
-            {
-                ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
-            }
+            _currentCursorContext = CursorContext.Boundary;
+            ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeAll, 0));
         }
     }
 
@@ -257,6 +248,7 @@ public sealed partial class CropOverlay : UserControl
             return InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeWestEast, 0));
         return InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
     }
+
     private void CropBoundary_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
         if (_activeCropAnchor == null)
@@ -391,38 +383,7 @@ public sealed partial class CropOverlay : UserControl
         }
     }
 
-    private bool IsPointerOverBoundary(Windows.Foundation.Point pointerPos)
-    {
-        // You may want to check if pointer is inside the crop area but not over any anchor
-        // For most cases, just return true if inside CropBoundary
-        // If you want to be more precise, check anchor bounds and exclude them
-        return true;
-    }
-
-    private bool IsPointerOverCropContent(Windows.Foundation.Point pos)
-    {
-        double left = _cropOffsets.Left;
-        double top = _cropOffsets.Top;
-        double right = CropCanvas.Width - _cropOffsets.Right;
-        double bottom = CropCanvas.Height - _cropOffsets.Bottom;
-
-        // Define a border thickness threshold (in pixels) for the border area
-        double borderThickness = Math.Max(
-            Math.Max(CropBoundary.BorderThickness.Left, CropBoundary.BorderThickness.Right),
-            Math.Max(CropBoundary.BorderThickness.Top, CropBoundary.BorderThickness.Bottom)
-        );
-        // You may want to use a fixed value if your border is always 1px, e.g. double borderThickness = 1;
-
-        // The content area is strictly inside the crop area, minus the border thickness
-        double contentLeft = left + borderThickness;
-        double contentTop = top + borderThickness;
-        double contentRight = right - borderThickness;
-        double contentBottom = bottom - borderThickness;
-
-        return pos.X > contentLeft && pos.X < contentRight && pos.Y > contentTop && pos.Y < contentBottom;
-    }
-
-    private bool IsPointerOverCropArea(Windows.Foundation.Point pos)
+    private bool IsPointerOverCropArea(Point pos)
     {
         double left = _cropOffsets.Left;
         double top = _cropOffsets.Top;
@@ -433,7 +394,7 @@ public sealed partial class CropOverlay : UserControl
         return pos.X > left && pos.X < right && pos.Y > top && pos.Y < bottom;
     }
 
-    private bool IsPointerOverAnyAnchor(Windows.Foundation.Point pos)
+    private bool IsPointerOverAnyAnchor(Point pos)
     {
         foreach (var anchor in GetCropAnchors())
         {
