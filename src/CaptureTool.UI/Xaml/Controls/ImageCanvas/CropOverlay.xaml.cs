@@ -9,7 +9,7 @@ using Windows.UI.Core;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
-public sealed partial class CropOverlay : UserControl
+public sealed partial class CropOverlay : UserControlBase
 {
     private enum CursorContext 
     { 
@@ -26,8 +26,8 @@ public sealed partial class CropOverlay : UserControl
 
     public Rect CropRect
     {
-        get => (Rect)GetValue(CropRectProperty);
-        set => SetValue(CropRectProperty, value);
+        get => Get<Rect>(CropRectProperty);
+        set => Set(CropRectProperty, value);
     }
 
     private Point _cropAnchorLastPointerPosition;

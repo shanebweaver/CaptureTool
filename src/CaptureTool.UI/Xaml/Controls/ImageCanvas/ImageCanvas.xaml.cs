@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
-public sealed partial class ImageCanvas : UserControl
+public sealed partial class ImageCanvas : UserControlBase
 {
     private static readonly DependencyProperty DrawablesProperty = DependencyProperty.Register(
         nameof(Drawables),
@@ -39,6 +39,12 @@ public sealed partial class ImageCanvas : UserControl
         typeof(bool),
         typeof(ImageCanvas),
         new PropertyMetadata(false, OnIsCropModeEnabledPropertyChanged));
+
+    public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
+       nameof(CropRect),
+       typeof(Windows.Foundation.Rect),
+       typeof(ImageCanvas),
+       new PropertyMetadata(Windows.Foundation.Rect.Empty));
 
     private static void OnIsCropModeEnabledPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -77,29 +83,33 @@ public sealed partial class ImageCanvas : UserControl
 
     public IEnumerable<IDrawable> Drawables
     {
-        get => (IEnumerable<IDrawable>)GetValue(DrawablesProperty);
-        set => SetValue(DrawablesProperty, value);
+        get => Get<IEnumerable<IDrawable>>(DrawablesProperty);
+        set => Set(DrawablesProperty, value);
     }
 
     public RotateFlipType Orientation
     {
-        get => (RotateFlipType)GetValue(OrientationProperty);
-        set => SetValue(OrientationProperty, value);
+        get => Get<RotateFlipType>(OrientationProperty);
+        set => Set(OrientationProperty, value);
     }
 
     public Size CanvasSize
     {
-        get => (Size)GetValue(CanvasSizeProperty);
-        set => SetValue(CanvasSizeProperty, value);
+        get => Get<Size>(CanvasSizeProperty);
+        set => Set(CanvasSizeProperty, value);
     }
 
     public bool IsCropModeEnabled
     {
-        get => (bool)GetValue(IsCropModeEnabledProperty);
-        set => SetValue(IsCropModeEnabledProperty, value);
+        get => Get<bool>(IsCropModeEnabledProperty);
+        set => Set(IsCropModeEnabledProperty, value);
     }
 
-    public Windows.Foundation.Rect CropRect { get; set; }
+    public Windows.Foundation.Rect CropRect
+    {
+        get => Get<Windows.Foundation.Rect>(CropRectProperty);
+        set => Set(CropRectProperty, value);
+    }
 
     private bool _isPointerDown;
     private Windows.Foundation.Point _lastPointerPosition;

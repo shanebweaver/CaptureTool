@@ -4,7 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace CaptureTool.UI.Xaml.Controls;
 
-public sealed partial class NewCaptureButton : UserControl
+public sealed partial class NewCaptureButton : UserControlBase
 {
     private static readonly DependencyProperty SymbolProperty = DependencyProperty.Register(
         nameof(Symbol),
@@ -26,20 +26,20 @@ public sealed partial class NewCaptureButton : UserControl
 
     public Symbol Symbol
     {
-        get => (Symbol)GetValue(SymbolProperty);
-        set => SetValue(SymbolProperty, value);
+        get => Get<Symbol>(SymbolProperty);
+        set => Set(SymbolProperty, value);
     }
 
     public string Text
     {
-        get => (string)GetValue(TextProperty);
-        set => SetValue(TextProperty, value);
+        get => Get<string>(TextProperty);
+        set => Set(TextProperty, value);
     }
 
     public ICommand Command
     {
-        get => (ICommand)GetValue(CommandProperty);
-        set => SetValue(CommandProperty, value);
+        get => Get<ICommand>(CommandProperty);
+        set => Set(CommandProperty, value);
     }
 
     public NewCaptureButton()

@@ -79,6 +79,7 @@
             Row="1">
             <imagecanvas:ImageCanvas
                 CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"
+                CropRect="{x:Bind ViewModel.CropRect, Mode=TwoWay}"
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}" />

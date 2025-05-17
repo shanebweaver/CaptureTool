@@ -85,6 +85,13 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _isInCropMode, value);
     }
 
+    private Windows.Foundation.Rect _cropRect;
+    public Windows.Foundation.Rect CropRect
+    {
+        get => _cropRect;
+        set => Set(ref _cropRect, value);
+    }
+
     private bool IsTurned =>
         Orientation == RotateFlipType.Rotate90FlipNone ||
         Orientation == RotateFlipType.Rotate270FlipNone ||
