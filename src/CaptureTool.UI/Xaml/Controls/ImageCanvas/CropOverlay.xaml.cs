@@ -18,6 +18,18 @@ public sealed partial class CropOverlay : UserControl
         Boundary
     }
 
+    public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
+        nameof(CropRect),
+        typeof(Rect),
+        typeof(CropOverlay),
+        new PropertyMetadata(Rect.Empty));
+
+    public Rect CropRect
+    {
+        get => (Rect)GetValue(CropRectProperty);
+        set => SetValue(CropRectProperty, value);
+    }
+
     private Point _cropAnchorLastPointerPosition;
     private Point _cropBoundaryLastPointerPosition;
     private Polygon? _activeCropAnchor = null;
@@ -44,6 +56,22 @@ public sealed partial class CropOverlay : UserControl
         CropBoundary.Width = width;
         Canvas.SetLeft(CropBoundary, 0);
         Canvas.SetTop(CropBoundary, 0);
+
+        UpdateCropRect();
+    }
+
+    private void UpdateCropRect()
+    {
+        double left = _cropOffsets.Left;
+        double top = _cropOffsets.Top;
+        double right = CropCanvas.Width - _cropOffsets.Right;
+        double bottom = CropCanvas.Height - _cropOffsets.Bottom;
+
+        // Clamp to valid values
+        double width = Math.Max(0, right - left);
+        double height = Math.Max(0, bottom - top);
+
+        CropRect = new Rect(left, top, width, height);
     }
 
     private Polygon[] GetCropAnchors()
@@ -154,8 +182,8 @@ public sealed partial class CropOverlay : UserControl
             _cropAnchorLastPointerPosition = currentPosition;
             e.Handled = true;
 
-            // Optionally: Update anchor visuals here if needed
             UpdateCropAnchorPositions();
+            UpdateCropRect();
         }
     }
 
@@ -294,6 +322,7 @@ public sealed partial class CropOverlay : UserControl
             e.Handled = true;
 
             UpdateCropAnchorPositions();
+            UpdateCropRect();
         }
         else if (_currentCursorContext != CursorContext.Anchor)
         {

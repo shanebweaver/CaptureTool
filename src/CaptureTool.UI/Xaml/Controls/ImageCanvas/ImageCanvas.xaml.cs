@@ -99,6 +99,8 @@ public sealed partial class ImageCanvas : UserControl
         set => SetValue(IsCropModeEnabledProperty, value);
     }
 
+    public Windows.Foundation.Rect CropRect { get; set; }
+
     private bool _isPointerDown;
     private Windows.Foundation.Point _lastPointerPosition;
 
