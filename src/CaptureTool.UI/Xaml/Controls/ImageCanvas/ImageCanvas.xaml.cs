@@ -59,6 +59,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 control.RootContainer.Background = new SolidColorBrush(Colors.Transparent);
             }
 
+            control.RenderCanvas.Invalidate();
             control.ZoomAndCenter();
         }
     }
@@ -198,7 +199,9 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         lock (this)
         {
-            ImageCanvasRenderOptions options = new(Orientation, CanvasSize);
+            var rect = (!IsCropModeEnabled) ? CropRect : new Windows.Foundation.Rect(0, 0, CanvasSize.Width, CanvasSize.Height);
+
+            ImageCanvasRenderOptions options = new(Orientation, CanvasSize, rect);
             ImageCanvasRenderer.Render([.. Drawables], options, args.DrawingSession);
         }
     }

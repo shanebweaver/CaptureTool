@@ -6,11 +6,13 @@ public sealed partial class ImageCanvasRenderOptions
 {
     public RotateFlipType Orientation { get; set; }
     public Size CanvasSize { get; set; }
+    public Windows.Foundation.Rect CropRect { get; set; }
 
-    public ImageCanvasRenderOptions(RotateFlipType orientation, Size canvasSize)
+    public ImageCanvasRenderOptions(RotateFlipType orientation, Size canvasSize, Windows.Foundation.Rect cropRect)
     {
         Orientation = orientation;
         CanvasSize = canvasSize;
+        CropRect = cropRect;
     }
 
     public bool IsTurned =>

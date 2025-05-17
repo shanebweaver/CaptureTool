@@ -180,7 +180,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            ImageCanvasRenderOptions options = new(Orientation, ImageSize);
+            ImageCanvasRenderOptions options = new(Orientation, ImageSize, CropRect);
             await ImageCanvasRenderer.CopyImageToClipboardAsync([.. Drawables], options, ImageSize.Width, ImageSize.Height, 96);
 
             _telemetryService.ActivityCompleted(activityId);
@@ -227,7 +227,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
             StorageFile file = await filePicker.PickSaveFileAsync();
             if (file != null)
             {
-                ImageCanvasRenderOptions options = new(Orientation, ImageSize);
+                ImageCanvasRenderOptions options = new(Orientation, ImageSize, CropRect);
                 await ImageCanvasRenderer.SaveImageAsync(file.Path, [.. Drawables], options, ImageSize.Width, ImageSize.Height, 96);
                 _telemetryService.ActivityCompleted(activityId);
             }
@@ -353,7 +353,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         try
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            await ImageCanvasPrinter.ShowPrintUIAsync([.. Drawables], new ImageCanvasRenderOptions(Orientation, ImageSize), hwnd);
+            await ImageCanvasPrinter.ShowPrintUIAsync([.. Drawables], new ImageCanvasRenderOptions(Orientation, ImageSize, CropRect), hwnd);
         }
         catch (Exception e)
         {

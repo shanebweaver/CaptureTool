@@ -18,12 +18,19 @@ public static partial class ImageCanvasRenderer
 
     public static async Task CopyImageToClipboardAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, float width, float height, float dpi = 96)
     {
-        float renderWidth = options.IsTurned ? height : width;
-        float renderHeight = options.IsTurned ? width : height;
+        float renderWidth = (float)options.CropRect.Width;
+        float renderHeight = (float)options.CropRect.Height;
 
         using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, dpi);
         using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
-        Render(drawables, options, drawingSession);
+
+        drawingSession.Transform = CalculateTransform(options);
+
+        foreach (IDrawable drawable in drawables)
+        {
+            drawable.Draw(drawingSession);
+        }
+
         drawingSession.Flush();
 
         using var stream = new InMemoryRandomAccessStream();
@@ -37,12 +44,19 @@ public static partial class ImageCanvasRenderer
 
     public static async Task SaveImageAsync(string filePath, IDrawable[] drawables, ImageCanvasRenderOptions options, float width, float height, float dpi = 96)
     {
-        float renderWidth = options.IsTurned ? height : width;
-        float renderHeight = options.IsTurned ? width : height;
+        float renderWidth = (float)options.CropRect.Width;
+        float renderHeight = (float)options.CropRect.Height;
 
         using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, dpi);
         using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
-        Render(drawables, options, drawingSession);
+
+        drawingSession.Transform = CalculateTransform(options);
+
+        foreach (IDrawable drawable in drawables)
+        {
+            drawable.Draw(drawingSession);
+        }
+
         drawingSession.Flush();
 
         using var stream = new InMemoryRandomAccessStream();
@@ -162,6 +176,9 @@ public static partial class ImageCanvasRenderer
                 transform *= Matrix3x2.CreateScale(-1, 1, new(canvasHeight / 2, canvasWidth / 2));
                 break;
         }
+
+        // Apply cropping
+        transform *= Matrix3x2.CreateTranslation(-(float)options.CropRect.X, -(float)options.CropRect.Y);
 
         return transform;
     }
