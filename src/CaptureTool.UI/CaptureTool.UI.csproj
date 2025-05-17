@@ -14,10 +14,6 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="Xaml\Pages\ErrorPage.xaml" />
-    <None Remove="Xaml\Pages\VideoEditPage.xaml" />
-  </ItemGroup>
 
   <!-- Project assets -->
   <ItemGroup>
@@ -77,16 +73,6 @@
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
   </ItemGroup>
-  <ItemGroup>
-    <Page Update="Xaml\Pages\ErrorPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Xaml\Pages\VideoEditPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
 
   <!-- XAML resources -->
   <ItemGroup>
@@ -124,6 +110,15 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Views\AppTitleBarView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Xaml\Controls\ImageCanvas\CropOverlay.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Xaml\Pages\ErrorPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Xaml\Pages\VideoEditPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
