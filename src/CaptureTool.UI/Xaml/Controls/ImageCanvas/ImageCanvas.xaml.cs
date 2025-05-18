@@ -44,7 +44,15 @@ public sealed partial class ImageCanvas : UserControlBase
        nameof(CropRect),
        typeof(Windows.Foundation.Rect),
        typeof(ImageCanvas),
-       new PropertyMetadata(Windows.Foundation.Rect.Empty));
+       new PropertyMetadata(Windows.Foundation.Rect.Empty, OnCropRectPropertyChanged));
+
+    private static void OnCropRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control && !control.IsCropModeEnabled)
+        {
+            control.RenderCanvas.Invalidate();
+        }
+    }
 
     private static void OnIsCropModeEnabledPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {

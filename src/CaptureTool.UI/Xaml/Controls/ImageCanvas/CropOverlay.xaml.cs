@@ -18,6 +18,13 @@ public sealed partial class CropOverlay : UserControlBase
         Boundary
     }
 
+    private Point _cropAnchorLastPointerPosition;
+    private Point _cropBoundaryLastPointerPosition;
+    private Polygon? _activeCropAnchor = null;
+    private bool _isCropBoundaryDragging = false;
+    private CursorContext _currentCursorContext = CursorContext.None;
+    private Thickness _cropOffsets = new(0, 0, 0, 0);
+
     public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
         nameof(CropRect),
         typeof(Rect),
@@ -29,13 +36,6 @@ public sealed partial class CropOverlay : UserControlBase
         get => Get<Rect>(CropRectProperty);
         set => Set(CropRectProperty, value);
     }
-
-    private Point _cropAnchorLastPointerPosition;
-    private Point _cropBoundaryLastPointerPosition;
-    private Polygon? _activeCropAnchor = null;
-    private bool _isCropBoundaryDragging = false;
-    private CursorContext _currentCursorContext = CursorContext.None;
-    private Thickness _cropOffsets = new(0, 0, 0, 0);
 
     public CropOverlay()
     {
