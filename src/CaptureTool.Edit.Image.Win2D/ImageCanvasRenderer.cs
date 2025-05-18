@@ -121,7 +121,7 @@ public static partial class ImageCanvasRenderer
                 break;
         }
 
-        // Apply translation
+        // Apply translation to reposition at 0,0
         bool isLandscape = canvasWidth > canvasHeight;
         float heightLessWidth = canvasHeight - canvasWidth;
         float widthLessHeight = canvasWidth - canvasHeight;
@@ -157,7 +157,7 @@ public static partial class ImageCanvasRenderer
                 break;
         }
 
-        // Apply scaling
+        // Apply flipping
         switch (options.Orientation)
         {
             case RotateFlipType.Rotate180FlipY:

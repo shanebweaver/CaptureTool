@@ -110,6 +110,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _drawables = [];
         _imageSize = new();
         _orientation = RotateFlipType.RotateNoneFlipNone;
+        _cropRect = new(0, 0, 0, 0);
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -128,6 +129,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
             {
                 ImageFile = imageFile;
                 ImageSize = GetImageSize(imageFile.Path);
+                CropRect = new(0, 0, ImageSize.Width, ImageSize.Height);
 
                 ImageDrawable imageDrawable = new(topLeft, imageFile.Path);
                 Drawables.Add(imageDrawable);
@@ -163,6 +165,9 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
+            CropRect = new(0, 0, 0, 0);
+            ImageSize = new(0, 0);
+            Orientation = RotateFlipType.RotateNoneFlipNone;
             Drawables.Clear();
             _telemetryService.ActivityCompleted(activityId);
         }

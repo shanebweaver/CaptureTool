@@ -58,26 +58,133 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (d is ImageCanvas control)
         {
-            if (e.NewValue is bool isCropModeEnabled && isCropModeEnabled)
+            control.DispatcherQueue.TryEnqueue(() =>
             {
-                control.RootContainer.Background = new SolidColorBrush(Colors.Black);
-            }
-            else
-            {
-                control.RootContainer.Background = new SolidColorBrush(Colors.Transparent);
-            }
+                if (e.NewValue is bool isCropModeEnabled && isCropModeEnabled)
+                {
+                    control.RootContainer.Background = new SolidColorBrush(Colors.Black);
+                }
+                else
+                {
+                    control.RootContainer.Background = new SolidColorBrush(Colors.Transparent);
+                }
 
-            control.UpdateDrawingCanvasSize();
-            control.ZoomAndCenter();
+                control.UpdateDrawingCanvasSize();
+                control.ZoomAndCenter();
+            });
         }
+    }
+
+    private static Windows.Foundation.Rect GetOrientedRect(
+        Windows.Foundation.Rect cropRect,
+        Size canvasSize,
+        RotateFlipType oldOrientation,
+        RotateFlipType newOrientation)
+    {
+        // Convert CropRect to normalized coordinates (0-1)
+        double normX = cropRect.X / canvasSize.Width;
+        double normY = cropRect.Y / canvasSize.Height;
+        double normW = cropRect.Width / canvasSize.Width;
+        double normH = cropRect.Height / canvasSize.Height;
+
+        // Helper to rotate/flip normalized rect
+        static (double x, double y, double w, double h) TransformRect(
+            double x, double y, double w, double h,
+            RotateFlipType from, RotateFlipType to)
+        {
+            // First, undo the old orientation (to get to "upright" space)
+            (x, y, w, h) = ApplyOrientationInverse(x, y, w, h, from);
+            // Then, apply the new orientation
+            (x, y, w, h) = ApplyOrientation(x, y, w, h, to);
+            return (x, y, w, h);
+        }
+
+        // Undo orientation: bring rect to upright
+        static (double x, double y, double w, double h) ApplyOrientationInverse(
+            double x, double y, double w, double h, RotateFlipType orientation)
+        {
+            // Only handle 90/180/270 and flips
+            switch (orientation)
+            {
+                case RotateFlipType.Rotate90FlipNone:
+                    return (y, 1 - x - w, h, w);
+                case RotateFlipType.Rotate180FlipNone:
+                    return (1 - x - w, 1 - y - h, w, h);
+                case RotateFlipType.Rotate270FlipNone:
+                    return (1 - y - h, x, h, w);
+                case RotateFlipType.RotateNoneFlipX:
+                    return (1 - x - w, y, w, h);
+                case RotateFlipType.RotateNoneFlipY:
+                    return (x, 1 - y - h, w, h);
+                // Add more cases as needed
+                default:
+                    return (x, y, w, h);
+            }
+        }
+
+        // Apply orientation: from upright to new orientation
+        static (double x, double y, double w, double h) ApplyOrientation(
+            double x, double y, double w, double h, RotateFlipType orientation)
+        {
+            switch (orientation)
+            {
+                case RotateFlipType.Rotate90FlipNone:
+                    return (1 - y - h, x, h, w);
+                case RotateFlipType.Rotate180FlipNone:
+                    return (1 - x - w, 1 - y - h, w, h);
+                case RotateFlipType.Rotate270FlipNone:
+                    return (y, 1 - x - w, h, w);
+                case RotateFlipType.RotateNoneFlipX:
+                    return (1 - x - w, y, w, h);
+                case RotateFlipType.RotateNoneFlipY:
+                    return (x, 1 - y - h, w, h);
+                // Add more cases as needed
+                default:
+                    return (x, y, w, h);
+            }
+        }
+
+        (double newNormX, double newNormY, double newNormW, double newNormH) =
+            TransformRect(normX, normY, normW, normH, oldOrientation, newOrientation);
+
+        // Clamp to [0,1]
+        newNormX = Math.Max(0, Math.Min(1, newNormX));
+        newNormY = Math.Max(0, Math.Min(1, newNormY));
+        newNormW = Math.Max(0, Math.Min(1 - newNormX, newNormW));
+        newNormH = Math.Max(0, Math.Min(1 - newNormY, newNormH));
+
+        // Convert back to pixel coordinates
+        return new Windows.Foundation.Rect(
+            newNormX * canvasSize.Width,
+            newNormY * canvasSize.Height,
+            newNormW * canvasSize.Width,
+            newNormH * canvasSize.Height
+        );
     }
 
     private static void OnOrientationPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is ImageCanvas control)
         {
-            control.UpdateDrawingCanvasSize();
-            control.ZoomAndCenter();
+            control.DispatcherQueue.TryEnqueue(() =>
+            {
+
+                // Orient the CropRect based on the new orientation
+                if (e.OldValue is RotateFlipType oldOrientation &&
+                    e.NewValue is RotateFlipType newOrientation &&
+                    control.CropRect != Windows.Foundation.Rect.Empty &&
+                    control.CanvasSize.Width > 0 && control.CanvasSize.Height > 0)
+                {
+                    control.UpdateDrawingCanvasSize();
+
+                    var crop = control.CropRect;
+                    var canvasSize = control.CanvasSize;
+                    control.CropRect = GetOrientedRect(crop, canvasSize, oldOrientation, newOrientation);
+                }
+
+                control.UpdateDrawingCanvasSize();
+                control.ZoomAndCenter();
+            });
         }
     }
 
@@ -85,8 +192,11 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (d is ImageCanvas control)
         {
-            control.UpdateDrawingCanvasSize();
-            control.ZoomAndCenter();
+            control.DispatcherQueue.TryEnqueue(() =>
+            {
+                control.UpdateDrawingCanvasSize();
+                control.ZoomAndCenter();
+            });
         }
     }
 
