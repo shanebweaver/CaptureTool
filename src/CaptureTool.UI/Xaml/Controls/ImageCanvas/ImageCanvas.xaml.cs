@@ -120,49 +120,7 @@ public sealed partial class ImageCanvas : UserControlBase
         InitializeComponent();
     }
 
-    private void UpdateDrawingCanvasSize()
-    {
-        RotateFlipType orientation = Orientation;
-        bool isTurned =
-            orientation == RotateFlipType.Rotate90FlipNone ||
-            orientation == RotateFlipType.Rotate90FlipX ||
-            orientation == RotateFlipType.Rotate90FlipY ||
-            orientation == RotateFlipType.Rotate90FlipXY;
-
-        double width, height;
-
-        if (IsCropModeEnabled)
-        {
-            height = isTurned ? CanvasSize.Width : CanvasSize.Height;
-            width = isTurned ? CanvasSize.Height : CanvasSize.Width;
-        }
-        else
-        {
-            // Use CropRect dimensions when crop mode is not enabled
-            var crop = CropRect;
-            height = isTurned ? crop.Width : crop.Height;
-            width = isTurned ? crop.Height : crop.Width;
-
-            // Fallback to CanvasSize if CropRect is empty or invalid
-            if (width <= 0 || height <= 0)
-            {
-                height = isTurned ? CanvasSize.Width : CanvasSize.Height;
-                width = isTurned ? CanvasSize.Height : CanvasSize.Width;
-            }
-        }
-
-        CanvasContainer.Height = height;
-        CanvasContainer.Width = width;
-
-        CropOverlay.Height = height;
-        CropOverlay.Width = width;
-
-        RenderCanvas.Height = height;
-        RenderCanvas.Width = width;
-        RenderCanvas.Invalidate();
-    }
-
-    #region Zoom and Center
+    #region Zoom, Center, and Size
     private void RootContainer_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         DispatcherQueue.TryEnqueue(() =>
@@ -170,6 +128,51 @@ public sealed partial class ImageCanvas : UserControlBase
             UpdateDrawingCanvasSize();
             ZoomAndCenter();
         });
+    }
+
+    private void UpdateDrawingCanvasSize()
+    {
+        lock (this)
+        {
+            RotateFlipType orientation = Orientation;
+            bool isTurned =
+                orientation == RotateFlipType.Rotate90FlipNone ||
+                orientation == RotateFlipType.Rotate90FlipX ||
+                orientation == RotateFlipType.Rotate90FlipY ||
+                orientation == RotateFlipType.Rotate90FlipXY;
+
+            double width, height;
+
+            if (IsCropModeEnabled)
+            {
+                height = isTurned ? CanvasSize.Width : CanvasSize.Height;
+                width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+            }
+            else
+            {
+                // Use CropRect dimensions when crop mode is not enabled
+                var crop = CropRect;
+                height = isTurned ? crop.Width : crop.Height;
+                width = isTurned ? crop.Height : crop.Width;
+
+                // Fallback to CanvasSize if CropRect is empty or invalid
+                if (width <= 0 || height <= 0)
+                {
+                    height = isTurned ? CanvasSize.Width : CanvasSize.Height;
+                    width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+                }
+            }
+
+            CanvasContainer.Height = height;
+            CanvasContainer.Width = width;
+
+            CropOverlay.Height = height;
+            CropOverlay.Width = width;
+
+            RenderCanvas.Height = height;
+            RenderCanvas.Width = width;
+            RenderCanvas.Invalidate();
+        }
     }
 
     private void ZoomAndCenter()
