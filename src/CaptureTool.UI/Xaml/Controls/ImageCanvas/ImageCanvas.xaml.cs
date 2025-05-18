@@ -16,25 +16,25 @@ namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
 public sealed partial class ImageCanvas : UserControlBase
 {
-    private static readonly DependencyProperty DrawablesProperty = DependencyProperty.Register(
+    public static readonly DependencyProperty DrawablesProperty = DependencyProperty.Register(
         nameof(Drawables),
         typeof(IEnumerable<IDrawable>),
         typeof(ImageCanvas),
         new PropertyMetadata(null));
 
-    private static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(
+    public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(
         nameof(Orientation),
         typeof(RotateFlipType),
         typeof(ImageCanvas),
         new PropertyMetadata(RotateFlipType.RotateNoneFlipNone, OnOrientationPropertyChanged));
 
-    private static readonly DependencyProperty CanvasSizeProperty = DependencyProperty.Register(
+    public static readonly DependencyProperty CanvasSizeProperty = DependencyProperty.Register(
         nameof(CanvasSize),
         typeof(Size),
         typeof(ImageCanvas),
         new PropertyMetadata(new Size(0, 0), OnCanvasSizePropertyChanged));
 
-    private static readonly DependencyProperty IsCropModeEnabledProperty = DependencyProperty.Register(
+    public static readonly DependencyProperty IsCropModeEnabledProperty = DependencyProperty.Register(
         nameof(IsCropModeEnabled),
         typeof(bool),
         typeof(ImageCanvas),
@@ -59,7 +59,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 control.RootContainer.Background = new SolidColorBrush(Colors.Transparent);
             }
 
-            control.RenderCanvas.Invalidate();
+            control.UpdateDrawingCanvasSize();
             control.ZoomAndCenter();
         }
     }
@@ -122,36 +122,54 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void UpdateDrawingCanvasSize()
     {
-        DispatcherQueue.TryEnqueue(() =>
+        RotateFlipType orientation = Orientation;
+        bool isTurned =
+            orientation == RotateFlipType.Rotate90FlipNone ||
+            orientation == RotateFlipType.Rotate90FlipX ||
+            orientation == RotateFlipType.Rotate90FlipY ||
+            orientation == RotateFlipType.Rotate90FlipXY;
+
+        double width, height;
+
+        if (IsCropModeEnabled)
         {
-            // Check if orientation is turned by 90 or 270 degrees
-            RotateFlipType orientation = Orientation;
-            bool isTurned =
-                orientation == RotateFlipType.Rotate90FlipNone ||
-                orientation == RotateFlipType.Rotate90FlipX ||
-                orientation == RotateFlipType.Rotate90FlipY ||
-                orientation == RotateFlipType.Rotate90FlipXY;
+            height = isTurned ? CanvasSize.Width : CanvasSize.Height;
+            width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+        }
+        else
+        {
+            // Use CropRect dimensions when crop mode is not enabled
+            var crop = CropRect;
+            height = isTurned ? crop.Width : crop.Height;
+            width = isTurned ? crop.Height : crop.Width;
 
-            double height = isTurned ? CanvasSize.Width : CanvasSize.Height;
-            double width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+            // Fallback to CanvasSize if CropRect is empty or invalid
+            if (width <= 0 || height <= 0)
+            {
+                height = isTurned ? CanvasSize.Width : CanvasSize.Height;
+                width = isTurned ? CanvasSize.Height : CanvasSize.Width;
+            }
+        }
 
-            CanvasContainer.Height = height;
-            CanvasContainer.Width = width;
+        CanvasContainer.Height = height;
+        CanvasContainer.Width = width;
 
-            CropOverlay.Height = height;
-            CropOverlay.Width = width;
+        CropOverlay.Height = height;
+        CropOverlay.Width = width;
 
-            RenderCanvas.Height = height;
-            RenderCanvas.Width = width;
-            RenderCanvas.Invalidate();
-        });
+        RenderCanvas.Height = height;
+        RenderCanvas.Width = width;
+        RenderCanvas.Invalidate();
     }
 
     #region Zoom and Center
     private void RootContainer_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        UpdateDrawingCanvasSize();
-        ZoomAndCenter();
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            UpdateDrawingCanvasSize();
+            ZoomAndCenter();
+        });
     }
 
     private void ZoomAndCenter()
