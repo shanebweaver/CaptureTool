@@ -13,7 +13,8 @@
     <TitleBar
         Title="{x:Bind ViewModel.Title}"
         BackRequested="TitleBar_BackRequested"
-        IsBackButtonVisible="{x:Bind ViewModel.CanGoBack, Mode=OneWay}">
+        IsBackButtonVisible="{x:Bind ViewModel.CanGoBack, Mode=OneWay}"
+        IsTabStop="False">
         <TitleBar.IconSource>
             <ImageIconSource ImageSource="{x:Bind ViewModel.Icon}" />
         </TitleBar.IconSource>
