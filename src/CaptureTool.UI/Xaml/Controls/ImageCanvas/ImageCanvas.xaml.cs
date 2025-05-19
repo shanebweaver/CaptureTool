@@ -169,8 +169,8 @@ public sealed partial class ImageCanvas : UserControlBase
             {
                 // Use CropRect dimensions when crop mode is not enabled
                 var crop = CropRect;
-                height = isTurned ? crop.Width : crop.Height;
-                width = isTurned ? crop.Height : crop.Width;
+                height = crop.Height;
+                width = crop.Width;
 
                 // Fallback to CanvasSize if CropRect is empty or invalid
                 if (width <= 0 || height <= 0)

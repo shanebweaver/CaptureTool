@@ -65,13 +65,12 @@ public sealed partial class CropOverlay : UserControlBase
         UpdateCropBoundary();
     }
 
-
     private void UpdateCropBoundary()
     {
-        double left = Math.Clamp(CropRect.Left, 0, Width);
-        double top = Math.Clamp(CropRect.Top, 0, Height);
-        double right = Math.Clamp(Width - CropRect.Right, 0, Width);
-        double bottom = Math.Clamp(Height - CropRect.Bottom, 0, Height);
+        double left = Math.Clamp(CropRect.Left, 0, CropCanvas.Width);
+        double top = Math.Clamp(CropRect.Top, 0, CropCanvas.Height);
+        double right = Math.Clamp(CropCanvas.Width - CropRect.Right, 0, CropCanvas.Width);
+        double bottom = Math.Clamp(CropCanvas.Height - CropRect.Bottom, 0, CropCanvas.Height);
         double centerX = (left + right) / 2;
         double centerY = (top + bottom) / 2;
 
