@@ -34,8 +34,7 @@ public sealed partial class CropOverlay : UserControlBase
     {
         if (d is CropOverlay control)
         {
-            System.Diagnostics.Debug.WriteLine("Crop rect changed");
-            //control.UpdateCropBoundary();
+            control.UpdateCropBoundary();
         }
     }
 
@@ -60,31 +59,23 @@ public sealed partial class CropOverlay : UserControlBase
         CropCanvas.Height = height;
         CropCanvas.Width = width;
 
-        // Clamp CropRect to fit within the new canvas size
-        double left = Math.Clamp(CropRect.Left, 0, width);
-        double top = Math.Clamp(CropRect.Top, 0, height);
-        double rectWidth = Math.Clamp(CropRect.Width, 0, width - left);
-        double rectHeight = Math.Clamp(CropRect.Height, 0, height - top);
-        CropRect = new Rect(left, top, rectWidth, rectHeight);
+        CropBoundary.Height = CropCanvas.Height;
+        CropBoundary.Width = CropCanvas.Width;
 
         UpdateCropBoundary();
     }
 
 
-    public void UpdateCropBoundary()
+    private void UpdateCropBoundary()
     {
-        double left = CropRect.Left;
-        double top = CropRect.Top;
-        double right = CropCanvas.Width - CropRect.Right;
-        double bottom = CropCanvas.Height - CropRect.Bottom;
+        double left = Math.Clamp(CropRect.Left, 0, Width);
+        double top = Math.Clamp(CropRect.Top, 0, Height);
+        double right = Math.Clamp(Width - CropRect.Right, 0, Width);
+        double bottom = Math.Clamp(Height - CropRect.Bottom, 0, Height);
         double centerX = (left + right) / 2;
         double centerY = (top + bottom) / 2;
 
-        CropBoundary.Height = CropCanvas.Height;
-        CropBoundary.Width = CropCanvas.Width;
         CropBoundary.BorderThickness = new Thickness(left, top, right, bottom);
-        Canvas.SetLeft(CropBoundary, 0);
-        Canvas.SetTop(CropBoundary, 0);
 
         Canvas.SetLeft(CropAnchor_TopLeft, left - CropAnchor_TopLeft.Width / 2);
         Canvas.SetTop(CropAnchor_TopLeft, top - CropAnchor_TopLeft.Height / 2);
@@ -110,7 +101,6 @@ public sealed partial class CropOverlay : UserControlBase
         Canvas.SetLeft(CropAnchor_Right, right - CropAnchor_Right.Width / 2);
         Canvas.SetTop(CropAnchor_Right, centerY - CropAnchor_Right.Height / 2);
     }
-
 
     private Polygon[] GetCropAnchors()
     {
@@ -212,7 +202,6 @@ public sealed partial class CropOverlay : UserControlBase
             }
 
             CropRect = new Rect(left, top, right - left, bottom - top);
-            UpdateCropBoundary();
             _cropAnchorLastPointerPosition = currentPosition;
             e.Handled = true;
         }
@@ -296,8 +285,6 @@ public sealed partial class CropOverlay : UserControlBase
             top = Math.Clamp(top, 0, canvasHeight - height);
 
             CropRect = new Rect(left, top, width, height);
-            UpdateCropBoundary();
-
             _cropBoundaryLastPointerPosition = pointerPos;
             e.Handled = true;
         }

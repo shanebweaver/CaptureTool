@@ -295,10 +295,9 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
                 _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
             };
-            var newCropRect = UpdateCropRectOrientation(Orientation, newOrientation);
 
+            CropRect = UpdateCropRectOrientation(Orientation, newOrientation);
             Orientation = newOrientation;
-            CropRect = newCropRect;
 
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -311,8 +310,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     private Windows.Foundation.Rect UpdateCropRectOrientation(RotateFlipType oldOrientation, RotateFlipType newOrientation)
     {
         var oldRect = CropRect;
-        var oldWidth = ImageSize.Width;
-        var oldHeight = ImageSize.Height;
+        var oldWidth = IsTurned ? ImageSize.Height : ImageSize.Width;
+        var oldHeight = IsTurned ? ImageSize.Width : ImageSize.Height;
 
         // Determine rotation delta (in 90-degree steps, clockwise)
         int GetRotationSteps(RotateFlipType from, RotateFlipType to)
@@ -385,12 +384,45 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         return new Windows.Foundation.Rect(x, y, w, h);
     }
 
+    private Windows.Foundation.Rect UpdateCropRectFlip(bool isHorizontal)
+    {
+        double x = CropRect.X;
+        double y = CropRect.Y;
+        double w = CropRect.Width;
+        double h = CropRect.Height;
+
+        // Use the current orientation to determine image dimensions
+        var imageWidth = IsTurned ? ImageSize.Height : ImageSize.Width;
+        var imageHeight = IsTurned ? ImageSize.Width : ImageSize.Height;
+
+        if (isHorizontal)
+        {
+            // Flip horizontally: move crop from left to right
+            x = imageWidth - (x + w);
+        }
+        else
+        {
+            // Flip vertically: move crop from top to bottom
+            y = imageHeight - (y + h);
+        }
+
+        // Clamp to image bounds
+        x = Math.Max(0, Math.Min(x, imageWidth - w));
+        y = Math.Max(0, Math.Min(y, imageHeight - h));
+        w = Math.Min(w, imageWidth - x);
+        h = Math.Min(h, imageHeight - y);
+
+        return new Windows.Foundation.Rect(x, y, w, h);
+    }
+
     private void Flip(bool isHorizontal)
     {
         string activityId = isHorizontal ? ActivityIds.FlipHorizontal : ActivityIds.FlipVertical;
         _telemetryService.ActivityInitiated(activityId);
         try
         {
+            CropRect = UpdateCropRectFlip(isHorizontal);
+
             if (IsTurned)
             {
                 Orientation = Orientation switch
@@ -425,6 +457,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
                     _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
                 };
             }
+
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
