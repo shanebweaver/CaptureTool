@@ -281,7 +281,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            Orientation = Orientation switch
+            var newOrientation = Orientation switch
             {
                 RotateFlipType.RotateNoneFlipNone => RotateFlipType.Rotate90FlipNone,
                 RotateFlipType.Rotate90FlipNone => RotateFlipType.Rotate180FlipNone,
@@ -295,12 +295,94 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
                 _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
             };
+            var newCropRect = UpdateCropRectOrientation(Orientation, newOrientation);
+
+            Orientation = newOrientation;
+            CropRect = newCropRect;
+
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
         {
             _telemetryService.ActivityError(activityId, e);
         }
+    }
+
+    private Windows.Foundation.Rect UpdateCropRectOrientation(RotateFlipType oldOrientation, RotateFlipType newOrientation)
+    {
+        var oldRect = CropRect;
+        var oldWidth = ImageSize.Width;
+        var oldHeight = ImageSize.Height;
+
+        // Determine rotation delta (in 90-degree steps, clockwise)
+        int GetRotationSteps(RotateFlipType from, RotateFlipType to)
+        {
+            int[] angles = {
+                0,   // RotateNoneFlipNone
+                90,  // Rotate90FlipNone
+                180, // Rotate180FlipNone
+                270, // Rotate270FlipNone
+                0,   // RotateNoneFlipX
+                90,  // Rotate90FlipX
+                180, // Rotate180FlipX
+                270, // Rotate270FlipX
+            };
+            int fromIdx = (int)from % 8;
+            int toIdx = (int)to % 8;
+            int delta = (angles[toIdx] - angles[fromIdx] + 360) % 360;
+            return delta / 90;
+        }
+
+        int steps = GetRotationSteps(oldOrientation, newOrientation) % 4;
+
+        double x = oldRect.X, y = oldRect.Y, w = oldRect.Width, h = oldRect.Height;
+        int width = oldWidth, height = oldHeight;
+
+        if (steps == 1) // 90° CW
+        {
+            double newX = height - (y + h);
+            double newY = x;
+            double newW = h;
+            double newH = w;
+            x = newX;
+            y = newY;
+            w = newW;
+            h = newH;
+            int tmp = width;
+            width = height;
+            height = tmp;
+        }
+        else if (steps == 2) // 180°
+        {
+            double newX = width - (x + w);
+            double newY = height - (y + h);
+            x = newX;
+            y = newY;
+            // w and h stay the same
+        }
+        else if (steps == 3) // 270° CW (or 90° CCW)
+        {
+            double newX = y;
+            double newY = width - (x + w);
+            double newW = h;
+            double newH = w;
+            x = newX;
+            y = newY;
+            w = newW;
+            h = newH;
+            int tmp = width;
+            width = height;
+            height = tmp;
+        }
+        // steps == 0: no rotation
+
+        // Clamp to new image bounds
+        x = Math.Max(0, Math.Min(x, width - w));
+        y = Math.Max(0, Math.Min(y, height - h));
+        w = Math.Min(w, width - x);
+        h = Math.Min(h, height - y);
+
+        return new Windows.Foundation.Rect(x, y, w, h);
     }
 
     private void Flip(bool isHorizontal)
