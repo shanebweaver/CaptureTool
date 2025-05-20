@@ -6,9 +6,10 @@ public sealed partial class ImageCanvasRenderOptions
 {
     public RotateFlipType Orientation { get; set; }
     public Size CanvasSize { get; set; }
-    public Windows.Foundation.Rect CropRect { get; set; }
+    public Rectangle CropRect { get; set; }
+    public float Dpi { get; set; } = 96f;
 
-    public ImageCanvasRenderOptions(RotateFlipType orientation, Size canvasSize, Windows.Foundation.Rect cropRect)
+    public ImageCanvasRenderOptions(RotateFlipType orientation, Size canvasSize, Rectangle cropRect)
     {
         Orientation = orientation;
         CanvasSize = canvasSize;

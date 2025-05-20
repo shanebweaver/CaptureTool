@@ -46,8 +46,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     public RelayCommand UndoCommand => new(Undo);
     public RelayCommand RedoCommand => new(Redo);
     public RelayCommand RotateCommand => new(Rotate);
-    public RelayCommand FlipHorizontalCommand => new(() => Flip(true));
-    public RelayCommand FlipVerticalCommand => new(() => Flip(false));
+    public RelayCommand FlipHorizontalCommand => new(() => Flip(FlipDirection.Horizontal));
+    public RelayCommand FlipVerticalCommand => new(() => Flip(FlipDirection.Vertical));
     public RelayCommand PrintCommand => new(Print);
 
     private ObservableCollection<IDrawable> _drawables;
@@ -71,8 +71,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _imageSize, value);
     }
 
-    private RotateFlipType _orientation;
-    public RotateFlipType Orientation
+    private System.Drawing.RotateFlipType _orientation;
+    public System.Drawing.RotateFlipType Orientation
     {
         get => _orientation;
         set => Set(ref _orientation, value);
@@ -85,18 +85,12 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _isInCropMode, value);
     }
 
-    private Windows.Foundation.Rect _cropRect;
-    public Windows.Foundation.Rect CropRect
+    private Rectangle _cropRect;
+    public Rectangle CropRect
     {
         get => _cropRect;
         set => Set(ref _cropRect, value);
     }
-
-    private bool IsTurned =>
-        Orientation == RotateFlipType.Rotate90FlipNone ||
-        Orientation == RotateFlipType.Rotate270FlipNone ||
-        Orientation == RotateFlipType.Rotate90FlipX ||
-        Orientation == RotateFlipType.Rotate270FlipX;
 
     public ImageEditPageViewModel(
         IAppController appController,
@@ -186,7 +180,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         try
         {
             ImageCanvasRenderOptions options = new(Orientation, ImageSize, CropRect);
-            await ImageCanvasRenderer.CopyImageToClipboardAsync([.. Drawables], options, ImageSize.Width, ImageSize.Height, 96);
+            await ImageCanvasRenderer.CopyImageToClipboardAsync([.. Drawables], options);
 
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -233,7 +227,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
             if (file != null)
             {
                 ImageCanvasRenderOptions options = new(Orientation, ImageSize, CropRect);
-                await ImageCanvasRenderer.SaveImageAsync(file.Path, [.. Drawables], options, ImageSize.Width, ImageSize.Height, 96);
+                await ImageCanvasRenderer.SaveImageAsync(file.Path, [.. Drawables], options);
                 _telemetryService.ActivityCompleted(activityId);
             }
             else
@@ -281,22 +275,11 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            var newOrientation = Orientation switch
-            {
-                RotateFlipType.RotateNoneFlipNone => RotateFlipType.Rotate90FlipNone,
-                RotateFlipType.Rotate90FlipNone => RotateFlipType.Rotate180FlipNone,
-                RotateFlipType.Rotate180FlipNone => RotateFlipType.Rotate270FlipNone,
-                RotateFlipType.Rotate270FlipNone => RotateFlipType.RotateNoneFlipNone,
+            RotateFlipType oldOrientation = Orientation;
+            RotateFlipType newOrientation = OrientationHelper.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
+            Rectangle newCropRect = OrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
 
-                RotateFlipType.RotateNoneFlipX => RotateFlipType.Rotate90FlipX,
-                RotateFlipType.Rotate90FlipX => RotateFlipType.Rotate180FlipX,
-                RotateFlipType.Rotate180FlipX => RotateFlipType.Rotate270FlipX,
-                RotateFlipType.Rotate270FlipX => RotateFlipType.RotateNoneFlipX,
-
-                _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
-            };
-
-            CropRect = UpdateCropRectOrientation(Orientation, newOrientation);
+            CropRect = newCropRect;
             Orientation = newOrientation;
 
             _telemetryService.ActivityCompleted(activityId);
@@ -307,156 +290,21 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         }
     }
 
-    private Windows.Foundation.Rect UpdateCropRectOrientation(RotateFlipType oldOrientation, RotateFlipType newOrientation)
+    private void Flip(FlipDirection flipDirection)
     {
-        var oldRect = CropRect;
-        var oldWidth = IsTurned ? ImageSize.Height : ImageSize.Width;
-        var oldHeight = IsTurned ? ImageSize.Width : ImageSize.Height;
-
-        // Determine rotation delta (in 90-degree steps, clockwise)
-        int GetRotationSteps(RotateFlipType from, RotateFlipType to)
+        string activityId = flipDirection switch
         {
-            int[] angles = {
-                0,   // RotateNoneFlipNone
-                90,  // Rotate90FlipNone
-                180, // Rotate180FlipNone
-                270, // Rotate270FlipNone
-                0,   // RotateNoneFlipX
-                90,  // Rotate90FlipX
-                180, // Rotate180FlipX
-                270, // Rotate270FlipX
-            };
-            int fromIdx = (int)from % 8;
-            int toIdx = (int)to % 8;
-            int delta = (angles[toIdx] - angles[fromIdx] + 360) % 360;
-            return delta / 90;
-        }
-
-        int steps = GetRotationSteps(oldOrientation, newOrientation) % 4;
-
-        double x = oldRect.X, y = oldRect.Y, w = oldRect.Width, h = oldRect.Height;
-        int width = oldWidth, height = oldHeight;
-
-        if (steps == 1) // 90° CW
-        {
-            double newX = height - (y + h);
-            double newY = x;
-            double newW = h;
-            double newH = w;
-            x = newX;
-            y = newY;
-            w = newW;
-            h = newH;
-            int tmp = width;
-            width = height;
-            height = tmp;
-        }
-        else if (steps == 2) // 180°
-        {
-            double newX = width - (x + w);
-            double newY = height - (y + h);
-            x = newX;
-            y = newY;
-            // w and h stay the same
-        }
-        else if (steps == 3) // 270° CW (or 90° CCW)
-        {
-            double newX = y;
-            double newY = width - (x + w);
-            double newW = h;
-            double newH = w;
-            x = newX;
-            y = newY;
-            w = newW;
-            h = newH;
-            int tmp = width;
-            width = height;
-            height = tmp;
-        }
-        // steps == 0: no rotation
-
-        // Clamp to new image bounds
-        x = Math.Max(0, Math.Min(x, width - w));
-        y = Math.Max(0, Math.Min(y, height - h));
-        w = Math.Min(w, width - x);
-        h = Math.Min(h, height - y);
-
-        return new Windows.Foundation.Rect(x, y, w, h);
-    }
-
-    private Windows.Foundation.Rect UpdateCropRectFlip(bool isHorizontal)
-    {
-        double x = CropRect.X;
-        double y = CropRect.Y;
-        double w = CropRect.Width;
-        double h = CropRect.Height;
-
-        // Use the current orientation to determine image dimensions
-        var imageWidth = IsTurned ? ImageSize.Height : ImageSize.Width;
-        var imageHeight = IsTurned ? ImageSize.Width : ImageSize.Height;
-
-        if (isHorizontal)
-        {
-            // Flip horizontally: move crop from left to right
-            x = imageWidth - (x + w);
-        }
-        else
-        {
-            // Flip vertically: move crop from top to bottom
-            y = imageHeight - (y + h);
-        }
-
-        // Clamp to image bounds
-        x = Math.Max(0, Math.Min(x, imageWidth - w));
-        y = Math.Max(0, Math.Min(y, imageHeight - h));
-        w = Math.Min(w, imageWidth - x);
-        h = Math.Min(h, imageHeight - y);
-
-        return new Windows.Foundation.Rect(x, y, w, h);
-    }
-
-    private void Flip(bool isHorizontal)
-    {
-        string activityId = isHorizontal ? ActivityIds.FlipHorizontal : ActivityIds.FlipVertical;
+            FlipDirection.Horizontal => ActivityIds.FlipHorizontal,
+            FlipDirection.Vertical => ActivityIds.FlipVertical,
+            _ => throw new InvalidOperationException("Unexpected FlipDirection value.")
+        };
         _telemetryService.ActivityInitiated(activityId);
+
         try
         {
-            CropRect = UpdateCropRectFlip(isHorizontal);
-
-            if (IsTurned)
-            {
-                Orientation = Orientation switch
-                {
-                    RotateFlipType.RotateNoneFlipNone => isHorizontal ? RotateFlipType.RotateNoneFlipY : RotateFlipType.RotateNoneFlipX,
-                    RotateFlipType.Rotate90FlipNone => isHorizontal ? RotateFlipType.Rotate90FlipY : RotateFlipType.Rotate90FlipX,
-                    RotateFlipType.Rotate180FlipNone => isHorizontal ? RotateFlipType.Rotate180FlipY : RotateFlipType.Rotate180FlipX,
-                    RotateFlipType.Rotate270FlipNone => isHorizontal ? RotateFlipType.Rotate270FlipY : RotateFlipType.Rotate270FlipX,
-
-                    RotateFlipType.RotateNoneFlipY => isHorizontal ? RotateFlipType.RotateNoneFlipNone : RotateFlipType.RotateNoneFlipX,
-                    RotateFlipType.Rotate90FlipY => isHorizontal ? RotateFlipType.Rotate90FlipNone : RotateFlipType.Rotate90FlipX,
-                    RotateFlipType.Rotate180FlipY => isHorizontal ? RotateFlipType.Rotate180FlipNone : RotateFlipType.Rotate180FlipX,
-                    RotateFlipType.Rotate270FlipY => isHorizontal ? RotateFlipType.Rotate270FlipNone : RotateFlipType.Rotate270FlipX,
-
-                    _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
-                };
-            }
-            else
-            {
-                Orientation = Orientation switch
-                {
-                    RotateFlipType.RotateNoneFlipNone => isHorizontal ? RotateFlipType.RotateNoneFlipX : RotateFlipType.RotateNoneFlipY,
-                    RotateFlipType.Rotate90FlipNone => isHorizontal ? RotateFlipType.Rotate90FlipX : RotateFlipType.Rotate90FlipY,
-                    RotateFlipType.Rotate180FlipNone => isHorizontal ? RotateFlipType.Rotate180FlipX : RotateFlipType.Rotate180FlipY,
-                    RotateFlipType.Rotate270FlipNone => isHorizontal ? RotateFlipType.Rotate270FlipX : RotateFlipType.Rotate270FlipY,
-
-                    RotateFlipType.RotateNoneFlipX => isHorizontal ? RotateFlipType.RotateNoneFlipNone : RotateFlipType.Rotate180FlipNone,
-                    RotateFlipType.Rotate90FlipX => isHorizontal ? RotateFlipType.Rotate90FlipNone : RotateFlipType.Rotate90FlipY,
-                    RotateFlipType.Rotate180FlipX => isHorizontal ? RotateFlipType.Rotate180FlipNone : RotateFlipType.RotateNoneFlipNone,
-                    RotateFlipType.Rotate270FlipX => isHorizontal ? RotateFlipType.Rotate270FlipNone : RotateFlipType.Rotate270FlipY,
-
-                    _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
-                };
-            }
+            Size imageSize = OrientationHelper.GetOrientedImageSize(ImageSize, Orientation);
+            CropRect = OrientationHelper.GetFlippedCropRect(CropRect, imageSize, flipDirection);
+            Orientation = OrientationHelper.GetFlippedOrientation(Orientation, flipDirection);
 
             _telemetryService.ActivityCompleted(activityId);
         }

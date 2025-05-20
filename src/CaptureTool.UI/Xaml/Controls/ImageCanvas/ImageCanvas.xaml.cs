@@ -24,9 +24,9 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(
         nameof(Orientation),
-        typeof(RotateFlipType),
+        typeof(System.Drawing.RotateFlipType),
         typeof(ImageCanvas),
-        new PropertyMetadata(RotateFlipType.RotateNoneFlipNone, OnOrientationPropertyChanged));
+        new PropertyMetadata(System.Drawing.RotateFlipType.RotateNoneFlipNone, OnOrientationPropertyChanged));
 
     public static readonly DependencyProperty CanvasSizeProperty = DependencyProperty.Register(
         nameof(CanvasSize),
@@ -42,9 +42,9 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
        nameof(CropRect),
-       typeof(Windows.Foundation.Rect),
+       typeof(Rectangle),
        typeof(ImageCanvas),
-       new PropertyMetadata(Windows.Foundation.Rect.Empty, OnCropRectPropertyChanged));
+       new PropertyMetadata(new Rectangle(0,0,0,0), OnCropRectPropertyChanged));
 
     private static void OnCropRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -105,9 +105,9 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(DrawablesProperty, value);
     }
 
-    public RotateFlipType Orientation
+    public System.Drawing.RotateFlipType Orientation
     {
-        get => Get<RotateFlipType>(OrientationProperty);
+        get => Get<System.Drawing.RotateFlipType>(OrientationProperty);
         set => Set(OrientationProperty, value);
     }
 
@@ -123,9 +123,9 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(IsCropModeEnabledProperty, value);
     }
 
-    public Windows.Foundation.Rect CropRect
+    public Rectangle CropRect
     {
-        get => Get<Windows.Foundation.Rect>(CropRectProperty);
+        get => Get<Rectangle>(CropRectProperty);
         set => Set(CropRectProperty, value);
     }
 
@@ -151,12 +151,12 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         lock (this)
         {
-            RotateFlipType orientation = Orientation;
+            System.Drawing.RotateFlipType orientation = Orientation;
             bool isTurned =
-                orientation == RotateFlipType.Rotate90FlipNone ||
-                orientation == RotateFlipType.Rotate90FlipX ||
-                orientation == RotateFlipType.Rotate90FlipY ||
-                orientation == RotateFlipType.Rotate90FlipXY;
+                orientation == System.Drawing.RotateFlipType.Rotate90FlipNone ||
+                orientation == System.Drawing.RotateFlipType.Rotate90FlipX ||
+                orientation == System.Drawing.RotateFlipType.Rotate90FlipY ||
+                orientation == System.Drawing.RotateFlipType.Rotate90FlipXY;
 
             double width, height;
 
@@ -202,10 +202,10 @@ public sealed partial class ImageCanvas : UserControlBase
             }
 
             bool isTurned =
-                Orientation == RotateFlipType.Rotate90FlipNone ||
-                Orientation == RotateFlipType.Rotate90FlipX ||
-                Orientation == RotateFlipType.Rotate90FlipY ||
-                Orientation == RotateFlipType.Rotate90FlipXY;
+                Orientation == System.Drawing.RotateFlipType.Rotate90FlipNone ||
+                Orientation == System.Drawing.RotateFlipType.Rotate90FlipX ||
+                Orientation == System.Drawing.RotateFlipType.Rotate90FlipY ||
+                Orientation == System.Drawing.RotateFlipType.Rotate90FlipXY;
 
             double containerWidth = RootContainer.ActualWidth;
             double containerHeight = RootContainer.ActualHeight;
@@ -237,7 +237,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         lock (this)
         {
-            var rect = (!IsCropModeEnabled) ? CropRect : new Windows.Foundation.Rect(0, 0, CanvasSize.Width, CanvasSize.Height);
+            var rect = (!IsCropModeEnabled) ? CropRect : new Rectangle(0, 0, CanvasSize.Width, CanvasSize.Height);
 
             ImageCanvasRenderOptions options = new(Orientation, CanvasSize, rect);
             ImageCanvasRenderer.Render([.. Drawables], options, args.DrawingSession);

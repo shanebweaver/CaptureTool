@@ -1,0 +1,20 @@
+﻿<Project Sdk="MSTest.Sdk/3.6.4">
+
+  <!-- Project properties -->
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <UseVSTest>true</UseVSTest>
+  </PropertyGroup>
+
+  <!-- Package references -->
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" />
+  </ItemGroup>
+
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Edit.Image.Win2D\CaptureTool.Edit.Image.Win2D.csproj" />
+  </ItemGroup>
+
+</Project>

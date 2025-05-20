@@ -16,12 +16,12 @@ public static partial class ImageCanvasRenderer
 {
     private static readonly Windows.UI.Color ClearColor = Colors.Transparent;
 
-    public static async Task CopyImageToClipboardAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, float width, float height, float dpi = 96)
+    public static async Task CopyImageToClipboardAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
-        float renderWidth = (float)options.CropRect.Width;
-        float renderHeight = (float)options.CropRect.Height;
+        float renderWidth = options.CropRect.Width;
+        float renderHeight = options.CropRect.Height;
 
-        using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, dpi);
+        using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, options.Dpi);
         using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
 
         drawingSession.Transform = CalculateTransform(options);
@@ -42,12 +42,12 @@ public static partial class ImageCanvasRenderer
         Clipboard.Flush();
     }
 
-    public static async Task SaveImageAsync(string filePath, IDrawable[] drawables, ImageCanvasRenderOptions options, float width, float height, float dpi = 96)
+    public static async Task SaveImageAsync(string filePath, IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
-        float renderWidth = (float)options.CropRect.Width;
-        float renderHeight = (float)options.CropRect.Height;
+        float renderWidth = options.CropRect.Width;
+        float renderHeight = options.CropRect.Height;
 
-        using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, dpi);
+        using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, options.Dpi);
         using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
 
         drawingSession.Transform = CalculateTransform(options);
@@ -96,12 +96,12 @@ public static partial class ImageCanvasRenderer
     private static Matrix3x2 CalculateTransform(ImageCanvasRenderOptions options)
     {
         Matrix3x2 transform = Matrix3x2.Identity;
-        float canvasWidth = options.CanvasSize.Width;
-        float canvasHeight = options.CanvasSize.Height;
+        double canvasWidth = options.CanvasSize.Width;
+        double canvasHeight = options.CanvasSize.Height;
 
         // Apply rotation
-        float maxDimension = Math.Max(canvasHeight, canvasWidth);
-        Vector2 rotationPoint = new(maxDimension / 2, maxDimension / 2);
+        double maxDimension = Math.Max(canvasHeight, canvasWidth);
+        Vector2 rotationPoint = new((float)maxDimension / 2, (float)maxDimension / 2);
         switch (options.Orientation)
         {
             case RotateFlipType.Rotate90FlipNone:
@@ -123,8 +123,8 @@ public static partial class ImageCanvasRenderer
 
         // Apply translation to reposition at 0,0
         bool isLandscape = canvasWidth > canvasHeight;
-        float heightLessWidth = canvasHeight - canvasWidth;
-        float widthLessHeight = canvasWidth - canvasHeight;
+        float heightLessWidth = (float)(canvasHeight - canvasWidth);
+        float widthLessHeight = (float)(canvasWidth - canvasHeight);
         switch (options.Orientation)
         {
             case RotateFlipType.Rotate90FlipNone:
@@ -161,19 +161,19 @@ public static partial class ImageCanvasRenderer
         switch (options.Orientation)
         {
             case RotateFlipType.Rotate180FlipY:
-                transform *= Matrix3x2.CreateScale(1, -1, new(canvasWidth / 2, canvasHeight / 2));
+                transform *= Matrix3x2.CreateScale(1, -1, new((float)canvasWidth / 2, (float)canvasHeight / 2));
                 break;
 
             case RotateFlipType.Rotate90FlipX:
-                transform *= Matrix3x2.CreateScale(1, -1, new(canvasHeight / 2, canvasWidth / 2));
+                transform *= Matrix3x2.CreateScale(1, -1, new((float)canvasHeight / 2, (float)canvasWidth / 2));
                 break;
 
             case RotateFlipType.Rotate180FlipX:
-                transform *= Matrix3x2.CreateScale(-1, 1, new(canvasWidth / 2, canvasHeight / 2));
+                transform *= Matrix3x2.CreateScale(-1, 1, new((float)canvasWidth / 2, (float)canvasHeight / 2));
                 break;
 
             case RotateFlipType.Rotate90FlipY:
-                transform *= Matrix3x2.CreateScale(-1, 1, new(canvasHeight / 2, canvasWidth / 2));
+                transform *= Matrix3x2.CreateScale(-1, 1, new((float)canvasHeight / 2, (float)canvasWidth / 2));
                 break;
         }
 

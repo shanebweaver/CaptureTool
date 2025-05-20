@@ -4,8 +4,9 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Shapes;
 using System;
-using Windows.Foundation;
 using Windows.UI.Core;
+using Rectangle = System.Drawing.Rectangle;
+using Point = Windows.Foundation.Point;
 
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
@@ -26,9 +27,9 @@ public sealed partial class CropOverlay : UserControlBase
 
     public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
         nameof(CropRect),
-        typeof(Rect),
+        typeof(Rectangle),
         typeof(CropOverlay),
-        new PropertyMetadata(Rect.Empty, OnCropRectPropertyChanged));
+        new PropertyMetadata(new Rectangle(0,0,0,0), OnCropRectPropertyChanged));
 
     private static void OnCropRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -38,9 +39,9 @@ public sealed partial class CropOverlay : UserControlBase
         }
     }
 
-    public Rect CropRect
+    public Rectangle CropRect
     {
-        get => Get<Rect>(CropRectProperty);
+        get => Get<Rectangle>(CropRectProperty);
         set => Set(CropRectProperty, value);
     }
 
@@ -200,7 +201,7 @@ public sealed partial class CropOverlay : UserControlBase
                 right = Math.Clamp(right + deltaX, left + 1, canvasWidth);
             }
 
-            CropRect = new Rect(left, top, right - left, bottom - top);
+            CropRect = new Rectangle((int)left, (int)top, (int)(right - left), (int)(bottom - top));
             _cropAnchorLastPointerPosition = currentPosition;
             e.Handled = true;
         }
@@ -283,7 +284,11 @@ public sealed partial class CropOverlay : UserControlBase
             left = Math.Clamp(left, 0, canvasWidth - width);
             top = Math.Clamp(top, 0, canvasHeight - height);
 
-            CropRect = new Rect(left, top, width, height);
+            CropRect = new Rectangle(
+                Convert.ToInt32(left), 
+                Convert.ToInt32(top), 
+                Convert.ToInt32(width), 
+                Convert.ToInt32(height));
             _cropBoundaryLastPointerPosition = pointerPos;
             e.Handled = true;
         }
