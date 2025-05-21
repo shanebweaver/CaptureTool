@@ -365,7 +365,7 @@ public static partial class OrientationHelper
                 transform *= Matrix3x2.CreateScale(1, -1, new((float)imageWidth / 2, (float)imageHeight / 2));
                 break;
 
-            case RotateFlipType.Rotate90FlipX:
+            case RotateFlipType.Rotate90FlipY:
                 transform *= Matrix3x2.CreateScale(1, -1, new((float)imageHeight / 2, (float)imageWidth / 2));
                 break;
 
@@ -373,7 +373,7 @@ public static partial class OrientationHelper
                 transform *= Matrix3x2.CreateScale(-1, 1, new((float)imageWidth / 2, (float)imageHeight / 2));
                 break;
 
-            case RotateFlipType.Rotate90FlipY:
+            case RotateFlipType.Rotate90FlipX:
                 transform *= Matrix3x2.CreateScale(-1, 1, new((float)imageHeight / 2, (float)imageWidth / 2));
                 break;
         }
