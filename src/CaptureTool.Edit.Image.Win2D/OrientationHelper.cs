@@ -14,6 +14,15 @@ public static partial class OrientationHelper
             orientation == RotateFlipType.Rotate270FlipX;
     }
 
+    public static bool IsXFlipped(RotateFlipType orientation)
+    {
+        return
+            orientation == RotateFlipType.RotateNoneFlipX ||
+            orientation == RotateFlipType.Rotate90FlipX ||
+            orientation == RotateFlipType.Rotate180FlipX ||
+            orientation == RotateFlipType.Rotate270FlipX;
+    }
+
     public static Size GetOrientedImageSize(Size imageSize, RotateFlipType orientation)
     {
         bool isTurned = IsTurned(orientation);
@@ -127,110 +136,167 @@ public static partial class OrientationHelper
         return new(x, y, w, h);
     }
 
-    public static Rectangle GetOrientedCropRect(Rectangle cropRect, Size imageSize, RotateFlipType oldOrientation, RotateFlipType newOrientation)
+    public static int GetRotationSteps(RotateFlipType from, RotateFlipType to)
     {
-        Rectangle oldRect = cropRect;
-        int oldWidth = imageSize.Width;
-        int oldHeight = imageSize.Height;
+        int[] angles = [
+            0,   // RotateNoneFlipNone
+            90,  // Rotate90FlipNone
+            180, // Rotate180FlipNone
+            270, // Rotate270FlipNone
+            0,   // RotateNoneFlipX
+            90,  // Rotate90FlipX
+            180, // Rotate180FlipX
+            270, // Rotate270FlipX
+        ];
+        int fromIdx = (int)from % 8;
+        int toIdx = (int)to % 8;
+        int delta = (angles[toIdx] - angles[fromIdx] + 360) % 360;
+        return (delta / 90) % 4;
+    }
 
-        // Helper: get rotation steps (in 90-degree increments, clockwise)
-        static int GetRotationSteps(RotateFlipType from, RotateFlipType to)
+    public static Rectangle GetOrientedCropRect(Rectangle cropRect, Size imageSize, RotateFlipType from, RotateFlipType to)
+    {
+        // Get the canonical crop rectangle based on the original orientation
+        Rectangle canonicalCropRect = ToCanonicalCropRect(cropRect, imageSize, from);
+        
+        // Calculate the new crop rectangle based on the target orientation
+        Rectangle orientedCropRect = FromCanonicalCropRect(canonicalCropRect, imageSize, to);
+
+        // Clamp to image bounds
+        //orientedCropRect.X = Math.Max(0, Math.Min(orientedCropRect.X, imageSize.Width - orientedCropRect.Width));
+        //orientedCropRect.Y = Math.Max(0, Math.Min(orientedCropRect.Y, imageSize.Height - orientedCropRect.Height));
+        //orientedCropRect.Width = Math.Min(orientedCropRect.Width, imageSize.Width - orientedCropRect.X);
+        //orientedCropRect.Height = Math.Min(orientedCropRect.Height, imageSize.Height - orientedCropRect.Y);
+        return orientedCropRect;
+    }
+
+    public static Rectangle ToCanonicalCropRect(Rectangle cropRect, Size imageSize, RotateFlipType orientation)
+    {
+        // The canonical orientation is RotateNoneFlipNone (no rotation, no flip).
+        // This method transforms the cropRect from the given orientation to the canonical orientation.
+        Rectangle rect = cropRect;
+        Size size = imageSize;
+
+        // If the orientation is turned, swap width and height
+        bool turned = orientation == RotateFlipType.Rotate90FlipNone ||
+                      orientation == RotateFlipType.Rotate270FlipNone ||
+                      orientation == RotateFlipType.Rotate90FlipX ||
+                      orientation == RotateFlipType.Rotate270FlipX;
+
+        if (turned)
+            size = new Size(size.Height, size.Width);
+
+        // Undo flip
+        switch (orientation)
         {
-            int[] angles = [
-                0,   // RotateNoneFlipNone
-                90,  // Rotate90FlipNone
-                180, // Rotate180FlipNone
-                270, // Rotate270FlipNone
-                0,   // RotateNoneFlipX
-                90,  // Rotate90FlipX
-                180, // Rotate180FlipX
-                270, // Rotate270FlipX
-            ];
-            int fromIdx = (int)from % 8;
-            int toIdx = (int)to % 8;
-            int delta = (angles[toIdx] - angles[fromIdx] + 360) % 360;
-            return (delta / 90) % 4;
+            case RotateFlipType.RotateNoneFlipX:
+            case RotateFlipType.Rotate90FlipX:
+            case RotateFlipType.Rotate180FlipX:
+            case RotateFlipType.Rotate270FlipX:
+                rect = new Rectangle(
+                    size.Width - rect.X - rect.Width,
+                    rect.Y,
+                    rect.Width,
+                    rect.Height
+                );
+                break;
         }
 
-        // Helper: get flipX and flipY for a given orientation
-        static (bool flipX, bool flipY) GetFlips(RotateFlipType orientation)
+        // Undo rotation
+        switch (orientation)
         {
-            return orientation switch
-            {
-                RotateFlipType.RotateNoneFlipNone => (false, false),
-                RotateFlipType.Rotate90FlipNone => (false, false),
-                RotateFlipType.Rotate180FlipNone => (false, false),
-                RotateFlipType.Rotate270FlipNone => (false, false),
-                RotateFlipType.RotateNoneFlipX => (true, false),
-                RotateFlipType.Rotate90FlipX => (true, false),
-                RotateFlipType.Rotate180FlipX => (true, false),
-                RotateFlipType.Rotate270FlipX => (true, false),
-                _ => (false, false)
-            };
+            case RotateFlipType.Rotate90FlipNone:
+            case RotateFlipType.Rotate90FlipX:
+                rect = new Rectangle(
+                    rect.Y,
+                    size.Width - rect.X - rect.Width,
+                    rect.Height,
+                    rect.Width
+                );
+                break;
+            case RotateFlipType.Rotate180FlipNone:
+            case RotateFlipType.Rotate180FlipX:
+                rect = new Rectangle(
+                    size.Width - rect.X - rect.Width,
+                    size.Height - rect.Y - rect.Height,
+                    rect.Width,
+                    rect.Height
+                );
+                break;
+            case RotateFlipType.Rotate270FlipNone:
+            case RotateFlipType.Rotate270FlipX:
+                rect = new Rectangle(
+                    size.Height - rect.Y - rect.Height,
+                    rect.X,
+                    rect.Height,
+                    rect.Width
+                );
+                break;
         }
 
-        int steps = GetRotationSteps(oldOrientation, newOrientation);
+        return rect;
+    }
 
-        // Calculate net flip (X and Y) between old and new orientation
-        (bool oldFlipX, bool oldFlipY) = GetFlips(oldOrientation);
-        (bool newFlipX, bool newFlipY) = GetFlips(newOrientation);
-        bool flipX = oldFlipX != newFlipX;
-        bool flipY = oldFlipY != newFlipY;
-
-        int x = oldRect.X, y = oldRect.Y, w = oldRect.Width, h = oldRect.Height;
-        int width = oldWidth, height = oldHeight;
-
-        // Apply rotation
-        if (steps == 1) // 90° CW
+    public static Rectangle FromCanonicalCropRect(Rectangle canonical, Size canonicalImageSize, RotateFlipType orientation)
+    {
+        Rectangle result;
+        switch (orientation)
         {
-            int newX = height - (y + h);
-            int newY = x;
-            int newW = h;
-            int newH = w;
-            x = newX;
-            y = newY;
-            w = newW;
-            h = newH;
-            (height, width) = (width, height);
+            case RotateFlipType.RotateNoneFlipNone:
+                result = canonical;
+                break;
+            case RotateFlipType.Rotate90FlipNone:
+                result = new Rectangle(
+                    canonicalImageSize.Height - canonical.Y - canonical.Height,
+                    canonical.X,
+                    canonical.Height,
+                    canonical.Width);
+                break;
+            case RotateFlipType.Rotate180FlipNone:
+                result = new Rectangle(
+                    canonicalImageSize.Width - canonical.X - canonical.Width,
+                    canonicalImageSize.Height - canonical.Y - canonical.Height,
+                    canonical.Width,
+                    canonical.Height);
+                break;
+            case RotateFlipType.Rotate270FlipNone:
+                result = new Rectangle(
+                    canonical.Y,
+                    canonicalImageSize.Width - canonical.X - canonical.Width,
+                    canonical.Height,
+                    canonical.Width);
+                break;
+            case RotateFlipType.RotateNoneFlipX:
+                result = new Rectangle(
+                    canonicalImageSize.Width - canonical.X - canonical.Width,
+                    canonical.Y,
+                    canonical.Width,
+                    canonical.Height);
+                break;
+            case RotateFlipType.Rotate90FlipX:
+                result = new Rectangle(
+                    canonical.Y,
+                    canonical.X,
+                    canonical.Height,
+                    canonical.Width);
+                break;
+            case RotateFlipType.Rotate180FlipX:
+                result = new Rectangle(
+                    canonical.X,
+                    canonicalImageSize.Height - canonical.Y - canonical.Height,
+                    canonical.Width,
+                    canonical.Height);
+                break;
+            case RotateFlipType.Rotate270FlipX:
+                result = new Rectangle(
+                    canonicalImageSize.Height - canonical.Y - canonical.Height,
+                    canonicalImageSize.Width - canonical.X - canonical.Width,
+                    canonical.Height,
+                    canonical.Width);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(orientation));
         }
-        else if (steps == 2) // 180°
-        {
-            int newX = width - (x + w);
-            int newY = height - (y + h);
-            x = newX;
-            y = newY;
-            // w and h stay the same
-        }
-        else if (steps == 3) // 270° CW (or 90° CCW)
-        {
-            int newX = y;
-            int newY = width - (x + w);
-            int newW = h;
-            int newH = w;
-            x = newX;
-            y = newY;
-            w = newW;
-            h = newH;
-            (height, width) = (width, height);
-        }
-        // steps == 0: no rotation
-
-        // Apply flipping
-        if (flipX)
-        {
-            x = width - (x + w);
-        }
-        if (flipY)
-        {
-            y = height - (y + h);
-        }
-
-        // Clamp to new image bounds
-        x = Math.Max(0, Math.Min(x, width - w));
-        y = Math.Max(0, Math.Min(y, height - h));
-        w = Math.Min(w, width - x);
-        h = Math.Min(h, height - y);
-
-        return new(x, y, w, h);
+        return result;
     }
 }
