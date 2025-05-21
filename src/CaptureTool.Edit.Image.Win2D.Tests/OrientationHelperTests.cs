@@ -67,15 +67,15 @@ public sealed class OrientationHelperTests
         Assert.AreEqual(RotateFlipType.Rotate270FlipNone, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate180FlipNone, RotationDirection.Clockwise));
         Assert.AreEqual(RotateFlipType.RotateNoneFlipNone, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate270FlipNone, RotationDirection.Clockwise));
 
-        Assert.AreEqual(RotateFlipType.Rotate270FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.RotateNoneFlipX, RotationDirection.CounterClockwise));
-        Assert.AreEqual(RotateFlipType.RotateNoneFlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate90FlipX, RotationDirection.CounterClockwise));
-        Assert.AreEqual(RotateFlipType.Rotate90FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate180FlipX, RotationDirection.CounterClockwise));
-        Assert.AreEqual(RotateFlipType.Rotate180FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate270FlipX, RotationDirection.CounterClockwise));
+        Assert.AreEqual(RotateFlipType.Rotate90FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.RotateNoneFlipX, RotationDirection.CounterClockwise));
+        Assert.AreEqual(RotateFlipType.Rotate180FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate90FlipX, RotationDirection.CounterClockwise));
+        Assert.AreEqual(RotateFlipType.Rotate270FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate180FlipX, RotationDirection.CounterClockwise));
+        Assert.AreEqual(RotateFlipType.RotateNoneFlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate270FlipX, RotationDirection.CounterClockwise));
 
-        Assert.AreEqual(RotateFlipType.Rotate90FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.RotateNoneFlipX, RotationDirection.Clockwise));
-        Assert.AreEqual(RotateFlipType.Rotate180FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate90FlipX, RotationDirection.Clockwise));
-        Assert.AreEqual(RotateFlipType.Rotate270FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate180FlipX, RotationDirection.Clockwise));
-        Assert.AreEqual(RotateFlipType.RotateNoneFlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate270FlipX, RotationDirection.Clockwise));
+        Assert.AreEqual(RotateFlipType.Rotate270FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.RotateNoneFlipX, RotationDirection.Clockwise));
+        Assert.AreEqual(RotateFlipType.RotateNoneFlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate90FlipX, RotationDirection.Clockwise));
+        Assert.AreEqual(RotateFlipType.Rotate90FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate180FlipX, RotationDirection.Clockwise));
+        Assert.AreEqual(RotateFlipType.Rotate180FlipX, OrientationHelper.GetRotatedOrientation(RotateFlipType.Rotate270FlipX, RotationDirection.Clockwise));
     }
 
     [TestMethod]

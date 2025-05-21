@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
+using System.Numerics;
 
 namespace CaptureTool.Edit.Image.Win2D;
 
@@ -78,10 +80,10 @@ public static partial class OrientationHelper
                 RotateFlipType.Rotate180FlipNone => RotateFlipType.Rotate270FlipNone,
                 RotateFlipType.Rotate270FlipNone => RotateFlipType.RotateNoneFlipNone,
 
-                RotateFlipType.RotateNoneFlipX => RotateFlipType.Rotate90FlipX,
-                RotateFlipType.Rotate90FlipX => RotateFlipType.Rotate180FlipX,
-                RotateFlipType.Rotate180FlipX => RotateFlipType.Rotate270FlipX,
-                RotateFlipType.Rotate270FlipX => RotateFlipType.RotateNoneFlipX,
+                RotateFlipType.RotateNoneFlipX => RotateFlipType.Rotate270FlipX,
+                RotateFlipType.Rotate90FlipX => RotateFlipType.RotateNoneFlipX,
+                RotateFlipType.Rotate180FlipX => RotateFlipType.Rotate90FlipX,
+                RotateFlipType.Rotate270FlipX => RotateFlipType.Rotate180FlipX,
 
                 _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
             },
@@ -93,10 +95,10 @@ public static partial class OrientationHelper
                 RotateFlipType.Rotate180FlipNone => RotateFlipType.Rotate90FlipNone,
                 RotateFlipType.Rotate270FlipNone => RotateFlipType.Rotate180FlipNone,
 
-                RotateFlipType.RotateNoneFlipX => RotateFlipType.Rotate270FlipX,
-                RotateFlipType.Rotate90FlipX => RotateFlipType.RotateNoneFlipX,
-                RotateFlipType.Rotate180FlipX => RotateFlipType.Rotate90FlipX,
-                RotateFlipType.Rotate270FlipX => RotateFlipType.Rotate180FlipX,
+                RotateFlipType.RotateNoneFlipX => RotateFlipType.Rotate90FlipX,
+                RotateFlipType.Rotate90FlipX => RotateFlipType.Rotate180FlipX,
+                RotateFlipType.Rotate180FlipX => RotateFlipType.Rotate270FlipX,
+                RotateFlipType.Rotate270FlipX => RotateFlipType.RotateNoneFlipX,
 
                 _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
             },
@@ -289,5 +291,101 @@ public static partial class OrientationHelper
                 throw new ArgumentOutOfRangeException(nameof(orientation));
         }
         return result;
+    }
+
+    public static Matrix3x2 CalculateRenderTransform(Rectangle cropRect, Size imageSize, RotateFlipType orientation)
+    {
+        Matrix3x2 transform = Matrix3x2.Identity;
+        double imageWidth = imageSize.Width;
+        double imageHeight = imageSize.Height;
+
+        // Apply rotation
+        double maxDimension = Math.Max(imageHeight, imageWidth);
+        Vector2 rotationPoint = new((float)maxDimension / 2, (float)maxDimension / 2);
+
+        switch (orientation)
+        {
+            case RotateFlipType.Rotate90FlipNone:
+            case RotateFlipType.Rotate90FlipX:
+            case RotateFlipType.Rotate90FlipY:
+                transform *= Matrix3x2.CreateRotation(GetRadians(90), rotationPoint);
+                break;
+
+            case RotateFlipType.Rotate180FlipNone:
+            case RotateFlipType.Rotate180FlipX:
+            case RotateFlipType.Rotate180FlipY:
+                transform *= Matrix3x2.CreateRotation(GetRadians(180), rotationPoint);
+                break;
+
+            case RotateFlipType.Rotate270FlipNone:
+                transform *= Matrix3x2.CreateRotation(GetRadians(270), rotationPoint);
+                break;
+        }
+
+        // Apply translation to reposition at 0,0
+        bool isLandscape = imageWidth > imageHeight;
+        float heightLessWidth = (float)(imageHeight - imageWidth);
+        float widthLessHeight = (float)(imageWidth - imageHeight);
+        switch (orientation)
+        {
+            case RotateFlipType.Rotate90FlipNone:
+            case RotateFlipType.Rotate90FlipX:
+            case RotateFlipType.Rotate90FlipY:
+                if (isLandscape)
+                {
+                    transform *= Matrix3x2.CreateTranslation(heightLessWidth, 0);
+                }
+                break;
+
+            case RotateFlipType.Rotate180FlipNone:
+            case RotateFlipType.Rotate180FlipX:
+            case RotateFlipType.Rotate180FlipY:
+                if (isLandscape)
+                {
+                    transform *= Matrix3x2.CreateTranslation(0, heightLessWidth);
+                }
+                else
+                {
+                    transform *= Matrix3x2.CreateTranslation(widthLessHeight, 0);
+                }
+                break;
+
+            case RotateFlipType.Rotate270FlipNone:
+                if (!isLandscape)
+                {
+                    transform *= Matrix3x2.CreateTranslation(0, widthLessHeight);
+                }
+                break;
+        }
+
+        // Apply flipping
+        switch (orientation)
+        {
+            case RotateFlipType.Rotate180FlipY:
+                transform *= Matrix3x2.CreateScale(1, -1, new((float)imageWidth / 2, (float)imageHeight / 2));
+                break;
+
+            case RotateFlipType.Rotate90FlipX:
+                transform *= Matrix3x2.CreateScale(1, -1, new((float)imageHeight / 2, (float)imageWidth / 2));
+                break;
+
+            case RotateFlipType.Rotate180FlipX:
+                transform *= Matrix3x2.CreateScale(-1, 1, new((float)imageWidth / 2, (float)imageHeight / 2));
+                break;
+
+            case RotateFlipType.Rotate90FlipY:
+                transform *= Matrix3x2.CreateScale(-1, 1, new((float)imageHeight / 2, (float)imageWidth / 2));
+                break;
+        }
+
+        // Apply cropping
+        transform *= Matrix3x2.CreateTranslation(-(float)cropRect.X, -(float)cropRect.Y);
+
+        return transform;
+    }
+
+    public static float GetRadians(double angle)
+    {
+        return (float)(Math.PI * angle / 180.0);
     }
 }
