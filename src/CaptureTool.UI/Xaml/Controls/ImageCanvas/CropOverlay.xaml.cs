@@ -70,12 +70,12 @@ public sealed partial class CropOverlay : UserControlBase
     {
         double left = Math.Clamp(CropRect.Left, 0, CropCanvas.Width);
         double top = Math.Clamp(CropRect.Top, 0, CropCanvas.Height);
-        double right = Math.Clamp(CropCanvas.Width - CropRect.Right, 0, CropCanvas.Width);
-        double bottom = Math.Clamp(CropCanvas.Height - CropRect.Bottom, 0, CropCanvas.Height);
+        double right = Math.Clamp(CropRect.Right, 0, CropCanvas.Width);
+        double bottom = Math.Clamp(CropRect.Bottom, 0, CropCanvas.Height);
         double centerX = (left + right) / 2;
         double centerY = (top + bottom) / 2;
 
-        CropBoundary.BorderThickness = new Thickness(left, top, right, bottom);
+        CropBoundary.BorderThickness = new Thickness(left, top, CropCanvas.Width - right, CropCanvas.Height - bottom);
 
         Canvas.SetLeft(CropAnchor_TopLeft, left - CropAnchor_TopLeft.Width / 2);
         Canvas.SetTop(CropAnchor_TopLeft, top - CropAnchor_TopLeft.Height / 2);
@@ -164,44 +164,58 @@ public sealed partial class CropOverlay : UserControlBase
             double right = CropRect.Right;
             double bottom = CropRect.Bottom;
 
+            double newLeft = left;
+            double newTop = top;
+            double newRight = right;
+            double newBottom = bottom;
+
+            // Clamp left and top so that width and height are always at least 1
             if (_activeCropAnchor == CropAnchor_TopLeft)
             {
-                left = Math.Clamp(left + deltaX, 0, right - 1);
-                top = Math.Clamp(top + deltaY, 0, bottom - 1);
+                newLeft = Math.Clamp(left + deltaX, 0, right - 1);
+                newTop = Math.Clamp(top + deltaY, 0, bottom - 1);
             }
             else if (_activeCropAnchor == CropAnchor_TopRight)
             {
-                right = Math.Clamp(right + deltaX, left + 1, canvasWidth);
-                top = Math.Clamp(top + deltaY, 0, bottom - 1);
+                newRight = Math.Clamp(right + deltaX, left + 1, canvasWidth);
+                newTop = Math.Clamp(top + deltaY, 0, bottom - 1);
             }
             else if (_activeCropAnchor == CropAnchor_BottomLeft)
             {
-                left = Math.Clamp(left + deltaX, 0, right - 1);
-                bottom = Math.Clamp(bottom + deltaY, top + 1, canvasHeight);
+                newLeft = Math.Clamp(left + deltaX, 0, right - 1);
+                newBottom = Math.Clamp(bottom + deltaY, top + 1, canvasHeight);
             }
             else if (_activeCropAnchor == CropAnchor_BottomRight)
             {
-                right = Math.Clamp(right + deltaX, left + 1, canvasWidth);
-                bottom = Math.Clamp(bottom + deltaY, top + 1, canvasHeight);
+                newRight = Math.Clamp(right + deltaX, left + 1, canvasWidth);
+                newBottom = Math.Clamp(bottom + deltaY, top + 1, canvasHeight);
             }
             else if (_activeCropAnchor == CropAnchor_Top)
             {
-                top = Math.Clamp(top + deltaY, 0, bottom - 1);
+                newTop = Math.Clamp(top + deltaY, 0, bottom - 1);
             }
             else if (_activeCropAnchor == CropAnchor_Bottom)
             {
-                bottom = Math.Clamp(bottom + deltaY, top + 1, canvasHeight);
+                newBottom = Math.Clamp(bottom + deltaY, top + 1, canvasHeight);
             }
             else if (_activeCropAnchor == CropAnchor_Left)
             {
-                left = Math.Clamp(left + deltaX, 0, right - 1);
+                newLeft = Math.Clamp(left + deltaX, 0, right - 1);
             }
             else if (_activeCropAnchor == CropAnchor_Right)
             {
-                right = Math.Clamp(right + deltaX, left + 1, canvasWidth);
+                newRight = Math.Clamp(right + deltaX, left + 1, canvasWidth);
             }
 
-            CropRect = new Rectangle((int)left, (int)top, (int)(right - left), (int)(bottom - top));
+            int intLeft = (int)Math.Round(newLeft);
+            int intTop = (int)Math.Round(newTop);
+            int intRight = (int)Math.Round(newRight);
+            int intBottom = (int)Math.Round(newBottom);
+
+            int width = Math.Max(1, intRight - intLeft);
+            int height = Math.Max(1, intBottom - intTop);
+
+            CropRect = new Rectangle(intLeft, intTop, width, height);
             _cropAnchorLastPointerPosition = currentPosition;
             e.Handled = true;
         }
