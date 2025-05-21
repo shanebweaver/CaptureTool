@@ -115,74 +115,73 @@ public sealed class OrientationHelperTests
         Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipNone, RotateFlipType.Rotate90FlipNone));
         Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipNone, RotateFlipType.Rotate180FlipNone));
         Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipNone, RotateFlipType.Rotate270FlipNone));
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipNone, RotateFlipType.RotateNoneFlipX));
-        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipNone, RotateFlipType.Rotate90FlipX));
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipNone, RotateFlipType.Rotate180FlipX));
-        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipNone, RotateFlipType.Rotate270FlipX));
+        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipNone, RotateFlipType.RotateNoneFlipX));
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipNone, RotateFlipType.Rotate90FlipX));
+        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipNone, RotateFlipType.Rotate180FlipX));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipNone, RotateFlipType.Rotate270FlipX));
 
         Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.RotateNoneFlipNone));
         Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.Rotate90FlipNone));
         Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.Rotate180FlipNone));
         Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.Rotate270FlipNone));
-        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.RotateNoneFlipX));
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.Rotate90FlipX));
-        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.Rotate180FlipX));
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.Rotate270FlipX));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.RotateNoneFlipX));
+        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.Rotate90FlipX));
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.Rotate180FlipX));
+        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipNone, RotateFlipType.Rotate270FlipX));
 
         Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.RotateNoneFlipNone));
         Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.Rotate90FlipNone));
         Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.Rotate180FlipNone));
         Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.Rotate270FlipNone));
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.RotateNoneFlipX));
-        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.Rotate90FlipX));
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.Rotate180FlipX));
-        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.Rotate270FlipX));
+        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.RotateNoneFlipX));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.Rotate90FlipX));
+        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.Rotate180FlipX));
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipNone, RotateFlipType.Rotate270FlipX));
 
         Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.RotateNoneFlipNone));
         Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.Rotate90FlipNone));
         Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.Rotate180FlipNone));
         Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.Rotate270FlipNone));
-        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.RotateNoneFlipX));
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.Rotate90FlipX));
-        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.Rotate180FlipX));
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.Rotate270FlipX));
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.RotateNoneFlipX));
+        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.Rotate90FlipX));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.Rotate180FlipX));
+        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipNone, RotateFlipType.Rotate270FlipX));
 
-        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.RotateNoneFlipNone));
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.Rotate90FlipNone));
-        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.Rotate180FlipNone));
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.Rotate270FlipNone));
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.RotateNoneFlipX));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.RotateNoneFlipNone));
+        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.Rotate90FlipNone));
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.Rotate180FlipNone));
+        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.Rotate270FlipNone));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.RotateNoneFlipX));
         Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.Rotate90FlipX));
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.Rotate180FlipX));
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.Rotate180FlipX));
         Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate90FlipX, RotateFlipType.Rotate270FlipX));
 
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.RotateNoneFlipNone));
-        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.Rotate90FlipNone));
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.Rotate180FlipNone));
-        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.Rotate270FlipNone));
+        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.RotateNoneFlipNone));
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.Rotate90FlipNone));
+        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.Rotate180FlipNone));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.Rotate270FlipNone));
         Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.RotateNoneFlipX));
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.Rotate90FlipX));
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.Rotate90FlipX));
         Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.Rotate180FlipX));
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.Rotate270FlipX));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.RotateNoneFlipX, RotateFlipType.Rotate270FlipX));
 
-        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.RotateNoneFlipNone));
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.Rotate90FlipNone));
-        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.Rotate180FlipNone));
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.Rotate270FlipNone));
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.RotateNoneFlipX));
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.RotateNoneFlipNone));
+        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.Rotate90FlipNone));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.Rotate180FlipNone));
+        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.Rotate270FlipNone));
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.RotateNoneFlipX));
         Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.Rotate90FlipX));
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.Rotate180FlipX));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.Rotate180FlipX));
         Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate270FlipX, RotateFlipType.Rotate270FlipX));
 
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.RotateNoneFlipNone));
-        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.Rotate90FlipNone));
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.Rotate180FlipNone));
-        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.Rotate270FlipNone));
+        Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.RotateNoneFlipNone));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.Rotate90FlipNone));
+        Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.Rotate180FlipNone));
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.Rotate270FlipNone));
         Assert.AreEqual(2, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.RotateNoneFlipX));
-        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.Rotate90FlipX));
+        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.Rotate90FlipX));
         Assert.AreEqual(0, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.Rotate180FlipX));
-        Assert.AreEqual(3, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.Rotate270FlipX));
-
+        Assert.AreEqual(1, OrientationHelper.GetRotationSteps(RotateFlipType.Rotate180FlipX, RotateFlipType.Rotate270FlipX));
     }
 
     [TestMethod]

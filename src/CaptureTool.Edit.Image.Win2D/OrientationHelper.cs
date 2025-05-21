@@ -139,19 +139,15 @@ public static partial class OrientationHelper
     public static int GetRotationSteps(RotateFlipType from, RotateFlipType to)
     {
         int[] angles = [
-            0,   // RotateNoneFlipNone
-            90,  // Rotate90FlipNone
-            180, // Rotate180FlipNone
-            270, // Rotate270FlipNone
-            0,   // RotateNoneFlipX
-            90,  // Rotate90FlipX
-            180, // Rotate180FlipX
-            270, // Rotate270FlipX
+            0,
+            1,//90,
+            2,//180,
+            3,//270,
         ];
-        int fromIdx = (int)from % 8;
-        int toIdx = (int)to % 8;
-        int delta = (angles[toIdx] - angles[fromIdx] + 360) % 360;
-        return (delta / 90) % 4;
+        int fromIdx = (int)from % 4;
+        int toIdx = (int)to % 4;
+        int delta = (angles[toIdx] - angles[fromIdx] + 4) % 4;
+        return delta;
     }
 
     public static Rectangle GetOrientedCropRect(Rectangle cropRect, Size imageSize, RotateFlipType from, RotateFlipType to)
@@ -162,11 +158,6 @@ public static partial class OrientationHelper
         // Calculate the new crop rectangle based on the target orientation
         Rectangle orientedCropRect = FromCanonicalCropRect(canonicalCropRect, imageSize, to);
 
-        // Clamp to image bounds
-        //orientedCropRect.X = Math.Max(0, Math.Min(orientedCropRect.X, imageSize.Width - orientedCropRect.Width));
-        //orientedCropRect.Y = Math.Max(0, Math.Min(orientedCropRect.Y, imageSize.Height - orientedCropRect.Height));
-        //orientedCropRect.Width = Math.Min(orientedCropRect.Width, imageSize.Width - orientedCropRect.X);
-        //orientedCropRect.Height = Math.Min(orientedCropRect.Height, imageSize.Height - orientedCropRect.Y);
         return orientedCropRect;
     }
 
