@@ -321,11 +321,13 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         try
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            await ImageCanvasPrinter.ShowPrintUIAsync([.. Drawables], new ImageCanvasRenderOptions(Orientation, ImageSize, CropRect), hwnd);
+            await ImageCanvasPrinter.Default.ShowPrintUIAsync([.. Drawables], new ImageCanvasRenderOptions(Orientation, ImageSize, CropRect), hwnd);
         }
         catch (Exception e)
         {
             _telemetryService.ActivityError(activityId, e);
+
+            // Use error service to show an error message to the user
         }
     }
 
