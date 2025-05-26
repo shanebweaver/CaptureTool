@@ -1,4 +1,4 @@
-﻿using CaptureTool.Capture.Desktop.SnippingTool;
+﻿using CaptureTool.Capture.Windows.SnippingTool;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel.Activation;
 

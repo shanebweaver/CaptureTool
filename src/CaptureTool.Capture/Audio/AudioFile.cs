@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Capture.Desktop;
+﻿namespace CaptureTool.Capture.Audio;
 
 public sealed partial class AudioFile : FileBase
 {

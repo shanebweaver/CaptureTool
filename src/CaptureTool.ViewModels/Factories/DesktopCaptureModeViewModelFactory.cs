@@ -1,10 +1,10 @@
-﻿using CaptureTool.Capture.Desktop;
+﻿using CaptureTool.Capture;
 using CaptureTool.Services;
 using CaptureTool.Services.Localization;
 
 namespace CaptureTool.ViewModels.Factories;
 
-public sealed partial class DesktopCaptureModeViewModelFactory : IFactoryService<DesktopCaptureModeViewModel, DesktopCaptureMode>
+public sealed partial class DesktopCaptureModeViewModelFactory : IFactoryService<DesktopCaptureModeViewModel, CaptureMode>
 {
     private readonly ILocalizationService _localizationService;
 
@@ -14,7 +14,7 @@ public sealed partial class DesktopCaptureModeViewModelFactory : IFactoryService
         _localizationService = localizationService;
     }
 
-    public DesktopCaptureModeViewModel Create(DesktopCaptureMode desktopCaptureMode)
+    public DesktopCaptureModeViewModel Create(CaptureMode desktopCaptureMode)
     {
         return new(
             desktopCaptureMode,

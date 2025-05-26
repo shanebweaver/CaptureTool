@@ -1,4 +1,4 @@
-using CaptureTool.Capture.Desktop;
+using CaptureTool.Capture.Image;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
@@ -31,8 +31,8 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : LoadableVi
 
     public RelayCommand NewDesktopImageCaptureCommand => new(NewDesktopImageCapture, () => IsImageDesktopCaptureEnabled);
 
-    private ObservableCollection<DesktopImageCaptureMode> _captureModes;
-    public ObservableCollection<DesktopImageCaptureMode> CaptureModes
+    private ObservableCollection<ImageCaptureMode> _captureModes;
+    public ObservableCollection<ImageCaptureMode> CaptureModes
     {
         get => _captureModes;
         set => Set(ref _captureModes, value);
@@ -90,7 +90,7 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : LoadableVi
             IsImageDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Image);
             if (IsImageDesktopCaptureEnabled)
             {
-                DesktopImageCaptureMode[] supportedModes = Enum.GetValues<DesktopImageCaptureMode>();
+                ImageCaptureMode[] supportedModes = Enum.GetValues<ImageCaptureMode>();
                 foreach (var captureMode in supportedModes)
                 {
                     CaptureModes.Add(captureMode);
@@ -151,7 +151,7 @@ public sealed partial class DesktopImageCaptureOptionsPageViewModel : LoadableVi
         try
         {
             var imageCaptureMode = CaptureModes[SelectedImageCaptureModeIndex];
-            DesktopImageCaptureOptions options = new(imageCaptureMode, ImageFileType.Png, _autoSave);
+            ImageCaptureOptions options = new(imageCaptureMode, ImageFileType.Png, _autoSave);
             await _appController.NewDesktopImageCaptureAsync(options);
 
             _telemetryService.ActivityCompleted(activityId);

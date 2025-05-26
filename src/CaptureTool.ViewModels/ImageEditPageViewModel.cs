@@ -1,4 +1,4 @@
-﻿using CaptureTool.Capture.Desktop;
+﻿using CaptureTool.Capture.Image;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.Edit.Image.Win2D;

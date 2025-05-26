@@ -14,7 +14,7 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Edit.Image.Win2D\CaptureTool.Edit.Image.Win2D.csproj" />
+    <ProjectReference Include="..\CaptureTool.Edit.Windows\CaptureTool.Edit.Windows.csproj" />
   </ItemGroup>
 
 </Project>

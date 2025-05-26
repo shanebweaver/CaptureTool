@@ -3,7 +3,7 @@
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
-    <ProjectReference Include="..\CaptureTool.Capture.Desktop\CaptureTool.Capture.Desktop.csproj" />
+    <ProjectReference Include="..\CaptureTool.Capture\CaptureTool.Capture.csproj" />
   </ItemGroup>
 
 </Project>

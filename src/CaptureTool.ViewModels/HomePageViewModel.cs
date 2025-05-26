@@ -1,4 +1,5 @@
-﻿using CaptureTool.Capture.Desktop;
+﻿using CaptureTool.Capture.Image;
+using CaptureTool.Capture.Video;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
@@ -169,7 +170,7 @@ public sealed partial class HomePageViewModel : LoadableViewModelBase
         try
         {
             // TODO: Remember last used options
-            DesktopImageCaptureOptions options = new(DesktopImageCaptureMode.Rectangle, ImageFileType.Png, true);
+            ImageCaptureOptions options = new(ImageCaptureMode.Rectangle, ImageFileType.Png, true);
             await _appController.NewDesktopImageCaptureAsync(options);
 
             _telemetryService.ActivityCompleted(activityId);
@@ -188,7 +189,7 @@ public sealed partial class HomePageViewModel : LoadableViewModelBase
         try
         {
             // TODO: Remember last used options
-            DesktopVideoCaptureOptions options = new(DesktopVideoCaptureMode.Rectangle, VideoFileType.Mp4, true);
+            VideoCaptureOptions options = new(VideoCaptureMode.Rectangle, VideoFileType.Mp4, true);
             await _appController.NewDesktopVideoCaptureAsync(options);
 
             _telemetryService.ActivityCompleted(activityId);

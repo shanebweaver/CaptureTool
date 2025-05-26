@@ -1,5 +1,6 @@
-﻿using CaptureTool.Capture.Desktop;
-using CaptureTool.Capture.Desktop.SnippingTool;
+﻿using CaptureTool.Capture.Image;
+using CaptureTool.Capture.Video;
+using CaptureTool.Capture.Windows.SnippingTool;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
@@ -77,7 +78,7 @@ internal class CaptureToolAppController : IAppController
         }
     }
 
-    public async Task NewDesktopImageCaptureAsync(DesktopImageCaptureOptions options)
+    public async Task NewDesktopImageCaptureAsync(ImageCaptureOptions options)
     {
         // Feature check
         bool isDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
@@ -107,7 +108,7 @@ internal class CaptureToolAppController : IAppController
         }
     }
 
-    public async Task NewDesktopVideoCaptureAsync(DesktopVideoCaptureOptions options)
+    public async Task NewDesktopVideoCaptureAsync(VideoCaptureOptions options)
     {
         // Feature check
         bool isDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
@@ -128,24 +129,24 @@ internal class CaptureToolAppController : IAppController
         await _snippingToolService.CaptureVideoAsync(snippingToolOptions);
     }
 
-    private static SnippingToolCaptureMode ParseImageCaptureMode(DesktopImageCaptureMode? desktopImageCaptureMode)
+    private static SnippingToolCaptureMode ParseImageCaptureMode(ImageCaptureMode? desktopImageCaptureMode)
     {
         SnippingToolCaptureMode snippingToolCaptureMode = desktopImageCaptureMode switch
         {
-            DesktopImageCaptureMode.Rectangle => SnippingToolCaptureMode.Rectangle,
-            DesktopImageCaptureMode.Window => SnippingToolCaptureMode.Window,
-            DesktopImageCaptureMode.Fullscreen => SnippingToolCaptureMode.Fullscreen,
-            DesktopImageCaptureMode.Freeform => SnippingToolCaptureMode.Freeform,
+            ImageCaptureMode.Rectangle => SnippingToolCaptureMode.Rectangle,
+            ImageCaptureMode.Window => SnippingToolCaptureMode.Window,
+            ImageCaptureMode.Fullscreen => SnippingToolCaptureMode.Fullscreen,
+            ImageCaptureMode.Freeform => SnippingToolCaptureMode.Freeform,
             _ => throw new ArgumentOutOfRangeException(nameof(desktopImageCaptureMode), "Unexpected image capture mode.")
         };
         return snippingToolCaptureMode;
     }
 
-    private static SnippingToolCaptureMode ParseVideoCaptureMode(DesktopVideoCaptureMode? desktopVideoCaptureMode)
+    private static SnippingToolCaptureMode ParseVideoCaptureMode(VideoCaptureMode? desktopVideoCaptureMode)
     {
         SnippingToolCaptureMode snippingToolCaptureMode = desktopVideoCaptureMode switch
         {
-            DesktopVideoCaptureMode.Rectangle => SnippingToolCaptureMode.Rectangle,
+            VideoCaptureMode.Rectangle => SnippingToolCaptureMode.Rectangle,
             _ => throw new ArgumentOutOfRangeException(nameof(desktopVideoCaptureMode), "Unexpected video capture mode.")
         };
         return snippingToolCaptureMode;

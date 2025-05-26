@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Services.Localization;
 using CaptureTool.Services.Logging;
-using CaptureTool.Capture.Desktop.SnippingTool;
 using CaptureTool.Services.Navigation;
+using CaptureTool.Capture.Windows.SnippingTool;
 
 namespace CaptureTool.UI;
 

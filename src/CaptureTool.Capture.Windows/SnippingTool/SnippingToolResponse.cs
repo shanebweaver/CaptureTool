@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 
-namespace CaptureTool.Capture.Desktop.SnippingTool;
+namespace CaptureTool.Capture.Windows.SnippingTool;
 
 // https://learn.microsoft.com/en-us/windows/apps/develop/launch/launch-snipping-tool
 public sealed partial class SnippingToolResponse

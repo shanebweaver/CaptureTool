@@ -1,4 +1,4 @@
-﻿using CaptureTool.Capture.Desktop;
+﻿using CaptureTool.Capture.Video;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Telemetry;
 using System;

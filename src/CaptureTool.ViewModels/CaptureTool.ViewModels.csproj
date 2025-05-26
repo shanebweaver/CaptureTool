@@ -14,13 +14,13 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Capture.Desktop\CaptureTool.Capture.Desktop.csproj" />
+    <ProjectReference Include="..\CaptureTool.Capture\CaptureTool.Capture.csproj" />
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
     <ProjectReference Include="..\CaptureTool.Core\CaptureTool.Core.csproj" />
-    <ProjectReference Include="..\CaptureTool.Edit.Image.Win2D\CaptureTool.Edit.Image.Win2D.csproj" />
+    <ProjectReference Include="..\CaptureTool.Edit.Windows\CaptureTool.Edit.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Windows\CaptureTool.Services.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Capture.Desktop.SnippingTool\CaptureTool.Capture.Desktop.SnippingTool.csproj" />
+    <ProjectReference Include="..\CaptureTool.Capture.Windows\CaptureTool.Capture.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
   </ItemGroup>
 

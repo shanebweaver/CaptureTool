@@ -1,4 +1,5 @@
-﻿using CaptureTool.Capture.Desktop;
+﻿using CaptureTool.Capture.Image;
+using CaptureTool.Capture.Video;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
@@ -144,7 +145,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
         try
         {
-            DesktopImageCaptureOptions options = new(DesktopImageCaptureMode.Rectangle, ImageFileType.Png, true);
+            ImageCaptureOptions options = new(ImageCaptureMode.Rectangle, ImageFileType.Png, true);
             _ = _appController.NewDesktopImageCaptureAsync(options);
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -161,7 +162,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
         try
         {
-            DesktopVideoCaptureOptions options = new(DesktopVideoCaptureMode.Rectangle, VideoFileType.Mp4, true);
+            VideoCaptureOptions options = new(VideoCaptureMode.Rectangle, VideoFileType.Mp4, true);
             _ = _appController.NewDesktopVideoCaptureAsync(options);
             _telemetryService.ActivityCompleted(activityId);
         }

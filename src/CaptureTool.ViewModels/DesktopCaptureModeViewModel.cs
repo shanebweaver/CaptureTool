@@ -1,4 +1,4 @@
-﻿using CaptureTool.Capture.Desktop;
+﻿using CaptureTool.Capture;
 using CaptureTool.Services.Localization;
 using System;
 
@@ -7,10 +7,10 @@ namespace CaptureTool.ViewModels;
 public sealed partial class DesktopCaptureModeViewModel : LoadableViewModelBase
 {
     public string DisplayName { get; }
-    public DesktopCaptureMode CaptureMode { get; }
+    public CaptureMode CaptureMode { get; }
 
     public DesktopCaptureModeViewModel(
-        DesktopCaptureMode captureMode,
+        CaptureMode captureMode,
         ILocalizationService localizationService)
     {
         CaptureMode = captureMode;

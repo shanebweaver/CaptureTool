@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Capture.Desktop;
+﻿namespace CaptureTool.Capture;
 
 public abstract partial class FileBase
 {

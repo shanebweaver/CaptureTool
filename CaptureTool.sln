@@ -30,11 +30,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Window
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Core", "src\CaptureTool.Core\CaptureTool.Core.csproj", "{E2B8000C-0354-430A-82DD-265A57839277}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Capture.Desktop.SnippingTool", "src\CaptureTool.Capture.Desktop.SnippingTool\CaptureTool.Capture.Desktop.SnippingTool.csproj", "{2AF975AE-7D0B-4FFD-AC10-768B667EAEF6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Capture.Windows", "src\CaptureTool.Capture.Windows\CaptureTool.Capture.Windows.csproj", "{2AF975AE-7D0B-4FFD-AC10-768B667EAEF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Capture.Desktop", "src\CaptureTool.Capture.Desktop\CaptureTool.Capture.Desktop.csproj", "{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Capture", "src\CaptureTool.Capture\CaptureTool.Capture.csproj", "{9492CC6D-4423-4DF0-BC7B-CCE107FC310A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Edit.Image.Win2D", "src\CaptureTool.Edit.Image.Win2D\CaptureTool.Edit.Image.Win2D.csproj", "{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Edit.Windows", "src\CaptureTool.Edit.Windows\CaptureTool.Edit.Windows.csproj", "{5A4C88D2-0DAF-427E-ABBC-6A4470E8225D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Tests", "src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj", "{7C067745-CD5D-4665-8EF9-79730477C4BA}"
 EndProject
@@ -42,7 +42,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.UI.Tests", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.ViewModels.Tests", "src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj", "{96D133A6-FD71-45DB-8023-C988F0E045C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Edit.Image.Win2D.Tests", "src\CaptureTool.Edit.Image.Win2D.Tests\CaptureTool.Edit.Image.Win2D.Tests.csproj", "{DFB09AB3-86E2-4870-B2DE-7AE55F126B46}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Edit.Windows.Tests", "src\CaptureTool.Edit.Windows.Tests\CaptureTool.Edit.Windows.Tests.csproj", "{DFB09AB3-86E2-4870-B2DE-7AE55F126B46}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

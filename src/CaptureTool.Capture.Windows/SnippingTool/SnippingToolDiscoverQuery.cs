@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CaptureTool.Capture.Desktop.SnippingTool;
+namespace CaptureTool.Capture.Windows.SnippingTool;
 
 public class SnippingToolDiscoverQuery : SnippingToolQuery
 {

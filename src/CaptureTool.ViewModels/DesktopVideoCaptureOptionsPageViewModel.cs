@@ -1,4 +1,4 @@
-using CaptureTool.Capture.Desktop;
+using CaptureTool.Capture.Video;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
@@ -31,8 +31,8 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableVi
 
     public RelayCommand NewDesktopVideoCaptureCommand => new(NewDesktopVideoCapture, () => IsVideoDesktopCaptureEnabled);
 
-    private ObservableCollection<DesktopVideoCaptureMode> _captureModes;
-    public ObservableCollection<DesktopVideoCaptureMode> CaptureModes
+    private ObservableCollection<VideoCaptureMode> _captureModes;
+    public ObservableCollection<VideoCaptureMode> CaptureModes
     {
         get => _captureModes;
         set => Set(ref _captureModes, value);
@@ -88,7 +88,7 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableVi
         try
         {
             IsVideoDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Video);
-            DesktopVideoCaptureMode[] supportedModes = Enum.GetValues<DesktopVideoCaptureMode>();
+            VideoCaptureMode[] supportedModes = Enum.GetValues<VideoCaptureMode>();
             foreach (var captureMode in supportedModes)
             {
                 CaptureModes.Add(captureMode);
@@ -147,7 +147,7 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableVi
         try
         {
             var videoCaptureMode = CaptureModes[SelectedCaptureModeIndex];
-            DesktopVideoCaptureOptions options = new(videoCaptureMode, VideoFileType.Mp4, _autoSave);
+            VideoCaptureOptions options = new(videoCaptureMode, VideoFileType.Mp4, _autoSave);
             await _appController.NewDesktopVideoCaptureAsync(options);
 
             _telemetryService.ActivityCompleted(activityId);

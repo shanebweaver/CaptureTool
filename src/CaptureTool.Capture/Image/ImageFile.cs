@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Capture.Desktop;
+﻿namespace CaptureTool.Capture.Image;
 
 public sealed partial class ImageFile : FileBase
 {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using CaptureTool.Capture.Desktop;
+using CaptureTool.Capture.Image;
+using CaptureTool.Capture.Video;
 
 namespace CaptureTool.Core.AppController;
 
@@ -11,8 +12,8 @@ public interface IAppController
     void Shutdown();
     bool TryRestart();
 
-    Task NewDesktopImageCaptureAsync(DesktopImageCaptureOptions options);
-    Task NewDesktopVideoCaptureAsync(DesktopVideoCaptureOptions options);
+    Task NewDesktopImageCaptureAsync(ImageCaptureOptions options);
+    Task NewDesktopVideoCaptureAsync(VideoCaptureOptions options);
     Task NewDesktopAudioCaptureAsync();
 
     void UpdateAppWindowPresentation(AppWindowPresenterAction action);
