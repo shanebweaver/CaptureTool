@@ -33,7 +33,7 @@
                     CreateResources="CanvasControl_CreateResources"
                     Draw="CanvasControl_Draw" />
 
-                <local:CropOverlay
+                <controls:CropOverlay
                     x:Name="CropOverlay"
                     CropRect="{x:Bind CropRect, Mode=TwoWay}"
                     Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />

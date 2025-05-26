@@ -5,6 +5,7 @@ using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
+using CaptureTool.UI.Xaml.Windows;
 using Microsoft.Windows.AppLifecycle;
 using System;
 using System.Diagnostics;
@@ -19,6 +20,8 @@ internal class CaptureToolAppController : IAppController
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
     private readonly ISnippingToolService _snippingToolService;
+
+    private DesktopImageCaptureWindow? _desktopImageCaptureWindow;
 
     public event EventHandler<AppWindowPresenterAction>? AppWindowPresentationUpdateRequested;
 
@@ -64,6 +67,16 @@ internal class CaptureToolAppController : IAppController
         App.Current.Shutdown();
     }
 
+    private void CleanupDesktopImageCaptureWindow()
+    {
+        if (_desktopImageCaptureWindow != null)
+        {
+            _desktopImageCaptureWindow.Close();
+            _desktopImageCaptureWindow = null;
+            UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
+        }
+    }
+
     public async Task NewDesktopImageCaptureAsync(DesktopImageCaptureOptions options)
     {
         // Feature check
@@ -74,13 +87,24 @@ internal class CaptureToolAppController : IAppController
             throw new InvalidOperationException("Feature is not enabled");
         }
 
+        CleanupDesktopImageCaptureWindow();
+
         // Show loading screen and minimize
         _navigationService.Navigate(CaptureToolNavigationRoutes.Loading, null);
         UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
 
-        SnippingToolCaptureMode captureMode = ParseImageCaptureMode(options.ImageCaptureMode);
-        SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
-        await _snippingToolService.CaptureImageAsync(snippingToolOptions);
+        bool useSnippingTool = false;
+        if (useSnippingTool)
+        {
+            SnippingToolCaptureMode captureMode = ParseImageCaptureMode(options.ImageCaptureMode);
+            SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
+            await _snippingToolService.CaptureImageAsync(snippingToolOptions);
+        }
+        else
+        {
+            _desktopImageCaptureWindow = new();
+            _desktopImageCaptureWindow.Activate();
+        }
     }
 
     public async Task NewDesktopVideoCaptureAsync(DesktopVideoCaptureOptions options)
@@ -92,6 +116,8 @@ internal class CaptureToolAppController : IAppController
         {
             throw new InvalidOperationException("Feature is not enabled");
         }
+
+        CleanupDesktopImageCaptureWindow();
 
         // Show loading screen and minimize
         _navigationService.Navigate(CaptureToolNavigationRoutes.Loading, null);
@@ -140,11 +166,33 @@ internal class CaptureToolAppController : IAppController
         return WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
     }
 
-    private void NavigateHome()
+    public void GoHome()
     {
+        CleanupDesktopImageCaptureWindow();
+
         if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.Home)
         {
             _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
+        }
+    }
+
+    public bool TryGoBack()
+    {
+        if (_navigationService.CanGoBack)
+        {
+            CleanupDesktopImageCaptureWindow();
+            _navigationService.GoBack();
+            return true;
+        }
+
+        return false;
+    }
+
+    public void GoBackOrHome()
+    {
+        if (!TryGoBack())
+        {
+            GoHome();
         }
     }
 
@@ -172,12 +220,12 @@ internal class CaptureToolAppController : IAppController
             }
             catch (Exception)
             {
-                NavigateHome();
+                GoHome();
             }
         }
         else
         {
-            NavigateHome();
+            GoHome();
         }
     }
 }

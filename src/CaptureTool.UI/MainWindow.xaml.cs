@@ -27,16 +27,13 @@ public sealed partial class MainWindow : Window
 
     private readonly CancellationTokenSource _activationCts = new();
 
-    private readonly AppWindow _appWindow;
-
     public MainWindow()
     {
         InitializeComponent();
 
-        _appWindow = GetAppWindowForCurrentWindow();
-        _appWindow.Closing += OnAppWindowClosing;
+        AppWindow.Closing += OnAppWindowClosing;
         
-        var titleBar = _appWindow.TitleBar;
+        var titleBar = AppWindow.TitleBar;
         titleBar.ExtendsContentIntoTitleBar = true;
 
         Activated += OnActivated;
@@ -58,13 +55,6 @@ public sealed partial class MainWindow : Window
         {
             UpdateRequestedAppTheme();
         }
-    }
-
-    private AppWindow GetAppWindowForCurrentWindow()
-    {
-        IntPtr hWnd = WindowNative.GetWindowHandle(this);
-        WindowId wndId = Win32Interop.GetWindowIdFromWindow(hWnd);
-        return AppWindow.GetFromWindowId(wndId);
     }
 
     private async void OnActivated(object sender, WindowActivatedEventArgs args)

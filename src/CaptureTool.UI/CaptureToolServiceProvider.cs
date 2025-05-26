@@ -45,15 +45,13 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IThemeService, WindowsThemeService>();
         collection.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
         collection.AddSingleton<ILocalizationService, WindowsLocalizationService>();
-        collection.AddSingleton(GetTaskEnvironment);
-
-        // ViewModel factories
-        collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel, DesktopCaptureMode>, DesktopCaptureModeViewModelFactory>();
-        collection.AddSingleton<IFactoryService<AppLanguageViewModel, AppLanguage>, AppLanguageViewModelFactory>();
-        collection.AddSingleton<IFactoryService<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
+        collection.AddSingleton<ITaskEnvironment, WinUITaskEnvironment>(CreateWinUITaskEnvironment);
 
         // ViewModels
+        // Windows
         collection.AddTransient<MainWindowViewModel>();
+        collection.AddTransient<DesktopImageCaptureWindowViewModel>();
+        // Pages
         collection.AddTransient<ErrorPageViewModel>();
         collection.AddTransient<HomePageViewModel>();
         collection.AddTransient<SettingsPageViewModel>();
@@ -62,9 +60,14 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<VideoEditPageViewModel>();
         collection.AddTransient<DesktopImageCaptureOptionsPageViewModel>();
         collection.AddTransient<DesktopVideoCaptureOptionsPageViewModel>();
+        // Views
         collection.AddTransient<AppMenuViewModel>();
         collection.AddTransient<AppTitleBarViewModel>();
         collection.AddTransient<AppAboutViewModel>();
+        // Factories
+        collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel, DesktopCaptureMode>, DesktopCaptureModeViewModelFactory>();
+        collection.AddSingleton<IFactoryService<AppLanguageViewModel, AppLanguage>, AppLanguageViewModelFactory>();
+        collection.AddSingleton<IFactoryService<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
 
         // App controller and feature manager
         collection.AddSingleton<IAppController, CaptureToolAppController>();
@@ -82,7 +85,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private ITaskEnvironment GetTaskEnvironment(IServiceProvider serviceProvider)
+    private static WinUITaskEnvironment CreateWinUITaskEnvironment(IServiceProvider serviceProvider)
     {
         return new WinUITaskEnvironment(App.Current.DispatcherQueue);
     }

@@ -8,7 +8,7 @@ using Windows.UI.Core;
 using Rectangle = System.Drawing.Rectangle;
 using Point = Windows.Foundation.Point;
 
-namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
+namespace CaptureTool.UI.Xaml.Controls;
 
 public sealed partial class CropOverlay : UserControlBase
 {

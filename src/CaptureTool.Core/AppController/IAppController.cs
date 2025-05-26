@@ -18,4 +18,8 @@ public interface IAppController
     void UpdateAppWindowPresentation(AppWindowPresenterAction action);
 
     nint GetMainWindowHandle();
+
+    void GoHome();
+    bool TryGoBack();
+    void GoBackOrHome();
 }

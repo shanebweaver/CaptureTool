@@ -14,6 +14,9 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Xaml\Windows\DesktopImageCaptureWindow.xaml" />
+  </ItemGroup>
 
   <!-- Project assets -->
   <ItemGroup>
@@ -42,6 +45,7 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
     <PackageReference Include="Microsoft.WindowsAppSDK" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" />
+    <PackageReference Include="WinUIEx" />
   </ItemGroup>
 
   <!-- Project references -->
@@ -119,6 +123,11 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Pages\VideoEditPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Xaml\Windows\DesktopImageCaptureWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

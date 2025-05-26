@@ -12,6 +12,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
 
+using Point = Windows.Foundation.Point;
+
 namespace CaptureTool.UI.Xaml.Controls.ImageCanvas;
 
 public sealed partial class ImageCanvas : UserControlBase
@@ -130,7 +132,7 @@ public sealed partial class ImageCanvas : UserControlBase
     }
 
     private bool _isPointerDown;
-    private Windows.Foundation.Point _lastPointerPosition;
+    private Point _lastPointerPosition;
 
     public ImageCanvas()
     {
