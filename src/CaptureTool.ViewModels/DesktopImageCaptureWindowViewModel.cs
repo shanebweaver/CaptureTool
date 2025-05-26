@@ -1,5 +1,4 @@
 ﻿using CaptureTool.Common.Commands;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Services.Navigation;
 using System.Drawing;
@@ -12,12 +11,20 @@ public sealed partial class DesktopImageCaptureWindowViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
 
     public RelayCommand GoBackCommand => new(GoBack);
+    public RelayCommand ToggleShowOptionsCommand => new(ToggleShowOptions);
 
     private Rectangle _captureArea;
     public Rectangle CaptureArea
     {
         get => _captureArea;
         set => Set(ref _captureArea, value);
+    }
+
+    private bool _showOptions;
+    public bool ShowOptions
+    {
+        get => _showOptions;
+        set => Set(ref _showOptions, value);
     }
 
     public DesktopImageCaptureWindowViewModel(
@@ -33,5 +40,10 @@ public sealed partial class DesktopImageCaptureWindowViewModel : ViewModelBase
     private void GoBack()
     {
         _appController.GoBackOrHome();
+    }
+
+    private void ToggleShowOptions()
+    {
+        ShowOptions = !ShowOptions;
     }
 }

@@ -125,8 +125,6 @@
     <Page Update="Xaml\Pages\VideoEditPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
     <Page Update="Xaml\Windows\DesktopImageCaptureWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
