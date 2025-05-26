@@ -117,13 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="NewCaptureButton_DesktopAudio.Text" xml:space="preserve">
+  <data name="NewCaptureButton_Audio.Text" xml:space="preserve">
     <value>Audio</value>
   </data>
-  <data name="NewCaptureButton_DesktopImage.Text" xml:space="preserve">
+  <data name="NewCaptureButton_Image.Text" xml:space="preserve">
     <value>Screenshot</value>
   </data>
-  <data name="NewCaptureButton_DesktopVideo.Text" xml:space="preserve">
+  <data name="NewCaptureButton_Video.Text" xml:space="preserve">
     <value>Screen recording</value>
   </data>
   <data name="AppTheme_Dark" xml:space="preserve">
@@ -180,13 +180,13 @@
   <data name="AppMenu_NewCaptureLabel.Text" xml:space="preserve">
     <value>New capture</value>
   </data>
-  <data name="AppMenu_NewCapture_DesktopAudioLabel.Text" xml:space="preserve">
+  <data name="AppMenu_NewCapture_AudioLabel.Text" xml:space="preserve">
     <value>Audio</value>
   </data>
-  <data name="AppMenu_NewCapture_DesktopVideoLabel.Text" xml:space="preserve">
+  <data name="AppMenu_NewCapture_VideoLabel.Text" xml:space="preserve">
     <value>Screen recording</value>
   </data>
-  <data name="AppMenu_NewCapture_DesktopImageLabel.Text" xml:space="preserve">
+  <data name="AppMenu_NewCapture_ImageLabel.Text" xml:space="preserve">
     <value>Screenshot</value>
   </data>
   <data name="AppMenu_OpenFileLabel.Text" xml:space="preserve">

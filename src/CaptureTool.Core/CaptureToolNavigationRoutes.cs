@@ -12,7 +12,7 @@ public static partial class CaptureToolNavigationRoutes
     public static readonly NavigationRoute ImageEdit = new("ImageEdit");
     public static readonly NavigationRoute VideoEdit = new("VideoEdit");
     public static readonly NavigationRoute AudioEdit = new("AudioEdit");
-    public static readonly NavigationRoute DesktopImageCaptureOptions = new("DesktopImageCaptureOptions");
-    public static readonly NavigationRoute DesktopVideoCaptureOptions = new("DesktopVideoCaptureOptions");
-    public static readonly NavigationRoute DesktopAudioCaptureOptions = new("DesktopAudioCaptureOptions");
+    public static readonly NavigationRoute ImageCaptureOptions = new("ImageCaptureOptions");
+    public static readonly NavigationRoute VideoCaptureOptions = new("VideoCaptureOptions");
+    public static readonly NavigationRoute AudioCaptureOptions = new("AudioCaptureOptions");
 }

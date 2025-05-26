@@ -16,10 +16,10 @@ public sealed partial class HomePage : HomePageBase
         if (e.NavigationMode == NavigationMode.Back)
         {
             ConnectedAnimation imageAnimation = ConnectedAnimationService.GetForCurrentView().GetAnimation("backAnimation_Image");
-            imageAnimation?.TryStart(NewDesktopImageCaptureButton);
+            imageAnimation?.TryStart(NewImageCaptureButton);
 
             ConnectedAnimation videoAnimation = ConnectedAnimationService.GetForCurrentView().GetAnimation("backAnimation_Video");
-            videoAnimation?.TryStart(NewDesktopVideoCaptureButton);
+            videoAnimation?.TryStart(NewVideoCaptureButton);
         }
 
         base.OnNavigatedTo(e);
@@ -27,13 +27,13 @@ public sealed partial class HomePage : HomePageBase
 
     protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
     {
-        if (e.SourcePageType == PageLocator.GetPageType(CaptureToolNavigationRoutes.DesktopImageCaptureOptions))
+        if (e.SourcePageType == PageLocator.GetPageType(CaptureToolNavigationRoutes.ImageCaptureOptions))
         {
-            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation_Image", NewDesktopImageCaptureButton);
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation_Image", NewImageCaptureButton);
         }
-        else if (e.SourcePageType == PageLocator.GetPageType(CaptureToolNavigationRoutes.DesktopVideoCaptureOptions))
+        else if (e.SourcePageType == PageLocator.GetPageType(CaptureToolNavigationRoutes.VideoCaptureOptions))
         {
-            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation_Video", NewDesktopVideoCaptureButton);
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation_Video", NewVideoCaptureButton);
         }
 
         base.OnNavigatingFrom(e);

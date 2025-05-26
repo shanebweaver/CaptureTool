@@ -5,7 +5,7 @@ using System.Drawing;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class DesktopImageCaptureWindowViewModel : ViewModelBase
+public sealed partial class ImageCaptureWindowViewModel : ViewModelBase
 {
     private readonly IAppController _appController;
     private readonly INavigationService _navigationService;
@@ -27,7 +27,7 @@ public sealed partial class DesktopImageCaptureWindowViewModel : ViewModelBase
         set => Set(ref _showOptions, value);
     }
 
-    public DesktopImageCaptureWindowViewModel(
+    public ImageCaptureWindowViewModel(
         IAppController appController,
         INavigationService navigationService)
     {

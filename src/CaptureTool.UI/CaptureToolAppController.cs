@@ -22,7 +22,7 @@ internal class CaptureToolAppController : IAppController
     private readonly INavigationService _navigationService;
     private readonly ISnippingToolService _snippingToolService;
 
-    private DesktopImageCaptureWindow? _desktopImageCaptureWindow;
+    private ImageCaptureWindow? _imageCaptureWindow;
 
     public event EventHandler<AppWindowPresenterAction>? AppWindowPresentationUpdateRequested;
 
@@ -68,27 +68,27 @@ internal class CaptureToolAppController : IAppController
         App.Current.Shutdown();
     }
 
-    private void CleanupDesktopImageCaptureWindow()
+    private void CleanupImageCaptureWindow()
     {
-        if (_desktopImageCaptureWindow != null)
+        if (_imageCaptureWindow != null)
         {
-            _desktopImageCaptureWindow.Close();
-            _desktopImageCaptureWindow = null;
+            _imageCaptureWindow.Close();
+            _imageCaptureWindow = null;
             UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
         }
     }
 
-    public async Task NewDesktopImageCaptureAsync(ImageCaptureOptions options)
+    public async Task NewImageCaptureAsync(ImageCaptureOptions options)
     {
         // Feature check
-        bool isDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
-        bool isImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Image);
-        if (!isDesktopCaptureEnabled || !isImageCaptureEnabled)
+        bool isCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture);
+        bool isImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Image);
+        if (!isCaptureEnabled || !isImageCaptureEnabled)
         {
             throw new InvalidOperationException("Feature is not enabled");
         }
 
-        CleanupDesktopImageCaptureWindow();
+        CleanupImageCaptureWindow();
 
         // Show loading screen and minimize
         _navigationService.Navigate(CaptureToolNavigationRoutes.Loading, null);
@@ -103,22 +103,22 @@ internal class CaptureToolAppController : IAppController
         }
         else
         {
-            _desktopImageCaptureWindow = new();
-            _desktopImageCaptureWindow.Activate();
+            _imageCaptureWindow = new();
+            _imageCaptureWindow.Activate();
         }
     }
 
-    public async Task NewDesktopVideoCaptureAsync(VideoCaptureOptions options)
+    public async Task NewVideoCaptureAsync(VideoCaptureOptions options)
     {
         // Feature check
-        bool isDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture);
-        bool isVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Video);
-        if (!isDesktopCaptureEnabled || !isVideoCaptureEnabled)
+        bool isCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture);
+        bool isVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Video);
+        if (!isCaptureEnabled || !isVideoCaptureEnabled)
         {
             throw new InvalidOperationException("Feature is not enabled");
         }
 
-        CleanupDesktopImageCaptureWindow();
+        CleanupImageCaptureWindow();
 
         // Show loading screen and minimize
         _navigationService.Navigate(CaptureToolNavigationRoutes.Loading, null);
@@ -129,30 +129,30 @@ internal class CaptureToolAppController : IAppController
         await _snippingToolService.CaptureVideoAsync(snippingToolOptions);
     }
 
-    private static SnippingToolCaptureMode ParseImageCaptureMode(ImageCaptureMode? desktopImageCaptureMode)
+    private static SnippingToolCaptureMode ParseImageCaptureMode(ImageCaptureMode? imageCaptureMode)
     {
-        SnippingToolCaptureMode snippingToolCaptureMode = desktopImageCaptureMode switch
+        SnippingToolCaptureMode snippingToolCaptureMode = imageCaptureMode switch
         {
             ImageCaptureMode.Rectangle => SnippingToolCaptureMode.Rectangle,
             ImageCaptureMode.Window => SnippingToolCaptureMode.Window,
             ImageCaptureMode.Fullscreen => SnippingToolCaptureMode.Fullscreen,
             ImageCaptureMode.Freeform => SnippingToolCaptureMode.Freeform,
-            _ => throw new ArgumentOutOfRangeException(nameof(desktopImageCaptureMode), "Unexpected image capture mode.")
+            _ => throw new ArgumentOutOfRangeException(nameof(imageCaptureMode), "Unexpected image capture mode.")
         };
         return snippingToolCaptureMode;
     }
 
-    private static SnippingToolCaptureMode ParseVideoCaptureMode(VideoCaptureMode? desktopVideoCaptureMode)
+    private static SnippingToolCaptureMode ParseVideoCaptureMode(VideoCaptureMode? videoCaptureMode)
     {
-        SnippingToolCaptureMode snippingToolCaptureMode = desktopVideoCaptureMode switch
+        SnippingToolCaptureMode snippingToolCaptureMode = videoCaptureMode switch
         {
             VideoCaptureMode.Rectangle => SnippingToolCaptureMode.Rectangle,
-            _ => throw new ArgumentOutOfRangeException(nameof(desktopVideoCaptureMode), "Unexpected video capture mode.")
+            _ => throw new ArgumentOutOfRangeException(nameof(videoCaptureMode), "Unexpected video capture mode.")
         };
         return snippingToolCaptureMode;
     }
 
-    public Task NewDesktopAudioCaptureAsync()
+    public Task NewAudioCaptureAsync()
     {
         throw new NotImplementedException();
     }
@@ -169,7 +169,7 @@ internal class CaptureToolAppController : IAppController
 
     public void GoHome()
     {
-        CleanupDesktopImageCaptureWindow();
+        CleanupImageCaptureWindow();
 
         if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.Home)
         {
@@ -181,7 +181,7 @@ internal class CaptureToolAppController : IAppController
     {
         if (_navigationService.CanGoBack)
         {
-            CleanupDesktopImageCaptureWindow();
+            CleanupImageCaptureWindow();
             _navigationService.GoBack();
             return true;
         }

@@ -4,11 +4,11 @@ using Microsoft.UI.Xaml;
 
 namespace CaptureTool.UI.Xaml.Windows;
 
-public sealed partial class DesktopImageCaptureWindow : Window
+public sealed partial class ImageCaptureWindow : Window
 {
-    public DesktopImageCaptureWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<DesktopImageCaptureWindowViewModel>();
+    public ImageCaptureWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<ImageCaptureWindowViewModel>();
 
-    public DesktopImageCaptureWindow()
+    public ImageCaptureWindow()
     {
         InitializeComponent();
         ExtendsContentIntoTitleBar = true;

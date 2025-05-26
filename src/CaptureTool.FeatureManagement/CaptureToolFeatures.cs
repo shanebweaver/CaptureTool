@@ -2,12 +2,12 @@
 
 public static partial class CaptureToolFeatures
 {
-    public static readonly FeatureFlag Feature_DesktopCapture = new("DesktopCapture");
-    public static readonly FeatureFlag Feature_DesktopCapture_Image = new("DesktopCapture_Image");
-    public static readonly FeatureFlag Feature_DesktopCapture_Image_Options = new("DesktopCapture_Image_Options");
-    public static readonly FeatureFlag Feature_DesktopCapture_Video = new("DesktopCapture_Video");
-    public static readonly FeatureFlag Feature_DesktopCapture_Video_Options = new("DesktopCapture_Video_Options");
-    public static readonly FeatureFlag Feature_DesktopCapture_Audio = new("DesktopCapture_Audio");
-    public static readonly FeatureFlag Feature_DesktopCapture_Audio_Options = new("DesktopCapture_Audio_Options");
+    public static readonly FeatureFlag Feature_Capture = new("Capture");
+    public static readonly FeatureFlag Feature_Capture_Image = new("Capture_Image");
+    public static readonly FeatureFlag Feature_Capture_Image_Options = new("Capture_Image_Options");
+    public static readonly FeatureFlag Feature_Capture_Video = new("Capture_Video");
+    public static readonly FeatureFlag Feature_Capture_Video_Options = new("Capture_Video_Options");
+    public static readonly FeatureFlag Feature_Capture_Audio = new("Capture_Audio");
+    public static readonly FeatureFlag Feature_Capture_Audio_Options = new("Capture_Audio_Options");
 }
   

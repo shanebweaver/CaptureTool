@@ -12,9 +12,9 @@ public interface IAppController
     void Shutdown();
     bool TryRestart();
 
-    Task NewDesktopImageCaptureAsync(ImageCaptureOptions options);
-    Task NewDesktopVideoCaptureAsync(VideoCaptureOptions options);
-    Task NewDesktopAudioCaptureAsync();
+    Task NewImageCaptureAsync(ImageCaptureOptions options);
+    Task NewVideoCaptureAsync(VideoCaptureOptions options);
+    Task NewAudioCaptureAsync();
 
     void UpdateAppWindowPresentation(AppWindowPresenterAction action);
 

@@ -50,7 +50,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         // ViewModels
         // Windows
         collection.AddTransient<MainWindowViewModel>();
-        collection.AddTransient<DesktopImageCaptureWindowViewModel>();
+        collection.AddTransient<ImageCaptureWindowViewModel>();
         // Pages
         collection.AddTransient<ErrorPageViewModel>();
         collection.AddTransient<HomePageViewModel>();
@@ -58,14 +58,13 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<LoadingPageViewModel>();
         collection.AddTransient<ImageEditPageViewModel>();
         collection.AddTransient<VideoEditPageViewModel>();
-        collection.AddTransient<DesktopImageCaptureOptionsPageViewModel>();
-        collection.AddTransient<DesktopVideoCaptureOptionsPageViewModel>();
+        collection.AddTransient<ImageCaptureOptionsPageViewModel>();
+        collection.AddTransient<VideoCaptureOptionsPageViewModel>();
         // Views
         collection.AddTransient<AppMenuViewModel>();
         collection.AddTransient<AppTitleBarViewModel>();
         collection.AddTransient<AppAboutViewModel>();
         // Factories
-        collection.AddSingleton<IFactoryService<DesktopCaptureModeViewModel, CaptureMode>, DesktopCaptureModeViewModelFactory>();
         collection.AddSingleton<IFactoryService<AppLanguageViewModel, AppLanguage>, AppLanguageViewModelFactory>();
         collection.AddSingleton<IFactoryService<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
 

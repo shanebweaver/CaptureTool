@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<local:DesktopVideoCaptureOptionsPageBase
-    x:Class="CaptureTool.UI.Xaml.Pages.DesktopVideoCaptureOptionsPage"
+<local:VideoCaptureOptionsPageBase
+    x:Class="CaptureTool.UI.Xaml.Pages.VideoCaptureOptionsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CaptureTool.UI.Xaml.Controls"
@@ -8,7 +8,7 @@
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
-    d:DataContext="{d:DesignInstance Type=viewmodels:DesktopVideoCaptureOptionsPageViewModel}"
+    d:DataContext="{d:DesignInstance Type=viewmodels:VideoCaptureOptionsPageViewModel}"
     mc:Ignorable="d">
 
     <Grid>
@@ -19,10 +19,10 @@
             </Grid.ColumnDefinitions>
 
             <controls:NewCaptureButton
-                x:Name="NewDesktopVideoCaptureButton"
-                x:Uid="NewCaptureButton_DesktopVideo"
-                Command="{x:Bind ViewModel.NewDesktopVideoCaptureCommand}"
-                Symbol="{StaticResource NewDesktopVideoCaptureSymbol}" />
+                x:Name="NewVideoCaptureButton"
+                x:Uid="NewCaptureButton_Video"
+                Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
+                Symbol="{StaticResource NewVideoCaptureSymbol}" />
 
             <Grid
                 VerticalAlignment="Center"
@@ -48,4 +48,4 @@
             </Grid>
         </Grid>
     </Grid>
-</local:DesktopVideoCaptureOptionsPageBase>
+</local:VideoCaptureOptionsPageBase>

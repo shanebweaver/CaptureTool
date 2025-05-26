@@ -12,8 +12,8 @@ internal static partial class PageLocator
         { CaptureToolNavigationRoutes.Error.RouteName, typeof(ErrorPage) },
         { CaptureToolNavigationRoutes.Settings.RouteName, typeof(SettingsPage) },
         { CaptureToolNavigationRoutes.Loading.RouteName, typeof(LoadingPage) },
-        { CaptureToolNavigationRoutes.DesktopImageCaptureOptions.RouteName, typeof(DesktopImageCaptureOptionsPage) },
-        { CaptureToolNavigationRoutes.DesktopVideoCaptureOptions.RouteName, typeof(DesktopVideoCaptureOptionsPage) },
+        { CaptureToolNavigationRoutes.ImageCaptureOptions.RouteName, typeof(ImageCaptureOptionsPage) },
+        { CaptureToolNavigationRoutes.VideoCaptureOptions.RouteName, typeof(VideoCaptureOptionsPage) },
         { CaptureToolNavigationRoutes.ImageEdit.RouteName, typeof(ImageEditPage) },
         { CaptureToolNavigationRoutes.VideoEdit.RouteName, typeof(VideoEditPage) },
     };

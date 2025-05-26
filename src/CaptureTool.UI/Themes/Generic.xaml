@@ -40,8 +40,8 @@
     <x:String x:Key="LocalLanguage24Regular">&#xF4F4;</x:String>
     <x:String x:Key="LocalLanguage28Regular">&#xF4F5;</x:String>
 
-    <Symbol x:Key="NewDesktopImageCaptureSymbol">Camera</Symbol>
-    <Symbol x:Key="NewDesktopVideoCaptureSymbol">Video</Symbol>
-    <Symbol x:Key="NewDesktopAudioCaptureSymbol">Microphone</Symbol>
+    <Symbol x:Key="NewImageCaptureSymbol">Camera</Symbol>
+    <Symbol x:Key="NewVideoCaptureSymbol">Video</Symbol>
+    <Symbol x:Key="NewAudioCaptureSymbol">Microphone</Symbol>
 
 </ResourceDictionary>

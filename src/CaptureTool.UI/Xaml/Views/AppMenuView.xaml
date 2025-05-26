@@ -17,16 +17,16 @@
             <!--  New capture  -->
             <MenuFlyoutSubItem x:Uid="AppMenu_NewCaptureLabel" Icon="Add">
                 <MenuFlyoutItem
-                    x:Uid="AppMenu_NewCapture_DesktopImageLabel"
-                    Command="{x:Bind ViewModel.NewDesktopImageCaptureCommand}"
+                    x:Uid="AppMenu_NewCapture_ImageLabel"
+                    Command="{x:Bind ViewModel.NewImageCaptureCommand}"
                     Icon="Camera" />
                 <MenuFlyoutItem
-                    x:Uid="AppMenu_NewCapture_DesktopVideoLabel"
-                    Command="{x:Bind ViewModel.NewDesktopVideoCaptureCommand}"
+                    x:Uid="AppMenu_NewCapture_VideoLabel"
+                    Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
                     Icon="Video" />
                 <MenuFlyoutItem
-                    x:Uid="AppMenu_NewCapture_DesktopAudioLabel"
-                    Command="{x:Bind ViewModel.NewDesktopAudioCaptureCommand}"
+                    x:Uid="AppMenu_NewCapture_AudioLabel"
+                    Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
                     Icon="Microphone" />
             </MenuFlyoutSubItem>
 

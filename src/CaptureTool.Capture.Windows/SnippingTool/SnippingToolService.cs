@@ -50,17 +50,17 @@ public class SnippingToolService : ISnippingToolService
     private async Task<SnippingToolEnabledMode[]> GetEnabledModesAsync()
     {
         List<SnippingToolEnabledMode> enabledModes = [];
-        bool isImageDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Image);
-        if (isImageDesktopCaptureEnabled)
+        bool isImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Image);
+        if (isImageCaptureEnabled)
         {
             enabledModes.Add(SnippingToolEnabledMode.SnippingAllModes);
         }
-        bool isVideoDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Video);
-        if (isVideoDesktopCaptureEnabled)
+        bool isVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Video);
+        if (isVideoCaptureEnabled)
         {
             enabledModes.Add(SnippingToolEnabledMode.RecordAllModes);
         }
 
-        return enabledModes.ToArray();
+        return [.. enabledModes];
     }
 }

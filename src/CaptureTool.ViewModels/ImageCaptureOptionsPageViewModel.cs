@@ -1,4 +1,4 @@
-using CaptureTool.Capture.Video;
+using CaptureTool.Capture.Image;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
@@ -14,13 +14,13 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableViewModelBase
+public sealed partial class ImageCaptureOptionsPageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "DesktopVideoCaptureOptionsPageViewModel_Load";
-        public static readonly string Unload = "DesktopVideoCaptureOptionsPageViewModel_Unload";
-        public static readonly string NewDesktopVideoCapture = "DesktopVideoCaptureOptionsPageViewModel_NewDesktopVideoCapture";
+        public static readonly string Load = "ImageCaptureOptionsPageViewModel_Load";
+        public static readonly string Unload = "ImageCaptureOptionsPageViewModel_Unload";
+        public static readonly string NewImageCapture = "ImageCaptureOptionsPageViewModel_NewImageCapture";
     }
 
     private readonly ITelemetryService _telemetryService;
@@ -29,27 +29,27 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableVi
     private readonly ICancellationService _cancellationService;
     private readonly IFeatureManager _featureManager;
 
-    public RelayCommand NewDesktopVideoCaptureCommand => new(NewDesktopVideoCapture, () => IsVideoDesktopCaptureEnabled);
+    public RelayCommand NewImageCaptureCommand => new(NewImageCapture, () => IsImageCaptureEnabled);
 
-    private ObservableCollection<VideoCaptureMode> _captureModes;
-    public ObservableCollection<VideoCaptureMode> CaptureModes
+    private ObservableCollection<ImageCaptureMode> _captureModes;
+    public ObservableCollection<ImageCaptureMode> CaptureModes
     {
         get => _captureModes;
         set => Set(ref _captureModes, value);
     }
 
-    private int _selectedCaptureModeIndex;
-    public int SelectedCaptureModeIndex
+    private int _selectedImageCaptureModeIndex;
+    public int SelectedImageCaptureModeIndex
     {
-        get => _selectedCaptureModeIndex;
-        set => Set(ref _selectedCaptureModeIndex, value);
+        get => _selectedImageCaptureModeIndex;
+        set => Set(ref _selectedImageCaptureModeIndex, value);
     }
 
-    private bool _isVideoDesktopCaptureEnabled;
-    public bool IsVideoDesktopCaptureEnabled
+    private bool _isImageCaptureEnabled;
+    public bool IsImageCaptureEnabled
     {
-        get => _isVideoDesktopCaptureEnabled;
-        set => Set(ref _isVideoDesktopCaptureEnabled, value);
+        get => _isImageCaptureEnabled;
+        set => Set(ref _isImageCaptureEnabled, value);
     }
 
     private bool _autoSave;
@@ -59,7 +59,7 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableVi
         set => Set(ref _autoSave, value);
     }
 
-    public DesktopVideoCaptureOptionsPageViewModel(
+    public ImageCaptureOptionsPageViewModel(
         ITelemetryService telemetryService,
         ISettingsService settingsService,
         IAppController appController,
@@ -73,7 +73,7 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableVi
         _featureManager = featureManager;
 
         _captureModes = [];
-        _selectedCaptureModeIndex = -1;
+        _selectedImageCaptureModeIndex = -1;
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -87,15 +87,19 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableVi
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            IsVideoDesktopCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_DesktopCapture_Video);
-            VideoCaptureMode[] supportedModes = Enum.GetValues<VideoCaptureMode>();
-            foreach (var captureMode in supportedModes)
+            IsImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Image);
+            if (IsImageCaptureEnabled)
             {
-                CaptureModes.Add(captureMode);
+                ImageCaptureMode[] supportedModes = Enum.GetValues<ImageCaptureMode>();
+                foreach (var captureMode in supportedModes)
+                {
+                    CaptureModes.Add(captureMode);
+                }
+
+                SelectedImageCaptureModeIndex = 0;
             }
 
-            SelectedCaptureModeIndex = 0;
-            AutoSave = _settingsService.Get(CaptureToolSettings.DesktopVideoCapture_Options_AutoSave);
+            AutoSave = _settingsService.Get(CaptureToolSettings.ImageCapture_Options_AutoSave);
 
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -124,9 +128,9 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableVi
 
         try
         {
-            IsVideoDesktopCaptureEnabled = false;
+            IsImageCaptureEnabled = false;
             CaptureModes.Clear();
-            SelectedCaptureModeIndex = 0;
+            SelectedImageCaptureModeIndex = -1;
             AutoSave = false;
 
             _telemetryService.ActivityCompleted(activityId);
@@ -139,16 +143,16 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableVi
         base.Unload();
     }
 
-    private async void NewDesktopVideoCapture()
+    private async void NewImageCapture()
     {
-        string activityId = ActivityIds.NewDesktopVideoCapture;
+        string activityId = ActivityIds.NewImageCapture;
         _telemetryService.ActivityInitiated(activityId);
 
         try
         {
-            var videoCaptureMode = CaptureModes[SelectedCaptureModeIndex];
-            VideoCaptureOptions options = new(videoCaptureMode, VideoFileType.Mp4, _autoSave);
-            await _appController.NewDesktopVideoCaptureAsync(options);
+            var imageCaptureMode = CaptureModes[SelectedImageCaptureModeIndex];
+            ImageCaptureOptions options = new(imageCaptureMode, ImageFileType.Png, _autoSave);
+            await _appController.NewImageCaptureAsync(options);
 
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -156,5 +160,7 @@ public sealed partial class DesktopVideoCaptureOptionsPageViewModel : LoadableVi
         {
             _telemetryService.ActivityError(activityId, e);
         }
+
+        base.Unload();
     }
 }
