@@ -19,39 +19,50 @@
 
         <Grid
             Margin="0,12,0,0"
-            Padding="8,4"
+            Padding="8"
             HorizontalAlignment="Center"
             VerticalAlignment="Top"
             Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
-            CornerRadius="8">
+            CornerRadius="4">
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" Spacing="12">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Grid
+                    Margin="-1"
+                    Padding="2,0"
+                    Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                    BorderBrush="{ThemeResource ButtonBorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                    <SelectorBar Margin="0,2,0,0">
+                        <SelectorBarItem IsSelected="True">
+                            <SymbolIcon Margin="8,0" Symbol="Camera" />
+                        </SelectorBarItem>
+                        <SelectorBarItem>
+                            <SymbolIcon Margin="8,0" Symbol="Video" />
+                        </SelectorBarItem>
+                    </SelectorBar>
+                </Grid>
 
-                <Button>
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <SymbolIcon VerticalAlignment="Center" Symbol="Camera" />
-                        <TextBlock VerticalAlignment="Center" Text="Capture" />
-                    </StackPanel>
-                </Button>
-
-                <ToggleSwitch MinWidth="0">
-                    <ToggleSwitch.OnContent>
-                        <SymbolIcon Symbol="Camera" />
-                    </ToggleSwitch.OnContent>
-                    <ToggleSwitch.OffContent>
-                        <SymbolIcon Symbol="Video" />
-                    </ToggleSwitch.OffContent>
-                </ToggleSwitch>
+                <DropDownButton Background="Transparent" BorderThickness="0">
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <MenuFlyoutItem Icon="Placeholder" Text="Rectangle" />
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                    <SymbolIcon Symbol="Placeholder" />
+                </DropDownButton>
 
                 <ToggleButton
                     Width="32"
                     Height="32"
                     Padding="0"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
                     IsChecked="{x:Bind ViewModel.ShowOptions, Mode=TwoWay}">
                     <SymbolIcon Symbol="More" />
                 </ToggleButton>
@@ -60,6 +71,8 @@
                     Width="32"
                     Height="32"
                     Padding="0"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
                     Command="{x:Bind ViewModel.GoBackCommand}">
                     <SymbolIcon Symbol="Clear" />
                 </Button>
