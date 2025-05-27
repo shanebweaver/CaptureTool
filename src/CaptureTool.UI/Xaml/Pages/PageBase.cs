@@ -21,6 +21,7 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
+        App.Current.MainWindow?.Activate();
         _loadCts ??= new();
 
         try

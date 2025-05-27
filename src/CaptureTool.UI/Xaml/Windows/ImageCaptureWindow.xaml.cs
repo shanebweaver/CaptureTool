@@ -11,7 +11,6 @@ public sealed partial class ImageCaptureWindow : Window
     public ImageCaptureWindow()
     {
         InitializeComponent();
-        ExtendsContentIntoTitleBar = true;
 
         AppWindow.IsShownInSwitchers = false;
         AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
@@ -20,6 +19,16 @@ public sealed partial class ImageCaptureWindow : Window
             presenter.Maximize();
             presenter.IsResizable = false;
             presenter.SetBorderAndTitleBar(false, false);
+        }
+
+        Activated += ImageCaptureWindow_Activated;
+    }
+
+    private void ImageCaptureWindow_Activated(object sender, WindowActivatedEventArgs e)
+    {
+        if (e.WindowActivationState == WindowActivationState.Deactivated)
+        {
+            Close();
         }
     }
 }

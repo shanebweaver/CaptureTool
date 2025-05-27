@@ -1,5 +1,6 @@
-using System;
 using CaptureTool.ViewModels;
+using System;
+using System.ComponentModel;
 using Windows.Media.Core;
 
 namespace CaptureTool.UI.Xaml.Pages;
@@ -12,7 +13,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
-    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
         {

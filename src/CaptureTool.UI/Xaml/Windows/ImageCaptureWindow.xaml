@@ -31,6 +31,17 @@
             </Grid.RowDefinitions>
 
             <StackPanel Orientation="Horizontal" Spacing="8">
+
+                <Button
+                    Width="32"
+                    Height="32"
+                    Padding="0"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Command="{x:Bind ViewModel.PerformCaptureCommand}">
+                    <SymbolIcon Symbol="Camera" />
+                </Button>
+
                 <Grid
                     Margin="-1"
                     Padding="2,0"
@@ -73,7 +84,7 @@
                     Padding="0"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Command="{x:Bind ViewModel.PerformCaptureCommand}">
+                    Command="{x:Bind ViewModel.GoBackCommand}">
                     <SymbolIcon Symbol="Clear" />
                 </Button>
             </StackPanel>

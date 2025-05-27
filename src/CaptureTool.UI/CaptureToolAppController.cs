@@ -22,8 +22,6 @@ internal class CaptureToolAppController : IAppController
     private readonly INavigationService _navigationService;
     private readonly ISnippingToolService _snippingToolService;
 
-    private ImageCaptureWindow? _imageCaptureWindow;
-
     public event EventHandler<AppWindowPresenterAction>? AppWindowPresentationUpdateRequested;
 
     public CaptureToolAppController(
@@ -68,16 +66,6 @@ internal class CaptureToolAppController : IAppController
         App.Current.Shutdown();
     }
 
-    private void CleanupImageCaptureWindow()
-    {
-        if (_imageCaptureWindow != null)
-        {
-            _imageCaptureWindow.Close();
-            _imageCaptureWindow = null;
-            UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
-        }
-    }
-
     public async Task NewImageCaptureAsync(ImageCaptureOptions options)
     {
         // Feature check
@@ -88,10 +76,7 @@ internal class CaptureToolAppController : IAppController
             throw new InvalidOperationException("Feature is not enabled");
         }
 
-        CleanupImageCaptureWindow();
-
         // Show loading screen and minimize
-        _navigationService.Navigate(CaptureToolNavigationRoutes.Loading, null);
         UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
 
         bool useSnippingTool = false;
@@ -103,8 +88,8 @@ internal class CaptureToolAppController : IAppController
         }
         else
         {
-            _imageCaptureWindow = new();
-            _imageCaptureWindow.Activate();
+            ImageCaptureWindow imageCaptureWindow = new();
+            imageCaptureWindow.Activate();
         }
     }
 
@@ -118,10 +103,7 @@ internal class CaptureToolAppController : IAppController
             throw new InvalidOperationException("Feature is not enabled");
         }
 
-        CleanupImageCaptureWindow();
-
         // Show loading screen and minimize
-        _navigationService.Navigate(CaptureToolNavigationRoutes.Loading, null);
         UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
 
         SnippingToolCaptureMode captureMode = ParseVideoCaptureMode(options.VideoCaptureMode);
@@ -169,7 +151,7 @@ internal class CaptureToolAppController : IAppController
 
     public void GoHome()
     {
-        CleanupImageCaptureWindow();
+        UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
 
         if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.Home)
         {
@@ -181,7 +163,7 @@ internal class CaptureToolAppController : IAppController
     {
         if (_navigationService.CanGoBack)
         {
-            CleanupImageCaptureWindow();
+            UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
             _navigationService.GoBack();
             return true;
         }
