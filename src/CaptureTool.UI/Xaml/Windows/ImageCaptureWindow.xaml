@@ -73,7 +73,7 @@
                     Padding="0"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Command="{x:Bind ViewModel.GoBackCommand}">
+                    Command="{x:Bind ViewModel.PerformCaptureCommand}">
                     <SymbolIcon Symbol="Clear" />
                 </Button>
             </StackPanel>
