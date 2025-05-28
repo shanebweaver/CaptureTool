@@ -8,6 +8,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 
 namespace CaptureTool.ViewModels;
 
@@ -73,7 +74,41 @@ public sealed partial class ImageCaptureWindowViewModel : ViewModelBase
 
         if (monitors.Count > 0)
         {
-            var firstMonitor = monitors[0];
+            // Find the monitor that contains the capture area
+            var area = CaptureArea;
+            var monitor = monitors.FirstOrDefault(m =>
+                area.Left >= m.Left &&
+                area.Top >= m.Top &&
+                area.Right <= m.Left + m.Width &&
+                area.Bottom <= m.Top + m.Height);
+
+            monitor ??= monitors[0]; // fallback
+
+            float scale = monitor.Scale;
+            int cropX = (int)((area.Left - monitor.Left) * scale);
+            int cropY = (int)((area.Top - monitor.Top) * scale);
+            int cropWidth = (int)(area.Width * scale);
+            int cropHeight = (int)(area.Height * scale);
+
+            // Create a bitmap for the full monitor
+            using var fullBmp = new Bitmap(monitor.Width, monitor.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            var bmpData = fullBmp.LockBits(
+                new Rectangle(0, 0, monitor.Width, monitor.Height),
+                System.Drawing.Imaging.ImageLockMode.WriteOnly,
+                fullBmp.PixelFormat
+            );
+
+            try
+            {
+                System.Runtime.InteropServices.Marshal.Copy(monitor.PixelBuffer, 0, bmpData.Scan0, monitor.PixelBuffer.Length);
+            }
+            finally
+            {
+                fullBmp.UnlockBits(bmpData);
+            }
+
+            // Crop to the selected area
+            using var croppedBmp = fullBmp.Clone(new Rectangle(cropX, cropY, cropWidth, cropHeight), fullBmp.PixelFormat);
             var tempPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "Temp",
@@ -81,29 +116,8 @@ public sealed partial class ImageCaptureWindowViewModel : ViewModelBase
             );
 
             Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
+            croppedBmp.Save(tempPath, System.Drawing.Imaging.ImageFormat.Png);
 
-            using (var bmp = new Bitmap(firstMonitor.Width, firstMonitor.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
-            {
-                var bmpData = bmp.LockBits(
-                    new Rectangle(0, 0, firstMonitor.Width, firstMonitor.Height),
-                    System.Drawing.Imaging.ImageLockMode.WriteOnly,
-                    bmp.PixelFormat
-                );
-
-                try
-                {
-                    // BGRA8 to ARGB
-                    System.Runtime.InteropServices.Marshal.Copy(firstMonitor.PixelBuffer, 0, bmpData.Scan0, firstMonitor.PixelBuffer.Length);
-                }
-                finally
-                {
-                    bmp.UnlockBits(bmpData);
-                }
-
-                bmp.Save(tempPath, System.Drawing.Imaging.ImageFormat.Png);
-            }
-
-            // Assuming ImageFile is a model class that takes a file path
             var imageFile = new ImageFile(tempPath);
             _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
         }

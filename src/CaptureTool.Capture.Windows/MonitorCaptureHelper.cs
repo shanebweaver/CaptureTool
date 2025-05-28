@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using WinRT;
 
 namespace CaptureTool.Capture.Windows;
 
 public static class MonitorCaptureHelper
 {
-    // Win32 API imports and structs
     private delegate bool MonitorEnumDelegate(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
 
     [DllImport("user32.dll")]
@@ -92,6 +92,21 @@ public static class MonitorCaptureHelper
         [In, Out] ref BITMAPINFO lpbi,
         uint uUsage);
 
+    [DllImport("shcore.dll")]
+    private static extern int GetDpiForMonitor(
+        IntPtr hmonitor,
+        MonitorDpiType dpiType,
+        out uint dpiX,
+        out uint dpiY);
+
+    private enum MonitorDpiType
+    {
+        MDT_EFFECTIVE_DPI = 0,
+        MDT_ANGULAR_DPI = 1,
+        MDT_RAW_DPI = 2,
+        MDT_DEFAULT = MDT_EFFECTIVE_DPI
+    }
+
     private const int BI_RGB = 0;
     private const uint DIB_RGB_COLORS = 0;
     private const int SRCCOPY = 0x00CC0020;
@@ -107,14 +122,14 @@ public static class MonitorCaptureHelper
                 cbSize = Marshal.SizeOf<MonitorInfoEx>()
             };
             if (!GetMonitorInfo(hMonitor, ref mi))
-            {
-                int error = Marshal.GetLastWin32Error();
-                Console.WriteLine($"GetMonitorInfo failed: {error}");
                 return true;
-            }
 
             int width = mi.rcMonitor.right - mi.rcMonitor.left;
             int height = mi.rcMonitor.bottom - mi.rcMonitor.top;
+            int left = mi.rcMonitor.left;
+            int top = mi.rcMonitor.top;
+
+            GetDpiForMonitor(hMonitor, MonitorDpiType.MDT_DEFAULT, out uint dpiX, out uint dpiY);
 
             IntPtr hdcScreen = GetDC(IntPtr.Zero);
             if (hdcScreen == IntPtr.Zero)
@@ -153,8 +168,9 @@ public static class MonitorCaptureHelper
                 Width = width,
                 Height = height,
                 PixelBuffer = pixels,
-                Left = mi.rcMonitor.left,
-                Top = mi.rcMonitor.top
+                Left = mi.rcMonitor.left,  
+                Top = mi.rcMonitor.top,
+                Dpi = dpiX
             });
 
             SelectObject(hdcMem, hOld);
@@ -171,7 +187,7 @@ public static class MonitorCaptureHelper
     private static byte[] GetBitmapBytes(IntPtr hdc, IntPtr hBitmap, int width, int height)
     {
         // BGRA 32bpp
-        BITMAPINFO bmi = new BITMAPINFO();
+        BITMAPINFO bmi = new();
         bmi.bmiHeader.biSize = (uint)Marshal.SizeOf<BITMAPINFOHEADER>();
         bmi.bmiHeader.biWidth = width;
         bmi.bmiHeader.biHeight = -height; // top-down DIB
@@ -179,15 +195,10 @@ public static class MonitorCaptureHelper
         bmi.bmiHeader.biBitCount = 32;
         bmi.bmiHeader.biCompression = BI_RGB;
         bmi.bmiHeader.biSizeImage = (uint)(width * height * 4);
-        bmi.bmiColors = new uint[256]; // Initialize to avoid NullReferenceException
+        bmi.bmiColors = new uint[256];
 
         byte[] pixels = new byte[width * height * 4];
         int scanLines = GetDIBits(hdc, hBitmap, 0, (uint)height, pixels, ref bmi, DIB_RGB_COLORS);
-        if (scanLines == 0)
-        {
-            // Failed to get bits, return empty array
-            return new byte[width * height * 4];
-        }
         return pixels;
     }
 }

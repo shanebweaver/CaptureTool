@@ -35,8 +35,6 @@ public class Program
     private static bool DecideRedirection()
     {
         bool isRedirect = false;
-        AppActivationArguments args = AppInstance.GetCurrent().GetActivatedEventArgs();
-        ExtendedActivationKind kind = args.Kind;
         AppInstance keyInstance = AppInstance.FindOrRegisterForKey("MySingleInstanceApp");
 
         if (keyInstance.IsCurrent)
@@ -46,6 +44,7 @@ public class Program
         else
         {
             isRedirect = true;
+            AppActivationArguments args = AppInstance.GetCurrent().GetActivatedEventArgs();
             RedirectActivationTo(args, keyInstance);
         }
 

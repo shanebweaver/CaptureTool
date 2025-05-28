@@ -7,4 +7,6 @@ public class MonitorCaptureResult
     public required byte[] PixelBuffer { get; set; } // BGRA8
     public int Left { get; set; }
     public int Top { get; set; }
+    public uint Dpi { get; set; }
+    public float Scale => Dpi / 96f;
 }
