@@ -7,8 +7,10 @@ using CaptureTool.Services.Navigation;
 using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace CaptureTool.ViewModels;
 
@@ -91,16 +93,16 @@ public sealed partial class ImageCaptureWindowViewModel : ViewModelBase
             int cropHeight = (int)(area.Height * scale);
 
             // Create a bitmap for the full monitor
-            using var fullBmp = new Bitmap(monitor.Width, monitor.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using var fullBmp = new Bitmap(monitor.Width, monitor.Height, PixelFormat.Format32bppArgb);
             var bmpData = fullBmp.LockBits(
                 new Rectangle(0, 0, monitor.Width, monitor.Height),
-                System.Drawing.Imaging.ImageLockMode.WriteOnly,
+                ImageLockMode.WriteOnly,
                 fullBmp.PixelFormat
             );
 
             try
             {
-                System.Runtime.InteropServices.Marshal.Copy(monitor.PixelBuffer, 0, bmpData.Scan0, monitor.PixelBuffer.Length);
+                Marshal.Copy(monitor.PixelBuffer, 0, bmpData.Scan0, monitor.PixelBuffer.Length);
             }
             finally
             {

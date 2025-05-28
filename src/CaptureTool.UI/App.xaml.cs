@@ -3,6 +3,7 @@ using System.Diagnostics;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Themes;
 using CaptureTool.UI.Activation;
+using CaptureTool.UI.Xaml.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;

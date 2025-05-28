@@ -1,22 +1,19 @@
-using System;
-using System.Drawing;
-using System.Threading;
 using CaptureTool.Core.AppController;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using CaptureTool.UI.Xaml.Pages;
 using CaptureTool.ViewModels;
-using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.Storage;
-using WinRT.Interop;
+using System;
+using System.Threading;
 
-namespace CaptureTool.UI;
+namespace CaptureTool.UI.Xaml.Windows;
 
 public sealed partial class MainWindow : Window
 {
-    private static readonly Windows.Graphics.RectInt32 DefaultWindowRect = new(48, 48, 540, 320);
+    private static readonly System.Drawing.Rectangle DefaultWindowRect = new(48, 48, 540, 320);
 
     private const string MainWindow_X = "MainWindow_X";
     private const string MainWindow_Y = "MainWindow_Y";
@@ -38,7 +35,6 @@ public sealed partial class MainWindow : Window
 
         Activated += OnActivated;
         Closed += OnClosed;
-        VisibilityChanged += OnVisibilityChanged;
         ViewModel.NavigationRequested += OnViewModelNavigationRequested;
         ViewModel.PresentationUpdateRequested += OnViewModelPresentationUpdateRequested;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
@@ -76,11 +72,6 @@ public sealed partial class MainWindow : Window
 
         _activationCts.Cancel();
         _activationCts.Dispose();
-    }
-
-    private void OnVisibilityChanged(object sender, WindowVisibilityChangedEventArgs args)
-    {
-        // TODO: Figure out how this affects the size. We don't want to restore a minimized window to the previous size (0,0).
     }
 
     private void OnViewModelNavigationRequested(object? sender, NavigationRequest navigationRequest)
@@ -124,7 +115,7 @@ public sealed partial class MainWindow : Window
     private void RestoreAppWindowSizeAndPosition()
     {
         var data = ApplicationData.GetDefault().LocalSettings;
-        var appWindowRect = new Windows.Graphics.RectInt32(
+        var appWindowRect = new global:: Windows.Graphics.RectInt32(
             (data.Values.TryGetValue(MainWindow_X, out object? oX) && (oX is int x) && x >= 0) ? x : DefaultWindowRect.X,
             (data.Values.TryGetValue(MainWindow_Y, out object? oY) && (oY is int y) && y >= 0) ? y : DefaultWindowRect.Y,
             (data.Values.TryGetValue(MainWindow_Width, out object? oW) && (oW is int w) && w > 0) ? w : DefaultWindowRect.Width,
