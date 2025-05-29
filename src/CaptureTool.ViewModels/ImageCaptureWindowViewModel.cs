@@ -86,12 +86,6 @@ public sealed partial class ImageCaptureWindowViewModel : ViewModelBase
 
             monitor ??= monitors[0]; // fallback
 
-            float scale = monitor.Scale;
-            int cropX = (int)((area.Left - monitor.Left) * scale);
-            int cropY = (int)((area.Top - monitor.Top) * scale);
-            int cropWidth = (int)(area.Width * scale);
-            int cropHeight = (int)(area.Height * scale);
-
             // Create a bitmap for the full monitor
             using var fullBmp = new Bitmap(monitor.Width, monitor.Height, PixelFormat.Format32bppArgb);
             var bmpData = fullBmp.LockBits(
@@ -110,6 +104,12 @@ public sealed partial class ImageCaptureWindowViewModel : ViewModelBase
             }
 
             // Crop to the selected area
+            float scale = monitor.Scale;
+            int cropX = (int)Math.Round((area.Left - monitor.Left) * scale);
+            int cropY = (int)Math.Round((area.Top - monitor.Top) * scale);
+            int cropWidth = (int)Math.Round(area.Width * scale);
+            int cropHeight = (int)Math.Round(area.Height * scale);
+
             using var croppedBmp = fullBmp.Clone(new Rectangle(cropX, cropY, cropWidth, cropHeight), fullBmp.PixelFormat);
             var tempPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -118,7 +118,7 @@ public sealed partial class ImageCaptureWindowViewModel : ViewModelBase
             );
 
             Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
-            croppedBmp.Save(tempPath, System.Drawing.Imaging.ImageFormat.Png);
+            croppedBmp.Save(tempPath, ImageFormat.Png);
 
             var imageFile = new ImageFile(tempPath);
             _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);

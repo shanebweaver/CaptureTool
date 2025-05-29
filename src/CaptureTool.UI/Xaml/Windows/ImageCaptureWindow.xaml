@@ -14,7 +14,7 @@
         <winuiex:TransparentTintBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid>
+    <Grid x:Name="RootPanel">
         <controls:SelectionOverlay SelectionRect="{x:Bind ViewModel.CaptureArea, Mode=TwoWay}" />
 
         <Grid
@@ -38,7 +38,7 @@
                     Padding="0"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Command="{x:Bind ViewModel.PerformCaptureCommand}">
+                    Click="CaptureButton_Click">
                     <SymbolIcon Symbol="Camera" />
                 </Button>
 
