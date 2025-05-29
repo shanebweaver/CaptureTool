@@ -71,8 +71,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _imageSize, value);
     }
 
-    private System.Drawing.RotateFlipType _orientation;
-    public System.Drawing.RotateFlipType Orientation
+    private RotateFlipType _orientation;
+    public RotateFlipType Orientation
     {
         get => _orientation;
         set => Set(ref _orientation, value);
@@ -128,10 +128,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
                 ImageDrawable imageDrawable = new(topLeft, imageFile.Path);
                 Drawables.Add(imageDrawable);
             }
-
-            // Test drawables
-            Drawables.Add(new RectangleDrawable(new(50, 50), new(50, 50), Color.Red, 2));
-            Drawables.Add(new TextDrawable(new(50, 50), "Hello world", Color.Yellow));
 
             _telemetryService.ActivityCompleted(activityId);
         }

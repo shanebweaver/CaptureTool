@@ -24,6 +24,8 @@ public sealed partial class SelectionOverlay : UserControlBase
     private Polygon? _activeSelectionAnchor = null;
     private bool _isSelectionBoundaryDragging = false;
     private CursorContext _currentCursorContext = CursorContext.None;
+    private bool _isCreatingNewSelection = false;
+    private Point _newSelectionAnchor;
 
     public static readonly DependencyProperty SelectionRectProperty = DependencyProperty.Register(
         nameof(SelectionRect),
@@ -50,6 +52,11 @@ public sealed partial class SelectionOverlay : UserControlBase
         InitializeComponent();
         AttachSelectionAnchorEvents();
         SizeChanged += SelectionOverlay_SizeChanged;
+
+        SelectionCanvas.PointerPressed += SelectionCanvas_PointerPressed;
+        SelectionCanvas.PointerMoved += SelectionCanvas_PointerMoved;
+        SelectionCanvas.PointerReleased += SelectionCanvas_PointerReleased;
+        SelectionCanvas.PointerCanceled += SelectionCanvas_PointerCanceled;
     }
 
     private void SelectionOverlay_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -394,6 +401,73 @@ public sealed partial class SelectionOverlay : UserControlBase
         }
     }
 
+    private void SelectionCanvas_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
+        if (!IsPointerOverSelectionArea(pointerPos) && !IsPointerOverAnyAnchor(pointerPos))
+        {
+            _isCreatingNewSelection = true;
+            _newSelectionAnchor = pointerPos;
+
+            // Start with a 1x1 rectangle at the pointer position
+            SelectionRect = new Rectangle(
+                (int)Math.Clamp(pointerPos.X, 0, SelectionCanvas.Width - 1),
+                (int)Math.Clamp(pointerPos.Y, 0, SelectionCanvas.Height - 1),
+                1,
+                1
+            );
+
+            SelectionCanvas.CapturePointer(e.Pointer);
+            e.Handled = true;
+        }
+    }
+
+    private void SelectionCanvas_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isCreatingNewSelection && e.Pointer.IsInContact)
+        {
+            var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
+
+            double x1 = Math.Clamp(_newSelectionAnchor.X, 0, SelectionCanvas.Width);
+            double y1 = Math.Clamp(_newSelectionAnchor.Y, 0, SelectionCanvas.Height);
+            double x2 = Math.Clamp(pointerPos.X, 0, SelectionCanvas.Width);
+            double y2 = Math.Clamp(pointerPos.Y, 0, SelectionCanvas.Height);
+
+            double left = Math.Min(x1, x2);
+            double top = Math.Min(y1, y2);
+            double right = Math.Max(x1, x2);
+            double bottom = Math.Max(y1, y2);
+
+            int intLeft = (int)Math.Round(left);
+            int intTop = (int)Math.Round(top);
+            int width = Math.Max(1, (int)Math.Round(right - left));
+            int height = Math.Max(1, (int)Math.Round(bottom - top));
+
+            SelectionRect = new Rectangle(intLeft, intTop, width, height);
+            e.Handled = true;
+        }
+    }
+
+    private void SelectionCanvas_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isCreatingNewSelection)
+        {
+            _isCreatingNewSelection = false;
+            SelectionCanvas.ReleasePointerCaptures();
+            e.Handled = true;
+        }
+    }
+
+    private void SelectionCanvas_PointerCanceled(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isCreatingNewSelection)
+        {
+            _isCreatingNewSelection = false;
+            SelectionCanvas.ReleasePointerCaptures();
+            e.Handled = true;
+        }
+    }
+
     private InputCursor GetCursorForAnchor(Polygon anchor)
     {
         // Set cursor type based on anchor position
@@ -410,25 +484,36 @@ public sealed partial class SelectionOverlay : UserControlBase
 
     private bool IsPointerOverSelectionArea(Point pos)
     {
-        double left = SelectionRect.Left;
-        double top = SelectionRect.Top;
-        double right = SelectionRect.Right;
-        double bottom = SelectionRect.Bottom;
-
-        // Check if inside the selection area rectangle
-        return pos.X > left && pos.X < right && pos.Y > top && pos.Y < bottom;
+        return IsPointerOverSelectionArea(pos, SelectionRect);
     }
 
     private bool IsPointerOverAnyAnchor(Point pos)
     {
-        foreach (var anchor in GetSelectionAnchors())
+        var anchors = GetSelectionAnchors();
+        return IsPointerOverAnyElement(pos, anchors);
+    }
+
+
+    private static bool IsPointerOverSelectionArea(Point pos, Rectangle selectionRect)
+    {
+        double left = selectionRect.Left;
+        double top = selectionRect.Top;
+        double right = selectionRect.Right;
+        double bottom = selectionRect.Bottom;
+
+        // Check if inside the selection area rectangle
+        return pos.X > left && pos.X < right && pos.Y > top && pos.Y < bottom;
+    }
+    private static bool IsPointerOverAnyElement(Point pos, FrameworkElement[] elements)
+    {
+        foreach (var element in elements)
         {
-            var anchorLeft = Canvas.GetLeft(anchor);
-            var anchorTop = Canvas.GetTop(anchor);
-            var anchorRight = anchorLeft + anchor.Width;
-            var anchorBottom = anchorTop + anchor.Height;
-            if (pos.X >= anchorLeft && pos.X <= anchorRight &&
-                pos.Y >= anchorTop && pos.Y <= anchorBottom)
+            var elementLeft = Canvas.GetLeft(element);
+            var elementTop = Canvas.GetTop(element);
+            var elementRight = elementLeft + element.Width;
+            var elementBottom = elementTop + element.Height;
+            if (pos.X >= elementLeft && pos.X <= elementRight &&
+                pos.Y >= elementTop && pos.Y <= elementBottom)
             {
                 return true;
             }

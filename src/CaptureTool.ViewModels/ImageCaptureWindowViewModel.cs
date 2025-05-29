@@ -51,7 +51,7 @@ public sealed partial class ImageCaptureWindowViewModel : ViewModelBase
         _appController = appController;
         _navigationService = navigationService;
 
-        _captureArea = new(100, 100, 200, 300);
+        _captureArea = new(0,0,0,0);
         _monitors = [];
     }
 

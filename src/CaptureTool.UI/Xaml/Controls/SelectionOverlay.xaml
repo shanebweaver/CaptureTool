@@ -8,12 +8,15 @@
     xmlns:local="using:CaptureTool.UI.Xaml.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-    <Canvas x:Name="SelectionCanvas">
+    <Canvas x:Name="SelectionCanvas" Background="Transparent">
         <Grid
             x:Name="SelectionBoundary"
             Background="Transparent"
             BorderThickness="0"
             IsTabStop="True">
+            <Grid.BorderBrush>
+                <SolidColorBrush Opacity=".5" Color="Black" />
+            </Grid.BorderBrush>
 
             <!--  Border  -->
             <Rectangle

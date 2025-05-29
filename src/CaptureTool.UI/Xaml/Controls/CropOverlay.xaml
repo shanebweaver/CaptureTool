@@ -14,6 +14,10 @@
             Background="Transparent"
             BorderThickness="0"
             IsTabStop="True">
+            <Grid.BorderBrush>
+                <SolidColorBrush Opacity=".5" Color="Black" />
+            </Grid.BorderBrush>
+
             <!--  Border  -->
             <Rectangle
                 Margin="-3"
