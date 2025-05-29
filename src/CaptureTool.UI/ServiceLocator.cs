@@ -2,11 +2,13 @@
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Capture.Windows.SnippingTool;
+using CaptureTool.Core.AppController;
 
 namespace CaptureTool.UI;
 
 internal class ServiceLocator
 {
+    public static IAppController AppController => GetService<IAppController>();
     public static ILogService Logging => GetService<ILogService>();
     public static INavigationService Navigation => GetService<INavigationService>();
     public static ILocalizationService Localization => GetService<ILocalizationService>();

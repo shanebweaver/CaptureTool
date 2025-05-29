@@ -88,8 +88,11 @@ internal class CaptureToolAppController : IAppController
         }
         else
         {
-            ImageCaptureWindow imageCaptureWindow = new();
-            imageCaptureWindow.Activate();
+            App.Current.DispatcherQueue.TryEnqueue(() =>
+            {
+                ImageCaptureWindow imageCaptureWindow = new();
+                imageCaptureWindow.Activate();
+            });
         }
     }
 
