@@ -17,6 +17,7 @@ public sealed partial class ImageCaptureWindow : Window
         AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
+            presenter.IsAlwaysOnTop = true;
             presenter.IsResizable = false;
             presenter.SetBorderAndTitleBar(false, false);
             presenter.Maximize();
