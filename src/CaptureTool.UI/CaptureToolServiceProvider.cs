@@ -50,7 +50,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         // ViewModels
         // Windows
         collection.AddTransient<MainWindowViewModel>();
-        collection.AddTransient<ImageCaptureWindowViewModel>();
+        collection.AddTransient<CaptureOverlayWindowViewModel>();
         // Pages
         collection.AddTransient<ErrorPageViewModel>();
         collection.AddTransient<HomePageViewModel>();

@@ -14,13 +14,13 @@ using System.Runtime.InteropServices;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class ImageCaptureWindowViewModel : ViewModelBase
+public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
 {
     private readonly IAppController _appController;
     private readonly INavigationService _navigationService;
 
     public RelayCommand PerformCaptureCommand => new(PerformCapture);
-    public RelayCommand GoBackCommand => new(GoBack);
+    public RelayCommand CloseOverlayCommand => new(CloseOverlay);
     public RelayCommand ToggleShowOptionsCommand => new(ToggleShowOptions);
 
     private Rectangle _captureArea;
@@ -44,7 +44,7 @@ public sealed partial class ImageCaptureWindowViewModel : ViewModelBase
         set => Set(ref _monitors, value);
     }
 
-    public ImageCaptureWindowViewModel(
+    public CaptureOverlayWindowViewModel(
         IAppController appController,
         INavigationService navigationService)
     {
@@ -55,9 +55,9 @@ public sealed partial class ImageCaptureWindowViewModel : ViewModelBase
         _monitors = [];
     }
 
-    private void GoBack()
+    private void CloseOverlay()
     {
-        _appController.GoBackOrHome();
+        _appController.CloseCaptureOverlay();
     }
 
     private void ToggleShowOptions()

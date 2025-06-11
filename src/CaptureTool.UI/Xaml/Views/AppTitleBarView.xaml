@@ -15,9 +15,10 @@
         BackRequested="TitleBar_BackRequested"
         IsBackButtonVisible="{x:Bind ViewModel.CanGoBack, Mode=OneWay}"
         IsTabStop="False">
-        <TitleBar.IconSource>
+        <!--  https://github.com/microsoft/microsoft-ui-xaml/issues/10374  -->
+        <!--<TitleBar.IconSource>
             <ImageIconSource ImageSource="{x:Bind ViewModel.Icon}" />
-        </TitleBar.IconSource>
+        </TitleBar.IconSource>-->
     </TitleBar>
 
 </local:AppTitleBarViewBase>

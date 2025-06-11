@@ -7,22 +7,23 @@ using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.UI.Xaml.Windows;
+using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using WinUIEx;
 
 namespace CaptureTool.UI;
 
-internal class CaptureToolAppController : IAppController
+internal partial class CaptureToolAppController : IAppController
 {
     private readonly IFeatureManager _featureManager;
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
     private readonly ISnippingToolService _snippingToolService;
-
-    public event EventHandler<AppWindowPresenterAction>? AppWindowPresentationUpdateRequested;
 
     public CaptureToolAppController(
         IFeatureManager featureManager,
@@ -77,7 +78,7 @@ internal class CaptureToolAppController : IAppController
         }
 
         // Show loading screen and minimize
-        UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
+        HideMainWindow();
 
         bool useSnippingTool = false;
         if (useSnippingTool)
@@ -88,12 +89,42 @@ internal class CaptureToolAppController : IAppController
         }
         else
         {
-            App.Current.DispatcherQueue.TryEnqueue(() =>
+            // TODO: Call a "thing" to lookup the number of monitors and create a new window for each.
+
+            if (_captureOverlayWindow == null)
             {
-                ImageCaptureWindow imageCaptureWindow = new();
-                imageCaptureWindow.Activate();
-            });
+                _captureOverlayWindow = new();
+                _captureOverlayWindow.Closed += ImageCaptureWindow_Closed;
+            }
+
+            _captureOverlayWindow.Activate();
+            SetForegroundWindow(_captureOverlayWindow.GetWindowHandle());
         }
+    }
+
+    private CaptureOverlayWindow? _captureOverlayWindow;
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetForegroundWindow(IntPtr hWnd);
+
+    public void CloseCaptureOverlay()
+    {
+        _captureOverlayWindow?.Close();
+    }
+
+    private void ImageCaptureWindow_Closed(object sender, WindowEventArgs args)
+    {
+        App.Current.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_captureOverlayWindow != null)
+            {
+                _captureOverlayWindow.Closed -= ImageCaptureWindow_Closed;
+                _captureOverlayWindow = null;
+            }
+
+            RestoreMainWindow();
+        });
     }
 
     public async Task NewVideoCaptureAsync(VideoCaptureOptions options)
@@ -107,7 +138,7 @@ internal class CaptureToolAppController : IAppController
         }
 
         // Show loading screen and minimize
-        UpdateAppWindowPresentation(AppWindowPresenterAction.Minimize);
+        HideMainWindow();
 
         SnippingToolCaptureMode captureMode = ParseVideoCaptureMode(options.VideoCaptureMode);
         SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
@@ -142,11 +173,6 @@ internal class CaptureToolAppController : IAppController
         throw new NotImplementedException();
     }
 
-    public void UpdateAppWindowPresentation(AppWindowPresenterAction action)
-    {
-        AppWindowPresentationUpdateRequested?.Invoke(this, action);
-    }
-
     public nint GetMainWindowHandle()
     {
         return WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
@@ -154,7 +180,7 @@ internal class CaptureToolAppController : IAppController
 
     public void GoHome()
     {
-        UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
+        RestoreMainWindow();
 
         if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.Home)
         {
@@ -162,11 +188,22 @@ internal class CaptureToolAppController : IAppController
         }
     }
 
+    private static void HideMainWindow()
+    {
+        App.Current.MainWindow?.Minimize();
+    }
+
+    private static void RestoreMainWindow()
+    {
+        App.Current.MainWindow?.Restore();
+        App.Current.MainWindow?.Activate();
+    }
+
     public bool TryGoBack()
     {
         if (_navigationService.CanGoBack)
         {
-            UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
+            RestoreMainWindow();
             _navigationService.GoBack();
             return true;
         }
@@ -185,7 +222,7 @@ internal class CaptureToolAppController : IAppController
     private async void OnSnippingToolResponseReceived(object? sender, SnippingToolResponse e)
     {
         Debug.WriteLine($"SnippingToolResponse: {e.Code} - {e.Reason}");
-        UpdateAppWindowPresentation(AppWindowPresenterAction.Restore);
+        RestoreMainWindow();
 
         if (e.Code == 200)
         {

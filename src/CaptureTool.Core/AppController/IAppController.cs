@@ -7,8 +7,6 @@ namespace CaptureTool.Core.AppController;
 
 public interface IAppController
 {
-    event EventHandler<AppWindowPresenterAction> AppWindowPresentationUpdateRequested;
-
     void Shutdown();
     bool TryRestart();
 
@@ -16,7 +14,7 @@ public interface IAppController
     Task NewVideoCaptureAsync(VideoCaptureOptions options);
     Task NewAudioCaptureAsync();
 
-    void UpdateAppWindowPresentation(AppWindowPresenterAction action);
+    void CloseCaptureOverlay();
 
     nint GetMainWindowHandle();
 

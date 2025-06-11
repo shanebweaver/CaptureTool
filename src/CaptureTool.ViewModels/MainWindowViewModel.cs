@@ -29,7 +29,6 @@ public sealed partial class MainWindowViewModel : LoadableViewModelBase, INaviga
     private readonly ISettingsService _settingsService;
 
     public event EventHandler<NavigationRequest>? NavigationRequested;
-    public event EventHandler<AppWindowPresenterAction>? PresentationUpdateRequested;
 
     private AppTheme _currentAppTheme;
     public AppTheme CurrentAppTheme
@@ -61,13 +60,11 @@ public sealed partial class MainWindowViewModel : LoadableViewModelBase, INaviga
         _settingsService = settingsService;
 
         _themeService.CurrentThemeChanged += OnCurrentThemeChanged;
-        _appController.AppWindowPresentationUpdateRequested += OnAppWindowPresentationUpdateRequested;
     }
 
     ~MainWindowViewModel()
     {
         _themeService.CurrentThemeChanged -= OnCurrentThemeChanged;
-        _appController.AppWindowPresentationUpdateRequested -= OnAppWindowPresentationUpdateRequested;
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -116,11 +113,6 @@ public sealed partial class MainWindowViewModel : LoadableViewModelBase, INaviga
         }
 
         await base.LoadAsync(parameter, cancellationToken);
-    }
-
-    private void OnAppWindowPresentationUpdateRequested(object? sender, AppWindowPresenterAction e)
-    {
-        PresentationUpdateRequested?.Invoke(this, e);
     }
 
     private void OnCurrentThemeChanged(object? sender, AppTheme newTheme)

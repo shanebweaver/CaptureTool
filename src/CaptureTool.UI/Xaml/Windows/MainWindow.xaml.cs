@@ -36,7 +36,6 @@ public sealed partial class MainWindow : Window
         Activated += OnActivated;
         Closed += OnClosed;
         ViewModel.NavigationRequested += OnViewModelNavigationRequested;
-        ViewModel.PresentationUpdateRequested += OnViewModelPresentationUpdateRequested;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
@@ -68,7 +67,6 @@ public sealed partial class MainWindow : Window
         Closed -= OnClosed;
 
         ViewModel.NavigationRequested -= OnViewModelNavigationRequested;
-        ViewModel.PresentationUpdateRequested -= OnViewModelPresentationUpdateRequested;
 
         _activationCts.Cancel();
         _activationCts.Dispose();
@@ -86,28 +84,6 @@ public sealed partial class MainWindow : Window
             {
                 Type pageType = PageLocator.GetPageType(navigationRequest.Route);
                 NavigationFrame.Navigate(pageType, navigationRequest.Parameter);
-            }
-        });
-    }
-
-    private void OnViewModelPresentationUpdateRequested(object? sender, AppWindowPresenterAction action)
-    {
-        DispatcherQueue.TryEnqueue(() =>
-        {
-            if (AppWindow.Presenter is OverlappedPresenter presenter)
-            {
-                switch (action)
-                {
-                    case AppWindowPresenterAction.Restore:
-                        presenter.Restore();
-                        break;
-                    case AppWindowPresenterAction.Minimize:
-                        presenter.Minimize();
-                        break;
-                    case AppWindowPresenterAction.Maximize:
-                        presenter.Maximize();
-                        break;
-                }
             }
         });
     }

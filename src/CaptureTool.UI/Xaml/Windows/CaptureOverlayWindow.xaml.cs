@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.UI.Xaml.Windows;
 
-public sealed partial class ImageCaptureWindow : Window
+public sealed partial class CaptureOverlayWindow : Window
 {
-    public ImageCaptureWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<ImageCaptureWindowViewModel>();
+    public CaptureOverlayWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<CaptureOverlayWindowViewModel>();
 
-    public ImageCaptureWindow()
+    public CaptureOverlayWindow()
     {
         InitializeComponent();
 
@@ -30,7 +30,10 @@ public sealed partial class ImageCaptureWindow : Window
     {
         if (e.WindowActivationState == WindowActivationState.Deactivated)
         {
-            Close();
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                Close();
+            });
         }
     }
 
