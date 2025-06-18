@@ -27,7 +27,7 @@
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
 
     <!-- Fonts -->
-    <Content Include="Assets\Fonts\FluentSystemIcons-Regular.ttf" />
+    <Content Include="Fonts\FluentSystemIcons-Regular.ttf" />
   </ItemGroup>
 
   <!-- App manifest -->
