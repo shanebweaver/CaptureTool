@@ -17,10 +17,12 @@
             HorizontalAlignment="Stretch"
             Spacing="12">
             <TextBlock x:Uid="SettingsPage_HeaderLabel" Style="{StaticResource TitleTextBlockStyle}" />
-            <TextBlock x:Uid="SettingsPage_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
+
+            <!--  Localization section  -->
+            <!--<TextBlock x:Uid="SettingsPage_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />-->
 
             <!--  App language  -->
-            <Expander
+            <!--<Expander
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
                 HorizontalContentAlignment="Left"
@@ -94,8 +96,9 @@
                             TextWrapping="NoWrap" />
                     </Grid>
                 </Grid>
-            </Expander>
+            </Expander>-->
 
+            <!--  Appearance section  -->
             <TextBlock x:Uid="SettingsPage_AppearanceHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
 
             <!--  App theme  -->

@@ -46,7 +46,7 @@
                 </AppBarButton.Icon>
             </AppBarButton>
             <AppBarSeparator />
-            <AppBarButton
+            <!--<AppBarButton
                 Command="{x:Bind ViewModel.UndoCommand}"
                 Icon="Undo"
                 IsEnabled="False"
@@ -57,20 +57,28 @@
                 Icon="Redo"
                 IsEnabled="False"
                 Label="Redo"
-                Visibility="Collapsed" />
+                Visibility="Collapsed" />-->
             <AppBarSeparator Visibility="Collapsed" />
             <AppBarButton
                 Command="{x:Bind ViewModel.CopyCommand}"
                 Icon="Copy"
-                Label="Copy" />
+                Label="Copy">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="C" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
             <AppBarButton
                 Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
-                Label="Save" />
-            <AppBarButton
+                Label="Save">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="S" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <!--<AppBarButton
                 Command="{x:Bind ViewModel.PrintCommand}"
                 Icon="Print"
-                Label="Print" />
+                Label="Print" />-->
         </CommandBar>
 
         <Grid

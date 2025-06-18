@@ -77,29 +77,29 @@ internal partial class CaptureToolAppController : IAppController
             throw new InvalidOperationException("Feature is not enabled");
         }
 
-        // Show loading screen and minimize
-        HideMainWindow();
-
-        bool useSnippingTool = false;
+        bool useSnippingTool = _snippingToolService.IsSnippingToolInstalled();
         if (useSnippingTool)
         {
+            // Show loading screen and minimize
+            HideMainWindow();
+
             SnippingToolCaptureMode captureMode = ParseImageCaptureMode(options.ImageCaptureMode);
             SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
             await _snippingToolService.CaptureImageAsync(snippingToolOptions);
         }
-        else
-        {
-            // TODO: Call a "thing" to lookup the number of monitors and create a new window for each.
+        //else
+        //{
+        //    // TODO: Call a "thing" to lookup the number of monitors and create a new window for each.
 
-            if (_captureOverlayWindow == null)
-            {
-                _captureOverlayWindow = new();
-                _captureOverlayWindow.Closed += ImageCaptureWindow_Closed;
-            }
+        //    if (_captureOverlayWindow == null)
+        //    {
+        //        _captureOverlayWindow = new();
+        //        _captureOverlayWindow.Closed += ImageCaptureWindow_Closed;
+        //    }
 
-            _captureOverlayWindow.Activate();
-            SetForegroundWindow(_captureOverlayWindow.GetWindowHandle());
-        }
+        //    _captureOverlayWindow.Activate();
+        //    SetForegroundWindow(_captureOverlayWindow.GetWindowHandle());
+        //}
     }
 
     private CaptureOverlayWindow? _captureOverlayWindow;
@@ -195,8 +195,11 @@ internal partial class CaptureToolAppController : IAppController
 
     private static void RestoreMainWindow()
     {
-        App.Current.MainWindow?.Restore();
-        App.Current.MainWindow?.Activate();
+        App.Current.DispatcherQueue.TryEnqueue(() =>
+        {
+            App.Current.MainWindow?.Restore();
+            App.Current.MainWindow?.Activate();
+        });
     }
 
     public bool TryGoBack()
@@ -222,7 +225,6 @@ internal partial class CaptureToolAppController : IAppController
     private async void OnSnippingToolResponseReceived(object? sender, SnippingToolResponse e)
     {
         Debug.WriteLine($"SnippingToolResponse: {e.Code} - {e.Reason}");
-        RestoreMainWindow();
 
         if (e.Code == 200)
         {
@@ -250,5 +252,7 @@ internal partial class CaptureToolAppController : IAppController
         {
             GoHome();
         }
+
+        RestoreMainWindow();
     }
 }

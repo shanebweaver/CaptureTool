@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CaptureTool.FeatureManagement;
+using Windows.Management.Deployment;
 using Windows.System;
 
 namespace CaptureTool.Capture.Windows.SnippingTool;
@@ -62,5 +63,26 @@ public class SnippingToolService : ISnippingToolService
         }
 
         return [.. enabledModes];
+    }
+
+    public bool IsSnippingToolInstalled()
+    {
+        return IsAppInstalled("Microsoft.ScreenSketch_8wekyb3d8bbwe");
+    }
+
+    private static bool IsAppInstalled(string packageFamilyName)
+    {
+        var packageManager = new PackageManager();
+        var packages = packageManager.FindPackagesForUser(string.Empty);
+
+        foreach (var package in packages)
+        {
+            if (package.Id.FamilyName.Equals(packageFamilyName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

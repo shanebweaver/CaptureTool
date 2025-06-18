@@ -28,24 +28,24 @@
             <TextBlock x:Uid="HomePage_StartCaptureLabel" HorizontalAlignment="Center" />
 
             <Grid ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
+                <!--<Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
                     <ColumnDefinition />
-                </Grid.ColumnDefinitions>
+                </Grid.ColumnDefinitions>-->
 
-                <StackPanel Spacing="4">
+                <StackPanel HorizontalAlignment="Center" Spacing="4">
                     <controls:NewCaptureButton
                         x:Name="NewImageCaptureButton"
                         x:Uid="NewCaptureButton_Image"
                         Command="{x:Bind ViewModel.NewImageCaptureCommand}"
                         Symbol="{StaticResource NewImageCaptureSymbol}" />
-                    <Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.ImageCaptureOptionsCommand}">
+                    <!--<Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.ImageCaptureOptionsCommand}">
                         <TextBlock x:Uid="HomePage_CaptureOptionsLabel" />
-                    </Button>
+                    </Button>-->
                 </StackPanel>
 
-                <Grid Column="1">
+                <!--<Grid Column="1">
                     <StackPanel Spacing="4">
                         <controls:NewCaptureButton
                             x:Name="NewVideoCaptureButton"
@@ -69,7 +69,7 @@
                             <TextBlock x:Uid="HomePage_CaptureOptionsLabel" />
                         </Button>
                     </StackPanel>
-                </Grid>
+                </Grid>-->
             </Grid>
         </StackPanel>
     </Grid>

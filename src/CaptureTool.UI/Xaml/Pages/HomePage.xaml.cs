@@ -18,8 +18,8 @@ public sealed partial class HomePage : HomePageBase
             ConnectedAnimation imageAnimation = ConnectedAnimationService.GetForCurrentView().GetAnimation("backAnimation_Image");
             imageAnimation?.TryStart(NewImageCaptureButton);
 
-            ConnectedAnimation videoAnimation = ConnectedAnimationService.GetForCurrentView().GetAnimation("backAnimation_Video");
-            videoAnimation?.TryStart(NewVideoCaptureButton);
+            //ConnectedAnimation videoAnimation = ConnectedAnimationService.GetForCurrentView().GetAnimation("backAnimation_Video");
+            //videoAnimation?.TryStart(NewVideoCaptureButton);
         }
 
         base.OnNavigatedTo(e);
@@ -31,10 +31,10 @@ public sealed partial class HomePage : HomePageBase
         {
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation_Image", NewImageCaptureButton);
         }
-        else if (e.SourcePageType == PageLocator.GetPageType(CaptureToolNavigationRoutes.VideoCaptureOptions))
-        {
-            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation_Video", NewVideoCaptureButton);
-        }
+        //else if (e.SourcePageType == PageLocator.GetPageType(CaptureToolNavigationRoutes.VideoCaptureOptions))
+        //{
+        //    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("forwardAnimation_Video", NewVideoCaptureButton);
+        //}
 
         base.OnNavigatingFrom(e);
     }

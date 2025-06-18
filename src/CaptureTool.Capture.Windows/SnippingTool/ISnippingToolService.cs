@@ -7,6 +7,8 @@ public interface ISnippingToolService
 {
     event EventHandler<SnippingToolResponse>? ResponseReceived;
 
+    bool IsSnippingToolInstalled();
+
     void HandleSnippingToolResponse(SnippingToolResponse response);
 
     Task DiscoverSupportAsync();
