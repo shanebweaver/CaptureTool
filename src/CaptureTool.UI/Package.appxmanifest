@@ -35,26 +35,13 @@
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
         DisplayName="Capture Tool"
-        Description="Capture Tool: An alternative to Windows Snipping Tool. Not developed by Microsoft."
+        Description="A simple screen capture utility tool."
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"  Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
-      <Extensions>
-        <uap:Extension Category="windows.protocol">
-          <uap:Protocol Name="capture-tool">
-            <uap:DisplayName>Capture Tool</uap:DisplayName>
-            <uap:Logo>Assets\StoreLogo.png</uap:Logo>
-          </uap:Protocol>
-        </uap:Extension>
-        <!--<uap:Extension Category="windows.protocol">
-          <uap:Protocol Name="ms-screenclip">
-            <uap:DisplayName>Capture Tool</uap:DisplayName>
-          </uap:Protocol>
-        </uap:Extension>-->
-      </Extensions>
     </Application>
   </Applications>
 
