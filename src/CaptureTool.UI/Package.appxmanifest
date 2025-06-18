@@ -5,7 +5,7 @@
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap rescap">
+  IgnorableNamespaces="mp uap rescap">
 
   <Identity
     Name="1206Weaver.65288EF293C1E"
@@ -42,6 +42,20 @@
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"  Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
+
+      <Extensions>
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="capture-tool">
+            <uap:DisplayName>Capture Tool</uap:DisplayName>
+            <uap:Logo>Assets\StoreLogo.png</uap:Logo>
+          </uap:Protocol>
+        </uap:Extension>
+        <!--<uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="ms-screenclip">
+            <uap:DisplayName>Capture Tool</uap:DisplayName>
+          </uap:Protocol>
+        </uap:Extension>-->
+      </Extensions>
     </Application>
   </Applications>
 
