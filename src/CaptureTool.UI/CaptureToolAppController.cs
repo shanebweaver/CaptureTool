@@ -1,5 +1,9 @@
-﻿using CaptureTool.Capture.Image;
+﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using CaptureTool.Capture.Image;
 using CaptureTool.Capture.Video;
+using CaptureTool.Capture.Windows;
 using CaptureTool.Capture.Windows.SnippingTool;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
@@ -9,11 +13,8 @@ using CaptureTool.Services.Navigation;
 using CaptureTool.UI.Xaml.Windows;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using Windows.Graphics.Capture;
 using WinUIEx;
 
 namespace CaptureTool.UI;
@@ -80,12 +81,30 @@ internal partial class CaptureToolAppController : IAppController
         bool useSnippingTool = _snippingToolService.IsSnippingToolInstalled();
         if (useSnippingTool)
         {
-            // Show loading screen and minimize
             HideMainWindow();
 
             SnippingToolCaptureMode captureMode = ParseImageCaptureMode(options.ImageCaptureMode);
             SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
             await _snippingToolService.CaptureImageAsync(snippingToolOptions);
+        }
+        else
+        {
+            var picker = new GraphicsCapturePicker();
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
+            var captureItem = await picker.PickSingleItemAsync();
+            if (captureItem == null)
+            {
+                return; // User canceled the picker
+            }
+
+            var storageFolder = Windows.Storage.ApplicationData.Current.TemporaryFolder;
+            var fileName = $"Capture_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+            var file = await GraphicsCaptureHelper.CaptureItemToBitmapFileAsync(captureItem, storageFolder, fileName);
+
+            ImageFile imageFile = new(file.Path);
+            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
         }
         //else
         //{
@@ -104,9 +123,9 @@ internal partial class CaptureToolAppController : IAppController
 
     private CaptureOverlayWindow? _captureOverlayWindow;
 
-    [LibraryImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool SetForegroundWindow(IntPtr hWnd);
+    //[LibraryImport("user32.dll")]
+    //[return: MarshalAs(UnmanagedType.Bool)]
+    //private static partial bool SetForegroundWindow(IntPtr hWnd);
 
     public void CloseCaptureOverlay()
     {
