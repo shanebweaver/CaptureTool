@@ -53,6 +53,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<CaptureOverlayWindowViewModel>();
         // Pages
         collection.AddTransient<ErrorPageViewModel>();
+        collection.AddTransient<AboutPageViewModel>();
         collection.AddTransient<HomePageViewModel>();
         collection.AddTransient<SettingsPageViewModel>();
         collection.AddTransient<LoadingPageViewModel>();
@@ -63,7 +64,6 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         // Views
         collection.AddTransient<AppMenuViewModel>();
         collection.AddTransient<AppTitleBarViewModel>();
-        collection.AddTransient<AppAboutViewModel>();
         // Factories
         collection.AddSingleton<IFactoryService<AppLanguageViewModel, AppLanguage>, AppLanguageViewModelFactory>();
         collection.AddSingleton<IFactoryService<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();

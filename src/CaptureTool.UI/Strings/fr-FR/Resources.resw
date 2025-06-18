@@ -207,4 +207,22 @@
   <data name="AppMenu_FileMenuItem.Title" xml:space="preserve">
     <value />
   </data>
+  <data name="About_DisclaimerOfLiability_Content" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_TermsOfUse_Content" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_PrivacyPolicy_Content" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_DisclaimerOfLiability_Title" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_PrivacyPolicy_Title" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_TermsOfUse_Title" xml:space="preserve">
+    <value />
+  </data>
 </root>

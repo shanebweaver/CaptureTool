@@ -37,8 +37,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private readonly IAppController _appController;
     private readonly IFeatureManager _featureManager;
 
-    public event EventHandler? ShowAboutAppRequested;
-
     public RelayCommand NewImageCaptureCommand => new(NewImageCapture, () => IsImageCaptureEnabled);
     public RelayCommand NewVideoCaptureCommand => new(NewVideoCapture, () => IsVideoCaptureEnabled);
     public RelayCommand NewAudioCaptureCommand => new(NewAudioCapture, () => IsAudioCaptureEnabled);
@@ -246,7 +244,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
         try
         {
-            ShowAboutAppRequested?.Invoke(this, EventArgs.Empty);
+            _navigationService.Navigate(CaptureToolNavigationRoutes.About);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

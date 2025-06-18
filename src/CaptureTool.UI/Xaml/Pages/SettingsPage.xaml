@@ -7,6 +7,7 @@
     xmlns:local="using:CaptureTool.UI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
+    xmlns:views="using:CaptureTool.UI.Xaml.Views"
     d:DataContext="{d:DesignInstance Type=viewmodels:SettingsPageViewModel}"
     mc:Ignorable="d">
 
@@ -20,7 +21,6 @@
 
             <!--  Localization section  -->
             <!--<TextBlock x:Uid="SettingsPage_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />-->
-
             <!--  App language  -->
             <!--<Expander
                 HorizontalAlignment="Stretch"
@@ -100,7 +100,6 @@
 
             <!--  Appearance section  -->
             <TextBlock x:Uid="SettingsPage_AppearanceHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
-
             <!--  App theme  -->
             <Expander
                 HorizontalAlignment="Stretch"

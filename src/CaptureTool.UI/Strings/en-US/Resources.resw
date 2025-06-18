@@ -207,4 +207,38 @@
   <data name="AppMenu_FileMenuItem.Title" xml:space="preserve">
     <value>File</value>
   </data>
+  <data name="About_DisclaimerOfLiability_Content" xml:space="preserve">
+    <value>This application is provided as-is without warranty. The developer is not liable for any misuse, including but not limited to capturing or distributing illegal content.</value>
+  </data>
+  <data name="About_TermsOfUse_Content" xml:space="preserve">
+    <value>By using this application, you agree to the following terms:  
+
+Purpose &amp; Intended Use
+This app is designed solely for lawful personal use to capture, edit, and save images on your device. Any other use, including but not limited to unauthorized surveillance, harassment, or illegal activity, is strictly prohibited.  
+
+No Data Collection
+This app does not collect, store, or transmit any personal data. Temporary files may be written to system-designated locations for internal functionality, such as image previews or editing. These are managed by your operating system. 
+
+User Responsibility
+You are solely responsible for any content you create, capture, or store using this app. The developer does not monitor or access user data and is not liable for user actions.  
+
+No Warranty
+This application is provided "as is", without any warranty of any kind. The developer is not responsible for any damages, losses, or legal issues that may result from its use.</value>
+  </data>
+  <data name="About_PrivacyPolicy_Content" xml:space="preserve">
+    <value>This application does not collect, store, or transmit any personal data or user-generated content. All captured or edited images remain solely on the user’s device and are not accessible to the developer.
+
+Temporary files may be created and stored in system-designated temporary folders during normal use (such as for editing or image previews). These files are managed by the operating system and are automatically cleared periodically.
+
+By using this application, you acknowledge that you are responsible for managing content created or saved on your device.</value>
+  </data>
+  <data name="About_DisclaimerOfLiability_Title" xml:space="preserve">
+    <value>Disclaimer of Liability</value>
+  </data>
+  <data name="About_PrivacyPolicy_Title" xml:space="preserve">
+    <value>Privacy Policy</value>
+  </data>
+  <data name="About_TermsOfUse_Title" xml:space="preserve">
+    <value>Terms of Use</value>
+  </data>
 </root>

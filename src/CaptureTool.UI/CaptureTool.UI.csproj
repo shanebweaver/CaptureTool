@@ -92,6 +92,9 @@
     <Page Update="Xaml\Pages\ImageCaptureOptionsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Update="Xaml\Pages\AboutPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Xaml\Pages\HomePage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -102,9 +105,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Pages\SettingsPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Update="Xaml\Views\AppAboutView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Views\AppMenuView.xaml">
