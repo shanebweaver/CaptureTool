@@ -1,4 +1,4 @@
-﻿using CaptureTool.Edit.Image.Win2D.Drawable;
+﻿using CaptureTool.Edit.Windows.Drawable;
 using Microsoft.Graphics.Canvas;
 using Microsoft.UI;
 using System;
@@ -8,12 +8,13 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Provider;
 using Windows.Storage.Streams;
+using Color = Windows.UI.Color;
 
-namespace CaptureTool.Edit.Image.Win2D;
+namespace CaptureTool.Edit.Windows;
 
 public static partial class ImageCanvasRenderer
 {
-    private static readonly Windows.UI.Color ClearColor = Colors.Transparent;
+    private static readonly Color ClearColor = Colors.Transparent;
 
     public static async Task CopyImageToClipboardAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
     {

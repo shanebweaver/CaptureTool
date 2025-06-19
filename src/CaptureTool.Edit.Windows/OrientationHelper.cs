@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 
-namespace CaptureTool.Edit.Image.Win2D;
+namespace CaptureTool.Edit.Windows;
 
 public static partial class OrientationHelper
 {

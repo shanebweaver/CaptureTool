@@ -1,12 +1,11 @@
-﻿using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.FeatureManagement;
+﻿using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 
 namespace CaptureTool.FeatureManagement;
 
 public sealed partial class CaptureToolFeatureManager : IFeatureManager
 {
-    private readonly FeatureManager _featureManager;
+    private readonly Dictionary<string, bool> _featureState = [];
 
     public CaptureToolFeatureManager()
     {
@@ -14,18 +13,26 @@ public sealed partial class CaptureToolFeatureManager : IFeatureManager
             .AddJsonFile("appsettings.json")
             .Build();
 
-        ConfigurationFeatureDefinitionProvider configurationProvider = new(configuration);
-        FeatureManagementOptions options = new()
-        {
-            IgnoreMissingFeatures = false,
-        };
-        FeatureManager featureManager = new(configurationProvider, options);
+        var featureManagementSection = configuration.GetRequiredSection("feature_management");
+        var featureFlagsSection = featureManagementSection.GetSection("feature_flags");
+        var featureFlagSections = featureFlagsSection.GetChildren();
 
-        _featureManager = featureManager;
+        foreach (var featureFlagSection in featureFlagSections)
+        {
+            string? id = featureFlagSection.GetSection("id").Value;
+            string? enabled = featureFlagSection.GetSection("enabled").Value;
+
+            if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(enabled))
+            {
+                throw new System.InvalidOperationException("Failed to parse appsettings.json");
+            }
+
+            _featureState.Add(id, bool.Parse(enabled));
+        }
     }
 
-    public Task<bool> IsEnabledAsync(FeatureFlag featureFlag)
+    public bool IsEnabled(FeatureFlag featureFlag)
     {
-        return _featureManager.IsEnabledAsync(featureFlag.Name);
+        return _featureState.TryGetValue(featureFlag.Id, out bool enabled) && enabled;
     }
 }

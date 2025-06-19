@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace CaptureTool.Edit.Image.Win2D;
+namespace CaptureTool.Edit.Windows;
 
 public sealed partial class ImageCanvasRenderOptions
 {

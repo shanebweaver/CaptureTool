@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Drawing;
 
-namespace CaptureTool.Edit.Image.Win2D.Tests;
+namespace CaptureTool.Edit.Windows.Tests;
 
 [TestClass]
 public sealed class OrientationHelperTests

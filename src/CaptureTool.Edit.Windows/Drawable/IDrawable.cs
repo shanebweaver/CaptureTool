@@ -1,7 +1,7 @@
-﻿using System.Numerics;
-using Microsoft.Graphics.Canvas;
+﻿using Microsoft.Graphics.Canvas;
+using System.Numerics;
 
-namespace CaptureTool.Edit.Image.Win2D.Drawable;
+namespace CaptureTool.Edit.Windows.Drawable;
 
 public partial interface IDrawable
 {

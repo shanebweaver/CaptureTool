@@ -1,13 +1,12 @@
-﻿using CaptureTool.Edit.Image.Win2D.Drawable;
+﻿using CaptureTool.Edit.Windows.Drawable;
 using Microsoft.Graphics.Canvas.Printing;
-using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Printing;
 
-namespace CaptureTool.Edit.Image.Win2D;
+namespace CaptureTool.Edit.Windows;
 
 public partial class ImageCanvasPrinter
 {

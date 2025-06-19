@@ -71,8 +71,8 @@ internal partial class CaptureToolAppController : IAppController
     public async Task NewImageCaptureAsync(ImageCaptureOptions options)
     {
         // Feature check
-        bool isCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture);
-        bool isImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Image);
+        bool isCaptureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture);
+        bool isImageCaptureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Image);
         if (!isCaptureEnabled || !isImageCaptureEnabled)
         {
             throw new InvalidOperationException("Feature is not enabled");
@@ -149,8 +149,8 @@ internal partial class CaptureToolAppController : IAppController
     public async Task NewVideoCaptureAsync(VideoCaptureOptions options)
     {
         // Feature check
-        bool isCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture);
-        bool isVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Video);
+        bool isCaptureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture);
+        bool isVideoCaptureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Video);
         if (!isCaptureEnabled || !isVideoCaptureEnabled)
         {
             throw new InvalidOperationException("Feature is not enabled");

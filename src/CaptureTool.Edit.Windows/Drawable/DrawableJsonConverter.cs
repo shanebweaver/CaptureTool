@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-namespace CaptureTool.Edit.Image.Win2D.Drawable;
+namespace CaptureTool.Edit.Windows.Drawable;
 
 public sealed partial class DrawableJsonConverter : JsonConverter<IDrawable>
 {

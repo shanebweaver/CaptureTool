@@ -3,7 +3,7 @@
   <!-- Project dependencies -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
-    <PackageReference Include="Microsoft.FeatureManagement" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
   </ItemGroup>
 
   <!-- Feature file -->

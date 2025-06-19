@@ -34,7 +34,7 @@ public class SnippingToolService : ISnippingToolService
 
     public async Task CaptureImageAsync(SnippingToolCaptureOptions options)
     {
-        SnippingToolEnabledMode[] enabledModes = await GetEnabledModesAsync();
+        SnippingToolEnabledMode[] enabledModes = GetEnabledModes();
         SnippingToolRequest request = SnippingToolRequest.CaptureImage(options.CaptureMode, enabledModes, CaptureToolRedirectUri);
         Uri requestUri = new(request.ToString());
         await Launcher.LaunchUriAsync(requestUri);
@@ -42,21 +42,21 @@ public class SnippingToolService : ISnippingToolService
 
     public async Task CaptureVideoAsync(SnippingToolCaptureOptions options)
     {
-        SnippingToolEnabledMode[] enabledModes = await GetEnabledModesAsync();
+        SnippingToolEnabledMode[] enabledModes = GetEnabledModes();
         SnippingToolRequest request = SnippingToolRequest.CaptureVideo(options.CaptureMode, enabledModes, CaptureToolRedirectUri);
         Uri requestUri = new(request.ToString());
         await Launcher.LaunchUriAsync(requestUri);
     }
 
-    private async Task<SnippingToolEnabledMode[]> GetEnabledModesAsync()
+    private SnippingToolEnabledMode[] GetEnabledModes()
     {
         List<SnippingToolEnabledMode> enabledModes = [];
-        bool isImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Image);
+        bool isImageCaptureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Image);
         if (isImageCaptureEnabled)
         {
             enabledModes.Add(SnippingToolEnabledMode.SnippingAllModes);
         }
-        bool isVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Video);
+        bool isVideoCaptureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Video);
         if (isVideoCaptureEnabled)
         {
             enabledModes.Add(SnippingToolEnabledMode.RecordAllModes);

@@ -110,16 +110,16 @@ public sealed partial class HomePageViewModel : LoadableViewModelBase
         {
 
             //  Image
-            IsImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Image);
-            IsImageCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Image_Options);
+            IsImageCaptureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Image);
+            IsImageCaptureOptionsEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Image_Options);
 
             //  Video
-            IsVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Video);
-            IsVideoCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Video_Options);
+            IsVideoCaptureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Video);
+            IsVideoCaptureOptionsEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Video_Options);
 
             //  Audio
-            IsAudioCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Audio);
-            IsAudioCaptureOptionsEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Audio_Options);
+            IsAudioCaptureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Audio);
+            IsAudioCaptureOptionsEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Audio_Options);
 
             _telemetryService.ActivityCompleted(activityId);
         }

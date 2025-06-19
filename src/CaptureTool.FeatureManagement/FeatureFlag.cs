@@ -2,10 +2,10 @@
 
 public sealed partial class FeatureFlag
 {
-    internal FeatureFlag(string name)
+    internal FeatureFlag(string id)
     {
-        Name = name;
+        Id = id;
     }
 
-    public string Name { get; }
+    public string Id { get; }
 }

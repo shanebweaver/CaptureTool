@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Edit.Image.Win2D;
+﻿namespace CaptureTool.Edit.Windows;
 
 public enum FlipDirection
 {

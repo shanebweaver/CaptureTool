@@ -1,8 +1,8 @@
-﻿using System.Drawing;
+﻿using Microsoft.Graphics.Canvas;
 using System.Numerics;
-using Microsoft.Graphics.Canvas;
+using Color = Windows.UI.Color;
 
-namespace CaptureTool.Edit.Image.Win2D.Drawable;
+namespace CaptureTool.Edit.Windows.Drawable;
 
 public sealed partial class TextDrawable : IDrawable
 {
@@ -20,7 +20,7 @@ public sealed partial class TextDrawable : IDrawable
     public void Draw(CanvasDrawingSession drawingSession)
     {
         Vector2 textPosition = new(Offset.X, Offset.Y);
-        Windows.UI.Color color = Windows.UI.Color.FromArgb(Color.A, Color.R, Color.G, Color.B);
+        Color color = Color.FromArgb(Color.A, Color.R, Color.G, Color.B);
         drawingSession.DrawText(Text, textPosition, color);
     }
 }

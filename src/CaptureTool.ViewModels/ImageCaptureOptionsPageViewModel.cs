@@ -87,7 +87,7 @@ public sealed partial class ImageCaptureOptionsPageViewModel : LoadableViewModel
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            IsImageCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Image);
+            IsImageCaptureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Image);
             if (IsImageCaptureEnabled)
             {
                 ImageCaptureMode[] supportedModes = Enum.GetValues<ImageCaptureMode>();

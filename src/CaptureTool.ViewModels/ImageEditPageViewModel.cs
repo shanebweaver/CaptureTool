@@ -1,8 +1,8 @@
 ﻿using CaptureTool.Capture.Image;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
-using CaptureTool.Edit.Image.Win2D;
-using CaptureTool.Edit.Image.Win2D.Drawable;
+using CaptureTool.Edit.Windows;
+using CaptureTool.Edit.Windows.Drawable;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Telemetry;
 using System;

@@ -4,6 +4,6 @@ namespace CaptureTool.FeatureManagement
 {
     public interface IFeatureManager
     {
-        Task<bool> IsEnabledAsync(FeatureFlag featureFlag);
+        bool IsEnabled(FeatureFlag featureFlag);
     }
 }

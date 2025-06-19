@@ -87,7 +87,7 @@ public sealed partial class VideoCaptureOptionsPageViewModel : LoadableViewModel
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            IsVideoCaptureEnabled = await _featureManager.IsEnabledAsync(CaptureToolFeatures.Feature_Capture_Video);
+            IsVideoCaptureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_Capture_Video);
             VideoCaptureMode[] supportedModes = Enum.GetValues<VideoCaptureMode>();
             foreach (var captureMode in supportedModes)
             {
