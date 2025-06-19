@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<controls:UserControlBase
+    x:Class="CaptureTool.UI.Windows.Xaml.Controls.ImageCanvas.ImageCanvas"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:canvasui="using:Microsoft.Graphics.Canvas.UI.Xaml"
+    xmlns:controls="using:CaptureTool.UI.Windows.Xaml.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.UI.Windows.Xaml.Controls.ImageCanvas"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
+    mc:Ignorable="d">
+    <Grid
+        x:Name="RootContainer"
+        PointerCanceled="RootContainer_PointerCanceled"
+        PointerCaptureLost="RootContainer_PointerCaptureLost"
+        PointerMoved="RootContainer_PointerMoved"
+        PointerPressed="RootContainer_PointerPressed"
+        PointerReleased="RootContainer_PointerReleased"
+        SizeChanged="RootContainer_SizeChanged">
+
+        <ScrollView
+            x:Name="CanvasScrollView"
+            HorizontalScrollBarVisibility="Auto"
+            ZoomMode="Enabled">
+            <Grid
+                x:Name="CanvasContainer"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+
+                <canvasui:CanvasControl
+                    x:Name="RenderCanvas"
+                    CreateResources="CanvasControl_CreateResources"
+                    Draw="CanvasControl_Draw" />
+
+                <controls:CropOverlay
+                    x:Name="CropOverlay"
+                    CropRect="{x:Bind CropRect, Mode=TwoWay}"
+                    Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
+            </Grid>
+        </ScrollView>
+    </Grid>
+</controls:UserControlBase>

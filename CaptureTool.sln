@@ -3,24 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35913.81
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.UI", "src\CaptureTool.UI\CaptureTool.UI.csproj", "{CF6AAB15-4A0F-43B4-A3D2-8DF7C881E38F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.UI.Windows", "src\CaptureTool.UI.Windows\CaptureTool.UI.Windows.csproj", "{CF6AAB15-4A0F-43B4-A3D2-8DF7C881E38F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.ViewModels", "src\CaptureTool.ViewModels\CaptureTool.ViewModels.csproj", "{37C10C6A-7277-4329-B966-73F0BB635915}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Common", "src\CaptureTool.Common\CaptureTool.Common.csproj", "{223408F1-2DD4-466F-8F3E-8FB0B42DCBB2}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
-	ProjectSection(SolutionItems) = preProject
-		README.md = README.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{49E306FC-52D3-4873-BCFB-C37B9C554B57}"
-	ProjectSection(SolutionItems) = preProject
-		src\Directory.Build.props = src\Directory.Build.props
-		src\Directory.Build.targets = src\Directory.Build.targets
-		src\Directory.Packages.props = src\Directory.Packages.props
-		src\Directory.Version.props = src\Directory.Version.props
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services", "src\CaptureTool.Services\CaptureTool.Services.csproj", "{50DC78F6-E662-415E-887E-0D13DF221936}"
 EndProject
@@ -38,11 +25,24 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Edit.Windows", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Tests", "src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj", "{7C067745-CD5D-4665-8EF9-79730477C4BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.UI.Tests", "src\CaptureTool.UI.Tests\CaptureTool.UI.Tests.csproj", "{905CD4A1-9A32-4C9C-822C-D4FC246A84E8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.UI.Windows.Tests", "src\CaptureTool.UI.Windows.Tests\CaptureTool.UI.Windows.Tests.csproj", "{905CD4A1-9A32-4C9C-822C-D4FC246A84E8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.ViewModels.Tests", "src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj", "{96D133A6-FD71-45DB-8023-C988F0E045C7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Edit.Windows.Tests", "src\CaptureTool.Edit.Windows.Tests\CaptureTool.Edit.Windows.Tests.csproj", "{DFB09AB3-86E2-4870-B2DE-7AE55F126B46}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{49E306FC-52D3-4873-BCFB-C37B9C554B57}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+		src\Directory.Build.targets = src\Directory.Build.targets
+		src\Directory.Packages.props = src\Directory.Packages.props
+		src\Directory.Version.props = src\Directory.Version.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
