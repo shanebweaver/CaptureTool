@@ -204,7 +204,7 @@
   <data name="About_TermsOfUse_ButtonLabel.Text" xml:space="preserve">
     <value />
   </data>
-  <data name="About_PrivacyPolicy_Content" xml:space="preserve">
+  <data name="About_PrivacyPolicy_DialogContent" xml:space="preserve">
     <value />
   </data>
   <data name="About_DisclaimerOfLiability_DialogTitle" xml:space="preserve">

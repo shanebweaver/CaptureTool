@@ -245,7 +245,7 @@ This application is provided "as is", without any warranty of any kind. The deve
     <value>Terms of Use</value>
     <comment>The label for the button shows the terms of use dialog on the about page.</comment>
   </data>
-  <data name="About_PrivacyPolicy_Content" xml:space="preserve">
+  <data name="About_PrivacyPolicy_DialogContent" xml:space="preserve">
     <value>This application does not collect, store, or transmit any personal data or user-generated content. All captured or edited images remain solely on the user’s device and are not accessible to the developer.
 
 Temporary files may be created and stored in system-designated temporary folders during normal use (such as for editing or image previews). These files are managed by the operating system and are automatically cleared periodically.
