@@ -119,72 +119,91 @@
   </resheader>
   <data name="NewCaptureButton_Audio.Text" xml:space="preserve">
     <value>Audio</value>
+    <comment>The label for the button that starts a new audio capture.</comment>
   </data>
   <data name="NewCaptureButton_Image.Text" xml:space="preserve">
     <value>Screenshot</value>
+    <comment>The label for the button that starts a new image capture.</comment>
   </data>
   <data name="NewCaptureButton_Video.Text" xml:space="preserve">
     <value>Screen recording</value>
+    <comment>The label for the button that starts a new video capture.</comment>
   </data>
   <data name="AppTheme_Dark" xml:space="preserve">
     <value>Dark</value>
+    <comment>The label for the dark theme option.</comment>
   </data>
   <data name="AppTheme_Light" xml:space="preserve">
     <value>Light</value>
+    <comment>The label for the light theme option.</comment>
   </data>
   <data name="AppTheme_SystemDefault" xml:space="preserve">
     <value>Use system default</value>
+    <comment>The label for the system default theme option.</comment>
   </data>
   <data name="NewCaptureOptions_AutoSaveCheckBoxLabel.Text" xml:space="preserve">
     <value>Auto save?</value>
+    <comment>The label for the auto-save checkbox in the new capture options.</comment>
   </data>
   <data name="HomePage_StartCaptureLabel.Text" xml:space="preserve">
     <value>Start a new capture</value>
+    <comment>The label that shows on the home page above the new capture buttons.</comment>
   </data>
   <data name="HomePage_CaptureOptionsLabel.Text" xml:space="preserve">
     <value>options</value>
+    <comment>The label for the capture options button on the home page.</comment>
   </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
     <value>An error occurred while loading the page.</value>
+    <comment>The title for the error page.</comment>
   </data>
   <data name="ErrorPage_RestartAppButtonLabel.Text" xml:space="preserve">
     <value>Restart app</value>
+    <comment>The label for the restart button on the error page.</comment>
   </data>
   <data name="Settings_HeaderLabel.Text" xml:space="preserve">
     <value>Settings</value>
+    <comment>The label for the header for the settings page.</comment>
   </data>
   <data name="Settings_LocalizationHeaderLabel.Text" xml:space="preserve">
     <value>Localization</value>
+    <comment>The label for the header of the localization section on the settings page.</comment>
   </data>
   <data name="Settings_AppLanguageHeaderLabel.Text" xml:space="preserve">
     <value>App language</value>
+    <comment>The label for the title of the app language setting on the settings page.</comment>
   </data>
   <data name="Settings_AppLanguageSubtitleLabel.Text" xml:space="preserve">
     <value>Select which app language to display</value>
+    <comment>The label for the subtitle of the app language setting on the settings page.</comment>
   </data>
   <data name="Settings_RestartAppButtonLabel.Text" xml:space="preserve">
     <value>Restart app</value>
-  </data>
-  <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
-    <value>Full changes will take affect on app restart.</value>
+    <comment>The label for the restart app button on the settings page.</comment>
   </data>
   <data name="Settings_AppearanceHeaderLabel.Text" xml:space="preserve">
     <value>Appearance</value>
+    <comment>The label for the header of the appearance section on the settings page.</comment>
   </data>
   <data name="Settings_AppThemeHeaderLabel.Text" xml:space="preserve">
     <value>App theme</value>
+    <comment>The label for the header of the app theme setting on the settings page.</comment>
   </data>
   <data name="Settings_AppThemeSubtitleLabel.Text" xml:space="preserve">
     <value>Select which app theme to display</value>
+    <comment>The label for the subtitle of the app theme setting on the settings page.</comment>
   </data>
   <data name="AppMenu_HelpMenuItem.Title" xml:space="preserve">
     <value>Help</value>
+    <comment>The label for the help menu.</comment>
   </data>
   <data name="AppMenu_FileMenuItem.Title" xml:space="preserve">
     <value>File</value>
+    <comment>The label for the file menu.</comment>
   </data>
   <data name="About_DisclaimerOfLiability_DialogContent" xml:space="preserve">
     <value>This application is provided as-is without warranty. The developer is not liable for any misuse, including but not limited to capturing or distributing illegal content.</value>
+    <comment>The content of the disclaimer of liability dialog on the about page.</comment>
   </data>
   <data name="About_TermsOfUse_DialogContent" xml:space="preserve">
     <value>By using this application, you agree to the following terms:  
@@ -200,24 +219,31 @@ You are solely responsible for any content you create, capture, or store using t
 
 No Warranty
 This application is provided "as is", without any warranty of any kind. The developer is not responsible for any damages, losses, or legal issues that may result from its use.</value>
+    <comment>The content of the terms of use dialog on the about page.</comment>
   </data>
   <data name="About_TermsOfUse_DialogTitle" xml:space="preserve">
     <value>Terms of Use</value>
+    <comment>The title of the terms of use dialog on the about page.</comment>
   </data>
   <data name="About_AppNameAndVersion.Text" xml:space="preserve">
     <value>Capture Tool 1.0.0.0</value>
+    <comment>The app name and version on the about page. Should be the same in every language. </comment>
   </data>
   <data name="About_Copyright.Text" xml:space="preserve">
     <value>© 2025 Shane Weaver. All rights reserved.</value>
+    <comment>Copyright symbol, the year, the publisher, all rights reserved. Shown on the about page.</comment>
   </data>
   <data name="About_DisclaimerOfLiability_ButtonLabel.Text" xml:space="preserve">
     <value>Disclaimer of Liability</value>
+    <comment>The label for the button on the about page that shows the disclaimer of liability dialog.</comment>
   </data>
   <data name="About_PrivacyPolicy_ButtonLabel.Text" xml:space="preserve">
     <value>Privacy Policy</value>
+    <comment>The label for the button on the about page that shows the privacy policy.</comment>
   </data>
   <data name="About_TermsOfUse_ButtonLabel.Text" xml:space="preserve">
     <value>Terms of Use</value>
+    <comment>The label for the button shows the terms of use dialog on the about page.</comment>
   </data>
   <data name="About_PrivacyPolicy_Content" xml:space="preserve">
     <value>This application does not collect, store, or transmit any personal data or user-generated content. All captured or edited images remain solely on the user’s device and are not accessible to the developer.
@@ -225,146 +251,198 @@ This application is provided "as is", without any warranty of any kind. The deve
 Temporary files may be created and stored in system-designated temporary folders during normal use (such as for editing or image previews). These files are managed by the operating system and are automatically cleared periodically.
 
 By using this application, you acknowledge that you are responsible for managing content created or saved on your device.</value>
+    <comment>The content of the privacy policy dialog on the about page.</comment>
   </data>
   <data name="About_DisclaimerOfLiability_DialogTitle" xml:space="preserve">
     <value>Disclaimer of Liability</value>
+    <comment>The title of the disclaimer of liability dialog on the about page.</comment>
   </data>
   <data name="About_PrivacyPolicy_DialogTitle" xml:space="preserve">
     <value>Privacy Policy</value>
+    <comment>The title of the privacy policy dialog on the about page.</comment>
   </data>
   <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
     <value>Send feedback</value>
+    <comment>The label for the user feedback button on the about page that launches Feedback Hub app.</comment>
   </data>
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>About this app</value>
+    <comment>The label for the title of the about page.</comment>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
     <value>Save</value>
+    <comment>The label for the save button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>Copy</value>
+    <comment>The label for the copy button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_FlipXButton.Label" xml:space="preserve">
     <value>Mirror</value>
-  </data>
-  <data name="ImageEdit_FlipYButton.Label" xml:space="preserve">
-    <value>Flip</value>
+    <comment>The label for the horizontal flip button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_RotateButton.Label" xml:space="preserve">
     <value>Rotate</value>
+    <comment>The label for the rotate button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_CropButton.Label" xml:space="preserve">
     <value>Crop</value>
+    <comment>The label for the crop button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Print</value>
+    <comment>The label for the print button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_UndoButton.Label" xml:space="preserve">
     <value>Undo</value>
+    <comment>The label for the undo button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_RedoButton.Label" xml:space="preserve">
     <value>Redo</value>
+    <comment>The label for the redo button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_CropButton.AccessKey" xml:space="preserve">
     <value>I</value>
+    <comment>The access key for the crop button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
+    <comment>The access key for the rotate button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_CopyButton.AccessKey" xml:space="preserve">
     <value>C</value>
+    <comment>The access key for the copy button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_SaveButton.AccessKey" xml:space="preserve">
     <value>S</value>
+    <comment>The access key for the save button on the image edit page.</comment>
   </data>
   <data name="AppMenu_HelpMenuItem.AccessKey" xml:space="preserve">
     <value>H</value>
+    <comment>The access key for the help menu.</comment>
   </data>
   <data name="AppMenu_FileMenuItem.AccessKey" xml:space="preserve">
     <value>F</value>
+    <comment>The access key for the file menu.</comment>
   </data>
   <data name="ImageEdit_PrintButton.AccessKey" xml:space="preserve">
     <value>P</value>
+    <comment>The access key for the print button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_UndoButton.AccessKey" xml:space="preserve">
     <value>Z</value>
+    <comment>The access key for the undo button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_RedoButton.AccessKey" xml:space="preserve">
     <value>Y</value>
+    <comment>The access key for the redo button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_FlipXButton.AccessKey" xml:space="preserve">
     <value>M</value>
+    <comment>The access key for the horizontal flip button on the image edit page.</comment>
   </data>
   <data name="AppMenu_OpenFileItem_KeyboardAccelerator.Key" xml:space="preserve">
     <value>O</value>
+    <comment>The keyboard accelerator key for the open file item in the file menu.</comment>
   </data>
   <data name="AppMenu_OpenFileItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
     <value>Control</value>
+    <comment>The keyboard accelerator modifiers for the open file item in the file menu.</comment>
   </data>
   <data name="AppMenu_ExitItem_KeyboardAccelerator.Key" xml:space="preserve">
     <value>F4</value>
+    <comment>The keyboard accelerator key for the exit item in the app menu.</comment>
   </data>
   <data name="AppMenu_ExitItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
     <value>Menu</value>
+    <comment>The keyboard accelerator modifiers for the exit item in the app menu.</comment>
   </data>
   <data name="AppMenu_ExitItem.AccessKey" xml:space="preserve">
     <value>X</value>
+    <comment>The access key for the exit item in the app menu.</comment>
   </data>
   <data name="AppMenu_ExitItem.Text" xml:space="preserve">
     <value>Exit</value>
+    <comment>The label for the exit item in the app menu.</comment>
   </data>
   <data name="AppMenu_SettingsItem.AccessKey" xml:space="preserve">
     <value>S</value>
+    <comment>The access key for the settings item in the file menu.</comment>
   </data>
   <data name="AppMenu_SettingsItem.Text" xml:space="preserve">
     <value>Settings</value>
+    <comment>The label for the settings item in the file menu.</comment>
   </data>
   <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
     <value>O</value>
+    <comment>The access key for the open file item in the file menu.</comment>
   </data>
   <data name="AppMenu_OpenFileItem.Text" xml:space="preserve">
     <value>Open...</value>
+    <comment>The label for the open file item in the file menu.</comment>
   </data>
   <data name="AppMenu_NewCapture_AudioItem.Text" xml:space="preserve">
     <value>Audio</value>
+    <comment>The label for the new audio capture item in the file menu.</comment>
   </data>
   <data name="AppMenu_NewCapture_VideoItem.Text" xml:space="preserve">
     <value>Screen recording</value>
+    <comment>The label for the new video capture item in the file menu.</comment>
   </data>
   <data name="AppMenu_NewCapture_ImageItem.Text" xml:space="preserve">
     <value>Screenshot</value>
+    <comment>The label for the new image capture item in the file menu.</comment>
   </data>
   <data name="AppMenu_AboutItem.AccessKey" xml:space="preserve">
     <value>A</value>
+    <comment>The access key for the about item in the app menu.</comment>
   </data>
   <data name="AppMenu_AboutItem.Text" xml:space="preserve">
     <value>About</value>
+    <comment>The label for the about item in the app menu.</comment>
   </data>
   <data name="AppMenu_NewCaptureItem.AccessKey" xml:space="preserve">
     <value>N</value>
+    <comment>The access key for the new capture item in the file menu.</comment>
   </data>
   <data name="AppMenu_NewCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
     <value>N</value>
+    <comment>The keyboard accelerator key for the new capture item in the file menu.</comment>
   </data>
   <data name="AppMenu_NewCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
     <value>Control</value>
+    <comment>The keyboard accelerator modifiers for the new capture item in the file menu.</comment>
   </data>
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
     <value>New capture</value>
+    <comment>The label for the new capture item in the file menu.</comment>
   </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Crop</value>
+    <comment>The tooltip for the crop button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Rotate</value>
+    <comment>The tool tip for the rotate button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_FlipXButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Mirror</value>
+    <comment>The tool tip for the horizontal flip button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_FlipYButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Flip</value>
+    <comment>The tool tip for the vertical flip button on the image edit page.</comment>
   </data>
   <data name="NewCaptureButton_Image.ToolTipService.ToolTip" xml:space="preserve">
     <value>New capture (Ctrl+N)</value>
+    <comment>The tool tip for the button that starts a new image capture.</comment>
+  </data>
+  <data name="ImageEdit_FlipYButton.Label" xml:space="preserve">
+    <value>Flip</value>
+    <comment>The label for the vertical flip button on the image edit page.</comment>
+  </data>
+  <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
+    <value>Full changes will take affect on app restart.</value>
+    <comment>The label for the message that shows when a settings change requires an app restart on the settings page.</comment>
   </data>
 </root>
