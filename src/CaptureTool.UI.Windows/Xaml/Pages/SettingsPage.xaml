@@ -83,7 +83,10 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <Button VerticalAlignment="Center" Command="{x:Bind ViewModel.RestartAppCommand}">
+                        <Button
+                            x:Uid="Settings_RestartAppButton"
+                            VerticalAlignment="Center"
+                            Command="{x:Bind ViewModel.RestartAppCommand}">
                             <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
                         </Button>
                         <TextBlock
@@ -162,7 +165,10 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <Button VerticalAlignment="Center" Command="{x:Bind ViewModel.RestartAppCommand}">
+                        <Button
+                            x:Uid="Settings_RestartAppButton"
+                            VerticalAlignment="Center"
+                            Command="{x:Bind ViewModel.RestartAppCommand}">
                             <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
                         </Button>
                         <TextBlock

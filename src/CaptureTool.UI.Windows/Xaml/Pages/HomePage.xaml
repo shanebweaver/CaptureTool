@@ -38,7 +38,6 @@
                     <controls:NewCaptureButton
                         x:Name="NewImageCaptureButton"
                         x:Uid="NewCaptureButton_Image"
-                        AccessKey="N"
                         Command="{x:Bind ViewModel.NewImageCaptureCommand}"
                         Symbol="{StaticResource NewImageCaptureSymbol}" />
                     <!--<Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.ImageCaptureOptionsCommand}">

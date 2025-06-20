@@ -177,30 +177,6 @@
   <data name="Settings_AppThemeSubtitleLabel.Text" xml:space="preserve">
     <value />
   </data>
-  <data name="AppMenu_NewCaptureLabel.Text" xml:space="preserve">
-    <value />
-  </data>
-  <data name="AppMenu_NewCapture_AudioLabel.Text" xml:space="preserve">
-    <value />
-  </data>
-  <data name="AppMenu_NewCapture_VideoLabel.Text" xml:space="preserve">
-    <value />
-  </data>
-  <data name="AppMenu_NewCapture_ImageLabel.Text" xml:space="preserve">
-    <value />
-  </data>
-  <data name="AppMenu_OpenFileLabel.Text" xml:space="preserve">
-    <value />
-  </data>
-  <data name="AppMenu_SettingsLabel.Text" xml:space="preserve">
-    <value />
-  </data>
-  <data name="AppMenu_ExitLabel.Text" xml:space="preserve">
-    <value />
-  </data>
-  <data name="AppMenu_AboutLabel.Text" xml:space="preserve">
-    <value />
-  </data>
   <data name="AppMenu_HelpMenuItem.Title" xml:space="preserve">
     <value />
   </data>
@@ -271,6 +247,108 @@
     <value />
   </data>
   <data name="ImageEdit_RedoButton.Label" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_CropButton.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_CopyButton.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_SaveButton.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_HelpMenuItem.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_FileMenuItem.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_PrintButton.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_UndoButton.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_RedoButton.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_FlipXButton.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_OpenFileItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_OpenFileItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_ExitItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_ExitItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_ExitItem.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_ExitItem.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_SettingsItem.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_SettingsItem.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_OpenFileItem.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_NewCapture_AudioItem.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_NewCapture_VideoItem.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_NewCapture_ImageItem.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_AboutItem.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_AboutItem.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_NewCaptureItem.AccessKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_NewCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_NewCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_FlipXButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageEdit_FlipYButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="NewCaptureButton_Image.ToolTipService.ToolTip" xml:space="preserve">
     <value />
   </data>
 </root>

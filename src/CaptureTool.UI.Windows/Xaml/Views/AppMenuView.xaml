@@ -13,67 +13,62 @@
 
     <MenuBar>
         <!--  File  -->
-        <MenuBarItem x:Uid="AppMenu_FileMenuItem" AccessKey="F">
+        <MenuBarItem x:Uid="AppMenu_FileMenuItem">
             <!--  New capture  -->
-            <!--<MenuFlyoutSubItem x:Uid="AppMenu_NewCaptureLabel" Icon="Add">
+            <!--<MenuFlyoutSubItem x:Uid="AppMenu_NewCaptureItem" Icon="Add">
                 <MenuFlyoutItem
-                    x:Uid="AppMenu_NewCapture_ImageLabel"
+                    x:Uid="AppMenu_NewCapture_ImageItem"
                     Command="{x:Bind ViewModel.NewImageCaptureCommand}"
                     Icon="Camera" />
                 <MenuFlyoutItem
-                    x:Uid="AppMenu_NewCapture_VideoLabel"
+                    x:Uid="AppMenu_NewCapture_VideoItem"
                     Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
                     Icon="Video" />
                 <MenuFlyoutItem
-                    x:Uid="AppMenu_NewCapture_AudioLabel"
+                    x:Uid="AppMenu_NewCapture_AudioItem"
                     Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
                     Icon="Microphone" />
             </MenuFlyoutSubItem>-->
 
             <!--  New capture  -->
             <MenuFlyoutItem
-                x:Uid="AppMenu_NewCaptureLabel"
-                AccessKey="N"
+                x:Uid="AppMenu_NewCaptureItem"
                 Command="{x:Bind ViewModel.NewImageCaptureCommand}"
-                Icon="Camera" />
+                Icon="Camera">
+                <MenuFlyoutItem.KeyboardAccelerators>
+                    <KeyboardAccelerator x:Uid="AppMenu_NewCaptureItem_KeyboardAccelerator" />
+                </MenuFlyoutItem.KeyboardAccelerators>
+            </MenuFlyoutItem>
 
             <!--  Open  -->
             <MenuFlyoutItem
-                x:Uid="AppMenu_OpenFileLabel"
-                AccessKey="O"
+                x:Uid="AppMenu_OpenFileItem"
                 Command="{x:Bind ViewModel.OpenFileCommand}"
                 Icon="Folder">
                 <MenuFlyoutItem.KeyboardAccelerators>
-                    <KeyboardAccelerator Key="O" Modifiers="Control" />
+                    <KeyboardAccelerator x:Uid="AppMenu_OpenFileItem_KeyboardAccelerator" />
                 </MenuFlyoutItem.KeyboardAccelerators>
             </MenuFlyoutItem>
             <MenuFlyoutSeparator />
 
             <!--  Settings  -->
             <MenuFlyoutItem
-                x:Uid="AppMenu_SettingsLabel"
-                AccessKey="S"
+                x:Uid="AppMenu_SettingsItem"
                 Command="{x:Bind ViewModel.NavigateToSettingsCommand}"
                 Icon="Setting" />
 
             <!--  Exit  -->
-            <MenuFlyoutItem
-                x:Uid="AppMenu_ExitLabel"
-                AccessKey="X"
-                Command="{x:Bind ViewModel.ExitApplicationCommand}">
+            <MenuFlyoutItem x:Uid="AppMenu_ExitItem" Command="{x:Bind ViewModel.ExitApplicationCommand}">
                 <MenuFlyoutItem.KeyboardAccelerators>
-                    <KeyboardAccelerator Key="F4" Modifiers="Menu" />
+                    <KeyboardAccelerator x:Uid="AppMenu_ExitItem_KeyboardAccelerator" />
                 </MenuFlyoutItem.KeyboardAccelerators>
             </MenuFlyoutItem>
         </MenuBarItem>
 
         <!--  Help  -->
-        <MenuBarItem x:Uid="AppMenu_HelpMenuItem" AccessKey="H">
+        <MenuBarItem x:Uid="AppMenu_HelpMenuItem">
             <!--  About  -->
-            <MenuFlyoutItem
-                x:Uid="AppMenu_AboutLabel"
-                AccessKey="A"
-                Command="{x:Bind ViewModel.ShowAboutAppCommand}" />
+            <MenuFlyoutItem x:Uid="AppMenu_AboutItem" Command="{x:Bind ViewModel.ShowAboutAppCommand}" />
         </MenuBarItem>
     </MenuBar>
 </local:AppMenuViewBase>

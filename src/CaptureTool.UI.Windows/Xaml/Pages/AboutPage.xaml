@@ -25,15 +25,15 @@
             <TextBlock x:Uid="About_AppNameAndVersion" TextWrapping="WrapWholeWords" />
             <TextBlock x:Uid="About_Copyright" TextWrapping="WrapWholeWords" />
 
-            <HyperlinkButton Command="{x:Bind ViewModel.ShowDisclaimerOfLiabilityCommand}">
+            <HyperlinkButton x:Uid="About_DisclaimerOfLiability_Button" Command="{x:Bind ViewModel.ShowDisclaimerOfLiabilityCommand}">
                 <TextBlock x:Uid="About_DisclaimerOfLiability_ButtonLabel" TextWrapping="WrapWholeWords" />
             </HyperlinkButton>
 
-            <HyperlinkButton Command="{x:Bind ViewModel.ShowTermsOfUseCommand}">
+            <HyperlinkButton x:Uid="About_TermsOfUse_Button" Command="{x:Bind ViewModel.ShowTermsOfUseCommand}">
                 <TextBlock x:Uid="About_TermsOfUse_ButtonLabel" TextWrapping="WrapWholeWords" />
             </HyperlinkButton>
 
-            <HyperlinkButton Command="{x:Bind ViewModel.ShowPrivacyPolicyCommand}">
+            <HyperlinkButton x:Uid="About_PrivacyPolicy_Button" Command="{x:Bind ViewModel.ShowPrivacyPolicyCommand}">
                 <TextBlock x:Uid="About_PrivacyPolicy_ButtonLabel" TextWrapping="WrapWholeWords" />
             </HyperlinkButton>
 
