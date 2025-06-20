@@ -136,219 +136,252 @@
     <value>Systemstandard verwenden</value>
   </data>
   <data name="NewCaptureOptions_AutoSaveCheckBoxLabel.Text" xml:space="preserve">
-    <value />
+    <value>Automatisch speichern?</value>
   </data>
   <data name="HomePage_StartCaptureLabel.Text" xml:space="preserve">
-    <value />
+    <value>Neue Aufnahme starten
+</value>
   </data>
   <data name="HomePage_CaptureOptionsLabel.Text" xml:space="preserve">
-    <value />
+    <value>Optionen
+</value>
   </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Beim Laden der Seite ist ein Fehler aufgetreten.</value>
   </data>
   <data name="ErrorPage_RestartAppButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>App neu starten
+</value>
   </data>
   <data name="Settings_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Einstellungen
+</value>
   </data>
   <data name="Settings_LocalizationHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Sprache und Region
+</value>
   </data>
   <data name="Settings_AppLanguageHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>App-Sprache</value>
   </data>
   <data name="Settings_AppLanguageSubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Wählen Sie die anzuzeigende Sprache
+</value>
   </data>
   <data name="Settings_RestartAppButtonLabel.Text" xml:space="preserve">
-    <value />
-  </data>
-  <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
-    <value />
+    <value>App neu starten
+</value>
   </data>
   <data name="Settings_AppearanceHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Erscheinungsbild
+</value>
   </data>
   <data name="Settings_AppThemeHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>App-Design</value>
   </data>
   <data name="Settings_AppThemeSubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Wählen Sie ein Design für die App</value>
   </data>
   <data name="AppMenu_HelpMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>Hilfe</value>
   </data>
   <data name="AppMenu_FileMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>Datei
+</value>
   </data>
   <data name="About_DisclaimerOfLiability_DialogContent" xml:space="preserve">
-    <value />
+    <value>Diese Anwendung wird ohne Gewähr bereitgestellt...
+</value>
   </data>
   <data name="About_TermsOfUse_DialogContent" xml:space="preserve">
-    <value />
+    <value>Durch die Nutzung dieser Anwendung stimmen Sie den folgenden Bedingungen zu...
+</value>
   </data>
   <data name="About_TermsOfUse_DialogTitle" xml:space="preserve">
-    <value />
+    <value>Nutzungsbedingungen
+</value>
   </data>
   <data name="About_AppNameAndVersion.Text" xml:space="preserve">
-    <value />
+    <value>Capture Tool 1.0.0.0
+</value>
   </data>
   <data name="About_Copyright.Text" xml:space="preserve">
-    <value />
+    <value>© 2025 Shane Weaver. Alle Rechte vorbehalten.
+</value>
   </data>
   <data name="About_DisclaimerOfLiability_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Haftungsausschluss
+</value>
   </data>
   <data name="About_PrivacyPolicy_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Datenschutzrichtlinie</value>
   </data>
   <data name="About_TermsOfUse_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Nutzungsbedingungen
+</value>
   </data>
   <data name="About_PrivacyPolicy_Content" xml:space="preserve">
-    <value />
+    <value>Diese Anwendung sammelt, speichert oder überträgt keine personenbezogenen Daten...
+</value>
   </data>
   <data name="About_DisclaimerOfLiability_DialogTitle" xml:space="preserve">
-    <value />
+    <value>Haftungsausschluss
+</value>
   </data>
   <data name="About_PrivacyPolicy_DialogTitle" xml:space="preserve">
-    <value />
+    <value>Datenschutzrichtlinie
+</value>
   </data>
   <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Feedback senden
+</value>
   </data>
   <data name="About_TitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Über diese App
+</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value />
+    <value>Speichern
+</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
-    <value />
+    <value>Kopieren
+</value>
   </data>
   <data name="ImageEdit_FlipXButton.Label" xml:space="preserve">
-    <value />
-  </data>
-  <data name="ImageEdit_FlipYButton.Label" xml:space="preserve">
-    <value />
+    <value>Spiegeln</value>
   </data>
   <data name="ImageEdit_RotateButton.Label" xml:space="preserve">
-    <value />
+    <value>Drehen
+</value>
   </data>
   <data name="ImageEdit_CropButton.Label" xml:space="preserve">
-    <value />
+    <value>Zuschneiden</value>
   </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
-    <value />
+    <value>Drucken
+</value>
   </data>
   <data name="ImageEdit_UndoButton.Label" xml:space="preserve">
-    <value />
+    <value>Rückgängig</value>
   </data>
   <data name="ImageEdit_RedoButton.Label" xml:space="preserve">
-    <value />
+    <value>Wiederholen</value>
   </data>
   <data name="ImageEdit_CropButton.AccessKey" xml:space="preserve">
-    <value />
+    <value>I</value>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
-    <value />
+    <value>R</value>
   </data>
   <data name="ImageEdit_CopyButton.AccessKey" xml:space="preserve">
-    <value />
+    <value>C</value>
   </data>
   <data name="ImageEdit_SaveButton.AccessKey" xml:space="preserve">
-    <value />
+    <value>S</value>
   </data>
   <data name="AppMenu_HelpMenuItem.AccessKey" xml:space="preserve">
-    <value />
+    <value>H</value>
   </data>
   <data name="AppMenu_FileMenuItem.AccessKey" xml:space="preserve">
-    <value />
+    <value>F</value>
   </data>
   <data name="ImageEdit_PrintButton.AccessKey" xml:space="preserve">
-    <value />
+    <value>P</value>
   </data>
   <data name="ImageEdit_UndoButton.AccessKey" xml:space="preserve">
-    <value />
+    <value>Z</value>
   </data>
   <data name="ImageEdit_RedoButton.AccessKey" xml:space="preserve">
-    <value />
+    <value>Y</value>
   </data>
   <data name="ImageEdit_FlipXButton.AccessKey" xml:space="preserve">
-    <value />
+    <value>M</value>
   </data>
   <data name="AppMenu_OpenFileItem_KeyboardAccelerator.Key" xml:space="preserve">
-    <value />
+    <value>O</value>
   </data>
   <data name="AppMenu_OpenFileItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Strg</value>
   </data>
   <data name="AppMenu_ExitItem_KeyboardAccelerator.Key" xml:space="preserve">
-    <value />
+    <value>F4</value>
   </data>
   <data name="AppMenu_ExitItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Menü</value>
   </data>
   <data name="AppMenu_ExitItem.AccessKey" xml:space="preserve">
-    <value />
+    <value>X</value>
   </data>
   <data name="AppMenu_ExitItem.Text" xml:space="preserve">
-    <value />
+    <value>Beenden
+</value>
   </data>
   <data name="AppMenu_SettingsItem.AccessKey" xml:space="preserve">
-    <value />
+    <value>S</value>
   </data>
   <data name="AppMenu_SettingsItem.Text" xml:space="preserve">
-    <value />
+    <value>Einstellungen</value>
   </data>
   <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
-    <value />
+    <value>O</value>
   </data>
   <data name="AppMenu_OpenFileItem.Text" xml:space="preserve">
-    <value />
+    <value>Öffnen...
+</value>
   </data>
   <data name="AppMenu_NewCapture_AudioItem.Text" xml:space="preserve">
-    <value />
+    <value>Audio</value>
   </data>
   <data name="AppMenu_NewCapture_VideoItem.Text" xml:space="preserve">
-    <value />
+    <value>Bildschirmaufnahme
+</value>
   </data>
   <data name="AppMenu_NewCapture_ImageItem.Text" xml:space="preserve">
-    <value />
+    <value>Bildschirmfoto
+</value>
   </data>
   <data name="AppMenu_AboutItem.AccessKey" xml:space="preserve">
-    <value />
+    <value>A</value>
   </data>
   <data name="AppMenu_AboutItem.Text" xml:space="preserve">
-    <value />
+    <value>Info
+</value>
   </data>
   <data name="AppMenu_NewCaptureItem.AccessKey" xml:space="preserve">
-    <value />
+    <value>N</value>
   </data>
   <data name="AppMenu_NewCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
-    <value />
+    <value>N</value>
   </data>
   <data name="AppMenu_NewCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Strg
+</value>
   </data>
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
-    <value />
+    <value>Neue Aufnahme</value>
   </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Bild zuschneiden</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Bild drehen
+</value>
   </data>
   <data name="ImageEdit_FlipXButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Bild horizontal spiegeln</value>
   </data>
   <data name="ImageEdit_FlipYButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Bild vertikal kippen</value>
   </data>
   <data name="NewCaptureButton_Image.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Neue Aufnahme (Strg+N)</value>
+  </data>
+  <data name="ImageEdit_FlipYButton.Label" xml:space="preserve">
+    <value>Kippen</value>
+  </data>
+  <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
+    <value>Änderungen werden nach dem Neustart übernommen.
+</value>
   </data>
 </root>
