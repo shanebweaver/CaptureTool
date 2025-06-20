@@ -150,31 +150,31 @@
   <data name="ErrorPage_RestartAppButtonLabel.Text" xml:space="preserve">
     <value>Restart app</value>
   </data>
-  <data name="SettingsPage_HeaderLabel.Text" xml:space="preserve">
+  <data name="Settings_HeaderLabel.Text" xml:space="preserve">
     <value>Settings</value>
   </data>
-  <data name="SettingsPage_LocalizationHeaderLabel.Text" xml:space="preserve">
+  <data name="Settings_LocalizationHeaderLabel.Text" xml:space="preserve">
     <value>Localization</value>
   </data>
-  <data name="SettingsPage_AppLanguageHeaderLabel.Text" xml:space="preserve">
+  <data name="Settings_AppLanguageHeaderLabel.Text" xml:space="preserve">
     <value>App language</value>
   </data>
-  <data name="SettingsPage_AppLanguageSubtitleLabel.Text" xml:space="preserve">
+  <data name="Settings_AppLanguageSubtitleLabel.Text" xml:space="preserve">
     <value>Select which app language to display</value>
   </data>
-  <data name="SettingsPage_RestartAppButtonLabel.Text" xml:space="preserve">
+  <data name="Settings_RestartAppButtonLabel.Text" xml:space="preserve">
     <value>Restart app</value>
   </data>
-  <data name="SettingsPage_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
+  <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
     <value>Full changes will take affect on app restart.</value>
   </data>
-  <data name="SettingsPage_AppearanceHeaderLabel.Text" xml:space="preserve">
+  <data name="Settings_AppearanceHeaderLabel.Text" xml:space="preserve">
     <value>Appearance</value>
   </data>
-  <data name="SettingsPage_AppThemeHeaderLabel.Text" xml:space="preserve">
+  <data name="Settings_AppThemeHeaderLabel.Text" xml:space="preserve">
     <value>App theme</value>
   </data>
-  <data name="SettingsPage_AppThemeSubtitleLabel.Text" xml:space="preserve">
+  <data name="Settings_AppThemeSubtitleLabel.Text" xml:space="preserve">
     <value>Select which app theme to display</value>
   </data>
   <data name="AppMenu_NewCaptureLabel.Text" xml:space="preserve">

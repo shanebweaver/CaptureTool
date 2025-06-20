@@ -17,10 +17,10 @@
             Padding="24"
             HorizontalAlignment="Stretch"
             Spacing="12">
-            <TextBlock x:Uid="SettingsPage_HeaderLabel" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock x:Uid="Settings_HeaderLabel" Style="{StaticResource TitleTextBlockStyle}" />
 
             <!--  Localization section  -->
-            <TextBlock x:Uid="SettingsPage_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
+            <TextBlock x:Uid="Settings_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
             <!--  App language  -->
             <Expander
                 HorizontalAlignment="Stretch"
@@ -40,11 +40,11 @@
                             Glyph="{StaticResource LocalLanguage24Regular}" />
                         <StackPanel Grid.Column="1" Padding="16,0,0,0">
                             <TextBlock
-                                x:Uid="SettingsPage_AppLanguageHeaderLabel"
+                                x:Uid="Settings_AppLanguageHeaderLabel"
                                 TextTrimming="WordEllipsis"
                                 TextWrapping="NoWrap" />
                             <TextBlock
-                                x:Uid="SettingsPage_AppLanguageSubtitleLabel"
+                                x:Uid="Settings_AppLanguageSubtitleLabel"
                                 FontSize="12"
                                 Opacity=".75"
                                 TextTrimming="WordEllipsis"
@@ -84,10 +84,10 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <Button VerticalAlignment="Center" Command="{x:Bind ViewModel.RestartAppCommand}">
-                            <TextBlock x:Uid="SettingsPage_RestartAppButtonLabel" />
+                            <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
                         </Button>
                         <TextBlock
-                            x:Uid="SettingsPage_FullChangesWillTakeAffectLabel"
+                            x:Uid="Settings_FullChangesWillTakeAffectLabel"
                             Grid.Column="1"
                             VerticalAlignment="Center"
                             Opacity=".8"
@@ -99,7 +99,7 @@
             </Expander>
 
             <!--  Appearance section  -->
-            <TextBlock x:Uid="SettingsPage_AppearanceHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
+            <TextBlock x:Uid="Settings_AppearanceHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
             <!--  App theme  -->
             <Expander
                 HorizontalAlignment="Stretch"
@@ -119,11 +119,11 @@
                             Glyph="{StaticResource Color16Regular}" />
                         <StackPanel Grid.Column="1" Padding="16,0,0,0">
                             <TextBlock
-                                x:Uid="SettingsPage_AppThemeHeaderLabel"
+                                x:Uid="Settings_AppThemeHeaderLabel"
                                 TextTrimming="WordEllipsis"
                                 TextWrapping="NoWrap" />
                             <TextBlock
-                                x:Uid="SettingsPage_AppThemeSubtitleLabel"
+                                x:Uid="Settings_AppThemeSubtitleLabel"
                                 FontSize="12"
                                 Opacity=".8"
                                 TextTrimming="WordEllipsis"
@@ -163,10 +163,10 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <Button VerticalAlignment="Center" Command="{x:Bind ViewModel.RestartAppCommand}">
-                            <TextBlock x:Uid="SettingsPage_RestartAppButtonLabel" />
+                            <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
                         </Button>
                         <TextBlock
-                            x:Uid="SettingsPage_FullChangesWillTakeAffectLabel"
+                            x:Uid="Settings_FullChangesWillTakeAffectLabel"
                             Grid.Column="1"
                             VerticalAlignment="Center"
                             Opacity=".8"
