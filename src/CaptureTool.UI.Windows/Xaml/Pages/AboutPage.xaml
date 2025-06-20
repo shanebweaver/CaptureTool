@@ -10,7 +10,7 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:AboutPageViewModel}"
     mc:Ignorable="d">
 
-    <Grid>
+    <ScrollView>
         <StackPanel
             x:Name="ContentPanel"
             Padding="24"
@@ -44,5 +44,5 @@
                     TextAlignment="Center" />
             </Button>
         </StackPanel>
-    </Grid>
+    </ScrollView>
 </local:AboutPageBase>

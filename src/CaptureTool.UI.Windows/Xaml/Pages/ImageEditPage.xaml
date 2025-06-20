@@ -21,15 +21,15 @@
 
         <CommandBar DefaultLabelPosition="Right" IsOpen="False">
             <AppBarToggleButton
+                x:Uid="ImageEdit_CropButton"
                 Command="{x:Bind ViewModel.ToggleCropModeCommand}"
                 Icon="Crop"
-                IsChecked="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
-                Label="Crop" />
+                IsChecked="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}" />
             <AppBarButton
+                x:Uid="ImageEdit_RotateButton"
                 Command="{x:Bind ViewModel.RotateCommand}"
-                Icon="Rotate"
-                Label="Rotate" />
-            <AppBarButton Command="{x:Bind ViewModel.FlipHorizontalCommand}" Label="Flip X">
+                Icon="Rotate" />
+            <AppBarButton x:Uid="ImageEdit_FlipXButton" Command="{x:Bind ViewModel.FlipHorizontalCommand}">
                 <AppBarButton.Icon>
                     <FontIcon
                         FontFamily="{StaticResource FluentSystemIcons}"
@@ -37,7 +37,7 @@
                         Glyph="{StaticResource FlipHorizontal32Regular}" />
                 </AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton Command="{x:Bind ViewModel.FlipVerticalCommand}" Label="Flip Y">
+            <AppBarButton x:Uid="ImageEdit_FlipYButton" Command="{x:Bind ViewModel.FlipVerticalCommand}">
                 <AppBarButton.Icon>
                     <FontIcon
                         FontFamily="{StaticResource FluentSystemIcons}"
@@ -50,27 +50,27 @@
                 Command="{x:Bind ViewModel.UndoCommand}"
                 Icon="Undo"
                 IsEnabled="False"
-                Label="Undo"
+                x:Uid="ImageEdit_UndoButton"
                 Visibility="Collapsed" />
             <AppBarButton
                 Command="{x:Bind ViewModel.RedoCommand}"
                 Icon="Redo"
                 IsEnabled="False"
-                Label="Redo"
+                x:Uid="ImageEdit_RedoButton"
                 Visibility="Collapsed" />-->
             <AppBarSeparator Visibility="Collapsed" />
             <AppBarButton
+                x:Uid="ImageEdit_CopyButton"
                 Command="{x:Bind ViewModel.CopyCommand}"
-                Icon="Copy"
-                Label="Copy">
+                Icon="Copy">
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="C" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
             <AppBarButton
+                x:Uid="ImageEdit_SaveButton"
                 Command="{x:Bind ViewModel.SaveCommand}"
-                Icon="Save"
-                Label="Save">
+                Icon="Save">
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
@@ -78,7 +78,7 @@
             <!--<AppBarButton
                 Command="{x:Bind ViewModel.PrintCommand}"
                 Icon="Print"
-                Label="Print" />-->
+                x:Uid="ImageEdit_PrintButton" />-->
         </CommandBar>
 
         <Grid

@@ -262,4 +262,31 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>About this app</value>
   </data>
+  <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="ImageEdit_FlipXButton.Label" xml:space="preserve">
+    <value>Flip X</value>
+  </data>
+  <data name="ImageEdit_FlipYButton.Label" xml:space="preserve">
+    <value>Flip Y</value>
+  </data>
+  <data name="ImageEdit_RotateButton.Label" xml:space="preserve">
+    <value>Rotate</value>
+  </data>
+  <data name="ImageEdit_CropButton.Label" xml:space="preserve">
+    <value>Crop</value>
+  </data>
+  <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
+    <value>Print</value>
+  </data>
+  <data name="ImageEdit_UndoButton.Label" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="ImageEdit_RedoButton.Label" xml:space="preserve">
+    <value>Redo</value>
+  </data>
 </root>
