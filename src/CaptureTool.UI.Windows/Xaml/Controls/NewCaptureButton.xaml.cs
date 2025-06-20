@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;
 
@@ -45,5 +46,19 @@ public sealed partial class NewCaptureButton : UserControlBase
     public NewCaptureButton()
     {
         InitializeComponent();
+        AccessKeyInvoked += OnAccessKeyInvoked;
+    }
+
+    private void OnAccessKeyInvoked(UIElement sender, AccessKeyInvokedEventArgs args)
+    {
+        // Optionally set focus
+        RootButton.Focus(FocusState.Programmatic);
+
+        // Manually invoke the command if needed
+        if (Command?.CanExecute(null) == true)
+        {
+            Command.Execute(null);
+            args.Handled = true;
+        }
     }
 }
