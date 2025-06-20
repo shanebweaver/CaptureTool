@@ -1,0 +1,8 @@
+﻿DwmExtendFrameIntoClientArea
+DwmEnableBlurBehindWindow
+GetWindowLongPtr
+SetWindowLongPtr
+GetClientRect
+CreateSolidBrush
+CreateRectRgn
+CallWindowProc

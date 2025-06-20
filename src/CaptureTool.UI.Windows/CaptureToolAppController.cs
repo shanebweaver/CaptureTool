@@ -10,12 +10,12 @@ using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
+using CaptureTool.UI.Windows.Xaml.Extensions;
 using CaptureTool.UI.Windows.Xaml.Windows;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel.Core;
 using Windows.Graphics.Capture;
-using WinUIEx;
 
 namespace CaptureTool.UI.Windows;
 
@@ -117,15 +117,10 @@ internal partial class CaptureToolAppController : IAppController
         //    }
 
         //    _captureOverlayWindow.Activate();
-        //    SetForegroundWindow(_captureOverlayWindow.GetWindowHandle());
         //}
     }
 
     private CaptureOverlayWindow? _captureOverlayWindow;
-
-    //[LibraryImport("user32.dll")]
-    //[return: MarshalAs(UnmanagedType.Bool)]
-    //private static partial bool SetForegroundWindow(IntPtr hWnd);
 
     public void CloseCaptureOverlay()
     {

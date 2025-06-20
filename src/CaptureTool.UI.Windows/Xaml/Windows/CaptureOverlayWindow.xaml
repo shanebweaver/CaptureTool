@@ -7,11 +7,10 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:winuiex="using:WinUIEx"
     mc:Ignorable="d">
 
     <Window.SystemBackdrop>
-        <winuiex:TransparentTintBackdrop />
+        <local:TransparentTintBackdrop />
     </Window.SystemBackdrop>
 
     <Grid x:Name="RootPanel">
