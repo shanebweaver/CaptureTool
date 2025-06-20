@@ -17,30 +17,30 @@
             HorizontalAlignment="Stretch"
             Spacing="12">
             <TextBlock
+                x:Uid="About_TitleLabel"
                 FontWeight="SemiBold"
                 Style="{StaticResource TitleTextBlockStyle}"
-                Text="About this app"
                 TextWrapping="WrapWholeWords" />
 
-            <TextBlock Text="Capture Tool 1.0.0.0" TextWrapping="WrapWholeWords" />
-            <TextBlock Text="© 2025 Shane Weaver. All rights reserved." TextWrapping="WrapWholeWords" />
+            <TextBlock x:Uid="About_AppNameAndVersion" TextWrapping="WrapWholeWords" />
+            <TextBlock x:Uid="About_Copyright" TextWrapping="WrapWholeWords" />
 
             <HyperlinkButton Command="{x:Bind ViewModel.ShowDisclaimerOfLiabilityCommand}">
-                <TextBlock Text="Disclaimer of Liability" TextWrapping="WrapWholeWords" />
+                <TextBlock x:Uid="About_DisclaimerOfLiability_ButtonLabel" TextWrapping="WrapWholeWords" />
             </HyperlinkButton>
 
             <HyperlinkButton Command="{x:Bind ViewModel.ShowTermsOfUseCommand}">
-                <TextBlock Text="Terms of Use" TextWrapping="WrapWholeWords" />
+                <TextBlock x:Uid="About_TermsOfUse_ButtonLabel" TextWrapping="WrapWholeWords" />
             </HyperlinkButton>
 
             <HyperlinkButton Command="{x:Bind ViewModel.ShowPrivacyPolicyCommand}">
-                <TextBlock Text="Privacy Policy" TextWrapping="WrapWholeWords" />
+                <TextBlock x:Uid="About_PrivacyPolicy_ButtonLabel" TextWrapping="WrapWholeWords" />
             </HyperlinkButton>
 
             <Button Visibility="Collapsed">
                 <TextBlock
+                    x:Uid="About_Feedback_ButtonLabel"
                     MinWidth="124"
-                    Text="Send feedback"
                     TextAlignment="Center" />
             </Button>
         </StackPanel>

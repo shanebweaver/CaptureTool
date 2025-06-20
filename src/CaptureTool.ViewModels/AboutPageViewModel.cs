@@ -19,9 +19,12 @@ public sealed partial class AboutPageViewModel : ViewModelBase
 
     public event EventHandler<(string title, string content)>? ShowDialogRequested;
 
-    public RelayCommand ShowPrivacyPolicyCommand => new(ShowPrivacyPolicy);
-    public RelayCommand ShowTermsOfUseCommand => new(ShowTermsOfUse);
-    public RelayCommand ShowDisclaimerOfLiabilityCommand => new(ShowDisclaimerOfLiability);
+    public RelayCommand ShowPrivacyPolicyCommand => 
+        new(() => ShowDialog("About_PrivacyPolicy_DialogTitle", "About_PrivacyPolicy_DialogContent", ActivityIds.ShowPrivacyPolicy));
+    public RelayCommand ShowTermsOfUseCommand => 
+        new(() => ShowDialog("About_TermsOfUse_DialogTitle", "About_TermsOfUse_DialogContent", ActivityIds.ShowTermsOfUse));
+    public RelayCommand ShowDisclaimerOfLiabilityCommand => 
+        new(() => ShowDialog("About_DisclaimerOfLiability_DialogTitle", "About_DisclaimerOfLiability_DialogContent", ActivityIds.ShowDisclaimerOfLiability));
 
     public AboutPageViewModel(
         ILocalizationService localizationService,
@@ -31,53 +34,14 @@ public sealed partial class AboutPageViewModel : ViewModelBase
         _telemetryService = telemetryService;
     }
 
-    private void ShowPrivacyPolicy()
+    private void ShowDialog(string titleResourceKey, string contentResourceKey, string activityId)
     {
-        string activityId = ActivityIds.ShowPrivacyPolicy;
         _telemetryService.ActivityInitiated(activityId);
 
         try
         {
-            string title = _localizationService.GetString("About_PrivacyPolicy_Title");
-            string content = _localizationService.GetString("About_PrivacyPolicy_Content");
-            ShowDialogRequested?.Invoke(this, (title, content));
-        }
-        catch (Exception ex)
-        {
-            _telemetryService.ActivityError(activityId, ex);
-        }
-
-        _telemetryService.ActivityInitiated(activityId);
-    }
-
-    private void ShowTermsOfUse()
-    {
-        string activityId = ActivityIds.ShowTermsOfUse;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
-        {
-            string title = _localizationService.GetString("About_TermsOfUse_Title");
-            string content = _localizationService.GetString("About_TermsOfUse_Content");
-            ShowDialogRequested?.Invoke(this, (title, content));
-        }
-        catch (Exception ex)
-        {
-            _telemetryService.ActivityError(activityId, ex);
-        }
-
-        _telemetryService.ActivityInitiated(activityId);
-    }
-
-    private void ShowDisclaimerOfLiability()
-    {
-        string activityId = ActivityIds.ShowDisclaimerOfLiability;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try 
-        {
-            string title = _localizationService.GetString("About_DisclaimerOfLiability_Title");
-            string content = _localizationService.GetString("About_DisclaimerOfLiability_Content");
+            string title = _localizationService.GetString(titleResourceKey);
+            string content = _localizationService.GetString(contentResourceKey);
             ShowDialogRequested?.Invoke(this, (title, content));
         }
         catch (Exception ex)

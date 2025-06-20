@@ -207,22 +207,43 @@
   <data name="AppMenu_FileMenuItem.Title" xml:space="preserve">
     <value />
   </data>
-  <data name="About_DisclaimerOfLiability_Content" xml:space="preserve">
+  <data name="About_DisclaimerOfLiability_DialogContent" xml:space="preserve">
     <value />
   </data>
-  <data name="About_TermsOfUse_Content" xml:space="preserve">
+  <data name="About_TermsOfUse_DialogContent" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_TermsOfUse_DialogTitle" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_AppNameAndVersion.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_Copyright.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_DisclaimerOfLiability_ButtonLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_PrivacyPolicy_ButtonLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_TermsOfUse_ButtonLabel.Text" xml:space="preserve">
     <value />
   </data>
   <data name="About_PrivacyPolicy_Content" xml:space="preserve">
     <value />
   </data>
-  <data name="About_DisclaimerOfLiability_Title" xml:space="preserve">
+  <data name="About_DisclaimerOfLiability_DialogTitle" xml:space="preserve">
     <value />
   </data>
-  <data name="About_PrivacyPolicy_Title" xml:space="preserve">
+  <data name="About_PrivacyPolicy_DialogTitle" xml:space="preserve">
     <value />
   </data>
-  <data name="About_TermsOfUse_Title" xml:space="preserve">
+  <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="About_TitleLabel.Text" xml:space="preserve">
     <value />
   </data>
 </root>
