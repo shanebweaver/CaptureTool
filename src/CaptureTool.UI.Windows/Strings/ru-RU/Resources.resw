@@ -118,130 +118,142 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="NewCaptureButton_Audio.Text" xml:space="preserve">
-    <value />
+    <value>Аудио</value>
   </data>
   <data name="NewCaptureButton_Image.Text" xml:space="preserve">
-    <value />
+    <value>Снимок экрана</value>
   </data>
   <data name="NewCaptureButton_Video.Text" xml:space="preserve">
-    <value />
+    <value>Запись экрана</value>
   </data>
   <data name="AppTheme_Dark" xml:space="preserve">
-    <value />
+    <value>Тёмная</value>
   </data>
   <data name="AppTheme_Light" xml:space="preserve">
-    <value />
+    <value>Светлая</value>
   </data>
   <data name="AppTheme_SystemDefault" xml:space="preserve">
-    <value />
+    <value>Использовать системную тему</value>
   </data>
   <data name="NewCaptureOptions_AutoSaveCheckBoxLabel.Text" xml:space="preserve">
-    <value />
+    <value>Автосохранение?</value>
   </data>
   <data name="HomePage_StartCaptureLabel.Text" xml:space="preserve">
-    <value />
+    <value>Начать новый захват</value>
   </data>
   <data name="HomePage_CaptureOptionsLabel.Text" xml:space="preserve">
-    <value />
+    <value>Параметры</value>
   </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Произошла ошибка при загрузке страницы.</value>
   </data>
   <data name="ErrorPage_RestartAppButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Перезапустить приложение</value>
   </data>
   <data name="Settings_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Настройки</value>
   </data>
   <data name="Settings_LocalizationHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Локализация</value>
   </data>
   <data name="Settings_AppLanguageHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Язык приложения</value>
   </data>
   <data name="Settings_AppLanguageSubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Выберите язык интерфейса</value>
   </data>
   <data name="Settings_RestartAppButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Перезапустить приложение</value>
   </data>
   <data name="Settings_AppearanceHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Внешний вид</value>
   </data>
   <data name="Settings_AppThemeHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Тема приложения</value>
   </data>
   <data name="Settings_AppThemeSubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Выберите тему оформления</value>
   </data>
   <data name="AppMenu_HelpMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>Справка</value>
   </data>
   <data name="AppMenu_FileMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>Файл</value>
   </data>
   <data name="About_DisclaimerOfLiability_DialogContent" xml:space="preserve">
-    <value />
+    <value>Данное приложение предоставляется «как есть», без каких-либо явных или подразумеваемых гарантий. Разработчик не несёт ответственности за любое неправомерное использование, включая, но не ограничиваясь, захватом или распространением незаконного контента.</value>
   </data>
   <data name="About_TermsOfUse_DialogContent" xml:space="preserve">
-    <value />
+    <value>Используя данное приложение, вы соглашаетесь со следующими условиями:
+
+Назначение и допустимое использование Приложение предназначено исключительно для законного личного использования — захвата, редактирования и сохранения изображений на вашем устройстве. Любое иное использование, включая, помимо прочего, несанкционированное наблюдение, преследование или незаконные действия, строго запрещено.
+
+Отсутствие сбора данных Приложение не собирает, не хранит и не передаёт персональные данные. Временные файлы могут создаваться в системных папках для внутреннего функционирования, например, при предварительном просмотре или редактировании изображений. Эти файлы управляются вашей операционной системой.
+
+Ответственность пользователя Вы несёте полную ответственность за любой контент, который создаёте, захватываете или сохраняете с помощью приложения. Разработчик не отслеживает данные пользователя и не несёт ответственности за действия пользователя.
+
+Отказ от гарантий Приложение предоставляется «как есть», без каких-либо гарантий. Разработчик не несёт ответственности за возможные убытки, ущерб или юридические последствия, вызванные его использованием.</value>
   </data>
   <data name="About_TermsOfUse_DialogTitle" xml:space="preserve">
-    <value />
+    <value>Условия использования</value>
   </data>
   <data name="About_AppNameAndVersion.Text" xml:space="preserve">
-    <value />
+    <value>Capture Tool 1.0.0.0</value>
   </data>
   <data name="About_Copyright.Text" xml:space="preserve">
-    <value />
+    <value>© 2025 Шейн Уивер. Все права защищены.</value>
   </data>
   <data name="About_DisclaimerOfLiability_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Отказ от ответственности</value>
   </data>
   <data name="About_PrivacyPolicy_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Политика конфиденциальности</value>
   </data>
   <data name="About_TermsOfUse_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Условия использования</value>
   </data>
   <data name="About_PrivacyPolicy_DialogContent" xml:space="preserve">
-    <value />
+    <value>Это приложение не собирает, не сохраняет и не передаёт персональные данные или пользовательский контент. Все захваченные или отредактированные изображения остаются исключительно на устройстве пользователя и недоступны для разработчика.
+
+Во время обычного использования могут создаваться временные файлы, которые хранятся в системных временных папках (например, для редактирования или предварительного просмотра изображений). Эти файлы управляются операционной системой и автоматически удаляются через определённые интервалы.
+
+Используя это приложение, вы подтверждаете, что несёте личную ответственность за управление контентом, созданным или сохранённым на вашем устройстве.</value>
   </data>
   <data name="About_DisclaimerOfLiability_DialogTitle" xml:space="preserve">
-    <value />
+    <value>Отказ от ответственности</value>
   </data>
   <data name="About_PrivacyPolicy_DialogTitle" xml:space="preserve">
-    <value />
+    <value>Политика конфиденциальности</value>
   </data>
   <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Отправить отзыв</value>
   </data>
   <data name="About_TitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>О приложении</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value />
+    <value>Сохранить</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
-    <value />
+    <value>Копировать</value>
   </data>
   <data name="ImageEdit_FlipXButton.Label" xml:space="preserve">
-    <value />
+    <value>Отразить по горизонтали</value>
   </data>
   <data name="ImageEdit_RotateButton.Label" xml:space="preserve">
-    <value />
+    <value>Повернуть</value>
   </data>
   <data name="ImageEdit_CropButton.Label" xml:space="preserve">
-    <value />
+    <value>Обрезать</value>
   </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
-    <value />
+    <value>Печать</value>
   </data>
   <data name="ImageEdit_UndoButton.Label" xml:space="preserve">
-    <value />
+    <value>Отменить</value>
   </data>
   <data name="ImageEdit_RedoButton.Label" xml:space="preserve">
-    <value />
+    <value>Повторить</value>
   </data>
   <data name="ImageEdit_CropButton.AccessKey" xml:space="preserve">
     <value>I</value>
@@ -277,46 +289,46 @@
     <value>O</value>
   </data>
   <data name="AppMenu_OpenFileItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Control</value>
   </data>
   <data name="AppMenu_ExitItem_KeyboardAccelerator.Key" xml:space="preserve">
     <value>F4</value>
   </data>
   <data name="AppMenu_ExitItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Menu</value>
   </data>
   <data name="AppMenu_ExitItem.AccessKey" xml:space="preserve">
     <value>X</value>
   </data>
   <data name="AppMenu_ExitItem.Text" xml:space="preserve">
-    <value />
+    <value>Выход</value>
   </data>
   <data name="AppMenu_SettingsItem.AccessKey" xml:space="preserve">
     <value>S</value>
   </data>
   <data name="AppMenu_SettingsItem.Text" xml:space="preserve">
-    <value />
+    <value>Настройки</value>
   </data>
   <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
     <value>O</value>
   </data>
   <data name="AppMenu_OpenFileItem.Text" xml:space="preserve">
-    <value />
+    <value>Открыть...</value>
   </data>
   <data name="AppMenu_NewCapture_AudioItem.Text" xml:space="preserve">
-    <value />
+    <value>Аудио</value>
   </data>
   <data name="AppMenu_NewCapture_VideoItem.Text" xml:space="preserve">
-    <value />
+    <value>Запись экрана</value>
   </data>
   <data name="AppMenu_NewCapture_ImageItem.Text" xml:space="preserve">
-    <value />
+    <value>Снимок экрана</value>
   </data>
   <data name="AppMenu_AboutItem.AccessKey" xml:space="preserve">
     <value>A</value>
   </data>
   <data name="AppMenu_AboutItem.Text" xml:space="preserve">
-    <value />
+    <value>О программе</value>
   </data>
   <data name="AppMenu_NewCaptureItem.AccessKey" xml:space="preserve">
     <value>N</value>
@@ -325,30 +337,30 @@
     <value>N</value>
   </data>
   <data name="AppMenu_NewCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Control</value>
   </data>
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
-    <value />
+    <value>Новый захват</value>
   </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Обрезать изображение</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Повернуть изображение</value>
   </data>
   <data name="ImageEdit_FlipXButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Отразить изображение по горизонтали</value>
   </data>
   <data name="ImageEdit_FlipYButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Отразить изображение по вертикали</value>
   </data>
   <data name="NewCaptureButton_Image.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Новый захват (Ctrl+N)</value>
   </data>
   <data name="ImageEdit_FlipYButton.Label" xml:space="preserve">
-    <value />
+    <value>Отразить по вертикали</value>
   </data>
   <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
-    <value />
+    <value>Изменения вступят в силу после перезапуска приложения.</value>
   </data>
 </root>

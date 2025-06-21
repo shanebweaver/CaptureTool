@@ -127,121 +127,133 @@
     <value>Enregistrement d'écran</value>
   </data>
   <data name="AppTheme_Dark" xml:space="preserve">
-    <value>Dark</value>
+    <value>Sombre</value>
   </data>
   <data name="AppTheme_Light" xml:space="preserve">
-    <value>Lumière</value>
+    <value>Clair</value>
   </data>
   <data name="AppTheme_SystemDefault" xml:space="preserve">
     <value>Utiliser les paramètres par défaut du système</value>
   </data>
   <data name="NewCaptureOptions_AutoSaveCheckBoxLabel.Text" xml:space="preserve">
-    <value />
+    <value>Enregistrement auto ?</value>
   </data>
   <data name="HomePage_StartCaptureLabel.Text" xml:space="preserve">
-    <value />
+    <value>Démarrer une nouvelle capture</value>
   </data>
   <data name="HomePage_CaptureOptionsLabel.Text" xml:space="preserve">
-    <value />
+    <value>Options</value>
   </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Une erreur est survenue lors du chargement de la page.</value>
   </data>
   <data name="ErrorPage_RestartAppButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Redémarrer l’application</value>
   </data>
   <data name="Settings_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Paramètres</value>
   </data>
   <data name="Settings_LocalizationHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Localisation</value>
   </data>
   <data name="Settings_AppLanguageHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Langue de l’application</value>
   </data>
   <data name="Settings_AppLanguageSubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Sélectionner la langue de l’application</value>
   </data>
   <data name="Settings_RestartAppButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Redémarrer l’application</value>
   </data>
   <data name="Settings_AppearanceHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Apparence</value>
   </data>
   <data name="Settings_AppThemeHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Thème de l’application</value>
   </data>
   <data name="Settings_AppThemeSubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Sélectionner le thème de l’application</value>
   </data>
   <data name="AppMenu_HelpMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>Aide</value>
   </data>
   <data name="AppMenu_FileMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>Fichier</value>
   </data>
   <data name="About_DisclaimerOfLiability_DialogContent" xml:space="preserve">
-    <value />
+    <value>Cette application est fournie « en l’état », sans aucune garantie expresse ou implicite. Le développeur décline toute responsabilité en cas d’utilisation abusive, y compris, sans s’y limiter, la capture ou la diffusion de contenu illicite.</value>
   </data>
   <data name="About_TermsOfUse_DialogContent" xml:space="preserve">
-    <value />
+    <value>En utilisant cette application, vous acceptez les conditions suivantes :
+
+Objet et utilisation prévue Cette application est destinée exclusivement à un usage personnel et légal, permettant de capturer, modifier et enregistrer des images sur votre appareil. Toute autre utilisation, notamment la surveillance non autorisée, le harcèlement ou toute activité illégale, est strictement interdite.
+
+Absence de collecte de données Cette application ne collecte, ne stocke ni ne transmet aucune donnée personnelle. Des fichiers temporaires peuvent être écrits dans des emplacements désignés par le système pour assurer certaines fonctionnalités internes, telles que l’aperçu ou la modification d’images. Leur gestion est assurée par votre système d’exploitation.
+
+Responsabilité de l’utilisateur Vous êtes seul responsable du contenu que vous créez, capturez ou stockez via cette application. Le développeur ne surveille ni n’accède aux données utilisateur et décline toute responsabilité quant aux actions de l’utilisateur.
+
+Absence de garantie Cette application est fournie « en l’état », sans aucune garantie d’aucune sorte. Le développeur n’est pas responsable des dommages, pertes ou problèmes juridiques pouvant résulter de son utilisation.</value>
   </data>
   <data name="About_TermsOfUse_DialogTitle" xml:space="preserve">
-    <value />
+    <value>Conditions d'utilisation</value>
   </data>
   <data name="About_AppNameAndVersion.Text" xml:space="preserve">
-    <value />
+    <value>Capture Tool 1.0.0.0</value>
   </data>
   <data name="About_Copyright.Text" xml:space="preserve">
-    <value />
+    <value>© 2025 Shane Weaver. Tous droits réservés.</value>
   </data>
   <data name="About_DisclaimerOfLiability_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Clause de non-responsabilité</value>
   </data>
   <data name="About_PrivacyPolicy_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Politique de confidentialité</value>
   </data>
   <data name="About_TermsOfUse_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Conditions d'utilisation</value>
   </data>
   <data name="About_PrivacyPolicy_DialogContent" xml:space="preserve">
-    <value />
+    <value>Cette application ne collecte, ne stocke ni ne transmet aucune donnée personnelle ou contenu généré par l’utilisateur. Toutes les images capturées ou modifiées restent exclusivement sur l’appareil de l’utilisateur et ne sont pas accessibles par le développeur.
+
+Des fichiers temporaires peuvent être créés et stockés dans des dossiers temporaires désignés par le système lors d’une utilisation normale (par exemple, pour l’édition ou l’aperçu d’images). Ces fichiers sont gérés par le système d’exploitation et sont automatiquement supprimés périodiquement.
+
+En utilisant cette application, vous reconnaissez être seul responsable de la gestion du contenu créé ou enregistré sur votre appareil.</value>
   </data>
   <data name="About_DisclaimerOfLiability_DialogTitle" xml:space="preserve">
-    <value />
+    <value>Clause de non-responsabilité</value>
   </data>
   <data name="About_PrivacyPolicy_DialogTitle" xml:space="preserve">
-    <value />
+    <value>Politique de confidentialité</value>
   </data>
   <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>Envoyer des commentaires</value>
   </data>
   <data name="About_TitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>À propos de cette application</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value />
+    <value>Enregistrer</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
-    <value />
+    <value>Copier</value>
   </data>
   <data name="ImageEdit_FlipXButton.Label" xml:space="preserve">
-    <value />
+    <value>Miroir horizontal</value>
   </data>
   <data name="ImageEdit_RotateButton.Label" xml:space="preserve">
-    <value />
+    <value>Faire pivoter</value>
   </data>
   <data name="ImageEdit_CropButton.Label" xml:space="preserve">
-    <value />
+    <value>Rogner</value>
   </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
-    <value />
+    <value>Imprimer</value>
   </data>
   <data name="ImageEdit_UndoButton.Label" xml:space="preserve">
-    <value />
+    <value>Annuler</value>
   </data>
   <data name="ImageEdit_RedoButton.Label" xml:space="preserve">
-    <value />
+    <value>Refaire</value>
   </data>
   <data name="ImageEdit_CropButton.AccessKey" xml:space="preserve">
     <value>I</value>
@@ -277,46 +289,46 @@
     <value>O</value>
   </data>
   <data name="AppMenu_OpenFileItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Control</value>
   </data>
   <data name="AppMenu_ExitItem_KeyboardAccelerator.Key" xml:space="preserve">
     <value>F4</value>
   </data>
   <data name="AppMenu_ExitItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Menu</value>
   </data>
   <data name="AppMenu_ExitItem.AccessKey" xml:space="preserve">
     <value>X</value>
   </data>
   <data name="AppMenu_ExitItem.Text" xml:space="preserve">
-    <value />
+    <value>Quitter</value>
   </data>
   <data name="AppMenu_SettingsItem.AccessKey" xml:space="preserve">
     <value>S</value>
   </data>
   <data name="AppMenu_SettingsItem.Text" xml:space="preserve">
-    <value />
+    <value>Paramètres</value>
   </data>
   <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
     <value>O</value>
   </data>
   <data name="AppMenu_OpenFileItem.Text" xml:space="preserve">
-    <value />
+    <value>Ouvrir...</value>
   </data>
   <data name="AppMenu_NewCapture_AudioItem.Text" xml:space="preserve">
-    <value />
+    <value>Audio</value>
   </data>
   <data name="AppMenu_NewCapture_VideoItem.Text" xml:space="preserve">
-    <value />
+    <value>Enregistrement d’écran</value>
   </data>
   <data name="AppMenu_NewCapture_ImageItem.Text" xml:space="preserve">
-    <value />
+    <value>Capture d’écran</value>
   </data>
   <data name="AppMenu_AboutItem.AccessKey" xml:space="preserve">
     <value>A</value>
   </data>
   <data name="AppMenu_AboutItem.Text" xml:space="preserve">
-    <value />
+    <value>À propos</value>
   </data>
   <data name="AppMenu_NewCaptureItem.AccessKey" xml:space="preserve">
     <value>N</value>
@@ -325,30 +337,30 @@
     <value>N</value>
   </data>
   <data name="AppMenu_NewCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Control</value>
   </data>
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
-    <value />
+    <value>Nouvelle capture</value>
   </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Rogner l’image</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Faire pivoter l’image</value>
   </data>
   <data name="ImageEdit_FlipXButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Retourner l’image horizontalement</value>
   </data>
   <data name="ImageEdit_FlipYButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Retourner l’image verticalement</value>
   </data>
   <data name="NewCaptureButton_Image.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Nouvelle capture (Ctrl+N)</value>
   </data>
   <data name="ImageEdit_FlipYButton.Label" xml:space="preserve">
-    <value />
+    <value>Renverser verticalement</value>
   </data>
   <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
-    <value />
+    <value>Les changements prendront effet au redémarrage.</value>
   </data>
 </root>

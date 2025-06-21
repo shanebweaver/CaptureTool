@@ -118,130 +118,142 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="NewCaptureButton_Audio.Text" xml:space="preserve">
-    <value />
+    <value>音频</value>
   </data>
   <data name="NewCaptureButton_Image.Text" xml:space="preserve">
-    <value />
+    <value>屏幕截图</value>
   </data>
   <data name="NewCaptureButton_Video.Text" xml:space="preserve">
-    <value />
+    <value>屏幕录制</value>
   </data>
   <data name="AppTheme_Dark" xml:space="preserve">
-    <value />
+    <value>深色</value>
   </data>
   <data name="AppTheme_Light" xml:space="preserve">
-    <value />
+    <value>浅色</value>
   </data>
   <data name="AppTheme_SystemDefault" xml:space="preserve">
-    <value />
+    <value>使用系统默认</value>
   </data>
   <data name="NewCaptureOptions_AutoSaveCheckBoxLabel.Text" xml:space="preserve">
-    <value />
+    <value>自动保存？</value>
   </data>
   <data name="HomePage_StartCaptureLabel.Text" xml:space="preserve">
-    <value />
+    <value>开始新捕获</value>
   </data>
   <data name="HomePage_CaptureOptionsLabel.Text" xml:space="preserve">
-    <value />
+    <value>选项</value>
   </data>
   <data name="ErrorPage_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>加载页面时出错。</value>
   </data>
   <data name="ErrorPage_RestartAppButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>重启应用</value>
   </data>
   <data name="Settings_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>设置</value>
   </data>
   <data name="Settings_LocalizationHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>本地化</value>
   </data>
   <data name="Settings_AppLanguageHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>应用语言</value>
   </data>
   <data name="Settings_AppLanguageSubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>选择显示的应用语言</value>
   </data>
   <data name="Settings_RestartAppButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>重启应用</value>
   </data>
   <data name="Settings_AppearanceHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>外观</value>
   </data>
   <data name="Settings_AppThemeHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>应用主题</value>
   </data>
   <data name="Settings_AppThemeSubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>选择显示的应用主题</value>
   </data>
   <data name="AppMenu_HelpMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>帮助</value>
   </data>
   <data name="AppMenu_FileMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>文件</value>
   </data>
   <data name="About_DisclaimerOfLiability_DialogContent" xml:space="preserve">
-    <value />
+    <value>本应用按“现状”提供，不附带任何明示或暗示的保证。开发者不对任何形式的滥用承担责任，包括但不限于捕获或传播非法内容。</value>
   </data>
   <data name="About_TermsOfUse_DialogContent" xml:space="preserve">
-    <value />
+    <value>使用本应用即表示您同意以下条款：
+
+用途与预期使用 本应用仅供合法的个人用途，用于在您的设备上捕获、编辑和保存图像。任何其他用途，包括但不限于未经授权的监控、骚扰或非法活动，均被严格禁止。
+
+无数据收集 本应用不会收集、存储或传输任何个人数据。正常使用期间，可能会在系统指定的位置写入临时文件，用于图像预览或编辑等内部功能。这些文件由操作系统负责管理。
+
+用户责任 您对使用本应用创建、捕获或存储的任何内容承担全部责任。开发者不监控或访问用户数据，对用户行为亦不承担任何责任。
+
+无担保条款 本应用按“现状”提供，不附带任何形式的担保。开发者不对因使用本应用可能导致的任何损害、损失或法律问题承担责任。</value>
   </data>
   <data name="About_TermsOfUse_DialogTitle" xml:space="preserve">
-    <value />
+    <value>使用条款</value>
   </data>
   <data name="About_AppNameAndVersion.Text" xml:space="preserve">
-    <value />
+    <value>Capture Tool 1.0.0.0</value>
   </data>
   <data name="About_Copyright.Text" xml:space="preserve">
-    <value />
+    <value>© 2025 Shane Weaver。保留所有权利。</value>
   </data>
   <data name="About_DisclaimerOfLiability_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>免责声明</value>
   </data>
   <data name="About_PrivacyPolicy_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>隐私政策</value>
   </data>
   <data name="About_TermsOfUse_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>使用条款</value>
   </data>
   <data name="About_PrivacyPolicy_DialogContent" xml:space="preserve">
-    <value />
+    <value>本应用不会收集、存储或传输任何个人数据或用户生成的内容。所有被捕获或编辑的图像仅保存在用户设备上，开发者无法访问。
+
+在正常使用过程中，系统可能会在指定的临时文件夹中创建并存储临时文件（例如用于编辑或图像预览）。这些文件由操作系统管理，并会定期自动清除。
+
+使用本应用即表示您确认对在设备上创建或保存的内容负有管理责任。</value>
   </data>
   <data name="About_DisclaimerOfLiability_DialogTitle" xml:space="preserve">
-    <value />
+    <value>免责声明</value>
   </data>
   <data name="About_PrivacyPolicy_DialogTitle" xml:space="preserve">
-    <value />
+    <value>隐私政策</value>
   </data>
   <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
-    <value />
+    <value>发送反馈</value>
   </data>
   <data name="About_TitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>关于此应用</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value />
+    <value>保存</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
-    <value />
+    <value>复制</value>
   </data>
   <data name="ImageEdit_FlipXButton.Label" xml:space="preserve">
-    <value />
+    <value>镜像</value>
   </data>
   <data name="ImageEdit_RotateButton.Label" xml:space="preserve">
-    <value />
+    <value>旋转</value>
   </data>
   <data name="ImageEdit_CropButton.Label" xml:space="preserve">
-    <value />
+    <value>裁剪</value>
   </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
-    <value />
+    <value>打印</value>
   </data>
   <data name="ImageEdit_UndoButton.Label" xml:space="preserve">
-    <value />
+    <value>撤销</value>
   </data>
   <data name="ImageEdit_RedoButton.Label" xml:space="preserve">
-    <value />
+    <value>重做</value>
   </data>
   <data name="ImageEdit_CropButton.AccessKey" xml:space="preserve">
     <value>I</value>
@@ -277,46 +289,46 @@
     <value>O</value>
   </data>
   <data name="AppMenu_OpenFileItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Control</value>
   </data>
   <data name="AppMenu_ExitItem_KeyboardAccelerator.Key" xml:space="preserve">
     <value>F4</value>
   </data>
   <data name="AppMenu_ExitItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Menu</value>
   </data>
   <data name="AppMenu_ExitItem.AccessKey" xml:space="preserve">
     <value>X</value>
   </data>
   <data name="AppMenu_ExitItem.Text" xml:space="preserve">
-    <value />
+    <value>退出</value>
   </data>
   <data name="AppMenu_SettingsItem.AccessKey" xml:space="preserve">
     <value>S</value>
   </data>
   <data name="AppMenu_SettingsItem.Text" xml:space="preserve">
-    <value />
+    <value>设置</value>
   </data>
   <data name="AppMenu_OpenFileItem.AccessKey" xml:space="preserve">
     <value>O</value>
   </data>
   <data name="AppMenu_OpenFileItem.Text" xml:space="preserve">
-    <value />
+    <value>打开...</value>
   </data>
   <data name="AppMenu_NewCapture_AudioItem.Text" xml:space="preserve">
-    <value />
+    <value>音频</value>
   </data>
   <data name="AppMenu_NewCapture_VideoItem.Text" xml:space="preserve">
-    <value />
+    <value>屏幕录制</value>
   </data>
   <data name="AppMenu_NewCapture_ImageItem.Text" xml:space="preserve">
-    <value />
+    <value>屏幕截图</value>
   </data>
   <data name="AppMenu_AboutItem.AccessKey" xml:space="preserve">
     <value>A</value>
   </data>
   <data name="AppMenu_AboutItem.Text" xml:space="preserve">
-    <value />
+    <value>关于</value>
   </data>
   <data name="AppMenu_NewCaptureItem.AccessKey" xml:space="preserve">
     <value>N</value>
@@ -325,30 +337,30 @@
     <value>N</value>
   </data>
   <data name="AppMenu_NewCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
-    <value />
+    <value>Control</value>
   </data>
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
-    <value />
+    <value>新建捕获</value>
   </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>裁剪图像</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>旋转图像</value>
   </data>
   <data name="ImageEdit_FlipXButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>水平翻转图像</value>
   </data>
   <data name="ImageEdit_FlipYButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>垂直翻转图像</value>
   </data>
   <data name="NewCaptureButton_Image.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>新建捕获 (Ctrl+N)</value>
   </data>
   <data name="ImageEdit_FlipYButton.Label" xml:space="preserve">
-    <value />
+    <value>翻转</value>
   </data>
   <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
-    <value />
+    <value>更改将在重启应用后生效。</value>
   </data>
 </root>
