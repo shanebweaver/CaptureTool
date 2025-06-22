@@ -40,6 +40,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
     ];
 
     public RelayCommand RestartAppCommand => new(RestartApp);
+    public RelayCommand GoBackCommand => new(GoBack);
 
     private ObservableCollection<AppLanguageViewModel> _appLanguages;
     public ObservableCollection<AppLanguageViewModel> AppLanguages
@@ -291,5 +292,10 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         {
             _telemetryService.ActivityError(activityId, e);
         }
+    }
+
+    private void GoBack()
+    {
+        _appController.GoBackOrHome();
     }
 }

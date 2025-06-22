@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core.AppController;
 using CaptureTool.Services.Localization;
+using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;
 
 namespace CaptureTool.ViewModels;
@@ -16,6 +19,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
 
     private readonly ILocalizationService _localizationService;
     private readonly ITelemetryService _telemetryService;
+    private readonly IAppController _appController;
 
     public event EventHandler<(string title, string content)>? ShowDialogRequested;
 
@@ -25,13 +29,16 @@ public sealed partial class AboutPageViewModel : ViewModelBase
         new(() => ShowDialog("About_TermsOfUse_DialogTitle", "About_TermsOfUse_DialogContent", ActivityIds.ShowTermsOfUse));
     public RelayCommand ShowDisclaimerOfLiabilityCommand => 
         new(() => ShowDialog("About_DisclaimerOfLiability_DialogTitle", "About_DisclaimerOfLiability_DialogContent", ActivityIds.ShowDisclaimerOfLiability));
+    public RelayCommand GoBackCommand => new(GoBack);
 
     public AboutPageViewModel(
         ILocalizationService localizationService,
-        ITelemetryService telemetryService)
+        ITelemetryService telemetryService,
+        IAppController appController)
     {
         _localizationService = localizationService;
         _telemetryService = telemetryService;
+        _appController = appController;
     }
 
     private void ShowDialog(string titleResourceKey, string contentResourceKey, string activityId)
@@ -50,5 +57,10 @@ public sealed partial class AboutPageViewModel : ViewModelBase
         }
 
         _telemetryService.ActivityInitiated(activityId);
+    }
+
+    private void GoBack()
+    {
+        _appController.GoBackOrHome();
     }
 }

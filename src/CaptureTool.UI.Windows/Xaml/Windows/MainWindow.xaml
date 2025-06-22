@@ -11,14 +11,14 @@
     Title="CaptureTool"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootGrid" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}">
+    <Grid x:Name="RootGrid" Background="{ThemeResource RootBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <views:AppTitleBarView />
+        <!--<views:AppTitleBarView />-->
 
         <Grid Row="1">
             <views:AppMenuView />

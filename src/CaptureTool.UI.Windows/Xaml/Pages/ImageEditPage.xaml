@@ -83,7 +83,7 @@
 
         <Grid
             x:Name="CanvasContainer"
-            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
+            Background="{ThemeResource ImageEditCanvasBackgroundBrush}"
             Row="1">
             <imagecanvas:ImageCanvas
                 CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"

@@ -3,6 +3,7 @@ using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using CaptureTool.UI.Windows.Xaml.Pages;
 using CaptureTool.ViewModels;
+using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.Storage;
@@ -29,9 +30,10 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
 
         AppWindow.Closing += OnAppWindowClosing;
-        
-        var titleBar = AppWindow.TitleBar;
-        titleBar.ExtendsContentIntoTitleBar = true;
+
+        // TODO: Fix colors in the titlebar.
+        // TODO: Make sure the colors are theme aware.
+        //AppWindow.TitleBar.BackgroundColor = Colors.Red;
 
         Activated += OnActivated;
         Closed += OnClosed;

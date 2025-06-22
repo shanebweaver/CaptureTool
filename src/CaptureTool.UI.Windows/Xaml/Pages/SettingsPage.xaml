@@ -12,177 +12,203 @@
     mc:Ignorable="d">
 
     <ScrollView>
-        <StackPanel
-            x:Name="ContentPanel"
-            Padding="24"
-            HorizontalAlignment="Stretch"
-            Spacing="12">
-            <TextBlock x:Uid="Settings_HeaderLabel" Style="{StaticResource TitleTextBlockStyle}" />
+        <StackPanel Padding="0,24" Spacing="24">
+            <StackPanel
+                Margin="12,0"
+                Orientation="Horizontal"
+                Spacing="12">
+                <Button
+                    Width="32"
+                    Height="32"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Command="{x:Bind ViewModel.GoBackCommand}">
+                    <SymbolIcon Symbol="Back" />
+                </Button>
+                <TextBlock
+                    x:Uid="Settings_HeaderLabel"
+                    Style="{StaticResource TitleTextBlockStyle}"
+                    TextWrapping="WrapWholeWords" />
+            </StackPanel>
 
-            <!--  Localization section  -->
-            <TextBlock x:Uid="Settings_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
-            <!--  App language  -->
-            <Expander
+            <StackPanel
+                x:Name="ContentPanel"
+                Margin="54,0"
                 HorizontalAlignment="Stretch"
-                VerticalAlignment="Top"
-                HorizontalContentAlignment="Left"
-                ExpandDirection="Down"
-                IsExpanded="True">
-                <Expander.Header>
-                    <Grid Padding="0,12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <FontIcon
-                            FontFamily="{StaticResource FluentSystemIcons}"
-                            FontSize="24"
-                            Glyph="{StaticResource LocalLanguage24Regular}" />
-                        <StackPanel Grid.Column="1" Padding="16,0,0,0">
-                            <TextBlock
-                                x:Uid="Settings_AppLanguageHeaderLabel"
-                                TextTrimming="WordEllipsis"
-                                TextWrapping="NoWrap" />
-                            <TextBlock
-                                x:Uid="Settings_AppLanguageSubtitleLabel"
-                                FontSize="12"
-                                Opacity=".75"
-                                TextTrimming="WordEllipsis"
-                                TextWrapping="NoWrap" />
-                        </StackPanel>
-                    </Grid>
-                </Expander.Header>
-                <Grid Padding="4,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <RadioButtons
-                        Padding="4,0"
-                        ItemsSource="{x:Bind ViewModel.AppLanguages, Mode=OneWay}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedAppLanguageIndex, Mode=TwoWay}">
-                        <RadioButtons.ItemTemplate>
-                            <DataTemplate x:DataType="viewmodels:AppLanguageViewModel">
-                                <Grid>
-                                    <TextBlock Margin="12,0,0,0" Text="{x:Bind DisplayName, Mode=OneWay}" />
-                                </Grid>
-                            </DataTemplate>
-                        </RadioButtons.ItemTemplate>
-                    </RadioButtons>
-                    <Grid
-                        Margin="0,12,0,0"
-                        Padding="0,12,0,0"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Center"
-                        BorderBrush="{ThemeResource SystemBaseLowColor}"
-                        BorderThickness="0,1,0,0"
-                        ColumnSpacing="12"
-                        Row="1"
-                        Visibility="{x:Bind ViewModel.ShowAppLanguageRestartMessage, Mode=OneWay}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Button
-                            x:Uid="Settings_RestartAppButton"
-                            VerticalAlignment="Center"
-                            Command="{x:Bind ViewModel.RestartAppCommand}">
-                            <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
-                        </Button>
-                        <TextBlock
-                            x:Uid="Settings_FullChangesWillTakeAffectLabel"
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            Opacity=".8"
-                            TextAlignment="Center"
-                            TextTrimming="WordEllipsis"
-                            TextWrapping="NoWrap" />
-                    </Grid>
-                </Grid>
-            </Expander>
+                Spacing="12">
 
-            <!--  Appearance section  -->
-            <TextBlock x:Uid="Settings_AppearanceHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
-            <!--  App theme  -->
-            <Expander
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Top"
-                HorizontalContentAlignment="Left"
-                ExpandDirection="Down"
-                IsExpanded="True">
-                <Expander.Header>
-                    <Grid Padding="0,12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <FontIcon
-                            FontFamily="{StaticResource FluentSystemIcons}"
-                            FontSize="24"
-                            Glyph="{StaticResource Color16Regular}" />
-                        <StackPanel Grid.Column="1" Padding="16,0,0,0">
-                            <TextBlock
-                                x:Uid="Settings_AppThemeHeaderLabel"
-                                TextTrimming="WordEllipsis"
-                                TextWrapping="NoWrap" />
-                            <TextBlock
-                                x:Uid="Settings_AppThemeSubtitleLabel"
-                                FontSize="12"
-                                Opacity=".8"
-                                TextTrimming="WordEllipsis"
-                                TextWrapping="NoWrap" />
-                        </StackPanel>
-                    </Grid>
-                </Expander.Header>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <RadioButtons
-                        Padding="4,0"
-                        ItemsSource="{x:Bind ViewModel.AppThemes, Mode=OneWay}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedAppThemeIndex, Mode=TwoWay}">
-                        <RadioButtons.ItemTemplate>
-                            <DataTemplate x:DataType="viewmodels:AppThemeViewModel">
-                                <Grid>
-                                    <TextBlock Margin="12,0,0,0" Text="{x:Bind DisplayName, Mode=OneWay}" />
-                                </Grid>
-                            </DataTemplate>
-                        </RadioButtons.ItemTemplate>
-                    </RadioButtons>
-                    <Grid
-                        Margin="0,12,0,0"
-                        Padding="0,12,0,0"
+                <!--  Localization section  -->
+                <StackPanel Spacing="4">
+                    <TextBlock x:Uid="Settings_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
+                    <!--  App language  -->
+                    <Expander
                         HorizontalAlignment="Stretch"
-                        VerticalAlignment="Center"
-                        BorderBrush="{ThemeResource SystemBaseLowColor}"
-                        BorderThickness="0,1,0,0"
-                        ColumnSpacing="12"
-                        Row="1"
-                        Visibility="{x:Bind ViewModel.ShowAppThemeRestartMessage, Mode=OneWay}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Button
-                            x:Uid="Settings_RestartAppButton"
-                            VerticalAlignment="Center"
-                            Command="{x:Bind ViewModel.RestartAppCommand}">
-                            <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
-                        </Button>
-                        <TextBlock
-                            x:Uid="Settings_FullChangesWillTakeAffectLabel"
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            Opacity=".8"
-                            TextAlignment="Center"
-                            TextTrimming="WordEllipsis"
-                            TextWrapping="NoWrap" />
-                    </Grid>
-                </Grid>
-            </Expander>
+                        VerticalAlignment="Top"
+                        HorizontalContentAlignment="Left"
+                        ExpandDirection="Down"
+                        IsExpanded="True">
+                        <Expander.Header>
+                            <Grid Padding="0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon
+                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                    FontSize="24"
+                                    Glyph="{StaticResource LocalLanguage24Regular}" />
+                                <StackPanel Grid.Column="1" Padding="16,0,0,0">
+                                    <TextBlock
+                                        x:Uid="Settings_AppLanguageHeaderLabel"
+                                        TextTrimming="WordEllipsis"
+                                        TextWrapping="NoWrap" />
+                                    <TextBlock
+                                        x:Uid="Settings_AppLanguageSubtitleLabel"
+                                        FontSize="12"
+                                        Opacity=".75"
+                                        TextTrimming="WordEllipsis"
+                                        TextWrapping="NoWrap" />
+                                </StackPanel>
+                            </Grid>
+                        </Expander.Header>
+                        <Grid Padding="4,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <RadioButtons
+                                Padding="4,0"
+                                ItemsSource="{x:Bind ViewModel.AppLanguages, Mode=OneWay}"
+                                SelectedIndex="{x:Bind ViewModel.SelectedAppLanguageIndex, Mode=TwoWay}">
+                                <RadioButtons.ItemTemplate>
+                                    <DataTemplate x:DataType="viewmodels:AppLanguageViewModel">
+                                        <Grid>
+                                            <TextBlock Margin="12,0,0,0" Text="{x:Bind DisplayName, Mode=OneWay}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </RadioButtons.ItemTemplate>
+                            </RadioButtons>
+                            <Grid
+                                Margin="0,12,0,0"
+                                Padding="0,12,0,0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                BorderBrush="{ThemeResource SystemBaseLowColor}"
+                                BorderThickness="0,1,0,0"
+                                ColumnSpacing="12"
+                                Row="1"
+                                Visibility="{x:Bind ViewModel.ShowAppLanguageRestartMessage, Mode=OneWay}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    x:Uid="Settings_RestartAppButton"
+                                    VerticalAlignment="Center"
+                                    Command="{x:Bind ViewModel.RestartAppCommand}">
+                                    <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
+                                </Button>
+                                <TextBlock
+                                    x:Uid="Settings_FullChangesWillTakeAffectLabel"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Opacity=".8"
+                                    TextAlignment="Center"
+                                    TextTrimming="WordEllipsis"
+                                    TextWrapping="NoWrap" />
+                            </Grid>
+                        </Grid>
+                    </Expander>
+                </StackPanel>
+
+                <!--  Appearance section  -->
+                <StackPanel Spacing="4">
+                    <TextBlock x:Uid="Settings_AppearanceHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
+                    <!--  App theme  -->
+                    <Expander
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        HorizontalContentAlignment="Left"
+                        ExpandDirection="Down"
+                        IsExpanded="True">
+                        <Expander.Header>
+                            <Grid Padding="0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon
+                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                    FontSize="24"
+                                    Glyph="{StaticResource Color16Regular}" />
+                                <StackPanel Grid.Column="1" Padding="16,0,0,0">
+                                    <TextBlock
+                                        x:Uid="Settings_AppThemeHeaderLabel"
+                                        TextTrimming="WordEllipsis"
+                                        TextWrapping="NoWrap" />
+                                    <TextBlock
+                                        x:Uid="Settings_AppThemeSubtitleLabel"
+                                        FontSize="12"
+                                        Opacity=".8"
+                                        TextTrimming="WordEllipsis"
+                                        TextWrapping="NoWrap" />
+                                </StackPanel>
+                            </Grid>
+                        </Expander.Header>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <RadioButtons
+                                Padding="4,0"
+                                ItemsSource="{x:Bind ViewModel.AppThemes, Mode=OneWay}"
+                                SelectedIndex="{x:Bind ViewModel.SelectedAppThemeIndex, Mode=TwoWay}">
+                                <RadioButtons.ItemTemplate>
+                                    <DataTemplate x:DataType="viewmodels:AppThemeViewModel">
+                                        <Grid>
+                                            <TextBlock Margin="12,0,0,0" Text="{x:Bind DisplayName, Mode=OneWay}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </RadioButtons.ItemTemplate>
+                            </RadioButtons>
+                            <Grid
+                                Margin="0,12,0,0"
+                                Padding="0,12,0,0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                BorderBrush="{ThemeResource SystemBaseLowColor}"
+                                BorderThickness="0,1,0,0"
+                                ColumnSpacing="12"
+                                Row="1"
+                                Visibility="{x:Bind ViewModel.ShowAppThemeRestartMessage, Mode=OneWay}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    x:Uid="Settings_RestartAppButton"
+                                    VerticalAlignment="Center"
+                                    Command="{x:Bind ViewModel.RestartAppCommand}">
+                                    <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
+                                </Button>
+                                <TextBlock
+                                    x:Uid="Settings_FullChangesWillTakeAffectLabel"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Opacity=".8"
+                                    TextAlignment="Center"
+                                    TextTrimming="WordEllipsis"
+                                    TextWrapping="NoWrap" />
+                            </Grid>
+                        </Grid>
+                    </Expander>
+                </StackPanel>
+            </StackPanel>
         </StackPanel>
+
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="CommonStates">
                 <VisualState x:Name="Default">

@@ -11,38 +11,59 @@
     mc:Ignorable="d">
 
     <ScrollView>
-        <StackPanel
-            x:Name="ContentPanel"
-            Padding="24"
-            HorizontalAlignment="Stretch"
-            Spacing="12">
-            <TextBlock
-                x:Uid="About_TitleLabel"
-                FontWeight="SemiBold"
-                Style="{StaticResource TitleTextBlockStyle}"
-                TextWrapping="WrapWholeWords" />
+        <StackPanel Padding="0,24" Spacing="24">
+            <StackPanel
+                Margin="12,0"
+                Orientation="Horizontal"
+                Spacing="12">
+                <Button
+                    Width="32"
+                    Height="32"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Command="{x:Bind ViewModel.GoBackCommand}">
+                    <SymbolIcon Symbol="Back" />
+                </Button>
+                <TextBlock
+                    x:Uid="About_TitleLabel"
+                    Style="{StaticResource TitleTextBlockStyle}"
+                    TextWrapping="WrapWholeWords" />
+            </StackPanel>
 
-            <TextBlock x:Uid="About_AppNameAndVersion" TextWrapping="WrapWholeWords" />
-            <TextBlock x:Uid="About_Copyright" TextWrapping="WrapWholeWords" />
+            <StackPanel
+                x:Name="ContentPanel"
+                Margin="54,0"
+                HorizontalAlignment="Stretch"
+                Spacing="12">
 
-            <HyperlinkButton x:Uid="About_DisclaimerOfLiability_Button" Command="{x:Bind ViewModel.ShowDisclaimerOfLiabilityCommand}">
-                <TextBlock x:Uid="About_DisclaimerOfLiability_ButtonLabel" TextWrapping="WrapWholeWords" />
-            </HyperlinkButton>
+                <StackPanel Spacing="4">
+                    <TextBlock x:Uid="About_AppNameAndVersion" TextWrapping="WrapWholeWords" />
+                    <TextBlock x:Uid="About_Copyright" TextWrapping="WrapWholeWords" />
+                </StackPanel>
 
-            <HyperlinkButton x:Uid="About_TermsOfUse_Button" Command="{x:Bind ViewModel.ShowTermsOfUseCommand}">
-                <TextBlock x:Uid="About_TermsOfUse_ButtonLabel" TextWrapping="WrapWholeWords" />
-            </HyperlinkButton>
+                <StackPanel Spacing="4">
+                    <HyperlinkButton x:Uid="About_DisclaimerOfLiability_Button" Command="{x:Bind ViewModel.ShowDisclaimerOfLiabilityCommand}">
+                        <TextBlock x:Uid="About_DisclaimerOfLiability_ButtonLabel" TextWrapping="WrapWholeWords" />
+                    </HyperlinkButton>
 
-            <HyperlinkButton x:Uid="About_PrivacyPolicy_Button" Command="{x:Bind ViewModel.ShowPrivacyPolicyCommand}">
-                <TextBlock x:Uid="About_PrivacyPolicy_ButtonLabel" TextWrapping="WrapWholeWords" />
-            </HyperlinkButton>
+                    <HyperlinkButton x:Uid="About_TermsOfUse_Button" Command="{x:Bind ViewModel.ShowTermsOfUseCommand}">
+                        <TextBlock x:Uid="About_TermsOfUse_ButtonLabel" TextWrapping="WrapWholeWords" />
+                    </HyperlinkButton>
 
-            <Button Visibility="Collapsed">
+                    <HyperlinkButton x:Uid="About_PrivacyPolicy_Button" Command="{x:Bind ViewModel.ShowPrivacyPolicyCommand}">
+                        <TextBlock x:Uid="About_PrivacyPolicy_ButtonLabel" TextWrapping="WrapWholeWords" />
+                    </HyperlinkButton>
+                </StackPanel>
+
+                <!--<Button>
                 <TextBlock
                     x:Uid="About_Feedback_ButtonLabel"
                     MinWidth="124"
                     TextAlignment="Center" />
-            </Button>
+            </Button>-->
+            </StackPanel>
         </StackPanel>
     </ScrollView>
 </local:AboutPageBase>
