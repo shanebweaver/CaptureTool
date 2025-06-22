@@ -19,7 +19,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <CommandBar DefaultLabelPosition="Right" IsOpen="False" Background="{ThemeResource LayerFillColorDefaultBrush}">
+        <CommandBar DefaultLabelPosition="Right" IsOpen="False">
             <AppBarToggleButton
                 x:Uid="ImageEdit_CropButton"
                 Command="{x:Bind ViewModel.ToggleCropModeCommand}"

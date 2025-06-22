@@ -1,14 +1,16 @@
-using CaptureTool.Services.Navigation;
+﻿using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using CaptureTool.UI.Windows.Xaml.Pages;
 using CaptureTool.ViewModels;
-using Microsoft.UI;
+using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.Storage;
 using System;
 using System.Threading;
-using Windows.UI;
+using Windows.ApplicationModel;
+using Windows.Foundation;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
@@ -30,7 +32,11 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
 
         AppWindow.Closing += OnAppWindowClosing;
-
+        AppTitleBar.Loaded += AppTitleBar_Loaded;
+        AppTitleBar.SizeChanged += AppTitleBar_SizeChanged;
+        ExtendsContentIntoTitleBar = true;
+        UpdateAppTitle();
+      
         // Set initial title bar colors based on theme
         UpdateTitleBarColors();
 
@@ -38,6 +44,48 @@ public sealed partial class MainWindow : Window
         Closed += OnClosed;
         ViewModel.NavigationRequested += OnViewModelNavigationRequested;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    private void UpdateAppTitle()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            string appTitle = "Capture Tool";
+
+            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
+            {
+                appTitle = AppInfo.Current.DisplayInfo.DisplayName;
+            }
+
+            Title = appTitle;
+            TitleBarTextBlock.Text = appTitle;
+        });
+    }
+
+    private void AppTitleBar_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (ExtendsContentIntoTitleBar == true)
+        {
+            // Set the initial interactive regions.
+            SetRegionsForCustomTitleBar();
+        }
+    }
+
+    private void AppTitleBar_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (ExtendsContentIntoTitleBar == true)
+        {
+            // Update interactive regions if the size of the window changes.
+            SetRegionsForCustomTitleBar();
+        }
+    }
+
+    private void SetRegionsForCustomTitleBar()
+    {
+        double scaleAdjustment = AppTitleBar.XamlRoot.RasterizationScale;
+
+        RightPaddingColumn.Width = new GridLength(AppWindow.TitleBar.RightInset / scaleAdjustment);
+        LeftPaddingColumn.Width = new GridLength(AppWindow.TitleBar.LeftInset / scaleAdjustment);
     }
 
     private void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
@@ -160,36 +208,36 @@ public sealed partial class MainWindow : Window
                 return;
 
             // Default values
-            Color backgroundColor;
-            Color foregroundColor;
+            //Color backgroundColor;
+            //Color foregroundColor;
 
             AppTheme appTheme = ViewModel.CurrentAppTheme == AppTheme.SystemDefault
                 ? ViewModel.DefaultAppTheme
                 : ViewModel.CurrentAppTheme;
 
-            switch (appTheme)
-            {
-                case AppTheme.Dark:
-                    backgroundColor = Colors.Black;
-                    foregroundColor = Colors.White;
-                    break;
-                case AppTheme.Light:
-                default:
-                    backgroundColor = Colors.White;
-                    foregroundColor = Colors.Black;
-                    break;
-            }
+            //switch (appTheme)
+            //{
+            //    case AppTheme.Dark:
+            //        backgroundColor = Colors.Transparent;
+            //        foregroundColor = Colors.White;
+            //        break;
+            //    case AppTheme.Light:
+            //    default:
+            //        backgroundColor = Colors.White;
+            //        foregroundColor = Colors.Black;
+            //        break;
+            //}
 
-            titleBar.BackgroundColor = backgroundColor;
-            titleBar.ForegroundColor = foregroundColor;
-            titleBar.ButtonBackgroundColor = backgroundColor;
-            titleBar.ButtonForegroundColor = foregroundColor;
+            //titleBar.BackgroundColor = backgroundColor;
+            //titleBar.ForegroundColor = foregroundColor;
+            //titleBar.ButtonBackgroundColor = backgroundColor;
+            //titleBar.ButtonForegroundColor = foregroundColor;
 
-            // Optional: Set inactive colors for better UX
-            titleBar.InactiveBackgroundColor = backgroundColor;
-            titleBar.InactiveForegroundColor = foregroundColor;
-            titleBar.ButtonInactiveBackgroundColor = backgroundColor;
-            titleBar.ButtonInactiveForegroundColor = foregroundColor;
+            //// Optional: Set inactive colors for better UX
+            //titleBar.InactiveBackgroundColor = backgroundColor;
+            //titleBar.InactiveForegroundColor = foregroundColor;
+            //titleBar.ButtonInactiveBackgroundColor = backgroundColor;
+            //titleBar.ButtonInactiveForegroundColor = foregroundColor;
         });
     }
 }

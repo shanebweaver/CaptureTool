@@ -8,21 +8,48 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:CaptureTool.UI.Windows.Xaml.Pages"
     xmlns:views="using:CaptureTool.UI.Windows.Xaml.Views"
-    Title="CaptureTool"
     mc:Ignorable="d">
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
 
-    <Grid x:Name="RootGrid" Background="{ThemeResource RootBackgroundBrush}">
+    <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <Grid Row="1">
-            <views:AppMenuView />
+        <Grid x:Name="AppTitleBar">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftPaddingColumn" Width="0" />
+                <ColumnDefinition />
+                <ColumnDefinition x:Name="RightPaddingColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <views:AppMenuView Grid.Column="1" />
+
+            <StackPanel
+                Grid.ColumnSpan="3"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Orientation="Horizontal">
+                <Image
+                    x:Name="TitleBarIcon"
+                    Width="16"
+                    Height="16"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Source="ms-appx:///Assets/StoreLogo.png" />
+                <TextBlock
+                    x:Name="TitleBarTextBlock"
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource CaptionTextBlockStyle}" />
+            </StackPanel>
         </Grid>
 
-        <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Row="2">
+        <Grid Row="2">
             <Frame x:Name="NavigationFrame" SourcePageType="pages:LoadingPage" />
         </Grid>
     </Grid>
