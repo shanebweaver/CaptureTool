@@ -1,9 +1,7 @@
-// Improved CropOverlay: Fully constrained crop rect within bounds
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Shapes;
 using System;
 using System.Collections.Generic;
 using Windows.Foundation;
@@ -57,33 +55,10 @@ public sealed partial class CropOverlay : UserControlBase
 
     private static void OnCropRectChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is CropOverlay overlay) overlay.UpdateCropVisuals();
-    }
-
-    private void UpdateCropVisuals()
-    {
-        UpdateCropBoundary();
-        //var rect = CropRect;
-        //double left = Math.Clamp(rect.Left, 0, CropCanvas.ActualWidth);
-        //double top = Math.Clamp(rect.Top, 0, CropCanvas.ActualHeight);
-        //double right = Math.Clamp(rect.Right, 0, CropCanvas.ActualWidth);
-        //double bottom = Math.Clamp(rect.Bottom, 0, CropCanvas.ActualHeight);
-
-        //Canvas.SetLeft(CropBoundary, left);
-        //Canvas.SetTop(CropBoundary, top);
-        //CropBoundary.Width = Math.Max(1, right - left);
-        //CropBoundary.Height = Math.Max(1, bottom - top);
-
-        //CropBoundary.BorderThickness = new Thickness(left, top, CropCanvas.ActualWidth - right, CropCanvas.ActualHeight - bottom);
-
-        //SetAnchor(CropAnchor_TopLeft, left, top);
-        //SetAnchor(CropAnchor_TopRight, right, top);
-        //SetAnchor(CropAnchor_BottomLeft, left, bottom);
-        //SetAnchor(CropAnchor_BottomRight, right, bottom);
-        //SetAnchor(CropAnchor_Top, (left + right) / 2, top);
-        //SetAnchor(CropAnchor_Bottom, (left + right) / 2, bottom);
-        //SetAnchor(CropAnchor_Left, left, (top + bottom) / 2);
-        //SetAnchor(CropAnchor_Right, right, (top + bottom) / 2);
+        if (d is CropOverlay overlay)
+        {
+            overlay.UpdateCropBoundary();
+        }
     }
 
     private void UpdateCropBoundary()
@@ -120,12 +95,6 @@ public sealed partial class CropOverlay : UserControlBase
 
         Canvas.SetLeft(CropAnchor_Right, right - CropAnchor_Right.Width / 2);
         Canvas.SetTop(CropAnchor_Right, centerY - CropAnchor_Right.Height / 2);
-    }
-
-    private static void SetAnchor(FrameworkElement anchor, double x, double y)
-    {
-        Canvas.SetLeft(anchor, x - anchor.Width / 2);
-        Canvas.SetTop(anchor, y - anchor.Height / 2);
     }
 
     private void AttachEventHandlers()
