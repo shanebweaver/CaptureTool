@@ -38,12 +38,20 @@ public class NavigationService : INavigationService
     {
         lock (_navigationLock)
         {
+            NavigationRequest request = new(route, parameter);
+            if (_navigationStack.TryPeek(out NavigationRequest lastRequest) &&
+                lastRequest.Route == request.Route &&
+                lastRequest.Parameter == request.Parameter)
+            {
+                // If the last request is the same as the current one, do not navigate again.
+                return;
+            }
+
             if (clearHistory)
             {
                 _navigationStack.Clear();
             }
 
-            NavigationRequest request = new(route, parameter);
             _navigationStack.Push(request);
             Navigate(request);
         }

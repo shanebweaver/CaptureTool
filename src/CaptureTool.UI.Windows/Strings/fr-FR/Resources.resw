@@ -363,4 +363,7 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
     <value>Les changements prendront effet au redémarrage.</value>
   </data>
+  <data name="NewCaptureButton_Image.AutomationProperties.Name" xml:space="preserve">
+    <value>Capture d'écran</value>
+  </data>
 </root>

@@ -8,6 +8,7 @@ public sealed partial class AppThemeViewModel : ViewModelBase
 {
     public AppTheme AppTheme { get; }
     public string DisplayName { get; }
+    public string AutomationName { get; }
 
     public AppThemeViewModel(
         AppTheme appTheme,
@@ -15,5 +16,6 @@ public sealed partial class AppThemeViewModel : ViewModelBase
     {
         AppTheme = appTheme;
         DisplayName = localizationService.GetString($"AppTheme_{Enum.GetName(appTheme)}");
+        AutomationName = DisplayName;
     }
 }

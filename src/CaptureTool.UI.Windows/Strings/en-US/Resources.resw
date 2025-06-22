@@ -445,4 +445,8 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Full changes will take affect on app restart.</value>
     <comment>The label for the message that shows when a settings change requires an app restart on the settings page.</comment>
   </data>
+  <data name="NewCaptureButton_Image.AutomationProperties.Name" xml:space="preserve">
+    <value>Screenshot</value>
+    <comment>The automation name for the button that starts a new image capture.</comment>
+  </data>
 </root>

@@ -21,6 +21,7 @@
                     Height="32"
                     Padding="0"
                     VerticalAlignment="Center"
+                    AutomationProperties.Name="Back"
                     Background="Transparent"
                     BorderBrush="Transparent"
                     Command="{x:Bind ViewModel.GoBackCommand}">

@@ -363,4 +363,7 @@
   <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
     <value>更改将在重启应用后生效。</value>
   </data>
+  <data name="NewCaptureButton_Image.AutomationProperties.Name" xml:space="preserve">
+    <value>屏幕截图</value>
+  </data>
 </root>

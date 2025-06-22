@@ -363,4 +363,7 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
     <value>Los cambios se aplicarán tras reiniciar la aplicación.</value>
   </data>
+  <data name="NewCaptureButton_Image.AutomationProperties.Name" xml:space="preserve">
+    <value>Captura de pantalla</value>
+  </data>
 </root>

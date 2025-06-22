@@ -7,6 +7,7 @@ public sealed partial class AppLanguageViewModel : ViewModelBase
 {
     public AppLanguage Language { get; }
     public string DisplayName { get; }
+    public string AutomationName { get; }
 
     public AppLanguageViewModel(AppLanguage language)
     {
@@ -14,5 +15,6 @@ public sealed partial class AppLanguageViewModel : ViewModelBase
 
         CultureInfo langInfo = new(language.Value);
         DisplayName = langInfo.NativeName;
+        AutomationName = langInfo.NativeName;
     }
 }

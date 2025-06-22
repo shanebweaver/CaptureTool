@@ -22,6 +22,7 @@
                     Height="32"
                     Padding="0"
                     VerticalAlignment="Center"
+                    AutomationProperties.Name="Back"
                     Background="Transparent"
                     BorderBrush="Transparent"
                     Command="{x:Bind ViewModel.GoBackCommand}">
@@ -47,6 +48,7 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Top"
                         HorizontalContentAlignment="Left"
+                        AutomationProperties.LabeledBy="{x:Bind AppLangaugeHeaderTextBlock}"
                         ExpandDirection="Down"
                         IsExpanded="True">
                         <Expander.Header>
@@ -61,6 +63,7 @@
                                     Glyph="{StaticResource LocalLanguage24Regular}" />
                                 <StackPanel Grid.Column="1" Padding="16,0,0,0">
                                     <TextBlock
+                                        x:Name="AppLangaugeHeaderTextBlock"
                                         x:Uid="Settings_AppLanguageHeaderLabel"
                                         TextTrimming="WordEllipsis"
                                         TextWrapping="NoWrap" />
@@ -84,9 +87,9 @@
                                 SelectedIndex="{x:Bind ViewModel.SelectedAppLanguageIndex, Mode=TwoWay}">
                                 <RadioButtons.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:AppLanguageViewModel">
-                                        <Grid>
+                                        <RadioButton AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">
                                             <TextBlock Margin="12,0,0,0" Text="{x:Bind DisplayName, Mode=OneWay}" />
-                                        </Grid>
+                                        </RadioButton>
                                     </DataTemplate>
                                 </RadioButtons.ItemTemplate>
                             </RadioButtons>
@@ -131,6 +134,7 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Top"
                         HorizontalContentAlignment="Left"
+                        AutomationProperties.LabeledBy="{x:Bind AppThemeHeaderTextBlock}"
                         ExpandDirection="Down"
                         IsExpanded="True">
                         <Expander.Header>
@@ -145,6 +149,7 @@
                                     Glyph="{StaticResource Color16Regular}" />
                                 <StackPanel Grid.Column="1" Padding="16,0,0,0">
                                     <TextBlock
+                                        x:Name="AppThemeHeaderTextBlock"
                                         x:Uid="Settings_AppThemeHeaderLabel"
                                         TextTrimming="WordEllipsis"
                                         TextWrapping="NoWrap" />
@@ -168,9 +173,9 @@
                                 SelectedIndex="{x:Bind ViewModel.SelectedAppThemeIndex, Mode=TwoWay}">
                                 <RadioButtons.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:AppThemeViewModel">
-                                        <Grid>
+                                        <RadioButton AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">
                                             <TextBlock Margin="12,0,0,0" Text="{x:Bind DisplayName, Mode=OneWay}" />
-                                        </Grid>
+                                        </RadioButton>
                                     </DataTemplate>
                                 </RadioButtons.ItemTemplate>
                             </RadioButtons>
@@ -218,7 +223,7 @@
                 </VisualState>
                 <VisualState x:Name="Wide">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="800" />
+                        <AdaptiveTrigger MinWindowWidth="908" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="ContentPanel.HorizontalAlignment" Value="Left" />

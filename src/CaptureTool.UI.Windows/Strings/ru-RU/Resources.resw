@@ -363,4 +363,7 @@
   <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
     <value>Изменения вступят в силу после перезапуска приложения.</value>
   </data>
+  <data name="NewCaptureButton_Image.AutomationProperties.Name" xml:space="preserve">
+    <value>Снимок экрана</value>
+  </data>
 </root>
