@@ -12,8 +12,7 @@
         <Grid
             x:Name="CropBoundary"
             Background="Transparent"
-            BorderThickness="0"
-            IsTabStop="True">
+            BorderThickness="0">
             <Grid.Resources>
                 <Style x:Key="CropAnchorPolygonStyle" TargetType="Polygon">
                     <Setter Property="Width" Value="40" />
