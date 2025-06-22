@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Input;
 using System;
 using System.Collections.Generic;
 using Windows.Foundation;
+using Windows.System;
 using Windows.UI.Core;
 using Rectangle = System.Drawing.Rectangle;
 
@@ -113,6 +114,7 @@ public sealed partial class CropOverlay : UserControlBase
             anchor.PointerCanceled += EndInteraction;
             anchor.PointerEntered += AnchorPointerEntered;
             anchor.PointerExited += AnchorPointerExited;
+            anchor.KeyDown += Anchor_KeyDown;
         }
 
         CropBoundary.PointerPressed += BoundaryPressed;
@@ -243,7 +245,6 @@ public sealed partial class CropOverlay : UserControlBase
             r.Height);
     }
 
-
     private void ResizeFromCorner(double dx, double dy, bool adjustLeft, bool adjustTop)
     {
         var r = CropRect;
@@ -316,4 +317,45 @@ public sealed partial class CropOverlay : UserControlBase
         var r = CropRect;
         return pos.X >= r.Left && pos.X <= r.Right && pos.Y >= r.Top && pos.Y <= r.Bottom;
     }
+
+    private void Anchor_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (sender is FrameworkElement anchor)
+        {
+            const int step = 1; // pixels to move per key press
+            var r = CropRect;
+            double left = r.Left;
+            double top = r.Top;
+            double right = r.Right;
+            double bottom = r.Bottom;
+
+            switch (e.Key)
+            {
+                case VirtualKey.Left:
+                    if (_anchorDragHandlers.TryGetValue(anchor, out var resizeHandlerLeft))
+                        resizeHandlerLeft(-step, 0);
+                    e.Handled = true;
+                    break;
+
+                case VirtualKey.Right:
+                    if (_anchorDragHandlers.TryGetValue(anchor, out var resizeHandlerRight))
+                        resizeHandlerRight(step, 0);
+                    e.Handled = true;
+                    break;
+
+                case VirtualKey.Up:
+                    if (_anchorDragHandlers.TryGetValue(anchor, out var resizeHandlerUp))
+                        resizeHandlerUp(0, -step);
+                    e.Handled = true;
+                    break;
+
+                case VirtualKey.Down:
+                    if (_anchorDragHandlers.TryGetValue(anchor, out var resizeHandlerDown))
+                        resizeHandlerDown(0, step);
+                    e.Handled = true;
+                    break;
+            }
+        }
+    }
+
 }
