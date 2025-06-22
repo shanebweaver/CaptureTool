@@ -30,6 +30,8 @@
             <!--  Top left  -->
             <Polygon
                 x:Name="CropAnchor_TopLeft"
+                Width="40"
+                Height="40"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Fill="White"
@@ -44,11 +46,15 @@
             <!--  Top right  -->
             <Polygon
                 x:Name="CropAnchor_TopRight"
+                Width="40"
+                Height="40"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 Fill="White"
+                IsTabStop="True"
                 Points="0,0 40,0 40,40 32,40 32,8 0,8"
-                Stroke="Black">
+                Stroke="Black"
+                UseSystemFocusVisuals="True">
                 <Polygon.RenderTransform>
                     <TranslateTransform X="10" Y="-9" />
                 </Polygon.RenderTransform>
@@ -56,11 +62,15 @@
             <!--  Bottom left  -->
             <Polygon
                 x:Name="CropAnchor_BottomLeft"
+                Width="40"
+                Height="40"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Bottom"
                 Fill="White"
+                IsTabStop="True"
                 Points="0,0 8,0 8,32 40,32 40,40 0,40"
-                Stroke="Black">
+                Stroke="Black"
+                UseSystemFocusVisuals="True">
                 <Polygon.RenderTransform>
                     <TranslateTransform X="-9" Y="9" />
                 </Polygon.RenderTransform>
@@ -68,11 +78,15 @@
             <!--  Bottom right  -->
             <Polygon
                 x:Name="CropAnchor_BottomRight"
+                Width="40"
+                Height="40"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
                 Fill="White"
+                IsTabStop="True"
                 Points="32,0 40,0 40,40 0,40 0,32 32,32"
-                Stroke="Black">
+                Stroke="Black"
+                UseSystemFocusVisuals="True">
                 <Polygon.RenderTransform>
                     <TranslateTransform X="10" Y="10" />
                 </Polygon.RenderTransform>
@@ -80,6 +94,8 @@
             <!--  Top  -->
             <Polygon
                 x:Name="CropAnchor_Top"
+                Width="40"
+                Height="40"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
                 Fill="White"
@@ -94,11 +110,15 @@
             <!--  Left  -->
             <Polygon
                 x:Name="CropAnchor_Left"
+                Width="40"
+                Height="40"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 Fill="White"
+                IsTabStop="True"
                 Points="0,0 8,0 8,40 0,40"
-                Stroke="Black">
+                Stroke="Black"
+                UseSystemFocusVisuals="True">
                 <Polygon.RenderTransform>
                     <TranslateTransform X="-9" />
                 </Polygon.RenderTransform>
@@ -106,11 +126,15 @@
             <!--  Right  -->
             <Polygon
                 x:Name="CropAnchor_Right"
+                Width="40"
+                Height="40"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
                 Fill="White"
+                IsTabStop="True"
                 Points="32,0 40,0 40,40 32,40"
-                Stroke="Black">
+                Stroke="Black"
+                UseSystemFocusVisuals="True">
                 <Polygon.RenderTransform>
                     <TranslateTransform X="10" />
                 </Polygon.RenderTransform>
@@ -118,11 +142,15 @@
             <!--  Bottom  -->
             <Polygon
                 x:Name="CropAnchor_Bottom"
+                Width="40"
+                Height="40"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Bottom"
                 Fill="White"
+                IsTabStop="True"
                 Points="0,32 40,32 40,40 0,40"
-                Stroke="Black">
+                Stroke="Black"
+                UseSystemFocusVisuals="True">
                 <Polygon.RenderTransform>
                     <TranslateTransform Y="10" />
                 </Polygon.RenderTransform>
