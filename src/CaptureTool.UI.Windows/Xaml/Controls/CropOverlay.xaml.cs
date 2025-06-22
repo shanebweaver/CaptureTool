@@ -1,55 +1,44 @@
+// Improved CropOverlay: Fully constrained crop rect within bounds
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Shapes;
 using System;
+using System.Collections.Generic;
+using Windows.Foundation;
 using Windows.UI.Core;
 using Rectangle = System.Drawing.Rectangle;
-using Point = Windows.Foundation.Point;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;
 
 public sealed partial class CropOverlay : UserControlBase
 {
-    private enum CursorContext 
-    { 
-        None,
-        Anchor,
-        Boundary
-    }
+    private enum DragMode { None, Move, Resize }
 
-    private Point _cropAnchorLastPointerPosition;
-    private Point _cropBoundaryLastPointerPosition;
-    private Polygon? _activeCropAnchor = null;
-    private bool _isCropBoundaryDragging = false;
-    private CursorContext _currentCursorContext = CursorContext.None;
+    private readonly Dictionary<FrameworkElement, Action<double, double>> _anchorDragHandlers = new();
+    private readonly Dictionary<FrameworkElement, CoreCursorType> _anchorCursors = new();
+    private Point _lastPointerPosition;
+    private FrameworkElement? _activeAnchor;
+    private DragMode _dragMode = DragMode.None;
 
     public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
         nameof(CropRect),
         typeof(Rectangle),
         typeof(CropOverlay),
-        new PropertyMetadata(new Rectangle(0,0,0,0), OnCropRectPropertyChanged));
-
-    private static void OnCropRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is CropOverlay control)
-        {
-            control.UpdateCropBoundary();
-        }
-    }
+        new PropertyMetadata(new Rectangle(), OnCropRectChanged));
 
     public Rectangle CropRect
     {
-        get => Get<Rectangle>(CropRectProperty);
-        set => Set(CropRectProperty, value);
+        get => (Rectangle)GetValue(CropRectProperty);
+        set => SetValue(CropRectProperty, value);
     }
 
     public CropOverlay()
     {
         InitializeComponent();
-        AttachCropAnchorEvents();
         SizeChanged += CropOverlay_SizeChanged;
+        Loaded += (_, _) => AttachEventHandlers();
     }
 
     private void CropOverlay_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -64,6 +53,37 @@ public sealed partial class CropOverlay : UserControlBase
         CropBoundary.Width = CropCanvas.Width;
 
         UpdateCropBoundary();
+    }
+
+    private static void OnCropRectChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is CropOverlay overlay) overlay.UpdateCropVisuals();
+    }
+
+    private void UpdateCropVisuals()
+    {
+        UpdateCropBoundary();
+        //var rect = CropRect;
+        //double left = Math.Clamp(rect.Left, 0, CropCanvas.ActualWidth);
+        //double top = Math.Clamp(rect.Top, 0, CropCanvas.ActualHeight);
+        //double right = Math.Clamp(rect.Right, 0, CropCanvas.ActualWidth);
+        //double bottom = Math.Clamp(rect.Bottom, 0, CropCanvas.ActualHeight);
+
+        //Canvas.SetLeft(CropBoundary, left);
+        //Canvas.SetTop(CropBoundary, top);
+        //CropBoundary.Width = Math.Max(1, right - left);
+        //CropBoundary.Height = Math.Max(1, bottom - top);
+
+        //CropBoundary.BorderThickness = new Thickness(left, top, CropCanvas.ActualWidth - right, CropCanvas.ActualHeight - bottom);
+
+        //SetAnchor(CropAnchor_TopLeft, left, top);
+        //SetAnchor(CropAnchor_TopRight, right, top);
+        //SetAnchor(CropAnchor_BottomLeft, left, bottom);
+        //SetAnchor(CropAnchor_BottomRight, right, bottom);
+        //SetAnchor(CropAnchor_Top, (left + right) / 2, top);
+        //SetAnchor(CropAnchor_Bottom, (left + right) / 2, bottom);
+        //SetAnchor(CropAnchor_Left, left, (top + bottom) / 2);
+        //SetAnchor(CropAnchor_Right, right, (top + bottom) / 2);
     }
 
     private void UpdateCropBoundary()
@@ -102,337 +122,229 @@ public sealed partial class CropOverlay : UserControlBase
         Canvas.SetTop(CropAnchor_Right, centerY - CropAnchor_Right.Height / 2);
     }
 
-    private Polygon[] GetCropAnchors()
+    private static void SetAnchor(FrameworkElement anchor, double x, double y)
     {
-        return [
-            CropAnchor_TopLeft,
-            CropAnchor_TopRight,
-            CropAnchor_BottomLeft,
-            CropAnchor_BottomRight,
-            CropAnchor_Top,
-            CropAnchor_Bottom,
-            CropAnchor_Left,
-            CropAnchor_Right
-        ];
+        Canvas.SetLeft(anchor, x - anchor.Width / 2);
+        Canvas.SetTop(anchor, y - anchor.Height / 2);
     }
 
-    private void AttachCropAnchorEvents()
+    private void AttachEventHandlers()
     {
-        foreach (var anchor in GetCropAnchors())
+        var anchors = new FrameworkElement[]
         {
-            anchor.PointerPressed += CropAnchor_PointerPressed;
-            anchor.PointerMoved += CropAnchor_PointerMoved;
-            anchor.PointerReleased += CropAnchor_PointerReleased;
-            anchor.PointerCanceled += CropAnchor_PointerCanceled;
-            anchor.PointerEntered += CropAnchor_PointerEntered;
-            anchor.PointerExited += CropAnchor_PointerExited;
+            CropAnchor_TopLeft, CropAnchor_TopRight, CropAnchor_BottomLeft, CropAnchor_BottomRight,
+            CropAnchor_Top, CropAnchor_Bottom, CropAnchor_Left, CropAnchor_Right
+        };
+
+        foreach (var anchor in anchors)
+        {
+            anchor.PointerPressed += AnchorPressed;
+            anchor.PointerMoved += AnchorMoved;
+            anchor.PointerReleased += EndInteraction;
+            anchor.PointerCanceled += EndInteraction;
+            anchor.PointerEntered += AnchorPointerEntered;
+            anchor.PointerExited += AnchorPointerExited;
         }
 
-        CropBoundary.PointerPressed += CropBoundary_PointerPressed;
-        CropBoundary.PointerMoved += CropBoundary_PointerMoved;
-        CropBoundary.PointerReleased += CropBoundary_PointerReleased;
-        CropBoundary.PointerCanceled += CropBoundary_PointerCanceled;
+        CropBoundary.PointerPressed += BoundaryPressed;
+        CropBoundary.PointerMoved += BoundaryMoved;
+        CropBoundary.PointerReleased += EndInteraction;
+        CropBoundary.PointerCanceled += EndInteraction;
 
-        CropBoundary.PointerEntered += CropBoundary_PointerEntered;
-        CropBoundary.PointerExited += CropBoundary_PointerExited;
+        InitAnchorHandlers();
     }
 
-    private void CropAnchor_PointerPressed(object sender, PointerRoutedEventArgs e)
+    private void InitAnchorHandlers()
     {
-        if (sender is Polygon anchor)
+        _anchorDragHandlers[CropAnchor_TopLeft] = (dx, dy) => ResizeFromCorner(dx, dy, true, true);
+        _anchorDragHandlers[CropAnchor_TopRight] = (dx, dy) => ResizeFromCorner(dx, dy, false, true);
+        _anchorDragHandlers[CropAnchor_BottomLeft] = (dx, dy) => ResizeFromCorner(dx, dy, true, false);
+        _anchorDragHandlers[CropAnchor_BottomRight] = (dx, dy) => ResizeFromCorner(dx, dy, false, false);
+        _anchorDragHandlers[CropAnchor_Top] = (_, dy) => ResizeEdge(true, false, dy);
+        _anchorDragHandlers[CropAnchor_Bottom] = (_, dy) => ResizeEdge(true, true, dy);
+        _anchorDragHandlers[CropAnchor_Left] = (dx, _) => ResizeEdge(false, false, dx);
+        _anchorDragHandlers[CropAnchor_Right] = (dx, _) => ResizeEdge(false, true, dx);
+
+        _anchorCursors[CropAnchor_TopLeft] = CoreCursorType.SizeNorthwestSoutheast;
+        _anchorCursors[CropAnchor_TopRight] = CoreCursorType.SizeNortheastSouthwest;
+        _anchorCursors[CropAnchor_BottomLeft] = CoreCursorType.SizeNortheastSouthwest;
+        _anchorCursors[CropAnchor_BottomRight] = CoreCursorType.SizeNorthwestSoutheast;
+        _anchorCursors[CropAnchor_Top] = CoreCursorType.SizeNorthSouth;
+        _anchorCursors[CropAnchor_Bottom] = CoreCursorType.SizeNorthSouth;
+        _anchorCursors[CropAnchor_Left] = CoreCursorType.SizeWestEast;
+        _anchorCursors[CropAnchor_Right] = CoreCursorType.SizeWestEast;
+    }
+
+    private void AnchorPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _activeAnchor = sender as FrameworkElement;
+        _lastPointerPosition = e.GetCurrentPoint(CropCanvas).Position;
+        _dragMode = DragMode.Resize;
+        ((UIElement)sender).CapturePointer(e.Pointer);
+        e.Handled = true;
+    }
+
+    private void AnchorMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (_dragMode != DragMode.Resize || _activeAnchor is null) return;
+
+        var pos = e.GetCurrentPoint(CropCanvas).Position;
+        var dx = pos.X - _lastPointerPosition.X;
+        var dy = pos.Y - _lastPointerPosition.Y;
+
+        if (_anchorDragHandlers.TryGetValue(_activeAnchor, out var handler))
+            handler(dx, dy);
+
+        _lastPointerPosition = pos;
+        e.Handled = true;
+    }
+
+    private void AnchorPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        if (sender is FrameworkElement anchor && _anchorCursors.TryGetValue(anchor, out var cursorType))
         {
-            _activeCropAnchor = anchor;
-            _cropAnchorLastPointerPosition = e.GetCurrentPoint(CropCanvas).Position;
-            anchor.CapturePointer(e.Pointer);
+            ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(cursorType, 0));
+        }
+    }
+
+    private void AnchorPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
+    }
+
+    private void BoundaryPressed(object sender, PointerRoutedEventArgs e)
+    {
+        var pos = e.GetCurrentPoint(CropCanvas).Position;
+        if (IsInCropArea(pos))
+        {
+            _dragMode = DragMode.Move;
+            _lastPointerPosition = pos;
+            CropBoundary.CapturePointer(e.Pointer);
             e.Handled = true;
         }
     }
 
-    private void CropAnchor_PointerMoved(object sender, PointerRoutedEventArgs e)
+    private void BoundaryMoved(object sender, PointerRoutedEventArgs e)
     {
-        if (_activeCropAnchor != null && e.Pointer.IsInContact)
-        {
-            var currentPosition = e.GetCurrentPoint(CropCanvas).Position;
-            double deltaX = currentPosition.X - _cropAnchorLastPointerPosition.X;
-            double deltaY = currentPosition.Y - _cropAnchorLastPointerPosition.Y;
+        if (_dragMode != DragMode.Move) return;
 
-            double canvasWidth = CropCanvas.Width;
-            double canvasHeight = CropCanvas.Height;
+        var pos = e.GetCurrentPoint(CropCanvas).Position;
+        var dx = pos.X - _lastPointerPosition.X;
+        var dy = pos.Y - _lastPointerPosition.Y;
 
-            double left = CropRect.Left;
-            double top = CropRect.Top;
-            double right = CropRect.Right;
-            double bottom = CropRect.Bottom;
-
-            double newLeft = left;
-            double newTop = top;
-            double newRight = right;
-            double newBottom = bottom;
-
-            // Clamp left and top so that width and height are always at least 1
-            if (_activeCropAnchor == CropAnchor_TopLeft)
-            {
-                newLeft = Math.Clamp(left + deltaX, 0, right - 1);
-                newTop = Math.Clamp(top + deltaY, 0, bottom - 1);
-            }
-            else if (_activeCropAnchor == CropAnchor_TopRight)
-            {
-                newRight = Math.Clamp(right + deltaX, left + 1, canvasWidth);
-                newTop = Math.Clamp(top + deltaY, 0, bottom - 1);
-            }
-            else if (_activeCropAnchor == CropAnchor_BottomLeft)
-            {
-                newLeft = Math.Clamp(left + deltaX, 0, right - 1);
-                newBottom = Math.Clamp(bottom + deltaY, top + 1, canvasHeight);
-            }
-            else if (_activeCropAnchor == CropAnchor_BottomRight)
-            {
-                newRight = Math.Clamp(right + deltaX, left + 1, canvasWidth);
-                newBottom = Math.Clamp(bottom + deltaY, top + 1, canvasHeight);
-            }
-            else if (_activeCropAnchor == CropAnchor_Top)
-            {
-                newTop = Math.Clamp(top + deltaY, 0, bottom - 1);
-            }
-            else if (_activeCropAnchor == CropAnchor_Bottom)
-            {
-                newBottom = Math.Clamp(bottom + deltaY, top + 1, canvasHeight);
-            }
-            else if (_activeCropAnchor == CropAnchor_Left)
-            {
-                newLeft = Math.Clamp(left + deltaX, 0, right - 1);
-            }
-            else if (_activeCropAnchor == CropAnchor_Right)
-            {
-                newRight = Math.Clamp(right + deltaX, left + 1, canvasWidth);
-            }
-
-            int intLeft = (int)Math.Round(newLeft);
-            int intTop = (int)Math.Round(newTop);
-            int intRight = (int)Math.Round(newRight);
-            int intBottom = (int)Math.Round(newBottom);
-
-            int width = Math.Max(1, intRight - intLeft);
-            int height = Math.Max(1, intBottom - intTop);
-
-            CropRect = new Rectangle(intLeft, intTop, width, height);
-            _cropAnchorLastPointerPosition = currentPosition;
-            e.Handled = true;
-        }
+        MoveBy(dx, dy);
+        _lastPointerPosition = pos;
+        e.Handled = true;
     }
 
-    private void CropAnchor_PointerReleased(object sender, PointerRoutedEventArgs e)
+    private void EndInteraction(object sender, PointerRoutedEventArgs e)
     {
-        if (_activeCropAnchor != null)
-        {
-            _activeCropAnchor.ReleasePointerCaptures();
-            _activeCropAnchor = null;
-            _currentCursorContext = CursorContext.None;
-            ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
-            e.Handled = true;
-        }
+        if (sender is UIElement element)
+            element.ReleasePointerCaptures();
+
+        _dragMode = DragMode.None;
+        _activeAnchor = null;
+        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
+        e.Handled = true;
     }
 
-    private void CropAnchor_PointerCanceled(object sender, PointerRoutedEventArgs e)
+    private void MoveBy(double dx, double dy)
     {
-        if (_activeCropAnchor != null)
+        var r = CropRect;
+
+        double canvasWidth = CropCanvas.ActualWidth;
+        double canvasHeight = CropCanvas.ActualHeight;
+
+        if (canvasWidth < 1 || canvasHeight < 1)
         {
-            _activeCropAnchor.ReleasePointerCaptures();
-            _activeCropAnchor = null;
-            _currentCursorContext = CursorContext.None;
-            ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
-            e.Handled = true;
+            // Canvas not properly sized yet — skip movement to avoid invalid clamp
+            return;
         }
+
+        double maxX = Math.Max(0, canvasWidth - r.Width);
+        double maxY = Math.Max(0, canvasHeight - r.Height);
+
+        double newX = Math.Clamp(r.Left + dx, 0, maxX);
+        double newY = Math.Clamp(r.Top + dy, 0, maxY);
+
+        CropRect = new Rectangle(
+            (int)Math.Round(newX),
+            (int)Math.Round(newY),
+            r.Width,
+            r.Height);
     }
 
-    private void CropAnchor_PointerEntered(object sender, PointerRoutedEventArgs e)
+
+    private void ResizeFromCorner(double dx, double dy, bool adjustLeft, bool adjustTop)
     {
-        if (sender is Polygon anchor)
+        var r = CropRect;
+        double left = r.Left;
+        double top = r.Top;
+        double right = r.Right;
+        double bottom = r.Bottom;
+
+        if (adjustLeft)
         {
-            _currentCursorContext = CursorContext.Anchor;
-            ProtectedCursor = GetCursorForAnchor(anchor);
+            double newLeft = Math.Clamp(left + dx, 0, right - 1);
+            left = newLeft;
         }
+        else
+        {
+            double newRight = Math.Clamp(right + dx, left + 1, CropCanvas.ActualWidth);
+            right = newRight;
+        }
+
+        if (adjustTop)
+        {
+            double newTop = Math.Clamp(top + dy, 0, bottom - 1);
+            top = newTop;
+        }
+        else
+        {
+            double newBottom = Math.Clamp(bottom + dy, top + 1, CropCanvas.ActualHeight);
+            bottom = newBottom;
+        }
+
+        CropRect = new Rectangle(
+            (int)Math.Round(left),
+            (int)Math.Round(top),
+            (int)Math.Round(right - left),
+            (int)Math.Round(bottom - top));
     }
 
-    private void CropAnchor_PointerExited(object sender, PointerRoutedEventArgs e)
+    private void ResizeEdge(bool vertical, bool positive, double delta)
     {
-        if (_activeCropAnchor == null)
+        var r = CropRect;
+        double left = r.Left;
+        double top = r.Top;
+        double right = r.Right;
+        double bottom = r.Bottom;
+
+        if (vertical)
         {
-            _currentCursorContext = CursorContext.Boundary;
-            ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeAll, 0));
-        }
-    }
-
-    private void CropBoundary_PointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        if (_activeCropAnchor == null)
-        {
-            var pointerPos = e.GetCurrentPoint(CropCanvas).Position;
-            if (IsPointerOverCropArea(pointerPos) && !IsPointerOverAnyAnchor(pointerPos))
-            {
-                _isCropBoundaryDragging = true;
-                _cropBoundaryLastPointerPosition = pointerPos;
-                CropBoundary.CapturePointer(e.Pointer);
-                e.Handled = true;
-            }
-        }
-    }
-
-    private void CropBoundary_PointerMoved(object sender, PointerRoutedEventArgs e)
-    {
-        var pointerPos = e.GetCurrentPoint(CropCanvas).Position;
-        if (_isCropBoundaryDragging && e.Pointer.IsInContact)
-        {
-            double deltaX = pointerPos.X - _cropBoundaryLastPointerPosition.X;
-            double deltaY = pointerPos.Y - _cropBoundaryLastPointerPosition.Y;
-
-            double canvasWidth = CropCanvas.Width;
-            double canvasHeight = CropCanvas.Height;
-
-            double left = CropRect.Left + deltaX;
-            double top = CropRect.Top + deltaY;
-            double width = CropRect.Width;
-            double height = CropRect.Height;
-
-            // Clamp so the crop rect stays within the canvas
-            left = Math.Clamp(left, 0, canvasWidth - width);
-            top = Math.Clamp(top, 0, canvasHeight - height);
-
-            CropRect = new Rectangle(
-                Convert.ToInt32(left), 
-                Convert.ToInt32(top), 
-                Convert.ToInt32(width), 
-                Convert.ToInt32(height));
-            _cropBoundaryLastPointerPosition = pointerPos;
-            e.Handled = true;
-        }
-        else if (_currentCursorContext != CursorContext.Anchor)
-        {
-            // Update cursor on hover
-            if (IsPointerOverCropArea(pointerPos) && !IsPointerOverAnyAnchor(pointerPos))
-            {
-                if (_currentCursorContext != CursorContext.Boundary)
-                {
-                    _currentCursorContext = CursorContext.Boundary;
-                    ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeAll, 0));
-                }
-            }
+            if (positive)
+                bottom = Math.Clamp(bottom + delta, top + 1, CropCanvas.ActualHeight);
             else
-            {
-                if (_currentCursorContext != CursorContext.None)
-                {
-                    _currentCursorContext = CursorContext.None;
-                    ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
-                }
-            }
+                top = Math.Clamp(top + delta, 0, bottom - 1);
         }
-    }
-
-    private void CropBoundary_PointerReleased(object sender, PointerRoutedEventArgs e)
-    {
-        if (_isCropBoundaryDragging)
+        else
         {
-            _isCropBoundaryDragging = false;
-            CropBoundary.ReleasePointerCaptures();
-
-            var pointerPos = e.GetCurrentPoint(CropCanvas).Position;
-            if (IsPointerOverAnyAnchor(pointerPos))
-            {
-                // Let anchor logic handle cursor
-            }
-            else if (IsPointerOverCropArea(pointerPos))
-            {
-                _currentCursorContext = CursorContext.Boundary;
-                ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeAll, 0));
-            }
+            if (positive)
+                right = Math.Clamp(right + delta, left + 1, CropCanvas.ActualWidth);
             else
-            {
-                _currentCursorContext = CursorContext.None;
-                ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
-            }
-
-            e.Handled = true;
+                left = Math.Clamp(left + delta, 0, right - 1);
         }
+
+        CropRect = new Rectangle(
+            (int)Math.Round(left),
+            (int)Math.Round(top),
+            (int)Math.Round(right - left),
+            (int)Math.Round(bottom - top));
     }
 
-    private void CropBoundary_PointerCanceled(object sender, PointerRoutedEventArgs e)
+    private bool IsInCropArea(Point pos)
     {
-        if (_isCropBoundaryDragging)
-        {
-            _isCropBoundaryDragging = false;
-            CropBoundary.ReleasePointerCaptures();
-            _currentCursorContext = CursorContext.None;
-            ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
-            e.Handled = true;
-        }
-    }
-
-    private void CropBoundary_PointerEntered(object sender, PointerRoutedEventArgs e)
-    {
-        if (_currentCursorContext != CursorContext.Anchor)
-        {
-            var pointerPos = e.GetCurrentPoint(CropCanvas).Position;
-            if (IsPointerOverCropArea(pointerPos) && !IsPointerOverAnyAnchor(pointerPos))
-            {
-                _currentCursorContext = CursorContext.Boundary;
-                ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeAll, 0));
-            }
-            else
-            {
-                _currentCursorContext = CursorContext.None;
-                ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
-            }
-        }
-    }
-
-    private void CropBoundary_PointerExited(object sender, PointerRoutedEventArgs e)
-    {
-        if (_currentCursorContext == CursorContext.Boundary)
-        {
-            _currentCursorContext = CursorContext.None;
-            ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
-        }
-    }
-
-    private InputCursor GetCursorForAnchor(Polygon anchor)
-    {
-        // Set cursor type based on anchor position
-        if (anchor == CropAnchor_TopLeft || anchor == CropAnchor_BottomRight)
-            return InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeNorthwestSoutheast, 0));
-        if (anchor == CropAnchor_TopRight || anchor == CropAnchor_BottomLeft)
-            return InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeNortheastSouthwest, 0));
-        if (anchor == CropAnchor_Top || anchor == CropAnchor_Bottom)
-            return InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeNorthSouth, 0));
-        if (anchor == CropAnchor_Left || anchor == CropAnchor_Right)
-            return InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeWestEast, 0));
-        return InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
-    }
-
-    private bool IsPointerOverCropArea(Point pos)
-    {
-        double left = CropRect.Left;
-        double top = CropRect.Top;
-        double right = CropRect.Right;
-        double bottom = CropRect.Bottom;
-
-        // Check if inside the crop area rectangle
-        return pos.X > left && pos.X < right && pos.Y > top && pos.Y < bottom;
-    }
-
-    private bool IsPointerOverAnyAnchor(Point pos)
-    {
-        foreach (var anchor in GetCropAnchors())
-        {
-            var anchorLeft = Canvas.GetLeft(anchor);
-            var anchorTop = Canvas.GetTop(anchor);
-            var anchorRight = anchorLeft + anchor.Width;
-            var anchorBottom = anchorTop + anchor.Height;
-            if (pos.X >= anchorLeft && pos.X <= anchorRight &&
-                pos.Y >= anchorTop && pos.Y <= anchorBottom)
-            {
-                return true;
-            }
-        }
-        return false;
+        var r = CropRect;
+        return pos.X >= r.Left && pos.X <= r.Right && pos.Y >= r.Top && pos.Y <= r.Bottom;
     }
 }
