@@ -40,7 +40,7 @@
                 Spacing="12">
 
                 <!--  Localization section  -->
-                <StackPanel Spacing="4">
+                <StackPanel Spacing="12">
                     <TextBlock x:Uid="Settings_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
                     <!--  App language  -->
                     <Expander
@@ -124,7 +124,7 @@
                 </StackPanel>
 
                 <!--  Appearance section  -->
-                <StackPanel Spacing="4">
+                <StackPanel Spacing="12">
                     <TextBlock x:Uid="Settings_AppearanceHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
                     <!--  App theme  -->
                     <Expander

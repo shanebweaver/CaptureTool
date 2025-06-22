@@ -4,21 +4,18 @@
     <ResourceDictionary.ThemeDictionaries>
         <!--  Light theme  -->
         <ResourceDictionary x:Key="Light">
-            <SolidColorBrush x:Key="TextForegroundBrush" Color="{StaticResource TextFillColorPrimary}" />
             <SolidColorBrush x:Key="RootBackgroundBrush" Color="{StaticResource LayerOnMicaBaseAltFillColorDefault}" />
             <StaticResource x:Key="ImageEditCanvasBackgroundBrush" ResourceKey="LayerOnMicaBaseAltFillColorDefault" />
         </ResourceDictionary>
 
         <!--  Dark theme  -->
         <ResourceDictionary x:Key="Dark">
-            <SolidColorBrush x:Key="TextForegroundBrush" Color="{StaticResource TextFillColorPrimary}" />
             <SolidColorBrush x:Key="RootBackgroundBrush" Color="{StaticResource LayerOnMicaBaseAltFillColorDefault}" />
             <StaticResource x:Key="ImageEditCanvasBackgroundBrush" ResourceKey="LayerOnMicaBaseAltFillColorDefault" />
         </ResourceDictionary>
 
         <!--  High contrast theme  -->
         <ResourceDictionary x:Key="HighContrast">
-            <SolidColorBrush x:Key="TextForegroundBrush" Color="{StaticResource SystemColorWindowTextColor}" />
             <StaticResource x:Key="RootBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
             <StaticResource x:Key="ImageEditCanvasBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
         </ResourceDictionary>

@@ -18,8 +18,6 @@
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <!--<views:AppTitleBarView />-->
-
         <Grid Row="1">
             <views:AppMenuView />
         </Grid>

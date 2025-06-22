@@ -1,4 +1,3 @@
-using CaptureTool.Core.AppController;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using CaptureTool.UI.Windows.Xaml.Pages;
@@ -9,6 +8,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.Windows.Storage;
 using System;
 using System.Threading;
+using Windows.UI;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
@@ -31,9 +31,8 @@ public sealed partial class MainWindow : Window
 
         AppWindow.Closing += OnAppWindowClosing;
 
-        // TODO: Fix colors in the titlebar.
-        // TODO: Make sure the colors are theme aware.
-        //AppWindow.TitleBar.BackgroundColor = Colors.Red;
+        // Set initial title bar colors based on theme
+        UpdateTitleBarColors();
 
         Activated += OnActivated;
         Closed += OnClosed;
@@ -51,6 +50,7 @@ public sealed partial class MainWindow : Window
         if (e.PropertyName == nameof(MainWindowViewModel.CurrentAppTheme))
         {
             UpdateRequestedAppTheme();
+            UpdateTitleBarColors();
         }
     }
 
@@ -148,5 +148,48 @@ public sealed partial class MainWindow : Window
             AppTheme.Dark => ElementTheme.Dark,
             _ => ElementTheme.Default,
         };
+    }
+
+    private void UpdateTitleBarColors()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            var titleBar = AppWindow.TitleBar;
+
+            if (titleBar is null)
+                return;
+
+            // Default values
+            Color backgroundColor;
+            Color foregroundColor;
+
+            AppTheme appTheme = ViewModel.CurrentAppTheme == AppTheme.SystemDefault
+                ? ViewModel.DefaultAppTheme
+                : ViewModel.CurrentAppTheme;
+
+            switch (appTheme)
+            {
+                case AppTheme.Dark:
+                    backgroundColor = Colors.Black;
+                    foregroundColor = Colors.White;
+                    break;
+                case AppTheme.Light:
+                default:
+                    backgroundColor = Colors.White;
+                    foregroundColor = Colors.Black;
+                    break;
+            }
+
+            titleBar.BackgroundColor = backgroundColor;
+            titleBar.ForegroundColor = foregroundColor;
+            titleBar.ButtonBackgroundColor = backgroundColor;
+            titleBar.ButtonForegroundColor = foregroundColor;
+
+            // Optional: Set inactive colors for better UX
+            titleBar.InactiveBackgroundColor = backgroundColor;
+            titleBar.InactiveForegroundColor = foregroundColor;
+            titleBar.ButtonInactiveBackgroundColor = backgroundColor;
+            titleBar.ButtonInactiveForegroundColor = foregroundColor;
+        });
     }
 }

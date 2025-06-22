@@ -109,9 +109,6 @@
     <Page Update="Xaml\Views\AppMenuView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Xaml\Views\AppTitleBarView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Update="Xaml\Controls\ImageCanvas\CropOverlay.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
