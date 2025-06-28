@@ -1,4 +1,5 @@
-﻿using CaptureTool.Edit.Windows.Drawable;
+﻿using CaptureTool.Core.AppController;
+using CaptureTool.Edit.Drawable;
 using Microsoft.Graphics.Canvas.Printing;
 using System;
 using System.Diagnostics;
@@ -8,20 +9,24 @@ using Windows.Graphics.Printing;
 
 namespace CaptureTool.Edit.Windows;
 
-public partial class ImageCanvasPrinter
+public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
 {
-    public static ImageCanvasPrinter Default { get; } = new();
-
     private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private readonly IAppController _appController;
 
     private CanvasPrintDocument? _printDocument = null;
 
-    ~ImageCanvasPrinter()
+    public Win2DImageCanvasPrinter(IAppController appController)
+    {
+        _appController = appController;
+    }
+
+    ~Win2DImageCanvasPrinter()
     {
         _printDocument?.Dispose();
     }
 
-    public async Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, nint hwnd)
+    public async Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
         await _semaphore.WaitAsync();
 
@@ -35,6 +40,7 @@ public partial class ImageCanvasPrinter
         {
             if (PrintManager.IsSupported())
             {
+                nint hwnd = _appController.GetMainWindowHandle();
                 PrintManager printManager = PrintManagerInterop.GetForWindow(hwnd);
                 printManager.PrintTaskRequested += OnPrintTaskRequested;
                 bool success = await PrintManagerInterop.ShowPrintUIForWindowAsync(hwnd);
@@ -57,13 +63,13 @@ public partial class ImageCanvasPrinter
         void PrintDocument_Preview(CanvasPrintDocument sender, CanvasPreviewEventArgs args)
         {
             sender.SetPageCount(1);
-            ImageCanvasRenderer.Render(drawables, options, args.DrawingSession);
+            Win2DImageCanvasRenderer.Render(drawables, options, args.DrawingSession);
         }
 
         void PrintDocument_Print(CanvasPrintDocument sender, CanvasPrintEventArgs args)
         {
             using var printDrawingSession = args.CreateDrawingSession();
-            ImageCanvasRenderer.Render(drawables, options, printDrawingSession);
+            Win2DImageCanvasRenderer.Render(drawables, options, printDrawingSession);
         }
     }
 

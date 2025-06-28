@@ -1,0 +1,72 @@
+﻿using CaptureTool.Core.AppController;
+using CaptureTool.Services.Storage;
+using CaptureTool.Storage;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Threading.Tasks;
+using Windows.Storage;
+using Windows.Storage.Pickers;
+
+namespace CaptureTool.Services.Windows.Storage;
+
+public sealed partial class WindowsFilePickerService : IFilePickerService
+{
+    private readonly IAppController _appController;
+
+    public WindowsFilePickerService(IAppController appController)
+    {
+        _appController = appController;
+    }
+
+    public async Task<ImageFile?> OpenImageFileAsync()
+    {
+        var filePicker = new FileOpenPicker
+        {
+            ViewMode = PickerViewMode.Thumbnail,
+            SuggestedStartLocation = PickerLocationId.PicturesLibrary
+        };
+        filePicker.FileTypeFilter.Add(".png");
+
+        nint hwnd = _appController.GetMainWindowHandle();
+        WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
+
+        StorageFile file = await filePicker.PickSingleFileAsync();
+        return (file != null) ? new ImageFile(file.Path) : null;
+    }
+
+    public async Task<ImageFile?> SaveImageFileAsync()
+    {
+        var filePicker = new FileSavePicker
+        {
+            SuggestedStartLocation = PickerLocationId.PicturesLibrary
+        };
+
+        unsafe
+        {
+#pragma warning disable IDE0028 // Simplify collection initialization
+            filePicker.FileTypeChoices.Add("PNG", new List<string>() { ".png" });
+#pragma warning restore IDE0028 // Simplify collection initialization
+        }
+
+        nint hwnd = _appController.GetMainWindowHandle();
+        WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
+
+        StorageFile file = await filePicker.PickSaveFileAsync();
+        return (file != null) ? new ImageFile(file.Path) : null;
+    }
+
+    public Size GetImageSize(ImageFile imageFile)
+    {
+        using FileStream file = new(imageFile.Path, FileMode.Open, FileAccess.Read);
+        var image = Image.FromStream(
+            stream: file,
+            useEmbeddedColorManagement: false,
+            validateImageData: false);
+
+        float width = image.PhysicalDimension.Width;
+        float height = image.PhysicalDimension.Height;
+        return new(Convert.ToInt32(width), Convert.ToInt32(height));
+    }
+}

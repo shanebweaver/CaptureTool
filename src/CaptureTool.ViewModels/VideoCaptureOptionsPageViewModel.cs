@@ -6,6 +6,7 @@ using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Settings;
 using CaptureTool.Services.Telemetry;
+using CaptureTool.Storage;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;

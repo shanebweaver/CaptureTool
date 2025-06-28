@@ -1,4 +1,6 @@
-﻿namespace CaptureTool.Capture.Video;
+﻿using CaptureTool.Storage;
+
+namespace CaptureTool.Capture.Video;
 
 public sealed partial class VideoCaptureOptions : CaptureOptions
 {

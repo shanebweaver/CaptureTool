@@ -1,6 +1,8 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Capture.Windows.SnippingTool;
 using CaptureTool.Core.AppController;
+using CaptureTool.Edit;
+using CaptureTool.Edit.Windows;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
@@ -41,6 +43,9 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<ITelemetryService, TelemetryService>();
 
         // Windows Services
+        collection.AddSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();
+        collection.AddSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
+        collection.AddSingleton<IFilePickerService, WindowsFilePickerService>();
         collection.AddSingleton<ISnippingToolService, SnippingToolService>();
         collection.AddSingleton<IThemeService, WindowsThemeService>();
         collection.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();

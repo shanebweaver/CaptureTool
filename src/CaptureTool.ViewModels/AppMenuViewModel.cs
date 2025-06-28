@@ -6,7 +6,9 @@ using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
+using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
+using CaptureTool.Storage;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -36,6 +38,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private readonly INavigationService _navigationService;
     private readonly IAppController _appController;
     private readonly IFeatureManager _featureManager;
+    private readonly IFilePickerService _filePickerService;
 
     public RelayCommand NewImageCaptureCommand => new(NewImageCapture, () => IsImageCaptureEnabled);
     public RelayCommand NewVideoCaptureCommand => new(NewVideoCapture, () => IsVideoCaptureEnabled);
@@ -71,13 +74,15 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         ICancellationService cancellationService,
         IAppController appController,
         INavigationService navigationService,
-        IFeatureManager featureManager)
+        IFeatureManager featureManager,
+        IFilePickerService filePickerService)
     {
         _telemetryService = telemetryService;
         _cancellationService = cancellationService;
         _appController = appController;
         _navigationService = navigationService;
         _featureManager = featureManager;
+        _filePickerService = filePickerService;
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -193,24 +198,13 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
         try
         {
-            var filePicker = new FileOpenPicker
-            {
-                ViewMode = PickerViewMode.Thumbnail,
-                SuggestedStartLocation = PickerLocationId.PicturesLibrary
-            };
-            filePicker.FileTypeFilter.Add(".png");
-
-            nint hwnd = _appController.GetMainWindowHandle();
-            WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
-
-            StorageFile file = await filePicker.PickSingleFileAsync();
-            if (file == null)
+            var imageFile = await _filePickerService.OpenImageFileAsync();
+            if (imageFile == null)
             {
                 _telemetryService.ActivityCanceled(activityId);
                 return;
             }
 
-            ImageFile imageFile = new(file.Path);
             _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
 
             _telemetryService.ActivityCompleted(activityId);

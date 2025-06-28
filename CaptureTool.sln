@@ -46,6 +46,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{49E306FC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Edit", "src\CaptureTool.Edit\CaptureTool.Edit.csproj", "{5BE91D4D-937C-42E6-BA05-894066FEC269}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Storage", "src\CaptureTool.Storage\CaptureTool.Storage.csproj", "{01A46BF6-E8B9-41D1-90B5-E0C1CD4AABE1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -182,6 +184,14 @@ Global
 		{5BE91D4D-937C-42E6-BA05-894066FEC269}.Release|ARM64.Build.0 = Release|Any CPU
 		{5BE91D4D-937C-42E6-BA05-894066FEC269}.Release|x64.ActiveCfg = Release|Any CPU
 		{5BE91D4D-937C-42E6-BA05-894066FEC269}.Release|x64.Build.0 = Release|Any CPU
+		{01A46BF6-E8B9-41D1-90B5-E0C1CD4AABE1}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{01A46BF6-E8B9-41D1-90B5-E0C1CD4AABE1}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{01A46BF6-E8B9-41D1-90B5-E0C1CD4AABE1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{01A46BF6-E8B9-41D1-90B5-E0C1CD4AABE1}.Debug|x64.Build.0 = Debug|Any CPU
+		{01A46BF6-E8B9-41D1-90B5-E0C1CD4AABE1}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{01A46BF6-E8B9-41D1-90B5-E0C1CD4AABE1}.Release|ARM64.Build.0 = Release|Any CPU
+		{01A46BF6-E8B9-41D1-90B5-E0C1CD4AABE1}.Release|x64.ActiveCfg = Release|Any CPU
+		{01A46BF6-E8B9-41D1-90B5-E0C1CD4AABE1}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

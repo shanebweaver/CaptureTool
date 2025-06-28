@@ -3,7 +3,7 @@
 /// <summary>
 /// Specifies how much an image is rotated and the axis used to flip the image.
 /// </summary>
-public enum RotateFlipType
+public enum Orientation
 {
     RotateNoneFlipNone = 0,
     Rotate90FlipNone = 1,
