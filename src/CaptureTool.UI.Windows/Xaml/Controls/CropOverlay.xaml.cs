@@ -112,11 +112,9 @@ public sealed partial class CropOverlay : UserControlBase
         foreach (var anchorBox in anchorBoxes)
         {
             anchorBox.PointerPressed += AnchorBox_PointerPressed;
-            anchorBox.PointerMoved += AnchorMoved;
-            anchorBox.PointerReleased += EndInteraction;
-            anchorBox.PointerCanceled += EndInteraction;
-            anchorBox.PointerEntered += AnchorPointerEntered;
-            anchorBox.PointerExited += AnchorPointerExited;
+            anchorBox.PointerMoved += AnchorBox_AnchorMoved;
+            anchorBox.PointerReleased += AnchorBox_EndInteraction;
+            anchorBox.PointerCanceled += AnchorBox_EndInteraction;
         }
 
         var anchors = new FrameworkElement[]
@@ -191,6 +189,15 @@ public sealed partial class CropOverlay : UserControlBase
         e.Handled = true;
     }
 
+
+    private void AnchorBox_AnchorMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (e.Pointer.PointerDeviceType == PointerDeviceType.Touch)
+        {
+            AnchorMoved(sender, e);
+        }
+    }
+
     private void AnchorMoved(object sender, PointerRoutedEventArgs e)
     {
         if (_dragMode != DragMode.Resize || _activeAnchor is null) return;
@@ -242,6 +249,14 @@ public sealed partial class CropOverlay : UserControlBase
         MoveBy(dx, dy);
         _lastPointerPosition = pos;
         e.Handled = true;
+    }
+
+    private void AnchorBox_EndInteraction(object sender, PointerRoutedEventArgs e)
+    {
+        if (e.Pointer.PointerDeviceType == PointerDeviceType.Touch)
+        {
+            EndInteraction(sender, e);
+        }
     }
 
     private void EndInteraction(object sender, PointerRoutedEventArgs e)
