@@ -1,5 +1,4 @@
-﻿using CaptureTool.Core.AppController;
-using CaptureTool.Edit.Drawable;
+﻿using CaptureTool.Edit.Drawable;
 using Microsoft.Graphics.Canvas.Printing;
 using System;
 using System.Diagnostics;
@@ -12,13 +11,11 @@ namespace CaptureTool.Edit.Windows;
 public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
 {
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-    private readonly IAppController _appController;
 
     private CanvasPrintDocument? _printDocument = null;
 
-    public Win2DImageCanvasPrinter(IAppController appController)
+    public Win2DImageCanvasPrinter()
     {
-        _appController = appController;
     }
 
     ~Win2DImageCanvasPrinter()
@@ -26,7 +23,7 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
         _printDocument?.Dispose();
     }
 
-    public async Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
+    public async Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, nint hwnd)
     {
         await _semaphore.WaitAsync();
 
@@ -40,7 +37,6 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
         {
             if (PrintManager.IsSupported())
             {
-                nint hwnd = _appController.GetMainWindowHandle();
                 PrintManager printManager = PrintManagerInterop.GetForWindow(hwnd);
                 printManager.PrintTaskRequested += OnPrintTaskRequested;
                 bool success = await PrintManagerInterop.ShowPrintUIForWindowAsync(hwnd);

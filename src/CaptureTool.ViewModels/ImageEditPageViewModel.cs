@@ -214,7 +214,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            var file = await _filePickerService.SaveImageFileAsync();
+            nint hwnd = _appController.GetMainWindowHandle();
+            var file = await _filePickerService.SaveImageFileAsync(hwnd);
             if (file != null)
             {
                 ImageCanvasRenderOptions options = new(Orientation, ImageSize, CropRect);
@@ -311,7 +312,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], new ImageCanvasRenderOptions(Orientation, ImageSize, CropRect));
+            nint hwnd = _appController.GetMainWindowHandle();
+            await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], new ImageCanvasRenderOptions(Orientation, ImageSize, CropRect), hwnd);
         }
         catch (Exception e)
         {

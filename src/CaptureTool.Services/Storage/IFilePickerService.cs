@@ -6,8 +6,8 @@ namespace CaptureTool.Services.Storage;
 
 public partial interface IFilePickerService
 {
-    Task<ImageFile?> OpenImageFileAsync();
-    Task<ImageFile?> SaveImageFileAsync();
+    Task<ImageFile?> OpenImageFileAsync(nint hwnd);
+    Task<ImageFile?> SaveImageFileAsync(nint hwnd);
 
     Size GetImageSize(ImageFile imageFile);
 }

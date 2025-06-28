@@ -1,5 +1,4 @@
-﻿using CaptureTool.Core.AppController;
-using CaptureTool.Services.Storage;
+﻿using CaptureTool.Services.Storage;
 using CaptureTool.Storage;
 using System;
 using System.Collections.Generic;
@@ -13,14 +12,7 @@ namespace CaptureTool.Services.Windows.Storage;
 
 public sealed partial class WindowsFilePickerService : IFilePickerService
 {
-    private readonly IAppController _appController;
-
-    public WindowsFilePickerService(IAppController appController)
-    {
-        _appController = appController;
-    }
-
-    public async Task<ImageFile?> OpenImageFileAsync()
+    public async Task<ImageFile?> OpenImageFileAsync(nint hwnd)
     {
         var filePicker = new FileOpenPicker
         {
@@ -29,14 +21,13 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         };
         filePicker.FileTypeFilter.Add(".png");
 
-        nint hwnd = _appController.GetMainWindowHandle();
         WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
 
         StorageFile file = await filePicker.PickSingleFileAsync();
         return (file != null) ? new ImageFile(file.Path) : null;
     }
 
-    public async Task<ImageFile?> SaveImageFileAsync()
+    public async Task<ImageFile?> SaveImageFileAsync(nint hwnd)
     {
         var filePicker = new FileSavePicker
         {
@@ -50,7 +41,6 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
 #pragma warning restore IDE0028 // Simplify collection initialization
         }
 
-        nint hwnd = _appController.GetMainWindowHandle();
         WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
 
         StorageFile file = await filePicker.PickSaveFileAsync();

@@ -4,10 +4,10 @@
   <ItemGroup>
     <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
-
+  
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Capture\CaptureTool.Capture.csproj" />
+    <ProjectReference Include="..\CaptureTool.Storage\CaptureTool.Storage.csproj" />
   </ItemGroup>
 
 </Project>

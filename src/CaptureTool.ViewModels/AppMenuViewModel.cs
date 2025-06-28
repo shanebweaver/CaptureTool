@@ -198,7 +198,8 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
         try
         {
-            var imageFile = await _filePickerService.OpenImageFileAsync();
+            nint hwnd = _appController.GetMainWindowHandle();
+            var imageFile = await _filePickerService.OpenImageFileAsync(hwnd);
             if (imageFile == null)
             {
                 _telemetryService.ActivityCanceled(activityId);

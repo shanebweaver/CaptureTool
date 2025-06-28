@@ -5,5 +5,5 @@ namespace CaptureTool.Edit;
 
 public interface IImageCanvasPrinter
 {
-    Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options);
+    Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, nint hwnd);
 }
