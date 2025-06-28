@@ -15,8 +15,11 @@ public sealed partial class CropOverlay : UserControlBase
 {
     private enum DragMode { None, Move, Resize }
 
+    private static readonly Size MinCropRectSize = new(50, 50);
+
     private readonly Dictionary<FrameworkElement, Action<double, double>> _anchorDragHandlers = new();
-    private readonly Dictionary<FrameworkElement, CoreCursorType> _anchorCursors = new();
+
+    private readonly Dictionary<FrameworkElement, CoreCursorType> _anchorCursors = [];
     private Point _lastPointerPosition;
     private FrameworkElement? _activeAnchor;
     private DragMode _dragMode = DragMode.None;
@@ -100,6 +103,22 @@ public sealed partial class CropOverlay : UserControlBase
 
     private void AttachEventHandlers()
     {
+        var anchorBoxes = new FrameworkElement[]
+        {
+            CropAnchorBox_TopLeft, CropAnchorBox_TopRight, CropAnchor_BottomLeft, CropAnchor_BottomRight,
+            CropAnchorBox_Top, CropAnchorBox_Bottom, CropAnchorBox_Left, CropAnchorBox_Right,
+        };
+
+        foreach (var anchorBox in anchorBoxes)
+        {
+            anchorBox.PointerPressed += AnchorBox_PointerPressed;
+            anchorBox.PointerMoved += AnchorMoved;
+            anchorBox.PointerReleased += EndInteraction;
+            anchorBox.PointerCanceled += EndInteraction;
+            anchorBox.PointerEntered += AnchorPointerEntered;
+            anchorBox.PointerExited += AnchorPointerExited;
+        }
+
         var anchors = new FrameworkElement[]
         {
             CropAnchor_TopLeft, CropAnchor_TopRight, CropAnchor_BottomLeft, CropAnchor_BottomRight,
@@ -136,6 +155,15 @@ public sealed partial class CropOverlay : UserControlBase
         _anchorDragHandlers[CropAnchor_Left] = (dx, _) => ResizeEdge(false, false, dx);
         _anchorDragHandlers[CropAnchor_Right] = (dx, _) => ResizeEdge(false, true, dx);
 
+        _anchorDragHandlers[CropAnchorBox_TopLeft] = (dx, dy) => ResizeFromCorner(dx, dy, true, true);
+        _anchorDragHandlers[CropAnchorBox_TopRight] = (dx, dy) => ResizeFromCorner(dx, dy, false, true);
+        _anchorDragHandlers[CropAnchorBox_BottomLeft] = (dx, dy) => ResizeFromCorner(dx, dy, true, false);
+        _anchorDragHandlers[CropAnchorBox_BottomRight] = (dx, dy) => ResizeFromCorner(dx, dy, false, false);
+        _anchorDragHandlers[CropAnchorBox_Top] = (_, dy) => ResizeEdge(true, false, dy);
+        _anchorDragHandlers[CropAnchorBox_Bottom] = (_, dy) => ResizeEdge(true, true, dy);
+        _anchorDragHandlers[CropAnchorBox_Left] = (dx, _) => ResizeEdge(false, false, dx);
+        _anchorDragHandlers[CropAnchorBox_Right] = (dx, _) => ResizeEdge(false, true, dx);
+
         _anchorCursors[CropAnchor_TopLeft] = CoreCursorType.SizeNorthwestSoutheast;
         _anchorCursors[CropAnchor_TopRight] = CoreCursorType.SizeNortheastSouthwest;
         _anchorCursors[CropAnchor_BottomLeft] = CoreCursorType.SizeNortheastSouthwest;
@@ -144,6 +172,14 @@ public sealed partial class CropOverlay : UserControlBase
         _anchorCursors[CropAnchor_Bottom] = CoreCursorType.SizeNorthSouth;
         _anchorCursors[CropAnchor_Left] = CoreCursorType.SizeWestEast;
         _anchorCursors[CropAnchor_Right] = CoreCursorType.SizeWestEast;
+    }
+
+    private void AnchorBox_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (e.Pointer.PointerDeviceType == PointerDeviceType.Touch)
+        {
+            AnchorPressed(sender, e);
+        }
     }
 
     private void AnchorPressed(object sender, PointerRoutedEventArgs e)
@@ -255,23 +291,27 @@ public sealed partial class CropOverlay : UserControlBase
 
         if (adjustLeft)
         {
-            double newLeft = Math.Clamp(left + dx, 0, right - 1);
+            double maxLeft = right - MinCropRectSize.Width;
+            double newLeft = Math.Clamp(left + dx, 0, maxLeft);
             left = newLeft;
         }
         else
         {
-            double newRight = Math.Clamp(right + dx, left + 1, CropCanvas.ActualWidth);
+            double minRight = left + MinCropRectSize.Width;
+            double newRight = Math.Clamp(right + dx, minRight, CropCanvas.ActualWidth);
             right = newRight;
         }
 
         if (adjustTop)
         {
-            double newTop = Math.Clamp(top + dy, 0, bottom - 1);
+            double maxTop = bottom - MinCropRectSize.Height;
+            double newTop = Math.Clamp(top + dy, 0, maxTop);
             top = newTop;
         }
         else
         {
-            double newBottom = Math.Clamp(bottom + dy, top + 1, CropCanvas.ActualHeight);
+            double minBottom = top + MinCropRectSize.Height;
+            double newBottom = Math.Clamp(bottom + dy, minBottom, CropCanvas.ActualHeight);
             bottom = newBottom;
         }
 
@@ -293,16 +333,28 @@ public sealed partial class CropOverlay : UserControlBase
         if (vertical)
         {
             if (positive)
-                bottom = Math.Clamp(bottom + delta, top + 1, CropCanvas.ActualHeight);
+            {
+                double minBottom = top + MinCropRectSize.Height;
+                bottom = Math.Clamp(bottom + delta, minBottom, CropCanvas.ActualHeight);
+            }
             else
-                top = Math.Clamp(top + delta, 0, bottom - 1);
+            {
+                double maxTop = bottom - MinCropRectSize.Height;
+                top = Math.Clamp(top + delta, 0, maxTop);
+            }
         }
         else
         {
             if (positive)
-                right = Math.Clamp(right + delta, left + 1, CropCanvas.ActualWidth);
+            {
+                double minRight = left + MinCropRectSize.Width;
+                right = Math.Clamp(right + delta, minRight, CropCanvas.ActualWidth);
+            }
             else
-                left = Math.Clamp(left + delta, 0, right - 1);
+            {
+                double maxLeft = right - MinCropRectSize.Width;
+                left = Math.Clamp(left + delta, 0, maxLeft);
+            }
         }
 
         CropRect = new Rectangle(

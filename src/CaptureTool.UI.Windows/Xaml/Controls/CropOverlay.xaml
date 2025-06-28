@@ -37,93 +37,125 @@
 
             <!--  Crop anchors  -->
             <!--  Top left  -->
-            <Polygon
-                x:Name="CropAnchor_TopLeft"
+            <Grid
+                x:Name="CropAnchorBox_TopLeft"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Points="0,0 40,0 40,8, 8,8 8,40, 0,40"
-                Style="{StaticResource CropAnchorPolygonStyle}">
-                <Polygon.RenderTransform>
-                    <TranslateTransform X="-9" Y="-9" />
-                </Polygon.RenderTransform>
-            </Polygon>
+                Background="Transparent">
+                <Polygon
+                    x:Name="CropAnchor_TopLeft"
+                    Points="0,0 40,0 40,8, 8,8 8,40, 0,40"
+                    Style="{StaticResource CropAnchorPolygonStyle}">
+                    <Polygon.RenderTransform>
+                        <TranslateTransform X="-9" Y="-9" />
+                    </Polygon.RenderTransform>
+                </Polygon>
+            </Grid>
             <!--  Top right  -->
-            <Polygon
-                x:Name="CropAnchor_TopRight"
+            <Grid
+                x:Name="CropAnchorBox_TopRight"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
-                Points="0,0 40,0 40,40 32,40 32,8 0,8"
-                Style="{StaticResource CropAnchorPolygonStyle}">
-                <Polygon.RenderTransform>
-                    <TranslateTransform X="10" Y="-9" />
-                </Polygon.RenderTransform>
-            </Polygon>
+                Background="Transparent">
+                <Polygon
+                    x:Name="CropAnchor_TopRight"
+                    Points="0,0 40,0 40,40 32,40 32,8 0,8"
+                    Style="{StaticResource CropAnchorPolygonStyle}">
+                    <Polygon.RenderTransform>
+                        <TranslateTransform X="10" Y="-9" />
+                    </Polygon.RenderTransform>
+                </Polygon>
+            </Grid>
             <!--  Bottom left  -->
-            <Polygon
-                x:Name="CropAnchor_BottomLeft"
+            <Grid
+                x:Name="CropAnchorBox_BottomLeft"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Bottom"
-                Points="0,0 8,0 8,32 40,32 40,40 0,40"
-                Style="{StaticResource CropAnchorPolygonStyle}">
-                <Polygon.RenderTransform>
-                    <TranslateTransform X="-9" Y="9" />
-                </Polygon.RenderTransform>
-            </Polygon>
+                Background="Transparent">
+                <Polygon
+                    x:Name="CropAnchor_BottomLeft"
+                    Points="0,0 8,0 8,32 40,32 40,40 0,40"
+                    Style="{StaticResource CropAnchorPolygonStyle}">
+                    <Polygon.RenderTransform>
+                        <TranslateTransform X="-9" Y="9" />
+                    </Polygon.RenderTransform>
+                </Polygon>
+            </Grid>
             <!--  Bottom right  -->
-            <Polygon
-                x:Name="CropAnchor_BottomRight"
+            <Grid
+                x:Name="CropAnchorBox_BottomRight"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
-                Points="32,0 40,0 40,40 0,40 0,32 32,32"
-                Style="{StaticResource CropAnchorPolygonStyle}">
-                <Polygon.RenderTransform>
-                    <TranslateTransform X="10" Y="10" />
-                </Polygon.RenderTransform>
-            </Polygon>
+                Background="Transparent">
+                <Polygon
+                    x:Name="CropAnchor_BottomRight"
+                    Points="32,0 40,0 40,40 0,40 0,32 32,32"
+                    Style="{StaticResource CropAnchorPolygonStyle}">
+                    <Polygon.RenderTransform>
+                        <TranslateTransform X="10" Y="10" />
+                    </Polygon.RenderTransform>
+                </Polygon>
+            </Grid>
             <!--  Top  -->
-            <Polygon
-                x:Name="CropAnchor_Top"
+            <Grid
+                x:Name="CropAnchorBox_Top"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
-                Points="0,0 40,0 40,8 0,8"
-                Style="{StaticResource CropAnchorPolygonStyle}">
-                <Polygon.RenderTransform>
-                    <TranslateTransform Y="-9" />
-                </Polygon.RenderTransform>
-            </Polygon>
+                Background="Transparent">
+                <Polygon
+                    x:Name="CropAnchor_Top"
+                    Points="0,0 40,0 40,8 0,8"
+                    Style="{StaticResource CropAnchorPolygonStyle}">
+                    <Polygon.RenderTransform>
+                        <TranslateTransform Y="-9" />
+                    </Polygon.RenderTransform>
+                </Polygon>
+            </Grid>
             <!--  Left  -->
-            <Polygon
-                x:Name="CropAnchor_Left"
+            <Grid
+                x:Name="CropAnchorBox_Left"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Points="0,0 8,0 8,40 0,40"
-                Style="{StaticResource CropAnchorPolygonStyle}">
-                <Polygon.RenderTransform>
-                    <TranslateTransform X="-9" />
-                </Polygon.RenderTransform>
-            </Polygon>
+                Background="Transparent">
+                <Polygon
+                    x:Name="CropAnchor_Left"
+                    Points="0,0 8,0 8,40 0,40"
+                    Style="{StaticResource CropAnchorPolygonStyle}">
+                    <Polygon.RenderTransform>
+                        <TranslateTransform X="-9" />
+                    </Polygon.RenderTransform>
+                </Polygon>
+            </Grid>
             <!--  Right  -->
-            <Polygon
-                x:Name="CropAnchor_Right"
+            <Grid
+                x:Name="CropAnchorBox_Right"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
-                Points="32,0 40,0 40,40 32,40"
-                Style="{StaticResource CropAnchorPolygonStyle}">
-                <Polygon.RenderTransform>
-                    <TranslateTransform X="10" />
-                </Polygon.RenderTransform>
-            </Polygon>
+                Background="Transparent">
+                <Polygon
+                    x:Name="CropAnchor_Right"
+                    Points="32,0 40,0 40,40 32,40"
+                    Style="{StaticResource CropAnchorPolygonStyle}">
+                    <Polygon.RenderTransform>
+                        <TranslateTransform X="10" />
+                    </Polygon.RenderTransform>
+                </Polygon>
+            </Grid>
             <!--  Bottom  -->
-            <Polygon
-                x:Name="CropAnchor_Bottom"
+            <Grid
+                x:Name="CropAnchorBox_Bottom"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Bottom"
-                Points="0,32 40,32 40,40 0,40"
-                Style="{StaticResource CropAnchorPolygonStyle}">
-                <Polygon.RenderTransform>
-                    <TranslateTransform Y="10" />
-                </Polygon.RenderTransform>
-            </Polygon>
+                Background="Transparent">
+                <Polygon
+                    x:Name="CropAnchor_Bottom"
+                    Points="0,32 40,32 40,40 0,40"
+                    Style="{StaticResource CropAnchorPolygonStyle}">
+                    <Polygon.RenderTransform>
+                        <TranslateTransform Y="10" />
+                    </Polygon.RenderTransform>
+                </Polygon>
+            </Grid>
         </Grid>
     </Canvas>
 </controls:UserControlBase>
