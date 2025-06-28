@@ -15,6 +15,6 @@
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.7.250401001" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.8.3" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.8.3" />
-    <PackageVersion Include="System.Drawing.Common" Version="9.0.4" />
+    <PackageVersion Include="System.Drawing.Common" Version="9.0.6" />
   </ItemGroup>
 </Project>

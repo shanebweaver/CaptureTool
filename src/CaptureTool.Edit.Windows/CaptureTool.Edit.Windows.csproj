@@ -12,5 +12,8 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" />
     <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Edit\CaptureTool.Edit.csproj" />
+  </ItemGroup>
 
 </Project>

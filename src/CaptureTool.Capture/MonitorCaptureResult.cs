@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Capture.Windows;
+﻿namespace CaptureTool.Capture;
 
 public class MonitorCaptureResult
 {

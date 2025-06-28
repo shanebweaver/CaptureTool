@@ -1,8 +1,10 @@
 ﻿using CaptureTool.Capture.Image;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
-using CaptureTool.Edit.Windows;
-using CaptureTool.Edit.Windows.Drawable;
+using CaptureTool.Edit;
+
+//using CaptureTool.Edit.Windows;
+//using CaptureTool.Edit.Windows.Drawable;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Telemetry;
 using System;
@@ -14,8 +16,9 @@ using System.IO;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Storage;
-using Windows.Storage.Pickers;
+using RotateFlipType = CaptureTool.Edit.RotateFlipType;
+//using Windows.Storage;
+//using Windows.Storage.Pickers;
 
 namespace CaptureTool.ViewModels;
 

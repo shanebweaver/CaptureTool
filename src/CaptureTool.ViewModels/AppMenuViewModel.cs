@@ -11,8 +11,8 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Storage;
-using Windows.Storage.Pickers;
+//using Windows.Storage;
+//using Windows.Storage.Pickers;
 
 namespace CaptureTool.ViewModels;
 

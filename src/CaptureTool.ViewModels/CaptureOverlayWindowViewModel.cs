@@ -1,5 +1,5 @@
-﻿using CaptureTool.Capture.Image;
-using CaptureTool.Capture.Windows;
+﻿using CaptureTool.Capture;
+using CaptureTool.Capture.Image;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;

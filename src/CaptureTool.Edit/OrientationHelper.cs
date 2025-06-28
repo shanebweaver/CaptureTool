@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Numerics;
 
-namespace CaptureTool.Edit.Windows;
+namespace CaptureTool.Edit;
 
 public static partial class OrientationHelper
 {
@@ -55,14 +55,14 @@ public static partial class OrientationHelper
         {
             return currentOrientation switch
             {
-                RotateFlipType.RotateNoneFlipNone => RotateFlipType.RotateNoneFlipY,
-                RotateFlipType.RotateNoneFlipY => RotateFlipType.RotateNoneFlipNone,
-                RotateFlipType.Rotate90FlipNone => RotateFlipType.Rotate90FlipY,
-                RotateFlipType.Rotate90FlipY => RotateFlipType.Rotate90FlipNone,
-                RotateFlipType.Rotate180FlipNone => RotateFlipType.Rotate180FlipY,
-                RotateFlipType.Rotate180FlipY => RotateFlipType.Rotate180FlipNone,
-                RotateFlipType.Rotate270FlipNone => RotateFlipType.Rotate270FlipY,
-                RotateFlipType.Rotate270FlipY => RotateFlipType.Rotate270FlipNone,
+                RotateFlipType.RotateNoneFlipNone => RotateFlipType.Rotate180FlipX,
+                RotateFlipType.Rotate180FlipX => RotateFlipType.RotateNoneFlipNone,
+                RotateFlipType.Rotate90FlipNone => RotateFlipType.Rotate270FlipX,
+                RotateFlipType.Rotate270FlipX => RotateFlipType.Rotate90FlipNone,
+                RotateFlipType.Rotate180FlipNone => RotateFlipType.RotateNoneFlipX,
+                RotateFlipType.RotateNoneFlipX => RotateFlipType.Rotate180FlipNone,
+                RotateFlipType.Rotate270FlipNone => RotateFlipType.Rotate90FlipX,
+                RotateFlipType.Rotate90FlipX => RotateFlipType.Rotate270FlipNone,
                 _ => throw new NotImplementedException("Unexpected RotateFlipType value"),
             };
         }
@@ -306,13 +306,13 @@ public static partial class OrientationHelper
         {
             case RotateFlipType.Rotate90FlipNone:
             case RotateFlipType.Rotate90FlipX:
-            case RotateFlipType.Rotate90FlipY:
+            case RotateFlipType.Rotate270FlipX:
                 transform *= Matrix3x2.CreateRotation(GetRadians(90), rotationPoint);
                 break;
 
             case RotateFlipType.Rotate180FlipNone:
             case RotateFlipType.Rotate180FlipX:
-            case RotateFlipType.Rotate180FlipY:
+            case RotateFlipType.RotateNoneFlipX:
                 transform *= Matrix3x2.CreateRotation(GetRadians(180), rotationPoint);
                 break;
 
@@ -329,7 +329,7 @@ public static partial class OrientationHelper
         {
             case RotateFlipType.Rotate90FlipNone:
             case RotateFlipType.Rotate90FlipX:
-            case RotateFlipType.Rotate90FlipY:
+            case RotateFlipType.Rotate270FlipX:
                 if (isLandscape)
                 {
                     transform *= Matrix3x2.CreateTranslation(heightLessWidth, 0);
@@ -338,7 +338,7 @@ public static partial class OrientationHelper
 
             case RotateFlipType.Rotate180FlipNone:
             case RotateFlipType.Rotate180FlipX:
-            case RotateFlipType.Rotate180FlipY:
+            case RotateFlipType.RotateNoneFlipX:
                 if (isLandscape)
                 {
                     transform *= Matrix3x2.CreateTranslation(0, heightLessWidth);
@@ -360,11 +360,11 @@ public static partial class OrientationHelper
         // Apply flipping
         switch (orientation)
         {
-            case RotateFlipType.Rotate180FlipY:
+            case RotateFlipType.RotateNoneFlipX:
                 transform *= Matrix3x2.CreateScale(1, -1, new((float)imageWidth / 2, (float)imageHeight / 2));
                 break;
 
-            case RotateFlipType.Rotate90FlipY:
+            case RotateFlipType.Rotate270FlipX:
                 transform *= Matrix3x2.CreateScale(1, -1, new((float)imageHeight / 2, (float)imageWidth / 2));
                 break;
 
