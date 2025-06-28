@@ -1,4 +1,6 @@
-﻿namespace CaptureTool.Capture.Image;
+﻿using CaptureTool.Storage;
+
+namespace CaptureTool.Capture.Image;
 
 public sealed partial class ImageCaptureOptions : CaptureOptions
 {

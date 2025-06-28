@@ -1,7 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
-using CaptureTool.Capture.Image;
+﻿using CaptureTool.Capture.Image;
 using CaptureTool.Capture.Video;
+using System.Threading.Tasks;
 
 namespace CaptureTool.Core.AppController;
 

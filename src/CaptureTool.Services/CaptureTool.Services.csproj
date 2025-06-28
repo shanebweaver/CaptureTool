@@ -8,6 +8,7 @@
   <!-- Project dependencies -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
+    <ProjectReference Include="..\CaptureTool.Storage\CaptureTool.Storage.csproj" />
   </ItemGroup>
 
 </Project>

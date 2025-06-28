@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Edit.Windows;
+﻿namespace CaptureTool.Edit;
 
 public enum RotationDirection
 {

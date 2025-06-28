@@ -1,6 +1,7 @@
 ﻿using CaptureTool.Capture.Image;
 using CaptureTool.Capture.Video;
 using CaptureTool.Capture.Windows.SnippingTool;
+using CaptureTool.Storage;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel.Activation;
 

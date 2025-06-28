@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace CaptureTool.Edit.Windows.Drawable;
+namespace CaptureTool.Edit.Drawable;
 
 [JsonSerializable(typeof(RectangleDrawable))]
 [JsonSerializable(typeof(TextDrawable))]

@@ -1,5 +1,6 @@
+using CaptureTool.Edit;
+using CaptureTool.Edit.Drawable;
 using CaptureTool.Edit.Windows;
-using CaptureTool.Edit.Windows.Drawable;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI;
@@ -13,6 +14,7 @@ using System.Drawing;
 using System.Threading.Tasks;
 
 using Point = Windows.Foundation.Point;
+using Orientation = CaptureTool.Edit.Orientation;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls.ImageCanvas;
 
@@ -26,9 +28,9 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(
         nameof(Orientation),
-        typeof(RotateFlipType),
+        typeof(Orientation),
         typeof(ImageCanvas),
-        new PropertyMetadata(RotateFlipType.RotateNoneFlipNone, OnOrientationPropertyChanged));
+        new PropertyMetadata(Orientation.RotateNoneFlipNone, OnOrientationPropertyChanged));
 
     public static readonly DependencyProperty CanvasSizeProperty = DependencyProperty.Register(
         nameof(CanvasSize),
@@ -107,9 +109,9 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(DrawablesProperty, value);
     }
 
-    public RotateFlipType Orientation
+    public Orientation Orientation
     {
-        get => Get<RotateFlipType>(OrientationProperty);
+        get => Get<Orientation>(OrientationProperty);
         set => Set(OrientationProperty, value);
     }
 
@@ -153,12 +155,12 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         lock (this)
         {
-            RotateFlipType orientation = Orientation;
+            Orientation orientation = Orientation;
             bool isTurned =
-                orientation == RotateFlipType.Rotate90FlipNone ||
-                orientation == RotateFlipType.Rotate90FlipX ||
-                orientation == RotateFlipType.Rotate90FlipY ||
-                orientation == RotateFlipType.Rotate90FlipXY;
+                orientation == Orientation.Rotate90FlipNone ||
+                orientation == Orientation.Rotate90FlipX ||
+                orientation == Orientation.Rotate270FlipNone ||
+                orientation == Orientation.Rotate270FlipX;
 
             double width, height;
 
@@ -204,10 +206,10 @@ public sealed partial class ImageCanvas : UserControlBase
             }
 
             bool isTurned =
-                Orientation == RotateFlipType.Rotate90FlipNone ||
-                Orientation == RotateFlipType.Rotate90FlipX ||
-                Orientation == RotateFlipType.Rotate90FlipY ||
-                Orientation == RotateFlipType.Rotate90FlipXY;
+                Orientation == Orientation.Rotate90FlipNone ||
+                Orientation == Orientation.Rotate90FlipX ||
+                Orientation == Orientation.Rotate270FlipNone ||
+                Orientation == Orientation.Rotate270FlipX;
 
             double containerWidth = RootContainer.ActualWidth;
             double containerHeight = RootContainer.ActualHeight;
@@ -242,7 +244,7 @@ public sealed partial class ImageCanvas : UserControlBase
             var rect = (!IsCropModeEnabled) ? CropRect : new Rectangle(0, 0, CanvasSize.Width, CanvasSize.Height);
 
             ImageCanvasRenderOptions options = new(Orientation, CanvasSize, rect);
-            ImageCanvasRenderer.Render([.. Drawables], options, args.DrawingSession);
+            Win2DImageCanvasRenderer.Render([.. Drawables], options, args.DrawingSession);
         }
     }
 
@@ -263,7 +265,7 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             if (drawable is ImageDrawable imageDrawable)
             {
-                Task prepTask = imageDrawable.PrepareAsync(sender);
+                Task prepTask = Win2DImageCanvasRenderer.PrepareAsync(imageDrawable, sender);
                 preparationTasks.Add(prepTask);
             }
         }

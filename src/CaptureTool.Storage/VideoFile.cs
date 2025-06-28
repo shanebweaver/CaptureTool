@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Capture.Video;
+﻿namespace CaptureTool.Storage;
 
 public sealed partial class VideoFile : FileBase
 {

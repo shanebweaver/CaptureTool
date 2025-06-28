@@ -1,15 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Project properties -->
-  <PropertyGroup>
-    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
-    <Platforms>x64;ARM64</Platforms>
-  </PropertyGroup>
-
   <!-- Package references -->
   <ItemGroup>
     <PackageReference Include="System.Drawing.Common" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" />
   </ItemGroup>
 
   <!-- Project references -->
@@ -17,10 +10,8 @@
     <ProjectReference Include="..\CaptureTool.Capture\CaptureTool.Capture.csproj" />
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
     <ProjectReference Include="..\CaptureTool.Core\CaptureTool.Core.csproj" />
-    <ProjectReference Include="..\CaptureTool.Edit.Windows\CaptureTool.Edit.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Edit\CaptureTool.Edit.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Windows\CaptureTool.Services.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Capture.Windows\CaptureTool.Capture.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
   </ItemGroup>
 

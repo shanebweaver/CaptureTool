@@ -1,22 +1,17 @@
-﻿using CaptureTool.Edit.Windows.Drawable;
+﻿using CaptureTool.Edit.Drawable;
 using Microsoft.Graphics.Canvas;
-using Microsoft.UI;
 using System;
-using System.Numerics;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Provider;
 using Windows.Storage.Streams;
-using Color = Windows.UI.Color;
 
 namespace CaptureTool.Edit.Windows;
 
-public static partial class ImageCanvasRenderer
+public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
 {
-    private static readonly Color ClearColor = Colors.Transparent;
-
-    public static async Task CopyImageToClipboardAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
+    public async Task CopyImageToClipboardAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
         float renderWidth = options.CropRect.Width;
         float renderHeight = options.CropRect.Height;
@@ -24,11 +19,11 @@ public static partial class ImageCanvasRenderer
         using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, options.Dpi);
         using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
 
-        drawingSession.Transform = CalculateTransform(options);
+        drawingSession.Transform = OrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation);
 
         foreach (IDrawable drawable in drawables)
         {
-            drawable.Draw(drawingSession);
+            Win2DImageCanvasRenderer.Draw(drawable, drawingSession);
         }
 
         drawingSession.Flush();
@@ -42,7 +37,7 @@ public static partial class ImageCanvasRenderer
         Clipboard.Flush();
     }
 
-    public static async Task SaveImageAsync(string filePath, IDrawable[] drawables, ImageCanvasRenderOptions options)
+    public async Task SaveImageAsync(string filePath, IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
         float renderWidth = options.CropRect.Width;
         float renderHeight = options.CropRect.Height;
@@ -50,11 +45,11 @@ public static partial class ImageCanvasRenderer
         using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, options.Dpi);
         using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
 
-        drawingSession.Transform = CalculateTransform(options);
+        drawingSession.Transform = OrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation);
 
         foreach (IDrawable drawable in drawables)
         {
-            drawable.Draw(drawingSession);
+            Win2DImageCanvasRenderer.Draw(drawable, drawingSession);
         }
 
         drawingSession.Flush();
@@ -76,25 +71,5 @@ public static partial class ImageCanvasRenderer
         {
             throw new Exception("File could not be saved.");
         }
-    }
-
-    public static void Render(IDrawable[] drawables, ImageCanvasRenderOptions options, CanvasDrawingSession drawingSession)
-    {
-        // Clear the drawing session
-        drawingSession.Clear(ClearColor);
-
-        // Apply the final transform to the drawing session
-        drawingSession.Transform = CalculateTransform(options);
-
-        // Draw all the drawables
-        foreach (IDrawable drawable in drawables)
-        {
-            drawable.Draw(drawingSession);
-        }
-    }
-
-    private static Matrix3x2 CalculateTransform(ImageCanvasRenderOptions options)
-    {
-        return OrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation);
     }
 }

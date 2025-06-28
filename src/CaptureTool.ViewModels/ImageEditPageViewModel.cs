@@ -1,21 +1,19 @@
-﻿using CaptureTool.Capture.Image;
-using CaptureTool.Common.Commands;
+﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
-using CaptureTool.Edit.Windows;
-using CaptureTool.Edit.Windows.Drawable;
+using CaptureTool.Edit;
+using CaptureTool.Edit.Drawable;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
+using CaptureTool.Storage;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Storage;
-using Windows.Storage.Pickers;
+using Orientation = CaptureTool.Edit.Orientation;
 
 namespace CaptureTool.ViewModels;
 
@@ -39,6 +37,9 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
     private readonly ITelemetryService _telemetryService;
+    private readonly IImageCanvasPrinter _imageCanvasPrinter;
+    private readonly IImageCanvasExporter _imageCanvasExporter;
+    private readonly IFilePickerService _filePickerService;
 
     public RelayCommand CopyCommand => new(Copy);
     public RelayCommand ToggleCropModeCommand => new(ToggleCropMode);
@@ -71,8 +72,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _imageSize, value);
     }
 
-    private RotateFlipType _orientation;
-    public RotateFlipType Orientation
+    private Orientation _orientation;
+    public Orientation Orientation
     {
         get => _orientation;
         set => Set(ref _orientation, value);
@@ -95,16 +96,22 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     public ImageEditPageViewModel(
         IAppController appController,
         ICancellationService cancellationService,
-        ITelemetryService telemetryService)
+        ITelemetryService telemetryService,
+        IImageCanvasPrinter imageCanvasPrinter,
+        IImageCanvasExporter imageCanvasExporter,
+        IFilePickerService filePickerService)
     {
         _appController = appController;
         _cancellationService = cancellationService;
         _telemetryService = telemetryService;
+        _imageCanvasPrinter = imageCanvasPrinter;
+        _filePickerService = filePickerService;
 
         _drawables = [];
         _imageSize = new();
-        _orientation = RotateFlipType.RotateNoneFlipNone;
+        _orientation = Orientation.RotateNoneFlipNone;
         _cropRect = new(0, 0, 0, 0);
+        _imageCanvasExporter = imageCanvasExporter;
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -122,10 +129,10 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
             if (parameter is ImageFile imageFile)
             {
                 ImageFile = imageFile;
-                ImageSize = GetImageSize(imageFile.Path);
+                ImageSize = _filePickerService.GetImageSize(imageFile);
                 CropRect = new(0, 0, ImageSize.Width, ImageSize.Height);
 
-                ImageDrawable imageDrawable = new(topLeft, imageFile.Path);
+                ImageDrawable imageDrawable = new(topLeft, imageFile);
                 Drawables.Add(imageDrawable);
             }
 
@@ -157,7 +164,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         {
             CropRect = new(0, 0, 0, 0);
             ImageSize = new(0, 0);
-            Orientation = RotateFlipType.RotateNoneFlipNone;
+            Orientation = Orientation.RotateNoneFlipNone;
             Drawables.Clear();
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -176,7 +183,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         try
         {
             ImageCanvasRenderOptions options = new(Orientation, ImageSize, CropRect);
-            await ImageCanvasRenderer.CopyImageToClipboardAsync([.. Drawables], options);
+            await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
 
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -207,23 +214,11 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            var filePicker = new FileSavePicker
-            {
-                SuggestedStartLocation = PickerLocationId.PicturesLibrary
-            };
-
-#pragma warning disable IDE0028 // Simplify collection initialization
-            filePicker.FileTypeChoices.Add("PNG", new List<string>() { ".png" });
-#pragma warning restore IDE0028 // Simplify collection initialization
-
-            nint hwnd = _appController.GetMainWindowHandle();
-            WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
-
-            StorageFile file = await filePicker.PickSaveFileAsync();
+            var file = await _filePickerService.SaveImageFileAsync();
             if (file != null)
             {
                 ImageCanvasRenderOptions options = new(Orientation, ImageSize, CropRect);
-                await ImageCanvasRenderer.SaveImageAsync(file.Path, [.. Drawables], options);
+                await _imageCanvasExporter.SaveImageAsync(file.Path, [.. Drawables], options);
                 _telemetryService.ActivityCompleted(activityId);
             }
             else
@@ -271,8 +266,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            RotateFlipType oldOrientation = Orientation;
-            RotateFlipType newOrientation = OrientationHelper.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
+            Orientation oldOrientation = Orientation;
+            Orientation newOrientation = OrientationHelper.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
             Rectangle newCropRect = OrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
 
             CropRect = newCropRect;
@@ -316,8 +311,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            nint hwnd = _appController.GetMainWindowHandle();
-            await ImageCanvasPrinter.Default.ShowPrintUIAsync([.. Drawables], new ImageCanvasRenderOptions(Orientation, ImageSize, CropRect), hwnd);
+            await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], new ImageCanvasRenderOptions(Orientation, ImageSize, CropRect));
         }
         catch (Exception e)
         {
@@ -325,18 +319,5 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
             // Use error service to show an error message to the user
         }
-    }
-
-    private static Size GetImageSize(string imagePath)
-    {
-        using FileStream file = new(imagePath, FileMode.Open, FileAccess.Read);
-        var image = Image.FromStream(
-            stream: file,
-            useEmbeddedColorManagement: false,
-            validateImageData: false);
-
-        float width = image.PhysicalDimension.Width;
-        float height = image.PhysicalDimension.Height;
-        return new(Convert.ToInt32(width), Convert.ToInt32(height));
     }
 }

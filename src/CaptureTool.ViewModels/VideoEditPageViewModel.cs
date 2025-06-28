@@ -1,6 +1,6 @@
-﻿using CaptureTool.Capture.Video;
-using CaptureTool.Services.Cancellation;
+﻿using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Telemetry;
+using CaptureTool.Storage;
 using System;
 using System.Diagnostics;
 using System.Threading;

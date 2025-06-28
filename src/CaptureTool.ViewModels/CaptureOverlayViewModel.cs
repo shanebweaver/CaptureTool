@@ -1,7 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
-using CaptureTool.Capture.Windows;
+using CaptureTool.Capture;
 
 namespace CaptureTool.ViewModels;
 

@@ -7,6 +7,7 @@ using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;
+using CaptureTool.Storage;
 using System;
 using System.Diagnostics;
 using System.Threading;
