@@ -10,7 +10,7 @@ using Color = Windows.UI.Color;
 
 namespace CaptureTool.Edit.Windows;
 
-public sealed partial class Win2DImageCanvasRenderer
+public static partial class Win2DImageCanvasRenderer
 {
     private static readonly Color ClearColor = Colors.Transparent;
     private static readonly Dictionary<ImageDrawable, ICanvasImage> _preparedImages = [];

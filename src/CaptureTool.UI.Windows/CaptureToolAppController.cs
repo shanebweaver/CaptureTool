@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using CaptureTool.Capture.Image;
 using CaptureTool.Capture.Video;
@@ -13,10 +15,13 @@ using CaptureTool.Services.Navigation;
 using CaptureTool.Storage;
 using CaptureTool.UI.Windows.Xaml.Extensions;
 using CaptureTool.UI.Windows.Xaml.Windows;
+using Microsoft.UI;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel.Core;
-using Windows.Graphics.Capture;
+using Windows.Graphics;
 
 namespace CaptureTool.UI.Windows;
 
@@ -26,6 +31,8 @@ internal partial class CaptureToolAppController : IAppController
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
     private readonly ISnippingToolService _snippingToolService;
+
+    private readonly Dictionary<IntPtr, CaptureOverlayWindow> _captureOverlayWindows = [];
 
     public CaptureToolAppController(
         IFeatureManager featureManager,
@@ -79,7 +86,7 @@ internal partial class CaptureToolAppController : IAppController
             throw new InvalidOperationException("Feature is not enabled");
         }
 
-        bool useSnippingTool = _snippingToolService.IsSnippingToolInstalled();
+        bool useSnippingTool = false;// _snippingToolService.IsSnippingToolInstalled();
         if (useSnippingTool)
         {
             HideMainWindow();
@@ -88,59 +95,93 @@ internal partial class CaptureToolAppController : IAppController
             SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
             await _snippingToolService.CaptureImageAsync(snippingToolOptions);
         }
-        else
-        {
-            var picker = new GraphicsCapturePicker();
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
-            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
-
-            var captureItem = await picker.PickSingleItemAsync();
-            if (captureItem == null)
-            {
-                return; // User canceled the picker
-            }
-
-            var storageFolder = global::Windows.Storage.ApplicationData.Current.TemporaryFolder;
-            var fileName = $"Capture_{DateTime.Now:yyyyMMdd_HHmmss}.png";
-            var file = await GraphicsCaptureHelper.CaptureItemToBitmapFileAsync(captureItem, storageFolder, fileName);
-
-            ImageFile imageFile = new(file.Path);
-            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
-        }
         //else
         //{
-        //    // TODO: Call a "thing" to lookup the number of monitors and create a new window for each.
+        //    var picker = new GraphicsCapturePicker();
+        //    var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
+        //    WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
-        //    if (_captureOverlayWindow == null)
+        //    var captureItem = await picker.PickSingleItemAsync();
+        //    if (captureItem == null)
         //    {
-        //        _captureOverlayWindow = new();
-        //        _captureOverlayWindow.Closed += ImageCaptureWindow_Closed;
+        //        return; // User canceled the picker
         //    }
 
-        //    _captureOverlayWindow.Activate();
+        //    var storageFolder = global::Windows.Storage.ApplicationData.Current.TemporaryFolder;
+        //    var fileName = $"Capture_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+        //    var file = await GraphicsCaptureHelper.CaptureItemToBitmapFileAsync(captureItem, storageFolder, fileName);
+
+        //    ImageFile imageFile = new(file.Path);
+        //    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
         //}
-    }
-
-    private CaptureOverlayWindow? _captureOverlayWindow;
-
-    public void CloseCaptureOverlay()
-    {
-        _captureOverlayWindow?.Close();
-    }
-
-    private void ImageCaptureWindow_Closed(object sender, WindowEventArgs args)
-    {
-        App.Current.DispatcherQueue.TryEnqueue(() =>
+        else
         {
-            if (_captureOverlayWindow != null)
-            {
-                _captureOverlayWindow.Closed -= ImageCaptureWindow_Closed;
-                _captureOverlayWindow = null;
-            }
-
-            RestoreMainWindow();
-        });
+            ShowCaptureOverlayOnAllMonitors();
+        }
     }
+
+    public void ShowCaptureOverlayOnAllMonitors()
+    {
+        CloseCaptureOverlays();
+
+        var monitors = MonitorCaptureHelper.CaptureAllMonitors();
+        foreach (var monitor in monitors)
+        {
+            var window = new CaptureOverlayWindow();
+            window.Closed += ImageCaptureWindow_ClosedAll;
+            window.ViewModel.WindowBounds = monitor.MonitorBounds;
+            window.ViewModel.IsPrimary = monitor.MonitorBounds.Top == 0 && monitor.MonitorBounds.Left == 0;
+            window.Activate();
+
+            _captureOverlayWindows[monitor.HMonitor] = window;
+        }
+    }
+
+    public void CloseCaptureOverlays()
+    {
+        foreach (var kvp in _captureOverlayWindows)
+        {
+            kvp.Value.Closed -= ImageCaptureWindow_ClosedAll;
+            kvp.Value.Close();
+        }
+        _captureOverlayWindows.Clear();
+    }
+
+    private void ImageCaptureWindow_ClosedAll(object sender, WindowEventArgs args)
+    {
+        var window = sender as CaptureOverlayWindow;
+        if (window == null) return;
+
+        var key = _captureOverlayWindows.FirstOrDefault(kvp => kvp.Value == window).Key;
+        if (key != default)
+            _captureOverlayWindows.Remove(key);
+
+        if (_captureOverlayWindows.Count == 0)
+        {
+            RestoreMainWindow();
+        }
+    }
+
+    //private CaptureOverlayWindow? _captureOverlayWindow;
+
+    //public void CloseCaptureOverlay()
+    //{
+    //    _captureOverlayWindow?.Close();
+    //}
+
+    //private void ImageCaptureWindow_Closed(object sender, WindowEventArgs args)
+    //{
+    //    App.Current.DispatcherQueue.TryEnqueue(() =>
+    //    {
+    //        if (_captureOverlayWindow != null)
+    //        {
+    //            _captureOverlayWindow.Closed -= ImageCaptureWindow_Closed;
+    //            _captureOverlayWindow = null;
+    //        }
+
+    //        RestoreMainWindow();
+    //    });
+    //}
 
     public async Task NewVideoCaptureAsync(VideoCaptureOptions options)
     {

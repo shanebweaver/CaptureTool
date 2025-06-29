@@ -23,6 +23,20 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
     public RelayCommand ToggleShowOptionsCommand => new(ToggleShowOptions);
 
+    private bool _isPrimary;
+    public bool IsPrimary
+    {
+        get => _isPrimary;
+        set => Set(ref _isPrimary, value);
+    }
+
+    private Rectangle _windowBounds;
+    public Rectangle WindowBounds
+    {
+        get => _windowBounds;
+        set => Set(ref _windowBounds, value);
+    }
+
     private Rectangle _captureArea;
     public Rectangle CaptureArea
     {
@@ -51,13 +65,14 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         _appController = appController;
         _navigationService = navigationService;
 
+        _windowBounds = new(0,0,0,0);
         _captureArea = new(0,0,0,0);
         _monitors = [];
     }
 
     private void CloseOverlay()
     {
-        _appController.CloseCaptureOverlay();
+        _appController.CloseCaptureOverlays();
     }
 
     private void ToggleShowOptions()

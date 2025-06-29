@@ -13,7 +13,7 @@ public interface IAppController
     Task NewVideoCaptureAsync(VideoCaptureOptions options);
     Task NewAudioCaptureAsync();
 
-    void CloseCaptureOverlay();
+    void CloseCaptureOverlays();
 
     nint GetMainWindowHandle();
 

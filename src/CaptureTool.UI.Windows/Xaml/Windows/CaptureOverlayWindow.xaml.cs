@@ -15,25 +15,23 @@ public sealed partial class CaptureOverlayWindow : Window
 
         AppWindow.IsShownInSwitchers = false;
         AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
-        if (AppWindow.Presenter is OverlappedPresenter presenter)
-        {
-            presenter.IsAlwaysOnTop = true;
-            presenter.IsResizable = false;
-            presenter.SetBorderAndTitleBar(false, false);
-            presenter.Maximize();
-        }
 
-        Activated += ImageCaptureWindow_Activated;
+        ViewModel.PropertyChanged += ViewModel_PropertyChanged;
     }
 
-    private void ImageCaptureWindow_Activated(object sender, WindowActivatedEventArgs e)
+    private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.WindowActivationState == WindowActivationState.Deactivated)
+        if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.WindowBounds))
         {
-            DispatcherQueue.TryEnqueue(() =>
+            AppWindow.MoveAndResize(new(ViewModel.WindowBounds.X, ViewModel.WindowBounds.Y, ViewModel.WindowBounds.Width, ViewModel.WindowBounds.Height));
+
+            if (AppWindow.Presenter is OverlappedPresenter presenter)
             {
-                Close();
-            });
+                presenter.IsAlwaysOnTop = true;
+                presenter.IsResizable = false;
+                presenter.SetBorderAndTitleBar(false, false);
+                presenter.Maximize();
+            }
         }
     }
 

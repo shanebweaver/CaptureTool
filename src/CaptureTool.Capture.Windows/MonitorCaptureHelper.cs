@@ -162,13 +162,17 @@ public static class MonitorCaptureHelper
                 pixels = new byte[width * height * 4];
             }
 
+            int workAreaWidth = mi.rcWork.right - mi.rcWork.left;
+            int workAreaHeight = mi.rcWork.bottom - mi.rcWork.top;
+            int workAreaLeft = mi.rcWork.left;
+            int workAreaTop = mi.rcWork.top;
+
             results.Add(new MonitorCaptureResult
             {
-                Width = width,
-                Height = height,
+                HMonitor = hMonitor,
+                MonitorBounds = new(mi.rcMonitor.left, mi.rcMonitor.top, width, height),
+                WorkAreaBounds = new(workAreaLeft, workAreaTop, workAreaWidth, workAreaHeight),
                 PixelBuffer = pixels,
-                Left = mi.rcMonitor.left,  
-                Top = mi.rcMonitor.top,
                 Dpi = dpiX
             });
 
