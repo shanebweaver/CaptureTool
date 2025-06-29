@@ -67,9 +67,11 @@ public sealed partial class ImageCanvas : UserControlBase
                 if (e.NewValue is bool isCropModeEnabled && isCropModeEnabled)
                 {
                     control.RootContainer.Background = new SolidColorBrush(Colors.Black);
+                    control.CanvasScrollView.ZoomMode = ScrollingZoomMode.Disabled;
                 }
                 else
                 {
+                    control.CanvasScrollView.ZoomMode = ScrollingZoomMode.Enabled;
                     control.RootContainer.Background = new SolidColorBrush(Colors.Transparent);
                 }
 

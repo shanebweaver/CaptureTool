@@ -105,7 +105,7 @@ public sealed partial class CropOverlay : UserControlBase
     {
         var anchorBoxes = new FrameworkElement[]
         {
-            CropAnchorBox_TopLeft, CropAnchorBox_TopRight, CropAnchor_BottomLeft, CropAnchor_BottomRight,
+            CropAnchorBox_TopLeft, CropAnchorBox_TopRight, CropAnchorBox_BottomLeft, CropAnchorBox_BottomRight,
             CropAnchorBox_Top, CropAnchorBox_Bottom, CropAnchorBox_Left, CropAnchorBox_Right,
         };
 
@@ -188,7 +188,6 @@ public sealed partial class CropOverlay : UserControlBase
         ((UIElement)sender).CapturePointer(e.Pointer);
         e.Handled = true;
     }
-
 
     private void AnchorBox_AnchorMoved(object sender, PointerRoutedEventArgs e)
     {

@@ -19,10 +19,7 @@
         PointerReleased="RootContainer_PointerReleased"
         SizeChanged="RootContainer_SizeChanged">
 
-        <ScrollView
-            x:Name="CanvasScrollView"
-            HorizontalScrollBarVisibility="Auto"
-            ZoomMode="Enabled">
+        <ScrollView x:Name="CanvasScrollView" HorizontalScrollBarVisibility="Auto">
             <Grid
                 x:Name="CanvasContainer"
                 HorizontalAlignment="Center"

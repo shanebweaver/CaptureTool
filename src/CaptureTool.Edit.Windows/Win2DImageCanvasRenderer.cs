@@ -2,7 +2,6 @@
 using Microsoft.Graphics.Canvas;
 using Microsoft.UI;
 using System;
-using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -13,7 +12,6 @@ namespace CaptureTool.Edit.Windows;
 public sealed partial class Win2DImageCanvasRenderer
 {
     private static readonly Color ClearColor = Colors.Transparent;
-    private static readonly Dictionary<ImageDrawable, ICanvasImage> _preparedImages = [];
 
     public static void Render(IDrawable[] drawables, ImageCanvasRenderOptions options, object drawingSessionObj)
     {
@@ -61,7 +59,8 @@ public sealed partial class Win2DImageCanvasRenderer
 
     private static void DrawImage(ImageDrawable drawable, CanvasDrawingSession drawingSession)
     {
-        if (_preparedImages.TryGetValue(drawable, out ICanvasImage? preparedImage))
+        ICanvasImage? preparedImage = drawable.GetPreparedImage();
+        if (preparedImage != null)
         {
             drawingSession.DrawImage(preparedImage, drawable.Offset);
         }
@@ -69,7 +68,7 @@ public sealed partial class Win2DImageCanvasRenderer
 
     public static async Task PrepareAsync(ImageDrawable imageDrawable, ICanvasResourceCreator resourceCreator)
     {
-        var prepared = await CanvasBitmap.LoadAsync(resourceCreator, imageDrawable.FileName.Path);
-        _preparedImages[imageDrawable] = prepared;
+        ICanvasImage prepared = await CanvasBitmap.LoadAsync(resourceCreator, imageDrawable.FileName.Path);
+        imageDrawable.SetPreparedImage(prepared);
     }
 }
