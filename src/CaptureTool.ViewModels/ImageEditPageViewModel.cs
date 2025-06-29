@@ -13,7 +13,7 @@ using System.Drawing;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Orientation = CaptureTool.Edit.Orientation;
+using ImageOrientation = CaptureTool.Edit.ImageOrientation;
 
 namespace CaptureTool.ViewModels;
 
@@ -72,8 +72,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _imageSize, value);
     }
 
-    private Orientation _orientation;
-    public Orientation Orientation
+    private ImageOrientation _orientation;
+    public ImageOrientation Orientation
     {
         get => _orientation;
         set => Set(ref _orientation, value);
@@ -109,7 +109,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
         _drawables = [];
         _imageSize = new();
-        _orientation = Orientation.RotateNoneFlipNone;
+        _orientation = ImageOrientation.RotateNoneFlipNone;
         _cropRect = new(0, 0, 0, 0);
         _imageCanvasExporter = imageCanvasExporter;
     }
@@ -164,7 +164,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         {
             CropRect = new(0, 0, 0, 0);
             ImageSize = new(0, 0);
-            Orientation = Orientation.RotateNoneFlipNone;
+            Orientation = ImageOrientation.RotateNoneFlipNone;
             Drawables.Clear();
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -267,9 +267,9 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            Orientation oldOrientation = Orientation;
-            Orientation newOrientation = OrientationHelper.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
-            Rectangle newCropRect = OrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
+            ImageOrientation oldOrientation = Orientation;
+            ImageOrientation newOrientation = ImageOrientationHelper.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
+            Rectangle newCropRect = ImageOrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
 
             CropRect = newCropRect;
             Orientation = newOrientation;
@@ -294,9 +294,9 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
         try
         {
-            Size imageSize = OrientationHelper.GetOrientedImageSize(ImageSize, Orientation);
-            CropRect = OrientationHelper.GetFlippedCropRect(CropRect, imageSize, flipDirection);
-            Orientation = OrientationHelper.GetFlippedOrientation(Orientation, flipDirection);
+            Size imageSize = ImageOrientationHelper.GetOrientedImageSize(ImageSize, Orientation);
+            CropRect = ImageOrientationHelper.GetFlippedCropRect(CropRect, imageSize, flipDirection);
+            Orientation = ImageOrientationHelper.GetFlippedOrientation(Orientation, flipDirection);
 
             _telemetryService.ActivityCompleted(activityId);
         }

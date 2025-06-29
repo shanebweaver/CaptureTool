@@ -4,12 +4,12 @@ namespace CaptureTool.Edit;
 
 public sealed partial class ImageCanvasRenderOptions
 {
-    public Orientation Orientation { get; set; }
+    public ImageOrientation Orientation { get; set; }
     public Size CanvasSize { get; set; }
     public Rectangle CropRect { get; set; }
     public float Dpi { get; set; } = 96f;
 
-    public ImageCanvasRenderOptions(Orientation orientation, Size canvasSize, Rectangle cropRect)
+    public ImageCanvasRenderOptions(ImageOrientation orientation, Size canvasSize, Rectangle cropRect)
     {
         Orientation = orientation;
         CanvasSize = canvasSize;
@@ -17,8 +17,8 @@ public sealed partial class ImageCanvasRenderOptions
     }
 
     public bool IsTurned =>
-        Orientation == Orientation.Rotate90FlipNone ||
-        Orientation == Orientation.Rotate270FlipNone ||
-        Orientation == Orientation.Rotate90FlipX ||
-        Orientation == Orientation.Rotate270FlipX;
+        Orientation == ImageOrientation.Rotate90FlipNone ||
+        Orientation == ImageOrientation.Rotate270FlipNone ||
+        Orientation == ImageOrientation.Rotate90FlipX ||
+        Orientation == ImageOrientation.Rotate270FlipX;
 }

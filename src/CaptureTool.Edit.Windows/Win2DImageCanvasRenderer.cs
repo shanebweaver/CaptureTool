@@ -24,7 +24,7 @@ public sealed partial class Win2DImageCanvasRenderer
         drawingSession.Clear(ClearColor);
 
         // Apply the final transform to the drawing session
-        drawingSession.Transform = OrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation);
+        drawingSession.Transform = ImageOrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation);
 
         // Draw all the drawables
         foreach (IDrawable drawable in drawables)

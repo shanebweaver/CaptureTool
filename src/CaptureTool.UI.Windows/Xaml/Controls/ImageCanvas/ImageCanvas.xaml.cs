@@ -14,7 +14,7 @@ using System.Drawing;
 using System.Threading.Tasks;
 
 using Point = Windows.Foundation.Point;
-using Orientation = CaptureTool.Edit.Orientation;
+using ImageOrientation = CaptureTool.Edit.ImageOrientation;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls.ImageCanvas;
 
@@ -28,9 +28,9 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(
         nameof(Orientation),
-        typeof(Orientation),
+        typeof(ImageOrientation),
         typeof(ImageCanvas),
-        new PropertyMetadata(Orientation.RotateNoneFlipNone, OnOrientationPropertyChanged));
+        new PropertyMetadata(ImageOrientation.RotateNoneFlipNone, OnOrientationPropertyChanged));
 
     public static readonly DependencyProperty CanvasSizeProperty = DependencyProperty.Register(
         nameof(CanvasSize),
@@ -111,9 +111,9 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(DrawablesProperty, value);
     }
 
-    public Orientation Orientation
+    public ImageOrientation Orientation
     {
-        get => Get<Orientation>(OrientationProperty);
+        get => Get<ImageOrientation>(OrientationProperty);
         set => Set(OrientationProperty, value);
     }
 
@@ -157,12 +157,12 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         lock (this)
         {
-            Orientation orientation = Orientation;
+            ImageOrientation orientation = Orientation;
             bool isTurned =
-                orientation == Orientation.Rotate90FlipNone ||
-                orientation == Orientation.Rotate90FlipX ||
-                orientation == Orientation.Rotate270FlipNone ||
-                orientation == Orientation.Rotate270FlipX;
+                orientation == ImageOrientation.Rotate90FlipNone ||
+                orientation == ImageOrientation.Rotate90FlipX ||
+                orientation == ImageOrientation.Rotate270FlipNone ||
+                orientation == ImageOrientation.Rotate270FlipX;
 
             double width, height;
 
@@ -208,10 +208,10 @@ public sealed partial class ImageCanvas : UserControlBase
             }
 
             bool isTurned =
-                Orientation == Orientation.Rotate90FlipNone ||
-                Orientation == Orientation.Rotate90FlipX ||
-                Orientation == Orientation.Rotate270FlipNone ||
-                Orientation == Orientation.Rotate270FlipX;
+                Orientation == ImageOrientation.Rotate90FlipNone ||
+                Orientation == ImageOrientation.Rotate90FlipX ||
+                Orientation == ImageOrientation.Rotate270FlipNone ||
+                Orientation == ImageOrientation.Rotate270FlipX;
 
             double containerWidth = RootContainer.ActualWidth;
             double containerHeight = RootContainer.ActualHeight;

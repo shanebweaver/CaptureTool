@@ -4,27 +4,27 @@ using System.Numerics;
 
 namespace CaptureTool.Edit;
 
-public static partial class OrientationHelper
+public static partial class ImageOrientationHelper
 {
-    public static bool IsTurned(Orientation orientation)
+    public static bool IsTurned(ImageOrientation orientation)
     {
         return
-            orientation == Orientation.Rotate90FlipNone ||
-            orientation == Orientation.Rotate270FlipNone ||
-            orientation == Orientation.Rotate90FlipX ||
-            orientation == Orientation.Rotate270FlipX;
+            orientation == ImageOrientation.Rotate90FlipNone ||
+            orientation == ImageOrientation.Rotate270FlipNone ||
+            orientation == ImageOrientation.Rotate90FlipX ||
+            orientation == ImageOrientation.Rotate270FlipX;
     }
 
-    public static bool IsXFlipped(Orientation orientation)
+    public static bool IsXFlipped(ImageOrientation orientation)
     {
         return
-            orientation == Orientation.RotateNoneFlipX ||
-            orientation == Orientation.Rotate90FlipX ||
-            orientation == Orientation.Rotate180FlipX ||
-            orientation == Orientation.Rotate270FlipX;
+            orientation == ImageOrientation.RotateNoneFlipX ||
+            orientation == ImageOrientation.Rotate90FlipX ||
+            orientation == ImageOrientation.Rotate180FlipX ||
+            orientation == ImageOrientation.Rotate270FlipX;
     }
 
-    public static Size GetOrientedImageSize(Size imageSize, Orientation orientation)
+    public static Size GetOrientedImageSize(Size imageSize, ImageOrientation orientation)
     {
         bool isTurned = IsTurned(orientation);
         int imageWidth = isTurned ? imageSize.Height : imageSize.Width;
@@ -32,21 +32,21 @@ public static partial class OrientationHelper
         return new(imageWidth, imageHeight);
     }
 
-    public static Orientation GetFlippedOrientation(Orientation currentOrientation, FlipDirection flipDirection)
+    public static ImageOrientation GetFlippedOrientation(ImageOrientation currentOrientation, FlipDirection flipDirection)
     {
         // Flip horizontally
         if (flipDirection == FlipDirection.Horizontal)
         {
             return currentOrientation switch
             {
-                Orientation.RotateNoneFlipNone => Orientation.RotateNoneFlipX,
-                Orientation.RotateNoneFlipX => Orientation.RotateNoneFlipNone,
-                Orientation.Rotate90FlipNone => Orientation.Rotate90FlipX,
-                Orientation.Rotate90FlipX => Orientation.Rotate90FlipNone,
-                Orientation.Rotate180FlipNone => Orientation.Rotate180FlipX,
-                Orientation.Rotate180FlipX => Orientation.Rotate180FlipNone,
-                Orientation.Rotate270FlipNone => Orientation.Rotate270FlipX,
-                Orientation.Rotate270FlipX => Orientation.Rotate270FlipNone,
+                ImageOrientation.RotateNoneFlipNone => ImageOrientation.RotateNoneFlipX,
+                ImageOrientation.RotateNoneFlipX => ImageOrientation.RotateNoneFlipNone,
+                ImageOrientation.Rotate90FlipNone => ImageOrientation.Rotate90FlipX,
+                ImageOrientation.Rotate90FlipX => ImageOrientation.Rotate90FlipNone,
+                ImageOrientation.Rotate180FlipNone => ImageOrientation.Rotate180FlipX,
+                ImageOrientation.Rotate180FlipX => ImageOrientation.Rotate180FlipNone,
+                ImageOrientation.Rotate270FlipNone => ImageOrientation.Rotate270FlipX,
+                ImageOrientation.Rotate270FlipX => ImageOrientation.Rotate270FlipNone,
                 _ => throw new NotImplementedException("Unexpected orientation value"),
             };
         }
@@ -55,49 +55,49 @@ public static partial class OrientationHelper
         {
             return currentOrientation switch
             {
-                Orientation.RotateNoneFlipNone => Orientation.Rotate180FlipX,
-                Orientation.Rotate180FlipX => Orientation.RotateNoneFlipNone,
-                Orientation.Rotate90FlipNone => Orientation.Rotate270FlipX,
-                Orientation.Rotate270FlipX => Orientation.Rotate90FlipNone,
-                Orientation.Rotate180FlipNone => Orientation.RotateNoneFlipX,
-                Orientation.RotateNoneFlipX => Orientation.Rotate180FlipNone,
-                Orientation.Rotate270FlipNone => Orientation.Rotate90FlipX,
-                Orientation.Rotate90FlipX => Orientation.Rotate270FlipNone,
+                ImageOrientation.RotateNoneFlipNone => ImageOrientation.Rotate180FlipX,
+                ImageOrientation.Rotate180FlipX => ImageOrientation.RotateNoneFlipNone,
+                ImageOrientation.Rotate90FlipNone => ImageOrientation.Rotate270FlipX,
+                ImageOrientation.Rotate270FlipX => ImageOrientation.Rotate90FlipNone,
+                ImageOrientation.Rotate180FlipNone => ImageOrientation.RotateNoneFlipX,
+                ImageOrientation.RotateNoneFlipX => ImageOrientation.Rotate180FlipNone,
+                ImageOrientation.Rotate270FlipNone => ImageOrientation.Rotate90FlipX,
+                ImageOrientation.Rotate90FlipX => ImageOrientation.Rotate270FlipNone,
                 _ => throw new NotImplementedException("Unexpected orientation value"),
             };
         }
     }
 
-    public static Orientation GetRotatedOrientation(Orientation orientation, RotationDirection rotationDirection)
+    public static ImageOrientation GetRotatedOrientation(ImageOrientation orientation, RotationDirection rotationDirection)
     {
         return rotationDirection switch
         {
             RotationDirection.Clockwise => orientation switch
             {
-                Orientation.RotateNoneFlipNone => Orientation.Rotate90FlipNone,
-                Orientation.Rotate90FlipNone => Orientation.Rotate180FlipNone,
-                Orientation.Rotate180FlipNone => Orientation.Rotate270FlipNone,
-                Orientation.Rotate270FlipNone => Orientation.RotateNoneFlipNone,
+                ImageOrientation.RotateNoneFlipNone => ImageOrientation.Rotate90FlipNone,
+                ImageOrientation.Rotate90FlipNone => ImageOrientation.Rotate180FlipNone,
+                ImageOrientation.Rotate180FlipNone => ImageOrientation.Rotate270FlipNone,
+                ImageOrientation.Rotate270FlipNone => ImageOrientation.RotateNoneFlipNone,
 
-                Orientation.RotateNoneFlipX => Orientation.Rotate270FlipX,
-                Orientation.Rotate90FlipX => Orientation.RotateNoneFlipX,
-                Orientation.Rotate180FlipX => Orientation.Rotate90FlipX,
-                Orientation.Rotate270FlipX => Orientation.Rotate180FlipX,
+                ImageOrientation.RotateNoneFlipX => ImageOrientation.Rotate270FlipX,
+                ImageOrientation.Rotate90FlipX => ImageOrientation.RotateNoneFlipX,
+                ImageOrientation.Rotate180FlipX => ImageOrientation.Rotate90FlipX,
+                ImageOrientation.Rotate270FlipX => ImageOrientation.Rotate180FlipX,
 
                 _ => throw new NotImplementedException("Unexpected orientation value"),
             },
 
             RotationDirection.CounterClockwise => orientation switch
             {
-                Orientation.RotateNoneFlipNone => Orientation.Rotate270FlipNone,
-                Orientation.Rotate90FlipNone => Orientation.RotateNoneFlipNone,
-                Orientation.Rotate180FlipNone => Orientation.Rotate90FlipNone,
-                Orientation.Rotate270FlipNone => Orientation.Rotate180FlipNone,
+                ImageOrientation.RotateNoneFlipNone => ImageOrientation.Rotate270FlipNone,
+                ImageOrientation.Rotate90FlipNone => ImageOrientation.RotateNoneFlipNone,
+                ImageOrientation.Rotate180FlipNone => ImageOrientation.Rotate90FlipNone,
+                ImageOrientation.Rotate270FlipNone => ImageOrientation.Rotate180FlipNone,
 
-                Orientation.RotateNoneFlipX => Orientation.Rotate90FlipX,
-                Orientation.Rotate90FlipX => Orientation.Rotate180FlipX,
-                Orientation.Rotate180FlipX => Orientation.Rotate270FlipX,
-                Orientation.Rotate270FlipX => Orientation.RotateNoneFlipX,
+                ImageOrientation.RotateNoneFlipX => ImageOrientation.Rotate90FlipX,
+                ImageOrientation.Rotate90FlipX => ImageOrientation.Rotate180FlipX,
+                ImageOrientation.Rotate180FlipX => ImageOrientation.Rotate270FlipX,
+                ImageOrientation.Rotate270FlipX => ImageOrientation.RotateNoneFlipX,
 
                 _ => throw new NotImplementedException("Unexpected orientation value"),
             },
@@ -137,7 +137,7 @@ public static partial class OrientationHelper
         return new(x, y, w, h);
     }
 
-    public static int GetRotationSteps(Orientation from, Orientation to)
+    public static int GetRotationSteps(ImageOrientation from, ImageOrientation to)
     {
         int[] angles = [
             0,
@@ -151,7 +151,7 @@ public static partial class OrientationHelper
         return delta;
     }
 
-    public static Rectangle GetOrientedCropRect(Rectangle cropRect, Size imageSize, Orientation from, Orientation to)
+    public static Rectangle GetOrientedCropRect(Rectangle cropRect, Size imageSize, ImageOrientation from, ImageOrientation to)
     {
         // Get the canonical crop rectangle based on the original orientation
         Rectangle canonicalCropRect = ToCanonicalCropRect(cropRect, imageSize, from);
@@ -162,7 +162,7 @@ public static partial class OrientationHelper
         return orientedCropRect;
     }
 
-    public static Rectangle ToCanonicalCropRect(Rectangle cropRect, Size imageSize, Orientation orientation)
+    public static Rectangle ToCanonicalCropRect(Rectangle cropRect, Size imageSize, ImageOrientation orientation)
     {
         // The canonical orientation is RotateNoneFlipNone (no rotation, no flip).
         // This method transforms the cropRect from the given orientation to the canonical orientation.
@@ -170,10 +170,10 @@ public static partial class OrientationHelper
         Size size = imageSize;
 
         // If the orientation is turned, swap width and height
-        bool turned = orientation == Orientation.Rotate90FlipNone ||
-                      orientation == Orientation.Rotate270FlipNone ||
-                      orientation == Orientation.Rotate90FlipX ||
-                      orientation == Orientation.Rotate270FlipX;
+        bool turned = orientation == ImageOrientation.Rotate90FlipNone ||
+                      orientation == ImageOrientation.Rotate270FlipNone ||
+                      orientation == ImageOrientation.Rotate90FlipX ||
+                      orientation == ImageOrientation.Rotate270FlipX;
 
         if (turned)
             size = new Size(size.Height, size.Width);
@@ -181,10 +181,10 @@ public static partial class OrientationHelper
         // Undo flip
         switch (orientation)
         {
-            case Orientation.RotateNoneFlipX:
-            case Orientation.Rotate90FlipX:
-            case Orientation.Rotate180FlipX:
-            case Orientation.Rotate270FlipX:
+            case ImageOrientation.RotateNoneFlipX:
+            case ImageOrientation.Rotate90FlipX:
+            case ImageOrientation.Rotate180FlipX:
+            case ImageOrientation.Rotate270FlipX:
                 rect = new Rectangle(
                     size.Width - rect.X - rect.Width,
                     rect.Y,
@@ -197,8 +197,8 @@ public static partial class OrientationHelper
         // Undo rotation
         switch (orientation)
         {
-            case Orientation.Rotate90FlipNone:
-            case Orientation.Rotate90FlipX:
+            case ImageOrientation.Rotate90FlipNone:
+            case ImageOrientation.Rotate90FlipX:
                 rect = new Rectangle(
                     rect.Y,
                     size.Width - rect.X - rect.Width,
@@ -206,8 +206,8 @@ public static partial class OrientationHelper
                     rect.Width
                 );
                 break;
-            case Orientation.Rotate180FlipNone:
-            case Orientation.Rotate180FlipX:
+            case ImageOrientation.Rotate180FlipNone:
+            case ImageOrientation.Rotate180FlipX:
                 rect = new Rectangle(
                     size.Width - rect.X - rect.Width,
                     size.Height - rect.Y - rect.Height,
@@ -215,8 +215,8 @@ public static partial class OrientationHelper
                     rect.Height
                 );
                 break;
-            case Orientation.Rotate270FlipNone:
-            case Orientation.Rotate270FlipX:
+            case ImageOrientation.Rotate270FlipNone:
+            case ImageOrientation.Rotate270FlipX:
                 rect = new Rectangle(
                     size.Height - rect.Y - rect.Height,
                     rect.X,
@@ -229,57 +229,57 @@ public static partial class OrientationHelper
         return rect;
     }
 
-    public static Rectangle FromCanonicalCropRect(Rectangle canonical, Size canonicalImageSize, Orientation orientation)
+    public static Rectangle FromCanonicalCropRect(Rectangle canonical, Size canonicalImageSize, ImageOrientation orientation)
     {
         Rectangle result;
         switch (orientation)
         {
-            case Orientation.RotateNoneFlipNone:
+            case ImageOrientation.RotateNoneFlipNone:
                 result = canonical;
                 break;
-            case Orientation.Rotate90FlipNone:
+            case ImageOrientation.Rotate90FlipNone:
                 result = new Rectangle(
                     canonicalImageSize.Height - canonical.Y - canonical.Height,
                     canonical.X,
                     canonical.Height,
                     canonical.Width);
                 break;
-            case Orientation.Rotate180FlipNone:
+            case ImageOrientation.Rotate180FlipNone:
                 result = new Rectangle(
                     canonicalImageSize.Width - canonical.X - canonical.Width,
                     canonicalImageSize.Height - canonical.Y - canonical.Height,
                     canonical.Width,
                     canonical.Height);
                 break;
-            case Orientation.Rotate270FlipNone:
+            case ImageOrientation.Rotate270FlipNone:
                 result = new Rectangle(
                     canonical.Y,
                     canonicalImageSize.Width - canonical.X - canonical.Width,
                     canonical.Height,
                     canonical.Width);
                 break;
-            case Orientation.RotateNoneFlipX:
+            case ImageOrientation.RotateNoneFlipX:
                 result = new Rectangle(
                     canonicalImageSize.Width - canonical.X - canonical.Width,
                     canonical.Y,
                     canonical.Width,
                     canonical.Height);
                 break;
-            case Orientation.Rotate90FlipX:
+            case ImageOrientation.Rotate90FlipX:
                 result = new Rectangle(
                     canonical.Y,
                     canonical.X,
                     canonical.Height,
                     canonical.Width);
                 break;
-            case Orientation.Rotate180FlipX:
+            case ImageOrientation.Rotate180FlipX:
                 result = new Rectangle(
                     canonical.X,
                     canonicalImageSize.Height - canonical.Y - canonical.Height,
                     canonical.Width,
                     canonical.Height);
                 break;
-            case Orientation.Rotate270FlipX:
+            case ImageOrientation.Rotate270FlipX:
                 result = new Rectangle(
                     canonicalImageSize.Height - canonical.Y - canonical.Height,
                     canonicalImageSize.Width - canonical.X - canonical.Width,
@@ -292,7 +292,7 @@ public static partial class OrientationHelper
         return result;
     }
 
-    public static Matrix3x2 CalculateRenderTransform(Rectangle cropRect, Size imageSize, Orientation orientation)
+    public static Matrix3x2 CalculateRenderTransform(Rectangle cropRect, Size imageSize, ImageOrientation orientation)
     {
         Matrix3x2 transform = Matrix3x2.Identity;
         double imageWidth = imageSize.Width;
@@ -304,19 +304,19 @@ public static partial class OrientationHelper
 
         switch (orientation)
         {
-            case Orientation.Rotate90FlipNone:
-            case Orientation.Rotate90FlipX:
-            case Orientation.Rotate270FlipX:
+            case ImageOrientation.Rotate90FlipNone:
+            case ImageOrientation.Rotate90FlipX:
+            case ImageOrientation.Rotate270FlipX:
                 transform *= Matrix3x2.CreateRotation(GetRadians(90), rotationPoint);
                 break;
 
-            case Orientation.Rotate180FlipNone:
-            case Orientation.Rotate180FlipX:
-            case Orientation.RotateNoneFlipX:
+            case ImageOrientation.Rotate180FlipNone:
+            case ImageOrientation.Rotate180FlipX:
+            case ImageOrientation.RotateNoneFlipX:
                 transform *= Matrix3x2.CreateRotation(GetRadians(180), rotationPoint);
                 break;
 
-            case Orientation.Rotate270FlipNone:
+            case ImageOrientation.Rotate270FlipNone:
                 transform *= Matrix3x2.CreateRotation(GetRadians(270), rotationPoint);
                 break;
         }
@@ -327,18 +327,18 @@ public static partial class OrientationHelper
         float widthLessHeight = (float)(imageWidth - imageHeight);
         switch (orientation)
         {
-            case Orientation.Rotate90FlipNone:
-            case Orientation.Rotate90FlipX:
-            case Orientation.Rotate270FlipX:
+            case ImageOrientation.Rotate90FlipNone:
+            case ImageOrientation.Rotate90FlipX:
+            case ImageOrientation.Rotate270FlipX:
                 if (isLandscape)
                 {
                     transform *= Matrix3x2.CreateTranslation(heightLessWidth, 0);
                 }
                 break;
 
-            case Orientation.Rotate180FlipNone:
-            case Orientation.Rotate180FlipX:
-            case Orientation.RotateNoneFlipX:
+            case ImageOrientation.Rotate180FlipNone:
+            case ImageOrientation.Rotate180FlipX:
+            case ImageOrientation.RotateNoneFlipX:
                 if (isLandscape)
                 {
                     transform *= Matrix3x2.CreateTranslation(0, heightLessWidth);
@@ -349,7 +349,7 @@ public static partial class OrientationHelper
                 }
                 break;
 
-            case Orientation.Rotate270FlipNone:
+            case ImageOrientation.Rotate270FlipNone:
                 if (!isLandscape)
                 {
                     transform *= Matrix3x2.CreateTranslation(0, widthLessHeight);
@@ -360,19 +360,19 @@ public static partial class OrientationHelper
         // Apply flipping
         switch (orientation)
         {
-            case Orientation.RotateNoneFlipX:
+            case ImageOrientation.RotateNoneFlipX:
                 transform *= Matrix3x2.CreateScale(1, -1, new((float)imageWidth / 2, (float)imageHeight / 2));
                 break;
 
-            case Orientation.Rotate270FlipX:
+            case ImageOrientation.Rotate270FlipX:
                 transform *= Matrix3x2.CreateScale(1, -1, new((float)imageHeight / 2, (float)imageWidth / 2));
                 break;
 
-            case Orientation.Rotate180FlipX:
+            case ImageOrientation.Rotate180FlipX:
                 transform *= Matrix3x2.CreateScale(-1, 1, new((float)imageWidth / 2, (float)imageHeight / 2));
                 break;
 
-            case Orientation.Rotate90FlipX:
+            case ImageOrientation.Rotate90FlipX:
                 transform *= Matrix3x2.CreateScale(-1, 1, new((float)imageHeight / 2, (float)imageWidth / 2));
                 break;
         }

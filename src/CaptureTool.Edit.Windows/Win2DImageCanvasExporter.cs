@@ -19,7 +19,7 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
         using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, options.Dpi);
         using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
 
-        drawingSession.Transform = OrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation);
+        drawingSession.Transform = ImageOrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation);
 
         foreach (IDrawable drawable in drawables)
         {
@@ -45,7 +45,7 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
         using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, options.Dpi);
         using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
 
-        drawingSession.Transform = OrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation);
+        drawingSession.Transform = ImageOrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation);
 
         foreach (IDrawable drawable in drawables)
         {
