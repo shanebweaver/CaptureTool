@@ -2,15 +2,14 @@
 using CaptureTool.Services.Themes;
 using CaptureTool.UI.Windows.Xaml.Pages;
 using CaptureTool.ViewModels;
-using Microsoft.UI.Input;
+using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.Storage;
 using System;
 using System.Threading;
 using Windows.ApplicationModel;
-using Windows.Foundation;
+using Windows.UI;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
@@ -207,37 +206,26 @@ public sealed partial class MainWindow : Window
             if (titleBar is null)
                 return;
 
-            // Default values
-            //Color backgroundColor;
-            //Color foregroundColor;
-
             AppTheme appTheme = ViewModel.CurrentAppTheme == AppTheme.SystemDefault
                 ? ViewModel.DefaultAppTheme
                 : ViewModel.CurrentAppTheme;
 
-            //switch (appTheme)
-            //{
-            //    case AppTheme.Dark:
-            //        backgroundColor = Colors.Transparent;
-            //        foregroundColor = Colors.White;
-            //        break;
-            //    case AppTheme.Light:
-            //    default:
-            //        backgroundColor = Colors.White;
-            //        foregroundColor = Colors.Black;
-            //        break;
-            //}
+            Color backgroundColor = Colors.Transparent;
+            Color foregroundColor = appTheme switch
+            {
+                AppTheme.Dark => Colors.White,
+                _ => Colors.Black,
+            };
 
-            //titleBar.BackgroundColor = backgroundColor;
-            //titleBar.ForegroundColor = foregroundColor;
-            //titleBar.ButtonBackgroundColor = backgroundColor;
-            //titleBar.ButtonForegroundColor = foregroundColor;
+            titleBar.BackgroundColor = backgroundColor;
+            titleBar.ForegroundColor = foregroundColor;
+            titleBar.ButtonBackgroundColor = backgroundColor;
+            titleBar.ButtonForegroundColor = foregroundColor;
 
-            //// Optional: Set inactive colors for better UX
-            //titleBar.InactiveBackgroundColor = backgroundColor;
-            //titleBar.InactiveForegroundColor = foregroundColor;
-            //titleBar.ButtonInactiveBackgroundColor = backgroundColor;
-            //titleBar.ButtonInactiveForegroundColor = foregroundColor;
+            titleBar.InactiveBackgroundColor = backgroundColor;
+            titleBar.InactiveForegroundColor = foregroundColor;
+            titleBar.ButtonInactiveBackgroundColor = backgroundColor;
+            titleBar.ButtonInactiveForegroundColor = foregroundColor;
         });
     }
 }
