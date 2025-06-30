@@ -124,11 +124,13 @@ internal partial class CaptureToolAppController : IAppController
     {
         CloseCaptureOverlays();
 
+
+
         var monitors = MonitorCaptureHelper.CaptureAllMonitors();
         foreach (var monitor in monitors)
         {
             var window = new CaptureOverlayWindow();
-            window.Closed += ImageCaptureWindow_ClosedAll;
+            window.Closed += ImageCaptureWindow_Closed;
             window.ViewModel.WindowBounds = monitor.MonitorBounds;
             window.ViewModel.IsPrimary = monitor.MonitorBounds.Top == 0 && monitor.MonitorBounds.Left == 0;
             window.Activate();
@@ -141,25 +143,16 @@ internal partial class CaptureToolAppController : IAppController
     {
         foreach (var kvp in _captureOverlayWindows)
         {
-            kvp.Value.Closed -= ImageCaptureWindow_ClosedAll;
+            kvp.Value.Closed -= ImageCaptureWindow_Closed;
             kvp.Value.Close();
         }
         _captureOverlayWindows.Clear();
     }
 
-    private void ImageCaptureWindow_ClosedAll(object sender, WindowEventArgs args)
+    private void ImageCaptureWindow_Closed(object sender, WindowEventArgs args)
     {
-        var window = sender as CaptureOverlayWindow;
-        if (window == null) return;
-
-        var key = _captureOverlayWindows.FirstOrDefault(kvp => kvp.Value == window).Key;
-        if (key != default)
-            _captureOverlayWindows.Remove(key);
-
-        if (_captureOverlayWindows.Count == 0)
-        {
-            RestoreMainWindow();
-        }
+        CloseCaptureOverlays();
+        RestoreMainWindow();
     }
 
     //private CaptureOverlayWindow? _captureOverlayWindow;
