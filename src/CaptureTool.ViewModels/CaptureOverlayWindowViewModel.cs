@@ -1,7 +1,6 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
-using CaptureTool.Services.Navigation;
 using System;
 using System.Drawing;
 
@@ -44,7 +43,6 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         IAppController appController)
     {
         _appController = appController;
-
         _captureArea = new(0,0,0,0);
     }
 

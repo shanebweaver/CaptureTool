@@ -87,8 +87,14 @@ internal partial class CaptureToolAppController : IAppController
             throw new InvalidOperationException("Feature is not enabled");
         }
 
+        bool useCustomOverlay = true;
         bool useSnippingTool = false;// _snippingToolService.IsSnippingToolInstalled();
-        if (useSnippingTool)
+        if (useCustomOverlay)
+        {
+            HideMainWindow();
+            ShowCaptureOverlayOnAllMonitors();
+        }
+        else if (useSnippingTool)
         {
             HideMainWindow();
 
@@ -96,29 +102,24 @@ internal partial class CaptureToolAppController : IAppController
             SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
             await _snippingToolService.CaptureImageAsync(snippingToolOptions);
         }
-        //else
-        //{
-        //    var picker = new GraphicsCapturePicker();
-        //    var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
-        //    WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
-
-        //    var captureItem = await picker.PickSingleItemAsync();
-        //    if (captureItem == null)
-        //    {
-        //        return; // User canceled the picker
-        //    }
-
-        //    var storageFolder = global::Windows.Storage.ApplicationData.Current.TemporaryFolder;
-        //    var fileName = $"Capture_{DateTime.Now:yyyyMMdd_HHmmss}.png";
-        //    var file = await GraphicsCaptureHelper.CaptureItemToBitmapFileAsync(captureItem, storageFolder, fileName);
-
-        //    ImageFile imageFile = new(file.Path);
-        //    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
-        //}
         else
         {
-            HideMainWindow();
-            ShowCaptureOverlayOnAllMonitors();
+            var picker = new global::Windows.Graphics.Capture.GraphicsCapturePicker();
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
+            var captureItem = await picker.PickSingleItemAsync();
+            if (captureItem == null)
+            {
+                return; // User canceled the picker
+            }
+
+            var storageFolder = global::Windows.Storage.ApplicationData.Current.TemporaryFolder;
+            var fileName = $"Capture_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+            var file = await GraphicsCaptureHelper.CaptureItemToBitmapFileAsync(captureItem, storageFolder, fileName);
+
+            ImageFile imageFile = new(file.Path);
+            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
         }
     }
 
