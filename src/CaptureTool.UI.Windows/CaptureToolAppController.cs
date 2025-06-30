@@ -88,7 +88,7 @@ internal partial class CaptureToolAppController : IAppController
         }
 
         bool useCustomOverlay = true;
-        bool useSnippingTool = false;// _snippingToolService.IsSnippingToolInstalled();
+        bool useSnippingTool = _snippingToolService.IsSnippingToolInstalled();
         if (useCustomOverlay)
         {
             ShowCaptureOverlayOnAllMonitors();
