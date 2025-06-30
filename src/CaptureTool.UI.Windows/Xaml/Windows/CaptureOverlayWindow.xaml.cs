@@ -50,54 +50,6 @@ public sealed partial class CaptureOverlayWindow : Window
         DispatcherQueue.TryEnqueue(() =>
         {
             ViewModel.RequestCaptureCommand.Execute(null);
-
-            /*
-            var monitor = ViewModel.Monitor;
-            if (monitor == null)
-            {
-                return;
-            }
-
-            var area = ViewModel.CaptureArea;
-            var monitorBounds = monitor.MonitorBounds;
-
-            // Create a bitmap for the full monitor
-            using var fullBmp = new Bitmap(monitorBounds.Width, monitorBounds.Height, PixelFormat.Format32bppArgb);
-            var bmpData = fullBmp.LockBits(
-                new Rectangle(0, 0, monitorBounds.Width, monitorBounds.Height),
-                ImageLockMode.WriteOnly,
-                fullBmp.PixelFormat
-            );
-
-            try
-            {
-                Marshal.Copy(monitor.PixelBuffer, 0, bmpData.Scan0, monitor.PixelBuffer.Length);
-            }
-            finally
-            {
-                fullBmp.UnlockBits(bmpData);
-            }
-
-            // Crop to the selected area
-            float scale = monitor.Scale;
-            int cropX = (int)Math.Round((area.Left - monitorBounds.Left) * scale);
-            int cropY = (int)Math.Round((area.Top - monitorBounds.Top) * scale);
-            int cropWidth = (int)Math.Round(area.Width * scale);
-            int cropHeight = (int)Math.Round(area.Height * scale);
-
-            using var croppedBmp = fullBmp.Clone(new Rectangle(cropX, cropY, cropWidth, cropHeight), fullBmp.PixelFormat);
-            var tempPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "Temp",
-                $"capture_{Guid.NewGuid()}.png"
-            );
-
-            Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
-            croppedBmp.Save(tempPath, ImageFormat.Png);
-
-            var imageFile = new ImageFile(tempPath);
-            ViewModel.PerformCaptureCommand.Execute(imageFile);
-            */
         });
     }
 }

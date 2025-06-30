@@ -1,9 +1,7 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Services.Navigation;
-using CaptureTool.Storage;
 using System;
 using System.Drawing;
 
@@ -12,7 +10,6 @@ namespace CaptureTool.ViewModels;
 public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
 {
     private readonly IAppController _appController;
-    private readonly INavigationService _navigationService;
 
     public event EventHandler? CaptureRequested;
 
@@ -44,11 +41,9 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     }
 
     public CaptureOverlayWindowViewModel(
-        IAppController appController,
-        INavigationService navigationService)
+        IAppController appController)
     {
         _appController = appController;
-        _navigationService = navigationService;
 
         _captureArea = new(0,0,0,0);
     }
@@ -67,10 +62,4 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     {
         CaptureRequested?.Invoke(this, EventArgs.Empty);
     }
-
-    //private void PerformCapture(ImageFile? imageFile)
-    //{
-    //    CloseOverlay();
-    //    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
-    //}
 }
