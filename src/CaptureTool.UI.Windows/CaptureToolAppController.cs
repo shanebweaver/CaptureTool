@@ -91,7 +91,6 @@ internal partial class CaptureToolAppController : IAppController
         bool useSnippingTool = false;// _snippingToolService.IsSnippingToolInstalled();
         if (useCustomOverlay)
         {
-            HideMainWindow();
             ShowCaptureOverlayOnAllMonitors();
         }
         else if (useSnippingTool)
@@ -125,7 +124,8 @@ internal partial class CaptureToolAppController : IAppController
 
     public void ShowCaptureOverlayOnAllMonitors()
     {
-        CloseCaptureOverlays();
+        HideMainWindow();
+        CleanupCaptureOverlays();
 
         var captureOverlayVM = new CaptureOverlayViewModel(this);
 
@@ -143,6 +143,12 @@ internal partial class CaptureToolAppController : IAppController
 
     public void CloseCaptureOverlays()
     {
+        CleanupCaptureOverlays();
+        RestoreMainWindow();
+    }
+
+    private void CleanupCaptureOverlays()
+    {
         foreach (var kvp in _captureOverlayWindows)
         {
             kvp.Value.Closed -= ImageCaptureWindow_Closed;
@@ -154,7 +160,6 @@ internal partial class CaptureToolAppController : IAppController
     private void ImageCaptureWindow_Closed(object sender, WindowEventArgs args)
     {
         CloseCaptureOverlays();
-        RestoreMainWindow();
     }
 
     public void RequestCapture(MonitorCaptureResult monitor, Rectangle area)
@@ -196,7 +201,6 @@ internal partial class CaptureToolAppController : IAppController
         croppedBmp.Save(tempPath, ImageFormat.Png);
 
         CloseCaptureOverlays();
-        RestoreMainWindow();
 
         var imageFile = new ImageFile(tempPath);
         _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);

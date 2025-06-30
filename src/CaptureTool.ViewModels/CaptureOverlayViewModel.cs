@@ -6,7 +6,8 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : ViewModelBase
 {
-    private IAppController _appController;
+    private readonly IAppController _appController;
+    private readonly List<CaptureOverlayWindowViewModel> _windowViewModels;
 
     private bool _showOptions;
     public bool ShowOptions
@@ -14,8 +15,6 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
         get => _showOptions;
         set => Set(ref _showOptions, value);
     }
-
-    private List<CaptureOverlayWindowViewModel> _windowViewModels;
 
     public CaptureOverlayViewModel(
         IAppController appController)
