@@ -116,6 +116,7 @@ internal partial class CaptureToolAppController : IAppController
         //}
         else
         {
+            HideMainWindow();
             ShowCaptureOverlayOnAllMonitors();
         }
     }
@@ -124,15 +125,11 @@ internal partial class CaptureToolAppController : IAppController
     {
         CloseCaptureOverlays();
 
-
-
         var monitors = MonitorCaptureHelper.CaptureAllMonitors();
         foreach (var monitor in monitors)
         {
-            var window = new CaptureOverlayWindow();
+            var window = new CaptureOverlayWindow(monitor);
             window.Closed += ImageCaptureWindow_Closed;
-            window.ViewModel.WindowBounds = monitor.MonitorBounds;
-            window.ViewModel.IsPrimary = monitor.MonitorBounds.Top == 0 && monitor.MonitorBounds.Left == 0;
             window.Activate();
 
             _captureOverlayWindows[monitor.HMonitor] = window;
