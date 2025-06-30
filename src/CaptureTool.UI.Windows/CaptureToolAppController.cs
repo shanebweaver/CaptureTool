@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
+﻿using CaptureTool.Capture;
 using CaptureTool.Capture.Image;
 using CaptureTool.Capture.Video;
 using CaptureTool.Capture.Windows;
@@ -13,10 +11,18 @@ using CaptureTool.Services.Navigation;
 using CaptureTool.Storage;
 using CaptureTool.UI.Windows.Xaml.Extensions;
 using CaptureTool.UI.Windows.Xaml.Windows;
+using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.Graphics.Capture;
 
 namespace CaptureTool.UI.Windows;
 
@@ -26,6 +32,8 @@ internal partial class CaptureToolAppController : IAppController
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
     private readonly ISnippingToolService _snippingToolService;
+
+    private readonly Dictionary<IntPtr, CaptureOverlayWindow> _captureOverlayWindows = [];
 
     public CaptureToolAppController(
         IFeatureManager featureManager,
@@ -79,8 +87,13 @@ internal partial class CaptureToolAppController : IAppController
             throw new InvalidOperationException("Feature is not enabled");
         }
 
+        bool useCustomOverlay = true;
         bool useSnippingTool = _snippingToolService.IsSnippingToolInstalled();
-        if (useSnippingTool)
+        if (useCustomOverlay)
+        {
+            ShowCaptureOverlayOnAllMonitors();
+        }
+        else if (useSnippingTool)
         {
             HideMainWindow();
 
@@ -90,7 +103,7 @@ internal partial class CaptureToolAppController : IAppController
         }
         else
         {
-            var picker = new GraphicsCapturePicker();
+            var picker = new global::Windows.Graphics.Capture.GraphicsCapturePicker();
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
             WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
@@ -107,39 +120,90 @@ internal partial class CaptureToolAppController : IAppController
             ImageFile imageFile = new(file.Path);
             _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
         }
-        //else
-        //{
-        //    // TODO: Call a "thing" to lookup the number of monitors and create a new window for each.
-
-        //    if (_captureOverlayWindow == null)
-        //    {
-        //        _captureOverlayWindow = new();
-        //        _captureOverlayWindow.Closed += ImageCaptureWindow_Closed;
-        //    }
-
-        //    _captureOverlayWindow.Activate();
-        //}
     }
 
-    private CaptureOverlayWindow? _captureOverlayWindow;
-
-    public void CloseCaptureOverlay()
+    public void ShowCaptureOverlayOnAllMonitors()
     {
-        _captureOverlayWindow?.Close();
+        HideMainWindow();
+        CleanupCaptureOverlays();
+
+        var captureOverlayVM = new CaptureOverlayViewModel(this);
+
+        var monitors = MonitorCaptureHelper.CaptureAllMonitors();
+        foreach (var monitor in monitors)
+        {
+            var window = new CaptureOverlayWindow(monitor);
+            window.Closed += ImageCaptureWindow_Closed;
+            window.Activate();
+
+            captureOverlayVM.AddWindowViewModel(window.ViewModel);
+            _captureOverlayWindows[monitor.HMonitor] = window;
+        }
+    }
+
+    public void CloseCaptureOverlays()
+    {
+        CleanupCaptureOverlays();
+        RestoreMainWindow();
+    }
+
+    private void CleanupCaptureOverlays()
+    {
+        foreach (var kvp in _captureOverlayWindows)
+        {
+            kvp.Value.Closed -= ImageCaptureWindow_Closed;
+            kvp.Value.Close();
+        }
+        _captureOverlayWindows.Clear();
     }
 
     private void ImageCaptureWindow_Closed(object sender, WindowEventArgs args)
     {
-        App.Current.DispatcherQueue.TryEnqueue(() =>
-        {
-            if (_captureOverlayWindow != null)
-            {
-                _captureOverlayWindow.Closed -= ImageCaptureWindow_Closed;
-                _captureOverlayWindow = null;
-            }
+        CloseCaptureOverlays();
+    }
 
-            RestoreMainWindow();
-        });
+    public void RequestCapture(MonitorCaptureResult monitor, Rectangle area)
+    {
+        var monitorBounds = monitor.MonitorBounds;
+
+        // Create a bitmap for the full monitor
+        using var fullBmp = new Bitmap(monitorBounds.Width, monitorBounds.Height, PixelFormat.Format32bppArgb);
+        var bmpData = fullBmp.LockBits(
+            new Rectangle(0, 0, monitorBounds.Width, monitorBounds.Height),
+            ImageLockMode.WriteOnly,
+            fullBmp.PixelFormat
+        );
+
+        try
+        {
+            Marshal.Copy(monitor.PixelBuffer, 0, bmpData.Scan0, monitor.PixelBuffer.Length);
+        }
+        finally
+        {
+            fullBmp.UnlockBits(bmpData);
+        }
+
+        // Crop to the selected area
+        float scale = monitor.Scale;
+        int cropX = (int)Math.Round((area.Left) * scale);
+        int cropY = (int)Math.Round((area.Top) * scale);
+        int cropWidth = (int)Math.Round(area.Width * scale);
+        int cropHeight = (int)Math.Round(area.Height * scale);
+
+        using var croppedBmp = fullBmp.Clone(new Rectangle(cropX, cropY, cropWidth, cropHeight), fullBmp.PixelFormat);
+        var tempPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Temp",
+            $"capture_{Guid.NewGuid()}.png"
+        );
+
+        Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
+        croppedBmp.Save(tempPath, ImageFormat.Png);
+
+        CloseCaptureOverlays();
+
+        var imageFile = new ImageFile(tempPath);
+        _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
     }
 
     public async Task NewVideoCaptureAsync(VideoCaptureOptions options)

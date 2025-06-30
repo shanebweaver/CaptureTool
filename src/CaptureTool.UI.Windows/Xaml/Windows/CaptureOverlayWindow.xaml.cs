@@ -1,6 +1,13 @@
+using CaptureTool.Capture;
+using CaptureTool.Storage;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
@@ -9,31 +16,24 @@ public sealed partial class CaptureOverlayWindow : Window
 {
     public CaptureOverlayWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<CaptureOverlayWindowViewModel>();
 
-    public CaptureOverlayWindow()
+    public CaptureOverlayWindow(MonitorCaptureResult monitor)
     {
         InitializeComponent();
 
         AppWindow.IsShownInSwitchers = false;
         AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
+
+        ViewModel.Monitor = monitor;
+
+        var bounds = monitor.MonitorBounds;
+        AppWindow.MoveAndResize(new(bounds.X, bounds.Y, bounds.Width, bounds.Height));
+
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
             presenter.IsAlwaysOnTop = true;
             presenter.IsResizable = false;
             presenter.SetBorderAndTitleBar(false, false);
             presenter.Maximize();
-        }
-
-        Activated += ImageCaptureWindow_Activated;
-    }
-
-    private void ImageCaptureWindow_Activated(object sender, WindowActivatedEventArgs e)
-    {
-        if (e.WindowActivationState == WindowActivationState.Deactivated)
-        {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                Close();
-            });
         }
     }
 
@@ -49,7 +49,7 @@ public sealed partial class CaptureOverlayWindow : Window
 
         DispatcherQueue.TryEnqueue(() =>
         {
-            ViewModel.PerformCaptureCommand.Execute(null);
+            ViewModel.RequestCaptureCommand.Execute(null);
         });
     }
 }

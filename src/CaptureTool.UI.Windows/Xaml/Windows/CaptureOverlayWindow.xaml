@@ -22,7 +22,8 @@
             HorizontalAlignment="Center"
             VerticalAlignment="Top"
             Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
-            CornerRadius="4">
+            CornerRadius="4"
+            Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}">
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
@@ -41,7 +42,7 @@
                     <SymbolIcon Symbol="Camera" />
                 </Button>
 
-                <Grid
+                <!--<Grid
                     Margin="-1"
                     Padding="2,0"
                     Background="{ThemeResource SystemControlAcrylicElementBrush}"
@@ -75,7 +76,7 @@
                     BorderBrush="Transparent"
                     IsChecked="{x:Bind ViewModel.ShowOptions, Mode=TwoWay}">
                     <SymbolIcon Symbol="More" />
-                </ToggleButton>
+                </ToggleButton>-->
 
                 <Button
                     Width="32"

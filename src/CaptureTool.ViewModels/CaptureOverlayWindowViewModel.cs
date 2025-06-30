@@ -1,27 +1,22 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
-using CaptureTool.Services.Navigation;
-using CaptureTool.Storage;
 using System;
-using System.Collections.ObjectModel;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
 {
     private readonly IAppController _appController;
-    private readonly INavigationService _navigationService;
 
-    public RelayCommand PerformCaptureCommand => new(PerformCapture);
+    public event EventHandler? CaptureRequested;
+
+    public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
     public RelayCommand ToggleShowOptionsCommand => new(ToggleShowOptions);
+
+    public bool IsPrimary => Monitor?.MonitorBounds.Top == 0 && Monitor.MonitorBounds.Left == 0;
 
     private Rectangle _captureArea;
     public Rectangle CaptureArea
@@ -37,27 +32,23 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         set => Set(ref _showOptions, value);
     }
 
-    private ObservableCollection<MonitorCaptureResult> _monitors;
-    public ObservableCollection<MonitorCaptureResult> Monitors
+    private MonitorCaptureResult? _monitor;
+    public MonitorCaptureResult? Monitor
     {
-        get => _monitors;
-        set => Set(ref _monitors, value);
+        get => _monitor;
+        set => Set(ref _monitor, value);
     }
 
     public CaptureOverlayWindowViewModel(
-        IAppController appController,
-        INavigationService navigationService)
+        IAppController appController)
     {
         _appController = appController;
-        _navigationService = navigationService;
-
         _captureArea = new(0,0,0,0);
-        _monitors = [];
     }
 
     private void CloseOverlay()
     {
-        _appController.CloseCaptureOverlay();
+        _appController.CloseCaptureOverlays();
     }
 
     private void ToggleShowOptions()
@@ -65,63 +56,8 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         ShowOptions = !ShowOptions;
     }
 
-    private void PerformCapture()
+    private void RequestCapture()
     {
-        Monitors.Clear();
-        //var monitors = MonitorCaptureHelper.CaptureAllMonitors();
-        //foreach (var monitor in monitors)
-        //{
-        //    Monitors.Add(monitor);
-        //}
-
-        //if (monitors.Count > 0)
-        //{
-        //    // Find the monitor that contains the capture area
-        //    var area = CaptureArea;
-        //    var monitor = monitors.FirstOrDefault(m =>
-        //        area.Left >= m.Left &&
-        //        area.Top >= m.Top &&
-        //        area.Right <= m.Left + m.Width &&
-        //        area.Bottom <= m.Top + m.Height);
-
-        //    monitor ??= monitors[0]; // fallback
-
-        //    // Create a bitmap for the full monitor
-        //    using var fullBmp = new Bitmap(monitor.Width, monitor.Height, PixelFormat.Format32bppArgb);
-        //    var bmpData = fullBmp.LockBits(
-        //        new Rectangle(0, 0, monitor.Width, monitor.Height),
-        //        ImageLockMode.WriteOnly,
-        //        fullBmp.PixelFormat
-        //    );
-
-        //    try
-        //    {
-        //        Marshal.Copy(monitor.PixelBuffer, 0, bmpData.Scan0, monitor.PixelBuffer.Length);
-        //    }
-        //    finally
-        //    {
-        //        fullBmp.UnlockBits(bmpData);
-        //    }
-
-        //    // Crop to the selected area
-        //    float scale = monitor.Scale;
-        //    int cropX = (int)Math.Round((area.Left - monitor.Left) * scale);
-        //    int cropY = (int)Math.Round((area.Top - monitor.Top) * scale);
-        //    int cropWidth = (int)Math.Round(area.Width * scale);
-        //    int cropHeight = (int)Math.Round(area.Height * scale);
-
-        //    using var croppedBmp = fullBmp.Clone(new Rectangle(cropX, cropY, cropWidth, cropHeight), fullBmp.PixelFormat);
-        //    var tempPath = Path.Combine(
-        //        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        //        "Temp",
-        //        $"capture_{Guid.NewGuid()}.png"
-        //    );
-
-        //    Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
-        //    croppedBmp.Save(tempPath, ImageFormat.Png);
-
-        //    var imageFile = new ImageFile(tempPath);
-        //    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
-        //}
+        CaptureRequested?.Invoke(this, EventArgs.Empty);
     }
 }

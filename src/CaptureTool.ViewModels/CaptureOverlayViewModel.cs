@@ -1,12 +1,14 @@
-﻿using System.Collections.ObjectModel;
-using System.Threading;
-using System.Threading.Tasks;
-using CaptureTool.Capture;
+﻿using CaptureTool.Core.AppController;
+using System.Collections.Generic;
+using System.Drawing;
 
 namespace CaptureTool.ViewModels;
 
-internal sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
+public sealed partial class CaptureOverlayViewModel : ViewModelBase
 {
+    private readonly IAppController _appController;
+    private readonly List<CaptureOverlayWindowViewModel> _windowViewModels;
+
     private bool _showOptions;
     public bool ShowOptions
     {
@@ -14,33 +16,44 @@ internal sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
         set => Set(ref _showOptions, value);
     }
 
-    private ObservableCollection<MonitorCaptureResult> _monitors;
-    public ObservableCollection<MonitorCaptureResult> Monitors
+    public CaptureOverlayViewModel(
+        IAppController appController)
     {
-        get => _monitors;
-        set => Set(ref _monitors, value);
+        _appController = appController;
+        _windowViewModels = [];
     }
 
-    public CaptureOverlayViewModel()
+    public void AddWindowViewModel(CaptureOverlayWindowViewModel newVM)
     {
-        _monitors = [];
+        _windowViewModels.Add(newVM);
+
+        newVM.CaptureRequested += CaptureOverlayWindowViewModel_CaptureRequested;
+        newVM.PropertyChanged += CaptureOverlayWindowViewModel_PropertyChanged;
     }
 
-    public override Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    private void CaptureOverlayWindowViewModel_CaptureRequested(object? sender, System.EventArgs e)
     {
-        Monitors.Clear();
-        //var monitors = MonitorCaptureHelper.
-        //foreach (var monitor in monitors)
-        //{
-        //    Monitors.Add(monitor);
-        //}
-
-
-        return base.LoadAsync(parameter, cancellationToken);
+        foreach (var windowVM in _windowViewModels)
+        {
+            if (windowVM.CaptureArea != Rectangle.Empty && windowVM.Monitor != null)
+            {
+                _appController.RequestCapture(windowVM.Monitor, windowVM.CaptureArea);
+                break;
+            }
+        }
     }
 
-    public override void Unload()
+    private void CaptureOverlayWindowViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        base.Unload();
+        if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.CaptureArea) && sender is CaptureOverlayWindowViewModel windowVM && !windowVM.CaptureArea.IsEmpty)
+        {
+            foreach (var tempWindowVM in _windowViewModels)
+            {
+                if (tempWindowVM != windowVM)
+                {
+                    tempWindowVM.CaptureArea = Rectangle.Empty;
+                }
+            }
+        }
     }
 }
