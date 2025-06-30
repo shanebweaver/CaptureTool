@@ -1,5 +1,7 @@
-﻿using CaptureTool.Capture.Image;
+﻿using CaptureTool.Capture;
+using CaptureTool.Capture.Image;
 using CaptureTool.Capture.Video;
+using System.Drawing;
 using System.Threading.Tasks;
 
 namespace CaptureTool.Core.AppController;
@@ -14,6 +16,7 @@ public interface IAppController
     Task NewAudioCaptureAsync();
 
     void CloseCaptureOverlays();
+    void RequestCapture(MonitorCaptureResult monitor, Rectangle area);
 
     nint GetMainWindowHandle();
 

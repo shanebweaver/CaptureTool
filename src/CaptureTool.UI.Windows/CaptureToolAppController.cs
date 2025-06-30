@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using CaptureTool.Capture;
 using CaptureTool.Capture.Image;
 using CaptureTool.Capture.Video;
 using CaptureTool.Capture.Windows;
@@ -15,13 +11,18 @@ using CaptureTool.Services.Navigation;
 using CaptureTool.Storage;
 using CaptureTool.UI.Windows.Xaml.Extensions;
 using CaptureTool.UI.Windows.Xaml.Windows;
-using Microsoft.UI;
-using Microsoft.UI.Dispatching;
-using Microsoft.UI.Windowing;
+using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.Graphics;
 
 namespace CaptureTool.UI.Windows;
 
@@ -125,6 +126,8 @@ internal partial class CaptureToolAppController : IAppController
     {
         CloseCaptureOverlays();
 
+        var captureOverlayVM = new CaptureOverlayViewModel(this);
+
         var monitors = MonitorCaptureHelper.CaptureAllMonitors();
         foreach (var monitor in monitors)
         {
@@ -132,6 +135,7 @@ internal partial class CaptureToolAppController : IAppController
             window.Closed += ImageCaptureWindow_Closed;
             window.Activate();
 
+            captureOverlayVM.AddWindowViewModel(window.ViewModel);
             _captureOverlayWindows[monitor.HMonitor] = window;
         }
     }
@@ -152,26 +156,50 @@ internal partial class CaptureToolAppController : IAppController
         RestoreMainWindow();
     }
 
-    //private CaptureOverlayWindow? _captureOverlayWindow;
+    public void RequestCapture(MonitorCaptureResult monitor, Rectangle area)
+    {
+        var monitorBounds = monitor.MonitorBounds;
 
-    //public void CloseCaptureOverlay()
-    //{
-    //    _captureOverlayWindow?.Close();
-    //}
+        // Create a bitmap for the full monitor
+        using var fullBmp = new Bitmap(monitorBounds.Width, monitorBounds.Height, PixelFormat.Format32bppArgb);
+        var bmpData = fullBmp.LockBits(
+            new Rectangle(0, 0, monitorBounds.Width, monitorBounds.Height),
+            ImageLockMode.WriteOnly,
+            fullBmp.PixelFormat
+        );
 
-    //private void ImageCaptureWindow_Closed(object sender, WindowEventArgs args)
-    //{
-    //    App.Current.DispatcherQueue.TryEnqueue(() =>
-    //    {
-    //        if (_captureOverlayWindow != null)
-    //        {
-    //            _captureOverlayWindow.Closed -= ImageCaptureWindow_Closed;
-    //            _captureOverlayWindow = null;
-    //        }
+        try
+        {
+            Marshal.Copy(monitor.PixelBuffer, 0, bmpData.Scan0, monitor.PixelBuffer.Length);
+        }
+        finally
+        {
+            fullBmp.UnlockBits(bmpData);
+        }
 
-    //        RestoreMainWindow();
-    //    });
-    //}
+        // Crop to the selected area
+        float scale = monitor.Scale;
+        int cropX = (int)Math.Round((area.Left) * scale);
+        int cropY = (int)Math.Round((area.Top) * scale);
+        int cropWidth = (int)Math.Round(area.Width * scale);
+        int cropHeight = (int)Math.Round(area.Height * scale);
+
+        using var croppedBmp = fullBmp.Clone(new Rectangle(cropX, cropY, cropWidth, cropHeight), fullBmp.PixelFormat);
+        var tempPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Temp",
+            $"capture_{Guid.NewGuid()}.png"
+        );
+
+        Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
+        croppedBmp.Save(tempPath, ImageFormat.Png);
+
+        CloseCaptureOverlays();
+        RestoreMainWindow();
+
+        var imageFile = new ImageFile(tempPath);
+        _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
+    }
 
     public async Task NewVideoCaptureAsync(VideoCaptureOptions options)
     {

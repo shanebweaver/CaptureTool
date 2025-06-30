@@ -49,6 +49,9 @@ public sealed partial class CaptureOverlayWindow : Window
 
         DispatcherQueue.TryEnqueue(() =>
         {
+            ViewModel.RequestCaptureCommand.Execute(null);
+
+            /*
             var monitor = ViewModel.Monitor;
             if (monitor == null)
             {
@@ -94,6 +97,7 @@ public sealed partial class CaptureOverlayWindow : Window
 
             var imageFile = new ImageFile(tempPath);
             ViewModel.PerformCaptureCommand.Execute(imageFile);
+            */
         });
     }
 }
