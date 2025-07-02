@@ -40,6 +40,17 @@
                 HorizontalAlignment="Stretch"
                 Spacing="12">
 
+                <StackPanel Spacing="12">
+                    <Grid Padding="0,12">
+                        <ToggleSwitch
+                            VerticalAlignment="Center"
+                            Header="Use system capture overlay"
+                            IsOn="{x:Bind ViewModel.UseSystemCaptureOverlay, Mode=TwoWay}"
+                            OffContent="Disabled"
+                            OnContent="Enabled" />
+                    </Grid>
+                </StackPanel>
+
                 <!--  Localization section  -->
                 <!--<StackPanel Spacing="12">
                     <TextBlock x:Uid="Settings_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />

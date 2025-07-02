@@ -1,8 +1,10 @@
 ﻿using CaptureTool.Common.Commands;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
+using CaptureTool.Services.Settings;
 using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
 using System;
@@ -29,6 +31,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
     private readonly IAppController _appController;
     private readonly ILocalizationService _localizationService;
     private readonly IThemeService _themeService;
+    private readonly ISettingsService _settingsService;
     private readonly ICancellationService _cancellationService;
     private readonly IFactoryService<AppLanguageViewModel, AppLanguage> _appLanguageViewModelFactory;
     private readonly IFactoryService<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
@@ -41,6 +44,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     public RelayCommand RestartAppCommand => new(RestartApp);
     public RelayCommand GoBackCommand => new(GoBack);
+    public RelayCommand UpdateUseSystemCaptureOverlayCommand => new(UpdateUseSystemCaptureOverlay);
 
     private ObservableCollection<AppLanguageViewModel> _appLanguages;
     public ObservableCollection<AppLanguageViewModel> AppLanguages
@@ -92,11 +96,23 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         set => Set(ref _showAppThemeRestartMessage, value);
     }
 
+    private bool _useSystemCaptureOverlay;
+    public bool UseSystemCaptureOverlay
+    {
+        get => _useSystemCaptureOverlay;
+        set
+        {
+            Set(ref _useSystemCaptureOverlay, value);
+            UpdateUseSystemCaptureOverlay();
+        }
+    }
+
     public SettingsPageViewModel(
         ITelemetryService telemetryService,
         IAppController appController,
         ILocalizationService localizationService,
         IThemeService themeService,
+        ISettingsService settingsService,
         ICancellationService cancellationService,
         IFactoryService<AppLanguageViewModel, AppLanguage> appLanguageViewModelFactory,
         IFactoryService<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
@@ -105,6 +121,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         _appController = appController;
         _localizationService = localizationService;
         _themeService = themeService;
+        _settingsService = settingsService;
         _cancellationService = cancellationService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
@@ -124,6 +141,8 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
+            UseSystemCaptureOverlay = _settingsService.Get(CaptureToolSettings.UseSystemCaptureOverlay);
+
             AppTheme currentTheme = _themeService.CurrentTheme;
 
             // Languages
@@ -198,6 +217,11 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         }
 
         base.Unload();
+    }
+
+    private void UpdateUseSystemCaptureOverlay()
+    {
+        _settingsService.Set(CaptureToolSettings.UseSystemCaptureOverlay, UseSystemCaptureOverlay);
     }
 
     private void UpdateAppLanguage()

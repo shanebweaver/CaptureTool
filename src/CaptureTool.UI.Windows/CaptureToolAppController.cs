@@ -8,6 +8,7 @@ using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
+using CaptureTool.Services.Settings;
 using CaptureTool.Storage;
 using CaptureTool.UI.Windows.Xaml.Extensions;
 using CaptureTool.UI.Windows.Xaml.Windows;
@@ -31,6 +32,7 @@ internal partial class CaptureToolAppController : IAppController
 {
     private readonly IFeatureManager _featureManager;
     private readonly ILogService _logService;
+    private readonly ISettingsService _settingsService;
     private readonly INavigationService _navigationService;
     private readonly ISnippingToolService _snippingToolService;
 
@@ -39,11 +41,13 @@ internal partial class CaptureToolAppController : IAppController
     public CaptureToolAppController(
         IFeatureManager featureManager,
         ILogService logService,
+        ISettingsService settingsService,
         INavigationService navigationService,
         ISnippingToolService snippingToolService) 
     {
         _featureManager = featureManager;
         _logService = logService;
+        _settingsService = settingsService;
         _navigationService = navigationService;
         _snippingToolService = snippingToolService;
 
@@ -88,13 +92,12 @@ internal partial class CaptureToolAppController : IAppController
             throw new InvalidOperationException("Feature is not enabled");
         }
 
-        bool useCustomOverlay = true;
-        bool useSnippingTool = _snippingToolService.IsSnippingToolInstalled();
-        if (useCustomOverlay)
+        bool useSystemCaptureOverlay = _settingsService.Get(CaptureToolSettings.UseSystemCaptureOverlay);
+        if (!useSystemCaptureOverlay)
         {
             ShowCaptureOverlayOnAllMonitors();
         }
-        else if (useSnippingTool)
+        else if (_snippingToolService.IsSnippingToolInstalled())
         {
             HideMainWindow();
 
