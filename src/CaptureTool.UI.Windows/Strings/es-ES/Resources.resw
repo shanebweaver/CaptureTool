@@ -372,4 +372,16 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
     <value />
   </data>
+  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OnContent" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OffContent" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.Header" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_CaptureHeaderLabel.Text" xml:space="preserve">
+    <value />
+  </data>
 </root>

@@ -457,4 +457,20 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Close (Esc)</value>
     <comment>The tool tip for the close button on the selection overlay toolbar.</comment>
   </data>
+  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OnContent" xml:space="preserve">
+    <value>Enabled</value>
+    <comment>The label for the system capture overlay toggle switch in the on state.</comment>
+  </data>
+  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OffContent" xml:space="preserve">
+    <value>Disabled</value>
+    <comment>The label for the system capture overlay toggle switch in the off state.</comment>
+  </data>
+  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.Header" xml:space="preserve">
+    <value>Use system capture overlay</value>
+    <comment>The header for the system capture overlay toggle switch.</comment>
+  </data>
+  <data name="Settings_CaptureHeaderLabel.Text" xml:space="preserve">
+    <value>Capture</value>
+    <comment>The label for the header of the capture section on the settings page.</comment>
+  </data>
 </root>
