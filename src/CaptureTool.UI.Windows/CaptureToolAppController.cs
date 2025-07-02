@@ -154,13 +154,7 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
-    public void CloseCaptureOverlays()
-    {
-        CleanupCaptureOverlays();
-        RestoreMainWindow();
-    }
-
-    private void CleanupCaptureOverlays()
+    public void CleanupCaptureOverlays()
     {
         foreach (var kvp in _captureOverlayWindows)
         {
@@ -172,7 +166,7 @@ internal partial class CaptureToolAppController : IAppController
 
     private void ImageCaptureWindow_Closed(object sender, WindowEventArgs args)
     {
-        CloseCaptureOverlays();
+        CleanupCaptureOverlays();
     }
 
     public void RequestCapture(MonitorCaptureResult monitor, Rectangle area)
@@ -213,7 +207,7 @@ internal partial class CaptureToolAppController : IAppController
         Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
         croppedBmp.Save(tempPath, ImageFormat.Png);
 
-        CloseCaptureOverlays();
+        CleanupCaptureOverlays();
 
         var imageFile = new ImageFile(tempPath);
         _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
@@ -285,7 +279,7 @@ internal partial class CaptureToolAppController : IAppController
         App.Current.MainWindow?.Minimize();
     }
 
-    private static void RestoreMainWindow()
+    public void RestoreMainWindow()
     {
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {

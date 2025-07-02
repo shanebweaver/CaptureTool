@@ -37,6 +37,17 @@ public sealed partial class CaptureOverlayWindow : Window
             ToolbarPanel.Visibility = Visibility.Visible;
             ToolbarPanel.Loaded += ToolbarPanel_Loaded;
         }
+
+        Activated += CaptureOverlayWindow_Activated;
+    }
+
+    private void CaptureOverlayWindow_Activated(object sender, WindowActivatedEventArgs args)
+    {
+        if (ViewModel != null)
+        {
+            System.Diagnostics.Debug.WriteLine($"Activated: {ViewModel.Monitor?.HMonitor} - {args.WindowActivationState}");
+            ViewModel.IsActive = args.WindowActivationState != WindowActivationState.Deactivated;
+        }
     }
 
     private void ToolbarPanel_Loaded(object sender, RoutedEventArgs e)

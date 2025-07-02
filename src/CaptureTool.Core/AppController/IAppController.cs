@@ -15,7 +15,8 @@ public interface IAppController
     Task NewVideoCaptureAsync(VideoCaptureOptions options);
     Task NewAudioCaptureAsync();
 
-    void CloseCaptureOverlays();
+    void RestoreMainWindow();
+    void CleanupCaptureOverlays();
     void RequestCapture(MonitorCaptureResult monitor, Rectangle area);
 
     nint GetMainWindowHandle();

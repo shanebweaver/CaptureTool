@@ -17,6 +17,13 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
 
     public bool IsPrimary => Monitor?.MonitorBounds.Top == 0 && Monitor.MonitorBounds.Left == 0;
 
+    private bool _isActive;
+    public bool IsActive
+    {
+        get => _isActive;
+        set => Set(ref _isActive, value);
+    }
+
     private Rectangle _captureArea;
     public Rectangle CaptureArea
     {
@@ -40,7 +47,8 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
 
     private void CloseOverlay()
     {
-        _appController.CloseCaptureOverlays();
+        _appController.CleanupCaptureOverlays();
+        _appController.RestoreMainWindow();
     }
 
     private void RequestCapture()
