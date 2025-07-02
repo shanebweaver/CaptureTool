@@ -13,6 +13,7 @@
     <ProjectReference Include="..\CaptureTool.Edit\CaptureTool.Edit.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
+    <ProjectReference Include="..\CaptureTool.Storage\CaptureTool.Storage.csproj" />
   </ItemGroup>
 
 </Project>

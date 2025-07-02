@@ -50,10 +50,12 @@
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
     <ProjectReference Include="..\CaptureTool.Core\CaptureTool.Core.csproj" />
     <ProjectReference Include="..\CaptureTool.Edit.Windows\CaptureTool.Edit.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Edit\CaptureTool.Edit.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Windows\CaptureTool.Services.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Capture.Windows\CaptureTool.Capture.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
+    <ProjectReference Include="..\CaptureTool.Storage\CaptureTool.Storage.csproj" />
     <ProjectReference Include="..\CaptureTool.ViewModels\CaptureTool.ViewModels.csproj" />
   </ItemGroup>
 
@@ -122,6 +124,9 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
 
   <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
@@ -144,7 +149,7 @@
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
-    <GenerateTestArtifacts>True</GenerateTestArtifacts>
+    <GenerateTestArtifacts>False</GenerateTestArtifacts>
     <AppxBundle>Auto</AppxBundle>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     <AppxBundlePlatforms>x64|arm64</AppxBundlePlatforms>
