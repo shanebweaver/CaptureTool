@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
@@ -169,8 +170,10 @@ internal partial class CaptureToolAppController : IAppController
         CleanupCaptureOverlays();
     }
 
-    public void RequestCapture(MonitorCaptureResult monitor, Rectangle area)
+    public void RequestCapture(nint hMonitor, Rectangle area)
     {
+        var allMonitors = MonitorCaptureHelper.CaptureAllMonitors();
+        var monitor = allMonitors.FirstOrDefault(m => m.HMonitor == hMonitor) ?? throw new InvalidOperationException("Failed to capture target monitor.");
         var monitorBounds = monitor.MonitorBounds;
 
         // Create a bitmap for the full monitor

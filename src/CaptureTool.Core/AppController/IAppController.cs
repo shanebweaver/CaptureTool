@@ -17,7 +17,7 @@ public interface IAppController
 
     void RestoreMainWindow();
     void CleanupCaptureOverlays();
-    void RequestCapture(MonitorCaptureResult monitor, Rectangle area);
+    void RequestCapture(nint hMonitor, Rectangle area);
 
     nint GetMainWindowHandle();
 
