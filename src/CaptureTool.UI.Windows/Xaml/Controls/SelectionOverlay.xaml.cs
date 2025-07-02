@@ -244,6 +244,16 @@ public sealed partial class SelectionOverlay : UserControlBase
             int height = Math.Max(1, (int)Math.Round(bottom - top));
 
             SelectionRect = new Rectangle(intLeft, intTop, width, height);
+
+            if (SelectionRect.Height >= 40 && SelectionRect.Width >= 40)
+            {
+                SelectionRectangle.Opacity = 1;
+            }
+            else
+            {
+                SelectionRectangle.Opacity = .5;
+            }
+
             e.Handled = true;
         }
     }

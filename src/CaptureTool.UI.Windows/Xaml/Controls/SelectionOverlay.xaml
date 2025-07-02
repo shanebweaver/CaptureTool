@@ -17,6 +17,7 @@
 
             <!--  Border  -->
             <Rectangle
+                x:Name="SelectionRectangle"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 Stroke="White"
