@@ -1,6 +1,5 @@
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using System;
 using Windows.UI.Core;
@@ -14,7 +13,6 @@ public sealed partial class SelectionOverlay : UserControlBase
     private enum CursorContext 
     { 
         None,
-        Anchor,
         Boundary
     }
 
@@ -28,7 +26,7 @@ public sealed partial class SelectionOverlay : UserControlBase
         nameof(SelectionRect),
         typeof(Rectangle),
         typeof(SelectionOverlay),
-        new PropertyMetadata(new Rectangle(0,0,0,0), OnSelectionRectPropertyChanged));
+        new PropertyMetadata(Rectangle.Empty, OnSelectionRectPropertyChanged));
 
     private static void OnSelectionRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -133,25 +131,15 @@ public sealed partial class SelectionOverlay : UserControlBase
             _selectionBoundaryLastPointerPosition = pointerPos;
             e.Handled = true;
         }
-        else if (_currentCursorContext != CursorContext.Anchor)
+        else if (IsPointerOverSelectionArea(pointerPos) && _currentCursorContext != CursorContext.Boundary)
         {
-            // Update cursor on hover
-            if (IsPointerOverSelectionArea(pointerPos))
-            {
-                if (_currentCursorContext != CursorContext.Boundary)
-                {
-                    _currentCursorContext = CursorContext.Boundary;
-                    ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeAll, 0));
-                }
-            }
-            else
-            {
-                if (_currentCursorContext != CursorContext.None)
-                {
-                    _currentCursorContext = CursorContext.None;
-                    ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
-                }
-            }
+            _currentCursorContext = CursorContext.Boundary;
+            ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeAll, 0));
+        }
+        else if (_currentCursorContext != CursorContext.None)
+        {
+            _currentCursorContext = CursorContext.None;
+            ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
         }
     }
 
@@ -192,22 +180,18 @@ public sealed partial class SelectionOverlay : UserControlBase
 
     private void SelectionBoundary_PointerEntered(object sender, PointerRoutedEventArgs e)
     {
-        if (_currentCursorContext != CursorContext.Anchor)
+        var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
+        if (IsPointerOverSelectionArea(pointerPos))
         {
-            var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
-            if (IsPointerOverSelectionArea(pointerPos))
-            {
-                _currentCursorContext = CursorContext.Boundary;
-                ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeAll, 0));
-            }
-            else
-            {
-                _currentCursorContext = CursorContext.None;
-                ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
-            }
+            _currentCursorContext = CursorContext.Boundary;
+            ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.SizeAll, 0));
+        }
+        else
+        {
+            _currentCursorContext = CursorContext.None;
+            ProtectedCursor = InputCursor.CreateFromCoreCursor(new(CoreCursorType.Arrow, 0));
         }
     }
-
     private void SelectionBoundary_PointerExited(object sender, PointerRoutedEventArgs e)
     {
         if (_currentCursorContext == CursorContext.Boundary)
@@ -300,21 +284,5 @@ public sealed partial class SelectionOverlay : UserControlBase
 
         // Check if inside the selection area rectangle
         return pos.X > left && pos.X < right && pos.Y > top && pos.Y < bottom;
-    }
-    private static bool IsPointerOverAnyElement(Point pos, FrameworkElement[] elements)
-    {
-        foreach (var element in elements)
-        {
-            var elementLeft = Canvas.GetLeft(element);
-            var elementTop = Canvas.GetTop(element);
-            var elementRight = elementLeft + element.Width;
-            var elementBottom = elementTop + element.Height;
-            if (pos.X >= elementLeft && pos.X <= elementRight &&
-                pos.Y >= elementTop && pos.Y <= elementBottom)
-            {
-                return true;
-            }
-        }
-        return false;
     }
 }
