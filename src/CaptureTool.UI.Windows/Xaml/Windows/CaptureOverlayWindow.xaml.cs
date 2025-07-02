@@ -3,6 +3,7 @@ using CaptureTool.ViewModels;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using System;
+using System.Drawing;
 using System.Threading.Tasks;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
@@ -45,7 +46,14 @@ public sealed partial class CaptureOverlayWindow : Window
 
     private void SelectionOverlay_SelectionComplete(object sender, EventArgs e)
     {
-        _ = PerformCaptureAsync();
+        if (ViewModel.CaptureArea.Height >= 40 && ViewModel.CaptureArea.Width >= 40)
+        {
+            _ = PerformCaptureAsync();
+        }
+        else
+        {
+            ViewModel.CaptureArea = Rectangle.Empty;
+        }
     }
 
     private async Task PerformCaptureAsync()
