@@ -366,4 +366,10 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="NewCaptureButton_Image.AutomationProperties.Name" xml:space="preserve">
     <value>Screenshot</value>
   </data>
+  <data name="SelectionOverlay_CloseButton.AutomationProperties.Name" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
 </root>

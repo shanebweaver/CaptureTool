@@ -449,4 +449,12 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Screenshot</value>
     <comment>The automation name for the button that starts a new image capture.</comment>
   </data>
+  <data name="SelectionOverlay_CloseButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Close</value>
+    <comment>The automation name for the close button on the selection overlay toolbar.</comment>
+  </data>
+  <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Close (Esc)</value>
+    <comment>The tool tip for the close button on the selection overlay toolbar.</comment>
+  </data>
 </root>

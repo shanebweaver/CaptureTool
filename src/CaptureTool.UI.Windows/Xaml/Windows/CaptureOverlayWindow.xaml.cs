@@ -1,13 +1,8 @@
 using CaptureTool.Capture;
-using CaptureTool.Storage;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
@@ -35,9 +30,25 @@ public sealed partial class CaptureOverlayWindow : Window
             presenter.SetBorderAndTitleBar(false, false);
             presenter.Maximize();
         }
+
+        if (ViewModel.IsPrimary)
+        {
+            ToolbarPanel.Visibility = Visibility.Visible;
+            ToolbarPanel.Loaded += ToolbarPanel_Loaded;
+        }
     }
 
-    private async void CaptureButton_Click(object sender, RoutedEventArgs e)
+    private void ToolbarPanel_Loaded(object sender, RoutedEventArgs e)
+    {
+        ToolbarPanel.Focus(FocusState.Programmatic);
+    }
+
+    private void SelectionOverlay_SelectionComplete(object sender, EventArgs e)
+    {
+        _ = PerformCaptureAsync();
+    }
+
+    private async Task PerformCaptureAsync()
     {
         RootPanel.Opacity = 0;
 

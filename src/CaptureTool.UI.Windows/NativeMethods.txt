@@ -6,3 +6,4 @@ GetClientRect
 CreateSolidBrush
 CreateRectRgn
 CallWindowProc
+SetForegroundWindow

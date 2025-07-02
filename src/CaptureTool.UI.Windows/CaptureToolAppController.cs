@@ -23,6 +23,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using Windows.Win32;
 
 namespace CaptureTool.UI.Windows;
 
@@ -134,10 +135,19 @@ internal partial class CaptureToolAppController : IAppController
         {
             var window = new CaptureOverlayWindow(monitor);
             window.Closed += ImageCaptureWindow_Closed;
-            window.Activate();
 
             captureOverlayVM.AddWindowViewModel(window.ViewModel);
             _captureOverlayWindows[monitor.HMonitor] = window;
+
+            window.AppWindow.Show(false);
+
+            if (window.ViewModel.IsPrimary)
+            {
+                // Must call SetForegroundWindow or focus will not move to the new window on activation.
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+                PInvoke.SetForegroundWindow(new(hwnd));
+                window.Activate();
+            }
         }
     }
 

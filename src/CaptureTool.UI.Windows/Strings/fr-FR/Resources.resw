@@ -366,4 +366,10 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="NewCaptureButton_Image.AutomationProperties.Name" xml:space="preserve">
     <value>Capture d'écran</value>
   </data>
+  <data name="SelectionOverlay_CloseButton.AutomationProperties.Name" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
 </root>
