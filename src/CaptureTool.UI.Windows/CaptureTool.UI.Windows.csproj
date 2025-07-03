@@ -145,9 +145,9 @@
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
     <GenerateTemporaryStoreCertificate>True</GenerateTemporaryStoreCertificate>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-    <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
-    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
     <GenerateTestArtifacts>False</GenerateTestArtifacts>
     <AppxBundle>Auto</AppxBundle>
@@ -155,5 +155,6 @@
     <AppxBundlePlatforms>x64|arm64</AppxBundlePlatforms>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <PublishAot>true</PublishAot>
+    <PackageCertificateKeyFile>CaptureTool.UI.Windows_TemporaryKey.pfx</PackageCertificateKeyFile>
   </PropertyGroup>
 </Project>
