@@ -49,7 +49,7 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
             {
                 // Cleanup, but don't restore focus to main window.
                 // This is to ensure Alt+Tab allows focus to go to the new app.
-                _appController.CleanupCaptureOverlays();
+                Close();
             }
         }
     }
@@ -63,6 +63,7 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
             windowViewModel.ActiveStateChanged -= CaptureOverlayWindowViewModel_ActiveStateChanged;
             windowViewModel.Close();
         }
+        _windowViewModels.Clear();
     }
 
     private void CaptureOverlayWindowViewModel_CaptureRequested(object? sender, System.EventArgs e)

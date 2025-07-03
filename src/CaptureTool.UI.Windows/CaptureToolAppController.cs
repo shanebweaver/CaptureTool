@@ -140,7 +140,7 @@ internal partial class CaptureToolAppController : IAppController
         {
             var window = new CaptureOverlayWindow(monitor);
             _captureOverlayViewModel.AddWindowViewModel(window.ViewModel);
-            window.AppWindow.Show(false);
+            window.Activate();              
 
             if (window.ViewModel.IsPrimary)
             {

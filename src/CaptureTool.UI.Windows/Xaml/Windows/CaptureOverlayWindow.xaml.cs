@@ -14,6 +14,8 @@ public sealed partial class CaptureOverlayWindow : Window
 
     public CaptureOverlayWindow(MonitorCaptureResult monitor)
     {
+        Activated += CaptureOverlayWindow_Activated;
+
         AppWindow.IsShownInSwitchers = false;
         AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
 
@@ -31,8 +33,6 @@ public sealed partial class CaptureOverlayWindow : Window
             presenter.Maximize();
         }
 
-        Activated += CaptureOverlayWindow_Activated;
-
         InitializeComponent();
         ToolbarPanel.Loaded += ToolbarPanel_Loaded;
     }
@@ -44,9 +44,8 @@ public sealed partial class CaptureOverlayWindow : Window
 
     private void CaptureOverlayWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
-        bool isActive = args.WindowActivationState != WindowActivationState.Deactivated;
-        ViewModel.IsActive = isActive;
-        if (isActive)
+        ViewModel.IsActive = args.WindowActivationState != WindowActivationState.Deactivated;
+        if (ViewModel.IsActive && ViewModel.IsPrimary)
         {
             // Must call SetForegroundWindow or focus will not move to the new window on activation.
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
