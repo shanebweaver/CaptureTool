@@ -53,11 +53,9 @@
                 </StackPanel>
 
                 <!--  Localization section  -->
-                <!--<StackPanel Spacing="12">
+                <StackPanel Spacing="12">
                     <TextBlock x:Uid="Settings_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
-                -->
-                <!--  App language  -->
-                <!--
+                    <!--  App language  -->
                     <Expander
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Top"
@@ -138,7 +136,7 @@
                             </Grid>
                         </Grid>
                     </Expander>
-                </StackPanel>-->
+                </StackPanel>
 
                 <!--  Appearance section  -->
                 <StackPanel Spacing="12">
