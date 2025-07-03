@@ -1,101 +1,86 @@
-﻿using System;
+﻿using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
+using Microsoft.Win32.SafeHandles;
+using Microsoft.Windows.AppLifecycle;
+using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.UI.Dispatching;
-using Microsoft.UI.Xaml;
-using Microsoft.Windows.AppLifecycle;
+using Windows.Win32.Foundation;
 
 namespace CaptureTool.UI.Windows;
 
 // https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/applifecycle/applifecycle-single-instance
 public class Program
 {
-    [STAThread]
-    static int Main(string[] args)
-    {
-        WinRT.ComWrappersSupport.InitializeComWrappers();
-        bool isRedirect = DecideRedirection();
+    private const string SingleInstanceKey = "MySingleInstanceApp";
+    private const uint InfiniteTimeout = uint.MaxValue;
+    private const uint DefaultFlags = 0;
 
-        if (!isRedirect)
+    [STAThread]
+    public static int Main(string[] args)
+    {
+        // Initialize COM wrappers and single-instance
+        WinRT.ComWrappersSupport.InitializeComWrappers();
+        var instance = AppInstance.FindOrRegisterForKey(SingleInstanceKey);
+
+        if (!instance.IsCurrent)
         {
-            Application.Start((p) =>
-            {
-                var context = new DispatcherQueueSynchronizationContext(
-                    DispatcherQueue.GetForCurrentThread());
-                SynchronizationContext.SetSynchronizationContext(context);
-                _ = new App();
-            });
+            RedirectToPrimary(instance);
+            return 0;
         }
+
+        // Subscribe before app startup
+        instance.Activated += (_, e) => App.Current.Activate(e);
+
+        // Start WinUI app
+        Application.Start(_ =>
+        {
+            SynchronizationContext.SetSynchronizationContext(
+                new DispatcherQueueSynchronizationContext(
+                    DispatcherQueue.GetForCurrentThread()));
+            var app = new App();
+        });
 
         return 0;
     }
 
-    private static bool DecideRedirection()
+    private static void RedirectToPrimary(AppInstance primary)
     {
-        bool isRedirect = false;
-        AppInstance keyInstance = AppInstance.FindOrRegisterForKey("MySingleInstanceApp");
+        // Create an unnamed manual-reset event (initially nonsignaled)
+        SafeFileHandle safeEvt = global::Windows.Win32.PInvoke.CreateEvent(
+            lpEventAttributes: null,
+            bManualReset: true,
+            bInitialState: false,
+            lpName: null);
 
-        if (keyInstance.IsCurrent)
+        // Wrap raw HANDLE for CsWin32 calls
+        var evtHandle = new HANDLE(safeEvt.DangerousGetHandle());
+
+        // Perform redirection on background thread
+        _ = Task.Run(() =>
         {
-            keyInstance.Activated += OnActivated;
-        }
-        else
-        {
-            isRedirect = true;
-            AppActivationArguments args = AppInstance.GetCurrent().GetActivatedEventArgs();
-            RedirectActivationTo(args, keyInstance);
-        }
+            primary.RedirectActivationToAsync(
+                AppInstance.GetCurrent().GetActivatedEventArgs())
+                .AsTask().GetAwaiter().GetResult();
 
-        return isRedirect;
-    }
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-    private static extern IntPtr CreateEvent(
-    IntPtr lpEventAttributes, bool bManualReset,
-    bool bInitialState, string lpName);
-
-    [DllImport("kernel32.dll")]
-    private static extern bool SetEvent(IntPtr hEvent);
-
-    [DllImport("ole32.dll")]
-    private static extern uint CoWaitForMultipleObjects(
-        uint dwFlags, uint dwMilliseconds, ulong nHandles,
-        IntPtr[] pHandles, out uint dwIndex);
-
-    [DllImport("user32.dll")]
-    static extern bool SetForegroundWindow(IntPtr hWnd);
-
-    private static IntPtr redirectEventHandle = IntPtr.Zero;
-
-    // Do the redirection on another thread, and use a non-blocking
-    // wait method to wait for the redirection to complete.
-    public static void RedirectActivationTo(AppActivationArguments args,
-                                            AppInstance keyInstance)
-    {
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-        redirectEventHandle = CreateEvent(IntPtr.Zero, true, false, null);
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
-        Task.Run(() =>
-        {
-            keyInstance.RedirectActivationToAsync(args).AsTask().Wait();
-            SetEvent(redirectEventHandle);
+            // Signal completion
+            global::Windows.Win32.PInvoke.SetEvent(evtHandle);
         });
 
-        uint CWMO_DEFAULT = 0;
-        uint INFINITE = 0xFFFFFFFF;
-        _ = CoWaitForMultipleObjects(
-           CWMO_DEFAULT, INFINITE, 1,
-           [redirectEventHandle], out uint handleIndex);
+        // Pump COM and wait for the event
+        Span<HANDLE> handles = stackalloc HANDLE[] { evtHandle };
+        global::Windows.Win32.PInvoke.CoWaitForMultipleObjects(
+            dwFlags: DefaultFlags,
+            dwTimeout: InfiniteTimeout,
+            pHandles: handles,
+            out _);
 
-        // Bring the window to the foreground
-        Process process = Process.GetProcessById((int)keyInstance.ProcessId);
-        SetForegroundWindow(process.MainWindowHandle);
-    }
+        // Dispose event handle
+        safeEvt.Dispose();
 
-    private static void OnActivated(object? sender, AppActivationArguments args)
-    {
-        App.Current.Activate(args);
+        // Bring primary window to foreground
+        var proc = Process.GetProcessById((int)primary.ProcessId);
+        global::Windows.Win32.PInvoke.SetForegroundWindow(new HWND(proc.MainWindowHandle));
     }
 }

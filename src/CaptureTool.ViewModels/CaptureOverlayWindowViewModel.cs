@@ -11,6 +11,8 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     private readonly IAppController _appController;
 
     public event EventHandler? CaptureRequested;
+    public event EventHandler? CloseRequested;
+    public event EventHandler? ActiveStateChanged;
 
     public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
@@ -21,7 +23,11 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     public bool IsActive
     {
         get => _isActive;
-        set => Set(ref _isActive, value);
+        set
+        {
+            Set(ref _isActive, value);
+            ActiveStateChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     private Rectangle _captureArea;
@@ -43,6 +49,11 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     {
         _appController = appController;
         _captureArea = Rectangle.Empty;
+    }
+
+    public void Close()
+    {
+        CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void CloseOverlay()

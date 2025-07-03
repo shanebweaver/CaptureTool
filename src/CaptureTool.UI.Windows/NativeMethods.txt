@@ -7,3 +7,7 @@ CreateSolidBrush
 CreateRectRgn
 CallWindowProc
 SetForegroundWindow
+SetEvent
+CreateEvent
+CoWaitForMultipleObjects
+CreateEventEx

@@ -14,12 +14,11 @@ public sealed partial class CaptureOverlayWindow : Window
 
     public CaptureOverlayWindow(MonitorCaptureResult monitor)
     {
-        InitializeComponent();
-
         AppWindow.IsShownInSwitchers = false;
         AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
 
         ViewModel.Monitor = monitor;
+        ViewModel.CloseRequested += ViewModel_CloseRequested;
 
         var bounds = monitor.MonitorBounds;
         AppWindow.MoveAndResize(new(bounds.X, bounds.Y, bounds.Width, bounds.Height));
@@ -32,27 +31,37 @@ public sealed partial class CaptureOverlayWindow : Window
             presenter.Maximize();
         }
 
-        if (ViewModel.IsPrimary)
-        {
-            ToolbarPanel.Visibility = Visibility.Visible;
-            ToolbarPanel.Loaded += ToolbarPanel_Loaded;
-        }
-
         Activated += CaptureOverlayWindow_Activated;
+
+        InitializeComponent();
+        ToolbarPanel.Loaded += ToolbarPanel_Loaded;
+    }
+
+    private void ViewModel_CloseRequested(object? sender, EventArgs e)
+    {
+        Close();
     }
 
     private void CaptureOverlayWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
-        if (ViewModel != null)
+        bool isActive = args.WindowActivationState != WindowActivationState.Deactivated;
+        ViewModel.IsActive = isActive;
+        if (isActive)
         {
-            System.Diagnostics.Debug.WriteLine($"Activated: {ViewModel.Monitor?.HMonitor} - {args.WindowActivationState}");
-            ViewModel.IsActive = args.WindowActivationState != WindowActivationState.Deactivated;
+            // Must call SetForegroundWindow or focus will not move to the new window on activation.
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            global::Windows.Win32.PInvoke.SetForegroundWindow(new(hwnd));
         }
     }
 
     private void ToolbarPanel_Loaded(object sender, RoutedEventArgs e)
     {
-        ToolbarPanel.Focus(FocusState.Programmatic);
+        ToolbarPanel.Loaded -= ToolbarPanel_Loaded;
+
+        if (ViewModel.IsPrimary)
+        {
+            ToolbarPanel.Visibility = Visibility.Visible;
+        }
     }
 
     private void SelectionOverlay_SelectionComplete(object sender, EventArgs e)

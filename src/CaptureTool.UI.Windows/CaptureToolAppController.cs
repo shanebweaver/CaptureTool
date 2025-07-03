@@ -36,8 +36,8 @@ internal partial class CaptureToolAppController : IAppController
     private readonly ISettingsService _settingsService;
     private readonly INavigationService _navigationService;
     private readonly ISnippingToolService _snippingToolService;
-
-    private readonly Dictionary<IntPtr, CaptureOverlayWindow> _captureOverlayWindows = [];
+    
+    private CaptureOverlayViewModel? _captureOverlayViewModel;
 
     public CaptureToolAppController(
         IFeatureManager featureManager,
@@ -132,42 +132,23 @@ internal partial class CaptureToolAppController : IAppController
         HideMainWindow();
         CleanupCaptureOverlays();
 
-        var captureOverlayVM = new CaptureOverlayViewModel(this);
+        _captureOverlayViewModel = new(this);
 
+        Window? primaryWindow = null;
         var monitors = MonitorCaptureHelper.CaptureAllMonitors();
         foreach (var monitor in monitors)
         {
             var window = new CaptureOverlayWindow(monitor);
-            window.Closed += ImageCaptureWindow_Closed;
-
-            captureOverlayVM.AddWindowViewModel(window.ViewModel);
-            _captureOverlayWindows[monitor.HMonitor] = window;
-
+            _captureOverlayViewModel.AddWindowViewModel(window.ViewModel);
             window.AppWindow.Show(false);
 
             if (window.ViewModel.IsPrimary)
             {
-                // Must call SetForegroundWindow or focus will not move to the new window on activation.
-                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-                PInvoke.SetForegroundWindow(new(hwnd));
-                window.Activate();
+                primaryWindow = window;
             }
         }
-    }
 
-    public void CleanupCaptureOverlays()
-    {
-        foreach (var kvp in _captureOverlayWindows)
-        {
-            kvp.Value.Closed -= ImageCaptureWindow_Closed;
-            kvp.Value.Close();
-        }
-        _captureOverlayWindows.Clear();
-    }
-
-    private void ImageCaptureWindow_Closed(object sender, WindowEventArgs args)
-    {
-        CleanupCaptureOverlays();
+        primaryWindow?.Activate();
     }
 
     public void RequestCapture(nint hMonitor, Rectangle area)
@@ -286,8 +267,14 @@ internal partial class CaptureToolAppController : IAppController
     {
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
-            App.Current.MainWindow?.Restore();
-            App.Current.MainWindow?.Activate();
+            if (App.Current.MainWindow != null)
+            {
+                App.Current.MainWindow.Restore();
+                App.Current.MainWindow.Activate();
+
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
+                PInvoke.SetForegroundWindow(new(hwnd));
+            }
         });
     }
 
@@ -343,5 +330,11 @@ internal partial class CaptureToolAppController : IAppController
         }
 
         RestoreMainWindow();
+    }
+
+    public void CleanupCaptureOverlays()
+    {
+        _captureOverlayViewModel?.Close();
+        _captureOverlayViewModel = null;
     }
 }

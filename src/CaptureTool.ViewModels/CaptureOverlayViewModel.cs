@@ -31,6 +31,38 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
 
         newVM.CaptureRequested += CaptureOverlayWindowViewModel_CaptureRequested;
         newVM.PropertyChanged += CaptureOverlayWindowViewModel_PropertyChanged;
+        newVM.ActiveStateChanged += CaptureOverlayWindowViewModel_ActiveStateChanged;
+    }
+
+    private async void CaptureOverlayWindowViewModel_ActiveStateChanged(object? sender, System.EventArgs e)
+    {
+        // Check for an active monitor
+        bool hasActiveMonitor() => _windowViewModels.FirstOrDefault((vm) => vm.IsActive)?.Monitor != null;
+        if (!hasActiveMonitor())
+        {
+            // Wait and check again. If no active, dismiss the overlay.
+            // The machine has 200 milliseconds to assign a new active monitor or the capture overlay will be closed.
+            // If the machine is too slow, the capture overlay will close when selecting from any non-primary other monitors.
+            await Task.Delay(200);
+
+            if (!hasActiveMonitor())
+            {
+                // Cleanup, but don't restore focus to main window.
+                // This is to ensure Alt+Tab allows focus to go to the new app.
+                _appController.CleanupCaptureOverlays();
+            }
+        }
+    }
+
+    public void Close()
+    {
+        foreach (var windowViewModel in _windowViewModels)
+        {
+            windowViewModel.CaptureRequested -= CaptureOverlayWindowViewModel_CaptureRequested;
+            windowViewModel.PropertyChanged -= CaptureOverlayWindowViewModel_PropertyChanged;
+            windowViewModel.ActiveStateChanged -= CaptureOverlayWindowViewModel_ActiveStateChanged;
+            windowViewModel.Close();
+        }
     }
 
     private void CaptureOverlayWindowViewModel_CaptureRequested(object? sender, System.EventArgs e)
@@ -52,30 +84,6 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
             if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.CaptureArea))
             {
                 OnCaptureAreaChanged(windowVM);
-            }
-            else if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.IsActive))
-            {
-                OnIsActiveChanged();
-            }
-        }
-    }
-
-    private async void OnIsActiveChanged()
-    {
-        // Check for an active monitor
-        bool hasActiveMonitor() => _windowViewModels.FirstOrDefault((vm) => vm.IsActive)?.Monitor != null;
-        if (!hasActiveMonitor())
-        {
-            // Wait and check again. If no active, dismiss the overlay.
-            // The machine has 50 milliseconds to assign a new active monitor or the capture overlay will be closed.
-            // If the machine is too slow, the capture overlay will close when selecting from any non-primary other monitors.
-            await Task.Delay(50);
-
-            if (!hasActiveMonitor())
-            {
-                // Cleanup, but don't restore focus to main window.
-                // This is to ensure Alt+Tab allows focus to go to the new app.
-                _appController.CleanupCaptureOverlays();
             }
         }
     }
