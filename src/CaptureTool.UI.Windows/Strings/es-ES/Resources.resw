@@ -197,9 +197,6 @@ Sin garantía Esta aplicación se proporciona “tal cual”, sin garantía de n
   <data name="About_TermsOfUse_DialogTitle" xml:space="preserve">
     <value>Términos de uso</value>
   </data>
-  <data name="About_AppNameAndVersion.Text" xml:space="preserve">
-    <value>Capture Tool 1.0.0.0</value>
-  </data>
   <data name="About_Copyright.Text" xml:space="preserve">
     <value>© 2025 Shane Weaver. Todos los derechos reservados.</value>
   </data>

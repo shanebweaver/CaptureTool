@@ -40,7 +40,10 @@
                 Spacing="12">
 
                 <StackPanel Spacing="4">
-                    <TextBlock x:Uid="About_AppNameAndVersion" TextWrapping="WrapWholeWords" />
+                    <TextBlock TextWrapping="WrapWholeWords">
+                        <Run Text="{x:Bind AppName}" />
+                        <Run Text="{x:Bind AppVersion}" />
+                    </TextBlock>
                     <TextBlock x:Uid="About_Copyright" TextWrapping="WrapWholeWords" />
                 </StackPanel>
 

@@ -197,9 +197,6 @@ Absence de garantie Cette application est fournie « en l’état », sans aucun
   <data name="About_TermsOfUse_DialogTitle" xml:space="preserve">
     <value>Conditions d'utilisation</value>
   </data>
-  <data name="About_AppNameAndVersion.Text" xml:space="preserve">
-    <value>Capture Tool 1.0.0.0</value>
-  </data>
   <data name="About_Copyright.Text" xml:space="preserve">
     <value>© 2025 Shane Weaver. Tous droits réservés.</value>
   </data>

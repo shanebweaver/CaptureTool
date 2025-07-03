@@ -225,10 +225,6 @@ This application is provided "as is", without any warranty of any kind. The deve
     <value>Terms of Use</value>
     <comment>The title of the terms of use dialog on the about page.</comment>
   </data>
-  <data name="About_AppNameAndVersion.Text" xml:space="preserve">
-    <value>Capture Tool 1.0.0.0</value>
-    <comment>The app name and version on the about page. Should be the same in every language. </comment>
-  </data>
   <data name="About_Copyright.Text" xml:space="preserve">
     <value>© 2025 Shane Weaver. All rights reserved.</value>
     <comment>Copyright symbol, the year, the publisher, all rights reserved. Shown on the about page.</comment>

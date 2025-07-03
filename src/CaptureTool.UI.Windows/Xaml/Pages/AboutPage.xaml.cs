@@ -1,14 +1,23 @@
-using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 
 namespace CaptureTool.UI.Windows.Xaml.Pages;
 
 public sealed partial class AboutPage : AboutPageBase
 {
+    private string AppName { get; }
+    private string AppVersion { get; }
+
     public AboutPage()
     {
         InitializeComponent();
         ViewModel.ShowDialogRequested += ViewModel_ShowDialogRequested;
+
+        var package = global::Windows.ApplicationModel.Package.Current;
+        var version = package.Id.Version;
+
+        AppName = package.DisplayName;
+        AppVersion = $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
     }
 
     private void ViewModel_ShowDialogRequested(object? sender, (string title, string content) details)
