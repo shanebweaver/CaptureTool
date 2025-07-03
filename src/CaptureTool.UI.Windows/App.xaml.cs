@@ -33,18 +33,6 @@ public partial class App : Application
         
         AppTheme defaultTheme = RequestedTheme == ApplicationTheme.Light ? AppTheme.Light : AppTheme.Dark;
         themeService.Initialize(defaultTheme);
-
-        ApplicationTheme? applicationTheme = themeService.CurrentTheme switch
-        {
-            AppTheme.Dark => ApplicationTheme.Dark,
-            AppTheme.Light => ApplicationTheme.Light,
-            _ => null
-        };
-
-        if (applicationTheme != null)
-        {
-            RequestedTheme = applicationTheme.Value;
-        }
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs launchArgs)

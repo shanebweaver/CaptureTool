@@ -35,9 +35,6 @@ public sealed partial class MainWindow : Window
         AppTitleBar.SizeChanged += AppTitleBar_SizeChanged;
         ExtendsContentIntoTitleBar = true;
         UpdateAppTitle();
-      
-        // Set initial title bar colors based on theme
-        UpdateTitleBarColors();
 
         Activated += OnActivated;
         Closed += OnClosed;
