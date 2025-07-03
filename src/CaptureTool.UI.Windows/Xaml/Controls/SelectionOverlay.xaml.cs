@@ -22,27 +22,21 @@ public sealed partial class SelectionOverlay : UserControlBase
     private bool _isCreatingNewSelection = false;
     private Point _newSelectionAnchor;
 
-    public static readonly DependencyProperty SelectionRectProperty = DependencyProperty.Register(
-        nameof(SelectionRect),
-        typeof(Rectangle),
-        typeof(SelectionOverlay),
-        new PropertyMetadata(Rectangle.Empty, OnSelectionRectPropertyChanged));
-
-    private static void OnSelectionRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private Rectangle _selectionRect = Rectangle.Empty;
+    public Rectangle SelectionRect
     {
-        if (d is SelectionOverlay control)
+        get => _selectionRect;
+        private set
         {
-            control.UpdateSelectionBoundary();
+            if (_selectionRect != value)
+            {
+                _selectionRect = value;
+                UpdateSelectionBoundary();
+            }
         }
     }
 
-    public Rectangle SelectionRect
-    {
-        get => Get<Rectangle>(SelectionRectProperty);
-        set => Set(SelectionRectProperty, value);
-    }
-
-    public event EventHandler? SelectionComplete;
+    public event EventHandler<Rectangle>? SelectionComplete;
 
     public SelectionOverlay()
     {
@@ -262,7 +256,14 @@ public sealed partial class SelectionOverlay : UserControlBase
     {
         if (_isCreatingNewSelection)
         {
-            SelectionComplete?.Invoke(this, EventArgs.Empty);
+            if (!IsValidSelection(SelectionRect))
+            {
+                SelectionRect = Rectangle.Empty; // Reset selection if too small
+            }
+            else
+            {
+                SelectionComplete?.Invoke(this, SelectionRect);
+            }
 
             _isCreatingNewSelection = false;
             SelectionCanvas.ReleasePointerCaptures();
@@ -294,5 +295,10 @@ public sealed partial class SelectionOverlay : UserControlBase
 
         // Check if inside the selection area rectangle
         return pos.X > left && pos.X < right && pos.Y > top && pos.Y < bottom;
+    }
+
+    private static bool IsValidSelection(Rectangle selectionRect)
+    {
+        return selectionRect.Width >= 40 && selectionRect.Height >= 40;
     }
 }

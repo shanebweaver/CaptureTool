@@ -64,15 +64,13 @@ public sealed partial class CaptureOverlayWindow : Window
         }
     }
 
-    private void SelectionOverlay_SelectionComplete(object sender, EventArgs e)
+    private void SelectionOverlay_SelectionComplete(object sender, Rectangle captureArea)
     {
-        if (ViewModel.CaptureArea.Height >= 40 && ViewModel.CaptureArea.Width >= 40)
+        ViewModel.CaptureArea = captureArea;
+
+        if (captureArea.Height >= 40 && captureArea.Width >= 40)
         {
             _ = PerformCaptureAsync();
-        }
-        else
-        {
-            ViewModel.CaptureArea = Rectangle.Empty;
         }
     }
 
@@ -90,5 +88,10 @@ public sealed partial class CaptureOverlayWindow : Window
         {
             ViewModel.RequestCaptureCommand.Execute(null);
         });
+    }
+
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.CloseOverlayCommand.Execute(null);
     }
 }

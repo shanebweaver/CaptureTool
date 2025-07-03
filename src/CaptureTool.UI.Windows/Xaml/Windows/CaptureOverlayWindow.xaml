@@ -14,7 +14,7 @@
     </Window.SystemBackdrop>
 
     <Grid x:Name="RootPanel">
-        <controls:SelectionOverlay SelectionComplete="SelectionOverlay_SelectionComplete" SelectionRect="{x:Bind ViewModel.CaptureArea, Mode=TwoWay}" />
+        <controls:SelectionOverlay SelectionComplete="SelectionOverlay_SelectionComplete" />
 
         <Grid
             x:Name="ToolbarPanel"
@@ -40,7 +40,7 @@
                     Padding="0"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Command="{x:Bind ViewModel.CloseOverlayCommand}">
+                    Click="CloseButton_Click">
                     <Button.KeyboardAccelerators>
                         <KeyboardAccelerator Key="Escape" />
                     </Button.KeyboardAccelerators>
