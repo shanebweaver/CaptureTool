@@ -92,6 +92,8 @@
         <Grid
             x:Name="CanvasContainer"
             Background="{ThemeResource ImageEditCanvasBackgroundBrush}"
+            BorderBrush="{ThemeResource AcrylicBackgroundFillColorDefaultInverseBrush}"
+            BorderThickness="0,1,0,0"
             Row="1">
             <controls:ImageCanvas
                 CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"
