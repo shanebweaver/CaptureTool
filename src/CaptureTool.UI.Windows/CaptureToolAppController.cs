@@ -10,6 +10,7 @@ using CaptureTool.UI.Windows.Xaml.Windows;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
+using Microsoft.Windows.Storage;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -23,7 +24,6 @@ namespace CaptureTool.UI.Windows;
 
 internal partial class CaptureToolAppController : IAppController
 {
-    private readonly IFeatureManager _featureManager;
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
     
@@ -34,7 +34,6 @@ internal partial class CaptureToolAppController : IAppController
         ILogService logService,
         INavigationService navigationService) 
     {
-        _featureManager = featureManager;
         _logService = logService;
         _navigationService = navigationService;
     }
@@ -123,8 +122,8 @@ internal partial class CaptureToolAppController : IAppController
 
         using var croppedBmp = fullBmp.Clone(new Rectangle(cropX, cropY, cropWidth, cropHeight), fullBmp.PixelFormat);
         var tempPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Temp",
+            ApplicationData.GetDefault().TemporaryPath,
+            "screenshots",
             $"capture_{Guid.NewGuid()}.png"
         );
 
