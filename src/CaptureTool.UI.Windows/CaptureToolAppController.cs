@@ -153,7 +153,7 @@ internal partial class CaptureToolAppController : IAppController
 
     private static void HideMainWindow()
     {
-        App.Current.MainWindow?.Minimize();
+        App.Current.MainWindow?.AppWindow.Hide();
     }
 
     public void RestoreMainWindow()
