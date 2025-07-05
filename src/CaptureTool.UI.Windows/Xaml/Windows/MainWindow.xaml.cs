@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
+using CaptureTool.UI.Windows.Xaml.Extensions;
 using CaptureTool.UI.Windows.Xaml.Pages;
 using CaptureTool.ViewModels;
 using Microsoft.UI;
@@ -9,13 +10,14 @@ using Microsoft.Windows.Storage;
 using System;
 using System.Threading;
 using Windows.ApplicationModel;
-using Windows.UI;
+using Windows.Graphics;
+using Color = Windows.UI.Color;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
 public sealed partial class MainWindow : Window
 {
-    private static readonly System.Drawing.Rectangle DefaultWindowRect = new(48, 48, 540, 320);
+    private static readonly SizeInt32 DefaultWindowSize = new(720, 540);
 
     private const string MainWindow_X = "MainWindow_X";
     private const string MainWindow_Y = "MainWindow_Y";
@@ -137,13 +139,21 @@ public sealed partial class MainWindow : Window
     private void RestoreAppWindowSizeAndPosition()
     {
         var data = ApplicationData.GetDefault().LocalSettings;
-        var appWindowRect = new global:: Windows.Graphics.RectInt32(
-            (data.Values.TryGetValue(MainWindow_X, out object? oX) && (oX is int x) && x >= 0) ? x : DefaultWindowRect.X,
-            (data.Values.TryGetValue(MainWindow_Y, out object? oY) && (oY is int y) && y >= 0) ? y : DefaultWindowRect.Y,
-            (data.Values.TryGetValue(MainWindow_Width, out object? oW) && (oW is int w) && w > 0) ? w : DefaultWindowRect.Width,
-            (data.Values.TryGetValue(MainWindow_Height, out object? oH) && (oH is int h) && h > 0) ? h : DefaultWindowRect.Height);
+        var appWindowSize = new SizeInt32(
+            (data.Values.TryGetValue(MainWindow_Width, out object? oW) && (oW is int w) && w > 0) ? w : DefaultWindowSize.Width,
+            (data.Values.TryGetValue(MainWindow_Height, out object? oH) && (oH is int h) && h > 0) ? h : DefaultWindowSize.Height);
+        
+        AppWindow.Resize(appWindowSize);
 
-        AppWindow.MoveAndResize(appWindowRect, DisplayArea.Primary);
+        if ((data.Values.TryGetValue(MainWindow_X, out object? oX) && (oX is int x) && x >= 0) && 
+            (data.Values.TryGetValue(MainWindow_Y, out object? oY) && (oY is int y) && y >= 0))
+        {
+            AppWindow.Move(new PointInt32(x, y));
+        }
+        else
+        {
+            this.CenterOnScreen();
+        }
     }
 
     private void SaveAppWindowSizeAndPosition()

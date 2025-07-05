@@ -11,3 +11,9 @@ SetEvent
 CreateEvent
 CoWaitForMultipleObjects
 CreateEventEx
+MonitorFromWindow
+GetMonitorInfo
+GetWindowRect
+GetDpiForWindow
+MONITORINFOEXW
+SetWindowPos
