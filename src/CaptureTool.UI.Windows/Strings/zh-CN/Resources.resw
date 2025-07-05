@@ -364,21 +364,21 @@
     <value>屏幕截图</value>
   </data>
   <data name="SelectionOverlay_CloseButton.AutomationProperties.Name" xml:space="preserve">
-    <value />
+    <value>关闭</value>
   </data>
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>关闭 (Esc)</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OnContent" xml:space="preserve">
-    <value />
+    <value>已启用</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OffContent" xml:space="preserve">
-    <value />
+    <value>已禁用</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.Header" xml:space="preserve">
-    <value />
+    <value>使用系统捕获覆盖层</value>
   </data>
   <data name="Settings_CaptureHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>捕获</value>
   </data>
 </root>

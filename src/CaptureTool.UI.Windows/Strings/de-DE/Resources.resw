@@ -364,21 +364,21 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
     <value>Screenshot</value>
   </data>
   <data name="SelectionOverlay_CloseButton.AutomationProperties.Name" xml:space="preserve">
-    <value />
+    <value>Schließen</value>
   </data>
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Schließen (Esc)</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OnContent" xml:space="preserve">
-    <value />
+    <value>Aktiviert</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OffContent" xml:space="preserve">
-    <value />
+    <value>Deaktiviert</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.Header" xml:space="preserve">
-    <value />
+    <value>Systemüberlagerung verwenden</value>
   </data>
   <data name="Settings_CaptureHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Aufnahme</value>
   </data>
 </root>

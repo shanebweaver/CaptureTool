@@ -364,21 +364,21 @@
     <value>Снимок экрана</value>
   </data>
   <data name="SelectionOverlay_CloseButton.AutomationProperties.Name" xml:space="preserve">
-    <value />
+    <value>Закрыть</value>
   </data>
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Закрыть (Esc)</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OnContent" xml:space="preserve">
-    <value />
+    <value>Включено</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OffContent" xml:space="preserve">
-    <value />
+    <value>Отключено</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.Header" xml:space="preserve">
-    <value />
+    <value>Использовать системную накладку захвата</value>
   </data>
   <data name="Settings_CaptureHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Захват</value>
   </data>
 </root>

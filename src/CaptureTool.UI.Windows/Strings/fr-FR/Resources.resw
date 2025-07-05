@@ -364,21 +364,21 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>Capture d'écran</value>
   </data>
   <data name="SelectionOverlay_CloseButton.AutomationProperties.Name" xml:space="preserve">
-    <value />
+    <value>Fermer</value>
   </data>
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Fermer (Esc)</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OnContent" xml:space="preserve">
-    <value />
+    <value>Activé</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OffContent" xml:space="preserve">
-    <value />
+    <value>Désactivé</value>
   </data>
   <data name="Settings_UseSystemCaptureOverlayToggleSwitch.Header" xml:space="preserve">
-    <value />
+    <value>Utiliser la superposition de capture système</value>
   </data>
   <data name="Settings_CaptureHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Capture </value>
   </data>
 </root>
