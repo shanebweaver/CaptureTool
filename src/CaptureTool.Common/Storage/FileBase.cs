@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Storage;
+﻿namespace CaptureTool.Common.Storage;
 
 public abstract partial class FileBase
 {

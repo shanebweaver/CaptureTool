@@ -117,17 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="NewCaptureButton_Audio.Text" xml:space="preserve">
-    <value>Audio</value>
-    <comment>The label for the button that starts a new audio capture.</comment>
-  </data>
   <data name="NewCaptureButton_Image.Text" xml:space="preserve">
     <value>Screenshot</value>
     <comment>The label for the button that starts a new image capture.</comment>
-  </data>
-  <data name="NewCaptureButton_Video.Text" xml:space="preserve">
-    <value>Screen recording</value>
-    <comment>The label for the button that starts a new video capture.</comment>
   </data>
   <data name="AppTheme_Dark" xml:space="preserve">
     <value>Dark</value>
@@ -140,10 +132,6 @@
   <data name="AppTheme_SystemDefault" xml:space="preserve">
     <value>Use system default</value>
     <comment>The label for the system default theme option.</comment>
-  </data>
-  <data name="NewCaptureOptions_AutoSaveCheckBoxLabel.Text" xml:space="preserve">
-    <value>Auto save?</value>
-    <comment>The label for the auto-save checkbox in the new capture options.</comment>
   </data>
   <data name="HomePage_StartCaptureLabel.Text" xml:space="preserve">
     <value>Start a new capture</value>
@@ -377,14 +365,6 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Open...</value>
     <comment>The label for the open file item in the file menu.</comment>
   </data>
-  <data name="AppMenu_NewCapture_AudioItem.Text" xml:space="preserve">
-    <value>Audio</value>
-    <comment>The label for the new audio capture item in the file menu.</comment>
-  </data>
-  <data name="AppMenu_NewCapture_VideoItem.Text" xml:space="preserve">
-    <value>Screen recording</value>
-    <comment>The label for the new video capture item in the file menu.</comment>
-  </data>
   <data name="AppMenu_NewCapture_ImageItem.Text" xml:space="preserve">
     <value>Screenshot</value>
     <comment>The label for the new image capture item in the file menu.</comment>
@@ -452,21 +432,5 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Close (Esc)</value>
     <comment>The tool tip for the close button on the selection overlay toolbar.</comment>
-  </data>
-  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OnContent" xml:space="preserve">
-    <value>Enabled</value>
-    <comment>The label for the system capture overlay toggle switch in the on state.</comment>
-  </data>
-  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OffContent" xml:space="preserve">
-    <value>Disabled</value>
-    <comment>The label for the system capture overlay toggle switch in the off state.</comment>
-  </data>
-  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.Header" xml:space="preserve">
-    <value>Use system capture overlay</value>
-    <comment>The header for the system capture overlay toggle switch.</comment>
-  </data>
-  <data name="Settings_CaptureHeaderLabel.Text" xml:space="preserve">
-    <value>Capture</value>
-    <comment>The label for the header of the capture section on the settings page.</comment>
   </data>
 </root>

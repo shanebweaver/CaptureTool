@@ -59,7 +59,6 @@
     <ProjectReference Include="..\CaptureTool.Services.Windows\CaptureTool.Services.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Capture.Windows\CaptureTool.Capture.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
-    <ProjectReference Include="..\CaptureTool.Storage\CaptureTool.Storage.csproj" />
     <ProjectReference Include="..\CaptureTool.ViewModels\CaptureTool.ViewModels.csproj" />
   </ItemGroup>
 
@@ -85,16 +84,7 @@
     <Page Update="Themes\Generic.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Xaml\Controls\ImageCanvas\ImageCanvas.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Update="Xaml\Controls\NewCaptureButton.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Update="Xaml\Pages\VideoCaptureOptionsPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Update="Xaml\Pages\ImageCaptureOptionsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Pages\AboutPage.xaml">
@@ -115,13 +105,7 @@
     <Page Update="Xaml\Views\AppMenuView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Xaml\Controls\ImageCanvas\CropOverlay.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Update="Xaml\Pages\ErrorPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Update="Xaml\Pages\VideoEditPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Xaml\Windows\CaptureOverlayWindow.xaml">

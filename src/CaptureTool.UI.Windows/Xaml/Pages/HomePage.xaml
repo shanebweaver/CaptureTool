@@ -22,55 +22,17 @@
         <StackPanel
             Grid.Row="1"
             HorizontalAlignment="Center"
-            VerticalAlignment="Center"
             Spacing="12">
 
             <TextBlock x:Uid="HomePage_StartCaptureLabel" HorizontalAlignment="Center" />
 
-            <Grid ColumnSpacing="8">
-                <!--<Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>-->
-
-                <StackPanel HorizontalAlignment="Center" Spacing="4">
-                    <controls:NewCaptureButton
-                        x:Name="NewImageCaptureButton"
-                        x:Uid="NewCaptureButton_Image"
-                        Command="{x:Bind ViewModel.NewImageCaptureCommand}"
-                        Symbol="{StaticResource NewImageCaptureSymbol}" />
-                    <!--<Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.ImageCaptureOptionsCommand}">
-                        <TextBlock x:Uid="HomePage_CaptureOptionsLabel" />
-                    </Button>-->
-                </StackPanel>
-
-                <!--<Grid Column="1">
-                    <StackPanel Spacing="4">
-                        <controls:NewCaptureButton
-                            x:Name="NewVideoCaptureButton"
-                            x:Uid="NewCaptureButton_Video"
-                            Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
-                            Symbol="{StaticResource NewVideoCaptureSymbol}" />
-                        <Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.VideoCaptureOptionsCommand}">
-                            <TextBlock x:Uid="HomePage_CaptureOptionsLabel" />
-                        </Button>
-                    </StackPanel>
-                </Grid>
-
-                <Grid Column="2">
-                    <StackPanel Spacing="4">
-                        <controls:NewCaptureButton
-                            x:Name="NewAudioCaptureButton"
-                            x:Uid="NewCaptureButton_Audio"
-                            Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
-                            Symbol="{StaticResource NewAudioCaptureSymbol}" />
-                        <Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.AudioCaptureOptionsCommand}">
-                            <TextBlock x:Uid="HomePage_CaptureOptionsLabel" />
-                        </Button>
-                    </StackPanel>
-                </Grid>-->
-            </Grid>
+            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                <controls:NewCaptureButton
+                    x:Name="NewImageCaptureButton"
+                    x:Uid="NewCaptureButton_Image"
+                    Command="{x:Bind ViewModel.NewImageCaptureCommand}"
+                    Symbol="{StaticResource NewImageCaptureSymbol}" />
+            </StackPanel>
         </StackPanel>
     </Grid>
 

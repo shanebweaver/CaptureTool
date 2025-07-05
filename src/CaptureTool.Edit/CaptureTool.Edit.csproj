@@ -7,7 +7,7 @@
   
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Storage\CaptureTool.Storage.csproj" />
+    <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
   </ItemGroup>
 
 </Project>

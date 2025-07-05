@@ -39,18 +39,6 @@
                 Margin="54,0"
                 HorizontalAlignment="Stretch"
                 Spacing="12">
-                <!--  System capture overlay  -->
-                <StackPanel Spacing="12">
-                    <TextBlock x:Uid="Settings_CaptureHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
-                    <Grid
-                        Padding="{ThemeResource ExpanderContentPadding}"
-                        Background="{ThemeResource ExpanderHeaderBackground}"
-                        BorderBrush="{ThemeResource ExpanderContentBorderBrush}"
-                        BorderThickness="{ThemeResource ExpanderContentDownBorderThickness}"
-                        CornerRadius="{ThemeResource ControlCornerRadius}">
-                        <ToggleSwitch x:Uid="Settings_UseSystemCaptureOverlayToggleSwitch" IsOn="{x:Bind ViewModel.UseSystemCaptureOverlay, Mode=TwoWay}" />
-                    </Grid>
-                </StackPanel>
 
                 <!--  Appearance section  -->
                 <StackPanel Spacing="12">

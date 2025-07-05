@@ -1,5 +1,5 @@
-﻿using CaptureTool.Services.Storage;
-using CaptureTool.Storage;
+﻿using CaptureTool.Common.Storage;
+using CaptureTool.Services.Storage;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

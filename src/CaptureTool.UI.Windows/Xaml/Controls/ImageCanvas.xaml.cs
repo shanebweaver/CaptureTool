@@ -14,9 +14,8 @@ using System.Drawing;
 using System.Threading.Tasks;
 
 using Point = Windows.Foundation.Point;
-using ImageOrientation = CaptureTool.Edit.ImageOrientation;
 
-namespace CaptureTool.UI.Windows.Xaml.Controls.ImageCanvas;
+namespace CaptureTool.UI.Windows.Xaml.Controls;
 
 public sealed partial class ImageCanvas : UserControlBase
 {

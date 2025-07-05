@@ -117,14 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="NewCaptureButton_Audio.Text" xml:space="preserve">
-    <value>Audio</value>
-  </data>
   <data name="NewCaptureButton_Image.Text" xml:space="preserve">
     <value>Captura de pantalla</value>
-  </data>
-  <data name="NewCaptureButton_Video.Text" xml:space="preserve">
-    <value>Grabación de pantalla</value>
   </data>
   <data name="AppTheme_Dark" xml:space="preserve">
     <value>Oscuro</value>
@@ -134,9 +128,6 @@
   </data>
   <data name="AppTheme_SystemDefault" xml:space="preserve">
     <value>Usar el tema del sistema</value>
-  </data>
-  <data name="NewCaptureOptions_AutoSaveCheckBoxLabel.Text" xml:space="preserve">
-    <value>¿Guardar automáticamente?</value>
   </data>
   <data name="HomePage_StartCaptureLabel.Text" xml:space="preserve">
     <value>Iniciar una nueva captura</value>
@@ -312,12 +303,6 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="AppMenu_OpenFileItem.Text" xml:space="preserve">
     <value>Abrir...</value>
   </data>
-  <data name="AppMenu_NewCapture_AudioItem.Text" xml:space="preserve">
-    <value>Audio</value>
-  </data>
-  <data name="AppMenu_NewCapture_VideoItem.Text" xml:space="preserve">
-    <value>Grabación de pantalla</value>
-  </data>
   <data name="AppMenu_NewCapture_ImageItem.Text" xml:space="preserve">
     <value>Captura de pantalla</value>
   </data>
@@ -368,17 +353,5 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   </data>
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Cerrar (Esc)</value>
-  </data>
-  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OnContent" xml:space="preserve">
-    <value>Activado</value>
-  </data>
-  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.OffContent" xml:space="preserve">
-    <value>Desactivado</value>
-  </data>
-  <data name="Settings_UseSystemCaptureOverlayToggleSwitch.Header" xml:space="preserve">
-    <value>Usar superposición de captura del sistema</value>
-  </data>
-  <data name="Settings_CaptureHeaderLabel.Text" xml:space="preserve">
-    <value>Captura</value>
   </data>
 </root>

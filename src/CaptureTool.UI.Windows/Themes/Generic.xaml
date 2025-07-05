@@ -44,7 +44,4 @@
     <x:String x:Key="LocalLanguage28Regular">&#xF4F5;</x:String>
 
     <Symbol x:Key="NewImageCaptureSymbol">Camera</Symbol>
-    <Symbol x:Key="NewVideoCaptureSymbol">Video</Symbol>
-    <Symbol x:Key="NewAudioCaptureSymbol">Microphone</Symbol>
-
 </ResourceDictionary>

@@ -1,11 +1,12 @@
 ﻿using CaptureTool.Common.Commands;
+using CaptureTool.Common.Storage;
 using CaptureTool.Core.AppController;
 using CaptureTool.Edit;
 using CaptureTool.Edit.Drawable;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
-using CaptureTool.Storage;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -13,7 +14,6 @@ using System.Drawing;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using ImageOrientation = CaptureTool.Edit.ImageOrientation;
 
 namespace CaptureTool.ViewModels;
 
@@ -40,6 +40,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
     private readonly IImageCanvasExporter _imageCanvasExporter;
     private readonly IFilePickerService _filePickerService;
+    private readonly IFeatureManager _featureManager;
 
     public RelayCommand CopyCommand => new(Copy);
     public RelayCommand ToggleCropModeCommand => new(ToggleCropMode);
@@ -93,24 +94,40 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _cropRect, value);
     }
 
+    private bool _isPrintEnabled;
+    public bool IsPrintEnabled
+    {
+        get => _isPrintEnabled;
+        set => Set(ref _isPrintEnabled, value);
+    }
+
+    private bool _isUndoRedoEnabled;
+    public bool IsUndoRedoEnabled
+    {
+        get => _isUndoRedoEnabled;
+        set => Set(ref _isUndoRedoEnabled, value);
+    }
+
     public ImageEditPageViewModel(
         IAppController appController,
         ICancellationService cancellationService,
         ITelemetryService telemetryService,
         IImageCanvasPrinter imageCanvasPrinter,
         IImageCanvasExporter imageCanvasExporter,
-        IFilePickerService filePickerService)
+        IFilePickerService filePickerService,
+        IFeatureManager featureManager)
     {
         _appController = appController;
         _cancellationService = cancellationService;
         _telemetryService = telemetryService;
         _imageCanvasPrinter = imageCanvasPrinter;
         _filePickerService = filePickerService;
+        _featureManager = featureManager;
 
         _drawables = [];
         _imageSize = new();
         _orientation = ImageOrientation.RotateNoneFlipNone;
-        _cropRect = new(0, 0, 0, 0);
+        _cropRect = Rectangle.Empty;
         _imageCanvasExporter = imageCanvasExporter;
     }
 
@@ -125,12 +142,15 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            Vector2 topLeft = new(0, 0);
+            IsPrintEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Print);
+            IsUndoRedoEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo);
+
+            Vector2 topLeft = Vector2.Zero;
             if (parameter is ImageFile imageFile)
             {
                 ImageFile = imageFile;
                 ImageSize = _filePickerService.GetImageSize(imageFile);
-                CropRect = new(0, 0, ImageSize.Width, ImageSize.Height);
+                CropRect = new(Point.Empty, ImageSize);
 
                 ImageDrawable imageDrawable = new(topLeft, imageFile);
                 Drawables.Add(imageDrawable);
@@ -162,8 +182,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            CropRect = new(0, 0, 0, 0);
-            ImageSize = new(0, 0);
+            CropRect = Rectangle.Empty;
+            ImageSize = Size.Empty;
             Orientation = ImageOrientation.RotateNoneFlipNone;
             Drawables.Clear();
             _telemetryService.ActivityCompleted(activityId);
@@ -235,6 +255,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
     private void Undo()
     {
+        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo), "Print feature should be enabled before calling Undo.");
+
         string activityId = ActivityIds.Undo;
         _telemetryService.ActivityInitiated(activityId);
         try
@@ -249,6 +271,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
     private void Redo()
     {
+        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo), "Print feature should be enabled before calling Redo.");
+
         string activityId = ActivityIds.Redo;
         _telemetryService.ActivityInitiated(activityId);
         try
@@ -308,6 +332,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
     private async void Print()
     {
+        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Print), "Print feature should be enabled before calling Print.");
+
         string activityId = ActivityIds.Print;
         _telemetryService.ActivityInitiated(activityId);
         try
@@ -318,8 +344,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         catch (Exception e)
         {
             _telemetryService.ActivityError(activityId, e);
-
-            // Use error service to show an error message to the user
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using CaptureTool.Storage;
+﻿using CaptureTool.Common.Storage;
 using System.Numerics;
 
 namespace CaptureTool.Edit.Drawable;

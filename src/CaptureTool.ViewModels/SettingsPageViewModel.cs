@@ -44,7 +44,6 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     public RelayCommand RestartAppCommand => new(RestartApp);
     public RelayCommand GoBackCommand => new(GoBack);
-    public RelayCommand UpdateUseSystemCaptureOverlayCommand => new(UpdateUseSystemCaptureOverlay);
 
     private ObservableCollection<AppLanguageViewModel> _appLanguages;
     public ObservableCollection<AppLanguageViewModel> AppLanguages
@@ -96,17 +95,6 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         set => Set(ref _showAppThemeRestartMessage, value);
     }
 
-    private bool _useSystemCaptureOverlay;
-    public bool UseSystemCaptureOverlay
-    {
-        get => _useSystemCaptureOverlay;
-        set
-        {
-            Set(ref _useSystemCaptureOverlay, value);
-            UpdateUseSystemCaptureOverlay();
-        }
-    }
-
     public SettingsPageViewModel(
         ITelemetryService telemetryService,
         IAppController appController,
@@ -141,8 +129,6 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            UseSystemCaptureOverlay = _settingsService.Get(CaptureToolSettings.UseSystemCaptureOverlay);
-
             AppTheme currentTheme = _themeService.CurrentTheme;
 
             // Languages
@@ -217,11 +203,6 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         }
 
         base.Unload();
-    }
-
-    private void UpdateUseSystemCaptureOverlay()
-    {
-        _settingsService.Set(CaptureToolSettings.UseSystemCaptureOverlay, UseSystemCaptureOverlay);
     }
 
     private void UpdateAppLanguage()

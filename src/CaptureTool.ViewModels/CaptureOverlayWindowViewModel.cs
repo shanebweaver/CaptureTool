@@ -58,7 +58,7 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
 
     private void CloseOverlay()
     {
-        _appController.CleanupCaptureOverlays();
+        _appController.CloseCaptureOverlay();
         _appController.RestoreMainWindow();
     }
 

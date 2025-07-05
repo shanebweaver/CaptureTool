@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Themes;
-using CaptureTool.UI.Windows.Activation;
 using CaptureTool.UI.Windows.Xaml.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
@@ -49,9 +48,6 @@ public partial class App : Application
             {
                 case ExtendedActivationKind.Launch:
                     HandleLaunchActivation(args);
-                    break;
-                case ExtendedActivationKind.Protocol:
-                    ProtocolActivationHandler.HandleActivation(args);
                     break;
                 default:
                     throw new InvalidOperationException("Unexpected activation kind");

@@ -4,8 +4,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:canvasui="using:Microsoft.Graphics.Canvas.UI.Xaml"
+    xmlns:controls="using:CaptureTool.UI.Windows.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:imagecanvas="using:CaptureTool.UI.Windows.Xaml.Controls.ImageCanvas"
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
@@ -20,6 +20,7 @@
         </Grid.RowDefinitions>
 
         <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+            <!--  Crop and orientation  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_CropButton"
                 Command="{x:Bind ViewModel.ToggleCropModeCommand}"
@@ -46,19 +47,21 @@
                 </AppBarButton.Icon>
             </AppBarButton>
             <AppBarSeparator />
-            <!--<AppBarButton
+            <!--  Undo/Redo  -->
+            <AppBarButton
+                x:Uid="ImageEdit_UndoButton"
                 Command="{x:Bind ViewModel.UndoCommand}"
                 Icon="Undo"
                 IsEnabled="False"
-                x:Uid="ImageEdit_UndoButton"
-                Visibility="Collapsed" />
+                Visibility="{x:Bind ViewModel.IsUndoRedoEnabled, Mode=OneWay}" />
             <AppBarButton
+                x:Uid="ImageEdit_RedoButton"
                 Command="{x:Bind ViewModel.RedoCommand}"
                 Icon="Redo"
                 IsEnabled="False"
-                x:Uid="ImageEdit_RedoButton"
-                Visibility="Collapsed" />-->
-            <AppBarSeparator Visibility="Collapsed" />
+                Visibility="{x:Bind ViewModel.IsUndoRedoEnabled, Mode=OneWay}" />
+            <AppBarSeparator Visibility="{x:Bind ViewModel.IsUndoRedoEnabled, Mode=OneWay}" />
+            <!--  Export  -->
             <AppBarButton
                 x:Uid="ImageEdit_CopyButton"
                 Command="{x:Bind ViewModel.CopyCommand}"
@@ -75,17 +78,22 @@
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
-            <!--<AppBarButton
+            <AppBarButton
+                x:Uid="ImageEdit_PrintButton"
                 Command="{x:Bind ViewModel.PrintCommand}"
                 Icon="Print"
-                x:Uid="ImageEdit_PrintButton" />-->
+                Visibility="{x:Bind ViewModel.IsPrintEnabled, Mode=OneWay}">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="P" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
         </CommandBar>
 
         <Grid
             x:Name="CanvasContainer"
             Background="{ThemeResource ImageEditCanvasBackgroundBrush}"
             Row="1">
-            <imagecanvas:ImageCanvas
+            <controls:ImageCanvas
                 CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"
                 CropRect="{x:Bind ViewModel.CropRect, Mode=TwoWay}"
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"

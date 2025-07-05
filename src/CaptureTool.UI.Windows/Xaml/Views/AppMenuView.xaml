@@ -15,22 +15,6 @@
         <!--  File  -->
         <MenuBarItem x:Uid="AppMenu_FileMenuItem">
             <!--  New capture  -->
-            <!--<MenuFlyoutSubItem x:Uid="AppMenu_NewCaptureItem" Icon="Add">
-                <MenuFlyoutItem
-                    x:Uid="AppMenu_NewCapture_ImageItem"
-                    Command="{x:Bind ViewModel.NewImageCaptureCommand}"
-                    Icon="Camera" />
-                <MenuFlyoutItem
-                    x:Uid="AppMenu_NewCapture_VideoItem"
-                    Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
-                    Icon="Video" />
-                <MenuFlyoutItem
-                    x:Uid="AppMenu_NewCapture_AudioItem"
-                    Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
-                    Icon="Microphone" />
-            </MenuFlyoutSubItem>-->
-
-            <!--  New capture  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_NewCaptureItem"
                 Command="{x:Bind ViewModel.NewImageCaptureCommand}"

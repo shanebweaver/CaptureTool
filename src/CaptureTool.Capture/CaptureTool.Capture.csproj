@@ -1,7 +1,3 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk"><!-- Project references -->
 
-  <!-- Project references -->
-  <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Storage\CaptureTool.Storage.csproj" />
-  </ItemGroup>
 </Project>

@@ -1,6 +1,4 @@
-﻿using CaptureTool.Capture;
-using CaptureTool.Capture.Windows.SnippingTool;
-using CaptureTool.Core.AppController;
+﻿using CaptureTool.Core.AppController;
 using CaptureTool.Edit;
 using CaptureTool.Edit.Windows;
 using CaptureTool.FeatureManagement;
@@ -46,7 +44,6 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();
         collection.AddSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
         collection.AddSingleton<IFilePickerService, WindowsFilePickerService>();
-        collection.AddSingleton<ISnippingToolService, SnippingToolService>();
         collection.AddSingleton<IThemeService, WindowsThemeService>();
         collection.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
         collection.AddSingleton<ILocalizationService, WindowsLocalizationService>();
@@ -63,9 +60,6 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<SettingsPageViewModel>();
         collection.AddTransient<LoadingPageViewModel>();
         collection.AddTransient<ImageEditPageViewModel>();
-        collection.AddTransient<VideoEditPageViewModel>();
-        collection.AddTransient<ImageCaptureOptionsPageViewModel>();
-        collection.AddTransient<VideoCaptureOptionsPageViewModel>();
         // Views
         collection.AddTransient<AppMenuViewModel>();
         // Factories
