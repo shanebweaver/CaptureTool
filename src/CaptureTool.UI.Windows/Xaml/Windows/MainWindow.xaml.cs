@@ -48,7 +48,7 @@ public sealed partial class MainWindow : Window
         {
             string appTitle = "Capture Tool";
 
-            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
+            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
             {
                 appTitle = AppInfo.Current.DisplayInfo.DisplayName;
             }
