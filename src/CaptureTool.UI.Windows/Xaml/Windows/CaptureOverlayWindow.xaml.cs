@@ -1,4 +1,5 @@
 using CaptureTool.Capture;
+using CaptureTool.Services.Themes;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -35,6 +36,32 @@ public sealed partial class CaptureOverlayWindow : Window
 
         InitializeComponent();
         ToolbarPanel.Loaded += ToolbarPanel_Loaded;
+
+        UpdateRequestedAppTheme();
+    }
+
+    private void UpdateRequestedAppTheme()
+    {
+        object theme = ViewModel.CurrentAppTheme switch
+        {
+            AppTheme.Light => ElementTheme.Light,
+            AppTheme.Dark => ElementTheme.Dark,
+            AppTheme.SystemDefault => ConvertToElementTheme(ViewModel.DefaultAppTheme),
+            _ => DependencyProperty.UnsetValue
+        };
+
+        RootPanel.SetValue(FrameworkElement.RequestedThemeProperty, theme);
+    }
+
+    private static ElementTheme ConvertToElementTheme(AppTheme appTheme)
+    {
+        return appTheme switch
+        {
+            AppTheme.SystemDefault => ElementTheme.Default,
+            AppTheme.Light => ElementTheme.Light,
+            AppTheme.Dark => ElementTheme.Dark,
+            _ => ElementTheme.Default,
+        };
     }
 
     private void ViewModel_CloseRequested(object? sender, EventArgs e)

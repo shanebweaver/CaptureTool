@@ -23,7 +23,6 @@ public sealed partial class MainWindowViewModel : LoadableViewModelBase, INaviga
 
     private readonly ITelemetryService _telemetryService;
     private readonly IThemeService _themeService;
-    private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
     private readonly INavigationService _navigationService;
     private readonly ISettingsService _settingsService;
@@ -47,14 +46,12 @@ public sealed partial class MainWindowViewModel : LoadableViewModelBase, INaviga
     public MainWindowViewModel(
         ITelemetryService telemetryService,
         IThemeService themeService,
-        IAppController appController,
         ICancellationService cancellationService,
         ISettingsService settingsService,
         INavigationService navigationService)
     {
         _telemetryService = telemetryService;
         _themeService = themeService;
-        _appController = appController;
         _cancellationService = cancellationService;
         _navigationService = navigationService;
         _settingsService = settingsService;
