@@ -98,14 +98,14 @@ internal partial class CaptureToolAppController : IAppController
         {
             ShowCaptureOverlayOnAllMonitors();
         }
-        else if (_snippingToolService.IsSnippingToolInstalled())
-        {
-            HideMainWindow();
+        //else if (_snippingToolService.IsSnippingToolInstalled())
+        //{
+        //    HideMainWindow();
 
-            SnippingToolCaptureMode captureMode = ParseImageCaptureMode(options.ImageCaptureMode);
-            SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
-            await _snippingToolService.CaptureImageAsync(snippingToolOptions);
-        }
+        //    SnippingToolCaptureMode captureMode = ParseImageCaptureMode(options.ImageCaptureMode);
+        //    SnippingToolCaptureOptions snippingToolOptions = new(captureMode, options.AutoSave);
+        //    await _snippingToolService.CaptureImageAsync(snippingToolOptions);
+        //}
         else
         {
             var picker = new global::Windows.Graphics.Capture.GraphicsCapturePicker();

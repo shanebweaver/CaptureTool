@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
@@ -92,7 +91,7 @@ public sealed partial class SnippingToolResponse
 
         if (query.StartsWith('?'))
         {
-            query = query.Substring(1); // Remove leading '?'
+            query = query[1..]; // Remove leading '?'
         }
 
         string[] pairs = query.Split('&');

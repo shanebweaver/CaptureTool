@@ -75,7 +75,7 @@ public sealed partial class CaptureOverlayWindow : Window
 
     private async Task PerformCaptureAsync()
     {
-        RootPanel.Opacity = 0;
+        AppWindow.Hide();
 
         // Allow the UI thread to process the opacity change and render.
         // This is not ideal, but there is no deterministic way to ensure that the UI is updated in time for the capture.
