@@ -1,4 +1,5 @@
-﻿using CaptureTool.Capture.Windows;
+﻿using CaptureTool.Capture;
+using CaptureTool.Capture.Windows;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
@@ -15,7 +16,6 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Windows.ApplicationModel.Core;
 using Windows.Win32;
@@ -90,10 +90,8 @@ internal partial class CaptureToolAppController : IAppController
         primaryWindow?.Activate();
     }
 
-    public void RequestCapture(nint hMonitor, Rectangle area)
+    public void PerformCapture(MonitorCaptureResult monitor, Rectangle area)
     {
-        var allMonitors = MonitorCaptureHelper.CaptureAllMonitors();
-        var monitor = allMonitors.FirstOrDefault(m => m.HMonitor == hMonitor) ?? throw new InvalidOperationException("Failed to capture target monitor.");
         var monitorBounds = monitor.MonitorBounds;
 
         // Create a bitmap for the full monitor

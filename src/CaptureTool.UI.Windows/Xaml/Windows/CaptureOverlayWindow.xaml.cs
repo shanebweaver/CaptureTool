@@ -3,8 +3,13 @@ using CaptureTool.Services.Themes;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
@@ -38,6 +43,28 @@ public sealed partial class CaptureOverlayWindow : Window
         ToolbarPanel.Loaded += ToolbarPanel_Loaded;
 
         UpdateRequestedAppTheme();
+        LoadBackgroundImage();
+    }
+
+    private void LoadBackgroundImage()
+    {
+        if (ViewModel.Monitor is not null && RootPanel is not null)
+        {
+            var monitor = ViewModel.Monitor;
+            var monitorBounds = monitor.MonitorBounds;
+
+            var writeableBitmap = new WriteableBitmap(monitorBounds.Width, monitorBounds.Height);
+            using (var stream = writeableBitmap.PixelBuffer.AsStream())
+            {
+                stream.Write(monitor.PixelBuffer, 0, monitor.PixelBuffer.Length);
+            }
+
+            RootPanel.Background = new Microsoft.UI.Xaml.Media.ImageBrush
+            {
+                ImageSource = writeableBitmap,
+                Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
+            };
+        }
     }
 
     private void UpdateRequestedAppTheme()

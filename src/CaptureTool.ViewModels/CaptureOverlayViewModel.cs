@@ -72,7 +72,7 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
         {
             if (windowVM.Monitor != null && windowVM.CaptureArea != Rectangle.Empty)
             {
-                _appController.RequestCapture(windowVM.Monitor.HMonitor, windowVM.CaptureArea);
+                _appController.PerformCapture(windowVM.Monitor, windowVM.CaptureArea);
                 break;
             }
         }

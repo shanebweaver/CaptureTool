@@ -9,10 +9,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Window.SystemBackdrop>
-        <local:TransparentTintBackdrop />
-    </Window.SystemBackdrop>
-
     <Grid x:Name="RootPanel">
         <controls:SelectionOverlay SelectionComplete="SelectionOverlay_SelectionComplete" />
 

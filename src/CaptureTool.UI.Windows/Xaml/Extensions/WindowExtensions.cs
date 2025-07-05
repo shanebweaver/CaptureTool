@@ -7,16 +7,6 @@ namespace CaptureTool.UI.Windows.Xaml.Extensions;
 
 internal static partial class WindowExtensions
 {
-    public static void Maximize(this Window window)
-    {
-        window.UpdateOverlappedPresenter(p => p.Maximize());
-    }
-
-    public static void Minimize(this Window window)
-    {
-        window.UpdateOverlappedPresenter(p => p.Minimize());
-    }
-
     public static void Restore(this Window window)
     {
         window.UpdateOverlappedPresenter(p => p.Restore());
@@ -24,10 +14,7 @@ internal static partial class WindowExtensions
 
     private static void UpdateOverlappedPresenter(this Window window, Action<OverlappedPresenter> action)
     {
-        if (window is null)
-        {
-            throw new ArgumentNullException(nameof(window));
-        }
+        ArgumentNullException.ThrowIfNull(window);
 
         var appwindow = window.AppWindow;
         if (appwindow.Presenter is OverlappedPresenter overlapped)

@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using CaptureTool.Capture;
+using System.Drawing;
 
 namespace CaptureTool.Core.AppController;
 
@@ -9,7 +10,7 @@ public interface IAppController
 
     void ShowCaptureOverlay();
     void CloseCaptureOverlay();
-    void RequestCapture(nint hMonitor, Rectangle area);
+    void PerformCapture(MonitorCaptureResult monitor, Rectangle area);
 
     void RestoreMainWindow();
     nint GetMainWindowHandle();
