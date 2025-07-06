@@ -37,14 +37,20 @@
                     Background="Transparent"
                     BorderBrush="Transparent"
                     Click="CloseButton_Click">
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="Escape" />
-                    </Button.KeyboardAccelerators>
                     <SymbolIcon Symbol="Clear" />
                 </Button>
             </StackPanel>
-
         </Grid>
+
+        <!--  Secret button to allow escape to work on all monitors.  -->
+        <Button
+            Click="CloseButton_Click"
+            IsTabStop="False"
+            Opacity="0">
+            <Button.KeyboardAccelerators>
+                <KeyboardAccelerator Key="Escape" />
+            </Button.KeyboardAccelerators>
+        </Button>
     </Grid>
 
 </Window>
