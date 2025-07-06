@@ -6,11 +6,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
@@ -20,13 +16,13 @@ public sealed partial class CaptureOverlayWindow : Window
 
     public CaptureOverlayWindow(MonitorCaptureResult monitor)
     {
+        ViewModel.Monitor = monitor;
+        ViewModel.CloseRequested += ViewModel_CloseRequested;
+
         Activated += CaptureOverlayWindow_Activated;
 
         AppWindow.IsShownInSwitchers = false;
         AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
-
-        ViewModel.Monitor = monitor;
-        ViewModel.CloseRequested += ViewModel_CloseRequested;
 
         var bounds = monitor.MonitorBounds;
         AppWindow.MoveAndResize(new(bounds.X, bounds.Y, bounds.Width, bounds.Height));
@@ -93,18 +89,22 @@ public sealed partial class CaptureOverlayWindow : Window
 
     private void ViewModel_CloseRequested(object? sender, EventArgs e)
     {
-        Close();
+        DispatcherQueue.TryEnqueue(Close);
     }
 
     private void CaptureOverlayWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
-        ViewModel.IsActive = args.WindowActivationState != WindowActivationState.Deactivated;
-        if (ViewModel.IsActive && ViewModel.IsPrimary)
+        DispatcherQueue.TryEnqueue(() =>
         {
-            // Must call SetForegroundWindow or focus will not move to the new window on activation.
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-            global::Windows.Win32.PInvoke.SetForegroundWindow(new(hwnd));
-        }
+            bool isActive = args.WindowActivationState != WindowActivationState.Deactivated;
+            ViewModel.IsActive = isActive;
+            if (isActive)
+            {
+                // Must call SetForegroundWindow or focus will not move to the new window on activation.
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+                global::Windows.Win32.PInvoke.SetForegroundWindow(new(hwnd));
+            }
+        });
     }
 
     private void ToolbarPanel_Loaded(object sender, RoutedEventArgs e)

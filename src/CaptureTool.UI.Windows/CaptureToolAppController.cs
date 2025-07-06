@@ -74,23 +74,28 @@ internal partial class CaptureToolAppController : IAppController
         HideMainWindow();
         Thread.Sleep(200);
 
-        _captureOverlayViewModel = new(this);
-
-        Window? primaryWindow = null;
-        var monitors = MonitorCaptureHelper.CaptureAllMonitors();
-        foreach (var monitor in monitors)
+        App.Current.DispatcherQueue.TryEnqueue(() =>
         {
-            var window = new CaptureOverlayWindow(monitor);
-            _captureOverlayViewModel.AddWindowViewModel(window.ViewModel);
-            window.Activate();              
+            _captureOverlayViewModel = new(this);
 
-            if (window.ViewModel.IsPrimary)
+            Window? primaryWindow = null;
+            var monitors = MonitorCaptureHelper.CaptureAllMonitors();
+            foreach (var monitor in monitors)
             {
-                primaryWindow = window;
-            }
-        }
+                var window = new CaptureOverlayWindow(monitor);
+                _captureOverlayViewModel.AddWindowViewModel(window.ViewModel);
 
-        primaryWindow?.Activate();
+                window.Activate();
+
+                if (window.ViewModel.IsPrimary)
+                {
+                    primaryWindow = window;
+                }
+            }
+
+            // Reactivate the primary window so the UI gets focus.
+            primaryWindow?.Activate();
+        });
     }
 
     public void PerformCapture(MonitorCaptureResult monitor, Rectangle area)
@@ -144,20 +149,40 @@ internal partial class CaptureToolAppController : IAppController
 
     public void GoHome()
     {
-        RestoreMainWindow();
-
         if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.Home)
         {
             _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
         }
     }
 
-    private static void HideMainWindow()
+    public void HideMainWindow()
     {
-        App.Current.MainWindow?.AppWindow.Hide();
+        App.Current.DispatcherQueue.TryEnqueue(() =>
+        {
+            App.Current.MainWindow?.AppWindow.Hide();
+        });
     }
 
-    public void RestoreMainWindow()
+    public void ShowMainWindow()
+    {
+        App.Current.DispatcherQueue.TryEnqueue(() =>
+        {
+            App.Current.MainWindow?.AppWindow.Show(false);
+        });
+    }
+
+    public void CloseCaptureOverlay()
+    {
+        App.Current.DispatcherQueue.TryEnqueue(() =>
+        {
+            _captureOverlayViewModel?.Close();
+            _captureOverlayViewModel = null;
+        });
+
+        RestoreMainWindow();
+    }
+
+    private static void RestoreMainWindow()
     {
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
@@ -176,7 +201,6 @@ internal partial class CaptureToolAppController : IAppController
     {
         if (_navigationService.CanGoBack)
         {
-            RestoreMainWindow();
             _navigationService.GoBack();
             return true;
         }
@@ -190,11 +214,5 @@ internal partial class CaptureToolAppController : IAppController
         {
             GoHome();
         }
-    }
-
-    public void CloseCaptureOverlay()
-    {
-        _captureOverlayViewModel?.Close();
-        _captureOverlayViewModel = null;
     }
 }

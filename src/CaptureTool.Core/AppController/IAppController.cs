@@ -12,7 +12,8 @@ public interface IAppController
     void CloseCaptureOverlay();
     void PerformCapture(MonitorCaptureResult monitor, Rectangle area);
 
-    void RestoreMainWindow();
+    void HideMainWindow();
+    void ShowMainWindow();
     nint GetMainWindowHandle();
 
     void GoHome();

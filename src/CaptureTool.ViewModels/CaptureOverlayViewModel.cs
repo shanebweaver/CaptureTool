@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
@@ -31,26 +30,27 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
 
         newVM.CaptureRequested += CaptureOverlayWindowViewModel_CaptureRequested;
         newVM.PropertyChanged += CaptureOverlayWindowViewModel_PropertyChanged;
-        newVM.ActiveStateChanged += CaptureOverlayWindowViewModel_ActiveStateChanged;
     }
 
-    private async void CaptureOverlayWindowViewModel_ActiveStateChanged(object? sender, System.EventArgs e)
-    {
-        // Check for an active monitor
-        bool hasActiveMonitor() => _windowViewModels.FirstOrDefault((vm) => vm.IsActive)?.Monitor != null;
-        if (!hasActiveMonitor())
-        {
-            // Wait and check again. If no active, dismiss the overlay.
-            // The machine has 200 milliseconds to assign a new active monitor or the capture overlay will be closed.
-            // If the machine is too slow, the capture overlay will close when selecting from any non-primary other monitors.
-            await Task.Delay(200);
+    private readonly Dictionary<nint, bool> _activeMonitors = [];
+    private bool _activated;
 
-            if (!hasActiveMonitor())
-            {
-                // Cleanup, but don't restore focus to main window.
-                // This is to ensure Alt+Tab allows focus to go to the new app.
-                Close();
-            }
+    private void OnActiveStateChanged(CaptureOverlayWindowViewModel windowVM)
+    {
+        var hMonitor = windowVM.Monitor?.HMonitor ?? nint.Zero;
+
+        _activeMonitors[hMonitor] = windowVM.IsActive;
+        if (windowVM.IsActive)
+        {
+            _activated = true;
+        }
+
+        bool isAnyActive = _activeMonitors.Any(e => e.Value);
+        if (!isAnyActive && _activated)
+        {
+            // Show main window first so that it shows up in the alt-tab list.
+            _appController.ShowMainWindow();
+            Close();
         }
     }
 
@@ -60,7 +60,6 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
         {
             windowViewModel.CaptureRequested -= CaptureOverlayWindowViewModel_CaptureRequested;
             windowViewModel.PropertyChanged -= CaptureOverlayWindowViewModel_PropertyChanged;
-            windowViewModel.ActiveStateChanged -= CaptureOverlayWindowViewModel_ActiveStateChanged;
             windowViewModel.Close();
         }
         _windowViewModels.Clear();
@@ -85,6 +84,10 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
             if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.CaptureArea))
             {
                 OnCaptureAreaChanged(windowVM);
+            }
+            else if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.IsActive))
+            {
+                OnActiveStateChanged(windowVM);
             }
         }
     }
