@@ -17,6 +17,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Windows.ApplicationModel.Core;
 using Windows.Win32;
 
@@ -68,8 +69,10 @@ internal partial class CaptureToolAppController : IAppController
 
     public void ShowCaptureOverlay()
     {
-        HideMainWindow();
+        // Give the window time to close so it isn't included in the capture
         CloseCaptureOverlay();
+        HideMainWindow();
+        Thread.Sleep(200);
 
         _captureOverlayViewModel = new(this);
 

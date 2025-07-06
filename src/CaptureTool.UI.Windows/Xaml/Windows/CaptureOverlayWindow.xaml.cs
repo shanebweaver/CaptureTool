@@ -123,24 +123,8 @@ public sealed partial class CaptureOverlayWindow : Window
 
         if (captureArea.Height >= 40 && captureArea.Width >= 40)
         {
-            _ = PerformCaptureAsync();
-        }
-    }
-
-    private async Task PerformCaptureAsync()
-    {
-        AppWindow.Hide();
-
-        // Allow the UI thread to process the opacity change and render.
-        // This is not ideal, but there is no deterministic way to ensure that the UI is updated in time for the capture.
-        await Task.Yield();
-        await Task.Yield();
-        await Task.Delay(50);
-
-        DispatcherQueue.TryEnqueue(() =>
-        {
             ViewModel.RequestCaptureCommand.Execute(null);
-        });
+        }
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
