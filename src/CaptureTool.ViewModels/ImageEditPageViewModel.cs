@@ -108,6 +108,17 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _isUndoRedoEnabled, value);
     }
 
+    private bool _showChromaKeyEffect;
+    public bool ShowChromaKeyEffect
+    {
+        get => _showChromaKeyEffect;
+        set
+        {
+            Set(ref _showChromaKeyEffect, value);
+            EnableEffects(value);
+        }
+    }
+
     public ImageEditPageViewModel(
         IAppController appController,
         ICancellationService cancellationService,
@@ -152,7 +163,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
                 ImageSize = _filePickerService.GetImageSize(imageFile);
                 CropRect = new(Point.Empty, ImageSize);
 
-                ImageDrawable imageDrawable = new(topLeft, imageFile);
+                ImageChromaKeyEffect chromaKeyEffect = new(Color.LimeGreen, 0.3f);
+                ImageDrawable imageDrawable = new(topLeft, imageFile, ImageSize, chromaKeyEffect);
                 Drawables.Add(imageDrawable);
             }
 
@@ -202,7 +214,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            ImageCanvasRenderOptions options = new(Orientation, ImageSize, CropRect);
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
 
             _telemetryService.ActivityCompleted(activityId);
@@ -238,7 +250,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
             var file = await _filePickerService.SaveImageFileAsync(hwnd);
             if (file != null)
             {
-                ImageCanvasRenderOptions options = new(Orientation, ImageSize, CropRect);
+                ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
                 await _imageCanvasExporter.SaveImageAsync(file.Path, [.. Drawables], options);
                 _telemetryService.ActivityCompleted(activityId);
             }
@@ -251,6 +263,11 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         {
             _telemetryService.ActivityError(activityId, e);
         }
+    }
+
+    public ImageCanvasRenderOptions GetImageCanvasRenderOptions()
+    {
+        return new(Orientation, ImageSize, CropRect);
     }
 
     private void Undo()
@@ -339,11 +356,24 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         try
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], new ImageCanvasRenderOptions(Orientation, ImageSize, CropRect), hwnd);
+            await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
         }
         catch (Exception e)
         {
             _telemetryService.ActivityError(activityId, e);
         }
+    }
+
+    private void EnableEffects(bool value)
+    {
+        foreach (IDrawable drawable in Drawables)
+        {
+            if (drawable is ImageDrawable imageDrawable && imageDrawable.ImageEffect != null)
+            {
+                imageDrawable.ImageEffect.IsEnabled = value;
+            }
+        }
+
+        // TODO: Tell the canvas to re-render
     }
 }

@@ -46,6 +46,11 @@
                         Glyph="{StaticResource FlipVertical32Regular}" />
                 </AppBarButton.Icon>
             </AppBarButton>
+            <AppBarToggleButton IsChecked="{x:Bind ViewModel.ShowChromaKeyEffect, Mode=TwoWay}" Label="Chroma Key">
+                <AppBarToggleButton.Icon>
+                    <SymbolIcon Symbol="Repair" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
             <AppBarSeparator />
             <!--  Undo/Redo  -->
             <AppBarButton

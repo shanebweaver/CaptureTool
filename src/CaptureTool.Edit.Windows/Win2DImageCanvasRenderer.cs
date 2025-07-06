@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Edit.Drawable;
 using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.UI;
 using System;
 using System.Numerics;
@@ -62,7 +63,30 @@ public static partial class Win2DImageCanvasRenderer
         ICanvasImage? preparedImage = drawable.GetPreparedImage();
         if (preparedImage != null)
         {
-            drawingSession.DrawImage(preparedImage, drawable.Offset);
+            if (drawable.ImageEffect is ImageChromaKeyEffect imageChromaKeyEffect && imageChromaKeyEffect.IsEnabled)
+            {
+                var color = Color.FromArgb(
+                        imageChromaKeyEffect.Color.A,
+                        imageChromaKeyEffect.Color.R,
+                        imageChromaKeyEffect.Color.G,
+                        imageChromaKeyEffect.Color.B);
+
+                ChromaKeyEffect chromaKeyEffect = new()
+                {
+                    Source = preparedImage,
+                    Color = color,
+                    Feather = true,
+                    Tolerance = imageChromaKeyEffect.Tolerance,
+                    InvertAlpha = false
+                };
+
+                drawingSession.Clear(Colors.White); // Looks better than black in most cases. Maybe should be theme dependent.
+                drawingSession.DrawImage(chromaKeyEffect, drawable.Offset);
+            }
+            else
+            {
+                drawingSession.DrawImage(preparedImage, drawable.Offset);
+            }
         }
     }
 
