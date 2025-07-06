@@ -3,7 +3,6 @@ using CaptureTool.Capture.Windows;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
-using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.UI.Windows.Xaml.Extensions;
@@ -13,13 +12,15 @@ using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.Storage;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Win32;
+using WinRT.Interop;
 
 namespace CaptureTool.UI.Windows;
 
@@ -28,10 +29,10 @@ internal partial class CaptureToolAppController : IAppController
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
     
+    private readonly HashSet<IntPtr> _captureOverlayWindowHandles = [];
     private CaptureOverlayViewModel? _captureOverlayViewModel;
 
     public CaptureToolAppController(
-        IFeatureManager featureManager,
         ILogService logService,
         INavigationService navigationService) 
     {
@@ -67,35 +68,78 @@ internal partial class CaptureToolAppController : IAppController
         App.Current.Shutdown();
     }
 
-    public void ShowCaptureOverlay()
+    public async void ShowCaptureOverlay()
     {
         // Give the window time to close so it isn't included in the capture
         CloseCaptureOverlay();
         HideMainWindow();
-        Thread.Sleep(200);
+        await Task.Delay(200);
 
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
+            _captureOverlayWindowHandles.Clear();
             _captureOverlayViewModel = new(this);
 
             Window? primaryWindow = null;
             var monitors = MonitorCaptureHelper.CaptureAllMonitors();
             foreach (var monitor in monitors)
             {
-                var window = new CaptureOverlayWindow(monitor);
+                CaptureOverlayWindow window = new(monitor);
+
+                IntPtr windowHwnd = WindowNative.GetWindowHandle(window);
+                _captureOverlayWindowHandles.Add(windowHwnd);
+
                 _captureOverlayViewModel.AddWindowViewModel(window.ViewModel);
-
-                window.Activate();
-
                 if (window.ViewModel.IsPrimary)
                 {
                     primaryWindow = window;
+                    primaryWindow.Activated += PrimaryWindow_Activated;
                 }
             }
 
-            // Reactivate the primary window so the UI gets focus.
+            // Activate the primary window so the UI gets focus.
             primaryWindow?.Activate();
         });
+    }
+
+    private void PrimaryWindow_Activated(object sender, WindowActivatedEventArgs args)
+    {
+        if (sender is Window window)
+        {
+            window.Activated -= PrimaryWindow_Activated;
+            StartForegroundMonitor();
+        }
+    }
+
+    private DispatcherTimer? _foregroundTimer;
+
+    private void StartForegroundMonitor()
+    {
+        if (_foregroundTimer == null)
+        {
+            _foregroundTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(100)
+            };
+
+            _foregroundTimer.Tick += (_, _) =>
+            {
+                IntPtr foregroundHwnd = PInvoke.GetForegroundWindow();
+                if (!_captureOverlayWindowHandles.Contains(foregroundHwnd))
+                {
+                    ShowMainWindow();
+                    CloseCaptureOverlay();
+                }
+            };
+        }
+
+        _foregroundTimer.Start();
+    }
+
+    private void StopForegroundTimer()
+    {
+        _foregroundTimer?.Stop();
+        _foregroundTimer = null;
     }
 
     public void PerformCapture(MonitorCaptureResult monitor, Rectangle area)
@@ -137,6 +181,7 @@ internal partial class CaptureToolAppController : IAppController
         croppedBmp.Save(tempPath, ImageFormat.Png);
 
         CloseCaptureOverlay();
+        RestoreMainWindow();
 
         var imageFile = new ImageFile(tempPath);
         _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
@@ -144,7 +189,7 @@ internal partial class CaptureToolAppController : IAppController
 
     public nint GetMainWindowHandle()
     {
-        return WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
+        return WindowNative.GetWindowHandle(App.Current.MainWindow);
     }
 
     public void GoHome()
@@ -173,13 +218,14 @@ internal partial class CaptureToolAppController : IAppController
 
     public void CloseCaptureOverlay()
     {
+        StopForegroundTimer();
+
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
+            _captureOverlayWindowHandles.Clear();
             _captureOverlayViewModel?.Close();
             _captureOverlayViewModel = null;
         });
-
-        RestoreMainWindow();
     }
 
     private static void RestoreMainWindow()

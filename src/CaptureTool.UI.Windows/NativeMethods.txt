@@ -17,3 +17,4 @@ GetWindowRect
 GetDpiForWindow
 MONITORINFOEXW
 SetWindowPos
+GetForegroundWindow

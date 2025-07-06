@@ -1,7 +1,6 @@
 ﻿using CaptureTool.Core.AppController;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 
 namespace CaptureTool.ViewModels;
 
@@ -30,28 +29,6 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
 
         newVM.CaptureRequested += CaptureOverlayWindowViewModel_CaptureRequested;
         newVM.PropertyChanged += CaptureOverlayWindowViewModel_PropertyChanged;
-    }
-
-    private readonly Dictionary<nint, bool> _activeMonitors = [];
-    private bool _activated;
-
-    private void OnActiveStateChanged(CaptureOverlayWindowViewModel windowVM)
-    {
-        var hMonitor = windowVM.Monitor?.HMonitor ?? nint.Zero;
-
-        _activeMonitors[hMonitor] = windowVM.IsActive;
-        if (windowVM.IsActive)
-        {
-            _activated = true;
-        }
-
-        bool isAnyActive = _activeMonitors.Any(e => e.Value);
-        if (!isAnyActive && _activated)
-        {
-            // Show main window first so that it shows up in the alt-tab list.
-            _appController.ShowMainWindow();
-            Close();
-        }
     }
 
     public void Close()
@@ -84,10 +61,6 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
             if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.CaptureArea))
             {
                 OnCaptureAreaChanged(windowVM);
-            }
-            else if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.IsActive))
-            {
-                OnActiveStateChanged(windowVM);
             }
         }
     }

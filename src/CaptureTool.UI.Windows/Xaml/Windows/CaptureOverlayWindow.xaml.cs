@@ -38,8 +38,11 @@ public sealed partial class CaptureOverlayWindow : Window
         InitializeComponent();
         ToolbarPanel.Loaded += ToolbarPanel_Loaded;
 
-        UpdateRequestedAppTheme();
-        LoadBackgroundImage();
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            UpdateRequestedAppTheme();
+            LoadBackgroundImage();
+        });
     }
 
     private void LoadBackgroundImage()
@@ -97,8 +100,7 @@ public sealed partial class CaptureOverlayWindow : Window
         DispatcherQueue.TryEnqueue(() =>
         {
             bool isActive = args.WindowActivationState != WindowActivationState.Deactivated;
-            ViewModel.IsActive = isActive;
-            if (isActive)
+            if (isActive && ViewModel.IsPrimary)
             {
                 // Must call SetForegroundWindow or focus will not move to the new window on activation.
                 var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
