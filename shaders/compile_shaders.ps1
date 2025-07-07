@@ -1,1 +1,0 @@
-./fxc /T ps_4_0 /E main /Fo ChromaKeyEffect.ps ChromaKeyEffect.hlsl
