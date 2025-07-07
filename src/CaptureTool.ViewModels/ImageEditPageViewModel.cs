@@ -11,6 +11,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,6 +43,10 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     private readonly IFilePickerService _filePickerService;
     private readonly IFeatureManager _featureManager;
 
+    private ImageDrawable? _imageDrawable;
+
+    public event EventHandler? InvalidateCanvasRequested;
+
     public RelayCommand CopyCommand => new(Copy);
     public RelayCommand ToggleCropModeCommand => new(ToggleCropMode);
     public RelayCommand SaveCommand => new(Save);
@@ -51,6 +56,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     public RelayCommand FlipHorizontalCommand => new(() => Flip(FlipDirection.Horizontal));
     public RelayCommand FlipVerticalCommand => new(() => Flip(FlipDirection.Vertical));
     public RelayCommand PrintCommand => new(Print);
+    public RelayCommand ToggleChromaKeyCommand => new(ToggleChromaKey);
 
     private ObservableCollection<IDrawable> _drawables;
     public ObservableCollection<IDrawable> Drawables
@@ -108,6 +114,20 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _isUndoRedoEnabled, value);
     }
 
+    private bool _isChromaKeyEnabled;
+    public bool IsChromaKeyEnabled
+    {
+        get => _isChromaKeyEnabled;
+        set => Set(ref _isChromaKeyEnabled, value);
+    }
+
+    private bool _showChromaKeyEffect;
+    public bool ShowChromaKeyEffect
+    {
+        get => _showChromaKeyEffect;
+        set => Set(ref _showChromaKeyEffect, value);
+    }
+
     public ImageEditPageViewModel(
         IAppController appController,
         ICancellationService cancellationService,
@@ -144,6 +164,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         {
             IsPrintEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Print);
             IsUndoRedoEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo);
+            IsChromaKeyEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey);
 
             Vector2 topLeft = Vector2.Zero;
             if (parameter is ImageFile imageFile)
@@ -152,8 +173,9 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
                 ImageSize = _filePickerService.GetImageSize(imageFile);
                 CropRect = new(Point.Empty, ImageSize);
 
-                ImageDrawable imageDrawable = new(topLeft, imageFile);
-                Drawables.Add(imageDrawable);
+                ImageChromaKeyEffect chromaKeyEffect = new(Color.LimeGreen, 0.4f);
+                _imageDrawable = new(topLeft, imageFile, ImageSize, chromaKeyEffect);
+                Drawables.Add(_imageDrawable);
             }
 
             _telemetryService.ActivityCompleted(activityId);
@@ -182,6 +204,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
+            _imageDrawable = null;
             CropRect = Rectangle.Empty;
             ImageSize = Size.Empty;
             Orientation = ImageOrientation.RotateNoneFlipNone;
@@ -202,7 +225,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            ImageCanvasRenderOptions options = new(Orientation, ImageSize, CropRect);
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
 
             _telemetryService.ActivityCompleted(activityId);
@@ -228,6 +251,22 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         }
     }
 
+    private void ToggleChromaKey()
+    {
+        bool newValue = !ShowChromaKeyEffect;
+        ShowChromaKeyEffect = newValue;
+
+        foreach (IDrawable drawable in Drawables)
+        {
+            if (drawable is ImageDrawable imageDrawable && imageDrawable.ImageEffect != null)
+            {
+                imageDrawable.ImageEffect.IsEnabled = newValue;
+            }
+        }
+
+        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+    }
+
     private async void Save()
     {
         string activityId = ActivityIds.Save;
@@ -238,7 +277,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
             var file = await _filePickerService.SaveImageFileAsync(hwnd);
             if (file != null)
             {
-                ImageCanvasRenderOptions options = new(Orientation, ImageSize, CropRect);
+                ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
                 await _imageCanvasExporter.SaveImageAsync(file.Path, [.. Drawables], options);
                 _telemetryService.ActivityCompleted(activityId);
             }
@@ -251,6 +290,11 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         {
             _telemetryService.ActivityError(activityId, e);
         }
+    }
+
+    public ImageCanvasRenderOptions GetImageCanvasRenderOptions()
+    {
+        return new(Orientation, ImageSize, CropRect);
     }
 
     private void Undo()
@@ -339,7 +383,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         try
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], new ImageCanvasRenderOptions(Orientation, ImageSize, CropRect), hwnd);
+            await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
         }
         catch (Exception e)
         {

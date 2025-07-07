@@ -46,8 +46,8 @@
                         Glyph="{StaticResource FlipVertical32Regular}" />
                 </AppBarButton.Icon>
             </AppBarButton>
-            <AppBarSeparator />
             <!--  Undo/Redo  -->
+            <AppBarSeparator Visibility="{x:Bind ViewModel.IsUndoRedoEnabled, Mode=OneWay}" />
             <AppBarButton
                 x:Uid="ImageEdit_UndoButton"
                 Command="{x:Bind ViewModel.UndoCommand}"
@@ -60,8 +60,8 @@
                 Icon="Redo"
                 IsEnabled="False"
                 Visibility="{x:Bind ViewModel.IsUndoRedoEnabled, Mode=OneWay}" />
-            <AppBarSeparator Visibility="{x:Bind ViewModel.IsUndoRedoEnabled, Mode=OneWay}" />
             <!--  Export  -->
+            <AppBarSeparator />
             <AppBarButton
                 x:Uid="ImageEdit_CopyButton"
                 Command="{x:Bind ViewModel.CopyCommand}"
@@ -87,6 +87,17 @@
                     <KeyboardAccelerator Key="P" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
+            <!--  Chroma Key  -->
+            <AppBarSeparator Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}" />
+            <AppBarToggleButton
+                Command="{x:Bind ViewModel.ToggleChromaKeyCommand}"
+                IsChecked="{x:Bind ViewModel.ShowChromaKeyEffect, Mode=OneWay}"
+                Label="Chroma Key"
+                Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <SymbolIcon Symbol="Repair" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
         </CommandBar>
 
         <Grid
@@ -96,6 +107,7 @@
             BorderThickness="0,1,0,0"
             Row="1">
             <controls:ImageCanvas
+                x:Name="ImageCanvas"
                 CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"
                 CropRect="{x:Bind ViewModel.CropRect, Mode=TwoWay}"
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"

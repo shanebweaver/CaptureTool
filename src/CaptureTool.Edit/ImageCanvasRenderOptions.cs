@@ -15,10 +15,4 @@ public sealed partial class ImageCanvasRenderOptions
         CanvasSize = canvasSize;
         CropRect = cropRect;
     }
-
-    public bool IsTurned =>
-        Orientation == ImageOrientation.Rotate90FlipNone ||
-        Orientation == ImageOrientation.Rotate270FlipNone ||
-        Orientation == ImageOrientation.Rotate90FlipX ||
-        Orientation == ImageOrientation.Rotate270FlipX;
 }
