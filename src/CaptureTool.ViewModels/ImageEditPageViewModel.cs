@@ -114,6 +114,13 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _isUndoRedoEnabled, value);
     }
 
+    private bool _isChromaKeyEnabled;
+    public bool IsChromaKeyEnabled
+    {
+        get => _isChromaKeyEnabled;
+        set => Set(ref _isChromaKeyEnabled, value);
+    }
+
     private bool _showChromaKeyEffect;
     public bool ShowChromaKeyEffect
     {
@@ -161,6 +168,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         {
             IsPrintEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Print);
             IsUndoRedoEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo);
+            IsChromaKeyEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey);
 
             Vector2 topLeft = Vector2.Zero;
             if (parameter is ImageFile imageFile)

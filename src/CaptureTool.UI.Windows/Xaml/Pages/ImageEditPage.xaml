@@ -88,11 +88,12 @@
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
             <!--  Chroma Key  -->
-            <AppBarSeparator />
+            <AppBarSeparator Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}" />
             <AppBarToggleButton
                 Command="{x:Bind ViewModel.ToggleChromaKeyCommand}"
                 IsChecked="{x:Bind ViewModel.ShowChromaKeyEffect, Mode=OneWay}"
-                Label="Chroma Key">
+                Label="Chroma Key"
+                Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <SymbolIcon Symbol="Repair" />
                 </AppBarToggleButton.Icon>
