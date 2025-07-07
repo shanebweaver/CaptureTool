@@ -11,6 +11,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,6 +43,10 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     private readonly IFilePickerService _filePickerService;
     private readonly IFeatureManager _featureManager;
 
+    private ImageDrawable? _imageDrawable;
+
+    public event EventHandler? InvalidateCanvasRequested;
+
     public RelayCommand CopyCommand => new(Copy);
     public RelayCommand ToggleCropModeCommand => new(ToggleCropMode);
     public RelayCommand SaveCommand => new(Save);
@@ -51,6 +56,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     public RelayCommand FlipHorizontalCommand => new(() => Flip(FlipDirection.Horizontal));
     public RelayCommand FlipVerticalCommand => new(() => Flip(FlipDirection.Vertical));
     public RelayCommand PrintCommand => new(Print);
+    public RelayCommand ToggleChromaKeyCommand => new(ToggleChromaKey);
 
     private ObservableCollection<IDrawable> _drawables;
     public ObservableCollection<IDrawable> Drawables
@@ -163,9 +169,9 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
                 ImageSize = _filePickerService.GetImageSize(imageFile);
                 CropRect = new(Point.Empty, ImageSize);
 
-                ImageChromaKeyEffect chromaKeyEffect = new(Color.LimeGreen, 0.3f);
-                ImageDrawable imageDrawable = new(topLeft, imageFile, ImageSize, chromaKeyEffect);
-                Drawables.Add(imageDrawable);
+                ImageChromaKeyEffect chromaKeyEffect = new(Color.LimeGreen, 0.4f);
+                _imageDrawable = new(topLeft, imageFile, ImageSize, chromaKeyEffect);
+                Drawables.Add(_imageDrawable);
             }
 
             _telemetryService.ActivityCompleted(activityId);
@@ -194,6 +200,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
+            _imageDrawable = null;
             CropRect = Rectangle.Empty;
             ImageSize = Size.Empty;
             Orientation = ImageOrientation.RotateNoneFlipNone;
@@ -237,6 +244,17 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         catch (Exception e)
         {
             _telemetryService.ActivityError(activityId, e);
+        }
+    }
+
+    private void ToggleChromaKey()
+    {
+        ShowChromaKeyEffect = !ShowChromaKeyEffect;
+
+        if (_imageDrawable?.ImageEffect != null)
+        {
+            _imageDrawable.ImageEffect.IsEnabled = ShowChromaKeyEffect;
+            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
     }
 

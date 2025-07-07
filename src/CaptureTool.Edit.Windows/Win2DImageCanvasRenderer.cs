@@ -66,10 +66,10 @@ public static partial class Win2DImageCanvasRenderer
             if (drawable.ImageEffect is ImageChromaKeyEffect imageChromaKeyEffect && imageChromaKeyEffect.IsEnabled)
             {
                 var color = Color.FromArgb(
-                        imageChromaKeyEffect.Color.A,
-                        imageChromaKeyEffect.Color.R,
-                        imageChromaKeyEffect.Color.G,
-                        imageChromaKeyEffect.Color.B);
+                    imageChromaKeyEffect.Color.A,
+                    imageChromaKeyEffect.Color.R,
+                    imageChromaKeyEffect.Color.G,
+                    imageChromaKeyEffect.Color.B);
 
                 ChromaKeyEffect chromaKeyEffect = new()
                 {

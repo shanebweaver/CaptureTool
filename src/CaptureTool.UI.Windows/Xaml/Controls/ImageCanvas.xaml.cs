@@ -238,6 +238,11 @@ public sealed partial class ImageCanvas : UserControlBase
     #endregion
 
     #region Drawing
+    public void InvalidateCanvas()
+    {
+        RenderCanvas.Invalidate();
+    }
+
     private void CanvasControl_Draw(CanvasControl sender, CanvasDrawEventArgs args)
     {
         lock (this)
