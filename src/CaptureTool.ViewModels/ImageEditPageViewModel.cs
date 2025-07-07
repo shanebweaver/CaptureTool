@@ -125,11 +125,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     public bool ShowChromaKeyEffect
     {
         get => _showChromaKeyEffect;
-        set
-        {
-            Set(ref _showChromaKeyEffect, value);
-            EnableEffects(value);
-        }
+        set => Set(ref _showChromaKeyEffect, value);
     }
 
     public ImageEditPageViewModel(
@@ -257,13 +253,18 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
     private void ToggleChromaKey()
     {
-        ShowChromaKeyEffect = !ShowChromaKeyEffect;
+        bool newValue = !ShowChromaKeyEffect;
+        ShowChromaKeyEffect = newValue;
 
-        if (_imageDrawable?.ImageEffect != null)
+        foreach (IDrawable drawable in Drawables)
         {
-            _imageDrawable.ImageEffect.IsEnabled = ShowChromaKeyEffect;
-            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+            if (drawable is ImageDrawable imageDrawable && imageDrawable.ImageEffect != null)
+            {
+                imageDrawable.ImageEffect.IsEnabled = newValue;
+            }
         }
+
+        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private async void Save()
@@ -388,18 +389,5 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         {
             _telemetryService.ActivityError(activityId, e);
         }
-    }
-
-    private void EnableEffects(bool value)
-    {
-        foreach (IDrawable drawable in Drawables)
-        {
-            if (drawable is ImageDrawable imageDrawable && imageDrawable.ImageEffect != null)
-            {
-                imageDrawable.ImageEffect.IsEnabled = value;
-            }
-        }
-
-        // TODO: Tell the canvas to re-render
     }
 }
