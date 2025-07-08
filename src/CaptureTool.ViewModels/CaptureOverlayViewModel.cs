@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Core.AppController;
+using CaptureTool.FeatureManagement;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -9,13 +10,6 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
 {
     private readonly IAppController _appController;
     private readonly List<CaptureOverlayWindowViewModel> _windowViewModels;
-
-    private bool _showOptions;
-    public bool ShowOptions
-    {
-        get => _showOptions;
-        set => Set(ref _showOptions, value);
-    }
 
     public CaptureOverlayViewModel(
         IAppController appController)
