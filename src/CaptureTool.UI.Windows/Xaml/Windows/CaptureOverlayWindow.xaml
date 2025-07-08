@@ -29,13 +29,20 @@
             </Grid.RowDefinitions>
 
             <StackPanel Orientation="Horizontal" Spacing="12">
-                <!--  Capture type  -->
+                <!--  Capture mode  -->
                 <toolkit:Segmented SelectionMode="Single" Visibility="{x:Bind ViewModel.IsVideoCaptureEnabled}">
                     <toolkit:SegmentedItem Icon="Camera" IsSelected="True" />
                     <toolkit:SegmentedItem Icon="Video" />
                 </toolkit:Segmented>
 
                 <!--  Capture mode  -->
+                <!--
+                    TODO:
+                    - Get icons for each capture type
+                    - Localize the string values
+                    - Add code to update selected symbol on change
+                    - Update SelectionOverlay to support additional capture types
+                -->
                 <DropDownButton Background="Transparent" BorderThickness="0">
                     <SymbolIcon Symbol="Preview" />
                     <DropDownButton.Flyout>
