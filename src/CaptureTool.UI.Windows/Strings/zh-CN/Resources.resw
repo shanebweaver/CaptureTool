@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="NewCaptureButton_Image.Text" xml:space="preserve">
+  <data name="NewCaptureButton_Image_Label.Text" xml:space="preserve">
     <value>屏幕截图</value>
   </data>
   <data name="AppTheme_Dark" xml:space="preserve">
@@ -345,14 +345,23 @@
   <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
     <value>更改将在重启应用后生效。</value>
   </data>
-  <data name="NewCaptureButton_Image.AutomationProperties.Name" xml:space="preserve">
-    <value>屏幕截图</value>
-  </data>
   <data name="SelectionOverlay_CloseButton.AutomationProperties.Name" xml:space="preserve">
     <value>关闭</value>
   </data>
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>关闭 (Esc)</value>
+  </data>
+  <data name="NewCaptureButton_Image.AutomationProperties.Name" xml:space="preserve">
+    <value>屏幕截图</value>
+  </data>
+  <data name="NewCaptureButton_Video_Label.Text" xml:space="preserve">
+    <value>屏幕录制</value>
+  </data>
+  <data name="NewCaptureButton_Video.ToolTipService.ToolTip" xml:space="preserve">
+    <value>新录制</value>
+  </data>
+  <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
+    <value>屏幕录制</value>
   </data>
   <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
     <value>发送反馈</value>

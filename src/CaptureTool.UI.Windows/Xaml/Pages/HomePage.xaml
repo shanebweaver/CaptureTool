@@ -12,6 +12,19 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:HomePageViewModel}"
     mc:Ignorable="d">
 
+    <Page.Resources>
+        <Style
+            x:Key="NewCaptureButtonStyle"
+            BasedOn="{StaticResource DefaultButtonStyle}"
+            TargetType="Button">
+            <Setter Property="Height" Value="96" />
+            <Setter Property="Width" Value="96" />
+            <Setter Property="MinHeight" Value="96" />
+            <Setter Property="MinWidth" Value="96" />
+            <Setter Property="CornerRadius" Value="12" />
+        </Style>
+    </Page.Resources>
+
     <Grid Row="1">
         <Grid.RowDefinitions>
             <RowDefinition Height="4*" />
@@ -26,18 +39,37 @@
 
             <TextBlock x:Uid="HomePage_StartCaptureLabel" HorizontalAlignment="Center" />
 
-            <StackPanel HorizontalAlignment="Center" Spacing="4">
-                <controls:NewCaptureButton
+            <StackPanel
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="4">
+                <Button
                     x:Name="NewImageCaptureButton"
                     x:Uid="NewCaptureButton_Image"
                     Command="{x:Bind ViewModel.NewImageCaptureCommand}"
-                    Symbol="{StaticResource NewImageCaptureSymbol}" />
-                <controls:NewCaptureButton
+                    Style="{StaticResource NewCaptureButtonStyle}">
+                    <StackPanel Spacing="4">
+                        <SymbolIcon Symbol="{StaticResource NewImageCaptureSymbol}" />
+                        <TextBlock
+                            x:Uid="NewCaptureButton_Image_Label"
+                            TextAlignment="Center"
+                            TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+                </Button>
+                <Button
                     x:Name="NewVideoCaptureButton"
                     x:Uid="NewCaptureButton_Video"
                     Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
-                    Symbol="{StaticResource NewVideoCaptureSymbol}"
-                    Visibility="{x:Bind ViewModel.IsVideoCaptureEnabled}" />
+                    Style="{StaticResource NewCaptureButtonStyle}"
+                    Visibility="{x:Bind ViewModel.IsVideoCaptureEnabled}">
+                    <StackPanel Spacing="4">
+                        <SymbolIcon Symbol="{StaticResource NewVideoCaptureSymbol}" />
+                        <TextBlock
+                            x:Uid="NewCaptureButton_Video_Label"
+                            TextAlignment="Center"
+                            TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </StackPanel>
     </Grid>

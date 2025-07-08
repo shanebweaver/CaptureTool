@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="NewCaptureButton_Image.Text" xml:space="preserve">
+  <data name="NewCaptureButton_Image_Label.Text" xml:space="preserve">
     <value>Screenshot</value>
   </data>
   <data name="AppTheme_Dark" xml:space="preserve">
@@ -345,14 +345,23 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
     <value>Änderungen werden nach dem Neustart übernommen.</value>
   </data>
-  <data name="NewCaptureButton_Image.AutomationProperties.Name" xml:space="preserve">
-    <value>Screenshot</value>
-  </data>
   <data name="SelectionOverlay_CloseButton.AutomationProperties.Name" xml:space="preserve">
     <value>Schließen</value>
   </data>
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Schließen (Esc)</value>
+  </data>
+  <data name="NewCaptureButton_Image.AutomationProperties.Name" xml:space="preserve">
+    <value>Screenshot</value>
+  </data>
+  <data name="NewCaptureButton_Video_Label.Text" xml:space="preserve">
+    <value>Bildschirmaufnahme</value>
+  </data>
+  <data name="NewCaptureButton_Video.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Neue Aufnahme</value>
+  </data>
+  <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
+    <value>Bildschirmaufnahme</value>
   </data>
   <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
     <value>Feedback senden</value>
