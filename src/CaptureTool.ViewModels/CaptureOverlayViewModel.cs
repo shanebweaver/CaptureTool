@@ -1,4 +1,5 @@
-﻿using CaptureTool.Core.AppController;
+﻿using CaptureTool.Capture;
+using CaptureTool.Core.AppController;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -46,9 +47,10 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
     {
         foreach (var windowVM in _windowViewModels)
         {
-            if (windowVM.Monitor != null && windowVM.CaptureArea != Rectangle.Empty)
+            var captureArea = windowVM.CaptureArea;
+            if (windowVM.Monitor is MonitorCaptureResult monitor && captureArea != Rectangle.Empty)
             {
-                _appController.PerformCapture(windowVM.Monitor, windowVM.CaptureArea);
+                _appController.PerformCapture(monitor, captureArea);
                 break;
             }
         }

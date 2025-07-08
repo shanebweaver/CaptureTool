@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace CaptureTool.Capture.Windows;
 
-public static class MonitorCaptureHelper
+public static partial class MonitorCaptureHelper
 {
     private delegate bool MonitorEnumDelegate(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
 
@@ -167,14 +167,13 @@ public static class MonitorCaptureHelper
             int workAreaLeft = mi.rcWork.left;
             int workAreaTop = mi.rcWork.top;
 
-            results.Add(new MonitorCaptureResult
-            {
-                HMonitor = hMonitor,
-                MonitorBounds = new(mi.rcMonitor.left, mi.rcMonitor.top, width, height),
-                WorkAreaBounds = new(workAreaLeft, workAreaTop, workAreaWidth, workAreaHeight),
-                PixelBuffer = pixels,
-                Dpi = dpiX
-            });
+            results.Add(new MonitorCaptureResult(
+                hMonitor,
+                pixels,
+                dpiX,
+                new(mi.rcMonitor.left, mi.rcMonitor.top, width, height),
+                new(workAreaLeft, workAreaTop, workAreaWidth, workAreaHeight)
+            ));
 
             SelectObject(hdcMem, hOld);
             DeleteObject(hBitmap);

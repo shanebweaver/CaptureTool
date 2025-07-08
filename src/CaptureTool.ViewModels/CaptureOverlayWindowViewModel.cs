@@ -18,7 +18,7 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
 
-    public bool IsPrimary => Monitor?.MonitorBounds.Top == 0 && Monitor.MonitorBounds.Left == 0;
+    public bool IsPrimary => Monitor?.MonitorBounds.Top == 0 && Monitor?.MonitorBounds.Left == 0;
         
     private Rectangle _captureArea;
     public Rectangle CaptureArea

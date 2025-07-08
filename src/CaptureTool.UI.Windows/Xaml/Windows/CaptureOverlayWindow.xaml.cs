@@ -47,9 +47,8 @@ public sealed partial class CaptureOverlayWindow : Window
 
     private void LoadBackgroundImage()
     {
-        if (ViewModel.Monitor is not null && RootPanel is not null)
+        if (ViewModel.Monitor is MonitorCaptureResult monitor && RootPanel is not null)
         {
-            var monitor = ViewModel.Monitor;
             var monitorBounds = monitor.MonitorBounds;
 
             var writeableBitmap = new WriteableBitmap(monitorBounds.Width, monitorBounds.Height);

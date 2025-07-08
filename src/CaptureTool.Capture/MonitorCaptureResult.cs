@@ -3,13 +3,21 @@ using System.Drawing;
 
 namespace CaptureTool.Capture;
 
-public class MonitorCaptureResult
+public readonly partial struct MonitorCaptureResult
 {
-    public IntPtr HMonitor { get; set; }
-    public required byte[] PixelBuffer { get; set; } // BGRA8
-    public uint Dpi { get; set; }
+    public IntPtr HMonitor { get; }
+    public byte[] PixelBuffer { get; } // BGRA8
+    public uint Dpi { get; }
     public float Scale => Dpi / 96f;
-    public Rectangle MonitorBounds { get; set; }
-    public Rectangle WorkAreaBounds { get; set; }
+    public Rectangle MonitorBounds { get; }
+    public Rectangle WorkAreaBounds { get; }
 
+    public MonitorCaptureResult(nint hMonitor, byte[] pixelBuffer, uint dpi, Rectangle monitorBounds, Rectangle workAreaBounds)
+    {
+        HMonitor = hMonitor;
+        PixelBuffer = pixelBuffer;
+        Dpi = dpi;
+        MonitorBounds = monitorBounds;
+        WorkAreaBounds = workAreaBounds;
+    }
 }
