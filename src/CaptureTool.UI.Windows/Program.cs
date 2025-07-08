@@ -18,6 +18,7 @@ public class Program
     private const uint DefaultFlags = 0;
 
     [STAThread]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "App entry point")]
     public static int Main(string[] args)
     {
         // Initialize COM wrappers and single-instance
@@ -69,7 +70,7 @@ public class Program
         });
 
         // Pump COM and wait for the event
-        Span<HANDLE> handles = stackalloc HANDLE[] { evtHandle };
+        Span<HANDLE> handles = [evtHandle];
         global::Windows.Win32.PInvoke.CoWaitForMultipleObjects(
             dwFlags: DefaultFlags,
             dwTimeout: InfiniteTimeout,

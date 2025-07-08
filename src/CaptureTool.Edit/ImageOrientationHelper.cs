@@ -231,64 +231,46 @@ public static partial class ImageOrientationHelper
 
     public static Rectangle FromCanonicalCropRect(Rectangle canonical, Size canonicalImageSize, ImageOrientation orientation)
     {
-        Rectangle result;
-        switch (orientation)
+        var result = orientation switch
         {
-            case ImageOrientation.RotateNoneFlipNone:
-                result = canonical;
-                break;
-            case ImageOrientation.Rotate90FlipNone:
-                result = new Rectangle(
-                    canonicalImageSize.Height - canonical.Y - canonical.Height,
-                    canonical.X,
-                    canonical.Height,
-                    canonical.Width);
-                break;
-            case ImageOrientation.Rotate180FlipNone:
-                result = new Rectangle(
-                    canonicalImageSize.Width - canonical.X - canonical.Width,
-                    canonicalImageSize.Height - canonical.Y - canonical.Height,
-                    canonical.Width,
-                    canonical.Height);
-                break;
-            case ImageOrientation.Rotate270FlipNone:
-                result = new Rectangle(
-                    canonical.Y,
-                    canonicalImageSize.Width - canonical.X - canonical.Width,
-                    canonical.Height,
-                    canonical.Width);
-                break;
-            case ImageOrientation.RotateNoneFlipX:
-                result = new Rectangle(
-                    canonicalImageSize.Width - canonical.X - canonical.Width,
-                    canonical.Y,
-                    canonical.Width,
-                    canonical.Height);
-                break;
-            case ImageOrientation.Rotate90FlipX:
-                result = new Rectangle(
-                    canonical.Y,
-                    canonical.X,
-                    canonical.Height,
-                    canonical.Width);
-                break;
-            case ImageOrientation.Rotate180FlipX:
-                result = new Rectangle(
-                    canonical.X,
-                    canonicalImageSize.Height - canonical.Y - canonical.Height,
-                    canonical.Width,
-                    canonical.Height);
-                break;
-            case ImageOrientation.Rotate270FlipX:
-                result = new Rectangle(
-                    canonicalImageSize.Height - canonical.Y - canonical.Height,
-                    canonicalImageSize.Width - canonical.X - canonical.Width,
-                    canonical.Height,
-                    canonical.Width);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(orientation));
-        }
+            ImageOrientation.RotateNoneFlipNone => canonical,
+            ImageOrientation.Rotate90FlipNone => new Rectangle(
+                canonicalImageSize.Height - canonical.Y - canonical.Height,
+                canonical.X,
+                canonical.Height,
+                canonical.Width),
+            ImageOrientation.Rotate180FlipNone => new Rectangle(
+                canonicalImageSize.Width - canonical.X - canonical.Width,
+                canonicalImageSize.Height - canonical.Y - canonical.Height,
+                canonical.Width,
+                canonical.Height),
+            ImageOrientation.Rotate270FlipNone => new Rectangle(
+                canonical.Y,
+                canonicalImageSize.Width - canonical.X - canonical.Width,
+                canonical.Height,
+                canonical.Width),
+            ImageOrientation.RotateNoneFlipX => new Rectangle(
+                canonicalImageSize.Width - canonical.X - canonical.Width,
+                canonical.Y,
+                canonical.Width,
+                canonical.Height),
+            ImageOrientation.Rotate90FlipX => new Rectangle(
+                canonical.Y,
+                canonical.X,
+                canonical.Height,
+                canonical.Width),
+            ImageOrientation.Rotate180FlipX => new Rectangle(
+                canonical.X,
+                canonicalImageSize.Height - canonical.Y - canonical.Height,
+                canonical.Width,
+                canonical.Height),
+            ImageOrientation.Rotate270FlipX => new Rectangle(
+                canonicalImageSize.Height - canonical.Y - canonical.Height,
+                canonicalImageSize.Width - canonical.X - canonical.Width,
+                canonical.Height,
+                canonical.Width),
+            _ => throw new ArgumentOutOfRangeException(nameof(orientation)),
+        };
         return result;
     }
 

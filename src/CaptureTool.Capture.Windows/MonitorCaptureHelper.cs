@@ -128,7 +128,7 @@ public static partial class MonitorCaptureHelper
             int left = mi.rcMonitor.left;
             int top = mi.rcMonitor.top;
 
-            GetDpiForMonitor(hMonitor, MonitorDpiType.MDT_DEFAULT, out uint dpiX, out uint dpiY);
+            _ = GetDpiForMonitor(hMonitor, MonitorDpiType.MDT_DEFAULT, out uint dpiX, out uint dpiY);
 
             IntPtr hdcScreen = GetDC(IntPtr.Zero);
             if (hdcScreen == IntPtr.Zero)
@@ -137,7 +137,7 @@ public static partial class MonitorCaptureHelper
             IntPtr hdcMem = CreateCompatibleDC(hdcScreen);
             if (hdcMem == IntPtr.Zero)
             {
-                ReleaseDC(IntPtr.Zero, hdcScreen);
+                _ = ReleaseDC(IntPtr.Zero, hdcScreen);
                 return true;
             }
 
@@ -145,7 +145,7 @@ public static partial class MonitorCaptureHelper
             if (hBitmap == IntPtr.Zero)
             {
                 DeleteDC(hdcMem);
-                ReleaseDC(IntPtr.Zero, hdcScreen);
+                _ = ReleaseDC(IntPtr.Zero, hdcScreen);
                 return true;
             }
 
@@ -178,7 +178,7 @@ public static partial class MonitorCaptureHelper
             SelectObject(hdcMem, hOld);
             DeleteObject(hBitmap);
             DeleteDC(hdcMem);
-            ReleaseDC(IntPtr.Zero, hdcScreen);
+            _ = ReleaseDC(IntPtr.Zero, hdcScreen);
 
             return true;
         }, IntPtr.Zero);
@@ -200,7 +200,7 @@ public static partial class MonitorCaptureHelper
         bmi.bmiColors = new uint[256];
 
         byte[] pixels = new byte[width * height * 4];
-        int scanLines = GetDIBits(hdc, hBitmap, 0, (uint)height, pixels, ref bmi, DIB_RGB_COLORS);
+        _ = GetDIBits(hdc, hBitmap, 0, (uint)height, pixels, ref bmi, DIB_RGB_COLORS);
         return pixels;
     }
 }

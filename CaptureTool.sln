@@ -25,8 +25,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Edit.Windows", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Tests", "src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj", "{7C067745-CD5D-4665-8EF9-79730477C4BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.UI.Windows.Tests", "src\CaptureTool.UI.Windows.Tests\CaptureTool.UI.Windows.Tests.csproj", "{905CD4A1-9A32-4C9C-822C-D4FC246A84E8}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.ViewModels.Tests", "src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj", "{96D133A6-FD71-45DB-8023-C988F0E045C7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Edit.Windows.Tests", "src\CaptureTool.Edit.Windows.Tests\CaptureTool.Edit.Windows.Tests.csproj", "{DFB09AB3-86E2-4870-B2DE-7AE55F126B46}"
@@ -144,14 +142,6 @@ Global
 		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Debug|x64.Build.0 = Debug|Any CPU
 		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Release|ARM64.ActiveCfg = Release|Any CPU
 		{7C067745-CD5D-4665-8EF9-79730477C4BA}.Release|x64.ActiveCfg = Release|Any CPU
-		{905CD4A1-9A32-4C9C-822C-D4FC246A84E8}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{905CD4A1-9A32-4C9C-822C-D4FC246A84E8}.Debug|ARM64.Build.0 = Debug|ARM64
-		{905CD4A1-9A32-4C9C-822C-D4FC246A84E8}.Debug|ARM64.Deploy.0 = Debug|ARM64
-		{905CD4A1-9A32-4C9C-822C-D4FC246A84E8}.Debug|x64.ActiveCfg = Debug|x64
-		{905CD4A1-9A32-4C9C-822C-D4FC246A84E8}.Debug|x64.Build.0 = Debug|x64
-		{905CD4A1-9A32-4C9C-822C-D4FC246A84E8}.Debug|x64.Deploy.0 = Debug|x64
-		{905CD4A1-9A32-4C9C-822C-D4FC246A84E8}.Release|ARM64.ActiveCfg = Release|ARM64
-		{905CD4A1-9A32-4C9C-822C-D4FC246A84E8}.Release|x64.ActiveCfg = Release|x64
 		{96D133A6-FD71-45DB-8023-C988F0E045C7}.Debug|ARM64.ActiveCfg = Debug|Any CPU
 		{96D133A6-FD71-45DB-8023-C988F0E045C7}.Debug|ARM64.Build.0 = Debug|Any CPU
 		{96D133A6-FD71-45DB-8023-C988F0E045C7}.Debug|x64.ActiveCfg = Debug|Any CPU

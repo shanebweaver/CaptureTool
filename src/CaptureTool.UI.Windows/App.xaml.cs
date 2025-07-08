@@ -47,7 +47,7 @@ public partial class App : Application
             switch (args.Kind)
             {
                 case ExtendedActivationKind.Launch:
-                    HandleLaunchActivation(args);
+                    HandleLaunchActivation();
                     break;
                 default:
                     throw new InvalidOperationException("Unexpected activation kind");
@@ -60,7 +60,7 @@ public partial class App : Application
         }
     }
 
-    private void HandleLaunchActivation(AppActivationArguments args)
+    private void HandleLaunchActivation()
     {
         if (MainWindow == null)
         {

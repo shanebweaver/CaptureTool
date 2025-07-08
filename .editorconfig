@@ -1,0 +1,16 @@
+# .editorconfig
+
+# Top-level settings that apply to all files
+root = true
+
+# Settings for C# files
+[*.cs]
+
+# IDE0290: Use primary constructor
+# This line tells the C# code style engine not to prefer primary constructors.
+csharp_style_prefer_primary_constructors = false
+
+# This line explicitly sets the severity of the IDE0290 diagnostic to 'none',
+# which effectively disables it and prevents it from showing as a suggestion,
+# warning, or error.
+dotnet_diagnostic.IDE0290.severity = none

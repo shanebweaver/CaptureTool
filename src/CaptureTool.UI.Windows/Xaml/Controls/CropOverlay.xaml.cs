@@ -17,7 +17,7 @@ public sealed partial class CropOverlay : UserControlBase
 
     private static readonly Size MinCropRectSize = new(50, 50);
 
-    private readonly Dictionary<FrameworkElement, Action<double, double>> _anchorDragHandlers = new();
+    private readonly Dictionary<FrameworkElement, Action<double, double>> _anchorDragHandlers = [];
 
     private readonly Dictionary<FrameworkElement, CoreCursorType> _anchorCursors = [];
     private Point _lastPointerPosition;
