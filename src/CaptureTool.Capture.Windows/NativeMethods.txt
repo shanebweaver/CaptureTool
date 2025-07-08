@@ -1,0 +1,14 @@
+﻿EnumDisplayMonitors
+GetMonitorInfo
+GetMonitorInfo
+CreateCompatibleBitmap
+CreateCompatibleDC
+SelectObject
+BitBlt
+GetDC
+ReleaseDC
+DeleteObject
+DeleteDC
+MONITORINFOEXW
+GetDpiForMonitor
+GetDIBits
