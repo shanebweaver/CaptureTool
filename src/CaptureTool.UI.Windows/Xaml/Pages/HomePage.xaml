@@ -32,6 +32,12 @@
                     x:Uid="NewCaptureButton_Image"
                     Command="{x:Bind ViewModel.NewImageCaptureCommand}"
                     Symbol="{StaticResource NewImageCaptureSymbol}" />
+                <controls:NewCaptureButton
+                    x:Name="NewVideoCaptureButton"
+                    x:Uid="NewCaptureButton_Video"
+                    Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
+                    Symbol="{StaticResource NewVideoCaptureSymbol}"
+                    Visibility="{x:Bind ViewModel.IsVideoCaptureEnabled}" />
             </StackPanel>
         </StackPanel>
     </Grid>
