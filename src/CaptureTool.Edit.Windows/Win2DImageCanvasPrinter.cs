@@ -8,17 +8,27 @@ using Windows.Graphics.Printing;
 
 namespace CaptureTool.Edit.Windows;
 
+
 public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
+{
+    public Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, nint hwnd)
+    {
+        Win2DImageCanvasPrintSession printSession = new();
+        return printSession.ShowPrintUIAsync(drawables, options, hwnd);
+    }
+}
+
+public partial class Win2DImageCanvasPrintSession
 {
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private CanvasPrintDocument? _printDocument = null;
 
-    public Win2DImageCanvasPrinter()
+    public Win2DImageCanvasPrintSession()
     {
     }
 
-    ~Win2DImageCanvasPrinter()
+    ~Win2DImageCanvasPrintSession()
     {
         _printDocument?.Dispose();
     }
@@ -38,9 +48,9 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
             if (PrintManager.IsSupported())
             {
                 PrintManager printManager = PrintManagerInterop.GetForWindow(hwnd);
-                printManager.PrintTaskRequested += OnPrintTaskRequested;
-                bool success = await PrintManagerInterop.ShowPrintUIForWindowAsync(hwnd);
                 printManager.PrintTaskRequested -= OnPrintTaskRequested;
+                printManager.PrintTaskRequested += OnPrintTaskRequested;
+                await PrintManagerInterop.ShowPrintUIForWindowAsync(hwnd);
             }
             else
             {
@@ -71,6 +81,8 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
 
     private void OnPrintTaskRequested(PrintManager sender, PrintTaskRequestedEventArgs args)
     {
+        sender.PrintTaskRequested -= OnPrintTaskRequested;
+
         args.Request.CreatePrintTask("Capture Tool Image Print", (a) =>
         {
             if (_printDocument != null)
