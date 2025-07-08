@@ -6,7 +6,7 @@ using System;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class HomePageViewModel : LoadableViewModelBase
+public sealed partial class HomePageViewModel : ViewModelBase
 {
     private readonly struct ActivityIds
     {
@@ -19,14 +19,8 @@ public sealed partial class HomePageViewModel : LoadableViewModelBase
 
     public RelayCommand NewImageCaptureCommand => new(NewImageCapture);
     public RelayCommand NewVideoCaptureCommand => new(NewVideoCapture, () => IsVideoCaptureEnabled);
-    
 
-    private bool _isVideoCaptureEnabled;
-    public bool IsVideoCaptureEnabled
-    {
-        get => _isVideoCaptureEnabled;
-        set => Set(ref _isVideoCaptureEnabled, value);
-    }
+    public bool IsVideoCaptureEnabled { get; }
 
     public HomePageViewModel(
         IFeatureManager featureManager,

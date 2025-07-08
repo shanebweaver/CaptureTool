@@ -11,7 +11,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,13 +49,13 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     public RelayCommand CopyCommand => new(Copy);
     public RelayCommand ToggleCropModeCommand => new(ToggleCropMode);
     public RelayCommand SaveCommand => new(Save);
-    public RelayCommand UndoCommand => new(Undo);
-    public RelayCommand RedoCommand => new(Redo);
+    public RelayCommand UndoCommand => new(Undo, () => IsUndoRedoEnabled);
+    public RelayCommand RedoCommand => new(Redo, () => IsUndoRedoEnabled);
     public RelayCommand RotateCommand => new(Rotate);
     public RelayCommand FlipHorizontalCommand => new(() => Flip(FlipDirection.Horizontal));
     public RelayCommand FlipVerticalCommand => new(() => Flip(FlipDirection.Vertical));
-    public RelayCommand PrintCommand => new(Print);
-    public RelayCommand ToggleChromaKeyCommand => new(ToggleChromaKey);
+    public RelayCommand PrintCommand => new(Print, () => IsPrintEnabled);
+    public RelayCommand ToggleChromaKeyCommand => new(ToggleChromaKey, () => IsChromaKeyEnabled);
 
     private ObservableCollection<IDrawable> _drawables;
     public ObservableCollection<IDrawable> Drawables
@@ -100,33 +99,16 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _cropRect, value);
     }
 
-    private bool _isPrintEnabled;
-    public bool IsPrintEnabled
-    {
-        get => _isPrintEnabled;
-        set => Set(ref _isPrintEnabled, value);
-    }
-
-    private bool _isUndoRedoEnabled;
-    public bool IsUndoRedoEnabled
-    {
-        get => _isUndoRedoEnabled;
-        set => Set(ref _isUndoRedoEnabled, value);
-    }
-
-    private bool _isChromaKeyEnabled;
-    public bool IsChromaKeyEnabled
-    {
-        get => _isChromaKeyEnabled;
-        set => Set(ref _isChromaKeyEnabled, value);
-    }
-
     private bool _showChromaKeyEffect;
     public bool ShowChromaKeyEffect
     {
         get => _showChromaKeyEffect;
         set => Set(ref _showChromaKeyEffect, value);
     }
+
+    public bool IsPrintEnabled { get; }
+    public bool IsUndoRedoEnabled { get; }
+    public bool IsChromaKeyEnabled { get; }
 
     public ImageEditPageViewModel(
         IAppController appController,
@@ -149,6 +131,10 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _orientation = ImageOrientation.RotateNoneFlipNone;
         _cropRect = Rectangle.Empty;
         _imageCanvasExporter = imageCanvasExporter;
+
+        IsPrintEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Print);
+        IsUndoRedoEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo);
+        IsChromaKeyEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey);
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -162,10 +148,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            IsPrintEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Print);
-            IsUndoRedoEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo);
-            IsChromaKeyEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey);
-
             Vector2 topLeft = Vector2.Zero;
             if (parameter is ImageFile imageFile)
             {
@@ -299,8 +281,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
     private void Undo()
     {
-        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo), "Print feature should be enabled before calling Undo.");
-
         string activityId = ActivityIds.Undo;
         _telemetryService.ActivityInitiated(activityId);
         try
@@ -315,8 +295,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
     private void Redo()
     {
-        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo), "Print feature should be enabled before calling Redo.");
-
         string activityId = ActivityIds.Redo;
         _telemetryService.ActivityInitiated(activityId);
         try
@@ -376,8 +354,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
     private async void Print()
     {
-        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Print), "Print feature should be enabled before calling Print.");
-
         string activityId = ActivityIds.Print;
         _telemetryService.ActivityInitiated(activityId);
         try

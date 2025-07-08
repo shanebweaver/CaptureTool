@@ -354,4 +354,7 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Fermer (Esc)</value>
   </data>
+  <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
+    <value>Envoyer des commentaires</value>
+  </data>
 </root>

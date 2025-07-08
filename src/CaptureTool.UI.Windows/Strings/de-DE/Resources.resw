@@ -354,4 +354,7 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Schließen (Esc)</value>
   </data>
+  <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
+    <value>Feedback senden</value>
+  </data>
 </root>

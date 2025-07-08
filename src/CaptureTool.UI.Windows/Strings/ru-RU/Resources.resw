@@ -354,4 +354,7 @@
   <data name="SelectionOverlay_CloseButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Закрыть (Esc)</value>
   </data>
+  <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
+    <value>Отправить отзыв</value>
+  </data>
 </root>

@@ -433,4 +433,8 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Close (Esc)</value>
     <comment>The tool tip for the close button on the selection overlay toolbar.</comment>
   </data>
+  <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
+    <value>Send feedback</value>
+    <comment>The label for the button in the app menu that launches the feedback hub app.</comment>
+  </data>
 </root>

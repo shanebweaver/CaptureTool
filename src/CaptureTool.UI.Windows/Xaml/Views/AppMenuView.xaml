@@ -51,6 +51,12 @@
 
         <!--  Help  -->
         <MenuBarItem x:Uid="AppMenu_HelpMenuItem">
+            <!--  Send feedback  -->
+            <MenuFlyoutItem
+                x:Uid="AppMenu_SendFeedbackItem"
+                Command="{x:Bind ViewModel.SendFeedbackCommand}"
+                Visibility="{x:Bind ViewModel.ShowSendFeedbackOption, Mode=OneWay}" />
+
             <!--  About  -->
             <MenuFlyoutItem x:Uid="AppMenu_AboutItem" Command="{x:Bind ViewModel.ShowAboutAppCommand}" />
         </MenuBarItem>
