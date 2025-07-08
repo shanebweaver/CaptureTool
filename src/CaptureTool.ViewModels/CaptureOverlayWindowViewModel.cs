@@ -1,6 +1,7 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Themes;
 using System;
 using System.Drawing;
@@ -48,7 +49,13 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         set => Set(ref _defaultAppTheme, value);
     }
 
+    public bool IsVideoCaptureEnabled { get; }
+    public bool IsWindowModeEnabled { get; }
+    public bool IsFullScreenModeEnabled { get; }
+    public bool IsFreeformModeEnabled { get; }
+
     public CaptureOverlayWindowViewModel(
+        IFeatureManager featureManager,
         IThemeService themeService,
         IAppController appController)
     {
@@ -58,6 +65,11 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         _themeService = themeService;
         DefaultAppTheme = _themeService.DefaultTheme;
         CurrentAppTheme = _themeService.CurrentTheme;
+
+        IsVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
+        IsWindowModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_WindowMode);
+        IsFullScreenModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_FullScreenMode);
+        IsFreeformModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_FreeformMode);
     }
 
     public void Close()

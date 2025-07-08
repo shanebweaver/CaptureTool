@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
     mc:Ignorable="d">
 
     <Grid x:Name="RootPanel">
@@ -27,7 +28,36 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <!--  Capture type  -->
+                <toolkit:Segmented SelectionMode="Single" Visibility="{x:Bind ViewModel.IsVideoCaptureEnabled}">
+                    <toolkit:SegmentedItem Icon="Camera" IsSelected="True" />
+                    <toolkit:SegmentedItem Icon="Video" />
+                </toolkit:Segmented>
+
+                <!--  Capture mode  -->
+                <DropDownButton Background="Transparent" BorderThickness="0">
+                    <SymbolIcon Symbol="Preview" />
+                    <DropDownButton.Flyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem Icon="Preview" Text="Rectangle" />
+                            <MenuFlyoutItem
+                                Icon="Preview"
+                                Text="Window"
+                                Visibility="{x:Bind ViewModel.IsWindowModeEnabled}" />
+                            <MenuFlyoutItem
+                                Icon="Preview"
+                                Text="Full screen"
+                                Visibility="{x:Bind ViewModel.IsFullScreenModeEnabled}" />
+                            <MenuFlyoutItem
+                                Icon="Preview"
+                                Text="Freeform"
+                                Visibility="{x:Bind ViewModel.IsFreeformModeEnabled}" />
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+
+                <!--  Close  -->
                 <Button
                     x:Name="CloseButton"
                     x:Uid="SelectionOverlay_CloseButton"
