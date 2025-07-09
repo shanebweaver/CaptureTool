@@ -119,7 +119,7 @@ internal partial class CaptureToolAppController : IAppController
         {
             _foregroundTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(100)
+                Interval = TimeSpan.FromMilliseconds(200)
             };
 
             _foregroundTimer.Tick += (_, _) =>
