@@ -6,12 +6,14 @@ using CaptureTool.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.Storage;
 using System;
 using System.Threading;
 using Windows.ApplicationModel;
+using Windows.Foundation;
 using Windows.Graphics;
-using Color = Windows.UI.Color;
+using Windows.UI;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
@@ -80,10 +82,32 @@ public sealed partial class MainWindow : Window
 
     private void SetRegionsForCustomTitleBar()
     {
-        double scaleAdjustment = AppTitleBar.XamlRoot.RasterizationScale;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            double scaleAdjustment = AppTitleBar.XamlRoot.RasterizationScale;
 
-        RightPaddingColumn.Width = new GridLength(AppWindow.TitleBar.RightInset / scaleAdjustment);
-        LeftPaddingColumn.Width = new GridLength(AppWindow.TitleBar.LeftInset / scaleAdjustment);
+            RightPaddingColumn.Width = new GridLength(AppWindow.TitleBar.RightInset / scaleAdjustment);
+            LeftPaddingColumn.Width = new GridLength(AppWindow.TitleBar.LeftInset / scaleAdjustment);
+
+            int offsetX = (int)GetElementOffsetFromWindowLeftInPixels(DraggablePanel);
+            int offsetY = 0; // At the top
+
+            RectInt32 draggableRect = new(offsetX, offsetY, (int)DraggablePanel.ActualWidth, (int)DraggablePanel.ActualHeight);
+            AppWindow.TitleBar.SetDragRectangles([draggableRect]);
+        });
+    }
+    
+    // Returns the X offset in physical pixels from the element to the left edge of the window
+    private static double GetElementOffsetFromWindowLeftInPixels(FrameworkElement element)
+    {
+        // Transform (0,0) of the element to the window's coordinate space
+        GeneralTransform transform = element.TransformToVisual(null); // 'null' means root visual (window)
+        Point offset = transform.TransformPoint(new Point(0, 0));
+
+        // Convert DIPs to physical pixels using the current scale
+        double scale = 1;// DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
+
+        return offset.X * scale;
     }
 
     private void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
