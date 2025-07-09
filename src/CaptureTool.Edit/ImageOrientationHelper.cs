@@ -274,7 +274,7 @@ public static partial class ImageOrientationHelper
         return result;
     }
 
-    public static Matrix3x2 CalculateRenderTransform(Rectangle cropRect, Size imageSize, ImageOrientation orientation)
+    public static Matrix3x2 CalculateRenderTransform(Rectangle cropRect, Size imageSize, ImageOrientation orientation, float scale = 1f)
     {
         Matrix3x2 transform = Matrix3x2.Identity;
         double imageWidth = imageSize.Width;
@@ -361,6 +361,9 @@ public static partial class ImageOrientationHelper
 
         // Apply cropping
         transform *= Matrix3x2.CreateTranslation(-(float)cropRect.X, -(float)cropRect.Y);
+
+        // Scaling
+        transform *= Matrix3x2.CreateScale(scale);
 
         return transform;
     }
