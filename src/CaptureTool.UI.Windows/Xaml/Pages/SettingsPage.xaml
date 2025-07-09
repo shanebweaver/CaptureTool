@@ -47,7 +47,7 @@
                     <Expander
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Top"
-                        HorizontalContentAlignment="Left"
+                        HorizontalContentAlignment="Stretch"
                         AutomationProperties.LabeledBy="{x:Bind AppThemeHeaderTextBlock}"
                         ExpandDirection="Down"
                         IsExpanded="True">
@@ -88,7 +88,11 @@
                                 <RadioButtons.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:AppThemeViewModel">
                                         <RadioButton AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">
-                                            <TextBlock Margin="12,0,0,0" Text="{x:Bind DisplayName, Mode=OneWay}" />
+                                            <TextBlock
+                                                Margin="12,0,0,0"
+                                                Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                TextTrimming="CharacterEllipsis"
+                                                TextWrapping="NoWrap" />
                                         </RadioButton>
                                     </DataTemplate>
                                 </RadioButtons.ItemTemplate>
@@ -116,6 +120,7 @@
                                 <TextBlock
                                     x:Uid="Settings_FullChangesWillTakeAffectLabel"
                                     Grid.Column="1"
+                                    HorizontalAlignment="Left"
                                     VerticalAlignment="Center"
                                     Opacity=".8"
                                     TextAlignment="Center"
@@ -136,7 +141,7 @@
                     <Expander
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Top"
-                        HorizontalContentAlignment="Left"
+                        HorizontalContentAlignment="Stretch"
                         AutomationProperties.LabeledBy="{x:Bind AppLangaugeHeaderTextBlock}"
                         ExpandDirection="Down"
                         IsExpanded="True">
@@ -177,7 +182,11 @@
                                 <RadioButtons.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:AppLanguageViewModel">
                                         <RadioButton AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">
-                                            <TextBlock Margin="12,0,0,0" Text="{x:Bind DisplayName, Mode=OneWay}" />
+                                            <TextBlock
+                                                Margin="12,0,0,0"
+                                                Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                TextTrimming="CharacterEllipsis"
+                                                TextWrapping="NoWrap" />
                                         </RadioButton>
                                     </DataTemplate>
                                 </RadioButtons.ItemTemplate>
@@ -205,6 +214,7 @@
                                 <TextBlock
                                     x:Uid="Settings_FullChangesWillTakeAffectLabel"
                                     Grid.Column="1"
+                                    HorizontalAlignment="Left"
                                     VerticalAlignment="Center"
                                     Opacity=".8"
                                     TextAlignment="Center"
