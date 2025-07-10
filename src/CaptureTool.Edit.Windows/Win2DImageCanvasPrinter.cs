@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Edit.Drawable;
+using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Printing;
 using System;
 using System.Diagnostics;
@@ -8,27 +9,19 @@ using Windows.Graphics.Printing;
 
 namespace CaptureTool.Edit.Windows;
 
-
 public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
 {
-    public Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, nint hwnd)
-    {
-        Win2DImageCanvasPrintSession printSession = new();
-        return printSession.ShowPrintUIAsync(drawables, options, hwnd);
-    }
-}
+    private const uint PageCount = 1;
 
-public partial class Win2DImageCanvasPrintSession
-{
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private CanvasPrintDocument? _printDocument = null;
 
-    public Win2DImageCanvasPrintSession()
+    public Win2DImageCanvasPrinter()
     {
     }
 
-    ~Win2DImageCanvasPrintSession()
+    ~Win2DImageCanvasPrinter()
     {
         _printDocument?.Dispose();
     }
@@ -68,15 +61,24 @@ public partial class Win2DImageCanvasPrintSession
 
         void PrintDocument_Preview(CanvasPrintDocument sender, CanvasPreviewEventArgs args)
         {
-            sender.SetPageCount(1);
-            Win2DImageCanvasRenderer.Render(drawables, options, args.DrawingSession);
+            Print(sender, args.DrawingSession, args.PrintTaskOptions, drawables, options);
         }
 
         void PrintDocument_Print(CanvasPrintDocument sender, CanvasPrintEventArgs args)
         {
             using var printDrawingSession = args.CreateDrawingSession();
-            Win2DImageCanvasRenderer.Render(drawables, options, printDrawingSession);
+            Print(sender, printDrawingSession, args.PrintTaskOptions, drawables, options);
         }
+    }
+
+    private static void Print(CanvasPrintDocument printDocument, CanvasDrawingSession printDrawingSession, PrintTaskOptions printOptions, IDrawable[] drawables, ImageCanvasRenderOptions renderOptions)
+    {
+        printDocument.SetPageCount(PageCount);
+
+        var pageDescription = printOptions.GetPageDescription(PageCount);
+        float scale = CalculateScaleForOnePage(renderOptions, pageDescription);
+
+        Win2DImageCanvasRenderer.Render(drawables, renderOptions, printDrawingSession, scale);
     }
 
     private void OnPrintTaskRequested(PrintManager sender, PrintTaskRequestedEventArgs args)
@@ -90,5 +92,19 @@ public partial class Win2DImageCanvasPrintSession
                 a.SetSource(_printDocument);
             }
         });
+    }
+
+    private static float CalculateScaleForOnePage(ImageCanvasRenderOptions options, PrintPageDescription pageDescription)
+    {
+        var imageableRect = pageDescription.ImageableRect;
+        var originalRect = options.CropRect;
+
+        // Calculate scale factor to fit originalRect within imageableRect
+        float scaleX = (float)(imageableRect.Width / originalRect.Width);
+        float scaleY = (float)(imageableRect.Height / originalRect.Height);
+        float scale = Math.Min(scaleX, scaleY);
+
+        // Only shrink, don't grow
+        return Math.Min(scale, 1);
     }
 }

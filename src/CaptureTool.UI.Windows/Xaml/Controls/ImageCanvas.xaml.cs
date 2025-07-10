@@ -152,47 +152,56 @@ public sealed partial class ImageCanvas : UserControlBase
         });
     }
 
+    private Size GetImageRenderSize()
+    {
+        ImageOrientation orientation = Orientation;
+        bool isTurned =
+            orientation == ImageOrientation.Rotate90FlipNone ||
+            orientation == ImageOrientation.Rotate90FlipX ||
+            orientation == ImageOrientation.Rotate270FlipNone ||
+            orientation == ImageOrientation.Rotate270FlipX;
+
+        double canvasWidth, canvasHeight;
+
+        if (IsCropModeEnabled)
+        {
+            canvasHeight = isTurned ? CanvasSize.Width : CanvasSize.Height;
+            canvasWidth = isTurned ? CanvasSize.Height : CanvasSize.Width;
+        }
+        else
+        {
+            // Use CropRect dimensions when crop mode is not enabled
+            var crop = CropRect;
+            canvasHeight = crop.Height;
+            canvasWidth = crop.Width;
+
+            // Fallback to CanvasSize if CropRect is empty or invalid
+            if (canvasWidth <= 0 || canvasHeight <= 0)
+            {
+                canvasHeight = isTurned ? CanvasSize.Width : CanvasSize.Height;
+                canvasWidth = isTurned ? CanvasSize.Height : CanvasSize.Width;
+            }
+        }
+
+        return new((int)canvasWidth, (int)canvasHeight);
+    }
+
     private void UpdateDrawingCanvasSize()
     {
         lock (this)
         {
-            ImageOrientation orientation = Orientation;
-            bool isTurned =
-                orientation == ImageOrientation.Rotate90FlipNone ||
-                orientation == ImageOrientation.Rotate90FlipX ||
-                orientation == ImageOrientation.Rotate270FlipNone ||
-                orientation == ImageOrientation.Rotate270FlipX;
+            Size renderSize = GetImageRenderSize();
+            int width = renderSize.Width;
+            int height = renderSize.Height;
 
-            double width, height;
-
-            if (IsCropModeEnabled)
-            {
-                height = isTurned ? CanvasSize.Width : CanvasSize.Height;
-                width = isTurned ? CanvasSize.Height : CanvasSize.Width;
-            }
-            else
-            {
-                // Use CropRect dimensions when crop mode is not enabled
-                var crop = CropRect;
-                height = crop.Height;
-                width = crop.Width;
-
-                // Fallback to CanvasSize if CropRect is empty or invalid
-                if (width <= 0 || height <= 0)
-                {
-                    height = isTurned ? CanvasSize.Width : CanvasSize.Height;
-                    width = isTurned ? CanvasSize.Height : CanvasSize.Width;
-                }
-            }
-
-            CanvasContainer.Height = height;
             CanvasContainer.Width = width;
+            CanvasContainer.Height = height;
 
-            CropOverlay.Height = height;
             CropOverlay.Width = width;
+            CropOverlay.Height = height;
 
-            RenderCanvas.Height = height;
             RenderCanvas.Width = width;
+            RenderCanvas.Height = height;
             RenderCanvas.Invalidate();
         }
     }
@@ -206,19 +215,15 @@ public sealed partial class ImageCanvas : UserControlBase
                 return;
             }
 
-            bool isTurned =
-                Orientation == ImageOrientation.Rotate90FlipNone ||
-                Orientation == ImageOrientation.Rotate90FlipX ||
-                Orientation == ImageOrientation.Rotate270FlipNone ||
-                Orientation == ImageOrientation.Rotate270FlipX;
-
             double containerWidth = RootContainer.ActualWidth;
             double containerHeight = RootContainer.ActualHeight;
 
-            double canvasWidth = isTurned ? CanvasSize.Height : CanvasSize.Width;
-            double canvasHeight = isTurned ? CanvasSize.Width : CanvasSize.Height;
+            Size renderSize = GetImageRenderSize();
+            int canvasWidth = renderSize.Width;
+            int canvasHeight = renderSize.Height;
 
-            double padding = 48;
+            // Add padding
+            int padding = 48;
             canvasWidth += padding;
             canvasHeight += padding;
 

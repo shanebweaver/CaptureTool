@@ -14,7 +14,7 @@ public static partial class Win2DImageCanvasRenderer
 {
     private static readonly Color ClearColor = Colors.Transparent;
 
-    public static void Render(IDrawable[] drawables, ImageCanvasRenderOptions options, object drawingSessionObj)
+    public static void Render(IDrawable[] drawables, ImageCanvasRenderOptions options, object drawingSessionObj, float scale = 1f)
     {
         if (drawingSessionObj is not CanvasDrawingSession drawingSession)
         {
@@ -25,7 +25,7 @@ public static partial class Win2DImageCanvasRenderer
         drawingSession.Clear(ClearColor);
 
         // Apply the final transform to the drawing session
-        drawingSession.Transform = ImageOrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation);
+        drawingSession.Transform = ImageOrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation, scale);
 
         // Draw all the drawables
         foreach (IDrawable drawable in drawables)

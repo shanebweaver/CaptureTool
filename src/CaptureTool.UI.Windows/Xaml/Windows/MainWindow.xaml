@@ -23,6 +23,7 @@
         <Grid x:Name="AppTitleBar">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="LeftPaddingColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition />
                 <ColumnDefinition x:Name="RightPaddingColumn" Width="0" />
             </Grid.ColumnDefinitions>
@@ -30,7 +31,7 @@
             <views:AppMenuView Grid.Column="1" />
 
             <StackPanel
-                Grid.ColumnSpan="3"
+                Grid.ColumnSpan="4"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Orientation="Horizontal">
@@ -47,6 +48,11 @@
                     VerticalAlignment="Center"
                     Style="{StaticResource CaptionTextBlockStyle}" />
             </StackPanel>
+
+            <Grid
+                x:Name="DraggablePanel"
+                Grid.Column="2"
+                Background="Transparent" />
         </Grid>
 
         <Grid Row="2">
