@@ -1,4 +1,8 @@
-﻿using CaptureTool.Services.Localization;
+﻿using CaptureTool.Core;
+using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Localization;
+using CaptureTool.Services.Settings;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -9,46 +13,66 @@ namespace CaptureTool.Services.Windows.Localization;
 
 public sealed partial class WindowsLocalizationService : ILocalizationService
 {
-    private ResourceLoader _resourceLoader;
-    private CultureInfo _culture;
+    private readonly ICancellationService _cancellationService;
+    private readonly ISettingsService _settingsService;
+    private readonly ResourceLoader? _resourceLoader;
 
-    public AppLanguage CurrentLanguage { get; }
-    public AppLanguage StartupLanguage { get; }
+    public AppLanguage? LanguageOverride { get; private set; }
+    public AppLanguage RequestedLanguage { get; private set; }
+    public AppLanguage StartupLanguage { get; private set; }
+    public AppLanguage DefaultLanguage { get; }
     public AppLanguage[] SupportedLanguages { get; }
 
-    public WindowsLocalizationService()
+    public WindowsLocalizationService(
+        ICancellationService cancellationService,
+        ISettingsService settingsService)
     {
-        InitializeResourceLoader();
-        Debug.Assert(_resourceLoader != null);
-        Debug.Assert(_culture != null);
+        _cancellationService = cancellationService;
+        _settingsService = settingsService;
 
-        StartupLanguage = CurrentLanguage = new(_culture.Name);
         SupportedLanguages = [.. ApplicationLanguages.Languages.Select(l => new AppLanguage(l))];
+        DefaultLanguage = new(CultureInfo.InstalledUICulture.Name);
+    
+        string languageOverride = _settingsService.Get(CaptureToolSettings.Settings_LanguageOverride);
+        ApplicationLanguages.PrimaryLanguageOverride = languageOverride;
+        LanguageOverride = string.IsNullOrEmpty(languageOverride) ? null : new(languageOverride);
+
+        StartupLanguage = LanguageOverride ?? DefaultLanguage;
+        RequestedLanguage = StartupLanguage;
+
+        _resourceLoader = ResourceLoader.GetForViewIndependentUse();
     }
 
     public string GetString(string resourceKey)
     {
+        Debug.Assert(_resourceLoader != null);
         return _resourceLoader.GetString(resourceKey);
     }
 
-    public void UpdateCurrentLanguage(AppLanguage language)
+    public void OverrideLanguage(AppLanguage? language)
     {
-        ApplicationLanguages.PrimaryLanguageOverride = language.Value;
-        InitializeResourceLoader();
-    }
-
-    private void InitializeResourceLoader()
-    {
-        _resourceLoader = new ResourceLoader();
-
-        string languageOverride = ApplicationLanguages.PrimaryLanguageOverride;
-        if (!string.IsNullOrEmpty(languageOverride))
+        if (language == null)
         {
-            _culture = new CultureInfo(languageOverride);
+            LanguageOverride = null;
+            RequestedLanguage = DefaultLanguage;
+            _settingsService.Unset(CaptureToolSettings.Settings_LanguageOverride);
+            ApplicationLanguages.PrimaryLanguageOverride = null;
         }
         else
         {
-            _culture = CultureInfo.InstalledUICulture;
+            bool isLanguageSupported = SupportedLanguages.Any(i => i.Value == language.Value.Value);
+            if (!isLanguageSupported)
+            {
+                throw new ArgumentOutOfRangeException(nameof(language));
+            }
+
+            LanguageOverride = language.Value;
+            RequestedLanguage = language.Value;
+            _settingsService.Set(CaptureToolSettings.Settings_LanguageOverride, language.Value.Value);
+            ApplicationLanguages.PrimaryLanguageOverride = language.Value.Value;
         }
+
+        var token = _cancellationService.GetLinkedCancellationTokenSource().Token;
+        _ = _settingsService.TrySaveAsync(token);
     }
 }

@@ -366,4 +366,7 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
     <value>Feedback senden</value>
   </data>
+  <data name="AppLanguage_SystemDefault" xml:space="preserve">
+    <value>Systemstandard verwenden</value>
+  </data>
 </root>

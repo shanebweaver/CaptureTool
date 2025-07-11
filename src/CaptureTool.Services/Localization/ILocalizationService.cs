@@ -2,11 +2,12 @@
 
 public interface ILocalizationService
 {
-    public AppLanguage CurrentLanguage { get; }
-    public AppLanguage StartupLanguage { get; }
+    AppLanguage? LanguageOverride { get; }
+    AppLanguage RequestedLanguage { get; }
+    AppLanguage StartupLanguage { get; }
+    AppLanguage DefaultLanguage { get; }
     AppLanguage[] SupportedLanguages { get; }
 
-    public string GetString(string resourceKey);
-
-    void UpdateCurrentLanguage(AppLanguage language);
+    string GetString(string resourceKey);
+    void OverrideLanguage(AppLanguage? language);
 }

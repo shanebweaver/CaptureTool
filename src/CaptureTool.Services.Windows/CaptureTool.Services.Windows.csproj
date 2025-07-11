@@ -15,6 +15,7 @@
 
   <!-- Project references -->
   <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Core\CaptureTool.Core.csproj" />
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
   </ItemGroup>
 

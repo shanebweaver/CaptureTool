@@ -3,10 +3,19 @@ using CaptureTool.Services.Localization;
 
 namespace CaptureTool.ViewModels.Factories;
 
-public sealed partial class AppLanguageViewModelFactory : IFactoryService<AppLanguageViewModel, AppLanguage>
+public sealed partial class AppLanguageViewModelFactory : IFactoryService<AppLanguageViewModel, AppLanguage?>
 {
-    public AppLanguageViewModel Create(AppLanguage language)
+    private readonly ILocalizationService _localizationService;
+    public AppLanguageViewModelFactory(
+        ILocalizationService localizationService)
     {
-        return new(language);
+        _localizationService = localizationService;
+    }
+
+    public AppLanguageViewModel Create(AppLanguage? language)
+    {
+        return new(
+            language, 
+            _localizationService);
     }
 }

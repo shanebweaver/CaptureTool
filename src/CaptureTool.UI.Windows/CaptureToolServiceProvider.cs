@@ -66,7 +66,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         // Views
         collection.AddTransient<AppMenuViewModel>();
         // Factories
-        collection.AddSingleton<IFactoryService<AppLanguageViewModel, AppLanguage>, AppLanguageViewModelFactory>();
+        collection.AddSingleton<IFactoryService<AppLanguageViewModel, AppLanguage?>, AppLanguageViewModelFactory>();
         collection.AddSingleton<IFactoryService<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
 
         // App controller and feature manager

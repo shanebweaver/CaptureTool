@@ -237,7 +237,7 @@ internal partial class CaptureToolAppController : IAppController
                 App.Current.MainWindow.Restore();
                 App.Current.MainWindow.Activate();
 
-                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
+                var hwnd = WindowNative.GetWindowHandle(App.Current.MainWindow);
                 PInvoke.SetForegroundWindow(new(hwnd));
             }
         });
