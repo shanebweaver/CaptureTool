@@ -5,16 +5,27 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class AppLanguageViewModel : ViewModelBase
 {
-    public AppLanguage Language { get; }
+    public AppLanguage? Language { get; }
     public string DisplayName { get; }
     public string AutomationName { get; }
 
-    public AppLanguageViewModel(AppLanguage language)
+    public AppLanguageViewModel(
+        AppLanguage? language,
+        ILocalizationService localizationService)
     {
         Language = language;
 
-        CultureInfo langInfo = new(language.Value);
-        DisplayName = langInfo.NativeName;
-        AutomationName = langInfo.NativeName;
+        if (language == null)
+        {
+            string useDefaultString = localizationService.GetString("AppLanguage_SystemDefault");
+            DisplayName = useDefaultString;
+            AutomationName = useDefaultString;
+        }
+        else
+        {
+            CultureInfo langInfo = new(language.Value.Value);
+            DisplayName = langInfo.NativeName;
+            AutomationName = langInfo.NativeName;
+        }
     }
 }

@@ -366,4 +366,7 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
     <value>Enviar comentarios</value>
   </data>
+  <data name="AppLanguage_SystemDefault" xml:space="preserve">
+    <value>Usar el tema del sistema</value>
+  </data>
 </root>

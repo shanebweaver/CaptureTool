@@ -449,4 +449,8 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Send feedback</value>
     <comment>The label for the send feedback item in the app menu.</comment>
   </data>
+  <data name="AppLanguage_SystemDefault" xml:space="preserve">
+    <value>Use system default</value>
+    <comment>The label for the system default language option.</comment>
+  </data>
 </root>

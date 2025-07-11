@@ -366,4 +366,7 @@
   <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
     <value>发送反馈</value>
   </data>
+  <data name="AppLanguage_SystemDefault" xml:space="preserve">
+    <value>使用系统默认</value>
+  </data>
 </root>

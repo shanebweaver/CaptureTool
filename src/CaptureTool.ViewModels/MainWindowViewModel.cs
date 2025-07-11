@@ -1,6 +1,7 @@
 ﻿using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
 using CaptureTool.Services.Telemetry;

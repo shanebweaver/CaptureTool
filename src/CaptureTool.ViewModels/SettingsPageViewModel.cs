@@ -3,7 +3,6 @@ using CaptureTool.Core.AppController;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
-using CaptureTool.Services.Settings;
 using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
 using System;
@@ -21,18 +20,19 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         public static readonly string Load = "SettingsPageViewModel_Load";
         public static readonly string Unload = "SettingsPageViewModel_Unload";
         public static readonly string RestartApp = "SettingsPageViewModel_RestartApp";
+        public static readonly string GoBack = "SettingsPageViewModel_GoBack";
         public static readonly string UpdateAppLanguage = "SettingsPageViewModel_UpdateAppLanguage";
         public static readonly string UpdateAppTheme = "SettingsPageViewModel_UpdateAppTheme";
         public static readonly string UpdateShowAppThemeRestartMessage = "SettingsPageViewModel_UpdateShowAppThemeRestartMessage";
+        public static readonly string UpdateShowAppLanguageRestartMessage = "SettingsPageViewModel_UpdateShowAppLanguageRestartMessage";
     }
 
     private readonly ITelemetryService _telemetryService;
     private readonly IAppController _appController;
     private readonly ILocalizationService _localizationService;
     private readonly IThemeService _themeService;
-    private readonly ISettingsService _settingsService;
     private readonly ICancellationService _cancellationService;
-    private readonly IFactoryService<AppLanguageViewModel, AppLanguage> _appLanguageViewModelFactory;
+    private readonly IFactoryService<AppLanguageViewModel, AppLanguage?> _appLanguageViewModelFactory;
     private readonly IFactoryService<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
     private readonly AppTheme[] SupportedAppThemes = [
@@ -99,16 +99,14 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         IAppController appController,
         ILocalizationService localizationService,
         IThemeService themeService,
-        ISettingsService settingsService,
         ICancellationService cancellationService,
-        IFactoryService<AppLanguageViewModel, AppLanguage> appLanguageViewModelFactory,
+        IFactoryService<AppLanguageViewModel, AppLanguage?> appLanguageViewModelFactory,
         IFactoryService<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
         _telemetryService = telemetryService;
         _appController = appController;
         _localizationService = localizationService;
         _themeService = themeService;
-        _settingsService = settingsService;
         _cancellationService = cancellationService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
@@ -119,72 +117,62 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
+        Unload();
         Debug.Assert(IsUnloaded);
         StartLoading();
 
-        string activityId = ActivityIds.Load;
-        _telemetryService.ActivityInitiated(activityId);
-
-        var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
-        try
+        ExecuteActivity(ActivityIds.Load, () =>
         {
-            AppTheme currentTheme = _themeService.CurrentTheme;
-
-            // Languages
-            AppLanguage[] languages = _localizationService.SupportedLanguages;
-            for (var i = 0; i < languages.Length; i++)
+            var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
+            try
             {
-                AppLanguage language = languages[i];
-                AppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
-                AppLanguages.Add(vm);
-
-                if (language == _localizationService.CurrentLanguage)
+                // Languages
+                AppLanguage[] languages = _localizationService.SupportedLanguages;
+                for (var i = 0; i < languages.Length; i++)
                 {
-                    SelectedAppLanguageIndex = i;
-                }
-            }
+                    AppLanguage language = languages[i];
+                    AppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
+                    AppLanguages.Add(vm);
 
-            // Themes
-            for (var i = 0; i < SupportedAppThemes.Length; i++)
+                    if (language.Value == _localizationService.LanguageOverride?.Value)
+                    {
+                        SelectedAppLanguageIndex = i;
+                    }
+                }
+                AppLanguages.Add(_appLanguageViewModelFactory.Create(null)); // Null for system default
+                if (SelectedAppLanguageIndex == -1)
+                {
+                    SelectedAppLanguageIndex = AppLanguages.Count - 1;
+                }
+                UpdateShowAppLanguageRestartMessage();
+
+                // Themes
+                AppTheme currentTheme = _themeService.CurrentTheme;
+                for (var i = 0; i < SupportedAppThemes.Length; i++)
+                {
+                    AppTheme supportedTheme = SupportedAppThemes[i];
+                    AppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
+                    AppThemes.Add(vm);
+
+                    if (supportedTheme == currentTheme)
+                    {
+                        SelectedAppThemeIndex = i;
+                    }
+                }
+                UpdateShowAppThemeRestartMessage();
+            }
+            finally
             {
-                AppTheme supportedTheme = SupportedAppThemes[i];
-                AppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
-                AppThemes.Add(vm);
-
-                if (supportedTheme == currentTheme)
-                {
-                    SelectedAppThemeIndex = i;
-                }
+                cts.Dispose();
             }
-
-            UpdateShowAppThemeRestartMessage();
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (OperationCanceledException)
-        {
-            _telemetryService.ActivityCanceled(activityId);
-            throw;
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-            throw;
-        }
-        finally
-        {
-            cts.Dispose();
-        }
+        });
 
         await base.LoadAsync(parameter, cancellationToken);
     }
 
     public override void Unload()
     {
-        string activityId = ActivityIds.Unload;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        ExecuteActivity(ActivityIds.Unload, () =>
         {
             ShowAppLanguageRestartMessage = false;
             SelectedAppLanguageIndex = -1;
@@ -193,67 +181,56 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
             ShowAppThemeRestartMessage = false;
             SelectedAppThemeIndex = -1;
             AppThemes.Clear();
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
 
         base.Unload();
     }
 
     private void UpdateAppLanguage()
     {
-        string activityId = ActivityIds.UpdateAppLanguage;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        ExecuteActivity(ActivityIds.UpdateAppLanguage, () =>
         {
             if (SelectedAppLanguageIndex != -1)
             {
                 AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
-                _localizationService.UpdateCurrentLanguage(vm.Language);
-                ShowAppLanguageRestartMessage = vm.Language != _localizationService.StartupLanguage;
+                if (vm.Language != _localizationService.LanguageOverride)
+                {
+                    _localizationService.OverrideLanguage(vm.Language);
+                    UpdateShowAppLanguageRestartMessage();
+                }
             }
+        });
+    }
 
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
+    private void UpdateShowAppLanguageRestartMessage()
+    {
+        ExecuteActivity(ActivityIds.UpdateShowAppLanguageRestartMessage, () =>
         {
-            _telemetryService.ActivityError(activityId, e);
-        }
+            ShowAppLanguageRestartMessage = 
+                _localizationService.RequestedLanguage != _localizationService.StartupLanguage || 
+                (_localizationService.LanguageOverride == null && _localizationService.StartupLanguage != _localizationService.DefaultLanguage);
+        });
     }
 
     private void UpdateAppTheme()
     {
-        string activityId = ActivityIds.UpdateAppLanguage;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        ExecuteActivity(ActivityIds.UpdateAppTheme, () =>
         {
             if (SelectedAppThemeIndex != -1)
             {
                 AppThemeViewModel vm = AppThemes[SelectedAppThemeIndex];
-                _themeService.UpdateCurrentTheme(vm.AppTheme);
-                UpdateShowAppThemeRestartMessage();
+                if (vm.AppTheme != _themeService.CurrentTheme)
+                {
+                    _themeService.UpdateCurrentTheme(vm.AppTheme);
+                    UpdateShowAppThemeRestartMessage();
+                }
             }
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void UpdateShowAppThemeRestartMessage()
     {
-        string activityId = ActivityIds.UpdateShowAppThemeRestartMessage;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        ExecuteActivity(ActivityIds.UpdateShowAppThemeRestartMessage, () =>
         {
             var defaultTheme = _themeService.DefaultTheme;
             var startupTheme = _themeService.StartupTheme;
@@ -272,34 +249,37 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
             }
 
             ShowAppThemeRestartMessage = currentTheme != startupTheme;
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void RestartApp()
     {
-        string activityId = ActivityIds.RestartApp;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
-        {
-            _appController.TryRestart();
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        ExecuteActivity(ActivityIds.RestartApp, () => _appController.TryRestart());
     }
 
     private void GoBack()
     {
-        _appController.GoBackOrHome();
+        ExecuteActivity(ActivityIds.GoBack, () => _appController.GoBackOrHome());
+    }
+
+    private void ExecuteActivity(string activityId, Action activityAction)
+    {
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            activityAction();
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (OperationCanceledException)
+        {
+            _telemetryService.ActivityCanceled(activityId);
+            throw;
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+            throw;
+        }
     }
 }

@@ -366,4 +366,7 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
     <value>Envoyer des commentaires</value>
   </data>
+  <data name="AppLanguage_SystemDefault" xml:space="preserve">
+    <value>Utiliser les paramètres par défaut du système</value>
+  </data>
 </root>
