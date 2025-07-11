@@ -13,75 +13,14 @@
     <Grid x:Name="RootPanel">
         <controls:SelectionOverlay SelectionComplete="SelectionOverlay_SelectionComplete" />
 
-        <Grid
-            x:Name="ToolbarPanel"
-            Margin="0,12,0,0"
-            Padding="8"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Top"
-            Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
-            CornerRadius="4"
-            Visibility="Collapsed">
-
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <!--  Capture mode  -->
-                <toolkit:Segmented SelectionMode="Single" Visibility="{x:Bind ViewModel.IsVideoCaptureEnabled}">
-                    <toolkit:SegmentedItem Icon="Camera" IsSelected="True" />
-                    <toolkit:SegmentedItem Icon="Video" />
-                </toolkit:Segmented>
-
-                <!--  Capture mode  -->
-                <!--
-                    TODO:
-                    - Get icons for each capture type
-                    - Localize the string values
-                    - Add code to update selected symbol on change
-                    - Update SelectionOverlay to support additional capture types
-                -->
-                <DropDownButton Background="Transparent" BorderThickness="0">
-                    <SymbolIcon Symbol="Preview" />
-                    <DropDownButton.Flyout>
-                        <MenuFlyout>
-                            <MenuFlyoutItem Icon="Preview" Text="Rectangle" />
-                            <MenuFlyoutItem
-                                Icon="Preview"
-                                Text="Window"
-                                Visibility="{x:Bind ViewModel.IsWindowModeEnabled}" />
-                            <MenuFlyoutItem
-                                Icon="Preview"
-                                Text="Full screen"
-                                Visibility="{x:Bind ViewModel.IsFullScreenModeEnabled}" />
-                            <MenuFlyoutItem
-                                Icon="Preview"
-                                Text="Freeform"
-                                Visibility="{x:Bind ViewModel.IsFreeformModeEnabled}" />
-                        </MenuFlyout>
-                    </DropDownButton.Flyout>
-                </DropDownButton>
-
-                <!--  Close  -->
-                <Button
-                    x:Name="CloseButton"
-                    x:Uid="SelectionOverlay_CloseButton"
-                    Width="32"
-                    Height="32"
-                    Padding="0"
-                    Background="Transparent"
-                    BorderBrush="Transparent"
-                    Click="CloseButton_Click">
-                    <SymbolIcon Symbol="Clear" />
-                </Button>
-            </StackPanel>
-        </Grid>
+        <controls:CaptureOverlayToolbar
+            x:Name="Toolbar"
+            CloseRequested="OnCloseRequested"
+            SelectedCaptureMode="{x:Bind ViewModel.SelectedCaptureMode, Mode=TwoWay}" />
 
         <!--  Secret button to allow escape to work on all monitors.  -->
         <Button
-            Click="CloseButton_Click"
+            Click="OnCloseRequested"
             IsTabStop="False"
             Opacity="0">
             <Button.KeyboardAccelerators>
