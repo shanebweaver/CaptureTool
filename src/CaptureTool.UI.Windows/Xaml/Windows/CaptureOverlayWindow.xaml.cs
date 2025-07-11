@@ -10,6 +10,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
+// TODO: Make this a View so it can have a ViewModel.
 public sealed partial class CaptureOverlayWindow : Window
 {
     public CaptureOverlayWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<CaptureOverlayWindowViewModel>();
@@ -42,7 +43,28 @@ public sealed partial class CaptureOverlayWindow : Window
         {
             UpdateRequestedAppTheme();
             LoadBackgroundImage();
+            ShowEnabledFeatures();
         });
+    }
+
+    private void ShowEnabledFeatures()
+    {
+        if (ViewModel.IsVideoCaptureEnabled)
+        {
+            CaptureModeSegmentedControl.Visibility = Visibility.Visible;
+        }
+        if (ViewModel.IsWindowModeEnabled)
+        {
+            WindowModeMenuItem.Visibility = Visibility.Visible;
+        }
+        if (ViewModel.IsFullScreenModeEnabled)
+        {
+            FullScreenModeMenuItem.Visibility = Visibility.Visible;
+        }
+        if (ViewModel.IsFreeformModeEnabled)
+        {
+            FreeformModeMenuItem.Visibility = Visibility.Visible;
+        }
     }
 
     private void LoadBackgroundImage()
@@ -110,11 +132,11 @@ public sealed partial class CaptureOverlayWindow : Window
 
     private void ToolbarPanel_Loaded(object sender, RoutedEventArgs e)
     {
-        ToolbarPanel.Loaded -= ToolbarPanel_Loaded;
+        Toolbar.Loaded -= ToolbarPanel_Loaded;
 
         if (ViewModel.IsPrimary)
         {
-            ToolbarPanel.Visibility = Visibility.Visible;
+            Toolbar.Visibility = Visibility.Visible;
         }
     }
 
@@ -128,7 +150,7 @@ public sealed partial class CaptureOverlayWindow : Window
         }
     }
 
-    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    private void OnCloseRequested(object sender, EventArgs e)
     {
         ViewModel.CloseOverlayCommand.Execute(null);
     }

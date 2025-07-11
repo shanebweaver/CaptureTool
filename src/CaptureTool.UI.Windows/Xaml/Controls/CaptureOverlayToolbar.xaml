@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.UI.Windows.Xaml.Controls.CaptureOverlayToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.UI.Windows.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    mc:Ignorable="d">
+
+    <Grid
+        x:Name="ToolbarPanel"
+        Margin="0,12,0,0"
+        Padding="8"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Top"
+        Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+        CornerRadius="4"
+        Visibility="Collapsed">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <!--  Capture mode  -->
+            <toolkit:Segmented
+                x:Name="CaptureModeSegmentedControl"
+                SelectionMode="Single"
+                Visibility="Collapsed">
+                <toolkit:SegmentedItem Icon="Camera" IsSelected="True" />
+                <toolkit:SegmentedItem Icon="Video" />
+            </toolkit:Segmented>
+
+            <!--  Capture type  -->
+            <!--
+                TODO:
+                - Get icons for each capture type
+                - Localize the string values
+                - Add code to update selected symbol on change
+                - Update SelectionOverlay to support additional capture types
+            -->
+            <DropDownButton Background="Transparent" BorderThickness="0">
+                <SymbolIcon Symbol="Preview" />
+                <DropDownButton.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Icon="Preview" Text="Rectangle" />
+                        <MenuFlyoutItem
+                            x:Name="WindowModeMenuItem"
+                            Icon="Preview"
+                            Text="Window"
+                            Visibility="Collapsed" />
+                        <MenuFlyoutItem
+                            x:Name="FullScreenModeMenuItem"
+                            Icon="Preview"
+                            Text="Full screen"
+                            Visibility="Collapsed" />
+                        <MenuFlyoutItem
+                            x:Name="FreeformModeMenuItem"
+                            Icon="Preview"
+                            Text="Freeform"
+                            Visibility="Collapsed" />
+                    </MenuFlyout>
+                </DropDownButton.Flyout>
+            </DropDownButton>
+
+            <!--  Close  -->
+            <Button
+                x:Name="CloseButton"
+                x:Uid="SelectionOverlay_CloseButton"
+                Width="32"
+                Height="32"
+                Padding="0"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                Click="CloseButton_Click">
+                <SymbolIcon Symbol="Clear" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</local:UserControlBase>
