@@ -3,6 +3,7 @@ using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.UI;
 using System;
+using System.Drawing;
 using System.Numerics;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -14,24 +15,45 @@ public static partial class Win2DImageCanvasRenderer
 {
     private static readonly Color ClearColor = Colors.Transparent;
 
-    public static void Render(IDrawable[] drawables, ImageCanvasRenderOptions options, object drawingSessionObj, float scale = 1f)
+    public static void Render(IDrawable[] drawables, ImageCanvasRenderOptions options, CanvasDrawingSession drawingSession, float scale = 1f)
     {
-        if (drawingSessionObj is not CanvasDrawingSession drawingSession)
-        {
-            throw new InvalidOperationException("Invalid drawing session object.");
-        }
-
-        // Clear the drawing session
         drawingSession.Clear(ClearColor);
 
-        // Apply the final transform to the drawing session
-        drawingSession.Transform = ImageOrientationHelper.CalculateRenderTransform(options.CropRect, options.CanvasSize, options.Orientation, scale);
+        var device = drawingSession.Device;
+        var renderTarget = new CanvasRenderTarget(device, options.CanvasSize.Width, options.CanvasSize.Height, options.Dpi);
 
-        // Draw all the drawables
-        foreach (IDrawable drawable in drawables)
+        using (var tempSession = renderTarget.CreateDrawingSession())
         {
-            Draw(drawable, drawingSession);
+            tempSession.Clear(ClearColor);
+
+            foreach (IDrawable drawable in drawables)
+            {
+                Draw(drawable, tempSession);
+            }
         }
+
+        //  Rotate, flip/mirror, scale
+        var rotateEffect = new Transform2DEffect
+        {
+            Source = renderTarget,
+            TransformMatrix = ImageOrientationHelper.CalculateRenderTransform(options.CanvasSize, options.Orientation, scale)
+        };
+
+        // Crop
+        var cropEffect = new CropEffect
+        {
+            Source = rotateEffect,
+            SourceRectangle = new(
+                new global::Windows.Foundation.Point(options.CropRect.Location.X, options.CropRect.Location.Y),
+                new global::Windows.Foundation.Size(options.CropRect.Width, options.CropRect.Height))
+        };
+        var cropAlignmentEffect = new Transform2DEffect
+        {
+            Source = cropEffect,
+            TransformMatrix = Matrix3x2.CreateTranslation(-options.CropRect.X, -options.CropRect.Y)
+        };
+
+        drawingSession.DrawImage(cropAlignmentEffect);
     }
 
     public static void Draw(IDrawable drawable, CanvasDrawingSession drawingSession)

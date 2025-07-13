@@ -15,15 +15,6 @@ public static partial class ImageOrientationHelper
             orientation == ImageOrientation.Rotate270FlipX;
     }
 
-    public static bool IsXFlipped(ImageOrientation orientation)
-    {
-        return
-            orientation == ImageOrientation.RotateNoneFlipX ||
-            orientation == ImageOrientation.Rotate90FlipX ||
-            orientation == ImageOrientation.Rotate180FlipX ||
-            orientation == ImageOrientation.Rotate270FlipX;
-    }
-
     public static Size GetOrientedImageSize(Size imageSize, ImageOrientation orientation)
     {
         bool isTurned = IsTurned(orientation);
@@ -274,7 +265,7 @@ public static partial class ImageOrientationHelper
         return result;
     }
 
-    public static Matrix3x2 CalculateRenderTransform(Rectangle cropRect, Size imageSize, ImageOrientation orientation, float scale = 1f)
+    public static Matrix3x2 CalculateRenderTransform(Size imageSize, ImageOrientation orientation, float scale = 1f)
     {
         Matrix3x2 transform = Matrix3x2.Identity;
         double imageWidth = imageSize.Width;
@@ -359,10 +350,7 @@ public static partial class ImageOrientationHelper
                 break;
         }
 
-        // Apply cropping
-        transform *= Matrix3x2.CreateTranslation(-(float)cropRect.X, -(float)cropRect.Y);
-
-        // Scaling
+        // Apply scaling
         transform *= Matrix3x2.CreateScale(scale);
 
         return transform;

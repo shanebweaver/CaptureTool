@@ -77,7 +77,7 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
 
         var pageDescription = printOptions.GetPageDescription(PageCount);
         float scale = CalculateScaleForOnePage(renderOptions, pageDescription);
-
+        
         Win2DImageCanvasRenderer.Render(drawables, renderOptions, printDrawingSession, scale);
     }
 
