@@ -18,7 +18,13 @@
         PointerReleased="RootContainer_PointerReleased"
         SizeChanged="RootContainer_SizeChanged">
 
-        <Rectangle x:Name="DimmedBackgroundRectangle" Visibility="Collapsed" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Black" Opacity=".5" />
+        <Rectangle
+            x:Name="DimmedBackgroundRectangle"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Fill="Black"
+            Opacity=".5"
+            Visibility="Collapsed" />
 
         <ScrollView x:Name="CanvasScrollView" HorizontalScrollBarVisibility="Auto">
             <Grid
