@@ -3,11 +3,9 @@ using CaptureTool.Edit.Drawable;
 using CaptureTool.Edit.Windows;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
-using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -35,7 +33,7 @@ public sealed partial class ImageCanvas : UserControlBase
         nameof(CanvasSize),
         typeof(Size),
         typeof(ImageCanvas),
-        new PropertyMetadata(new Size(0, 0), OnCanvasSizePropertyChanged));
+        new PropertyMetadata(Size.Empty, OnCanvasSizePropertyChanged));
 
     public static readonly DependencyProperty IsCropModeEnabledProperty = DependencyProperty.Register(
         nameof(IsCropModeEnabled),
@@ -47,7 +45,7 @@ public sealed partial class ImageCanvas : UserControlBase
        nameof(CropRect),
        typeof(Rectangle),
        typeof(ImageCanvas),
-       new PropertyMetadata(new Rectangle(0,0,0,0), OnCropRectPropertyChanged));
+       new PropertyMetadata(Rectangle.Empty, OnCropRectPropertyChanged));
 
     private static void OnCropRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -65,13 +63,13 @@ public sealed partial class ImageCanvas : UserControlBase
             {
                 if (e.NewValue is bool isCropModeEnabled && isCropModeEnabled)
                 {
-                    control.RootContainer.Background = new SolidColorBrush(Colors.Black);
+                    control.DimmedBackgroundRectangle.Visibility = Visibility.Visible;
                     control.CanvasScrollView.ZoomMode = ScrollingZoomMode.Disabled;
                 }
                 else
                 {
                     control.CanvasScrollView.ZoomMode = ScrollingZoomMode.Enabled;
-                    control.RootContainer.Background = new SolidColorBrush(Colors.Transparent);
+                    control.DimmedBackgroundRectangle.Visibility = Visibility.Collapsed;
                 }
 
                 control.UpdateDrawingCanvasSize();
