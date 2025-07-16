@@ -1,21 +1,24 @@
-MIT License
+PolyForm Noncommercial License 1.0.0 – Modified
 
-Copyright (c) 2025 Shane Weaver
+Copyright (c) Shane Weaver, 2025
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is hereby granted to any individual or organization to use, copy, modify, and distribute this software, provided that:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. **Noncommercial Use Only**: This software may only be used for noncommercial purposes. Use for personal, educational, or research purposes is allowed.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. **Prohibited Commercial Use**: You may not use the software in a revenue-generating product, service, or process, or within a for-profit organization.
+
+3. **Prohibited Entities**: Use by the following entities or their subsidiaries is strictly prohibited without written permission:
+   - Microsoft Corporation
+   - Google LLC
+   - Amazon.com, Inc.
+   - Meta Platforms, Inc.
+   - Any company with more than 100 employees or annual revenue exceeding $10 million USD
+
+4. **No Warranty**: The software is provided “as is”, without warranty of any kind, express or implied.
+
+5. **No Trademark Rights**: This license does not grant any rights to use the name, logo, or other trademarks of the copyright holder.
+
+For full license text, refer to https://polyformproject.org/licenses/noncommercial/1.0.0/
+
+For commercial use, contact shanebweaver@gmail.com.
