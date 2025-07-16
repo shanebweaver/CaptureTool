@@ -10,7 +10,7 @@ public interface IAppController
 
     void ShowCaptureOverlay();
     void CloseCaptureOverlay();
-    void PerformCapture(MonitorCaptureResult monitor, Rectangle area);
+    void PerformCapture(MonitorCaptureResult monitor, Rectangle captureArea);
 
     void HideMainWindow();
     void ShowMainWindow();

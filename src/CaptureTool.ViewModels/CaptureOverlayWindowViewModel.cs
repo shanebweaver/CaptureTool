@@ -109,6 +109,18 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         _selectedCaptureModeIndex = 0;
 
         _supportedCaptureTypes = [CaptureType.Rectangle];
+        if (IsWindowModeEnabled)
+        {
+            _supportedCaptureTypes.Add(CaptureType.Window);
+        }
+        if (IsFullScreenModeEnabled)
+        {
+            _supportedCaptureTypes.Add(CaptureType.FullScreen);
+        }
+        if (IsFreeformModeEnabled)
+        {
+            _supportedCaptureTypes.Add(CaptureType.Freeform);
+        }
         _selectedCaptureTypeIndex = 0;
     }
 

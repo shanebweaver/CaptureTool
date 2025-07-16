@@ -45,19 +45,19 @@
                         <TextBlock x:Uid="CaptureType_Rectangle" />
                     </StackPanel>
                 </ComboBoxItem>
-                <ComboBoxItem x:Name="WindowModeMenuItem" IsEnabled="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Window), Mode=OneWay}">
+                <ComboBoxItem x:Name="WindowModeMenuItem" Visibility="{x:Bind GetVisibilityForCaptureType(capture:CaptureType.Window), Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource WindowSnipping}" />
                         <TextBlock x:Uid="CaptureType_Window" />
                     </StackPanel>
                 </ComboBoxItem>
-                <ComboBoxItem x:Name="FullScreenModeMenuItem" IsEnabled="{x:Bind IsCaptureTypeSupported(capture:CaptureType.FullScreen), Mode=OneWay}">
+                <ComboBoxItem x:Name="FullScreenModeMenuItem" Visibility="{x:Bind GetVisibilityForCaptureType(capture:CaptureType.FullScreen), Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource FitPage}" />
                         <TextBlock x:Uid="CaptureType_FullScreen" />
                     </StackPanel>
                 </ComboBoxItem>
-                <ComboBoxItem x:Name="FreeformModeMenuItem" IsEnabled="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Freeform), Mode=OneWay}">
+                <ComboBoxItem x:Name="FreeformModeMenuItem" Visibility="{x:Bind GetVisibilityForCaptureType(capture:CaptureType.Freeform), Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource FreeFormClipping}" />
                         <TextBlock x:Uid="CaptureType_Freeform" />

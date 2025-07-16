@@ -84,12 +84,6 @@ internal partial class CaptureToolAppController : IAppController
             var monitors = MonitorCaptureHelper.CaptureAllMonitors();
             foreach (var monitor in monitors)
             {
-                if (monitor.MonitorBounds.X != 0 && monitor.MonitorBounds.Y != 0)
-                {
-                    // Non-primary
-                    continue;
-                }
-
                 CaptureOverlayWindow window = new(monitor);
 
                 IntPtr windowHwnd = WindowNative.GetWindowHandle(window);

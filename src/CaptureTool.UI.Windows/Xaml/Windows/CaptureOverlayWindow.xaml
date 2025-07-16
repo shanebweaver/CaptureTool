@@ -8,22 +8,9 @@
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:views="using:CaptureTool.UI.Windows.Xaml.Views"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootPanel">
-        <controls:SelectionOverlay SelectionComplete="SelectionOverlay_SelectionComplete" />
-
-        <controls:CaptureOverlayToolbar x:Name="Toolbar" CloseRequested="OnCloseRequested" />
-
-        <!--  Secret button to allow escape to work on all monitors.  -->
-        <Button
-            Click="OnEscapeRequested"
-            IsTabStop="False"
-            Opacity="0">
-            <Button.KeyboardAccelerators>
-                <KeyboardAccelerator Key="Escape" />
-            </Button.KeyboardAccelerators>
-        </Button>
-    </Grid>
+    <views:CaptureOverlayWindowView x:Name="RootView" />
 
 </Window>

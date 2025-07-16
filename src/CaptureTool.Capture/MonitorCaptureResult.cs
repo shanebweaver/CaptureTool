@@ -11,6 +11,7 @@ public readonly partial struct MonitorCaptureResult
     public float Scale => Dpi / 96f;
     public Rectangle MonitorBounds { get; }
     public Rectangle WorkAreaBounds { get; }
+    public bool IsPrimary => MonitorBounds.X == 0 && MonitorBounds.Y == 0;
 
     public MonitorCaptureResult(nint hMonitor, byte[] pixelBuffer, uint dpi, Rectangle monitorBounds, Rectangle workAreaBounds)
     {
