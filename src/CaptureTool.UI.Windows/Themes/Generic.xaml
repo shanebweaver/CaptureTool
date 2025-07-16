@@ -21,6 +21,17 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
+    <Style
+        x:Key="IconButtonStyle"
+        BasedOn="{StaticResource DefaultButtonStyle}"
+        TargetType="Button">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
     <FontFamily x:Key="FluentSystemIcons">ms-appx:///Fonts/FluentSystemIcons-Regular.ttf#FluentSystemIcons-Regular</FontFamily>
 
     <x:String x:Key="FlipHorizontal16Regular">&#xE62B;</x:String>
@@ -43,6 +54,50 @@
     <x:String x:Key="LocalLanguage24Regular">&#xF4F4;</x:String>
     <x:String x:Key="LocalLanguage28Regular">&#xF4F5;</x:String>
 
+    <x:String x:Key="Window16Regular">&#xEE5D;</x:String>
+    <x:String x:Key="Window24Regular">&#xEE5E;</x:String>
+    <x:String x:Key="Window28Regular">&#xEE5F;</x:String>
+    <x:String x:Key="Window32Regular">&#xEE60;</x:String>
+    <x:String x:Key="Window48Regular">&#xEE61;</x:String>
+
+    <x:String x:Key="Desktop16Regular">&#xE358;</x:String>
+    <x:String x:Key="Desktop20Regular">&#xE359;</x:String>
+    <x:String x:Key="Desktop24Regular">&#xE35A;</x:String>
+    <x:String x:Key="Desktop28Regular">&#xE35B;</x:String>
+    <x:String x:Key="Desktop32Regular">&#xE487;</x:String>
+
+    <x:String x:Key="Screenshot16Regular">&#xF0412;</x:String>
+    <x:String x:Key="Screenshot20Regular">&#xF68D;</x:String>
+    <x:String x:Key="Screenshot24Regular">&#xF68E;</x:String>
+    <x:String x:Key="Screenshot28Regular">&#xF045C;</x:String>
+
+    <x:String x:Key="ScreenshotRecord16Regular">&#xF0413;</x:String>
+    <x:String x:Key="ScreenshotRecord20Regular">&#xF0414;</x:String>
+    <x:String x:Key="ScreenshotRecord24Regular">&#xF0415;</x:String>
+    <x:String x:Key="ScreenshotRecord28Regular">&#xF045D;</x:String>
+
+    <!--  Segoe Fluent Icons  -->
+    <x:String x:Key="Record">&#xE7C8;</x:String>
+    <x:String x:Key="Video">&#xE714;</x:String>
+    <x:String x:Key="Camera">&#xE722;</x:String>
+    <x:String x:Key="Microphone">&#xE720;</x:String>
+    <x:String x:Key="Redo">&#xE7A6;</x:String>
+    <x:String x:Key="Undo">&#xE7A7;</x:String>
+    <x:String x:Key="Crop">&#xE7A8;</x:String>
+    <x:String x:Key="PhotoCollection">&#xE7AA;</x:String>
+    <x:String x:Key="Color">&#xE790;</x:String>
+    <x:String x:Key="Settings">&#xE713;</x:String>
+    <x:String x:Key="Cancel">&#xE711;</x:String>
+    <x:String x:Key="Back">&#xE72B;</x:String>
+    <x:String x:Key="Print">&#xE749;</x:String>
+    <x:String x:Key="RectangularClipping">&#xF407;</x:String>
+    <x:String x:Key="FreeFormClipping">&#xF408;</x:String>
+    <x:String x:Key="WindowSnipping">&#xF7ED;</x:String>
+    <x:String x:Key="FitPage">&#xE9A6;</x:String>
+    <x:String x:Key="VideoCapture">&#xF7EE;</x:String>
+    <x:String x:Key="AspectRatio">&#xE799;</x:String>
+
+    <!--  Capture Mode Symbols  -->
     <Symbol x:Key="NewImageCaptureSymbol">Camera</Symbol>
     <Symbol x:Key="NewVideoCaptureSymbol">Video</Symbol>
 </ResourceDictionary>

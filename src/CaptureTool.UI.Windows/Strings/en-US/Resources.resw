@@ -453,4 +453,20 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Use system default</value>
     <comment>The label for the system default language option.</comment>
   </data>
+  <data name="CaptureType_Rectangle.Text" xml:space="preserve">
+    <value>Rectangle</value>
+    <comment>The label for the Rectangle capture type</comment>
+  </data>
+  <data name="CaptureType_Window.Text" xml:space="preserve">
+    <value>Window</value>
+    <comment>The label for the Window capture type.</comment>
+  </data>
+  <data name="CaptureType_FullScreen.Text" xml:space="preserve">
+    <value>Full screen</value>
+    <comment>The label for the Full screen capture type.</comment>
+  </data>
+  <data name="CaptureType_Freeform.Text" xml:space="preserve">
+    <value>Freeform</value>
+    <comment>The label for the Freeform capture type.</comment>
+  </data>
 </root>

@@ -4,6 +4,7 @@ using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Themes;
 using System;
+using System.Collections.ObjectModel;
 using System.Drawing;
 
 namespace CaptureTool.ViewModels;
@@ -20,7 +21,36 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
 
     public bool IsPrimary => Monitor?.MonitorBounds.Top == 0 && Monitor?.MonitorBounds.Left == 0;
-        
+
+
+    private ObservableCollection<CaptureType> _supportedCaptureTypes;
+    public ObservableCollection<CaptureType> SupportedCaptureTypes
+    {
+        get => _supportedCaptureTypes;
+        set => Set(ref _supportedCaptureTypes, value);
+    }
+
+    private int _selectedCaptureTypeIndex;
+    public int SelectedCaptureTypeIndex
+    {
+        get => _selectedCaptureTypeIndex;
+        set => Set(ref _selectedCaptureTypeIndex, value);
+    }
+
+    private ObservableCollection<CaptureMode> _supportedCaptureModes;
+    public ObservableCollection<CaptureMode> SupportedCaptureModes
+    {
+        get => _supportedCaptureModes;
+        set => Set(ref _supportedCaptureModes, value);
+    }
+
+    private int _selectedCaptureModeIndex;
+    public int SelectedCaptureModeIndex
+    {
+        get => _selectedCaptureModeIndex;
+        set => Set(ref _selectedCaptureModeIndex, value);
+    }
+
     private Rectangle _captureArea;
     public Rectangle CaptureArea
     {
@@ -70,6 +100,16 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         IsWindowModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_WindowMode);
         IsFullScreenModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_FullScreenMode);
         IsFreeformModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_FreeformMode);
+
+        _supportedCaptureModes = [ CaptureMode.Image ];
+        if (IsVideoCaptureEnabled)
+        {
+            _supportedCaptureModes.Add(CaptureMode.Video);
+        }
+        _selectedCaptureModeIndex = 0;
+
+        _supportedCaptureTypes = [CaptureType.Rectangle];
+        _selectedCaptureTypeIndex = 0;
     }
 
     public void Close()

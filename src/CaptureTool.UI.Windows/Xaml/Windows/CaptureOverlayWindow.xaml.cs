@@ -10,7 +10,6 @@ using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
-// TODO: Make this a View so it can have a ViewModel.
 public sealed partial class CaptureOverlayWindow : Window
 {
     public CaptureOverlayWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<CaptureOverlayWindowViewModel>();
@@ -37,33 +36,25 @@ public sealed partial class CaptureOverlayWindow : Window
         }
 
         InitializeComponent();
-        ToolbarPanel.Loaded += ToolbarPanel_Loaded;
 
         DispatcherQueue.TryEnqueue(() =>
         {
             UpdateRequestedAppTheme();
             LoadBackgroundImage();
-            ShowEnabledFeatures();
+            LoadToolbar();
         });
     }
 
-    private void ShowEnabledFeatures()
+    private void LoadToolbar()
     {
-        if (ViewModel.IsVideoCaptureEnabled)
+        if (ViewModel.IsPrimary)
         {
-            CaptureModeSegmentedControl.Visibility = Visibility.Visible;
-        }
-        if (ViewModel.IsWindowModeEnabled)
-        {
-            WindowModeMenuItem.Visibility = Visibility.Visible;
-        }
-        if (ViewModel.IsFullScreenModeEnabled)
-        {
-            FullScreenModeMenuItem.Visibility = Visibility.Visible;
-        }
-        if (ViewModel.IsFreeformModeEnabled)
-        {
-            FreeformModeMenuItem.Visibility = Visibility.Visible;
+            Toolbar.Visibility = Visibility.Visible;
+            Toolbar.IsVideoCaptureEnabled = ViewModel.IsVideoCaptureEnabled;
+            Toolbar.SupportedCaptureModes = ViewModel.SupportedCaptureModes;
+            Toolbar.SelectedCaptureModeIndex = ViewModel.SelectedCaptureModeIndex;
+            Toolbar.SupportedCaptureTypes = ViewModel.SupportedCaptureTypes;
+            Toolbar.SelectedCaptureTypeIndex = ViewModel.SelectedCaptureTypeIndex;
         }
     }
 
@@ -130,16 +121,6 @@ public sealed partial class CaptureOverlayWindow : Window
         });
     }
 
-    private void ToolbarPanel_Loaded(object sender, RoutedEventArgs e)
-    {
-        Toolbar.Loaded -= ToolbarPanel_Loaded;
-
-        if (ViewModel.IsPrimary)
-        {
-            Toolbar.Visibility = Visibility.Visible;
-        }
-    }
-
     private void SelectionOverlay_SelectionComplete(object sender, Rectangle captureArea)
     {
         ViewModel.CaptureArea = captureArea;
@@ -151,6 +132,11 @@ public sealed partial class CaptureOverlayWindow : Window
     }
 
     private void OnCloseRequested(object sender, EventArgs e)
+    {
+        ViewModel.CloseOverlayCommand.Execute(null);
+    }
+
+    private void OnEscapeRequested(object sender, RoutedEventArgs e)
     {
         ViewModel.CloseOverlayCommand.Execute(null);
     }

@@ -369,4 +369,16 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Utiliser les paramètres par défaut du système</value>
   </data>
+  <data name="CaptureType_Rectangle.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="CaptureType_Window.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="CaptureType_FullScreen.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="CaptureType_Freeform.Text" xml:space="preserve">
+    <value />
+  </data>
 </root>

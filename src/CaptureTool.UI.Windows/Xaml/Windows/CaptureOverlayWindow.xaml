@@ -13,14 +13,11 @@
     <Grid x:Name="RootPanel">
         <controls:SelectionOverlay SelectionComplete="SelectionOverlay_SelectionComplete" />
 
-        <controls:CaptureOverlayToolbar
-            x:Name="Toolbar"
-            CloseRequested="OnCloseRequested"
-            SelectedCaptureMode="{x:Bind ViewModel.SelectedCaptureMode, Mode=TwoWay}" />
+        <controls:CaptureOverlayToolbar x:Name="Toolbar" CloseRequested="OnCloseRequested" />
 
         <!--  Secret button to allow escape to work on all monitors.  -->
         <Button
-            Click="OnCloseRequested"
+            Click="OnEscapeRequested"
             IsTabStop="False"
             Opacity="0">
             <Button.KeyboardAccelerators>
