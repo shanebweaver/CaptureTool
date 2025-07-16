@@ -150,7 +150,7 @@ public sealed partial class ImageCanvas : UserControlBase
         });
     }
 
-    private Size GetImageRenderSize()
+    private bool IsTurned()
     {
         ImageOrientation orientation = Orientation;
         bool isTurned =
@@ -158,6 +158,13 @@ public sealed partial class ImageCanvas : UserControlBase
             orientation == ImageOrientation.Rotate90FlipX ||
             orientation == ImageOrientation.Rotate270FlipNone ||
             orientation == ImageOrientation.Rotate270FlipX;
+
+        return isTurned;
+    }
+
+    private Size GetImageRenderSize()
+    {
+        bool isTurned = IsTurned();
 
         double canvasWidth, canvasHeight;
 
@@ -250,8 +257,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         lock (this)
         {
-            var rect = (!IsCropModeEnabled) ? CropRect : new Rectangle(0, 0, CanvasSize.Width, CanvasSize.Height);
-
+            var rect = (!IsCropModeEnabled) ? CropRect : IsTurned() ? new Rectangle(0, 0, CanvasSize.Height, CanvasSize.Width) : new Rectangle(0, 0, CanvasSize.Width, CanvasSize.Height);
             ImageCanvasRenderOptions options = new(Orientation, CanvasSize, rect);
             Win2DImageCanvasRenderer.Render([.. Drawables], options, args.DrawingSession);
         }
@@ -260,7 +266,6 @@ public sealed partial class ImageCanvas : UserControlBase
     private void CanvasControl_CreateResources(CanvasControl sender, CanvasCreateResourcesEventArgs args)
     {
         // Create any resources needed by the Draw event handler.
-
         // Asynchronous work can be tracked with TrackAsyncAction:
         args.TrackAsyncAction(CreateResourcesAsync(sender).AsAsyncAction());
     }
