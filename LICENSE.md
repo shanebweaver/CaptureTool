@@ -21,4 +21,4 @@ Permission is hereby granted to any individual or organization to use, copy, mod
 
 For full license text, refer to https://polyformproject.org/licenses/noncommercial/1.0.0/
 
-For commercial use, contact shanebweaver@gmail.com.
+For commercial use, contact shanebweaver@gmail.com
