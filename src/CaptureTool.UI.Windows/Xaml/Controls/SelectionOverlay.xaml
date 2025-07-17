@@ -20,6 +20,7 @@
                 x:Name="SelectionRectangle"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
+                Fill="Transparent"
                 Stroke="White"
                 StrokeThickness="2" />
         </Grid>

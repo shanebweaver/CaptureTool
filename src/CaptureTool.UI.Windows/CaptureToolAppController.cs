@@ -84,6 +84,13 @@ internal partial class CaptureToolAppController : IAppController
             var monitors = MonitorCaptureHelper.CaptureAllMonitors();
             foreach (var monitor in monitors)
             {
+                // Uncomment to only show overlay on primary monitor.
+                // Useful for debugging on a side monitor.
+                //if (!monitor.IsPrimary)
+                //{
+                //    continue;
+                //}
+
                 CaptureOverlayWindow window = new(monitor);
 
                 IntPtr windowHwnd = WindowNative.GetWindowHandle(window);
@@ -163,21 +170,26 @@ internal partial class CaptureToolAppController : IAppController
             fullBmp.UnlockBits(bmpData);
         }
 
-        // Crop to the selected area
-        float scale = monitor.Scale;
-        int cropX = (int)Math.Round((area.Left) * scale);
-        int cropY = (int)Math.Round((area.Top) * scale);
-        int cropWidth = (int)Math.Round(area.Width * scale);
-        int cropHeight = (int)Math.Round(area.Height * scale);
-
-        using var croppedBmp = fullBmp.Clone(new Rectangle(cropX, cropY, cropWidth, cropHeight), fullBmp.PixelFormat);
         var tempPath = Path.Combine(
             ApplicationData.GetDefault().TemporaryPath,
             "screenshots",
             $"capture_{Guid.NewGuid()}.png"
         );
 
-        Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
+        // Crop to the selected area
+        float scale = monitor.Scale; int cropX = (int)Math.Round((area.Left) * scale);
+        int cropY = (int)Math.Round((area.Top) * scale);
+        int cropWidth = (int)Math.Round(area.Width * scale);
+        int cropHeight = (int)Math.Round(area.Height * scale);
+
+        // Ensure cropping stays within image bounds
+        cropX = Math.Clamp(cropX, 0, fullBmp.Width - 1);
+        cropY = Math.Clamp(cropY, 0, fullBmp.Height - 1);
+        cropWidth = Math.Clamp(cropWidth, 1, fullBmp.Width - cropX);
+        cropHeight = Math.Clamp(cropHeight, 1, fullBmp.Height - cropY);
+
+        var cropRect = new Rectangle(cropX, cropY, cropWidth, cropHeight);
+        using var croppedBmp = fullBmp.Clone(cropRect, fullBmp.PixelFormat);
         croppedBmp.Save(tempPath, ImageFormat.Png);
 
         CloseCaptureOverlay();

@@ -1,5 +1,6 @@
 using CaptureTool.Capture;
 using CaptureTool.Services.Themes;
+using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
@@ -14,38 +15,58 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
     {
         InitializeComponent();
 
+        ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+
         DispatcherQueue.TryEnqueue(() =>
         {
             UpdateRequestedAppTheme();
             LoadBackgroundImage();
-            //LoadToolbar();
         });
     }
 
-    //private void LoadToolbar()
-    //{
-    //    if (ViewModel.IsPrimary)
-    //    {
-    //        Toolbar.Visibility = Visibility.Visible;
-    //        Toolbar.IsVideoCaptureEnabled = ViewModel.IsVideoCaptureEnabled;
-    //        Toolbar.SupportedCaptureModes = ViewModel.SupportedCaptureModes;
-    //        Toolbar.SelectedCaptureModeIndex = ViewModel.SelectedCaptureModeIndex;
-    //        Toolbar.SupportedCaptureTypes = ViewModel.SupportedCaptureTypes;
-    //        Toolbar.SelectedCaptureTypeIndex = ViewModel.SelectedCaptureTypeIndex;
-
-    //        Toolbar.CaptureTypeSelectionChanged += Toolbar_CaptureTypeSelectionChanged;
-    //        Toolbar.CaptureModeSelectionChanged += Toolbar_CaptureModeSelectionChanged;
-    //    }
-    //}
-
-    private void Toolbar_CaptureModeSelectionChanged(object? sender, int e)
+    private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        ViewModel.SelectedCaptureModeIndex = e;
+        if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.SelectedCaptureTypeIndex))
+        {
+            OnSelectedCaptureTypeChanged();
+        }
+        else if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.CaptureArea))
+        {
+            SelectionOverlay.SelectionRect = ViewModel.Monitor.HasValue ? ViewModel.Monitor.Value.MonitorBounds : Rectangle.Empty;
+        }
     }
 
-    private void Toolbar_CaptureTypeSelectionChanged(object? sender, int e)
+    private void OnSelectedCaptureTypeChanged()
     {
-        ViewModel.SelectedCaptureTypeIndex = e;
+        var newCaptureType = ViewModel.SelectedCaptureType;
+        SelectionOverlay.CaptureType = newCaptureType;
+        
+        if (newCaptureType == CaptureType.Rectangle)
+        {
+            SelectionOverlay.SelectionRect = Rectangle.Empty;
+            // Also restore pointer logic
+        }
+        else if (newCaptureType == CaptureType.Window)
+        {
+            SelectionOverlay.SelectionRect = Rectangle.Empty;
+        }
+        else if (newCaptureType == CaptureType.FullScreen)
+        {
+            if (ViewModel.Monitor != null)
+            {
+                // Change Pointer Logic to accept picture on click.
+                ViewModel.CaptureArea = ViewModel.Monitor.Value.MonitorBounds;
+                //DispatcherQueue.TryEnqueue(() =>
+                //{
+                //    ViewModel.RequestCaptureCommand.Execute(null);
+                //});
+            }
+        }
+        else if (newCaptureType == CaptureType.Freeform)
+        {
+            SelectionOverlay.SelectionRect = Rectangle.Empty;
+            // Also restore pointer logic
+        }
     }
 
     private void LoadBackgroundImage()

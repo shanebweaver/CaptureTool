@@ -12,7 +12,7 @@
     mc:Ignorable="d">
 
     <Grid x:Name="RootPanel">
-        <controls:SelectionOverlay SelectionComplete="SelectionOverlay_SelectionComplete" />
+        <controls:SelectionOverlay x:Name="SelectionOverlay" SelectionComplete="SelectionOverlay_SelectionComplete" />
 
         <controls:CaptureOverlayToolbar
             x:Name="Toolbar"
@@ -21,7 +21,8 @@
             SelectedCaptureModeIndex="{x:Bind ViewModel.SelectedCaptureModeIndex, Mode=TwoWay}"
             SelectedCaptureTypeIndex="{x:Bind ViewModel.SelectedCaptureTypeIndex, Mode=TwoWay}"
             SupportedCaptureModes="{x:Bind ViewModel.SupportedCaptureModes, Mode=OneWay}"
-            SupportedCaptureTypes="{x:Bind ViewModel.SupportedCaptureTypes, Mode=OneWay}" />
+            SupportedCaptureTypes="{x:Bind ViewModel.SupportedCaptureTypes, Mode=OneWay}"
+            Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}" />
 
         <!--  Secret button to allow escape to work on all monitors.  -->
         <Button

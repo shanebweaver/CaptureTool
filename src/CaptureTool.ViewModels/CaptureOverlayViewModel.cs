@@ -1,6 +1,5 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Core.AppController;
-using CaptureTool.FeatureManagement;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -57,6 +56,30 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
             if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.CaptureArea))
             {
                 OnCaptureAreaChanged(windowVM);
+            }
+            else if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.SelectedCaptureModeIndex))
+            {
+                foreach (var windowViewModel in _windowViewModels)
+                {
+                    if (windowViewModel == windowVM)
+                    {
+                        continue;
+                    }
+
+                    windowViewModel.SelectedCaptureModeIndex = windowVM.SelectedCaptureModeIndex;
+                }
+            }
+            else if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.SelectedCaptureTypeIndex))
+            {
+                foreach (var windowViewModel in _windowViewModels)
+                {
+                    if (windowViewModel == windowVM)
+                    {
+                        continue;
+                    }
+
+                    windowViewModel.SelectedCaptureTypeIndex = windowVM.SelectedCaptureTypeIndex;
+                }
             }
         }
     }

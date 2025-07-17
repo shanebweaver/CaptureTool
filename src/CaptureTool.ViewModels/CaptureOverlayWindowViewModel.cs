@@ -16,6 +16,8 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
 
     public event EventHandler? CaptureRequested;
     public event EventHandler? CloseRequested;
+    public event EventHandler<CaptureMode>? SelectedCaptureModeChanged;
+    public event EventHandler<CaptureType>? SelectedCaptureTypeChanged;
 
     public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
@@ -34,7 +36,13 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     public int SelectedCaptureTypeIndex
     {
         get => _selectedCaptureTypeIndex;
-        set => Set(ref _selectedCaptureTypeIndex, value);
+        set
+        {
+            if (Set(ref _selectedCaptureTypeIndex, value))
+            {
+                SelectedCaptureTypeChanged?.Invoke(this, SelectedCaptureType);
+            }
+        }
     }
 
     private ObservableCollection<CaptureMode> _supportedCaptureModes;
@@ -48,8 +56,17 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     public int SelectedCaptureModeIndex
     {
         get => _selectedCaptureModeIndex;
-        set => Set(ref _selectedCaptureModeIndex, value);
+        set
+        {
+            if (Set(ref _selectedCaptureModeIndex, value))
+            {
+                SelectedCaptureModeChanged?.Invoke(this, SelectedCaptureMode);
+            }
+        }
     }
+
+    public CaptureMode SelectedCaptureMode => SupportedCaptureModes[SelectedCaptureModeIndex];
+    public CaptureType SelectedCaptureType => SupportedCaptureTypes[Math.Min(SelectedCaptureTypeIndex, SupportedCaptureTypes.Count - 1)];
 
     private Rectangle _captureArea;
     public Rectangle CaptureArea
