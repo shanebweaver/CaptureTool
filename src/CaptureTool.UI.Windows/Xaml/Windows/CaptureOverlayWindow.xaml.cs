@@ -3,6 +3,8 @@ using CaptureTool.ViewModels;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
@@ -10,7 +12,7 @@ public sealed partial class CaptureOverlayWindow : Window
 {
     public CaptureOverlayWindowViewModel ViewModel => RootView.ViewModel;
 
-    public CaptureOverlayWindow(MonitorCaptureResult monitor)
+    public CaptureOverlayWindow(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows)
     {
         if (monitor.IsPrimary)
         {
@@ -33,9 +35,8 @@ public sealed partial class CaptureOverlayWindow : Window
 
         InitializeComponent();
 
-        // TODO: Maybe this VM should be loadable
-        ViewModel.Monitor = monitor;
         ViewModel.CloseRequested += ViewModel_CloseRequested;
+        ViewModel.Load(monitor, monitorWindows);
     }
 
     private void ViewModel_CloseRequested(object? sender, EventArgs e)

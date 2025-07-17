@@ -3,6 +3,7 @@ using CaptureTool.Capture.Windows;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.UI.Windows.Xaml.Extensions;
@@ -16,6 +17,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
@@ -80,8 +82,10 @@ internal partial class CaptureToolAppController : IAppController
             _captureOverlayWindowHandles.Clear();
             _captureOverlayViewModel = new(this);
 
-            Window? primaryWindow = null;
+            var allWindows = WindowInfoHelper.GetAllWindows();
             var monitors = MonitorCaptureHelper.CaptureAllMonitors();
+
+            Window? primaryWindow = null;
             foreach (var monitor in monitors)
             {
                 // Uncomment to only show overlay on primary monitor.
@@ -90,8 +94,19 @@ internal partial class CaptureToolAppController : IAppController
                 //{
                 //    continue;
                 //}
+                
+                var monitorWindows = allWindows.Select((wi) => {
+                    var position = wi.Position;
+                    var scale = monitor.Scale;
+                    var scaled = new Rectangle(
+                        (int)(position.X * scale),
+                        (int)(position.Y * scale),
+                        (int)(position.Width * scale),
+                        (int)(position.Height * scale));
+                    return scaled;
+                }).Where(p => monitor.MonitorBounds.IntersectsWith(p) || monitor.MonitorBounds.Contains(p));
 
-                CaptureOverlayWindow window = new(monitor);
+                CaptureOverlayWindow window = new(monitor, monitorWindows);
 
                 IntPtr windowHwnd = WindowNative.GetWindowHandle(window);
                 _captureOverlayWindowHandles.Add(windowHwnd);

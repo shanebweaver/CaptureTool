@@ -4,8 +4,10 @@ using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Themes;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Linq;
 
 namespace CaptureTool.ViewModels;
 
@@ -107,7 +109,14 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     public MonitorCaptureResult? Monitor
     {
         get => _monitor;
-        set => Set(ref _monitor, value);
+        private set => Set(ref _monitor, value);
+    }
+
+    private IEnumerable<Rectangle> _monitorWindows;
+    public IEnumerable<Rectangle> MonitorWindows
+    {
+        get => _monitorWindows;
+        private set => Set(ref _monitorWindows, value);
     }
 
     private AppTheme _currentAppTheme;
@@ -136,6 +145,7 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     {
         _appController = appController;
         _captureArea = Rectangle.Empty;
+        _monitorWindows = [];
 
         _themeService = themeService;
         DefaultAppTheme = _themeService.DefaultTheme;
@@ -167,6 +177,12 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
             _supportedCaptureTypes.Add(CaptureType.Freeform);
         }
         _selectedCaptureTypeIndex = 0;
+    }
+
+    public void Load(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows)
+    {
+        Monitor = monitor;
+        MonitorWindows = monitorWindows;
     }
 
     public void Close()

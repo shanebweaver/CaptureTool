@@ -12,3 +12,8 @@ DeleteDC
 MONITORINFOEXW
 GetDpiForMonitor
 GetDIBits
+EnumWindows
+GetWindowText
+GetWindowTextLength
+GetWindowRect
+IsWindowVisible

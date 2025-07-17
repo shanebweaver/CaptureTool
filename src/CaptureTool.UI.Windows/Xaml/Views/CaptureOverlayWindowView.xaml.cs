@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace CaptureTool.UI.Windows.Xaml.Views;
@@ -29,22 +30,15 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
         switch (e.PropertyName)
         {
             case nameof(CaptureOverlayWindowViewModel.SelectedCaptureType):
-                OnSelectedCaptureTypeChanged();
+                SelectionOverlay.CaptureType = ViewModel.SelectedCaptureType;
                 break;
             case nameof(CaptureOverlayWindowViewModel.CaptureArea):
-                OnCaptureAreaChanged();
+                SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
+                break;
+            case nameof(CaptureOverlayWindowViewModel.MonitorWindows):
+                SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
                 break;
         }
-    }
-
-    private void OnSelectedCaptureTypeChanged()
-    {
-        SelectionOverlay.CaptureType = ViewModel.SelectedCaptureType;
-    }
-
-    private void OnCaptureAreaChanged()
-    {
-        SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
     }
 
     private void LoadBackgroundImage()

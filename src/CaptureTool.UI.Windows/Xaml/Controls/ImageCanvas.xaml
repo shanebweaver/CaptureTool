@@ -26,7 +26,10 @@
             Opacity=".5"
             Visibility="Collapsed" />
 
-        <ScrollView x:Name="CanvasScrollView" HorizontalScrollBarVisibility="Auto">
+        <ScrollView
+            x:Name="CanvasScrollView"
+            HorizontalScrollBarVisibility="Auto"
+            ZoomMode="Enabled">
             <Grid
                 x:Name="CanvasContainer"
                 HorizontalAlignment="Center"
