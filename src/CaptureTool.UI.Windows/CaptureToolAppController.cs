@@ -172,7 +172,6 @@ internal partial class CaptureToolAppController : IAppController
 
         var tempPath = Path.Combine(
             ApplicationData.GetDefault().TemporaryPath,
-            "screenshots",
             $"capture_{Guid.NewGuid()}.png"
         );
 

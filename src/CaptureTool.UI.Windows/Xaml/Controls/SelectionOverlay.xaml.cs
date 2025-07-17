@@ -53,14 +53,6 @@ public sealed partial class SelectionOverlay : UserControlBase
         SelectionCanvas.PointerExited += SelectionCanvas_PointerExited;
     }
 
-    private void SelectionCanvas_PointerExited(object sender, PointerRoutedEventArgs e)
-    {
-        if (CaptureType == CaptureType.FullScreen)
-        {
-            SelectionRect = Rectangle.Empty;
-        }
-    }
-
     private void SelectionOverlay_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         double height = e.NewSize.Height;
@@ -107,11 +99,25 @@ public sealed partial class SelectionOverlay : UserControlBase
                 e.Handled = true;
             }
         }
+        else if (CaptureType == CaptureType.Window)
+        {
+            var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
+            if (!IsPointerOverSelectionArea(pointerPos))
+            {
+                _isCreatingNewSelection = true;
+                SelectionCanvas.CapturePointer(e.Pointer);
+                e.Handled = true;
+            }
+        }
         else if (CaptureType == CaptureType.FullScreen)
         {
             _isCreatingNewSelection = true;
             SelectionCanvas.CapturePointer(e.Pointer);
             e.Handled = true;
+        }
+        else if (CaptureType == CaptureType.Freeform)
+        {
+
         }
     }
 
@@ -152,47 +158,58 @@ public sealed partial class SelectionOverlay : UserControlBase
                 e.Handled = true;
             }
         }
+        else if (CaptureType == CaptureType.Window)
+        {
+            // Look for a window rectangle and if the pointer is inside it, use that rectangle as the selection area
+
+            // If no window is found, clear the selection area.
+            SelectionRect = Rectangle.Empty;
+        }
         else if (CaptureType == CaptureType.FullScreen)
         {
             SelectionRect = new(0,0, (int)SelectionCanvas.Width, (int)SelectionCanvas.Height);
+        }
+        else if (CaptureType == CaptureType.Freeform)
+        {
+
         }
     }
 
     private void SelectionCanvas_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
-        if (CaptureType == CaptureType.Rectangle || CaptureType == CaptureType.FullScreen)
-        {
-            if (_isCreatingNewSelection)
-            {
-                if (!IsValidSelection(SelectionRect))
-                {
-                    SelectionRect = Rectangle.Empty; // Reset selection if too small
-                }
-                else
-                {
-                    SelectionComplete?.Invoke(this, SelectionRect);
-                }
+        SelectionCanvas.ReleasePointerCaptures();
 
-                _isCreatingNewSelection = false;
-                SelectionCanvas.ReleasePointerCaptures();
-                e.Handled = true;
+        if (_isCreatingNewSelection)
+        {
+            if (!IsValidSelection(SelectionRect))
+            {
+                SelectionRect = Rectangle.Empty; // Reset selection if too small
             }
+            else
+            {
+                SelectionComplete?.Invoke(this, SelectionRect);
+            }
+
+            _isCreatingNewSelection = false;
+            e.Handled = true;
         }
     }
 
     private void SelectionCanvas_PointerCanceled(object sender, PointerRoutedEventArgs e)
     {
-        if (CaptureType == CaptureType.Rectangle || CaptureType == CaptureType.FullScreen)
+        if (_isCreatingNewSelection)
         {
-            if (_isCreatingNewSelection)
-            {
-                _isCreatingNewSelection = false;
-                SelectionCanvas.ReleasePointerCaptures();
-                e.Handled = true;
-            }
-
-            SelectionRect = Rectangle.Empty;
+            _isCreatingNewSelection = false;
+            SelectionCanvas.ReleasePointerCaptures();
+            e.Handled = true;
         }
+
+        SelectionRect = Rectangle.Empty;
+    }
+
+    private void SelectionCanvas_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+            SelectionRect = Rectangle.Empty;
     }
 
     private bool IsPointerOverSelectionArea(Point pos)

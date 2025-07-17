@@ -26,47 +26,25 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.SelectedCaptureTypeIndex))
+        switch (e.PropertyName)
         {
-            OnSelectedCaptureTypeChanged();
-        }
-        else if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.CaptureArea))
-        {
-            SelectionOverlay.SelectionRect = ViewModel.Monitor.HasValue ? ViewModel.Monitor.Value.MonitorBounds : Rectangle.Empty;
+            case nameof(CaptureOverlayWindowViewModel.SelectedCaptureType):
+                OnSelectedCaptureTypeChanged();
+                break;
+            case nameof(CaptureOverlayWindowViewModel.CaptureArea):
+                OnCaptureAreaChanged();
+                break;
         }
     }
 
     private void OnSelectedCaptureTypeChanged()
     {
-        var newCaptureType = ViewModel.SelectedCaptureType;
-        SelectionOverlay.CaptureType = newCaptureType;
-        
-        if (newCaptureType == CaptureType.Rectangle)
-        {
-            SelectionOverlay.SelectionRect = Rectangle.Empty;
-            // Also restore pointer logic
-        }
-        else if (newCaptureType == CaptureType.Window)
-        {
-            SelectionOverlay.SelectionRect = Rectangle.Empty;
-        }
-        else if (newCaptureType == CaptureType.FullScreen)
-        {
-            if (ViewModel.Monitor != null)
-            {
-                // Change Pointer Logic to accept picture on click.
-                ViewModel.CaptureArea = ViewModel.Monitor.Value.MonitorBounds;
-                //DispatcherQueue.TryEnqueue(() =>
-                //{
-                //    ViewModel.RequestCaptureCommand.Execute(null);
-                //});
-            }
-        }
-        else if (newCaptureType == CaptureType.Freeform)
-        {
-            SelectionOverlay.SelectionRect = Rectangle.Empty;
-            // Also restore pointer logic
-        }
+        SelectionOverlay.CaptureType = ViewModel.SelectedCaptureType;
+    }
+
+    private void OnCaptureAreaChanged()
+    {
+        SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
     }
 
     private void LoadBackgroundImage()

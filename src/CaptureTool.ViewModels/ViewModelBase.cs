@@ -13,10 +13,18 @@ public abstract partial class ViewModelBase : INotifyPropertyChanged
         if (!EqualityComparer<T>.Default.Equals(field, value))
         {
             field = value;
-            PropertyChanged?.Invoke(this, new(propertyName));
+            if (propertyName != null)
+            {
+                RaisePropertyChanged(propertyName);
+            }
             return true;
         }
 
         return false;
+    }
+
+    protected void RaisePropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new(propertyName));
     }
 }
