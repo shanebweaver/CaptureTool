@@ -3,7 +3,7 @@ using CaptureTool.Capture.Windows;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
-using CaptureTool.FeatureManagement;
+using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.UI.Windows.Xaml.Extensions;
@@ -14,6 +14,7 @@ using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.Storage;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -30,16 +31,21 @@ internal partial class CaptureToolAppController : IAppController
 {
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
-    
+    private readonly ICancellationService _cancellationService;
+
+
     private readonly HashSet<IntPtr> _captureOverlayWindowHandles = [];
     private CaptureOverlayViewModel? _captureOverlayViewModel;
+    private MainWindow? _mainWindow;
 
     public CaptureToolAppController(
         ILogService logService,
-        INavigationService navigationService) 
+        INavigationService navigationService,
+        ICancellationService cancellationService) 
     {
         _logService = logService;
         _navigationService = navigationService;
+        _cancellationService = cancellationService;
     }
 
     public bool TryRestart()
@@ -65,12 +71,7 @@ internal partial class CaptureToolAppController : IAppController
         return false;
     }
 
-    public void Shutdown()
-    {
-        App.Current.Shutdown();
-    }
-
-    public async void ShowCaptureOverlay()
+    public async void ShowCaptureOverlay(CaptureOptions? options = null)
     {
         // Give the window time to close so it isn't included in the capture
         CloseCaptureOverlay();
@@ -206,8 +207,8 @@ internal partial class CaptureToolAppController : IAppController
         using var croppedBmp = fullBmp.Clone(cropRect, fullBmp.PixelFormat);
         croppedBmp.Save(tempPath, ImageFormat.Png);
 
-        CloseCaptureOverlay();
         RestoreMainWindow();
+        CloseCaptureOverlay();
 
         var imageFile = new ImageFile(tempPath);
         _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
@@ -215,7 +216,7 @@ internal partial class CaptureToolAppController : IAppController
 
     public nint GetMainWindowHandle()
     {
-        return WindowNative.GetWindowHandle(App.Current.MainWindow);
+        return WindowNative.GetWindowHandle(_mainWindow);
     }
 
     public void GoHome()
@@ -230,15 +231,15 @@ internal partial class CaptureToolAppController : IAppController
     {
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
-            App.Current.MainWindow?.AppWindow.Hide();
+            _mainWindow?.AppWindow.Hide();
         });
     }
 
     public void ShowMainWindow()
     {
         App.Current.DispatcherQueue.TryEnqueue(() =>
-        {
-            App.Current.MainWindow?.AppWindow.Show(false);
+        {            
+            _mainWindow?.AppWindow.Show(false);
         });
     }
 
@@ -254,16 +255,23 @@ internal partial class CaptureToolAppController : IAppController
         });
     }
 
-    private static void RestoreMainWindow()
+    public void RestoreMainWindow()
     {
+        if (_mainWindow == null)
+        {
+            _mainWindow = new MainWindow();
+            _mainWindow.Closed += OnWindowClosed;
+            _mainWindow.Activate();
+        }
+
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
-            if (App.Current.MainWindow != null)
+            if (_mainWindow != null)
             {
-                App.Current.MainWindow.Restore();
-                App.Current.MainWindow.Activate();
+                _mainWindow.Restore();
+                _mainWindow.Activate();
 
-                var hwnd = WindowNative.GetWindowHandle(App.Current.MainWindow);
+                var hwnd = WindowNative.GetWindowHandle(_mainWindow);
                 PInvoke.SetForegroundWindow(new(hwnd));
             }
         });
@@ -285,6 +293,51 @@ internal partial class CaptureToolAppController : IAppController
         if (!TryGoBack())
         {
             GoHome();
+        }
+    }
+
+    private void OnWindowClosed(object sender, WindowEventArgs args)
+    {
+        CleanupWindow();
+        CheckExit();
+    }
+
+    private void CheckExit()
+    {
+        if (_mainWindow == null)
+        {
+            Shutdown();
+        }
+    }
+
+    private void CleanupWindow()
+    {
+        if (_mainWindow != null)
+        {
+            _mainWindow.Closed -= OnWindowClosed;
+            _mainWindow.Close();
+            _mainWindow = null;
+        }
+    }
+
+    public void Shutdown()
+    {
+        lock (this)
+        {
+            try
+            {
+                CleanupWindow();
+
+                // Cancel all running tasks
+                _cancellationService.CancelAll();
+            }
+            catch (Exception e)
+            {
+                // Error during shutdown.
+                Debug.Fail($"Error during shutdown: {e.Message}");
+            }
+
+            Application.Current.Exit();
         }
     }
 }

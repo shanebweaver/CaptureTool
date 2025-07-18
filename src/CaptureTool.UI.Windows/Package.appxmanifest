@@ -49,6 +49,14 @@
             <uap:Logo>Assets\StoreLogo.png</uap:Logo>
           </uap:Protocol>
         </uap:Extension>
+		  
+		<!-- Snipping Tool protocol -->
+		<uap:Extension Category="windows.protocol">
+		  <uap:Protocol Name="ms-screenclip">
+			<uap:DisplayName>Capture Tool</uap:DisplayName>
+			<uap:Logo>Assets\StoreLogo.png</uap:Logo>
+		  </uap:Protocol>
+		</uap:Extension>
       </Extensions>
     </Application>
   </Applications>

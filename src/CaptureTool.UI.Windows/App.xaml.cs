@@ -1,12 +1,10 @@
-﻿using System;
-using System.Diagnostics;
-using CaptureTool.Services.Cancellation;
+﻿using CaptureTool.Core.AppController;
 using CaptureTool.Services.Themes;
-using CaptureTool.UI.Windows.Xaml.Windows;
-using Microsoft.Extensions.DependencyInjection;
+using CaptureTool.UI.Windows.Activation;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
+using System;
 
 namespace CaptureTool.UI.Windows;
 
@@ -16,7 +14,6 @@ public partial class App : Application
 
     internal CaptureToolServiceProvider ServiceProvider { get; }
     internal DispatcherQueue DispatcherQueue { get; }
-    internal MainWindow? MainWindow { get; private set; }
 
     public App()
     {
@@ -42,12 +39,16 @@ public partial class App : Application
 
     internal void Activate(AppActivationArguments args)
     {
+        IAppController appController = ServiceProvider.GetService<IAppController>();
         try
         {
             switch (args.Kind)
             {
                 case ExtendedActivationKind.Launch:
-                    HandleLaunchActivation();
+                    appController.RestoreMainWindow();
+                    break;
+                case ExtendedActivationKind.Protocol:
+                    ProtocolActivationManager.HandleActivation(args);
                     break;
                 default:
                     throw new InvalidOperationException("Unexpected activation kind");
@@ -56,65 +57,7 @@ public partial class App : Application
         catch (Exception e)
         {
             ServiceLocator.Logging.LogException(e, "Activation failed.");
-            CheckExit();
-        }
-    }
-
-    private void HandleLaunchActivation()
-    {
-        if (MainWindow == null)
-        {
-            MainWindow = new MainWindow();
-            MainWindow.Closed += OnWindowClosed;
-        }
-        MainWindow.Activate();
-    }
-
-    private void OnWindowClosed(object sender, WindowEventArgs args)
-    {
-        CleanupWindow();
-        CheckExit();
-    }
-
-    private void CheckExit()
-    {
-        if (MainWindow == null)
-        {
-            Shutdown();
-        }
-    }
-
-    private void CleanupWindow()
-    {
-        if (MainWindow != null)
-        {
-            MainWindow.Closed -= OnWindowClosed;
-            MainWindow.Close();
-            MainWindow = null;
-        }
-    }
-
-    internal void Shutdown()
-    {
-        lock (this)
-        {
-            try
-            {
-                CleanupWindow();
-
-                // Cancel all running tasks
-                ServiceProvider.GetRequiredService<ICancellationService>().CancelAll();
-
-                // Dispose all services
-                ServiceProvider.Dispose();
-            }
-            catch (Exception e)
-            {
-                // Error during shutdown.
-                Debug.Fail($"Error during shutdown: {e.Message}");
-            }
-
-            Application.Current.Exit();
+            appController.Shutdown();
         }
     }
 }
