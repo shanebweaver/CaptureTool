@@ -39,25 +39,28 @@ public partial class App : Application
 
     internal void Activate(AppActivationArguments args)
     {
-        IAppController appController = ServiceProvider.GetService<IAppController>();
-        try
+        DispatcherQueue.TryEnqueue(() =>
         {
-            switch (args.Kind)
+            IAppController appController = ServiceProvider.GetService<IAppController>();
+            try
             {
-                case ExtendedActivationKind.Launch:
-                    appController.RestoreMainWindow();
-                    break;
-                case ExtendedActivationKind.Protocol:
-                    ProtocolActivationManager.HandleActivation(args);
-                    break;
-                default:
-                    throw new InvalidOperationException("Unexpected activation kind");
+                switch (args.Kind)
+                {
+                    case ExtendedActivationKind.Launch:
+                        appController.RestoreMainWindow();
+                        break;
+                    case ExtendedActivationKind.Protocol:
+                        ProtocolActivationManager.HandleActivation(args);
+                        break;
+                    default:
+                        throw new InvalidOperationException("Unexpected activation kind");
+                }
             }
-        }
-        catch (Exception e)
-        {
-            ServiceLocator.Logging.LogException(e, "Activation failed.");
-            appController.Shutdown();
-        }
+            catch (Exception e)
+            {
+                ServiceLocator.Logging.LogException(e, "Activation failed.");
+                appController.Shutdown();
+            }
+        });
     }
 }
