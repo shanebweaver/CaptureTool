@@ -33,7 +33,6 @@ internal partial class CaptureToolAppController : IAppController
     private readonly INavigationService _navigationService;
     private readonly ICancellationService _cancellationService;
 
-
     private readonly HashSet<IntPtr> _captureOverlayWindowHandles = [];
     private CaptureOverlayViewModel? _captureOverlayViewModel;
     private MainWindow? _mainWindow;
@@ -95,7 +94,7 @@ internal partial class CaptureToolAppController : IAppController
                 //{
                 //    continue;
                 //}
-                
+
                 var monitorWindows = allWindows.Select((wi) => {
                     var position = wi.Position;
                     var scale = monitor.Scale;
