@@ -64,7 +64,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 if (e.NewValue is bool isCropModeEnabled && isCropModeEnabled)
                 {
                     control.DimmedBackgroundRectangle.Visibility = Visibility.Visible;
-                    control.CanvasScrollView.ZoomMode = ScrollingZoomMode.Disabled;
+                    //control.CanvasScrollView.ZoomMode = ScrollingZoomMode.Disabled;
                 }
                 else
                 {
@@ -336,4 +336,12 @@ public sealed partial class ImageCanvas : UserControlBase
         _isPointerDown = false;
     }
     #endregion
+
+    private void CanvasScrollView_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (IsCropModeEnabled)
+        {
+            e.Handled = true;
+        }
+    }
 }

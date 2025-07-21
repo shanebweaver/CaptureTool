@@ -29,6 +29,7 @@
         <ScrollView
             x:Name="CanvasScrollView"
             HorizontalScrollBarVisibility="Auto"
+            PointerMoved="CanvasScrollView_PointerMoved"
             ZoomMode="Enabled">
             <Grid
                 x:Name="CanvasContainer"

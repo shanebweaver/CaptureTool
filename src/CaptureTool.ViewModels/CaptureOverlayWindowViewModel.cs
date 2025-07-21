@@ -133,9 +133,6 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     }
 
     public bool IsVideoCaptureEnabled { get; }
-    public bool IsWindowModeEnabled { get; }
-    public bool IsFullScreenModeEnabled { get; }
-    public bool IsFreeformModeEnabled { get; }
 
     public CaptureOverlayWindowViewModel(
         IFeatureManager featureManager,
@@ -150,28 +147,24 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         DefaultAppTheme = _themeService.DefaultTheme;
         CurrentAppTheme = _themeService.CurrentTheme;
 
-        IsVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
-        IsWindowModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_WindowMode);
-        IsFullScreenModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_FullScreenMode);
-        IsFreeformModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_FreeformMode);
-
+        bool isVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
+        IsVideoCaptureEnabled = isVideoCaptureEnabled;
         _supportedCaptureModes = [ CaptureMode.Image ];
-        if (IsVideoCaptureEnabled)
+        if (isVideoCaptureEnabled)
         {
             _supportedCaptureModes.Add(CaptureMode.Video);
         }
         _selectedCaptureModeIndex = 0;
 
+        bool isWindowModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_WindowMode);
+        bool isFreeformModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_FreeformMode);
         _supportedCaptureTypes = [CaptureType.Rectangle];
-        if (IsWindowModeEnabled)
+        if (isWindowModeEnabled)
         {
             _supportedCaptureTypes.Add(CaptureType.Window);
         }
-        if (IsFullScreenModeEnabled)
-        {
-            _supportedCaptureTypes.Add(CaptureType.FullScreen);
-        }
-        if (IsFreeformModeEnabled)
+        _supportedCaptureTypes.Add(CaptureType.FullScreen);
+        if (isFreeformModeEnabled)
         {
             _supportedCaptureTypes.Add(CaptureType.Freeform);
         }

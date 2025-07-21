@@ -132,7 +132,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _cropRect = Rectangle.Empty;
         _imageCanvasExporter = imageCanvasExporter;
 
-        IsPrintEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Print);
         IsUndoRedoEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo);
         IsChromaKeyEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey);
     }
