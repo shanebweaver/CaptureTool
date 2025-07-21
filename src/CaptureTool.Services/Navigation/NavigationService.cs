@@ -14,7 +14,7 @@ public class NavigationService : INavigationService
 
     public bool CanGoBack => _navigationStack.Count > 1;
 
-    public NavigationRoute CurrentRoute => _navigationStack.Peek().Route;
+    public NavigationRoute? CurrentRoute => _navigationStack.Count == 0 ? null : _navigationStack.Peek().Route;
 
     public void SetNavigationHandler(INavigationHandler navigationHandler)
     {

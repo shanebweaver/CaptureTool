@@ -6,6 +6,7 @@ using CaptureTool.Core.AppController;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
+using CaptureTool.Services.Settings;
 using CaptureTool.UI.Windows.Xaml.Extensions;
 using CaptureTool.UI.Windows.Xaml.Windows;
 using CaptureTool.ViewModels;
@@ -14,13 +15,16 @@ using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.Storage;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using Windows.ApplicationModel.Core;
 using Windows.Win32;
 using WinRT.Interop;
@@ -32,19 +36,98 @@ internal partial class CaptureToolAppController : IAppController
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
     private readonly ICancellationService _cancellationService;
+    private readonly ISettingsService _settingsService;
 
     private readonly HashSet<IntPtr> _captureOverlayWindowHandles = [];
     private CaptureOverlayViewModel? _captureOverlayViewModel;
     private MainWindow? _mainWindow;
+    private DispatcherTimer? _foregroundTimer;
+    private readonly SemaphoreSlim _semaphore = new(1,1);
+    private bool _isInitialized;
 
     public CaptureToolAppController(
         ILogService logService,
         INavigationService navigationService,
-        ICancellationService cancellationService) 
+        ICancellationService cancellationService,
+        ISettingsService settingsService) 
     {
         _logService = logService;
         _navigationService = navigationService;
         _cancellationService = cancellationService;
+        _settingsService = settingsService;
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _semaphore.WaitAsync();
+
+        try
+        {
+            if (_isInitialized)
+            {
+                return;
+            }
+
+            CancellationTokenSource cancellationTokenSource = _cancellationService.GetLinkedCancellationTokenSource();
+            await InitializeSettingsServiceAsync(cancellationTokenSource.Token);
+
+            _isInitialized = true;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    private void ThrowIfNotInitialized()
+    {
+        if (!_isInitialized)
+        {
+            throw new InvalidOperationException($"{nameof(CaptureToolAppController)} must be initialized before it can be used.");
+        }
+    }
+
+    public async Task HandleLaunchActicationAsync()
+    {
+        await InitializeAsync();
+        RestoreMainWindow();
+        GoHome();
+    }
+
+    public async Task HandleProtocolActivationAsync(Uri protocolUri)
+    {
+        if (protocolUri.Scheme == "ms-screenclip")
+        {
+            await InitializeAsync();
+
+            NameValueCollection queryParams = HttpUtility.ParseQueryString(protocolUri.Query) ?? [];
+            bool isRecordingType = queryParams.Get("type") is string type && type == "recording";
+
+            string source = queryParams.Get("source") ?? string.Empty;
+            if (source == "PrintScreen")
+            {
+                // PrtSc key
+                // Capture all monitors and silently put the image in the users clipboard.
+                List<MonitorCaptureResult> monitors = MonitorCaptureHelper.CaptureAllMonitors();
+                ClipboardImageHelper.CombineMonitorsAndCopyToClipboard(monitors);
+            }
+            else if (source == "ScreenRecorderHotKey" || isRecordingType)
+            {
+                // Video capture
+                CaptureMode captureMode = CaptureMode.Video;
+                CaptureType captureType = CaptureType.Rectangle;
+                CaptureOptions captureOptions = new(captureMode, captureType);
+                ShowCaptureOverlay(captureOptions);
+            }
+            else if (source == "HotKey")
+            {
+                // Image capture
+                CaptureMode captureMode = CaptureMode.Image;
+                CaptureType captureType = CaptureType.Rectangle;
+                CaptureOptions captureOptions = new(captureMode, captureType);
+                ShowCaptureOverlay(captureOptions);
+            }
+        }
     }
 
     public bool TryRestart()
@@ -72,6 +155,8 @@ internal partial class CaptureToolAppController : IAppController
 
     public async void ShowCaptureOverlay(CaptureOptions? options = null)
     {
+        ThrowIfNotInitialized();
+
         // Give the window time to close so it isn't included in the capture
         CloseCaptureOverlay();
         HideMainWindow();
@@ -133,8 +218,6 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
-    private DispatcherTimer? _foregroundTimer;
-
     private void StartForegroundMonitor()
     {
         if (_foregroundTimer == null)
@@ -166,6 +249,8 @@ internal partial class CaptureToolAppController : IAppController
 
     public void PerformCapture(MonitorCaptureResult monitor, Rectangle area)
     {
+        ThrowIfNotInitialized();
+
         var monitorBounds = monitor.MonitorBounds;
 
         // Create a bitmap for the full monitor
@@ -254,13 +339,12 @@ internal partial class CaptureToolAppController : IAppController
         });
     }
 
-    public void RestoreMainWindow()
+    private void RestoreMainWindow()
     {
         if (_mainWindow == null)
         {
             _mainWindow = new MainWindow();
             _mainWindow.Closed += OnWindowClosed;
-            _mainWindow.Activate();
         }
 
         App.Current.DispatcherQueue.TryEnqueue(() =>
@@ -326,17 +410,22 @@ internal partial class CaptureToolAppController : IAppController
             try
             {
                 CleanupWindow();
-
-                // Cancel all running tasks
                 _cancellationService.CancelAll();
             }
             catch (Exception e)
             {
-                // Error during shutdown.
                 Debug.Fail($"Error during shutdown: {e.Message}");
             }
 
             Application.Current.Exit();
         }
+    }
+
+    private async Task InitializeSettingsServiceAsync(CancellationToken cancellationToken)
+    {
+        string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string settingsFilePath = Path.Combine(appDataPath, "Settings.json");
+        await _settingsService.InitializeAsync(settingsFilePath, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
     }
 }

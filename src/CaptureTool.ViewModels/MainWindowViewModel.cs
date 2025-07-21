@@ -1,32 +1,13 @@
-﻿using CaptureTool.Core;
-using CaptureTool.Core.AppController;
-using CaptureTool.Services.Cancellation;
-using CaptureTool.Services.Localization;
-using CaptureTool.Services.Navigation;
-using CaptureTool.Services.Settings;
-using CaptureTool.Services.Telemetry;
+﻿using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class MainWindowViewModel : LoadableViewModelBase, INavigationHandler
+public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHandler
 {
-    private readonly struct ActivityIds
-    {
-        public static readonly string Load = "MainWindowViewModel_Load";
-        public static readonly string Unload = "MainWindowViewModel_Unload";
-    }
-
-    private readonly ITelemetryService _telemetryService;
     private readonly IThemeService _themeService;
-    private readonly ICancellationService _cancellationService;
     private readonly INavigationService _navigationService;
-    private readonly ISettingsService _settingsService;
 
     public event EventHandler<NavigationRequest>? NavigationRequested;
 
@@ -45,19 +26,16 @@ public sealed partial class MainWindowViewModel : LoadableViewModelBase, INaviga
     }
 
     public MainWindowViewModel(
-        ITelemetryService telemetryService,
         IThemeService themeService,
-        ICancellationService cancellationService,
-        ISettingsService settingsService,
         INavigationService navigationService)
     {
-        _telemetryService = telemetryService;
         _themeService = themeService;
-        _cancellationService = cancellationService;
         _navigationService = navigationService;
-        _settingsService = settingsService;
 
+        _navigationService.SetNavigationHandler(this);
         _themeService.CurrentThemeChanged += OnCurrentThemeChanged;
+        DefaultAppTheme = _themeService.DefaultTheme;
+        CurrentAppTheme = _themeService.CurrentTheme;
     }
 
     ~MainWindowViewModel()
@@ -65,77 +43,9 @@ public sealed partial class MainWindowViewModel : LoadableViewModelBase, INaviga
         _themeService.CurrentThemeChanged -= OnCurrentThemeChanged;
     }
 
-    public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
-    {
-        Debug.Assert(IsUnloaded);
-        StartLoading();
-
-        string activityId = ActivityIds.Load;
-        _telemetryService.ActivityInitiated(activityId);
-
-        var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
-        try
-        {
-            // Navigation handler
-            _navigationService.SetNavigationHandler(this);
-            cts.Token.ThrowIfCancellationRequested();
-
-            // Settings service
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string settingsFilePath = Path.Combine(appDataPath, "CaptureTool", "Settings.json");
-            await _settingsService.InitializeAsync(settingsFilePath, cts.Token);
-            cts.Token.ThrowIfCancellationRequested();
-
-            // App theme
-            DefaultAppTheme = _themeService.DefaultTheme;
-            CurrentAppTheme = _themeService.CurrentTheme;
-
-            // Go home
-            _navigationService.Navigate(CaptureToolNavigationRoutes.Home);
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (OperationCanceledException)
-        {
-            _telemetryService.ActivityCanceled(activityId);
-            throw;
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-            throw;
-        }
-        finally
-        {
-            cts.Dispose();
-        }
-
-        await base.LoadAsync(parameter, cancellationToken);
-    }
-
     private void OnCurrentThemeChanged(object? sender, AppTheme newTheme)
     {
         CurrentAppTheme = newTheme;
-    }
-
-    public override void Unload()
-    {
-        string activityId = ActivityIds.Unload;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
-        {
-            DefaultAppTheme = 0;
-            CurrentAppTheme = 0;
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
-
-        base.Unload();
     }
 
     public void HandleNavigationRequest(NavigationRequest request)

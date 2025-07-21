@@ -1,6 +1,5 @@
 ﻿using CaptureTool.Core.AppController;
 using CaptureTool.Services.Themes;
-using CaptureTool.UI.Windows.Activation;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
@@ -47,10 +46,13 @@ public partial class App : Application
                 switch (args.Kind)
                 {
                     case ExtendedActivationKind.Launch:
-                        appController.RestoreMainWindow();
+                        appController.HandleLaunchActicationAsync();
                         break;
                     case ExtendedActivationKind.Protocol:
-                        ProtocolActivationManager.HandleActivation(args);
+                        if (args.Data is global::Windows.ApplicationModel.Activation.IProtocolActivatedEventArgs protocolArgs)
+                        {
+                            appController.HandleProtocolActivationAsync(protocolArgs.Uri);
+                        }
                         break;
                     default:
                         throw new InvalidOperationException("Unexpected activation kind");

@@ -124,12 +124,12 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async void OnActivated(object sender, WindowActivatedEventArgs args)
+    private void OnActivated(object sender, WindowActivatedEventArgs args)
     {
-        if (args.WindowActivationState == WindowActivationState.CodeActivated && ViewModel.IsUnloaded)
+        if (args.WindowActivationState == WindowActivationState.CodeActivated)
         {
+            Activated -= OnActivated;
             RestoreAppWindowSizeAndPosition();
-            await ViewModel.LoadAsync(null, _activationCts.Token);
         }
     }
 
