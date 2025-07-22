@@ -106,10 +106,18 @@ internal partial class CaptureToolAppController : IAppController
             string source = queryParams.Get("source") ?? string.Empty;
             if (source == "PrintScreen")
             {
-                // PrtSc key
-                // Capture all monitors and silently put the image in the users clipboard.
-                List<MonitorCaptureResult> monitors = MonitorCaptureHelper.CaptureAllMonitors();
-                ClipboardImageHelper.CombineMonitorsAndCopyToClipboard(monitors);
+                // PrtSc key modern behavior.
+                // Windows 11 has a global setting and will only call ms-screenclip if the user want to show the capture app.
+                // In Windows Settings > Accessibility > Keyboard, "Use the Print screen key to open screen capture"
+                CaptureMode captureMode = CaptureMode.Image;
+                CaptureType captureType = CaptureType.Rectangle;
+                CaptureOptions captureOptions = new(captureMode, captureType);
+                ShowCaptureOverlay(captureOptions);
+
+                // Legacy behavior
+                // Capture all monitors silently and put the image in the user's clipboard.
+                //List<MonitorCaptureResult> monitors = MonitorCaptureHelper.CaptureAllMonitors();
+                //ClipboardImageHelper.CombineMonitorsAndCopyToClipboard(monitors);
             }
             else if (source == "ScreenRecorderHotKey" || isRecordingType)
             {
