@@ -104,6 +104,7 @@
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
     <GenerateTemporaryStoreCertificate>True</GenerateTemporaryStoreCertificate>
     <GenerateTestArtifacts>False</GenerateTestArtifacts>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 	<PublishProfile>win-$(Platform).pubxml</PublishProfile>
 	<PublishAot>true</PublishAot>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
