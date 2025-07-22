@@ -44,6 +44,9 @@ public sealed partial class MainWindow : Window
         Closed += OnClosed;
         ViewModel.NavigationRequested += OnViewModelNavigationRequested;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+
+        UpdateRequestedAppTheme();
+        UpdateTitleBarColors();
     }
 
     private void UpdateAppTitle()
