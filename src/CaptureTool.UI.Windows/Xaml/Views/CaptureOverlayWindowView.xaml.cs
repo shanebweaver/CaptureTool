@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace CaptureTool.UI.Windows.Xaml.Views;

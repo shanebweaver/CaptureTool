@@ -244,21 +244,16 @@ public sealed partial class MainWindow : Window
                 ? ViewModel.DefaultAppTheme
                 : ViewModel.CurrentAppTheme;
 
-            Color backgroundColor = Colors.Transparent;
             Color foregroundColor = appTheme switch
             {
                 AppTheme.Dark => Colors.White,
                 _ => Colors.Black,
             };
 
-            titleBar.BackgroundColor = backgroundColor;
             titleBar.ForegroundColor = foregroundColor;
-            titleBar.ButtonBackgroundColor = backgroundColor;
             titleBar.ButtonForegroundColor = foregroundColor;
 
-            titleBar.InactiveBackgroundColor = backgroundColor;
             titleBar.InactiveForegroundColor = foregroundColor;
-            titleBar.ButtonInactiveBackgroundColor = backgroundColor;
             titleBar.ButtonInactiveForegroundColor = foregroundColor;
         });
     }
