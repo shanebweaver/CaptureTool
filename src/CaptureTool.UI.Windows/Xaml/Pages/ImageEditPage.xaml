@@ -102,6 +102,7 @@
 
         <Grid
             x:Name="CanvasContainer"
+            Margin="0,-1,0,0"
             Background="{ThemeResource ImageEditCanvasBackgroundBrush}"
             BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
             BorderThickness="0,1,0,0"
