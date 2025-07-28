@@ -1,7 +1,6 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
-using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Feedback;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Storage;
@@ -47,23 +46,18 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         set => Set(ref _showSendFeedbackOption, value);
     }
 
-    public bool IsSendFeedbackEnabled { get; }
-
     public AppMenuViewModel(
         ITelemetryService telemetryService,
         IAppController appController,
         IFeedbackService feedbackService,
         INavigationService navigationService,
-        IFilePickerService filePickerService,
-        IFeatureManager featureManager)
+        IFilePickerService filePickerService)
     {
         _telemetryService = telemetryService;
         _appController = appController;
         _feedbackService = feedbackService;
         _navigationService = navigationService;
         _filePickerService = filePickerService;
-
-        IsSendFeedbackEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_UserFeedback);
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -76,10 +70,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            if (IsSendFeedbackEnabled)
-            {
-                ShowSendFeedbackOption = await _feedbackService.IsFeedbackSupportedAsync();
-            }
+            ShowSendFeedbackOption = await _feedbackService.IsFeedbackSupportedAsync();
 
             _telemetryService.ActivityCompleted(activityId);
         }

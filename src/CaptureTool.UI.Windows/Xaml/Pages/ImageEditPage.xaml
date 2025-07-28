@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:canvasui="using:Microsoft.Graphics.Canvas.UI.Xaml"
     xmlns:controls="using:CaptureTool.UI.Windows.Xaml.Controls"
+    xmlns:converters="using:CaptureTool.UI.Windows.Xaml.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -12,14 +13,29 @@
     xmlns:views="using:CaptureTool.UI.Windows.Xaml.Views"
     d:DataContext="{d:DesignInstance Type=viewmodels:ImageEditPageViewModel}"
     mc:Ignorable="d">
-
+    <Page.Resources>
+        <converters:ColorTypeConverter x:Key="ColorTypeConverter" />
+        <converters:ColorHexStringConverter x:Key="ColorHexStringConverter" />
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
 
         <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+            <!--  Chroma Key  -->
+            <AppBarToggleButton
+                Command="{x:Bind ViewModel.ToggleChromaKeyOptionsCommand}"
+                IsChecked="{x:Bind ViewModel.ShowChromaKeyEffect, Mode=TwoWay}"
+                Label="Chroma Key"
+                Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="{StaticResource Color}" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
+            <AppBarSeparator Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}" />
             <!--  Crop and orientation  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_CropButton"
@@ -81,23 +97,11 @@
             <AppBarButton
                 x:Uid="ImageEdit_PrintButton"
                 Command="{x:Bind ViewModel.PrintCommand}"
-                Icon="Print"
-                Visibility="{x:Bind ViewModel.IsPrintEnabled, Mode=OneWay}">
+                Icon="Print">
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="P" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
-            <!--  Chroma Key  -->
-            <AppBarSeparator Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}" />
-            <AppBarToggleButton
-                Command="{x:Bind ViewModel.ToggleChromaKeyCommand}"
-                IsChecked="{x:Bind ViewModel.ShowChromaKeyEffect, Mode=OneWay}"
-                Label="Chroma Key"
-                Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}">
-                <AppBarToggleButton.Icon>
-                    <SymbolIcon Symbol="Repair" />
-                </AppBarToggleButton.Icon>
-            </AppBarToggleButton>
         </CommandBar>
 
         <Grid
@@ -106,7 +110,7 @@
             Background="{ThemeResource ImageEditCanvasBackgroundBrush}"
             BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
             BorderThickness="0,1,0,0"
-            Row="1">
+            Row="2">
             <controls:ImageCanvas
                 x:Name="ImageCanvas"
                 CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"
@@ -114,6 +118,108 @@
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}" />
+        </Grid>
+
+        <!--  Chroma key options  -->
+        <Grid
+            HorizontalAlignment="Center"
+            Row="1"
+            Visibility="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}">
+            <CommandBar
+                DefaultLabelPosition="Right"
+                IsDynamicOverflowEnabled="False"
+                IsOpen="False"
+                OverflowButtonVisibility="Collapsed">
+                <AppBarElementContainer Margin="2,6" VerticalContentAlignment="Center">
+                    <DropDownButton Padding="8,4">
+                        <Rectangle Width="24" Height="24">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="{x:Bind ViewModel.ChromaKeyColor, Converter={StaticResource ColorTypeConverter}}" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <DropDownButton.Flyout>
+                            <Flyout>
+                                <Flyout.FlyoutPresenterStyle>
+                                    <Style BasedOn="{StaticResource DefaultFlyoutPresenterStyle}" TargetType="FlyoutPresenter">
+                                        <Setter Property="Padding" Value="12" />
+                                    </Style>
+                                </Flyout.FlyoutPresenterStyle>
+                                <ScrollView>
+                                    <StackPanel MinWidth="150" Spacing="4">
+                                        <Button
+                                            Padding="8"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Stretch">
+                                            <Grid ColumnSpacing="8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <Rectangle
+                                                    Width="32"
+                                                    Height="32"
+                                                    Fill="LightGray"
+                                                    RadiusX="4"
+                                                    RadiusY="4" />
+                                                <SymbolIcon Foreground="White" Symbol="Cancel" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Text="No effect" />
+                                            </Grid>
+                                        </Button>
+                                        <MenuFlyoutSeparator />
+                                        <ItemsControl ItemsSource="{x:Bind ViewModel.ChromaKeyColorPresets, Mode=OneWay}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="Color">
+                                                    <Button
+                                                        Padding="8"
+                                                        HorizontalAlignment="Stretch"
+                                                        HorizontalContentAlignment="Stretch">
+                                                        <Grid ColumnSpacing="8">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Rectangle
+                                                                Width="32"
+                                                                Height="32"
+                                                                RadiusX="16"
+                                                                RadiusY="16">
+                                                                <Rectangle.Fill>
+                                                                    <SolidColorBrush Color="{Binding Converter={StaticResource ColorTypeConverter}}" />
+                                                                </Rectangle.Fill>
+                                                            </Rectangle>
+                                                            <StackPanel Grid.Column="1">
+                                                                <TextBlock Text="Lime Green" />
+                                                                <TextBlock FontSize="12" Text="{Binding Converter={StaticResource ColorHexStringConverter}}" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ScrollView>
+                            </Flyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                </AppBarElementContainer>
+
+                <AppBarElementContainer Margin="2,6" VerticalContentAlignment="Center">
+                    <TextBox Width="100" PlaceholderText="#000000" />
+                </AppBarElementContainer>
+
+                <AppBarElementContainer Margin="2,6" VerticalContentAlignment="Center">
+                    <Slider
+                        Width="200"
+                        Maximum="60"
+                        Minimum="10"
+                        SnapsTo="StepValues"
+                        StepFrequency="1"
+                        Value="{x:Bind ViewModel.ChromaKeyTolerance, Mode=TwoWay}" />
+                </AppBarElementContainer>
+            </CommandBar>
         </Grid>
     </Grid>
 </local:ImageEditPageBase>
