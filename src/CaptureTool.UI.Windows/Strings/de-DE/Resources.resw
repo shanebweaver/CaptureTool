@@ -370,15 +370,15 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
     <value>Systemstandard verwenden</value>
   </data>
   <data name="CaptureType_Rectangle.Text" xml:space="preserve">
-    <value />
+    <value>Rechteck</value>
   </data>
   <data name="CaptureType_Window.Text" xml:space="preserve">
-    <value />
+    <value>Fenster</value>
   </data>
   <data name="CaptureType_FullScreen.Text" xml:space="preserve">
-    <value />
+    <value>Vollbild</value>
   </data>
   <data name="CaptureType_Freeform.Text" xml:space="preserve">
-    <value />
+    <value>Freiform</value>
   </data>
 </root>

@@ -370,15 +370,15 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
     <value>Usar el tema del sistema</value>
   </data>
   <data name="CaptureType_Rectangle.Text" xml:space="preserve">
-    <value />
+    <value>Rectángulo</value>
   </data>
   <data name="CaptureType_Window.Text" xml:space="preserve">
-    <value />
+    <value>Ventana</value>
   </data>
   <data name="CaptureType_FullScreen.Text" xml:space="preserve">
-    <value />
+    <value>Pantalla completa</value>
   </data>
   <data name="CaptureType_Freeform.Text" xml:space="preserve">
-    <value />
+    <value>Forma libre</value>
   </data>
 </root>

@@ -370,15 +370,15 @@
     <value>使用系统默认</value>
   </data>
   <data name="CaptureType_Rectangle.Text" xml:space="preserve">
-    <value />
+    <value>矩形</value>
   </data>
   <data name="CaptureType_Window.Text" xml:space="preserve">
-    <value />
+    <value>窗口</value>
   </data>
   <data name="CaptureType_FullScreen.Text" xml:space="preserve">
-    <value />
+    <value>全屏</value>
   </data>
   <data name="CaptureType_Freeform.Text" xml:space="preserve">
-    <value />
+    <value>自由形式</value>
   </data>
 </root>

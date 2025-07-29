@@ -370,15 +370,15 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>Utiliser les paramètres par défaut du système</value>
   </data>
   <data name="CaptureType_Rectangle.Text" xml:space="preserve">
-    <value />
+    <value>Rectangle</value>
   </data>
   <data name="CaptureType_Window.Text" xml:space="preserve">
-    <value />
+    <value>Fenêtre</value>
   </data>
   <data name="CaptureType_FullScreen.Text" xml:space="preserve">
-    <value />
+    <value>Plein écran</value>
   </data>
   <data name="CaptureType_Freeform.Text" xml:space="preserve">
-    <value />
+    <value>Forme libre</value>
   </data>
 </root>
