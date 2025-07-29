@@ -34,7 +34,6 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
 
-        AppWindow.Closing += OnAppWindowClosing;
         AppTitleBar.Loaded += AppTitleBar_Loaded;
         AppTitleBar.SizeChanged += AppTitleBar_SizeChanged;
         ExtendsContentIntoTitleBar = true;
@@ -47,6 +46,13 @@ public sealed partial class MainWindow : Window
 
         UpdateRequestedAppTheme();
         UpdateTitleBarColors();
+
+        SizeChanged += MainWindow_SizeChanged;
+    }
+
+    private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
+    {
+        SaveAppWindowSizeAndPosition();
     }
 
     private void UpdateAppTitle()
@@ -113,11 +119,6 @@ public sealed partial class MainWindow : Window
         return offset.X * scale;
     }
 
-    private void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
-    {
-        SaveAppWindowSizeAndPosition();
-    }
-
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MainWindowViewModel.CurrentAppTheme))
@@ -169,10 +170,10 @@ public sealed partial class MainWindow : Window
         var appWindowSize = new SizeInt32(
             (data.Values.TryGetValue(MainWindow_Width, out object? oW) && (oW is int w) && w > 0) ? w : DefaultWindowSize.Width,
             (data.Values.TryGetValue(MainWindow_Height, out object? oH) && (oH is int h) && h > 0) ? h : DefaultWindowSize.Height);
-        
+
         AppWindow.Resize(appWindowSize);
 
-        if ((data.Values.TryGetValue(MainWindow_X, out object? oX) && (oX is int x) && x >= 0) && 
+        if ((data.Values.TryGetValue(MainWindow_X, out object? oX) && (oX is int x) && x >= 0) &&
             (data.Values.TryGetValue(MainWindow_Y, out object? oY) && (oY is int y) && y >= 0))
         {
             AppWindow.Move(new PointInt32(x, y));

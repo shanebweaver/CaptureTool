@@ -12,6 +12,11 @@ public sealed partial class WindowsJsonStorageService : IJsonStorageService
 {
     public async Task<T?> ReadAsync<T>(string filePath, JsonTypeInfo<T> jsonTypeInfo)
     {
+        if (!File.Exists(filePath))
+        {
+            return default;
+        }
+
         IStorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
         string text = await FileIO.ReadTextAsync(file);
         return JsonSerializer.Deserialize(text, jsonTypeInfo);
