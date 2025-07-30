@@ -184,10 +184,10 @@ internal partial class CaptureToolAppController : IAppController
             {
                 // Uncomment to only show overlay on primary monitor.
                 // Useful for debugging on a side monitor.
-                if (!monitor.IsPrimary)
-                {
-                    continue;
-                }
+                //if (!monitor.IsPrimary)
+                //{
+                //    continue;
+                //}
 
                 //var monitorWindows = allWindows.Select((wi) => {
                 //    var position = wi.Position;
