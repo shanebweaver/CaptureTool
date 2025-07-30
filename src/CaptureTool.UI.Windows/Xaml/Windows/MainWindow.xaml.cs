@@ -7,24 +7,19 @@ using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.Windows.Storage;
 using System;
 using System.Threading;
 using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.Graphics;
 using Windows.UI;
+using Windows.UI.WindowManagement;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
 public sealed partial class MainWindow : Window
 {
     private static readonly SizeInt32 DefaultWindowSize = new(720, 540);
-
-    private const string MainWindow_X = "MainWindow_X";
-    private const string MainWindow_Y = "MainWindow_Y";
-    private const string MainWindow_Width = "MainWindow_Width";
-    private const string MainWindow_Height = "MainWindow_Height";
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
 
@@ -46,13 +41,6 @@ public sealed partial class MainWindow : Window
 
         UpdateRequestedAppTheme();
         UpdateTitleBarColors();
-
-        SizeChanged += MainWindow_SizeChanged;
-    }
-
-    private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
-    {
-        SaveAppWindowSizeAndPosition();
     }
 
     private void UpdateAppTitle()
@@ -166,46 +154,9 @@ public sealed partial class MainWindow : Window
 
     private void RestoreAppWindowSizeAndPosition()
     {
-        var data = ApplicationData.GetDefault().LocalSettings;
-        var appWindowSize = new SizeInt32(
-            (data.Values.TryGetValue(MainWindow_Width, out object? oW) && (oW is int w) && w > 0) ? w : DefaultWindowSize.Width,
-            (data.Values.TryGetValue(MainWindow_Height, out object? oH) && (oH is int h) && h > 0) ? h : DefaultWindowSize.Height);
-
-        AppWindow.Resize(appWindowSize);
-
-        if ((data.Values.TryGetValue(MainWindow_X, out object? oX) && (oX is int x) && x >= 0) &&
-            (data.Values.TryGetValue(MainWindow_Y, out object? oY) && (oY is int y) && y >= 0))
-        {
-            AppWindow.Move(new PointInt32(x, y));
-        }
-        else
-        {
-            this.CenterOnScreen();
-        }
-    }
-
-    private void SaveAppWindowSizeAndPosition()
-    {
-        if (AppWindow.Presenter is OverlappedPresenter presenter)
-        {
-            var data = ApplicationData.GetDefault().LocalSettings;
-            bool isMaximized = presenter.State == OverlappedPresenterState.Maximized;
-            bool isMinimized = presenter.State == OverlappedPresenterState.Minimized;
-            if (!isMinimized && !isMaximized)
-            {
-                data.Values[MainWindow_X] = AppWindow.Position.X;
-                data.Values[MainWindow_Y] = AppWindow.Position.Y;
-                data.Values[MainWindow_Width] = AppWindow.Size.Width;
-                data.Values[MainWindow_Height] = AppWindow.Size.Height;
-            }
-            else
-            {
-                data.Values[MainWindow_X] = null;
-                data.Values[MainWindow_Y] = null;
-                data.Values[MainWindow_Width] = null;
-                data.Values[MainWindow_Height] = null;
-            }
-        }
+        AppWindow.Move(new PointInt32(1,1));
+        AppWindow.Resize(DefaultWindowSize);
+        this.CenterOnScreen();
     }
 
     private void UpdateRequestedAppTheme()
