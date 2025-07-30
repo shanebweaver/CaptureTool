@@ -15,13 +15,36 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
     {
         InitializeComponent();
 
-        ViewModel.PropertyChanged += ViewModel_PropertyChanged;
-
         DispatcherQueue.TryEnqueue(() =>
         {
             UpdateRequestedAppTheme();
             LoadBackgroundImage();
         });
+
+        Loaded += CaptureOverlayWindowView_Loaded;
+        Unloaded += CaptureOverlayWindowView_Unloaded;
+    }
+
+    ~CaptureOverlayWindowView()
+    {
+        Loaded -= CaptureOverlayWindowView_Loaded;
+        Unloaded -= CaptureOverlayWindowView_Unloaded;
+    }
+
+    private void CaptureOverlayWindowView_Loaded(object sender, RoutedEventArgs e)
+    {
+        ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+        Toolbar.CloseRequested += OnCloseRequested;
+        SecretEscapeButton.Click += OnEscapeRequested;
+        SelectionOverlay.SelectionComplete += SelectionOverlay_SelectionComplete;
+    }
+
+    private void CaptureOverlayWindowView_Unloaded(object sender, RoutedEventArgs e)
+    {
+        ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        Toolbar.CloseRequested -= OnCloseRequested;
+        SecretEscapeButton.Click -= OnEscapeRequested;
+        SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;
     }
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -84,7 +107,7 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
         };
     }
 
-    private void SelectionOverlay_SelectionComplete(object sender, Rectangle captureArea)
+    private void SelectionOverlay_SelectionComplete(object? sender, Rectangle captureArea)
     {
         ViewModel.CaptureArea = captureArea;
 
@@ -94,12 +117,12 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
         }
     }
 
-    private void OnCloseRequested(object sender, EventArgs e)
+    private void OnCloseRequested(object? sender, EventArgs e)
     {
         ViewModel.CloseOverlayCommand.Execute(null);
     }
 
-    private void OnEscapeRequested(object sender, RoutedEventArgs e)
+    private void OnEscapeRequested(object? sender, RoutedEventArgs e)
     {
         ViewModel.CloseOverlayCommand.Execute(null);
     }

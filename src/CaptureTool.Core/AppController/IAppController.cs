@@ -18,7 +18,7 @@ public interface IAppController
     void PerformCapture(MonitorCaptureResult monitor, Rectangle captureArea);
 
     void HideMainWindow();
-    void ShowMainWindow();
+    void ShowMainWindow(bool activate = true);
     nint GetMainWindowHandle();
 
     void GoHome();

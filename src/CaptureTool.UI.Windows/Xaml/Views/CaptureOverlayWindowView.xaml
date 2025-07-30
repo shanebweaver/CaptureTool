@@ -12,11 +12,10 @@
     mc:Ignorable="d">
 
     <Grid x:Name="RootPanel">
-        <controls:SelectionOverlay x:Name="SelectionOverlay" SelectionComplete="SelectionOverlay_SelectionComplete" />
+        <controls:SelectionOverlay x:Name="SelectionOverlay" />
 
         <controls:CaptureOverlayToolbar
             x:Name="Toolbar"
-            CloseRequested="OnCloseRequested"
             IsVideoCaptureEnabled="{x:Bind ViewModel.IsVideoCaptureEnabled, Mode=OneWay}"
             SelectedCaptureModeIndex="{x:Bind ViewModel.SelectedCaptureModeIndex, Mode=TwoWay}"
             SelectedCaptureTypeIndex="{x:Bind ViewModel.SelectedCaptureTypeIndex, Mode=TwoWay}"
@@ -26,7 +25,7 @@
 
         <!--  Secret button to allow escape to work on all monitors.  -->
         <Button
-            Click="OnEscapeRequested"
+            x:Name="SecretEscapeButton"
             IsTabStop="False"
             Opacity="0">
             <Button.KeyboardAccelerators>

@@ -1,52 +1,29 @@
-﻿using CaptureTool.Capture;
-using CaptureTool.Core.AppController;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : ViewModelBase
 {
-    private readonly IAppController _appController;
-    private readonly List<CaptureOverlayWindowViewModel> _windowViewModels;
+    private readonly List<CaptureOverlayWindowViewModel> _windowViewModels = [];
 
-    public CaptureOverlayViewModel(
-        IAppController appController)
+    public CaptureOverlayViewModel()
     {
-        _appController = appController;
-        _windowViewModels = [];
     }
 
     public void AddWindowViewModel(CaptureOverlayWindowViewModel newVM)
     {
-        _windowViewModels.Add(newVM);
-
-        newVM.CaptureRequested += CaptureOverlayWindowViewModel_CaptureRequested;
         newVM.PropertyChanged += CaptureOverlayWindowViewModel_PropertyChanged;
+        _windowViewModels.Add(newVM);
     }
 
-    public void Close()
+    public void Unload()
     {
         foreach (var windowViewModel in _windowViewModels)
         {
-            windowViewModel.CaptureRequested -= CaptureOverlayWindowViewModel_CaptureRequested;
             windowViewModel.PropertyChanged -= CaptureOverlayWindowViewModel_PropertyChanged;
-            windowViewModel.Close();
         }
         _windowViewModels.Clear();
-    }
-
-    private void CaptureOverlayWindowViewModel_CaptureRequested(object? sender, System.EventArgs e)
-    {
-        foreach (var windowVM in _windowViewModels)
-        {
-            var captureArea = windowVM.CaptureArea;
-            if (windowVM.Monitor is MonitorCaptureResult monitor && captureArea != Rectangle.Empty)
-            {
-                _appController.PerformCapture(monitor, captureArea);
-                break;
-            }
-        }
     }
 
     private void CaptureOverlayWindowViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

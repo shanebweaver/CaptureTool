@@ -2,7 +2,6 @@ using CaptureTool.Capture;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -17,6 +16,7 @@ public sealed partial class CaptureOverlayWindow : Window
         if (monitor.IsPrimary)
         {
             Activated += CaptureOverlayWindow_Activated;
+            Closed += CaptureOverlayWindow_Closed;
         }
 
         AppWindow.IsShownInSwitchers = false;
@@ -35,13 +35,16 @@ public sealed partial class CaptureOverlayWindow : Window
 
         InitializeComponent();
 
-        ViewModel.CloseRequested += ViewModel_CloseRequested;
         ViewModel.Load(monitor, monitorWindows);
     }
 
-    private void ViewModel_CloseRequested(object? sender, EventArgs e)
+    private void CaptureOverlayWindow_Closed(object sender, WindowEventArgs args)
     {
-        DispatcherQueue.TryEnqueue(Close);
+        Activated -= CaptureOverlayWindow_Activated;
+        Closed -= CaptureOverlayWindow_Closed;
+
+        ViewModel.Unload();
+        Content = null;
     }
 
     private void CaptureOverlayWindow_Activated(object sender, WindowActivatedEventArgs args)

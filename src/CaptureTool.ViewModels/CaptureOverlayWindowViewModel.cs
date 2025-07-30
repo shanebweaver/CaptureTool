@@ -15,8 +15,6 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     private readonly IThemeService _themeService;
     private readonly IAppController _appController;
 
-    public event EventHandler? CaptureRequested;
-    public event EventHandler? CloseRequested;
     public event EventHandler<CaptureMode>? SelectedCaptureModeChanged;
     public event EventHandler<CaptureType>? SelectedCaptureTypeChanged;
 
@@ -24,7 +22,6 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
 
     public bool IsPrimary => Monitor?.MonitorBounds.Top == 0 && Monitor?.MonitorBounds.Left == 0;
-
 
     private ObservableCollection<CaptureType> _supportedCaptureTypes;
     public ObservableCollection<CaptureType> SupportedCaptureTypes
@@ -111,8 +108,8 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         private set => Set(ref _monitor, value);
     }
 
-    private IEnumerable<Rectangle> _monitorWindows;
-    public IEnumerable<Rectangle> MonitorWindows
+    private IList<Rectangle> _monitorWindows;
+    public IList<Rectangle> MonitorWindows
     {
         get => _monitorWindows;
         private set => Set(ref _monitorWindows, value);
@@ -176,12 +173,18 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     public void Load(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows)
     {
         Monitor = monitor;
-        MonitorWindows = monitorWindows;
+        MonitorWindows = [.. monitorWindows];
     }
 
-    public void Close()
+    public void Unload()
     {
-        CloseRequested?.Invoke(this, EventArgs.Empty);
+        _selectedCaptureTypeIndex = default;
+        _selectedCaptureModeIndex = default;
+        _supportedCaptureTypes.Clear();
+        _supportedCaptureModes.Clear();
+        _monitor = null;
+        _monitorWindows.Clear();
+        _captureArea = Rectangle.Empty;
     }
 
     private void CloseOverlay()
@@ -192,6 +195,9 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
 
     private void RequestCapture()
     {
-        CaptureRequested?.Invoke(this, EventArgs.Empty);
+        if (Monitor != null && CaptureArea != Rectangle.Empty)
+        {
+            _appController.PerformCapture(Monitor.Value, CaptureArea);
+        }
     }
 }

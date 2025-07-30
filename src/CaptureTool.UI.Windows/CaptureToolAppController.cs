@@ -38,6 +38,7 @@ internal partial class CaptureToolAppController : IAppController
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
 
+    private readonly HashSet<CaptureOverlayWindow> _captureOverlayWindows = [];
     private readonly HashSet<IntPtr> _captureOverlayWindowHandles = [];
     private CaptureOverlayViewModel? _captureOverlayViewModel;
     private MainWindow? _mainWindow;
@@ -173,9 +174,9 @@ internal partial class CaptureToolAppController : IAppController
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
             _captureOverlayWindowHandles.Clear();
-            _captureOverlayViewModel = new(this);
+            _captureOverlayViewModel = new();
 
-            var allWindows = WindowInfoHelper.GetAllWindows();
+            //var allWindows = WindowInfoHelper.GetAllWindows();
             var monitors = MonitorCaptureHelper.CaptureAllMonitors();
 
             Window? primaryWindow = null;
@@ -183,23 +184,24 @@ internal partial class CaptureToolAppController : IAppController
             {
                 // Uncomment to only show overlay on primary monitor.
                 // Useful for debugging on a side monitor.
-                //if (!monitor.IsPrimary)
-                //{
-                //    continue;
-                //}
+                if (!monitor.IsPrimary)
+                {
+                    continue;
+                }
 
-                var monitorWindows = allWindows.Select((wi) => {
-                    var position = wi.Position;
-                    var scale = monitor.Scale;
-                    var scaled = new Rectangle(
-                        (int)(position.X * scale),
-                        (int)(position.Y * scale),
-                        (int)(position.Width * scale),
-                        (int)(position.Height * scale));
-                    return scaled;
-                }).Where(p => monitor.MonitorBounds.IntersectsWith(p) || monitor.MonitorBounds.Contains(p));
+                //var monitorWindows = allWindows.Select((wi) => {
+                //    var position = wi.Position;
+                //    var scale = monitor.Scale;
+                //    var scaled = new Rectangle(
+                //        (int)(position.X * scale),
+                //        (int)(position.Y * scale),
+                //        (int)(position.Width * scale),
+                //        (int)(position.Height * scale));
+                //    return scaled;
+                //}).Where(p => monitor.MonitorBounds.IntersectsWith(p) || monitor.MonitorBounds.Contains(p));
 
-                CaptureOverlayWindow window = new(monitor, monitorWindows);
+                CaptureOverlayWindow window = new(monitor, []);
+                _captureOverlayWindows.Add(window);
 
                 IntPtr windowHwnd = WindowNative.GetWindowHandle(window);
                 _captureOverlayWindowHandles.Add(windowHwnd);
@@ -240,7 +242,7 @@ internal partial class CaptureToolAppController : IAppController
                 IntPtr foregroundHwnd = PInvoke.GetForegroundWindow();
                 if (!_captureOverlayWindowHandles.Contains(foregroundHwnd))
                 {
-                    ShowMainWindow();
+                    ShowMainWindow(false);
                     CloseCaptureOverlay();
                 }
             };
@@ -327,11 +329,17 @@ internal partial class CaptureToolAppController : IAppController
         });
     }
 
-    public void ShowMainWindow()
+    public void ShowMainWindow(bool activate = true)
     {
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {            
-            _mainWindow?.AppWindow.Show(false);
+            _mainWindow?.AppWindow.Show(activate);
+
+            if (activate)
+            {
+                var hwnd = WindowNative.GetWindowHandle(_mainWindow);
+                PInvoke.SetForegroundWindow(new(hwnd));
+            }
         });
     }
 
@@ -342,8 +350,15 @@ internal partial class CaptureToolAppController : IAppController
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
             _captureOverlayWindowHandles.Clear();
-            _captureOverlayViewModel?.Close();
+
+            _captureOverlayViewModel?.Unload();
             _captureOverlayViewModel = null;
+
+            foreach (var window in _captureOverlayWindows)
+            {
+                window.Close();
+            }
+            _captureOverlayWindows.Clear();
         });
     }
 
