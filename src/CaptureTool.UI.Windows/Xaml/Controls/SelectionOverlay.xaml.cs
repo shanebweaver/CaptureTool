@@ -186,8 +186,6 @@ public sealed partial class SelectionOverlay : UserControlBase
             var pointerPos = e.GetCurrentPoint(SelectionCanvas).Position;
             var pointerPoint = new System.Drawing.Point((int)pointerPos.X, (int)pointerPos.Y);
 
-            System.Diagnostics.Debug.WriteLine(pointerPoint);
-
             bool windowFound = false;
             foreach (var windowRect in WindowRects)
             {
