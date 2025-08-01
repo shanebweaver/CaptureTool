@@ -36,6 +36,7 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
             var deferral = args.GetDeferral();
             try
             {
+                printDocument.SetPageCount(PageCount);
                 Print(sender, args.DrawingSession, args.PrintTaskOptions, drawables, options);
             }
             finally 
@@ -81,11 +82,8 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
 
     private static void Print(CanvasPrintDocument printDocument, CanvasDrawingSession printDrawingSession, PrintTaskOptions printOptions, IDrawable[] drawables, ImageCanvasRenderOptions renderOptions)
     {
-        printDocument.SetPageCount(PageCount);
-
-        var pageDescription = printOptions.GetPageDescription(PageCount);
+        PrintPageDescription pageDescription = printOptions.GetPageDescription(PageCount);
         float scale = CalculateScaleForOnePage(renderOptions, pageDescription);
-        
         Win2DImageCanvasRenderer.Render(drawables, renderOptions, printDrawingSession, scale);
     }
 
