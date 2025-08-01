@@ -76,8 +76,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
                 return;
             }
 
-            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
-
+            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

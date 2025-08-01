@@ -221,7 +221,7 @@ internal partial class CaptureToolAppController : IAppController
         CloseCaptureOverlay();
 
         var imageFile = new ImageFile(tempPath);
-        _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile);
+        _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
     }
 
     public nint GetMainWindowHandle()
