@@ -61,13 +61,29 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
 
         void PrintDocument_Preview(CanvasPrintDocument sender, CanvasPreviewEventArgs args)
         {
-            Print(sender, args.DrawingSession, args.PrintTaskOptions, drawables, options);
+            var deferral = args.GetDeferral();
+            try
+            {
+                Print(sender, args.DrawingSession, args.PrintTaskOptions, drawables, options);
+            }
+            finally 
+            {
+                deferral.Complete(); 
+            }
         }
 
         void PrintDocument_Print(CanvasPrintDocument sender, CanvasPrintEventArgs args)
         {
-            using var printDrawingSession = args.CreateDrawingSession();
-            Print(sender, printDrawingSession, args.PrintTaskOptions, drawables, options);
+            var deferral = args.GetDeferral();
+            try
+            {
+                using var printDrawingSession = args.CreateDrawingSession();
+                Print(sender, printDrawingSession, args.PrintTaskOptions, drawables, options);
+            }
+            finally
+            {
+                deferral.Complete();
+            }
         }
     }
 
@@ -85,13 +101,20 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
     {
         sender.PrintTaskRequested -= OnPrintTaskRequested;
 
-        args.Request.CreatePrintTask("Capture Tool Image Print", (a) =>
+        PrintTask printTask = args.Request.CreatePrintTask("Capture Tool Image Print", (printTaskArgs) =>
         {
             if (_printDocument != null)
             {
-                a.SetSource(_printDocument);
+                printTaskArgs.SetSource(_printDocument);
             }
         });
+        printTask.Completed += PrintTask_Completed;
+    }
+
+    private void PrintTask_Completed(PrintTask sender, PrintTaskCompletedEventArgs args)
+    {
+        sender.Completed -= PrintTask_Completed;
+        _printDocument?.Dispose();
     }
 
     private static float CalculateScaleForOnePage(ImageCanvasRenderOptions options, PrintPageDescription pageDescription)
