@@ -1,5 +1,4 @@
 ﻿using CaptureTool.Capture;
-using CaptureTool.Capture.Windows;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
@@ -7,27 +6,20 @@ using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
-using CaptureTool.UI.Windows.Xaml.Extensions;
 using CaptureTool.UI.Windows.Xaml.Windows;
-using CaptureTool.ViewModels;
-using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.Storage;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Windows.ApplicationModel.Core;
-using Windows.Win32;
-using WinRT.Interop;
 
 namespace CaptureTool.UI.Windows;
 
@@ -38,11 +30,9 @@ internal partial class CaptureToolAppController : IAppController
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
 
-    private readonly HashSet<CaptureOverlayWindow> _captureOverlayWindows = [];
-    private readonly HashSet<IntPtr> _captureOverlayWindowHandles = [];
-    private CaptureOverlayViewModel? _captureOverlayViewModel;
-    private MainWindow? _mainWindow;
-    private DispatcherTimer? _foregroundTimer;
+    private CaptureOverlayHost? _overlayHost;
+    private MainWindowHost? _mainWindowHost;
+
     private readonly SemaphoreSlim _semaphore = new(1,1);
     private bool _isInitialized;
 
@@ -77,14 +67,6 @@ internal partial class CaptureToolAppController : IAppController
         finally
         {
             _semaphore.Release();
-        }
-    }
-
-    private void ThrowIfNotInitialized()
-    {
-        if (!_isInitialized)
-        {
-            throw new InvalidOperationException($"{nameof(CaptureToolAppController)} must be initialized before it can be used.");
         }
     }
 
@@ -166,86 +148,29 @@ internal partial class CaptureToolAppController : IAppController
     {
         ThrowIfNotInitialized();
 
-        // Give the window time to close so it isn't included in the capture
         CloseCaptureOverlay();
         HideMainWindow();
         await Task.Delay(200);
 
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
-            _captureOverlayWindowHandles.Clear();
-            _captureOverlayViewModel = new();
-
-            var allWindows = WindowInfoHelper.GetAllWindows();
-            var monitors = MonitorCaptureHelper.CaptureAllMonitors();
-
-            Window? primaryWindow = null;
-            foreach (var monitor in monitors)
+            _overlayHost = new CaptureOverlayHost(() =>
             {
-                // Uncomment to only show overlay on primary monitor.
-                // Useful for debugging on a side monitor.
-                //if (!monitor.IsPrimary)
-                //{
-                //    continue;
-                //}
+                ShowMainWindow(false);
+                CloseCaptureOverlay();
+            });
 
-                var monitorWindows = allWindows.Where(p => monitor.MonitorBounds.IntersectsWith(p.Position) || monitor.MonitorBounds.Contains(p.Position));
-
-                CaptureOverlayWindow window = new(monitor, []);
-                _captureOverlayWindows.Add(window);
-
-                IntPtr windowHwnd = WindowNative.GetWindowHandle(window);
-                _captureOverlayWindowHandles.Add(windowHwnd);
-
-                _captureOverlayViewModel.AddWindowViewModel(window.ViewModel);
-                if (window.ViewModel.IsPrimary)
-                {
-                    primaryWindow = window;
-                    primaryWindow.Activated += PrimaryWindow_Activated;
-                }
-            }
-
-            // Activate the primary window so the UI gets focus.
-            primaryWindow?.Activate();
+            _overlayHost.Show(options ?? new(CaptureMode.Image, CaptureType.Rectangle));
         });
     }
 
-    private void PrimaryWindow_Activated(object sender, WindowActivatedEventArgs args)
+    public void CloseCaptureOverlay()
     {
-        if (sender is Window window)
+        App.Current.DispatcherQueue.TryEnqueue(() =>
         {
-            window.Activated -= PrimaryWindow_Activated;
-            StartForegroundMonitor();
-        }
-    }
-
-    private void StartForegroundMonitor()
-    {
-        if (_foregroundTimer == null)
-        {
-            _foregroundTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(200)
-            };
-
-            _foregroundTimer.Tick += (_, _) =>
-            {
-                IntPtr foregroundHwnd = PInvoke.GetForegroundWindow();
-                if (!_captureOverlayWindowHandles.Contains(foregroundHwnd))
-                {
-                    ShowMainWindow(false);
-                    CloseCaptureOverlay();
-                }
-            };
-        }
-
-        _foregroundTimer.Start();
-    }
-
-    private void StopForegroundTimer()
-    {
-        _foregroundTimer?.Stop();
-        _foregroundTimer = null;
+            _overlayHost?.Dispose();
+            _overlayHost = null;
+        });
     }
 
     public void PerformCapture(MonitorCaptureResult monitor, Rectangle area)
@@ -301,7 +226,7 @@ internal partial class CaptureToolAppController : IAppController
 
     public nint GetMainWindowHandle()
     {
-        return WindowNative.GetWindowHandle(_mainWindow);
+        return _mainWindowHost?.Handle ?? IntPtr.Zero;
     }
 
     public void GoHome()
@@ -314,64 +239,12 @@ internal partial class CaptureToolAppController : IAppController
 
     public void HideMainWindow()
     {
-        App.Current.DispatcherQueue.TryEnqueue(() =>
-        {
-            _mainWindow?.AppWindow.Hide();
-        });
+        _mainWindowHost?.Hide();
     }
 
     public void ShowMainWindow(bool activate = true)
     {
-        App.Current.DispatcherQueue.TryEnqueue(() =>
-        {            
-            _mainWindow?.AppWindow.Show(activate);
-
-            if (activate)
-            {
-                var hwnd = WindowNative.GetWindowHandle(_mainWindow);
-                PInvoke.SetForegroundWindow(new(hwnd));
-            }
-        });
-    }
-
-    public void CloseCaptureOverlay()
-    {
-        StopForegroundTimer();
-
-        App.Current.DispatcherQueue.TryEnqueue(() =>
-        {
-            _captureOverlayWindowHandles.Clear();
-
-            _captureOverlayViewModel?.Unload();
-            _captureOverlayViewModel = null;
-
-            foreach (var window in _captureOverlayWindows)
-            {
-                window.Close();
-            }
-            _captureOverlayWindows.Clear();
-        });
-    }
-
-    private void RestoreMainWindow()
-    {
-        if (_mainWindow == null)
-        {
-            _mainWindow = new MainWindow();
-            _mainWindow.Closed += OnMainWindowClosed;
-        }
-
-        App.Current.DispatcherQueue.TryEnqueue(() =>
-        {
-            if (_mainWindow != null)
-            {
-                _mainWindow.Restore();
-                _mainWindow.Activate();
-
-                var hwnd = WindowNative.GetWindowHandle(_mainWindow);
-                PInvoke.SetForegroundWindow(new(hwnd));
-            }
-        });
+        _mainWindowHost?.Show(activate);
     }
 
     public bool TryGoBack()
@@ -390,30 +263,6 @@ internal partial class CaptureToolAppController : IAppController
         if (!TryGoBack())
         {
             GoHome();
-        }
-    }
-
-    private void OnMainWindowClosed(object sender, WindowEventArgs args)
-    {
-        CleanupMainWindow();
-        CheckExit();
-    }
-
-    private void CheckExit()
-    {
-        if (_mainWindow == null)
-        {
-            Shutdown();
-        }
-    }
-
-    private void CleanupMainWindow()
-    {
-        if (_mainWindow != null)
-        {
-            _mainWindow.Closed -= OnMainWindowClosed;
-            _mainWindow.Close();
-            _mainWindow = null;
         }
     }
 
@@ -436,11 +285,45 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
+    private void CheckExit()
+    {
+        if (_mainWindowHost == null)
+        {
+            Shutdown();
+        }
+    }
+
+    private void RestoreMainWindow()
+    {
+        _mainWindowHost ??= new MainWindowHost(OnMainWindowClosed);
+        _mainWindowHost.Restore();
+    }
+
+    private void OnMainWindowClosed()
+    {
+        CleanupMainWindow();
+        CheckExit();
+    }
+
+    private void CleanupMainWindow()
+    {
+        _mainWindowHost?.Dispose();
+        _mainWindowHost = null;
+    }
+
     private async Task InitializeSettingsServiceAsync(CancellationToken cancellationToken)
     {
         string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         string settingsFilePath = Path.Combine(appDataPath, "Settings.json");
         await _settingsService.InitializeAsync(settingsFilePath, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
+    }
+
+    private void ThrowIfNotInitialized()
+    {
+        if (!_isInitialized)
+        {
+            throw new InvalidOperationException($"{nameof(CaptureToolAppController)} must be initialized before it can be used.");
+        }
     }
 }

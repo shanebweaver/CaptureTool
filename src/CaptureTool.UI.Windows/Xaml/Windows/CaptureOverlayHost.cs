@@ -1,0 +1,119 @@
+﻿using CaptureTool.Capture;
+using CaptureTool.Capture.Windows;
+using CaptureTool.ViewModels;
+using Microsoft.UI.Xaml;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Windows.Win32;
+using WinRT.Interop;
+
+namespace CaptureTool.UI.Windows.Xaml.Windows;
+
+internal sealed partial class CaptureOverlayHost : IDisposable
+{
+    private readonly Action _onClosed;
+
+    private readonly HashSet<CaptureOverlayWindow> _windows = [];
+    private readonly HashSet<nint> _windowHandles = [];
+    private CaptureOverlayViewModel? _viewModel;
+    private DispatcherTimer? _foregroundTimer;
+    private Window? _primaryWindow;
+
+    public CaptureOverlayHost(Action onClosed)
+    {
+        _onClosed = onClosed;
+    }
+
+    public void Show(CaptureOptions options)
+    {
+        Close();
+        _windowHandles.Clear();
+        _viewModel = new();
+
+        var allWindows = WindowInfoHelper.GetAllWindows();
+        var monitors = MonitorCaptureHelper.CaptureAllMonitors();
+
+        foreach (var monitor in monitors)
+        {
+            var monitorWindows = allWindows.Select(w => w.Position).Where(p =>
+                monitor.MonitorBounds.IntersectsWith(p) ||
+                monitor.MonitorBounds.Contains(p));
+
+            var window = new CaptureOverlayWindow(monitor, monitorWindows.ToList());
+            _windows.Add(window);
+
+            var hwnd = WindowNative.GetWindowHandle(window);
+            _windowHandles.Add(hwnd);
+
+            _viewModel.AddWindowViewModel(window.ViewModel);
+
+            if (window.ViewModel.IsPrimary)
+            {
+                _primaryWindow = window;
+                _primaryWindow.Activated += OnPrimaryWindowActivated;
+            }
+        }
+
+        _primaryWindow?.Activate();
+    }
+
+    private void OnPrimaryWindowActivated(object sender, WindowActivatedEventArgs args)
+    {
+        if (sender is Window window)
+        {
+            window.Activated -= OnPrimaryWindowActivated;
+            StartForegroundMonitor();
+        }
+    }
+
+    private void StartForegroundMonitor()
+    {
+        if (_foregroundTimer != null)
+            return;
+
+        _foregroundTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(200)
+        };
+
+        _foregroundTimer.Tick += (_, _) =>
+        {
+            var foregroundHwnd = PInvoke.GetForegroundWindow();
+            if (!_windowHandles.Contains(foregroundHwnd))
+            {
+                Close();
+                _onClosed.Invoke();
+            }
+        };
+
+        _foregroundTimer.Start();
+    }
+
+    private void StopForegroundMonitor()
+    {
+        _foregroundTimer?.Stop();
+        _foregroundTimer = null;
+    }
+
+    public void Close()
+    {
+        StopForegroundMonitor();
+        _windowHandles.Clear();
+
+        _viewModel?.Unload();
+        _viewModel = null;
+
+        foreach (var window in _windows)
+        {
+            window.Close();
+        }
+
+        _windows.Clear();
+    }
+
+    public void Dispose()
+    {
+        Close();
+    }
+}
