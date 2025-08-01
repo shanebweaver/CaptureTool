@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -175,7 +176,7 @@ internal partial class CaptureToolAppController : IAppController
             _captureOverlayWindowHandles.Clear();
             _captureOverlayViewModel = new();
 
-            //var allWindows = WindowInfoHelper.GetAllWindows();
+            var allWindows = WindowInfoHelper.GetAllWindows();
             var monitors = MonitorCaptureHelper.CaptureAllMonitors();
 
             Window? primaryWindow = null;
@@ -188,16 +189,7 @@ internal partial class CaptureToolAppController : IAppController
                 //    continue;
                 //}
 
-                //var monitorWindows = allWindows.Select((wi) => {
-                //    var position = wi.Position;
-                //    var scale = monitor.Scale;
-                //    var scaled = new Rectangle(
-                //        (int)(position.X * scale),
-                //        (int)(position.Y * scale),
-                //        (int)(position.Width * scale),
-                //        (int)(position.Height * scale));
-                //    return scaled;
-                //}).Where(p => monitor.MonitorBounds.IntersectsWith(p) || monitor.MonitorBounds.Contains(p));
+                var monitorWindows = allWindows.Where(p => monitor.MonitorBounds.IntersectsWith(p.Position) || monitor.MonitorBounds.Contains(p.Position));
 
                 CaptureOverlayWindow window = new(monitor, []);
                 _captureOverlayWindows.Add(window);
@@ -366,7 +358,7 @@ internal partial class CaptureToolAppController : IAppController
         if (_mainWindow == null)
         {
             _mainWindow = new MainWindow();
-            _mainWindow.Closed += OnWindowClosed;
+            _mainWindow.Closed += OnMainWindowClosed;
         }
 
         App.Current.DispatcherQueue.TryEnqueue(() =>
@@ -401,9 +393,9 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
-    private void OnWindowClosed(object sender, WindowEventArgs args)
+    private void OnMainWindowClosed(object sender, WindowEventArgs args)
     {
-        CleanupWindow();
+        CleanupMainWindow();
         CheckExit();
     }
 
@@ -415,11 +407,11 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
-    private void CleanupWindow()
+    private void CleanupMainWindow()
     {
         if (_mainWindow != null)
         {
-            _mainWindow.Closed -= OnWindowClosed;
+            _mainWindow.Closed -= OnMainWindowClosed;
             _mainWindow.Close();
             _mainWindow = null;
         }
@@ -431,7 +423,8 @@ internal partial class CaptureToolAppController : IAppController
         {
             try
             {
-                CleanupWindow();
+                CloseCaptureOverlay();
+                CleanupMainWindow();
                 _cancellationService.CancelAll();
             }
             catch (Exception e)
