@@ -439,7 +439,7 @@ internal partial class CaptureToolAppController : IAppController
                 Debug.Fail($"Error during shutdown: {e.Message}");
             }
 
-            Application.Current.Exit();
+            Environment.Exit(0);
         }
     }
 
