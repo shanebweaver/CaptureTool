@@ -2,8 +2,6 @@
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Printing;
 using System;
-using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Printing;
 
@@ -13,52 +11,26 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
 {
     private const uint PageCount = 1;
 
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
-
-    private CanvasPrintDocument? _printDocument = null;
-
     public Win2DImageCanvasPrinter()
     {
     }
 
-    ~Win2DImageCanvasPrinter()
-    {
-        _printDocument?.Dispose();
-    }
-
     public async Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, nint hwnd)
     {
-        await _semaphore.WaitAsync();
-
-        _printDocument?.Dispose();
-
-        _printDocument = new();
-        _printDocument.Preview += PrintDocument_Preview;
-        _printDocument.Print += PrintDocument_Print;
-
-        try
+        if (!PrintManager.IsSupported())
         {
-            if (PrintManager.IsSupported())
-            {
-                PrintManager printManager = PrintManagerInterop.GetForWindow(hwnd);
-                printManager.PrintTaskRequested -= OnPrintTaskRequested;
-                printManager.PrintTaskRequested += OnPrintTaskRequested;
-                await PrintManagerInterop.ShowPrintUIForWindowAsync(hwnd);
-            }
-            else
-            {
-                throw new NotSupportedException("Printing is not supported.");
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.WriteLine(e.Message);
-        }
-        finally
-        {
-            _semaphore.Release();
+            throw new NotSupportedException("Printing is not supported.");
         }
 
+        CanvasPrintDocument printDocument = new();
+        printDocument.Preview += PrintDocument_Preview;
+        printDocument.Print += PrintDocument_Print;
+
+        PrintManager printManager = PrintManagerInterop.GetForWindow(hwnd);
+        printManager.PrintTaskRequested -= OnPrintTaskRequested;
+        printManager.PrintTaskRequested += OnPrintTaskRequested;
+        await PrintManagerInterop.ShowPrintUIForWindowAsync(hwnd);
+       
         void PrintDocument_Preview(CanvasPrintDocument sender, CanvasPreviewEventArgs args)
         {
             var deferral = args.GetDeferral();
@@ -85,6 +57,26 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
                 deferral.Complete();
             }
         }
+
+        void OnPrintTaskRequested(PrintManager sender, PrintTaskRequestedEventArgs args)
+        {
+            sender.PrintTaskRequested -= OnPrintTaskRequested;
+
+            PrintTask printTask = args.Request.CreatePrintTask("Capture Tool Image Print", (printTaskArgs) =>
+            {
+                if (printDocument != null)
+                {
+                    printTaskArgs.SetSource(printDocument);
+                }
+            });
+            printTask.Completed += PrintTask_Completed;
+        }
+
+        void PrintTask_Completed(PrintTask sender, PrintTaskCompletedEventArgs args)
+        {
+            sender.Completed -= PrintTask_Completed;
+            printDocument?.Dispose();
+        }
     }
 
     private static void Print(CanvasPrintDocument printDocument, CanvasDrawingSession printDrawingSession, PrintTaskOptions printOptions, IDrawable[] drawables, ImageCanvasRenderOptions renderOptions)
@@ -95,26 +87,6 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
         float scale = CalculateScaleForOnePage(renderOptions, pageDescription);
         
         Win2DImageCanvasRenderer.Render(drawables, renderOptions, printDrawingSession, scale);
-    }
-
-    private void OnPrintTaskRequested(PrintManager sender, PrintTaskRequestedEventArgs args)
-    {
-        sender.PrintTaskRequested -= OnPrintTaskRequested;
-
-        PrintTask printTask = args.Request.CreatePrintTask("Capture Tool Image Print", (printTaskArgs) =>
-        {
-            if (_printDocument != null)
-            {
-                printTaskArgs.SetSource(_printDocument);
-            }
-        });
-        printTask.Completed += PrintTask_Completed;
-    }
-
-    private void PrintTask_Completed(PrintTask sender, PrintTaskCompletedEventArgs args)
-    {
-        sender.Completed -= PrintTask_Completed;
-        _printDocument?.Dispose();
     }
 
     private static float CalculateScaleForOnePage(ImageCanvasRenderOptions options, PrintPageDescription pageDescription)
