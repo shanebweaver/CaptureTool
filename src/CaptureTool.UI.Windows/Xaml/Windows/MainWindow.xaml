@@ -51,6 +51,7 @@
 
             <Grid
                 x:Name="DraggablePanel"
+                MinHeight="30"
                 Grid.Column="2"
                 Background="Transparent" />
         </Grid>

@@ -1,18 +1,14 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
-using CaptureTool.Services.Feedback;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
 using System;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class AppMenuViewModel : LoadableViewModelBase
+public sealed partial class AppMenuViewModel : ViewModelBase
 {
     private readonly struct ActivityIds
     {
@@ -29,64 +25,24 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private readonly ITelemetryService _telemetryService;
     private readonly INavigationService _navigationService;
     private readonly IAppController _appController;
-    private readonly IFeedbackService _feedbackService;
     private readonly IFilePickerService _filePickerService;
 
     public RelayCommand NewImageCaptureCommand => new(NewImageCapture);
     public RelayCommand OpenFileCommand => new(OpenFile);
     public RelayCommand NavigateToSettingsCommand => new(NavigateToSettings);
     public RelayCommand ShowAboutAppCommand => new(ShowAboutApp);
-    public RelayCommand SendFeedbackCommand => new(SendFeedback);
     public RelayCommand ExitApplicationCommand => new(ExitApplication);
-
-    private bool _showSendFeedbackOption;
-    public bool ShowSendFeedbackOption
-    {
-        get => _showSendFeedbackOption;
-        set => Set(ref _showSendFeedbackOption, value);
-    }
 
     public AppMenuViewModel(
         ITelemetryService telemetryService,
         IAppController appController,
-        IFeedbackService feedbackService,
         INavigationService navigationService,
         IFilePickerService filePickerService)
     {
         _telemetryService = telemetryService;
         _appController = appController;
-        _feedbackService = feedbackService;
         _navigationService = navigationService;
         _filePickerService = filePickerService;
-    }
-
-    public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
-    {
-        Unload();
-        Debug.Assert(IsUnloaded);
-        StartLoading();
-
-        string activityId = ActivityIds.Load;
-        _telemetryService.ActivityInitiated(activityId);
-        try
-        {
-            ShowSendFeedbackOption = await _feedbackService.IsFeedbackSupportedAsync();
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-            throw;
-        }
-
-        await base.LoadAsync(parameter, cancellationToken);
-    }
-
-    public override void Unload()
-    {
-        ShowSendFeedbackOption = false;
-        base.Unload();
     }
 
     private void NewImageCapture()
@@ -154,22 +110,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         try
         {
             _navigationService.Navigate(CaptureToolNavigationRoutes.About);
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
-    }
-
-    private void SendFeedback()
-    {
-        string activityId = ActivityIds.SendFeedback;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
-        {
-            _feedbackService.ShowFeedbackUIAsync();
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

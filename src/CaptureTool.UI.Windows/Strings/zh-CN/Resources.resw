@@ -213,9 +213,6 @@
   <data name="About_PrivacyPolicy_DialogTitle" xml:space="preserve">
     <value>隐私政策</value>
   </data>
-  <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
-    <value>发送反馈</value>
-  </data>
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>关于此应用</value>
   </data>
@@ -362,9 +359,6 @@
   </data>
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
     <value>屏幕录制</value>
-  </data>
-  <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
-    <value>发送反馈</value>
   </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>使用系统默认</value>

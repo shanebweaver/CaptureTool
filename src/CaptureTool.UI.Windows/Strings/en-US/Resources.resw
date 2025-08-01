@@ -245,10 +245,6 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Privacy Policy</value>
     <comment>The title of the privacy policy dialog on the about page.</comment>
   </data>
-  <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
-    <value>Send feedback</value>
-    <comment>The label for the user feedback button on the about page that launches Feedback Hub app.</comment>
-  </data>
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>About this app</value>
     <comment>The label for the title of the about page.</comment>
@@ -444,10 +440,6 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
     <value>Screen recording</value>
     <comment>The automation name for the button that starts a new video capture.</comment>
-  </data>
-  <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
-    <value>Send feedback</value>
-    <comment>The label for the send feedback item in the app menu.</comment>
   </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Use system default</value>

@@ -213,9 +213,6 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="About_PrivacyPolicy_DialogTitle" xml:space="preserve">
     <value>Datenschutzrichtlinie</value>
   </data>
-  <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
-    <value>Feedback senden</value>
-  </data>
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>Über diese App</value>
   </data>
@@ -362,9 +359,6 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   </data>
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
     <value>Bildschirmaufnahme</value>
-  </data>
-  <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
-    <value>Feedback senden</value>
   </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Systemstandard verwenden</value>

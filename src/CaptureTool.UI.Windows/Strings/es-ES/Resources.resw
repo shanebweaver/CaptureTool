@@ -213,9 +213,6 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="About_PrivacyPolicy_DialogTitle" xml:space="preserve">
     <value>Política de privacidad</value>
   </data>
-  <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
-    <value>Enviar comentarios</value>
-  </data>
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>Acerca de esta aplicación</value>
   </data>
@@ -362,9 +359,6 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   </data>
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
     <value>Grabación de pantalla</value>
-  </data>
-  <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
-    <value>Enviar comentarios</value>
   </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Usar el tema del sistema</value>

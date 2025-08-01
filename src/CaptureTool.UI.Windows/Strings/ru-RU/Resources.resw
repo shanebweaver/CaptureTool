@@ -213,9 +213,6 @@
   <data name="About_PrivacyPolicy_DialogTitle" xml:space="preserve">
     <value>Политика конфиденциальности</value>
   </data>
-  <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
-    <value>Отправить отзыв</value>
-  </data>
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>О приложении</value>
   </data>
@@ -362,9 +359,6 @@
   </data>
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
     <value>Запись с экрана</value>
-  </data>
-  <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
-    <value>Отправить отзыв</value>
   </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Использовать системную тему</value>

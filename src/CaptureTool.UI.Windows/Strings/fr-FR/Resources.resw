@@ -213,9 +213,6 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="About_PrivacyPolicy_DialogTitle" xml:space="preserve">
     <value>Politique de confidentialité</value>
   </data>
-  <data name="About_Feedback_ButtonLabel.Text" xml:space="preserve">
-    <value>Envoyer des commentaires</value>
-  </data>
   <data name="About_TitleLabel.Text" xml:space="preserve">
     <value>À propos de cette application</value>
   </data>
@@ -362,9 +359,6 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   </data>
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
     <value>Enregistrement d’écran</value>
-  </data>
-  <data name="AppMenu_SendFeedbackItem.Text" xml:space="preserve">
-    <value>Envoyer des commentaires</value>
   </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Utiliser les paramètres par défaut du système</value>
