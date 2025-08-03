@@ -4,11 +4,13 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:canvasui="using:Microsoft.Graphics.Canvas.UI.Xaml"
+    xmlns:chromakey="using:CaptureTool.Edit.ChromaKey"
     xmlns:controls="using:CaptureTool.UI.Windows.Xaml.Controls"
     xmlns:converters="using:CaptureTool.UI.Windows.Xaml.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:templateselectors="using:CaptureTool.UI.Windows.Xaml.TemplateSelectors"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
     xmlns:views="using:CaptureTool.UI.Windows.Xaml.Views"
     d:DataContext="{d:DesignInstance Type=viewmodels:ImageEditPageViewModel}"
@@ -16,7 +18,55 @@
     <Page.Resources>
         <converters:ColorTypeConverter x:Key="ColorTypeConverter" />
         <converters:ColorHexStringConverter x:Key="ColorHexStringConverter" />
+
+        <DataTemplate x:Key="EmptyTemplate" x:DataType="chromakey:ChromaKeyColorOption">
+            <Grid Margin="0,2,0,0" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Rectangle
+                    Width="22"
+                    Height="22"
+                    Fill="Gray"
+                    RadiusX="4"
+                    RadiusY="4" />
+                <SymbolIcon Foreground="White" Symbol="Cancel" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Text="No effect" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ColorTemplate" x:DataType="chromakey:ChromaKeyColorOption">
+            <Grid Margin="0,2,0,0" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Rectangle
+                    Width="22"
+                    Height="22"
+                    RadiusX="16"
+                    RadiusY="16">
+                    <Rectangle.Fill>
+                        <SolidColorBrush Color="{x:Bind Color, Converter={StaticResource ColorTypeConverter}}" />
+                    </Rectangle.Fill>
+                </Rectangle>
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Text="{x:Bind Color, Converter={StaticResource ColorHexStringConverter}}" />
+            </Grid>
+        </DataTemplate>
+
+        <templateselectors:ChromaKeyColorOptionTemplateSelector
+            x:Key="ChromaKeyColorOptionTemplateSelector"
+            ColorTemplate="{StaticResource ColorTemplate}"
+            EmptyTemplate="{StaticResource EmptyTemplate}" />
     </Page.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -27,8 +77,7 @@
         <CommandBar DefaultLabelPosition="Right" IsOpen="False">
             <!--  Chroma Key  -->
             <AppBarToggleButton
-                Command="{x:Bind ViewModel.ToggleChromaKeyOptionsCommand}"
-                IsChecked="{x:Bind ViewModel.ShowChromaKeyEffect, Mode=TwoWay}"
+                IsChecked="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=TwoWay}"
                 Label="Chroma Key"
                 Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
@@ -126,98 +175,31 @@
             Row="1"
             Visibility="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}">
             <CommandBar
-                DefaultLabelPosition="Right"
                 IsDynamicOverflowEnabled="False"
                 IsOpen="False"
                 OverflowButtonVisibility="Collapsed">
-                <AppBarElementContainer Margin="2,6" VerticalContentAlignment="Center">
-                    <DropDownButton Padding="8,4">
-                        <Rectangle Width="24" Height="24">
-                            <Rectangle.Fill>
-                                <SolidColorBrush Color="{x:Bind ViewModel.ChromaKeyColor, Converter={StaticResource ColorTypeConverter}}" />
-                            </Rectangle.Fill>
-                        </Rectangle>
-                        <DropDownButton.Flyout>
-                            <Flyout>
-                                <Flyout.FlyoutPresenterStyle>
-                                    <Style BasedOn="{StaticResource DefaultFlyoutPresenterStyle}" TargetType="FlyoutPresenter">
-                                        <Setter Property="Padding" Value="12" />
-                                    </Style>
-                                </Flyout.FlyoutPresenterStyle>
-                                <ScrollView>
-                                    <StackPanel MinWidth="150" Spacing="4">
-                                        <Button
-                                            Padding="8"
-                                            HorizontalAlignment="Stretch"
-                                            HorizontalContentAlignment="Stretch">
-                                            <Grid ColumnSpacing="8">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition />
-                                                </Grid.ColumnDefinitions>
-                                                <Rectangle
-                                                    Width="32"
-                                                    Height="32"
-                                                    Fill="LightGray"
-                                                    RadiusX="4"
-                                                    RadiusY="4" />
-                                                <SymbolIcon Foreground="White" Symbol="Cancel" />
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    VerticalAlignment="Center"
-                                                    Text="No effect" />
-                                            </Grid>
-                                        </Button>
-                                        <MenuFlyoutSeparator />
-                                        <ItemsControl ItemsSource="{x:Bind ViewModel.ChromaKeyColorPresets, Mode=OneWay}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="Color">
-                                                    <Button
-                                                        Padding="8"
-                                                        HorizontalAlignment="Stretch"
-                                                        HorizontalContentAlignment="Stretch">
-                                                        <Grid ColumnSpacing="8">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition />
-                                                            </Grid.ColumnDefinitions>
-                                                            <Rectangle
-                                                                Width="32"
-                                                                Height="32"
-                                                                RadiusX="16"
-                                                                RadiusY="16">
-                                                                <Rectangle.Fill>
-                                                                    <SolidColorBrush Color="{Binding Converter={StaticResource ColorTypeConverter}}" />
-                                                                </Rectangle.Fill>
-                                                            </Rectangle>
-                                                            <StackPanel Grid.Column="1">
-                                                                <TextBlock Text="Lime Green" />
-                                                                <TextBlock FontSize="12" Text="{Binding Converter={StaticResource ColorHexStringConverter}}" />
-                                                            </StackPanel>
-                                                        </Grid>
-                                                    </Button>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </ScrollView>
-                            </Flyout>
-                        </DropDownButton.Flyout>
-                    </DropDownButton>
+                <AppBarElementContainer VerticalContentAlignment="Center">
+                    <Grid Margin="4">
+                        <ComboBox
+                            MinWidth="156"
+                            ItemTemplateSelector="{StaticResource ChromaKeyColorOptionTemplateSelector}"
+                            ItemsSource="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
+                            SelectedIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=TwoWay}" />
+                    </Grid>
                 </AppBarElementContainer>
 
-                <AppBarElementContainer Margin="2,6" VerticalContentAlignment="Center">
-                    <TextBox Width="100" PlaceholderText="#000000" />
-                </AppBarElementContainer>
-
-                <AppBarElementContainer Margin="2,6" VerticalContentAlignment="Center">
-                    <Slider
-                        Width="200"
-                        Maximum="60"
-                        Minimum="10"
-                        SnapsTo="StepValues"
-                        StepFrequency="1"
-                        Value="{x:Bind ViewModel.ChromaKeyTolerance, Mode=TwoWay}" />
+                <AppBarElementContainer VerticalContentAlignment="Center">
+                    <Grid Margin="4">
+                        <Slider
+                            Width="148"
+                            Maximum="100"
+                            Minimum="0"
+                            SnapsTo="StepValues"
+                            StepFrequency="1"
+                            TickFrequency="5"
+                            TickPlacement="Outside"
+                            Value="{x:Bind ViewModel.ChromaKeyTolerance, Mode=TwoWay}" />
+                    </Grid>
                 </AppBarElementContainer>
             </CommandBar>
         </Grid>

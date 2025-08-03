@@ -2,19 +2,17 @@
 using CaptureTool.Common.Storage;
 using CaptureTool.Core.AppController;
 using CaptureTool.Edit;
+using CaptureTool.Edit.ChromaKey;
 using CaptureTool.Edit.Drawable;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
-using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -57,9 +55,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     public RelayCommand FlipHorizontalCommand => new(() => Flip(FlipDirection.Horizontal));
     public RelayCommand FlipVerticalCommand => new(() => Flip(FlipDirection.Vertical));
     public RelayCommand PrintCommand => new(Print);
-    public RelayCommand ToggleChromaKeyOptionsCommand => new(ToggleChromaKeyOptions, () => IsChromaKeyEnabled);
     public RelayCommand<Color> UpdateChromaKeyColorCommand => new(UpdateChromaKeyColor, () => IsChromaKeyEnabled);
-
 
     private ObservableCollection<IDrawable> _drawables;
     public ObservableCollection<IDrawable> Drawables
@@ -103,18 +99,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _cropRect, value);
     }
 
-    private bool _showChromaKeyEffect;
-    public bool ShowChromaKeyEffect
-    {
-        get => _showChromaKeyEffect;
-        set
-        {
-            Set(ref _showChromaKeyEffect, value);
-            UpdateChromaKeyEffectValues();
-        }
-    }
-
-
     private bool _showChromaKeyOptions;
     public bool ShowChromaKeyOptions
     {
@@ -144,14 +128,23 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         }
     }
 
-    private bool _showChromaKeyColorPicker;
-    public bool ShowChromaKeyColorPicker
+    private ObservableCollection<ChromaKeyColorOption> _chromaKeyColorOptions;
+    public ObservableCollection<ChromaKeyColorOption> ChromaKeyColorOptions
     {
-        get => _showChromaKeyColorPicker;
-        set => Set(ref _showChromaKeyColorPicker, value);
+        get => _chromaKeyColorOptions;
+        set => Set(ref _chromaKeyColorOptions, value);
     }
 
-    public ObservableCollection<Color> ChromaKeyColorPresets { get; } = [Color.LimeGreen, Color.RoyalBlue];
+    private int _selectedChromaKeyColorOptionIndex;
+    public int SelectedChromaKeyColorOption
+    {
+        get => _selectedChromaKeyColorOptionIndex;
+        set
+        {
+            Set(ref _selectedChromaKeyColorOptionIndex, value);
+            UpdateChromaKeyColor(_chromaKeyColorOptions[value].Color);
+        }
+    }
 
     public bool IsUndoRedoEnabled { get; }
     public bool IsChromaKeyEnabled { get; }
@@ -177,10 +170,21 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _cropRect = Rectangle.Empty;
         _imageCanvasExporter = imageCanvasExporter;
         _chromaKeyTolerance = 30;
-        _chromaKeyColor = Color.LimeGreen;
+        _chromaKeyColor = Color.Empty;
+        _selectedChromaKeyColorOptionIndex = 0;
 
         IsUndoRedoEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo);
         IsChromaKeyEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey);
+
+        _chromaKeyColorOptions = [];
+        if (IsChromaKeyEnabled)
+        {
+            _chromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
+            foreach (var preset in ChromaKeyColorOptionPresets.All)
+            {
+                _chromaKeyColorOptions.Add(preset);
+            }
+        }
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -278,25 +282,20 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         }
     }
 
-    private void ToggleChromaKeyOptions()
-    {
-        ShowChromaKeyOptions = !ShowChromaKeyOptions;
-    }
-
     private void UpdateChromaKeyEffectValues()
     {
         if (_imageDrawable != null && _imageDrawable.ImageEffect == null)
         {
             _imageDrawable.ImageEffect = new ImageChromaKeyEffect(ChromaKeyColor, ChromaKeyTolerance / 100f)
             {
-                IsEnabled = ShowChromaKeyEffect
+                IsEnabled = !_chromaKeyColor.IsEmpty
             };
         }
         else if (_imageDrawable?.ImageEffect is ImageChromaKeyEffect chromaKeyEffect)
         {
             chromaKeyEffect.Tolerance = ChromaKeyTolerance / 100f;
             chromaKeyEffect.Color = ChromaKeyColor;
-            chromaKeyEffect.IsEnabled = ShowChromaKeyEffect;
+            chromaKeyEffect.IsEnabled = !_chromaKeyColor.IsEmpty;
         }
 
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
