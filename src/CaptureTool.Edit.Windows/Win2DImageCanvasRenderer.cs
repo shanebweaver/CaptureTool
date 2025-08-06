@@ -92,69 +92,15 @@ public static partial class Win2DImageCanvasRenderer
                     imageChromaKeyEffect.Color.G,
                     imageChromaKeyEffect.Color.B);
                 var tolerance = imageChromaKeyEffect.Tolerance;
+                var desaturation = imageChromaKeyEffect.Desaturation;
+                var finalResult = ApplyChromaCleanup(preparedImage, keyColor, tolerance, desaturation);
 
-                // 1. Apply chroma key to image: this gives you a transparent background
-                var chromaKeyed = new ChromaKeyEffect
-                {
-                    Source = preparedImage,
-                    Color = keyColor,
-                    Tolerance = tolerance,
-                    Feather = true,
-                    InvertAlpha = false
-                };
-
-                // 2. Extract just the alpha mask from the chroma keyed image
-                //    (which contains smooth feathered edges of the keyed color)
-                var chromaAlphaMask = new ColorMatrixEffect
-                {
-                    Source = chromaKeyed,
-                    ColorMatrix = new Matrix5x4
-                    {
-                        // Pass-through RGB (won't be used)
-                        M11 = 1,
-                        M22 = 1,
-                        M33 = 1,
-                        M44 = 1,     // preserve alpha
-                    }
-                };
-
-                // 3. Desaturate the original image
-                var desaturated = new ColorMatrixEffect
-                {
-                    Source = preparedImage,
-                    ColorMatrix = new Matrix5x4
-                    {
-                        M11 = 0.299f,
-                        M12 = 0.299f,
-                        M13 = 0.299f,
-                        M21 = 0.587f,
-                        M22 = 0.587f,
-                        M23 = 0.587f,
-                        M31 = 0.114f,
-                        M32 = 0.114f,
-                        M33 = 0.114f,
-                        M44 = 1f
-                    }
-                };
-
-                // 4. Lerp between original and grayscale using the chromaAlphaMask
-                var grayedEdges = LerpByMaskEffectHelper.Create(preparedImage, desaturated, chromaAlphaMask);
-
-                // 5. Apply alpha from chromaKeyed onto the blended result
-                //    (so transparent pixels from chromaKeyed stay fully transparent)
-                var finalResult = new AlphaMaskEffect
-                {
-                    Source = grayedEdges,
-                    AlphaMask = chromaKeyed // use original chroma keyed image for its alpha
-                };
-
-                // 6. Draw it!
                 drawingSession.Clear(Colors.White);
                 drawingSession.DrawImage(finalResult, drawable.Offset);
-
             }
             else
             {
+                drawingSession.Clear(Colors.White);
                 drawingSession.DrawImage(preparedImage, drawable.Offset);
             }
         }
@@ -165,47 +111,101 @@ public static partial class Win2DImageCanvasRenderer
         ICanvasImage prepared = await CanvasBitmap.LoadAsync(resourceCreator, imageDrawable.FileName.Path);
         imageDrawable.SetPreparedImage(prepared);
     }
-}
 
-public static class LerpByMaskEffectHelper
-{
-    public static ICanvasImage Create(ICanvasImage original, ICanvasImage altered, ICanvasImage mask)
+    public static ICanvasImage ApplyChromaCleanup(
+        ICanvasImage originalImage,
+        Color chromaColor,
+        float keyTolerance = 0.1f,
+        float desaturation = 0f,
+        float blur = 0.0f
+    )
     {
-        // Create inverse mask: (1 - alpha)
-        var inverseMask = new ColorMatrixEffect
+        // Step 1: Remove the background
+        var chromaKeyRemoved = new ChromaKeyEffect
         {
-            Source = mask,
+            Source = originalImage,
+            Color = chromaColor,
+            Tolerance = keyTolerance,
+            InvertAlpha = false,
+            Feather = true,
+        };
+
+        // Step 2: Create mask of pixels matching chroma color (for desaturation)
+        var chromaColorMask = new ChromaKeyEffect
+        {
+            Source = originalImage,
+            Color = chromaColor,
+            Tolerance = desaturation,
+            InvertAlpha = true,
+            Feather = false,
+        };
+
+        // Step 3: Extract alpha from chromaKeyRemoved as second mask
+        var chromaKeyAlphaMask = new OpacityEffect
+        {
+            Source = chromaKeyRemoved
+        };
+
+        // Step 4: Combine both masks with ArithmeticCompositeEffect
+        var combinedMask = new ArithmeticCompositeEffect
+        {
+            Source1 = chromaColorMask,
+            Source2 = chromaKeyAlphaMask,
+            MultiplyAmount = 1,
+            Source1Amount = 0,
+            Source2Amount = 0,
+            Offset = 0
+        };
+
+        ICanvasImage finalMask = combinedMask;
+
+        if (blur > 0f)
+        {
+            finalMask = new GaussianBlurEffect
+            {
+                Source = combinedMask,
+                BlurAmount = blur,
+                Optimization = EffectOptimization.Balanced
+            };
+        }
+
+        // Step 5: Create desaturated version of the original image
+        var desaturated = new ColorMatrixEffect
+        {
+            Source = originalImage,
             ColorMatrix = new Matrix5x4
             {
-                M11 = 1f,
-                M22 = 1f,
-                M33 = 1f,
-                M44 = -1f,  // Invert alpha
-                M54 = 1f    // Offset to complete inversion
+                M11 = 0.3f,
+                M12 = 0.3f,
+                M13 = 0.3f,
+                M21 = 0.59f,
+                M22 = 0.59f,
+                M23 = 0.59f,
+                M31 = 0.11f,
+                M32 = 0.11f,
+                M33 = 0.11f,
+                M44 = 1f,
             }
         };
 
-        // Multiply original * (1 - alpha)
-        var originalPart = new BlendEffect
+        // Step 6: Mask the desaturated version with the combined mask
+        var maskedDesaturated = new AlphaMaskEffect
         {
-            Mode = BlendEffectMode.Multiply,
-            Background = original,
-            Foreground = inverseMask
+            Source = desaturated,
+            AlphaMask = finalMask
         };
 
-        // Multiply altered * alpha
-        var alteredPart = new BlendEffect
+        // Step 7: Composite the masked grayscale image over the background-removed image
+        var final = new CompositeEffect
         {
-            Mode = BlendEffectMode.Multiply,
-            Background = altered,
-            Foreground = mask
+            Mode = CanvasComposite.SourceOver,
+            Sources =
+            {
+                chromaKeyRemoved,
+                maskedDesaturated
+            }
         };
 
-        // Add them together (original*(1-a) + altered*a)
-        return new CompositeEffect
-        {
-            Mode = CanvasComposite.Add,
-            Sources = { originalPart, alteredPart }
-        };
+        return final;
     }
 }

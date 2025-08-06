@@ -25,13 +25,19 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
-                <Rectangle
-                    Width="22"
-                    Height="22"
-                    Fill="Gray"
-                    RadiusX="4"
-                    RadiusY="4" />
-                <SymbolIcon Foreground="White" Symbol="Cancel" />
+                <Grid>
+                    <Rectangle
+                        Width="22"
+                        Height="22"
+                        Fill="Gray"
+                        RadiusX="4"
+                        RadiusY="4" />
+                    <SymbolIcon
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="White"
+                        Symbol="Cancel" />
+                </Grid>
                 <TextBlock
                     Grid.Column="1"
                     VerticalAlignment="Center"
@@ -48,8 +54,8 @@
                 <Rectangle
                     Width="22"
                     Height="22"
-                    RadiusX="16"
-                    RadiusY="16">
+                    RadiusX="11"
+                    RadiusY="11">
                     <Rectangle.Fill>
                         <SolidColorBrush Color="{x:Bind Color, Converter={StaticResource ColorTypeConverter}}" />
                     </Rectangle.Fill>
@@ -171,6 +177,7 @@
 
         <!--  Chroma key options  -->
         <Grid
+            Margin="8"
             HorizontalAlignment="Center"
             Row="1"
             Visibility="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}">
@@ -178,27 +185,60 @@
                 IsDynamicOverflowEnabled="False"
                 IsOpen="False"
                 OverflowButtonVisibility="Collapsed">
-                <AppBarElementContainer VerticalContentAlignment="Center">
-                    <Grid Margin="4">
+                <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
+                    <Grid Margin="4,0">
                         <ComboBox
                             MinWidth="156"
+                            Header="Key Color"
                             ItemTemplateSelector="{StaticResource ChromaKeyColorOptionTemplateSelector}"
                             ItemsSource="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
                             SelectedIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=TwoWay}" />
                     </Grid>
                 </AppBarElementContainer>
 
-                <AppBarElementContainer VerticalContentAlignment="Center">
-                    <Grid Margin="4">
+                <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
+                    <Grid Margin="8,0">
                         <Slider
                             Width="148"
+                            Header="Tolerance"
+                            IsEnabled="{x:Bind ViewModel.ShowChromaKeyEffect, Mode=OneWay}"
                             Maximum="100"
                             Minimum="0"
                             SnapsTo="StepValues"
                             StepFrequency="1"
                             TickFrequency="5"
                             TickPlacement="Outside"
-                            Value="{x:Bind ViewModel.ChromaKeyTolerance, Mode=TwoWay}" />
+                            Value="{x:Bind ViewModel.ChromaKeyTolerance, Mode=TwoWay}">
+                            <Slider.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock Margin="0,0,0,6" Text="{Binding}" />
+                                </DataTemplate>
+                            </Slider.HeaderTemplate>
+                        </Slider>
+                    </Grid>
+                </AppBarElementContainer>
+
+                <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
+                    <Grid Height="64" Margin="8,0">
+                        <Slider
+                            Width="148"
+                            VerticalAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            Header="Desaturation"
+                            IsEnabled="{x:Bind ViewModel.ShowChromaKeyEffect, Mode=OneWay}"
+                            Maximum="100"
+                            Minimum="0"
+                            SnapsTo="StepValues"
+                            StepFrequency="1"
+                            TickFrequency="5"
+                            TickPlacement="Outside"
+                            Value="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=TwoWay}">
+                            <Slider.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock Margin="0,0,0,6" Text="{Binding}" />
+                                </DataTemplate>
+                            </Slider.HeaderTemplate>
+                        </Slider>
                     </Grid>
                 </AppBarElementContainer>
             </CommandBar>

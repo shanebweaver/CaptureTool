@@ -117,6 +117,18 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         }
     }
 
+
+    private int _chromaKeyDesaturation;
+    public int ChromaKeyDesaturation
+    {
+        get => _chromaKeyDesaturation;
+        set
+        {
+            Set(ref _chromaKeyDesaturation, value);
+            UpdateChromaKeyEffectValues();
+        }
+    }
+
     private Color _chromaKeyColor;
     public Color ChromaKeyColor
     {
@@ -125,6 +137,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         {
             Set(ref _chromaKeyColor, value);
             UpdateChromaKeyEffectValues();
+            RaisePropertyChanged(nameof(ShowChromaKeyEffect));
         }
     }
 
@@ -146,6 +159,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         }
     }
 
+    public bool ShowChromaKeyEffect => !_chromaKeyColor.IsEmpty;
     public bool IsUndoRedoEnabled { get; }
     public bool IsChromaKeyEnabled { get; }
 
@@ -286,7 +300,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     {
         if (_imageDrawable != null && _imageDrawable.ImageEffect == null)
         {
-            _imageDrawable.ImageEffect = new ImageChromaKeyEffect(ChromaKeyColor, ChromaKeyTolerance / 100f)
+            _imageDrawable.ImageEffect = new ImageChromaKeyEffect(ChromaKeyColor, ChromaKeyTolerance / 100f, ChromaKeyDesaturation / 100f)
             {
                 IsEnabled = !_chromaKeyColor.IsEmpty
             };
@@ -294,6 +308,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         else if (_imageDrawable?.ImageEffect is ImageChromaKeyEffect chromaKeyEffect)
         {
             chromaKeyEffect.Tolerance = ChromaKeyTolerance / 100f;
+            chromaKeyEffect.Desaturation = ChromaKeyDesaturation / 100f;
             chromaKeyEffect.Color = ChromaKeyColor;
             chromaKeyEffect.IsEnabled = !_chromaKeyColor.IsEmpty;
         }
