@@ -51,8 +51,18 @@
 
         <!--  Help  -->
         <MenuBarItem x:Uid="AppMenu_HelpMenuItem">
+            <!--  Add-ons  -->
+            <MenuFlyoutItem
+                x:Uid="AppMenu_AddOnsItem"
+                Command="{x:Bind ViewModel.ShowAddOnsCommand}"
+                Icon="Shop"
+                Visibility="Collapsed" />
+
             <!--  About  -->
-            <MenuFlyoutItem x:Uid="AppMenu_AboutItem" Command="{x:Bind ViewModel.ShowAboutAppCommand}" />
+            <MenuFlyoutItem
+                x:Uid="AppMenu_AboutItem"
+                Command="{x:Bind ViewModel.ShowAboutAppCommand}"
+                Icon="Help" />
         </MenuBarItem>
     </MenuBar>
 </local:AppMenuViewBase>

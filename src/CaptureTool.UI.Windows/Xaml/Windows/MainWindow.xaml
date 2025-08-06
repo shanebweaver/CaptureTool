@@ -23,7 +23,7 @@
         <Grid x:Name="AppTitleBar">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="LeftPaddingColumn" Width="0" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="AppMenuColumn" Width="Auto" />
                 <ColumnDefinition />
                 <ColumnDefinition x:Name="RightPaddingColumn" Width="0" />
             </Grid.ColumnDefinitions>

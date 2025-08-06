@@ -481,4 +481,12 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Key desaturation</value>
     <comment>The text for the header of the desaturation slider in the chroma key toolbar.</comment>
   </data>
+  <data name="AddOns_TitleLabel.Text" xml:space="preserve">
+    <value>Add-ons</value>
+    <comment>The title for the Add-ons page.</comment>
+  </data>
+  <data name="AppMenu_AddOnsItem.Text" xml:space="preserve">
+    <value>Add-ons</value>
+    <comment>The label for the menu item that shows the app add-ons page.</comment>
+  </data>
 </root>

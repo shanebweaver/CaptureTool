@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:AddOnsPageBase
+    x:Class="CaptureTool.UI.Windows.Xaml.Pages.AddOnsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.UI.Windows.Xaml.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollView>
+        <StackPanel Padding="0,24" Spacing="24">
+            <StackPanel
+                Margin="12,0"
+                Orientation="Horizontal"
+                Spacing="12">
+                <Button
+                    Width="32"
+                    Height="32"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Back"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Command="{x:Bind ViewModel.GoBackCommand}">
+                    <SymbolIcon Symbol="Back" />
+                </Button>
+                <TextBlock
+                    x:Uid="AddOns_TitleLabel"
+                    Style="{StaticResource TitleTextBlockStyle}"
+                    TextWrapping="WrapWholeWords" />
+            </StackPanel>
+
+            <Grid
+                x:Name="ContentPanel"
+                Margin="54,0"
+                HorizontalAlignment="Stretch">
+                <Expander
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    IsExpanded="True">
+                    <Expander.Header>
+                        <Grid Padding="0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon
+                                FontFamily="{StaticResource FluentSystemIcons}"
+                                FontSize="24"
+                                Glyph="{StaticResource Color16Regular}" />
+                            <StackPanel Grid.Column="1" Padding="16,0,0,0">
+                                <TextBlock
+                                    x:Uid="AddOns_ChromaKeyHeaderLabel"
+                                    Text="Chroma Key Background Removal"
+                                    TextTrimming="WordEllipsis"
+                                    TextWrapping="NoWrap" />
+                                <TextBlock
+                                    x:Uid="AddOns_ChromaKeySubtitleLabel"
+                                    FontSize="12"
+                                    Opacity=".8"
+                                    Text="Isolate a target in front of a green or blue screen."
+                                    TextTrimming="WordEllipsis"
+                                    TextWrapping="NoWrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander.Header>
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition MaxWidth="500" />
+                        </Grid.ColumnDefinitions>
+                        <Grid RowSpacing="12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <Grid Height="124">
+                                <FlipView HorizontalAlignment="Center" VerticalAlignment="Top">
+                                    <Image />
+                                    <Image />
+                                </FlipView>
+                            </Grid>
+
+                            <Button
+                                Grid.Row="1"
+                                Padding="12,16"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Top"
+                                HorizontalContentAlignment="Left"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                Foreground="{ThemeResource SystemAltHighColor}">
+                                <TextBlock FontWeight="SemiBold" Text="$0.99" />
+                            </Button>
+                        </Grid>
+                        <Grid
+                            Grid.Column="1"
+                            HorizontalAlignment="Left"
+                            RowSpacing="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <TextBlock
+                                MaxLines="2"
+                                Text="Prepare images for online storefronts."
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="WrapWholeWords" />
+                            <TextBlock
+                                Grid.Row="1"
+                                MaxLines="2"
+                                Text="Isolate the target in front of a green or blue screen."
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="WrapWholeWords" />
+                            <TextBlock
+                                Grid.Row="2"
+                                MaxLines="3"
+                                Text="Adjust the tolerance to remove the background, then desaturate the key color to cleanup the edges."
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="WrapWholeWords" />
+                        </Grid>
+                    </Grid>
+                </Expander>
+            </Grid>
+        </StackPanel>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Default">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="908" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentPanel.HorizontalAlignment" Value="Left" />
+                        <Setter Target="ContentPanel.MinWidth" Value="800" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+    </ScrollView>
+</local:AddOnsPageBase>

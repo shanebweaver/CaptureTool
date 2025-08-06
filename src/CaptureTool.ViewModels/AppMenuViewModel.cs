@@ -18,6 +18,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         public static readonly string OpenFile = "AppMenuViewModel_OpenFile";
         public static readonly string NavigateToSettings = "AppMenuViewModel_NavigateToSettings";
         public static readonly string ShowAboutApp = "AppMenuViewModel_ShowAboutApp";
+        public static readonly string ShowAddOns = "AppMenuViewModel_ShowAddOns";
         public static readonly string ExitApplication = "AppMenuViewModel_ExitApplication";
         public static readonly string SendFeedback = "AppMenuViewModel_SendFeedback";
     }
@@ -30,7 +31,8 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     public RelayCommand NewImageCaptureCommand => new(NewImageCapture);
     public RelayCommand OpenFileCommand => new(OpenFile);
     public RelayCommand NavigateToSettingsCommand => new(NavigateToSettings);
-    public RelayCommand ShowAboutAppCommand => new(ShowAboutApp);
+    public RelayCommand ShowAboutAppCommand => new(ShowAboutApp); 
+    public RelayCommand ShowAddOnsCommand => new(ShowAddOns); 
     public RelayCommand ExitApplicationCommand => new(ExitApplication);
 
     public AppMenuViewModel(
@@ -109,6 +111,22 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         try
         {
             _navigationService.Navigate(CaptureToolNavigationRoutes.About);
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
+    }
+
+    private void ShowAddOns()
+    {
+        string activityId = ActivityIds.ShowAddOns;
+        _telemetryService.ActivityInitiated(activityId);
+
+        try
+        {
+            _navigationService.Navigate(CaptureToolNavigationRoutes.AddOns);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

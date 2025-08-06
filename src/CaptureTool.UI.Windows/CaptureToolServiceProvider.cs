@@ -10,12 +10,14 @@ using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
 using CaptureTool.Services.Storage;
+using CaptureTool.Services.Store;
 using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
 using CaptureTool.Services.Windows.Localization;
 using CaptureTool.Services.Windows.Storage;
 using CaptureTool.Services.Windows.TaskEnvironment;
+using CaptureTool.Services.Windows.Store;
 using CaptureTool.Services.Windows.Themes;
 using CaptureTool.ViewModels;
 using CaptureTool.ViewModels.Factories;
@@ -41,6 +43,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<ITelemetryService, TelemetryService>();
 
         // Windows Services
+        collection.AddSingleton<IStoreService, WindowsStoreService>();
         collection.AddSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();
         collection.AddSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
         collection.AddSingleton<IFilePickerService, WindowsFilePickerService>();
@@ -56,6 +59,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         // Pages
         collection.AddTransient<ErrorPageViewModel>();
         collection.AddTransient<AboutPageViewModel>();
+        collection.AddTransient<AddOnsPageViewModel>();
         collection.AddTransient<HomePageViewModel>();
         collection.AddTransient<SettingsPageViewModel>();
         collection.AddTransient<LoadingPageViewModel>();
