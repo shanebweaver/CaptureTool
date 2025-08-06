@@ -20,6 +20,23 @@ public abstract partial class UserControlBase : UserControl, INotifyPropertyChan
         if (!EqualityComparer<T>.Default.Equals(value, (T)GetValue(dp)))
         {
             SetValue(dp, value);
+            RaisePropertyChanged(propertyName);
+        }
+    }
+
+    protected void Set<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (!EqualityComparer<T>.Default.Equals(value, field))
+        {
+            field = value;
+            RaisePropertyChanged(propertyName);
+        }
+    }
+
+    protected void RaisePropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        if (!string.IsNullOrEmpty(propertyName))
+        {
             PropertyChanged?.Invoke(this, new(propertyName));
         }
     }

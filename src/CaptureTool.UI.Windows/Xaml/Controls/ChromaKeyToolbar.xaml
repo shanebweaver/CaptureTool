@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.UI.Windows.Xaml.Controls.ChromaKeyToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:chromakey="using:CaptureTool.Edit.ChromaKey"
+    xmlns:converters="using:CaptureTool.UI.Windows.Xaml.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.UI.Windows.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:templateselectors="using:CaptureTool.UI.Windows.Xaml.TemplateSelectors"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ColorTypeConverter x:Key="ColorTypeConverter" />
+        <converters:ColorHexStringConverter x:Key="ColorHexStringConverter" />
+
+        <DataTemplate x:Key="EmptyTemplate" x:DataType="chromakey:ChromaKeyColorOption">
+            <Grid Margin="0,2,0,0" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Grid>
+                    <Rectangle
+                        Width="22"
+                        Height="22"
+                        Fill="Gray"
+                        RadiusX="4"
+                        RadiusY="4" />
+                    <SymbolIcon
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="White"
+                        Symbol="Cancel" />
+                </Grid>
+                <TextBlock
+                    x:Uid="ChromaKeyToolbar_ColorOption_NoEffect"
+                    Grid.Column="1"
+                    VerticalAlignment="Center" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ColorTemplate" x:DataType="chromakey:ChromaKeyColorOption">
+            <Grid Margin="0,2,0,0" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Rectangle
+                    Width="22"
+                    Height="22"
+                    RadiusX="11"
+                    RadiusY="11">
+                    <Rectangle.Fill>
+                        <SolidColorBrush Color="{x:Bind Color, Converter={StaticResource ColorTypeConverter}}" />
+                    </Rectangle.Fill>
+                </Rectangle>
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Text="{x:Bind Color, Converter={StaticResource ColorHexStringConverter}}" />
+            </Grid>
+        </DataTemplate>
+
+        <templateselectors:ChromaKeyColorOptionTemplateSelector
+            x:Key="ChromaKeyColorOptionTemplateSelector"
+            ColorTemplate="{StaticResource ColorTemplate}"
+            EmptyTemplate="{StaticResource EmptyTemplate}" />
+    </UserControl.Resources>
+
+    <Grid>
+        <CommandBar
+            IsDynamicOverflowEnabled="False"
+            IsOpen="False"
+            OverflowButtonVisibility="Collapsed">
+
+            <!--  Key color  -->
+            <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
+                <Grid Margin="4,0">
+                    <ComboBox
+                        x:Uid="ChromaKeyToolbar_KeyColor"
+                        MinWidth="156"
+                        ItemTemplateSelector="{StaticResource ChromaKeyColorOptionTemplateSelector}"
+                        ItemsSource="{x:Bind ColorOptions, Mode=OneWay}"
+                        SelectedIndex="{x:Bind SelectedColorOptionIndex, Mode=TwoWay}" />
+                </Grid>
+            </AppBarElementContainer>
+
+            <!--  Tolerance  -->
+            <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
+                <Grid Margin="8,0">
+                    <Slider
+                        x:Uid="ChromaKeyToolbar_Tolerance"
+                        Width="148"
+                        IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
+                        Maximum="100"
+                        Minimum="0"
+                        SnapsTo="StepValues"
+                        StepFrequency="1"
+                        TickFrequency="5"
+                        TickPlacement="Outside"
+                        Value="{x:Bind Tolerance, Mode=TwoWay}">
+                        <Slider.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="0,0,0,6" Text="{Binding}" />
+                            </DataTemplate>
+                        </Slider.HeaderTemplate>
+                    </Slider>
+                </Grid>
+            </AppBarElementContainer>
+
+            <!--  Desaturation  -->
+            <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
+                <Grid Margin="8,0">
+                    <Slider
+                        x:Uid="ChromaKeyToolbar_Desaturation"
+                        Width="148"
+                        VerticalAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
+                        Maximum="100"
+                        Minimum="0"
+                        SnapsTo="StepValues"
+                        StepFrequency="1"
+                        TickFrequency="5"
+                        TickPlacement="Outside"
+                        Value="{x:Bind Desaturation, Mode=TwoWay}">
+                        <Slider.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="0,0,0,6" Text="{Binding}" />
+                            </DataTemplate>
+                        </Slider.HeaderTemplate>
+                    </Slider>
+                </Grid>
+            </AppBarElementContainer>
+        </CommandBar>
+    </Grid>
+</local:UserControlBase>

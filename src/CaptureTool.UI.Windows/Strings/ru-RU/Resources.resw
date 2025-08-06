@@ -375,4 +375,19 @@
   <data name="CaptureType_Freeform.Text" xml:space="preserve">
     <value>Произвольная форма</value>
   </data>
+  <data name="ImageEdit_ChromaKeyButton.Label" xml:space="preserve">
+    <value>Хромакей</value>
+  </data>
+  <data name="ChromaKeyToolbar_ColorOption_NoEffect.Text" xml:space="preserve">
+    <value>Без эффекта</value>
+  </data>
+  <data name="ChromaKeyToolbar_KeyColor.Header" xml:space="preserve">
+    <value>Ключевой цвет</value>
+  </data>
+  <data name="ChromaKeyToolbar_Tolerance.Header" xml:space="preserve">
+    <value>Допуск ключа</value>
+  </data>
+  <data name="ChromaKeyToolbar_Desaturation.Header" xml:space="preserve">
+    <value>Обесцвечивание ключа</value>
+  </data>
 </root>

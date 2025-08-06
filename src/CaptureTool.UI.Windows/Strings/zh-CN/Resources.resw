@@ -375,4 +375,19 @@
   <data name="CaptureType_Freeform.Text" xml:space="preserve">
     <value>自由形式</value>
   </data>
+  <data name="ImageEdit_ChromaKeyButton.Label" xml:space="preserve">
+    <value>色度键</value>
+  </data>
+  <data name="ChromaKeyToolbar_ColorOption_NoEffect.Text" xml:space="preserve">
+    <value>无效果</value>
+  </data>
+  <data name="ChromaKeyToolbar_KeyColor.Header" xml:space="preserve">
+    <value>键颜色</value>
+  </data>
+  <data name="ChromaKeyToolbar_Tolerance.Header" xml:space="preserve">
+    <value>键容差</value>
+  </data>
+  <data name="ChromaKeyToolbar_Desaturation.Header" xml:space="preserve">
+    <value>键颜色去饱和</value>
+  </data>
 </root>

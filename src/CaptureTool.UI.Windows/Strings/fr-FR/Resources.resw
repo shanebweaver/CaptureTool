@@ -375,4 +375,19 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="CaptureType_Freeform.Text" xml:space="preserve">
     <value>Forme libre</value>
   </data>
+  <data name="ImageEdit_ChromaKeyButton.Label" xml:space="preserve">
+    <value>Incrustation chroma</value>
+  </data>
+  <data name="ChromaKeyToolbar_ColorOption_NoEffect.Text" xml:space="preserve">
+    <value>Aucun effet</value>
+  </data>
+  <data name="ChromaKeyToolbar_KeyColor.Header" xml:space="preserve">
+    <value>Couleur clé</value>
+  </data>
+  <data name="ChromaKeyToolbar_Tolerance.Header" xml:space="preserve">
+    <value>Tolérance de la clé</value>
+  </data>
+  <data name="ChromaKeyToolbar_Desaturation.Header" xml:space="preserve">
+    <value>Désaturation de la clé</value>
+  </data>
 </root>

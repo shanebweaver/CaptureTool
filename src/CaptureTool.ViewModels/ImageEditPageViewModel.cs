@@ -117,7 +117,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         }
     }
 
-
     private int _chromaKeyDesaturation;
     public int ChromaKeyDesaturation
     {
@@ -137,7 +136,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         {
             Set(ref _chromaKeyColor, value);
             UpdateChromaKeyEffectValues();
-            RaisePropertyChanged(nameof(ShowChromaKeyEffect));
         }
     }
 
@@ -159,7 +157,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         }
     }
 
-    public bool ShowChromaKeyEffect => !_chromaKeyColor.IsEmpty;
     public bool IsUndoRedoEnabled { get; }
     public bool IsChromaKeyEnabled { get; }
 

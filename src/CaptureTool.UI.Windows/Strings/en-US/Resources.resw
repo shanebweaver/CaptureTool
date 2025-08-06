@@ -461,4 +461,24 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Freeform</value>
     <comment>The label for the Freeform capture type.</comment>
   </data>
+  <data name="ImageEdit_ChromaKeyButton.Label" xml:space="preserve">
+    <value>Chroma key</value>
+    <comment>The label for the button on the image edit page that shows or hides the chroma key toolbar.</comment>
+  </data>
+  <data name="ChromaKeyToolbar_ColorOption_NoEffect.Text" xml:space="preserve">
+    <value>No effect</value>
+    <comment>The text for the option in the chroma key toolbar color options that disables the chroma key effect.</comment>
+  </data>
+  <data name="ChromaKeyToolbar_KeyColor.Header" xml:space="preserve">
+    <value>Key color</value>
+    <comment>The text for the header of the key color combo box in the chroma key toolbar.</comment>
+  </data>
+  <data name="ChromaKeyToolbar_Tolerance.Header" xml:space="preserve">
+    <value>Key tolerance</value>
+    <comment>The text for the header of the tolerance slider in the chroma key toolbar.</comment>
+  </data>
+  <data name="ChromaKeyToolbar_Desaturation.Header" xml:space="preserve">
+    <value>Key desaturation</value>
+    <comment>The text for the header of the desaturation slider in the chroma key toolbar.</comment>
+  </data>
 </root>

@@ -375,4 +375,19 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="CaptureType_Freeform.Text" xml:space="preserve">
     <value>Forma libre</value>
   </data>
+  <data name="ImageEdit_ChromaKeyButton.Label" xml:space="preserve">
+    <value>Clave de croma</value>
+  </data>
+  <data name="ChromaKeyToolbar_ColorOption_NoEffect.Text" xml:space="preserve">
+    <value>Sin efecto</value>
+  </data>
+  <data name="ChromaKeyToolbar_KeyColor.Header" xml:space="preserve">
+    <value>Color clave</value>
+  </data>
+  <data name="ChromaKeyToolbar_Tolerance.Header" xml:space="preserve">
+    <value>Tolerancia de clave</value>
+  </data>
+  <data name="ChromaKeyToolbar_Desaturation.Header" xml:space="preserve">
+    <value>Desaturación de clave</value>
+  </data>
 </root>

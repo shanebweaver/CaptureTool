@@ -3,75 +3,14 @@
     x:Class="CaptureTool.UI.Windows.Xaml.Pages.ImageEditPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:canvasui="using:Microsoft.Graphics.Canvas.UI.Xaml"
-    xmlns:chromakey="using:CaptureTool.Edit.ChromaKey"
     xmlns:controls="using:CaptureTool.UI.Windows.Xaml.Controls"
-    xmlns:converters="using:CaptureTool.UI.Windows.Xaml.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:templateselectors="using:CaptureTool.UI.Windows.Xaml.TemplateSelectors"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
-    xmlns:views="using:CaptureTool.UI.Windows.Xaml.Views"
     d:DataContext="{d:DesignInstance Type=viewmodels:ImageEditPageViewModel}"
     mc:Ignorable="d">
-    <Page.Resources>
-        <converters:ColorTypeConverter x:Key="ColorTypeConverter" />
-        <converters:ColorHexStringConverter x:Key="ColorHexStringConverter" />
-
-        <DataTemplate x:Key="EmptyTemplate" x:DataType="chromakey:ChromaKeyColorOption">
-            <Grid Margin="0,2,0,0" ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
-                <Grid>
-                    <Rectangle
-                        Width="22"
-                        Height="22"
-                        Fill="Gray"
-                        RadiusX="4"
-                        RadiusY="4" />
-                    <SymbolIcon
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="White"
-                        Symbol="Cancel" />
-                </Grid>
-                <TextBlock
-                    Grid.Column="1"
-                    VerticalAlignment="Center"
-                    Text="No effect" />
-            </Grid>
-        </DataTemplate>
-
-        <DataTemplate x:Key="ColorTemplate" x:DataType="chromakey:ChromaKeyColorOption">
-            <Grid Margin="0,2,0,0" ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
-                <Rectangle
-                    Width="22"
-                    Height="22"
-                    RadiusX="11"
-                    RadiusY="11">
-                    <Rectangle.Fill>
-                        <SolidColorBrush Color="{x:Bind Color, Converter={StaticResource ColorTypeConverter}}" />
-                    </Rectangle.Fill>
-                </Rectangle>
-                <TextBlock
-                    Grid.Column="1"
-                    VerticalAlignment="Center"
-                    Text="{x:Bind Color, Converter={StaticResource ColorHexStringConverter}}" />
-            </Grid>
-        </DataTemplate>
-
-        <templateselectors:ChromaKeyColorOptionTemplateSelector
-            x:Key="ChromaKeyColorOptionTemplateSelector"
-            ColorTemplate="{StaticResource ColorTemplate}"
-            EmptyTemplate="{StaticResource EmptyTemplate}" />
-    </Page.Resources>
+    <Page.Resources />
 
     <Grid>
         <Grid.RowDefinitions>
@@ -83,8 +22,8 @@
         <CommandBar DefaultLabelPosition="Right" IsOpen="False">
             <!--  Chroma Key  -->
             <AppBarToggleButton
+                x:Uid="ImageEdit_ChromaKeyButton"
                 IsChecked="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=TwoWay}"
-                Label="Chroma Key"
                 Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="{StaticResource Color}" />
@@ -181,67 +120,11 @@
             HorizontalAlignment="Center"
             Row="1"
             Visibility="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}">
-            <CommandBar
-                IsDynamicOverflowEnabled="False"
-                IsOpen="False"
-                OverflowButtonVisibility="Collapsed">
-                <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
-                    <Grid Margin="4,0">
-                        <ComboBox
-                            MinWidth="156"
-                            Header="Key Color"
-                            ItemTemplateSelector="{StaticResource ChromaKeyColorOptionTemplateSelector}"
-                            ItemsSource="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
-                            SelectedIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=TwoWay}" />
-                    </Grid>
-                </AppBarElementContainer>
-
-                <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
-                    <Grid Margin="8,0">
-                        <Slider
-                            Width="148"
-                            Header="Tolerance"
-                            IsEnabled="{x:Bind ViewModel.ShowChromaKeyEffect, Mode=OneWay}"
-                            Maximum="100"
-                            Minimum="0"
-                            SnapsTo="StepValues"
-                            StepFrequency="1"
-                            TickFrequency="5"
-                            TickPlacement="Outside"
-                            Value="{x:Bind ViewModel.ChromaKeyTolerance, Mode=TwoWay}">
-                            <Slider.HeaderTemplate>
-                                <DataTemplate>
-                                    <TextBlock Margin="0,0,0,6" Text="{Binding}" />
-                                </DataTemplate>
-                            </Slider.HeaderTemplate>
-                        </Slider>
-                    </Grid>
-                </AppBarElementContainer>
-
-                <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
-                    <Grid Height="64" Margin="8,0">
-                        <Slider
-                            Width="148"
-                            VerticalAlignment="Stretch"
-                            VerticalContentAlignment="Stretch"
-                            Header="Desaturation"
-                            IsEnabled="{x:Bind ViewModel.ShowChromaKeyEffect, Mode=OneWay}"
-                            Maximum="100"
-                            Minimum="0"
-                            SnapsTo="StepValues"
-                            StepFrequency="1"
-                            TickFrequency="5"
-                            TickPlacement="Outside"
-                            Value="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=TwoWay}">
-                            <Slider.HeaderTemplate>
-                                <DataTemplate>
-                                    <TextBlock Margin="0,0,0,6" Text="{Binding}" />
-                                </DataTemplate>
-                            </Slider.HeaderTemplate>
-                        </Slider>
-                    </Grid>
-                </AppBarElementContainer>
-            </CommandBar>
+            <controls:ChromaKeyToolbar
+                ColorOptions="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
+                Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=TwoWay}"
+                SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=TwoWay}"
+                Tolerance="{x:Bind ViewModel.ChromaKeyTolerance, Mode=TwoWay}" />
         </Grid>
     </Grid>
 </local:ImageEditPageBase>
