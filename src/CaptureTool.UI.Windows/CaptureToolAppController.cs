@@ -20,7 +20,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using Windows.ApplicationModel.Core;
 
 namespace CaptureTool.UI.Windows;
 
@@ -124,20 +123,20 @@ internal partial class CaptureToolAppController : IAppController
 
     public bool TryRestart()
     {
-        AppRestartFailureReason restartError = AppInstance.Restart(string.Empty);
+        global::Windows.ApplicationModel.Core.AppRestartFailureReason restartError = AppInstance.Restart(string.Empty);
 
         switch (restartError)
         {
-            case AppRestartFailureReason.NotInForeground:
+            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.NotInForeground:
                 _logService.LogWarning("The app is not in the foreground.");
                 break;
-            case AppRestartFailureReason.RestartPending:
+            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.RestartPending:
                 _logService.LogWarning("Another restart is currently pending.");
                 break;
-            case AppRestartFailureReason.InvalidUser:
+            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.InvalidUser:
                 _logService.LogWarning("Current user is not signed in or not a valid user.");
                 break;
-            case AppRestartFailureReason.Other:
+            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.Other:
                 _logService.LogWarning("Failure restarting.");
                 break;
         }
@@ -359,5 +358,10 @@ internal partial class CaptureToolAppController : IAppController
         {
             throw new InvalidOperationException($"{nameof(CaptureToolAppController)} must be initialized before it can be used.");
         }
+    }
+
+    public string GetDefaultScreenshotsFolderPath()
+    {
+        return global::Windows.Storage.KnownFolders.SavedPictures.Path;
     }
 }

@@ -80,7 +80,8 @@
                             x:Uid="Settings_AutoCopy_Toggle"
                             Grid.Column="2"
                             MinWidth="0"
-                            HorizontalAlignment="Right" />
+                            HorizontalAlignment="Right"
+                            IsOn="{x:Bind ViewModel.ImageCaptureAutoCopy, Mode=TwoWay}" />
                     </Grid>
 
                     <!--  Auto save  -->
@@ -120,7 +121,8 @@
                                     x:Uid="Settings_AutoSave_Toggle"
                                     Grid.Column="2"
                                     MinWidth="0"
-                                    HorizontalAlignment="Right" />
+                                    HorizontalAlignment="Right"
+                                    IsOn="{x:Bind ViewModel.ImageCaptureAutoSave, Mode=TwoWay}" />
                             </Grid>
                         </Expander.Header>
                         <Grid Margin="4,0">

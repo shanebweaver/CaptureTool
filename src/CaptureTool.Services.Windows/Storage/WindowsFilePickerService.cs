@@ -12,6 +12,21 @@ namespace CaptureTool.Services.Windows.Storage;
 
 public sealed partial class WindowsFilePickerService : IFilePickerService
 {
+    public async Task<string?> PickFolderAsync(nint hwnd)
+    {
+        var picker = new FolderPicker
+        {
+            ViewMode = PickerViewMode.Thumbnail,
+            SuggestedStartLocation = PickerLocationId.PicturesLibrary,
+        };
+        picker.FileTypeFilter.Add("*");
+
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
+        StorageFolder folder = await picker.PickSingleFolderAsync();
+        return folder?.Path;
+    }
+
     public async Task<ImageFile?> OpenImageFileAsync(nint hwnd)
     {
         var filePicker = new FileOpenPicker

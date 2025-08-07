@@ -18,6 +18,8 @@ public interface IAppController
     void PerformCapture(MonitorCaptureResult monitor, Rectangle captureArea);
     void PerformAllScreensCapture();
 
+    string GetDefaultScreenshotsFolderPath();
+
     void HideMainWindow();
     void ShowMainWindow(bool activate = true);
     nint GetMainWindowHandle();

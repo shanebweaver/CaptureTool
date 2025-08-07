@@ -5,11 +5,13 @@ using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Settings;
+using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,6 +40,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
+    private readonly IFilePickerService _filePickerService;
     private readonly ICancellationService _cancellationService;
     private readonly IFactoryService<AppLanguageViewModel, AppLanguage?> _appLanguageViewModelFactory;
     private readonly IFactoryService<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
@@ -137,6 +140,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         IAppController appController,
         ILocalizationService localizationService,
         IThemeService themeService,
+        IFilePickerService filePickerService,
         ISettingsService settingsService,
         ICancellationService cancellationService,
         IFactoryService<AppLanguageViewModel, AppLanguage?> appLanguageViewModelFactory,
@@ -147,6 +151,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         _localizationService = localizationService;
         _settingsService = settingsService;
         _themeService = themeService;
+        _filePickerService = filePickerService;
         _cancellationService = cancellationService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
@@ -202,10 +207,16 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
                 }
                 UpdateShowAppThemeRestartMessage();
 
-                ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.ImageCapture_Options_AutoCopy);
-                ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.ImageCapture_Options_AutoSave);
+                ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
+                ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
 
-                ScreenshotsFolderPath = "C:/users/shweaver/Photos/screenshots";
+                var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
+                if (string.IsNullOrWhiteSpace(screenshotsFolder))
+                {
+                    screenshotsFolder = _appController.GetDefaultScreenshotsFolderPath();
+                }
+
+                ScreenshotsFolderPath = screenshotsFolder;
             }
             finally
             {
@@ -220,16 +231,16 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
     {
         ExecuteActivity(ActivityIds.Unload, () =>
         {
-            ShowAppLanguageRestartMessage = false;
-            SelectedAppLanguageIndex = -1;
-            AppLanguages.Clear();
+            _showAppLanguageRestartMessage = false;
+            _selectedAppLanguageIndex = -1;
+            _appLanguages.Clear();
 
-            ShowAppThemeRestartMessage = false;
-            SelectedAppThemeIndex = -1;
-            AppThemes.Clear();
+            _showAppThemeRestartMessage = false;
+            _selectedAppThemeIndex = -1;
+            _appThemes.Clear();
 
-            ImageCaptureAutoSave = false;
-            ImageCaptureAutoCopy = false;
+            _imageCaptureAutoSave = false;
+            _imageCaptureAutoCopy = false;
         });
 
         base.Unload();
@@ -303,31 +314,49 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     private void UpdateImageCaptureAutoSave()
     {
-        ExecuteActivity(ActivityIds.UpdateImageCaptureAutoSave, () =>
+        ExecuteActivity(ActivityIds.UpdateImageCaptureAutoSave, async () =>
         {
+            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, ImageCaptureAutoSave);
+            await _settingsService.TrySaveAsync(CancellationToken.None);
         });
     }
 
     private void UpdateImageCaptureAutoCopy()
     {
-        ExecuteActivity(ActivityIds.UpdateImageCaptureAutoCopy, () =>
+        ExecuteActivity(ActivityIds.UpdateImageCaptureAutoCopy, async () =>
         {
+            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, ImageCaptureAutoCopy);
+            await _settingsService.TrySaveAsync(CancellationToken.None);
         });
     }
 
     private void ChangeScreenshotsFolder()
     {
-        // TODO: Show file picker and update location
-        ExecuteActivity(ActivityIds.ChangeScreenshotsFolder, () =>
+        ExecuteActivity(ActivityIds.ChangeScreenshotsFolder, async () =>
         {
+            var hwnd = _appController.GetMainWindowHandle();
+            string? folderPath = await _filePickerService.PickFolderAsync(hwnd);
+
+            if (string.IsNullOrWhiteSpace(folderPath)) 
+            {
+                return;
+            }
+
+            ScreenshotsFolderPath = folderPath;
+
+            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder, folderPath);
+            await _settingsService.TrySaveAsync(CancellationToken.None);
         });
     }
 
     private void OpenScreenshotsFolder()
     {
-        // TODO: Open the location in file explorer.
         ExecuteActivity(ActivityIds.OpenScreenshotsFolder, () =>
         {
+            if (Directory.Exists(ScreenshotsFolderPath))
+            {
+                Process.Start("explorer.exe", $"/open, {ScreenshotsFolderPath}");
+            }
         });
     }
 
