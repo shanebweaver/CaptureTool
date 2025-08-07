@@ -11,7 +11,9 @@ public sealed partial class CaptureOverlayWindow : Window
 {
     public CaptureOverlayWindowViewModel ViewModel => RootView.ViewModel;
 
-    public CaptureOverlayWindow(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows)
+    public bool IsClosed { get; private set; }
+
+    public CaptureOverlayWindow(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows, CaptureOptions options)
     {
         if (monitor.IsPrimary)
         {
@@ -35,7 +37,7 @@ public sealed partial class CaptureOverlayWindow : Window
 
         InitializeComponent();
 
-        ViewModel.Load(monitor, monitorWindows);
+        ViewModel.Load(monitor, monitorWindows, options);
     }
 
     private void CaptureOverlayWindow_Closed(object sender, WindowEventArgs args)
@@ -45,13 +47,14 @@ public sealed partial class CaptureOverlayWindow : Window
 
         ViewModel.Unload();
         Content = null;
+        IsClosed = true;
     }
 
     private void CaptureOverlayWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            if (args.WindowActivationState != WindowActivationState.Deactivated)
+            if (!IsClosed && args.WindowActivationState != WindowActivationState.Deactivated)
             {
                 // Must call SetForegroundWindow or focus will not move to the new window on activation.
                 var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);

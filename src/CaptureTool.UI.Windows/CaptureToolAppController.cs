@@ -93,14 +93,9 @@ internal partial class CaptureToolAppController : IAppController
                 // Windows 11 has a global setting and will only call ms-screenclip if the user want to show the capture app.
                 // In Windows Settings > Accessibility > Keyboard, "Use the Print screen key to open screen capture"
                 CaptureMode captureMode = CaptureMode.Image;
-                CaptureType captureType = CaptureType.Rectangle;
+                CaptureType captureType = CaptureType.AllScreens;
                 CaptureOptions captureOptions = new(captureMode, captureType);
                 ShowCaptureOverlay(captureOptions);
-
-                // Legacy behavior
-                // Capture all monitors silently and put the image in the user's clipboard.
-                //List<MonitorCaptureResult> monitors = MonitorCaptureHelper.CaptureAllMonitors();
-                //ClipboardImageHelper.CombineMonitorsAndCopyToClipboard(monitors);
             }
             else if (source == "ScreenRecorderHotKey" || isRecordingType)
             {
@@ -175,35 +170,40 @@ internal partial class CaptureToolAppController : IAppController
 
     public void PerformAllScreensCapture()
     {
-        if (_overlayHost == null)
+        ThrowIfNotInitialized();
+
+        App.Current.DispatcherQueue.TryEnqueue(() =>
         {
-            return;
-        }
-
-        var monitors = _overlayHost.GetMonitors();
-        Bitmap? combined = MonitorCaptureHelper.CombineMonitors(monitors);
-
-        if (combined != null)
-        {
-            try
+            if (_overlayHost == null)
             {
-                var tempPath = Path.Combine(
-                    ApplicationData.GetDefault().TemporaryPath,
-                    $"capture_{Guid.NewGuid()}.png"
-                );
-                combined.Save(tempPath, ImageFormat.Png);
-
-                RestoreMainWindow();
-                CloseCaptureOverlay();
-
-                var imageFile = new ImageFile(tempPath);
-                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
+                return;
             }
-            finally
+
+            var monitors = _overlayHost.GetMonitors();
+            Bitmap? combined = MonitorCaptureHelper.CombineMonitors(monitors);
+
+            if (combined != null)
             {
-                combined.Dispose();
+                try
+                {
+                    var tempPath = Path.Combine(
+                        ApplicationData.GetDefault().TemporaryPath,
+                        $"capture_{Guid.NewGuid()}.png"
+                    );
+                    combined.Save(tempPath, ImageFormat.Png);
+
+                    RestoreMainWindow();
+                    CloseCaptureOverlay();
+
+                    var imageFile = new ImageFile(tempPath);
+                    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
+                }
+                finally
+                {
+                    combined.Dispose();
+                }
             }
-        }
+        });
     }
 
     public void PerformCapture(MonitorCaptureResult monitor, Rectangle area)

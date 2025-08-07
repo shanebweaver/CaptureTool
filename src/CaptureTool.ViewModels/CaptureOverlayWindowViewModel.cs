@@ -170,10 +170,20 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         _selectedCaptureTypeIndex = 0;
     }
 
-    public void Load(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows)
+    public void Load(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows, CaptureOptions options)
     {
         Monitor = monitor;
         MonitorWindows = [.. monitorWindows];
+
+        if (SupportedCaptureModes.Contains(options.CaptureMode))
+        {
+            SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(options.CaptureMode);
+        }
+
+        if (SupportedCaptureTypes.Contains(options.CaptureType))
+        {
+            SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(options.CaptureType);
+        }
     }
 
     public void Unload()

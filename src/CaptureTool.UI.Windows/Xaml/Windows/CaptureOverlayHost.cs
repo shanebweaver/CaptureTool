@@ -1,6 +1,7 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Capture.Windows;
 using CaptureTool.ViewModels;
+using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml;
 using System;
 using System.Collections.Generic;
@@ -47,7 +48,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
                 monitor.MonitorBounds.IntersectsWith(p) ||
                 monitor.MonitorBounds.Contains(p));
 
-            var window = new CaptureOverlayWindow(monitor, monitorWindows.ToList());
+            var window = new CaptureOverlayWindow(monitor, [.. monitorWindows], options);
             _windows.Add(window);
 
             var hwnd = WindowNative.GetWindowHandle(window);
@@ -112,9 +113,16 @@ internal sealed partial class CaptureOverlayHost : IDisposable
         _viewModel?.Unload();
         _viewModel = null;
 
-        foreach (var window in _windows)
+        foreach (CaptureOverlayWindow window in _windows)
         {
-            window.Close();
+            try
+            {
+                if (!window.IsClosed)
+                {
+                    window.DispatcherQueue.EnqueueAsync(() => window.Close());
+                }
+            }
+            catch (Exception){ }
         }
 
         _windows.Clear();
