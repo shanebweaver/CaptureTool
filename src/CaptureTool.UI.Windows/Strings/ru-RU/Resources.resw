@@ -400,39 +400,39 @@
     <value>Все экраны</value>
   </data>
   <data name="Settings_ImageCaptureHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Захват изображения</value>
   </data>
   <data name="Settings_AutoSave_Toggle.OnContent" xml:space="preserve">
-    <value />
+    <value>Вкл</value>
   </data>
   <data name="Settings_AutoCopy_Toggle.OnContent" xml:space="preserve">
-    <value />
+    <value>Вкл</value>
   </data>
   <data name="Settings_AutoSave_Toggle.OffContent" xml:space="preserve">
-    <value />
+    <value>Выкл</value>
   </data>
   <data name="Settings_AutoCopy_Toggle.OffContent" xml:space="preserve">
-    <value />
+    <value>Выкл</value>
   </data>
   <data name="Settings_AutoSave_OpenButton.Content" xml:space="preserve">
-    <value />
+    <value>Открыть</value>
   </data>
   <data name="Settings_AutoSave_ChangeButton.Content" xml:space="preserve">
-    <value />
+    <value>Изменить папку</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Папка для скриншотов:</value>
   </data>
   <data name="Settings_AutoSave_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Автоматическое сохранение изображений</value>
   </data>
   <data name="Settings_AutoCopy_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Автоматическое копирование изображений</value>
   </data>
   <data name="Settings_AutoCopy_SubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Автоматически копировать изображения в буфер обмена после захвата.</value>
   </data>
   <data name="Settings_AutoSave_SubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Автоматически сохранять изображения в папку скриншотов после захвата.</value>
   </data>
 </root>

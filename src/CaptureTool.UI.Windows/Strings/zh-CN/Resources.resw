@@ -400,39 +400,39 @@
     <value>所有屏幕</value>
   </data>
   <data name="Settings_ImageCaptureHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>图像捕获</value>
   </data>
   <data name="Settings_AutoSave_Toggle.OnContent" xml:space="preserve">
-    <value />
+    <value>开启</value>
   </data>
   <data name="Settings_AutoCopy_Toggle.OnContent" xml:space="preserve">
-    <value />
+    <value>开启</value>
   </data>
   <data name="Settings_AutoSave_Toggle.OffContent" xml:space="preserve">
-    <value />
+    <value>关闭</value>
   </data>
   <data name="Settings_AutoCopy_Toggle.OffContent" xml:space="preserve">
-    <value />
+    <value>关闭</value>
   </data>
   <data name="Settings_AutoSave_OpenButton.Content" xml:space="preserve">
-    <value />
+    <value>打开</value>
   </data>
   <data name="Settings_AutoSave_ChangeButton.Content" xml:space="preserve">
-    <value />
+    <value>更改文件夹</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value />
+    <value>截图文件夹：</value>
   </data>
   <data name="Settings_AutoSave_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>自动保存图像</value>
   </data>
   <data name="Settings_AutoCopy_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>自动复制图像</value>
   </data>
   <data name="Settings_AutoCopy_SubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>捕获后自动将图像复制到剪贴板。</value>
   </data>
   <data name="Settings_AutoSave_SubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>捕获后自动将图像保存到截图文件夹中。</value>
   </data>
 </root>

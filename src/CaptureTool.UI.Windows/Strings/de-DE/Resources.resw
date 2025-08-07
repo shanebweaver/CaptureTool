@@ -400,39 +400,39 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
     <value>Alle Bildschirme</value>
   </data>
   <data name="Settings_ImageCaptureHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Bilderfassung</value>
   </data>
   <data name="Settings_AutoSave_Toggle.OnContent" xml:space="preserve">
-    <value />
+    <value>Ein</value>
   </data>
   <data name="Settings_AutoCopy_Toggle.OnContent" xml:space="preserve">
-    <value />
+    <value>Ein</value>
   </data>
   <data name="Settings_AutoSave_Toggle.OffContent" xml:space="preserve">
-    <value />
+    <value>Aus</value>
   </data>
   <data name="Settings_AutoCopy_Toggle.OffContent" xml:space="preserve">
-    <value />
+    <value>Aus</value>
   </data>
   <data name="Settings_AutoSave_OpenButton.Content" xml:space="preserve">
-    <value />
+    <value>Öffnen</value>
   </data>
   <data name="Settings_AutoSave_ChangeButton.Content" xml:space="preserve">
-    <value />
+    <value>Ordner ändern</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Screenshot-Ordner:</value>
   </data>
   <data name="Settings_AutoSave_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Bilder automatisch speichern</value>
   </data>
   <data name="Settings_AutoCopy_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Bilder automatisch kopieren</value>
   </data>
   <data name="Settings_AutoCopy_SubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Bilder nach der Aufnahme automatisch in die Zwischenablage kopieren.</value>
   </data>
   <data name="Settings_AutoSave_SubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Bilder nach der Aufnahme automatisch im Screenshot-Ordner speichern.</value>
   </data>
 </root>

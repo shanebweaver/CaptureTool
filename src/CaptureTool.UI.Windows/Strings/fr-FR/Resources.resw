@@ -400,39 +400,39 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>Tous les écrans</value>
   </data>
   <data name="Settings_ImageCaptureHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Capture d’image</value>
   </data>
   <data name="Settings_AutoSave_Toggle.OnContent" xml:space="preserve">
-    <value />
+    <value>Activé</value>
   </data>
   <data name="Settings_AutoCopy_Toggle.OnContent" xml:space="preserve">
-    <value />
+    <value>Activé</value>
   </data>
   <data name="Settings_AutoSave_Toggle.OffContent" xml:space="preserve">
-    <value />
+    <value>Désactivé</value>
   </data>
   <data name="Settings_AutoCopy_Toggle.OffContent" xml:space="preserve">
-    <value />
+    <value>Désactivé</value>
   </data>
   <data name="Settings_AutoSave_OpenButton.Content" xml:space="preserve">
-    <value />
+    <value>Ouvrir</value>
   </data>
   <data name="Settings_AutoSave_ChangeButton.Content" xml:space="preserve">
-    <value />
+    <value>Changer de dossier</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Dossier des captures d’écran :</value>
   </data>
   <data name="Settings_AutoSave_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Enregistrement automatique des images</value>
   </data>
   <data name="Settings_AutoCopy_HeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Copier automatiquement les images</value>
   </data>
   <data name="Settings_AutoCopy_SubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Copier automatiquement les images dans le presse-papiers après la capture.</value>
   </data>
   <data name="Settings_AutoSave_SubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Enregistrer automatiquement les images dans le dossier des captures après la capture.</value>
   </data>
 </root>
