@@ -1,5 +1,4 @@
-﻿using CaptureTool.Core.AppController;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 
 namespace CaptureTool.ViewModels;
