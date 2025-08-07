@@ -96,6 +96,7 @@
     <x:String x:Key="FitPage">&#xE9A6;</x:String>
     <x:String x:Key="VideoCapture">&#xF7EE;</x:String>
     <x:String x:Key="AspectRatio">&#xE799;</x:String>
+    <x:String x:Key="Project">&#xEBC6;</x:String>
 
     <!--  Capture Mode Symbols  -->
     <Symbol x:Key="NewImageCaptureSymbol">Camera</Symbol>

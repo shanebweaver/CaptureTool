@@ -16,6 +16,7 @@ public interface IAppController
     void ShowCaptureOverlay(CaptureOptions? options = null);
     void CloseCaptureOverlay();
     void PerformCapture(MonitorCaptureResult monitor, Rectangle captureArea);
+    void PerformAllScreensCapture();
 
     void HideMainWindow();
     void ShowMainWindow(bool activate = true);

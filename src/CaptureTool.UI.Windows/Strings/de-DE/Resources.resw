@@ -391,9 +391,12 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
     <value>Schlüssel-Entsättigung</value>
   </data>
   <data name="AddOns_TitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Add-Ons</value>
   </data>
   <data name="AppMenu_AddOnsItem.Text" xml:space="preserve">
-    <value />
+    <value>Add-Ons</value>
+  </data>
+  <data name="CaptureType_AllScreens.Text" xml:space="preserve">
+    <value>Alle Bildschirme</value>
   </data>
 </root>

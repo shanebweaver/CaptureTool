@@ -5,5 +5,6 @@ public enum CaptureType
     Rectangle,
     Window,
     FullScreen,
-    Freeform
+    Freeform,
+    AllScreens
 }

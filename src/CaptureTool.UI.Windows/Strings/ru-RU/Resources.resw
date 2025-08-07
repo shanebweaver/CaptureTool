@@ -391,9 +391,12 @@
     <value>Обесцвечивание ключа</value>
   </data>
   <data name="AddOns_TitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Дополнения</value>
   </data>
   <data name="AppMenu_AddOnsItem.Text" xml:space="preserve">
-    <value />
+    <value>Дополнения</value>
+  </data>
+  <data name="CaptureType_AllScreens.Text" xml:space="preserve">
+    <value>Все экраны</value>
   </data>
 </root>

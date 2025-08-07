@@ -89,9 +89,4 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
 
         return false;
     }
-
-    private Visibility GetVisibilityForCaptureType(CaptureType captureType)
-    {
-        return IsCaptureTypeSupported(captureType) ? Visibility.Visible : Visibility.Collapsed;
-    }
 }

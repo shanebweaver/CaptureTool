@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Capture;
+using CaptureTool.Capture.Windows;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
@@ -171,6 +172,39 @@ internal partial class CaptureToolAppController : IAppController
             _overlayHost?.Dispose();
             _overlayHost = null;
         });
+    }
+
+    public void PerformAllScreensCapture()
+    {
+        if (_overlayHost == null)
+        {
+            return;
+        }
+
+        var monitors = _overlayHost.GetMonitors();
+        Bitmap? combined = MonitorCaptureHelper.CombineMonitors(monitors);
+
+        if (combined != null)
+        {
+            try
+            {
+                var tempPath = Path.Combine(
+                    ApplicationData.GetDefault().TemporaryPath,
+                    $"capture_{Guid.NewGuid()}.png"
+                );
+                combined.Save(tempPath, ImageFormat.Png);
+
+                RestoreMainWindow();
+                CloseCaptureOverlay();
+
+                var imageFile = new ImageFile(tempPath);
+                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
+            }
+            finally
+            {
+                combined.Dispose();
+            }
+        }
     }
 
     public void PerformCapture(MonitorCaptureResult monitor, Rectangle area)

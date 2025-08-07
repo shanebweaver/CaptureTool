@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -8,6 +11,52 @@ namespace CaptureTool.Capture.Windows;
 
 public static partial class MonitorCaptureHelper
 {
+    public static Bitmap? CombineMonitors(IList<MonitorCaptureResult> monitors)
+    {
+        if (monitors.Count == 0)
+            return null;
+
+        // Step 1: Calculate the union of all monitor bounds
+        Rectangle unionBounds = monitors[0].MonitorBounds;
+        foreach (var m in monitors)
+            unionBounds = Rectangle.Union(unionBounds, m.MonitorBounds);
+
+        int finalWidth = unionBounds.Width;
+        int finalHeight = unionBounds.Height;
+        byte[] finalBuffer = new byte[finalWidth * finalHeight * 4]; // BGRA
+
+        // Step 2: Copy each monitor into final buffer
+        foreach (var monitor in monitors)
+        {
+            var src = monitor.PixelBuffer;
+            var bounds = monitor.MonitorBounds;
+            int width = bounds.Width;
+            int height = bounds.Height;
+
+            int offsetX = bounds.X - unionBounds.X;
+            int offsetY = bounds.Y - unionBounds.Y;
+
+            for (int y = 0; y < height; y++)
+            {
+                int srcRowStart = y * width * 4;
+                int dstRowStart = ((offsetY + y) * finalWidth + offsetX) * 4;
+
+                System.Buffer.BlockCopy(src, srcRowStart, finalBuffer, dstRowStart, width * 4);
+            }
+        }
+
+        // Step 3: Create System.Drawing.Bitmap
+        var bmp = new Bitmap(finalWidth, finalHeight, PixelFormat.Format32bppArgb);
+        var bmpData = bmp.LockBits(
+            new Rectangle(0, 0, finalWidth, finalHeight),
+            ImageLockMode.WriteOnly,
+            PixelFormat.Format32bppArgb
+        );
+        Marshal.Copy(finalBuffer, 0, bmpData.Scan0, finalBuffer.Length);
+        bmp.UnlockBits(bmpData);
+        return bmp;
+    }
+
     public static unsafe List<MonitorCaptureResult> CaptureAllMonitors()
     {
         var results = new List<MonitorCaptureResult>();

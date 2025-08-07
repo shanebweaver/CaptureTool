@@ -391,9 +391,12 @@
     <value>键颜色去饱和</value>
   </data>
   <data name="AddOns_TitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>加载项</value>
   </data>
   <data name="AppMenu_AddOnsItem.Text" xml:space="preserve">
-    <value />
+    <value>加载项</value>
+  </data>
+  <data name="CaptureType_AllScreens.Text" xml:space="preserve">
+    <value>所有屏幕</value>
   </data>
 </root>

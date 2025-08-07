@@ -14,11 +14,17 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 {
     private readonly Action _onClosed;
 
+    private readonly HashSet<MonitorCaptureResult> _monitors = [];
     private readonly HashSet<CaptureOverlayWindow> _windows = [];
     private readonly HashSet<nint> _windowHandles = [];
     private CaptureOverlayViewModel? _viewModel;
     private DispatcherTimer? _foregroundTimer;
     private Window? _primaryWindow;
+
+    public MonitorCaptureResult[] GetMonitors()
+    {
+        return [.. _monitors];
+    }
 
     public CaptureOverlayHost(Action onClosed)
     {
@@ -28,7 +34,6 @@ internal sealed partial class CaptureOverlayHost : IDisposable
     public void Show(CaptureOptions options)
     {
         Close();
-        _windowHandles.Clear();
         _viewModel = new();
 
         var allWindows = WindowInfoHelper.GetAllWindows();
@@ -36,6 +41,8 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
         foreach (var monitor in monitors)
         {
+            _monitors.Add(monitor);
+
             var monitorWindows = allWindows.Select(w => w.Position).Where(p =>
                 monitor.MonitorBounds.IntersectsWith(p) ||
                 monitor.MonitorBounds.Contains(p));
@@ -100,6 +107,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
     {
         StopForegroundMonitor();
         _windowHandles.Clear();
+        _monitors.Clear();
 
         _viewModel?.Unload();
         _viewModel = null;

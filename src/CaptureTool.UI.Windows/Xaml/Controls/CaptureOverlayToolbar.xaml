@@ -63,6 +63,12 @@
                         <TextBlock x:Uid="CaptureType_Freeform" />
                     </StackPanel>
                 </ComboBoxItem>
+                <ComboBoxItem x:Name="AllScreensModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.AllScreens), Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Project}" />
+                        <TextBlock x:Uid="CaptureType_AllScreens" />
+                    </StackPanel>
+                </ComboBoxItem>
             </ComboBox>
 
             <!--  Close  -->

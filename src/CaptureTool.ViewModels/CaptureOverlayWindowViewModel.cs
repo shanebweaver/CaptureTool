@@ -15,9 +15,6 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     private readonly IThemeService _themeService;
     private readonly IAppController _appController;
 
-    public event EventHandler<CaptureMode>? SelectedCaptureModeChanged;
-    public event EventHandler<CaptureType>? SelectedCaptureTypeChanged;
-
     public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
 
@@ -40,33 +37,36 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
             {
                 RaisePropertyChanged(nameof(SelectedCaptureType));
                 OnSelectedCaptureTypeChanged();
-                SelectedCaptureTypeChanged?.Invoke(this, SelectedCaptureType);
             }
         }
     }
 
     private void OnSelectedCaptureTypeChanged()
     {
-        var newCaptureType = SelectedCaptureType;
+        switch (SelectedCaptureType)
+        {
+            case CaptureType.Rectangle:
+                CaptureArea = Rectangle.Empty;
+                break;
 
-        if (newCaptureType == CaptureType.Rectangle)
-        {
-            CaptureArea = Rectangle.Empty;
-        }
-        else if (newCaptureType == CaptureType.Window)
-        {
-            CaptureArea = Rectangle.Empty;
-        }
-        else if (newCaptureType == CaptureType.FullScreen)
-        {
-            if (Monitor != null)
-            {
-                CaptureArea = Monitor.Value.MonitorBounds;
-            }
-        }
-        else if (newCaptureType == CaptureType.Freeform)
-        {
-            CaptureArea = Rectangle.Empty;
+            case CaptureType.Window:
+                CaptureArea = Rectangle.Empty;
+                break;
+
+            case CaptureType.FullScreen:
+                if (Monitor != null)
+                {
+                    CaptureArea = Monitor.Value.MonitorBounds;
+                }
+                break;
+
+            case CaptureType.Freeform:
+                CaptureArea = Rectangle.Empty;
+                break;
+
+            case CaptureType.AllScreens:
+                _appController.PerformAllScreensCapture();
+                break;
         }
     }
 
@@ -86,7 +86,6 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
             if (Set(ref _selectedCaptureModeIndex, value))
             {
                 RaisePropertyChanged(nameof(SelectedCaptureMode));
-                SelectedCaptureModeChanged?.Invoke(this, SelectedCaptureMode);
             }
         }
     }
@@ -167,6 +166,7 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         {
             _supportedCaptureTypes.Add(CaptureType.Freeform);
         }
+        _supportedCaptureTypes.Add(CaptureType.AllScreens);
         _selectedCaptureTypeIndex = 0;
     }
 

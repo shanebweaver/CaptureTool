@@ -489,4 +489,8 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Add-ons</value>
     <comment>The label for the menu item that shows the app add-ons page.</comment>
   </data>
+  <data name="CaptureType_AllScreens.Text" xml:space="preserve">
+    <value>All screens</value>
+    <comment>The label for the All Screens capture type.</comment>
+  </data>
 </root>

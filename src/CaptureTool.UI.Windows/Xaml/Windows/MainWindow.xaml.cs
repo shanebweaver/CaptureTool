@@ -8,14 +8,12 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using System;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.Graphics;
 using Windows.UI;
 using Windows.UI.WindowManagement;
-using Windows.Win32;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
@@ -103,7 +101,7 @@ public sealed partial class MainWindow : Window
     }
     
     // Returns the X offset in physical pixels from the element to the left edge of the window
-    private double GetElementOffsetFromWindowLeftInPixels(FrameworkElement element)
+    private static double GetElementOffsetFromWindowLeftInPixels(FrameworkElement element)
     {
         // Transform (0,0) of the element to the window's coordinate space
         GeneralTransform transform = element.TransformToVisual(null); // 'null' means root visual (window)
