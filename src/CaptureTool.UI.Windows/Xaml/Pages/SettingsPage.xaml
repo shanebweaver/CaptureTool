@@ -30,7 +30,7 @@
                 </Button>
                 <TextBlock
                     x:Uid="Settings_HeaderLabel"
-                    Style="{StaticResource TitleTextBlockStyle}"
+                    Style="{StaticResource SubtitleTextBlockStyle}"
                     TextWrapping="WrapWholeWords" />
             </StackPanel>
 
@@ -40,9 +40,123 @@
                 HorizontalAlignment="Stretch"
                 Spacing="12">
 
+                <!--  Image Capture section  -->
+                <StackPanel Spacing="4">
+                    <TextBlock x:Uid="Settings_ImageCaptureHeaderLabel" Margin="0,4" />
+
+                    <!--  Auto copy  -->
+                    <Grid
+                        Padding="16,12"
+                        Background="{ThemeResource CardBackgroundFillColorDefault}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                        BorderThickness="1"
+                        ColumnSpacing="16"
+                        CornerRadius="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="28" />
+                        </Grid.ColumnDefinitions>
+
+                        <SymbolIcon Symbol="Copy" />
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock
+                                x:Uid="Settings_AutoCopy_HeaderLabel"
+                                MaxLines="2"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="WrapWholeWords" />
+                            <TextBlock
+                                x:Uid="Settings_AutoCopy_SubtitleLabel"
+                                FontSize="12"
+                                MaxLines="2"
+                                Opacity=".75"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+
+                        <ToggleSwitch
+                            x:Uid="Settings_AutoCopy_Toggle"
+                            Grid.Column="2"
+                            MinWidth="0"
+                            HorizontalAlignment="Right" />
+                    </Grid>
+
+                    <!--  Auto save  -->
+                    <Expander
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        IsExpanded="True">
+                        <Expander.Header>
+                            <Grid
+                                Padding="0,12"
+                                ColumnSpacing="16"
+                                CornerRadius="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <SymbolIcon Symbol="Save" />
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock
+                                        x:Uid="Settings_AutoSave_HeaderLabel"
+                                        MaxLines="2"
+                                        TextTrimming="WordEllipsis"
+                                        TextWrapping="WrapWholeWords" />
+                                    <TextBlock
+                                        x:Uid="Settings_AutoSave_SubtitleLabel"
+                                        FontSize="12"
+                                        MaxLines="2"
+                                        Opacity=".75"
+                                        TextTrimming="WordEllipsis"
+                                        TextWrapping="WrapWholeWords" />
+                                </StackPanel>
+
+                                <ToggleSwitch
+                                    x:Uid="Settings_AutoSave_Toggle"
+                                    Grid.Column="2"
+                                    MinWidth="0"
+                                    HorizontalAlignment="Right" />
+                            </Grid>
+                        </Expander.Header>
+                        <Grid Margin="4,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock
+                                    x:Uid="Settings_AutoSave_ScreenshotsFolderLabel"
+                                    MaxLines="2"
+                                    TextTrimming="WordEllipsis"
+                                    TextWrapping="NoWrap" />
+                                <HyperlinkButton Command="{x:Bind ViewModel.OpenScreenshotsFolderCommand}">
+                                    <TextBlock
+                                        MaxLines="2"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        Text="{x:Bind ViewModel.ScreenshotsFolderPath, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="Wrap" />
+                                </HyperlinkButton>
+                            </StackPanel>
+
+                            <StackPanel
+                                Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="4">
+                                <Button x:Uid="Settings_AutoSave_ChangeButton" Command="{x:Bind ViewModel.ChangeScreenshotsFolderCommand}" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander>
+                </StackPanel>
+
                 <!--  Appearance section  -->
-                <StackPanel Spacing="12">
-                    <TextBlock x:Uid="Settings_AppearanceHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
+                <StackPanel Spacing="4">
+                    <TextBlock x:Uid="Settings_AppearanceHeaderLabel" Margin="0,4" />
                     <!--  App theme  -->
                     <Expander
                         HorizontalAlignment="Stretch"
@@ -76,15 +190,12 @@
                                 </StackPanel>
                             </Grid>
                         </Expander.Header>
-                        <Grid>
+                        <Grid Margin="4,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <RadioButtons
-                                Padding="4,0"
-                                ItemsSource="{x:Bind ViewModel.AppThemes, Mode=OneWay}"
-                                SelectedIndex="{x:Bind ViewModel.SelectedAppThemeIndex, Mode=TwoWay}">
+                            <RadioButtons ItemsSource="{x:Bind ViewModel.AppThemes, Mode=OneWay}" SelectedIndex="{x:Bind ViewModel.SelectedAppThemeIndex, Mode=TwoWay}">
                                 <RadioButtons.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:AppThemeViewModel">
                                         <RadioButton AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">
@@ -99,7 +210,6 @@
                             </RadioButtons>
                             <Grid
                                 Margin="0,12,0,0"
-                                Padding="0,12,0,0"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Center"
                                 BorderBrush="{ThemeResource SystemBaseLowColor}"
@@ -134,9 +244,9 @@
                 <!--  Localization section  -->
                 <StackPanel
                     x:Name="LocalizationSection"
-                    Spacing="12"
+                    Spacing="4"
                     Visibility="Collapsed">
-                    <TextBlock x:Uid="Settings_LocalizationHeaderLabel" Style="{StaticResource BaseTextBlockStyle}" />
+                    <TextBlock x:Uid="Settings_LocalizationHeaderLabel" Margin="0,4" />
                     <!--  App language  -->
                     <Expander
                         HorizontalAlignment="Stretch"
@@ -170,15 +280,12 @@
                                 </StackPanel>
                             </Grid>
                         </Expander.Header>
-                        <Grid Padding="4,0">
+                        <Grid Margin="4,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <RadioButtons
-                                Padding="4,0"
-                                ItemsSource="{x:Bind ViewModel.AppLanguages, Mode=OneWay}"
-                                SelectedIndex="{x:Bind ViewModel.SelectedAppLanguageIndex, Mode=TwoWay}">
+                            <RadioButtons ItemsSource="{x:Bind ViewModel.AppLanguages, Mode=OneWay}" SelectedIndex="{x:Bind ViewModel.SelectedAppLanguageIndex, Mode=TwoWay}">
                                 <RadioButtons.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:AppLanguageViewModel">
                                         <RadioButton AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">
@@ -193,7 +300,6 @@
                             </RadioButtons>
                             <Grid
                                 Margin="0,12,0,0"
-                                Padding="0,12,0,0"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Center"
                                 BorderBrush="{ThemeResource SystemBaseLowColor}"

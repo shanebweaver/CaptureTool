@@ -1,8 +1,10 @@
 ﻿using CaptureTool.Common.Commands;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
+using CaptureTool.Services.Settings;
 using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
 using System;
@@ -21,6 +23,10 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         public static readonly string Unload = "SettingsPageViewModel_Unload";
         public static readonly string RestartApp = "SettingsPageViewModel_RestartApp";
         public static readonly string GoBack = "SettingsPageViewModel_GoBack";
+        public static readonly string UpdateImageCaptureAutoCopy = "SettingsPageViewModel_UpdateImageCaptureAutoCopy";
+        public static readonly string UpdateImageCaptureAutoSave = "SettingsPageViewModel_UpdateImageCaptureAutoSave";
+        public static readonly string ChangeScreenshotsFolder = "SettingsPageViewModel_ChangeScreenshotsFolder";
+        public static readonly string OpenScreenshotsFolder = "SettingsPageViewModel_OpenScreenshotsFolder";
         public static readonly string UpdateAppLanguage = "SettingsPageViewModel_UpdateAppLanguage";
         public static readonly string UpdateAppTheme = "SettingsPageViewModel_UpdateAppTheme";
         public static readonly string UpdateShowAppThemeRestartMessage = "SettingsPageViewModel_UpdateShowAppThemeRestartMessage";
@@ -30,6 +36,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
     private readonly ITelemetryService _telemetryService;
     private readonly IAppController _appController;
     private readonly ILocalizationService _localizationService;
+    private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
     private readonly ICancellationService _cancellationService;
     private readonly IFactoryService<AppLanguageViewModel, AppLanguage?> _appLanguageViewModelFactory;
@@ -41,6 +48,8 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         AppTheme.SystemDefault,
     ];
 
+    public RelayCommand ChangeScreenshotsFolderCommand => new(ChangeScreenshotsFolder);
+    public RelayCommand OpenScreenshotsFolderCommand => new(OpenScreenshotsFolder);
     public RelayCommand RestartAppCommand => new(RestartApp);
     public RelayCommand GoBackCommand => new(GoBack);
 
@@ -94,11 +103,41 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         set => Set(ref _showAppThemeRestartMessage, value);
     }
 
+    private bool _imageCaptureAutoCopy;
+    public bool ImageCaptureAutoCopy
+    {
+        get => _imageCaptureAutoCopy;
+        set
+        {
+            Set(ref _imageCaptureAutoCopy, value);
+            UpdateImageCaptureAutoCopy();
+        }
+    }
+
+    private bool _imageCaptureAutoSave;
+    public bool ImageCaptureAutoSave
+    {
+        get => _imageCaptureAutoSave;
+        set
+        {
+            Set(ref _imageCaptureAutoSave, value);
+            UpdateImageCaptureAutoSave();
+        }
+    }
+
+    private string _screenshotsFolderPath;
+    public string ScreenshotsFolderPath
+    {
+        get => _screenshotsFolderPath;
+        set => Set(ref _screenshotsFolderPath, value);
+    }
+
     public SettingsPageViewModel(
         ITelemetryService telemetryService,
         IAppController appController,
         ILocalizationService localizationService,
         IThemeService themeService,
+        ISettingsService settingsService,
         ICancellationService cancellationService,
         IFactoryService<AppLanguageViewModel, AppLanguage?> appLanguageViewModelFactory,
         IFactoryService<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
@@ -106,6 +145,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         _telemetryService = telemetryService;
         _appController = appController;
         _localizationService = localizationService;
+        _settingsService = settingsService;
         _themeService = themeService;
         _cancellationService = cancellationService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
@@ -113,6 +153,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
         _appThemes = [];
         _appLanguages = [];
+        _screenshotsFolderPath = string.Empty;
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -160,6 +201,11 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
                     }
                 }
                 UpdateShowAppThemeRestartMessage();
+
+                ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.ImageCapture_Options_AutoCopy);
+                ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.ImageCapture_Options_AutoSave);
+
+                ScreenshotsFolderPath = "C:/users/shweaver/Photos/screenshots";
             }
             finally
             {
@@ -181,6 +227,9 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
             ShowAppThemeRestartMessage = false;
             SelectedAppThemeIndex = -1;
             AppThemes.Clear();
+
+            ImageCaptureAutoSave = false;
+            ImageCaptureAutoCopy = false;
         });
 
         base.Unload();
@@ -249,6 +298,36 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
             }
 
             ShowAppThemeRestartMessage = currentTheme != startupTheme;
+        });
+    }
+
+    private void UpdateImageCaptureAutoSave()
+    {
+        ExecuteActivity(ActivityIds.UpdateImageCaptureAutoSave, () =>
+        {
+        });
+    }
+
+    private void UpdateImageCaptureAutoCopy()
+    {
+        ExecuteActivity(ActivityIds.UpdateImageCaptureAutoCopy, () =>
+        {
+        });
+    }
+
+    private void ChangeScreenshotsFolder()
+    {
+        // TODO: Show file picker and update location
+        ExecuteActivity(ActivityIds.ChangeScreenshotsFolder, () =>
+        {
+        });
+    }
+
+    private void OpenScreenshotsFolder()
+    {
+        // TODO: Open the location in file explorer.
+        ExecuteActivity(ActivityIds.OpenScreenshotsFolder, () =>
+        {
         });
     }
 

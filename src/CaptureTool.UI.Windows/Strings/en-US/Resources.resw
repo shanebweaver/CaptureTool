@@ -493,4 +493,52 @@ By using this application, you acknowledge that you are responsible for managing
     <value>All screens</value>
     <comment>The label for the All Screens capture type.</comment>
   </data>
+  <data name="Settings_ImageCaptureHeaderLabel.Text" xml:space="preserve">
+    <value>Image capture</value>
+    <comment>The header for the image capture section of the settings page.</comment>
+  </data>
+  <data name="Settings_AutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+    <comment>The label for the on state of the auto save toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_AutoCopy_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+    <comment>The label for the on state of the auto copy toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_AutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+    <comment>The label for the off state of the auto save toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_AutoCopy_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+    <comment>The label for the off state of the auto copy toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_AutoSave_OpenButton.Content" xml:space="preserve">
+    <value>Open</value>
+    <comment>The label for the button that allows the user to open the screenshots folder from the settings page.</comment>
+  </data>
+  <data name="Settings_AutoSave_ChangeButton.Content" xml:space="preserve">
+    <value>Change folder</value>
+    <comment>The label for the button that allows the user to change the screenshots folder from the settings page.</comment>
+  </data>
+  <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
+    <value>Screenshots folder:</value>
+    <comment>The label for the screenshots folder location on the settings page.</comment>
+  </data>
+  <data name="Settings_AutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>Auto-save images</value>
+    <comment>The header for the auto save section on the settings page.</comment>
+  </data>
+  <data name="Settings_AutoCopy_HeaderLabel.Text" xml:space="preserve">
+    <value>Auto-copy images</value>
+    <comment>The header for the auto copy section on the settings page.</comment>
+  </data>
+  <data name="Settings_AutoCopy_SubtitleLabel.Text" xml:space="preserve">
+    <value>Automatically copy images to the clipboard after capture.</value>
+    <comment>The subtitle for the auto copy section on the settings page.</comment>
+  </data>
+  <data name="Settings_AutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>Automatically save images to the screenshots folder after capture.</value>
+    <comment>The subtitle for the auto save section on the settings page.</comment>
+  </data>
 </root>

@@ -12,25 +12,25 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
         nameof(ColorOptions),
         typeof(IEnumerable<ChromaKeyColorOption>),
         typeof(ChromaKeyToolbar),
-        new PropertyMetadata(null));
+        new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty SelectedColorOptionIndexProperty = DependencyProperty.Register(
         nameof(SelectedColorOptionIndex),
         typeof(int),
         typeof(ChromaKeyToolbar),
-        new PropertyMetadata(null));
+        new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty ToleranceProperty = DependencyProperty.Register(
         nameof(Tolerance),
         typeof(int),
         typeof(ChromaKeyToolbar),
-        new PropertyMetadata(0));
+        new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty DesaturationProperty = DependencyProperty.Register(
         nameof(Desaturation),
         typeof(int),
         typeof(ChromaKeyToolbar),
-        new PropertyMetadata(0));
+        new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public IEnumerable<ChromaKeyColorOption> ColorOptions
     {

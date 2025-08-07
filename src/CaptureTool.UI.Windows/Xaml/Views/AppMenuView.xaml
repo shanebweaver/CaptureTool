@@ -42,7 +42,10 @@
                 Icon="Setting" />
 
             <!--  Exit  -->
-            <MenuFlyoutItem x:Uid="AppMenu_ExitItem" Command="{x:Bind ViewModel.ExitApplicationCommand}">
+            <MenuFlyoutItem
+                x:Uid="AppMenu_ExitItem"
+                Command="{x:Bind ViewModel.ExitApplicationCommand}"
+                Icon="Cancel">
                 <MenuFlyoutItem.KeyboardAccelerators>
                     <KeyboardAccelerator x:Uid="AppMenu_ExitItem_KeyboardAccelerator" />
                 </MenuFlyoutItem.KeyboardAccelerators>
