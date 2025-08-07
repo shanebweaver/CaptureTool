@@ -35,7 +35,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
     public void Show(CaptureOptions options)
     {
         Close();
-        _viewModel = new();
+        _viewModel = ViewModelLocator.GetViewModel<CaptureOverlayViewModel>();
 
         var allWindows = WindowInfoHelper.GetAllWindows();
         var monitors = MonitorCaptureHelper.CaptureAllMonitors();

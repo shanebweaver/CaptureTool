@@ -33,16 +33,15 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         get => _selectedCaptureTypeIndex;
         set
         {
-            if (Set(ref _selectedCaptureTypeIndex, value))
-            {
-                RaisePropertyChanged(nameof(SelectedCaptureType));
-                OnSelectedCaptureTypeChanged();
-            }
+            Set(ref _selectedCaptureTypeIndex, value);
+            OnSelectedCaptureTypeIndexChanged();
         }
     }
 
-    private void OnSelectedCaptureTypeChanged()
+    private void OnSelectedCaptureTypeIndexChanged()
     {
+        RaisePropertyChanged(nameof(SelectedCaptureType));
+
         switch (SelectedCaptureType)
         {
             case CaptureType.Rectangle:

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CaptureTool.Core.AppController;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace CaptureTool.ViewModels;
@@ -13,7 +14,10 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
 
     public void AddWindowViewModel(CaptureOverlayWindowViewModel newVM)
     {
-        newVM.PropertyChanged += CaptureOverlayWindowViewModel_PropertyChanged;
+        if (newVM.IsPrimary)
+        {
+            newVM.PropertyChanged += CaptureOverlayWindowViewModel_PropertyChanged;
+        }
         _windowViewModels.Add(newVM);
     }
 

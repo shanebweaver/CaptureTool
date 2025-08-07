@@ -57,7 +57,7 @@ public static partial class MonitorCaptureHelper
         return bmp;
     }
 
-    public static unsafe List<MonitorCaptureResult> CaptureAllMonitors()
+    public static unsafe MonitorCaptureResult[] CaptureAllMonitors()
     {
         var results = new List<MonitorCaptureResult>();
 
@@ -68,7 +68,7 @@ public static partial class MonitorCaptureHelper
             dwData: new()
         );
 
-        return results;
+        return [.. results];
 
         unsafe BOOL EnumMonitorCallback(
             HMONITOR hMonitor,
@@ -155,12 +155,12 @@ public static partial class MonitorCaptureHelper
                 hMonitor,
                 pixels,
                 dpiX,
-                new System.Drawing.Rectangle(
+                new Rectangle(
                     mi.monitorInfo.rcMonitor.left,
                     mi.monitorInfo.rcMonitor.top,
                     width,
                     height),
-                new System.Drawing.Rectangle(
+                new Rectangle(
                     mi.monitorInfo.rcWork.left,
                     mi.monitorInfo.rcWork.top,
                     workW,

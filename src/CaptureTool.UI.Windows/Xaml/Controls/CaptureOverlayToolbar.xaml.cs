@@ -31,7 +31,6 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
-
     public static readonly DependencyProperty IsVideoCaptureEnabledProperty = DependencyProperty.Register(
         nameof(IsVideoCaptureEnabled),
         typeof(bool),

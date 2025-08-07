@@ -66,6 +66,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<ImageEditPageViewModel>();
         // Views
         collection.AddTransient<AppMenuViewModel>();
+        collection.AddTransient<CaptureOverlayViewModel>();
         // Factories
         collection.AddSingleton<IFactoryService<AppLanguageViewModel, AppLanguage?>, AppLanguageViewModelFactory>();
         collection.AddSingleton<IFactoryService<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
