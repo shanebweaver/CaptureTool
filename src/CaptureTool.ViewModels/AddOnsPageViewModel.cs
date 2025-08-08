@@ -1,6 +1,5 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
-using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Store;
@@ -17,7 +16,7 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
     private readonly INavigationService _navigationService;
     private readonly ILocalizationService _localizationService;
 
-    public RelayCommand GetChromaKeyAddOnCommand => new(GetChromaKeyAddOn, () => IsChromaKeyFeatureEnabled);
+    public RelayCommand GetChromaKeyAddOnCommand => new(GetChromaKeyAddOn, () => IsChromaKeyAddOnAvailable);
     public RelayCommand GoBackCommand => new(GoBack, () => _navigationService.CanGoBack);
 
     private bool _isChromaKeyAddOnOwned;
@@ -41,21 +40,17 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
         private set => Set(ref _isChromaKeyAddOnAvailable, value);
     }
 
-    public bool IsChromaKeyFeatureEnabled { get; }
-
     public AddOnsPageViewModel(
         IAppController appController,
         ILocalizationService localizationService,
         IStoreService storeService,
-        INavigationService navigationService,
-        IFeatureManager featureManager)
+        INavigationService navigationService)
     {
         _appController = appController;
         _storeService = storeService;
         _navigationService = navigationService;
         _localizationService = localizationService;
         _chromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
-        IsChromaKeyFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey);
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -88,7 +83,7 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
 
     private async void GetChromaKeyAddOn()
     {
-        if (IsChromaKeyFeatureEnabled && !IsChromaKeyAddOnOwned)
+        if (!IsChromaKeyAddOnOwned)
         {
             var hwnd = _appController.GetMainWindowHandle();
             bool success = await _storeService.PurchaseAddonAsync(AddOns.ChromaKeyBackgroundRemoval, hwnd);

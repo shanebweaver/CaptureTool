@@ -44,7 +44,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
     private readonly IImageCanvasExporter _imageCanvasExporter;
     private readonly IFilePickerService _filePickerService;
-    private readonly IFeatureManager _featureManager;
 
     private ImageDrawable? _imageDrawable;
 
@@ -200,7 +199,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService = telemetryService;
         _imageCanvasPrinter = imageCanvasPrinter;
         _filePickerService = filePickerService;
-        _featureManager = featureManager;
 
         _drawables = [];
         _imageSize = new();
@@ -237,18 +235,14 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
                 Drawables.Add(_imageDrawable);
             }
 
-            bool isChromaKeyFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey);
-            if (isChromaKeyFeatureEnabled)
+            bool isChromaKeyEnabled = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval);
+            IsChromaKeyEnabled = isChromaKeyEnabled;
+            if (isChromaKeyEnabled)
             {
-                bool isChromaKeyEnabled = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval);
-                IsChromaKeyEnabled = isChromaKeyEnabled;
-                if (isChromaKeyEnabled)
+                ChromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
+                foreach (var preset in ChromaKeyColorOptionPresets.All)
                 {
-                    ChromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
-                    foreach (var preset in ChromaKeyColorOptionPresets.All)
-                    {
-                        ChromaKeyColorOptions.Add(preset);
-                    }
+                    ChromaKeyColorOptions.Add(preset);
                 }
             }
 
