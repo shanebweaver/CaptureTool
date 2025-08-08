@@ -1,14 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using CaptureTool.Core.AppController;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : ViewModelBase
 {
+    private readonly IAppController _appController;
     private readonly List<CaptureOverlayWindowViewModel> _windowViewModels = [];
 
-    public CaptureOverlayViewModel()
+    public CaptureOverlayViewModel(IAppController appController)
     {
+        _appController = appController;
     }
 
     public void AddWindowViewModel(CaptureOverlayWindowViewModel newVM)
@@ -59,6 +62,11 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
                     }
 
                     windowViewModel.SelectedCaptureTypeIndex = windowVM.SelectedCaptureTypeIndex;
+                }
+
+                if (windowVM.SelectedCaptureType == Capture.CaptureType.AllScreens)
+                {
+                    _appController.PerformAllScreensCapture();
                 }
             }
         }

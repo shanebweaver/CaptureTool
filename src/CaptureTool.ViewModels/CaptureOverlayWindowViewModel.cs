@@ -44,14 +44,6 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
 
         switch (SelectedCaptureType)
         {
-            case CaptureType.Rectangle:
-                CaptureArea = Rectangle.Empty;
-                break;
-
-            case CaptureType.Window:
-                CaptureArea = Rectangle.Empty;
-                break;
-
             case CaptureType.FullScreen:
                 if (Monitor != null)
                 {
@@ -59,12 +51,12 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
                 }
                 break;
 
+            case CaptureType.Window:
+            case CaptureType.Rectangle:
             case CaptureType.Freeform:
-                CaptureArea = Rectangle.Empty;
-                break;
-
             case CaptureType.AllScreens:
-                _appController.PerformAllScreensCapture();
+            default:
+                CaptureArea = Rectangle.Empty;
                 break;
         }
     }

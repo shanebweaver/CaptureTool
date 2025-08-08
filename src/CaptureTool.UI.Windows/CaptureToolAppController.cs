@@ -328,6 +328,7 @@ internal partial class CaptureToolAppController : IAppController
         var imageFile = new ImageFile(tempPath);
         _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
         TryAutoSaveImage(imageFile);
+        _ = TryAutoCopyImageAsync(imageFile);
     }
 
     public nint GetMainWindowHandle()
