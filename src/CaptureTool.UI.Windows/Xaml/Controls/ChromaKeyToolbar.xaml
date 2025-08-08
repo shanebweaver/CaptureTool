@@ -70,10 +70,7 @@
     </UserControl.Resources>
 
     <Grid>
-        <CommandBar
-            IsDynamicOverflowEnabled="False"
-            IsOpen="False"
-            OverflowButtonVisibility="Collapsed">
+        <CommandBar IsDynamicOverflowEnabled="true" IsOpen="False">
 
             <!--  Key color  -->
             <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">

@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Edit;
 using CaptureTool.Edit.ChromaKey;
@@ -7,6 +8,7 @@ using CaptureTool.Edit.Drawable;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Storage;
+using CaptureTool.Services.Store;
 using CaptureTool.Services.Telemetry;
 using System;
 using System.Collections.ObjectModel;
@@ -35,12 +37,14 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         public static readonly string Print = "ImageEditPageViewModel_Print";
     }
 
+    private readonly IStoreService _storeService;
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
     private readonly ITelemetryService _telemetryService;
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
     private readonly IImageCanvasExporter _imageCanvasExporter;
     private readonly IFilePickerService _filePickerService;
+    private readonly IFeatureManager _featureManager;
 
     private ImageDrawable? _imageDrawable;
 
@@ -157,10 +161,17 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         }
     }
 
+    public bool _isChromaKeyEnabled;
+    public bool IsChromaKeyEnabled
+    {
+        get => _isChromaKeyEnabled;
+        set => Set(ref _isChromaKeyEnabled, value);
+    }
+
     public bool IsUndoRedoEnabled { get; }
-    public bool IsChromaKeyEnabled { get; }
 
     public ImageEditPageViewModel(
+        IStoreService storeService,
         IAppController appController,
         ICancellationService cancellationService,
         ITelemetryService telemetryService,
@@ -169,11 +180,13 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         IFilePickerService filePickerService,
         IFeatureManager featureManager)
     {
+        _storeService = storeService;
         _appController = appController;
         _cancellationService = cancellationService;
         _telemetryService = telemetryService;
         _imageCanvasPrinter = imageCanvasPrinter;
         _filePickerService = filePickerService;
+        _featureManager = featureManager;
 
         _drawables = [];
         _imageSize = new();
@@ -183,19 +196,9 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _chromaKeyTolerance = 30;
         _chromaKeyColor = Color.Empty;
         _selectedChromaKeyColorOptionIndex = 0;
+        _chromaKeyColorOptions = [];
 
         IsUndoRedoEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo);
-        IsChromaKeyEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey);
-
-        _chromaKeyColorOptions = [];
-        if (IsChromaKeyEnabled)
-        {
-            _chromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
-            foreach (var preset in ChromaKeyColorOptionPresets.All)
-            {
-                _chromaKeyColorOptions.Add(preset);
-            }
-        }
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -218,6 +221,21 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
                 _imageDrawable = new(topLeft, imageFile, ImageSize);
                 Drawables.Add(_imageDrawable);
+            }
+
+            bool isChromaKeyFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey);
+            if (isChromaKeyFeatureEnabled)
+            {
+                bool isChromaKeyEnabled = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval);
+                IsChromaKeyEnabled = isChromaKeyEnabled;
+                if (isChromaKeyEnabled)
+                {
+                    ChromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
+                    foreach (var preset in ChromaKeyColorOptionPresets.All)
+                    {
+                        ChromaKeyColorOptions.Add(preset);
+                    }
+                }
             }
 
             _telemetryService.ActivityCompleted(activityId);

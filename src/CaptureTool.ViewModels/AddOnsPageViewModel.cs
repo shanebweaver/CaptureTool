@@ -6,7 +6,7 @@ using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Store;
 using System.Threading;
 using System.Threading.Tasks;
-using static CaptureTool.Core.CaptureToolStoreProductIds;
+using static CaptureTool.Core.CaptureToolStoreProducts;
 
 namespace CaptureTool.ViewModels;
 
@@ -94,7 +94,10 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
             bool success = await _storeService.PurchaseAddonAsync(AddOns.ChromaKeyBackgroundRemoval, hwnd);
             IsChromaKeyAddOnAvailable = !success;
             IsChromaKeyAddOnOwned = success;
-            ChromaKeyAddOnPrice = _localizationService.GetString("AddOns_ItemOwned");
+            if (success)
+            {
+                ChromaKeyAddOnPrice = _localizationService.GetString("AddOns_ItemOwned");
+            }
         }
     }
 

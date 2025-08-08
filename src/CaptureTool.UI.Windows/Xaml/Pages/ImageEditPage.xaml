@@ -116,11 +116,12 @@
 
         <!--  Chroma key options  -->
         <Grid
-            Margin="8"
-            HorizontalAlignment="Center"
+            Margin="0,8"
+            HorizontalAlignment="Stretch"
             Row="1"
             Visibility="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}">
             <controls:ChromaKeyToolbar
+                HorizontalAlignment="Stretch"
                 ColorOptions="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
                 Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=TwoWay}"
                 SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=TwoWay}"

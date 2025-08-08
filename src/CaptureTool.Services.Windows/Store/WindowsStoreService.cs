@@ -30,10 +30,17 @@ public sealed partial class WindowsStoreService : IStoreService
             }
 
             var appLicense = await _storeContext.GetAppLicenseAsync();
-            if (appLicense.AddOnLicenses.TryGetValue(storeProductId, out var license))
+            StoreLicense? addOnLicense = null;
+            foreach (var licenseKvp in appLicense.AddOnLicenses)
             {
-                _licenseCache[storeProductId] = license;
-                return license.IsActive;
+                // license keys from store context have extra data appended on the end.
+                if (licenseKvp.Key.StartsWith(storeProductId))
+                {
+                    var licenseValue = licenseKvp.Value;
+                    addOnLicense = licenseValue;
+                    _licenseCache[storeProductId] = licenseValue;
+                    return licenseValue.IsActive;
+                }
             }
 
             return false;
