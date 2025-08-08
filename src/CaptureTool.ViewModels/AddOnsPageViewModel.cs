@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core;
+using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Store;
@@ -10,6 +11,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
 {
+    private readonly IAppController _appController;
     private readonly IStoreService _storeService;
     private readonly INavigationService _navigationService;
 
@@ -26,10 +28,12 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
     public bool IsChromaKeyFeatureEnabled { get; }
 
     public AddOnsPageViewModel(
+        IAppController appController,
         IStoreService storeService,
         INavigationService navigationService,
         IFeatureManager featureManager)
     {
+        _appController = appController;
         _storeService = storeService;
         _navigationService = navigationService;
 
@@ -57,7 +61,8 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
     {
         if (IsChromaKeyFeatureEnabled && !IsChromaKeyAddOnOwned)
         {
-            bool success = await _storeService.PurchaseAddonAsync(CaptureToolStoreProductIds.AddOns.ChromaKeyBackgroundRemoval);
+            var hwnd = _appController.GetMainWindowHandle();
+            bool success = await _storeService.PurchaseAddonAsync(CaptureToolStoreProductIds.AddOns.ChromaKeyBackgroundRemoval, hwnd);
             IsChromaKeyAddOnOwned = success;
         }
     }

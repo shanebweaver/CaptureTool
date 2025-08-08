@@ -58,8 +58,7 @@
             <MenuFlyoutItem
                 x:Uid="AppMenu_AddOnsItem"
                 Command="{x:Bind ViewModel.ShowAddOnsCommand}"
-                Icon="Shop"
-                Visibility="Collapsed" />
+                Icon="Shop" />
 
             <!--  About  -->
             <MenuFlyoutItem

@@ -49,10 +49,11 @@ public sealed partial class WindowsStoreService : IStoreService
     /// Prompts the user to purchase the specified add-on.
     /// Returns true if the purchase succeeded.
     /// </summary>
-    public async Task<bool> PurchaseAddonAsync(string storeProductId)
+    public async Task<bool> PurchaseAddonAsync(string storeProductId, nint hwnd)
     {
         try
         {
+            WinRT.Interop.InitializeWithWindow.Initialize(_storeContext, hwnd);
             var result = await _storeContext.RequestPurchaseAsync(storeProductId);
 
             switch (result.Status)
@@ -77,7 +78,6 @@ public sealed partial class WindowsStoreService : IStoreService
         }
         catch (Exception)
         {
-            // TODO: Optional: Log error
             return false;
         }
     }

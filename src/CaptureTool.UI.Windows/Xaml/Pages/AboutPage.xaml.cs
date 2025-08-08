@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace CaptureTool.UI.Windows.Xaml.Pages;
 
@@ -32,11 +33,12 @@ public sealed partial class AboutPage : AboutPageBase
             }
         };
 
+        string closeButtonText = new ResourceLoader().GetString("ContentDialog_Close");
         ContentDialog dialog = new()
         {
             XamlRoot = XamlRoot,
             Title = details.title,
-            PrimaryButtonText = "Close",
+            PrimaryButtonText = closeButtonText,
             Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
             DefaultButton = ContentDialogButton.Primary,
             Content = contentScrollView
@@ -44,18 +46,4 @@ public sealed partial class AboutPage : AboutPageBase
 
         _ = dialog.ShowAsync();
     }
-
-    //private void OnShowAboutAppRequested(object? sender, System.EventArgs e)
-    //{
-    //    ContentDialog dialog = new()
-    //    {
-    //        XamlRoot = XamlRoot,
-    //        PrimaryButtonText = "Close",
-    //        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-    //        DefaultButton = ContentDialogButton.Primary,
-    //        Content = new AppAboutView()
-    //    };
-
-    //    _ = dialog.ShowAsync();
-    //}
 }

@@ -52,14 +52,12 @@
                             <StackPanel Grid.Column="1" Padding="16,0,0,0">
                                 <TextBlock
                                     x:Uid="AddOns_ChromaKeyHeaderLabel"
-                                    Text="Chroma Key Background Removal"
                                     TextTrimming="WordEllipsis"
                                     TextWrapping="NoWrap" />
                                 <TextBlock
                                     x:Uid="AddOns_ChromaKeySubtitleLabel"
                                     FontSize="12"
                                     Opacity=".8"
-                                    Text="Isolate a target in front of a green or blue screen."
                                     TextTrimming="WordEllipsis"
                                     TextWrapping="NoWrap" />
                             </StackPanel>
@@ -75,12 +73,15 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition />
                             </Grid.RowDefinitions>
-                            <Grid Height="124">
-                                <FlipView HorizontalAlignment="Center" VerticalAlignment="Top">
-                                    <Image />
-                                    <Image />
-                                </FlipView>
-                            </Grid>
+
+                            <FlipView Height="124">
+                                <FlipViewItem KeyUp="FlipViewItem_KeyUp" Tapped="FlipViewItem_Tapped">
+                                    <Image x:Name="ChromaKeyImageOff" Source="/Assets/chroma-key-off_light.png" />
+                                </FlipViewItem>
+                                <FlipViewItem Tapped="FlipViewItem_Tapped">
+                                    <Image x:Name="ChromaKeyImageOn" Source="/Assets/chroma-key-on_light.png" />
+                                </FlipViewItem>
+                            </FlipView>
 
                             <Button
                                 Grid.Row="1"
@@ -89,6 +90,7 @@
                                 VerticalAlignment="Top"
                                 HorizontalContentAlignment="Left"
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                Command="{x:Bind ViewModel.GetChromaKeyAddOnCommand}"
                                 Foreground="{ThemeResource SystemAltHighColor}">
                                 <TextBlock FontWeight="SemiBold" Text="$0.99" />
                             </Button>

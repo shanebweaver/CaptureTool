@@ -541,4 +541,16 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Automatically save images to the screenshots folder after capture.</value>
     <comment>The subtitle for the auto save section on the settings page.</comment>
   </data>
+  <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
+    <value>Isolate a target in front of a green or blue screen.</value>
+    <comment>The subtitle for the chroma key feature on the add-ons page</comment>
+  </data>
+  <data name="AddOns_ChromaKeyHeaderLabel.Text" xml:space="preserve">
+    <value>Chroma Key Background Removal</value>
+    <comment>The header for the chroma key feature on the add-ons page</comment>
+  </data>
+  <data name="ContentDialog_Close" xml:space="preserve">
+    <value>Close</value>
+    <comment>The text for the close button in a content dialog</comment>
+  </data>
 </root>

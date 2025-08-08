@@ -60,13 +60,6 @@
                         <TextBlock x:Uid="About_PrivacyPolicy_ButtonLabel" TextWrapping="WrapWholeWords" />
                     </HyperlinkButton>
                 </StackPanel>
-
-                <!--<Button>
-                <TextBlock
-                    x:Uid="About_Feedback_ButtonLabel"
-                    MinWidth="124"
-                    TextAlignment="Center" />
-            </Button>-->
             </StackPanel>
         </StackPanel>
         <VisualStateManager.VisualStateGroups>
