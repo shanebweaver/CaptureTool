@@ -113,7 +113,7 @@
                 <Grid Margin="8,0">
                     <Slider
                         x:Uid="ChromaKeyToolbar_Desaturation"
-                        MaxWidth="218"
+                        MinWidth="218"
                         VerticalAlignment="Stretch"
                         VerticalContentAlignment="Stretch"
                         IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"

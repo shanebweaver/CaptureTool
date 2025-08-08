@@ -93,7 +93,14 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     public bool IsInCropMode
     {
         get => _isInCropMode;
-        set => Set(ref _isInCropMode, value);
+        set
+        {
+            Set(ref _isInCropMode, value);
+            if (value && _showChromaKeyOptions)
+            {
+                ShowChromaKeyOptions = false;
+            }
+        }
     }
 
     private Rectangle _cropRect;
@@ -107,7 +114,14 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     public bool ShowChromaKeyOptions
     {
         get => _showChromaKeyOptions;
-        set => Set(ref _showChromaKeyOptions, value);
+        set
+        {
+            Set(ref _showChromaKeyOptions, value);
+            if (value && _isInCropMode)
+            {
+                IsInCropMode = false;
+            }
+        }
     }
 
     private int _chromaKeyTolerance;

@@ -64,11 +64,9 @@ public sealed partial class ImageCanvas : UserControlBase
                 if (e.NewValue is bool isCropModeEnabled && isCropModeEnabled)
                 {
                     control.DimmedBackgroundRectangle.Visibility = Visibility.Visible;
-                    control.CanvasScrollView.ZoomMode = ScrollingZoomMode.Disabled;
                 }
                 else
                 {
-                    control.CanvasScrollView.ZoomMode = ScrollingZoomMode.Enabled;
                     control.DimmedBackgroundRectangle.Visibility = Visibility.Collapsed;
                 }
 

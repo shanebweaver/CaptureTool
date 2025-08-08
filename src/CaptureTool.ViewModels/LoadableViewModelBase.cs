@@ -10,7 +10,12 @@ public abstract partial class LoadableViewModelBase : ViewModelBase, ILoadable
     public LoadState LoadState
     {
         get => _loadState;
-        set => Set(ref _loadState, value);
+        set
+        {
+            Set(ref _loadState, value);
+            RaisePropertyChanged(nameof(IsLoaded));
+            RaisePropertyChanged(nameof(IsUnloaded));
+        }
     }
 
     public bool IsUnloaded => LoadState == LoadState.Unloaded;

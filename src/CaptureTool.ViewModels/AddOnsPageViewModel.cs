@@ -54,7 +54,7 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
         _storeService = storeService;
         _navigationService = navigationService;
         _localizationService = localizationService;
-        _chromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemNotAvailable");
+        _chromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
         IsChromaKeyFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey);
     }
 

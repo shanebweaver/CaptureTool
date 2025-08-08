@@ -522,7 +522,7 @@ By using this application, you acknowledge that you are responsible for managing
     <comment>The label for the button that allows the user to change the screenshots folder from the settings page.</comment>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value>Screenshots folder:</value>
+    <value>Saved images folder:</value>
     <comment>The label for the screenshots folder location on the settings page.</comment>
   </data>
   <data name="Settings_AutoSave_HeaderLabel.Text" xml:space="preserve">
@@ -538,7 +538,7 @@ By using this application, you acknowledge that you are responsible for managing
     <comment>The subtitle for the auto copy section on the settings page.</comment>
   </data>
   <data name="Settings_AutoSave_SubtitleLabel.Text" xml:space="preserve">
-    <value>Automatically save images to the screenshots folder after capture.</value>
+    <value>Automatically save images to a folder after capture.</value>
     <comment>The subtitle for the auto save section on the settings page.</comment>
   </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">

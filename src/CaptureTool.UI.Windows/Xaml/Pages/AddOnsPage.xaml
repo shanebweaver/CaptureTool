@@ -89,12 +89,24 @@
                                 Padding="12,16"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Top"
-                                HorizontalContentAlignment="Left"
+                                HorizontalContentAlignment="Stretch"
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                 Command="{x:Bind ViewModel.GetChromaKeyAddOnCommand}"
                                 Foreground="{ThemeResource SystemAltHighColor}"
                                 IsEnabled="{x:Bind ViewModel.IsChromaKeyAddOnAvailable, Mode=OneWay}">
-                                <TextBlock FontWeight="SemiBold" Text="{x:Bind ViewModel.ChromaKeyAddOnPrice, Mode=OneWay}" />
+                                <Grid>
+                                    <ProgressRing
+                                        Width="16"
+                                        Height="16"
+                                        HorizontalAlignment="Center"
+                                        IsActive="True"
+                                        Visibility="{x:Bind ViewModel.IsUnloaded, Mode=OneWay}" />
+                                    <TextBlock
+                                        HorizontalAlignment="Left"
+                                        FontWeight="SemiBold"
+                                        Text="{x:Bind ViewModel.ChromaKeyAddOnPrice, Mode=OneWay}"
+                                        Visibility="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
+                                </Grid>
                             </Button>
                         </Grid>
                         <Grid
