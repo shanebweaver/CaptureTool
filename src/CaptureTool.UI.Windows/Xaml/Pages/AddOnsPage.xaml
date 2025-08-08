@@ -92,7 +92,7 @@
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                 Command="{x:Bind ViewModel.GetChromaKeyAddOnCommand}"
                                 Foreground="{ThemeResource SystemAltHighColor}">
-                                <TextBlock FontWeight="SemiBold" Text="$0.99" />
+                                <TextBlock FontWeight="SemiBold" Text="{x:Bind ViewModel.ChromaKeyAddOnPrice, Mode=OneWay}" />
                             </Button>
                         </Grid>
                         <Grid

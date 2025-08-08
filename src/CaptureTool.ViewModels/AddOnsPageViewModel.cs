@@ -25,6 +25,13 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
         set => Set(ref  _isChromaKeyAddOnOwned, value);
     }
 
+    private string _chromaKeyAddOnPrice = string.Empty;
+    public string ChromaKeyAddOnPrice
+    {
+        get => _chromaKeyAddOnPrice;
+        set => Set(ref _chromaKeyAddOnPrice, value);
+    }
+
     public bool IsChromaKeyFeatureEnabled { get; }
 
     public AddOnsPageViewModel(
@@ -46,6 +53,7 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
         if (addOn != null)
         {
             IsChromaKeyAddOnOwned = addOn.IsOwned;
+            ChromaKeyAddOnPrice = addOn.Price;
         }
         
         await base.LoadAsync(parameter, cancellationToken);
@@ -53,7 +61,8 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
 
     public override void Unload()
     {
-        IsChromaKeyAddOnOwned = false;
+        _isChromaKeyAddOnOwned = false;
+        _chromaKeyAddOnPrice = string.Empty;
         base.Unload();
     }
 

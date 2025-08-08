@@ -94,7 +94,7 @@ public sealed partial class WindowsStoreService : IStoreService
             var result = await _storeContext.GetStoreProductsAsync(productKinds, storeIds);
             if (result.Products.TryGetValue(storeProductId, out var product))
             {
-                StoreAddOn addOn = new(product.InAppOfferToken, product.IsInUserCollection);
+                StoreAddOn addOn = new(product.InAppOfferToken, product.IsInUserCollection, product.Price.FormattedPrice);
                 return addOn;
             }
             return null;
