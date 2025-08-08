@@ -441,7 +441,13 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="AddOns_ChromaKeyHeaderLabel.Text" xml:space="preserve">
     <value />
   </data>
-  <data name="ContentDialog_Close" xml:space="preserve">
+  <data name="AddOns_ChromaKeyDescription.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AddOns_ItemNotAvailable" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AddOns_ItemOwned" xml:space="preserve">
     <value />
   </data>
 </root>

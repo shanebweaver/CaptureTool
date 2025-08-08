@@ -18,7 +18,6 @@
             BasedOn="{StaticResource DefaultButtonStyle}"
             TargetType="Button">
             <Setter Property="Height" Value="96" />
-            <Setter Property="Width" Value="96" />
             <Setter Property="MinHeight" Value="96" />
             <Setter Property="MinWidth" Value="96" />
             <Setter Property="CornerRadius" Value="12" />

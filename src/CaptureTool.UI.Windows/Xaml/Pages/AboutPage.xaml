@@ -29,7 +29,7 @@
                 </Button>
                 <TextBlock
                     x:Uid="About_TitleLabel"
-                    Style="{StaticResource TitleTextBlockStyle}"
+                    Style="{StaticResource SubtitleTextBlockStyle}"
                     TextWrapping="WrapWholeWords" />
             </StackPanel>
 

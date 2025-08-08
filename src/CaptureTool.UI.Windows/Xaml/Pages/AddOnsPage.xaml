@@ -27,7 +27,7 @@
                 </Button>
                 <TextBlock
                     x:Uid="AddOns_TitleLabel"
-                    Style="{StaticResource TitleTextBlockStyle}"
+                    Style="{StaticResource SubtitleTextBlockStyle}"
                     TextWrapping="WrapWholeWords" />
             </StackPanel>
 
@@ -36,8 +36,9 @@
                 Margin="54,0"
                 HorizontalAlignment="Stretch">
                 <Expander
+                    MaxWidth="800"
                     HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Left"
+                    HorizontalContentAlignment="Stretch"
                     IsExpanded="True">
                     <Expander.Header>
                         <Grid Padding="0,12">
@@ -63,10 +64,10 @@
                             </StackPanel>
                         </Grid>
                     </Expander.Header>
-                    <Grid ColumnSpacing="12">
+                    <Grid HorizontalAlignment="Stretch" ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="200" />
-                            <ColumnDefinition MaxWidth="500" />
+                            <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <Grid RowSpacing="12">
                             <Grid.RowDefinitions>
@@ -91,36 +92,23 @@
                                 HorizontalContentAlignment="Left"
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                 Command="{x:Bind ViewModel.GetChromaKeyAddOnCommand}"
-                                Foreground="{ThemeResource SystemAltHighColor}">
+                                Foreground="{ThemeResource SystemAltHighColor}"
+                                IsEnabled="{x:Bind ViewModel.IsChromaKeyAddOnAvailable, Mode=OneWay}">
                                 <TextBlock FontWeight="SemiBold" Text="{x:Bind ViewModel.ChromaKeyAddOnPrice, Mode=OneWay}" />
                             </Button>
                         </Grid>
                         <Grid
                             Grid.Column="1"
-                            HorizontalAlignment="Left"
-                            RowSpacing="8">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition />
-                            </Grid.RowDefinitions>
-                            <TextBlock
-                                MaxLines="2"
-                                Text="Prepare images for online storefronts."
-                                TextTrimming="WordEllipsis"
-                                TextWrapping="WrapWholeWords" />
-                            <TextBlock
-                                Grid.Row="1"
-                                MaxLines="2"
-                                Text="Isolate the target in front of a green or blue screen."
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="WrapWholeWords" />
-                            <TextBlock
-                                Grid.Row="2"
-                                MaxLines="3"
-                                Text="Adjust the tolerance to remove the background, then desaturate the key color to cleanup the edges."
-                                TextTrimming="WordEllipsis"
-                                TextWrapping="WrapWholeWords" />
+                            MaxHeight="202"
+                            VerticalAlignment="Top">
+                            <ScrollView>
+                                <Grid Padding="0,0,8,0">
+                                    <TextBlock
+                                        x:Uid="AddOns_ChromaKeyDescription"
+                                        TextTrimming="WordEllipsis"
+                                        TextWrapping="WrapWholeWords" />
+                                </Grid>
+                            </ScrollView>
                         </Grid>
                     </Grid>
                 </Expander>

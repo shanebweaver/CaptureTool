@@ -474,7 +474,7 @@ By using this application, you acknowledge that you are responsible for managing
     <comment>The text for the header of the key color combo box in the chroma key toolbar.</comment>
   </data>
   <data name="ChromaKeyToolbar_Tolerance.Header" xml:space="preserve">
-    <value>Key tolerance</value>
+    <value>Key removal</value>
     <comment>The text for the header of the tolerance slider in the chroma key toolbar.</comment>
   </data>
   <data name="ChromaKeyToolbar_Desaturation.Header" xml:space="preserve">
@@ -548,6 +548,22 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="AddOns_ChromaKeyHeaderLabel.Text" xml:space="preserve">
     <value>Chroma Key Background Removal</value>
     <comment>The header for the chroma key feature on the add-ons page</comment>
+  </data>
+  <data name="AddOns_ChromaKeyDescription.Text" xml:space="preserve">
+    <value>Prepare images for online storefronts.  
+
+Isolate the target in front of a green or blue screen.  
+
+Adjust the tolerance to remove the background, then desaturate the key color to cleanup the edges.</value>
+    <comment>The description of the chroma key feature on the add-ons page.</comment>
+  </data>
+  <data name="AddOns_ItemNotAvailable" xml:space="preserve">
+    <value>Unavailable</value>
+    <comment>The label for the purchase button when an add on is not available for purchase.</comment>
+  </data>
+  <data name="AddOns_ItemOwned" xml:space="preserve">
+    <value>Owned</value>
+    <comment>The label for the purchase button when an add on is already owned.</comment>
   </data>
   <data name="ContentDialog_Close" xml:space="preserve">
     <value>Close</value>

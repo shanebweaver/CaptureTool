@@ -93,7 +93,7 @@
                 <Grid Margin="8,0">
                     <Slider
                         x:Uid="ChromaKeyToolbar_Tolerance"
-                        Width="148"
+                        Width="218"
                         IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
                         Maximum="100"
                         Minimum="0"
@@ -116,7 +116,7 @@
                 <Grid Margin="8,0">
                     <Slider
                         x:Uid="ChromaKeyToolbar_Desaturation"
-                        Width="148"
+                        Width="218"
                         VerticalAlignment="Stretch"
                         VerticalContentAlignment="Stretch"
                         IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
