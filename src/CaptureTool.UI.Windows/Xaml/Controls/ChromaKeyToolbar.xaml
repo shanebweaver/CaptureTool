@@ -78,7 +78,7 @@
                     <ComboBox
                         x:Uid="ChromaKeyToolbar_KeyColor"
                         MinWidth="156"
-                        MinHeight="64"
+                        MinHeight="66"
                         ItemTemplateSelector="{StaticResource ChromaKeyColorOptionTemplateSelector}"
                         ItemsSource="{x:Bind ColorOptions, Mode=OneWay}"
                         SelectedIndex="{x:Bind SelectedColorOptionIndex, Mode=TwoWay}" />
