@@ -421,7 +421,7 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
     <value>Cambiar carpeta</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value>Carpeta de capturas de pantalla:</value>
+    <value>Carpeta de imágenes guardadas:</value>
   </data>
   <data name="Settings_AutoSave_HeaderLabel.Text" xml:space="preserve">
     <value>Guardar imágenes automáticamente</value>
@@ -436,22 +436,29 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
     <value>Guardar automáticamente las imágenes en la carpeta de capturas después de capturarlas.</value>
   </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Aísle un objeto frente a un fondo verde o azul.</value>
   </data>
   <data name="AddOns_ChromaKeyHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Eliminación de fondo por croma</value>
   </data>
   <data name="AddOns_ChromaKeyDescription.Text" xml:space="preserve">
-    <value />
+    <value>Prepare imágenes para escaparates en línea. 
+
+Aísle el objeto frente a un fondo verde o azul. Ajuste la tolerancia para eliminar el fondo y desature el color clave para limpiar los bordes.
+
+Ajuste la tolerancia para eliminar el fondo y desature el color clave para limpiar los bordes.</value>
   </data>
   <data name="AddOns_ItemNotAvailable" xml:space="preserve">
-    <value />
+    <value>No disponible</value>
   </data>
   <data name="AddOns_ItemOwned" xml:space="preserve">
-    <value />
+    <value>Ya adquirido</value>
+  </data>
+  <data name="ContentDialog_Close" xml:space="preserve">
+    <value>Cerrar</value>
   </data>
   <data name="AppMenu_OptionsMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>Opciones</value>
   </data>
   <data name="AppMenu_OptionsMenuItem.AccessKey" xml:space="preserve">
     <value>O</value>

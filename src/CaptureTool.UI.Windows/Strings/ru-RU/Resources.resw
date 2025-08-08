@@ -421,7 +421,7 @@
     <value>Изменить папку</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value>Папка для скриншотов:</value>
+    <value>Папка с сохранёнными изображениями:</value>
   </data>
   <data name="Settings_AutoSave_HeaderLabel.Text" xml:space="preserve">
     <value>Автоматическое сохранение изображений</value>
@@ -436,22 +436,29 @@
     <value>Автоматически сохранять изображения в папку скриншотов после захвата.</value>
   </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Изолируйте объект на фоне зелёного или синего экрана.</value>
   </data>
   <data name="AddOns_ChromaKeyHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Удаление фона по хромакею</value>
   </data>
   <data name="AddOns_ChromaKeyDescription.Text" xml:space="preserve">
-    <value />
+    <value>Подготовьте изображения для интернет-витрин. 
+
+Изолируйте объект на фоне зелёного или синего экрана. Настройте допуск для удаления фона, затем уменьшите насыщенность ключевого цвета для очистки краёв.
+
+Настройте допуск для удаления фона, затем уменьшите насыщенность ключевого цвета для очистки краёв.</value>
   </data>
   <data name="AddOns_ItemNotAvailable" xml:space="preserve">
-    <value />
+    <value>Недоступно</value>
   </data>
   <data name="AddOns_ItemOwned" xml:space="preserve">
-    <value />
+    <value>Уже приобретено</value>
+  </data>
+  <data name="ContentDialog_Close" xml:space="preserve">
+    <value>Закрыть</value>
   </data>
   <data name="AppMenu_OptionsMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>Параметры</value>
   </data>
   <data name="AppMenu_OptionsMenuItem.AccessKey" xml:space="preserve">
     <value>O</value>

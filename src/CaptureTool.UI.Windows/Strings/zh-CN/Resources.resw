@@ -421,7 +421,7 @@
     <value>更改文件夹</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value>截图文件夹：</value>
+    <value>已保存的图片文件夹：</value>
   </data>
   <data name="Settings_AutoSave_HeaderLabel.Text" xml:space="preserve">
     <value>自动保存图像</value>
@@ -436,22 +436,29 @@
     <value>捕获后自动将图像保存到截图文件夹中。</value>
   </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>将对象置于绿色或蓝色背景前。</value>
   </data>
   <data name="AddOns_ChromaKeyHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>色度键背景移除</value>
   </data>
   <data name="AddOns_ChromaKeyDescription.Text" xml:space="preserve">
-    <value />
+    <value>为在线商店准备图像。
+
+将对象置于绿色或蓝色背景前。调整容差以移除背景，然后降低关键颜色的饱和度以清理边缘。
+
+调整容差以移除背景，然后降低关键颜色的饱和度以清理边缘。</value>
   </data>
   <data name="AddOns_ItemNotAvailable" xml:space="preserve">
-    <value />
+    <value>不可用</value>
   </data>
   <data name="AddOns_ItemOwned" xml:space="preserve">
-    <value />
+    <value>已拥有</value>
+  </data>
+  <data name="ContentDialog_Close" xml:space="preserve">
+    <value>关闭</value>
   </data>
   <data name="AppMenu_OptionsMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>选项</value>
   </data>
   <data name="AppMenu_OptionsMenuItem.AccessKey" xml:space="preserve">
     <value>O</value>

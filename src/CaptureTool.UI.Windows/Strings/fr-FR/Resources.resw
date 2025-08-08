@@ -421,7 +421,7 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>Changer de dossier</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
-    <value>Dossier des captures d’écran :</value>
+    <value>Dossier des images enregistrées :</value>
   </data>
   <data name="Settings_AutoSave_HeaderLabel.Text" xml:space="preserve">
     <value>Enregistrement automatique des images</value>
@@ -436,22 +436,29 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>Enregistrer automatiquement les images dans le dossier des captures après la capture.</value>
   </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
-    <value />
+    <value>Isolez un objet devant un fond vert ou bleu.</value>
   </data>
   <data name="AddOns_ChromaKeyHeaderLabel.Text" xml:space="preserve">
-    <value />
+    <value>Suppression de fond par incrustation chromatique</value>
   </data>
   <data name="AddOns_ChromaKeyDescription.Text" xml:space="preserve">
-    <value />
+    <value>Préparez des images pour les vitrines en ligne. 
+
+Isolez l’objet devant un fond vert ou bleu. Ajustez la tolérance pour supprimer l’arrière-plan, puis désaturez la couleur clé pour nettoyer les bords.
+
+Ajustez la tolérance pour supprimer l’arrière-plan, puis désaturez la couleur clé pour nettoyer les bords.</value>
   </data>
   <data name="AddOns_ItemNotAvailable" xml:space="preserve">
-    <value />
+    <value>Indisponible</value>
   </data>
   <data name="AddOns_ItemOwned" xml:space="preserve">
-    <value />
+    <value>Déjà acquis</value>
+  </data>
+  <data name="ContentDialog_Close" xml:space="preserve">
+    <value>Fermer</value>
   </data>
   <data name="AppMenu_OptionsMenuItem.Title" xml:space="preserve">
-    <value />
+    <value>Options</value>
   </data>
   <data name="AppMenu_OptionsMenuItem.AccessKey" xml:space="preserve">
     <value>O</value>
