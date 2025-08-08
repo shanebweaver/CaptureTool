@@ -66,7 +66,7 @@
                     </Expander.Header>
                     <Grid HorizontalAlignment="Stretch" ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="150" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <Grid RowSpacing="12">
@@ -75,14 +75,18 @@
                                 <RowDefinition />
                             </Grid.RowDefinitions>
 
-                            <FlipView Height="124">
-                                <FlipViewItem KeyUp="FlipViewItem_KeyUp" Tapped="FlipViewItem_Tapped">
-                                    <Image x:Name="ChromaKeyImageOff" Source="/Assets/chroma-key-off_light.png" />
-                                </FlipViewItem>
-                                <FlipViewItem Tapped="FlipViewItem_Tapped">
-                                    <Image x:Name="ChromaKeyImageOn" Source="/Assets/chroma-key-on_light.png" />
-                                </FlipViewItem>
-                            </FlipView>
+                            <Grid
+                                Width="150"
+                                Height="150"
+                                BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4">
+                                <ProgressRing
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    IsActive="True" />
+                                <Image x:Name="ChromaKeyAddOnLogoImage" HorizontalAlignment="Stretch" />
+                            </Grid>
 
                             <Button
                                 Grid.Row="1"

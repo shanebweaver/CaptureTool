@@ -3,6 +3,7 @@ using CaptureTool.Core.AppController;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Store;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using static CaptureTool.Core.CaptureToolStoreProducts;
@@ -31,6 +32,13 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
     {
         get => _chromaKeyAddOnPrice;
         private set => Set(ref _chromaKeyAddOnPrice, value);
+    }
+
+    private Uri? _chromaKeyAddOnLogoImage;
+    public Uri? ChromaKeyAddOnLogoImage
+    {
+        get => _chromaKeyAddOnLogoImage;
+        private set => Set(ref _chromaKeyAddOnLogoImage, value);
     }
 
     private bool _isChromaKeyAddOnAvailable;
@@ -62,12 +70,14 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
             IsChromaKeyAddOnAvailable = !isOwned;
             IsChromaKeyAddOnOwned = isOwned;
             ChromaKeyAddOnPrice = isOwned ? _localizationService.GetString("AddOns_ItemOwned") : addOn.Price;
+            ChromaKeyAddOnLogoImage = addOn.LogoImage;
         }
         else
         {
             IsChromaKeyAddOnAvailable = false;
             IsChromaKeyAddOnOwned = false;
             ChromaKeyAddOnPrice = _localizationService.GetString("AddOns_ItemNotAvailable");
+            ChromaKeyAddOnLogoImage = null;
         }
 
         await base.LoadAsync(parameter, cancellationToken);
@@ -78,6 +88,7 @@ public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
         _isChromaKeyAddOnAvailable = false;
         _isChromaKeyAddOnOwned = false;
         _chromaKeyAddOnPrice = string.Empty;
+        _chromaKeyAddOnLogoImage = null;
         base.Unload();
     }
 

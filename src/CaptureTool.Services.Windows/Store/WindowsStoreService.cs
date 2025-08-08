@@ -2,6 +2,7 @@
 using CaptureTool.Services.Telemetry;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Services.Store;
 
@@ -115,7 +116,8 @@ public sealed partial class WindowsStoreService : IStoreService
             StoreAddOn? addOn = null;
             if (queryResult.Products.TryGetValue(storeProductId, out var product))
             {
-                addOn = new(product.InAppOfferToken, product.IsInUserCollection, product.Price.FormattedPrice);
+                StoreImage? logoImage = product.Images.Where(i => i.ImagePurposeTag == "Logo").FirstOrDefault();
+                addOn = new(product.InAppOfferToken, product.IsInUserCollection, product.Price.FormattedPrice, logoImage?.Uri);
             }
 
             _telemetryService.ActivityCompleted(activityId);
