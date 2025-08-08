@@ -569,4 +569,12 @@ Adjust the tolerance to remove the background, then desaturate the key color to 
     <value>Close</value>
     <comment>The text for the close button in a content dialog</comment>
   </data>
+  <data name="AppMenu_OptionsMenuItem.Title" xml:space="preserve">
+    <value>Options</value>
+    <comment>The label for the options section in the app menu.</comment>
+  </data>
+  <data name="AppMenu_OptionsMenuItem.AccessKey" xml:space="preserve">
+    <value>O</value>
+    <comment>The access key for the options menu.</comment>
+  </data>
 </root>

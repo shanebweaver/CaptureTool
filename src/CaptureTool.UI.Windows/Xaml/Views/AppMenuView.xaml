@@ -35,12 +35,6 @@
             </MenuFlyoutItem>
             <MenuFlyoutSeparator />
 
-            <!--  Settings  -->
-            <MenuFlyoutItem
-                x:Uid="AppMenu_SettingsItem"
-                Command="{x:Bind ViewModel.NavigateToSettingsCommand}"
-                Icon="Setting" />
-
             <!--  Exit  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_ExitItem"
@@ -52,14 +46,23 @@
             </MenuFlyoutItem>
         </MenuBarItem>
 
-        <!--  Help  -->
-        <MenuBarItem x:Uid="AppMenu_HelpMenuItem">
+        <!--  Options  -->
+        <MenuBarItem x:Uid="AppMenu_OptionsMenuItem">
             <!--  Add-ons  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_AddOnsItem"
                 Command="{x:Bind ViewModel.ShowAddOnsCommand}"
                 Icon="Shop" />
 
+            <!--  Settings  -->
+            <MenuFlyoutItem
+                x:Uid="AppMenu_SettingsItem"
+                Command="{x:Bind ViewModel.NavigateToSettingsCommand}"
+                Icon="Setting" />
+        </MenuBarItem>
+
+        <!--  Help  -->
+        <MenuBarItem x:Uid="AppMenu_HelpMenuItem">
             <!--  About  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_AboutItem"
