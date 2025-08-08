@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Services.Store;
+using CaptureTool.Services.Telemetry;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,11 +9,13 @@ namespace CaptureTool.Services.Windows.Store;
 
 public sealed partial class WindowsStoreService : IStoreService
 {
+    private readonly ITelemetryService _telemetryService;
     private readonly StoreContext _storeContext;
     private readonly Dictionary<string, StoreLicense> _licenseCache;
 
-    public WindowsStoreService()
+    public WindowsStoreService(ITelemetryService telemetryService)
     {
+        _telemetryService = telemetryService;
         _storeContext = StoreContext.GetDefault();
         _licenseCache = [];
     }
@@ -22,8 +25,11 @@ public sealed partial class WindowsStoreService : IStoreService
     /// </summary>
     public async Task<bool> IsAddonPurchasedAsync(string storeProductId)
     {
+        string activityId = $"{nameof(WindowsStoreService)}.{nameof(IsAddonPurchasedAsync)}";
         try
         {
+            _telemetryService.ActivityInitiated(activityId);
+
             if (_licenseCache.TryGetValue(storeProductId, out var cachedLicense))
             {
                 return cachedLicense.IsActive;
@@ -34,20 +40,21 @@ public sealed partial class WindowsStoreService : IStoreService
             foreach (var licenseKvp in appLicense.AddOnLicenses)
             {
                 // license keys from store context have extra data appended on the end.
-                if (licenseKvp.Key.StartsWith(storeProductId))
+                if (licenseKvp.Key.StartsWith(storeProductId) && licenseKvp.Value.IsActive)
                 {
                     var licenseValue = licenseKvp.Value;
                     addOnLicense = licenseValue;
                     _licenseCache[storeProductId] = licenseValue;
-                    return licenseValue.IsActive;
+                    return true;
                 }
             }
 
+            _telemetryService.ActivityCompleted(activityId);
             return false;
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            // TODO: Log error
+            _telemetryService.ActivityError(activityId, e);
             return false;
         }
     }
@@ -58,33 +65,35 @@ public sealed partial class WindowsStoreService : IStoreService
     /// </summary>
     public async Task<bool> PurchaseAddonAsync(string storeProductId, nint hwnd)
     {
+        string activityId = $"{nameof(WindowsStoreService)}.{nameof(PurchaseAddonAsync)}";
         try
         {
-            WinRT.Interop.InitializeWithWindow.Initialize(_storeContext, hwnd);
-            var result = await _storeContext.RequestPurchaseAsync(storeProductId);
+            _telemetryService.ActivityInitiated(activityId);
 
-            switch (result.Status)
+            WinRT.Interop.InitializeWithWindow.Initialize(_storeContext, hwnd);
+            StorePurchaseResult purchaseResult = await _storeContext.RequestPurchaseAsync(storeProductId);
+
+            bool success = false;
+            if (purchaseResult.Status == StorePurchaseStatus.Succeeded)
             {
-                case StorePurchaseStatus.Succeeded:
-                    var appLicense = await _storeContext.GetAppLicenseAsync();
-                    if (appLicense.AddOnLicenses.TryGetValue(storeProductId, out var newLicense))
-                    {
-                        _licenseCache[storeProductId] = newLicense;
-                        return true;
-                    }
-                    return false;
-                case StorePurchaseStatus.AlreadyPurchased:
-                    return true;
-                case StorePurchaseStatus.NotPurchased:
-                    // User cancelled
-                    return false;
-                default:
-                    // Network error or unknown error
-                    return false;
+                var appLicense = await _storeContext.GetAppLicenseAsync();
+                if (appLicense.AddOnLicenses.TryGetValue(storeProductId, out var newLicense))
+                {
+                    _licenseCache[storeProductId] = newLicense;
+                }
+                success = true;
             }
+            else if (purchaseResult.Status == StorePurchaseStatus.AlreadyPurchased)
+            {
+                success = true;
+            }
+
+            _telemetryService.ActivityCompleted(activityId);
+            return success;
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            _telemetryService.ActivityError(activityId, e);
             return false;
         }
     }
@@ -94,20 +103,27 @@ public sealed partial class WindowsStoreService : IStoreService
     /// </summary>
     public async Task<StoreAddOn?> GetAddonProductInfoAsync(string storeProductId)
     {
+        string activityId = $"{nameof(WindowsStoreService)}.{nameof(GetAddonProductInfoAsync)}";
         try
         {
+            _telemetryService.ActivityInitiated(activityId);
+
             IList<string> productKinds = [ "Durable" ];
             IList<string> storeIds = [ storeProductId ];
-            var result = await _storeContext.GetStoreProductsAsync(productKinds, storeIds);
-            if (result.Products.TryGetValue(storeProductId, out var product))
+            StoreProductQueryResult queryResult = await _storeContext.GetStoreProductsAsync(productKinds, storeIds);
+
+            StoreAddOn? addOn = null;
+            if (queryResult.Products.TryGetValue(storeProductId, out var product))
             {
-                StoreAddOn addOn = new(product.InAppOfferToken, product.IsInUserCollection, product.Price.FormattedPrice);
-                return addOn;
+                addOn = new(product.InAppOfferToken, product.IsInUserCollection, product.Price.FormattedPrice);
             }
-            return null;
+
+            _telemetryService.ActivityCompleted(activityId);
+            return addOn;
         }
-        catch
+        catch (Exception e)
         {
+            _telemetryService.ActivityError(activityId, e);
             return null;
         }
     }
