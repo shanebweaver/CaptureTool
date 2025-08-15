@@ -16,7 +16,7 @@
         <converters:ColorHexStringConverter x:Key="ColorHexStringConverter" />
 
         <DataTemplate x:Key="EmptyTemplate" x:DataType="chromakey:ChromaKeyColorOption">
-            <Grid Margin="0,2,0,0" ColumnSpacing="8">
+            <Grid Margin="0,2" ColumnSpacing="8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition />
@@ -42,7 +42,7 @@
         </DataTemplate>
 
         <DataTemplate x:Key="ColorTemplate" x:DataType="chromakey:ChromaKeyColorOption">
-            <Grid Margin="0,2,0,0" ColumnSpacing="8">
+            <Grid Margin="0,2" ColumnSpacing="8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition />
@@ -87,50 +87,50 @@
 
             <!--  Tolerance  -->
             <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
-                <Grid Margin="8,0">
-                    <Slider
-                        x:Uid="ChromaKeyToolbar_Tolerance"
-                        MinWidth="218"
-                        IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
-                        Maximum="100"
-                        Minimum="0"
-                        SnapsTo="StepValues"
-                        StepFrequency="1"
-                        TickFrequency="5"
-                        TickPlacement="Outside"
-                        Value="{x:Bind Tolerance, Mode=TwoWay}">
-                        <Slider.HeaderTemplate>
-                            <DataTemplate>
-                                <TextBlock Margin="0,0,0,6" Text="{Binding}" />
-                            </DataTemplate>
-                        </Slider.HeaderTemplate>
-                    </Slider>
-                </Grid>
+                <StackPanel Margin="4,0" Spacing="8">
+                    <TextBlock x:Uid="ChromaKeyToolbar_Tolerance" />
+
+                    <DropDownButton Padding="2,2,14,2" IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}">
+                        <NumberBox
+                            Background="Transparent"
+                            BorderThickness="0"
+                            LargeChange="5"
+                            Maximum="99"
+                            Minimum="1"
+                            SmallChange="1"
+                            Value="{x:Bind Tolerance, Mode=TwoWay}" />
+
+                        <DropDownButton.Flyout>
+                            <Flyout>
+                                <ListBox Background="Transparent" ItemsSource="{x:Bind ToleranceOptions}" />
+                            </Flyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                </StackPanel>
             </AppBarElementContainer>
 
             <!--  Desaturation  -->
             <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
-                <Grid Margin="8,0">
-                    <Slider
-                        x:Uid="ChromaKeyToolbar_Desaturation"
-                        MinWidth="218"
-                        VerticalAlignment="Stretch"
-                        VerticalContentAlignment="Stretch"
-                        IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}"
-                        Maximum="100"
-                        Minimum="0"
-                        SnapsTo="StepValues"
-                        StepFrequency="1"
-                        TickFrequency="5"
-                        TickPlacement="Outside"
-                        Value="{x:Bind Desaturation, Mode=TwoWay}">
-                        <Slider.HeaderTemplate>
-                            <DataTemplate>
-                                <TextBlock Margin="0,0,0,6" Text="{Binding}" />
-                            </DataTemplate>
-                        </Slider.HeaderTemplate>
-                    </Slider>
-                </Grid>
+                <StackPanel Margin="4,0" Spacing="8">
+                    <TextBlock x:Uid="ChromaKeyToolbar_Desaturation" />
+
+                    <DropDownButton Padding="2,2,14,2" IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}">
+                        <NumberBox
+                            Background="Transparent"
+                            BorderThickness="0"
+                            LargeChange="5"
+                            Maximum="99"
+                            Minimum="1"
+                            SmallChange="1"
+                            Value="{x:Bind Desaturation, Mode=TwoWay}" />
+
+                        <DropDownButton.Flyout>
+                            <Flyout>
+                                <ListBox Background="Transparent" ItemsSource="{x:Bind DesaturationOptions}" />
+                            </Flyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                </StackPanel>
             </AppBarElementContainer>
         </CommandBar>
     </Grid>

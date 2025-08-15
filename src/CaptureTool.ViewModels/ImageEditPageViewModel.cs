@@ -43,6 +43,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     private readonly ITelemetryService _telemetryService;
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
     private readonly IImageCanvasExporter _imageCanvasExporter;
+    private readonly IChromaKeyService _chromaKeyService;
     private readonly IFilePickerService _filePickerService;
 
     private ImageDrawable? _imageDrawable;
@@ -191,6 +192,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         IImageCanvasPrinter imageCanvasPrinter,
         IImageCanvasExporter imageCanvasExporter,
         IFilePickerService filePickerService,
+        IChromaKeyService chromaKeyService,
         IFeatureManager featureManager)
     {
         _storeService = storeService;
@@ -198,6 +200,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _cancellationService = cancellationService;
         _telemetryService = telemetryService;
         _imageCanvasPrinter = imageCanvasPrinter;
+        _chromaKeyService = chromaKeyService;
         _filePickerService = filePickerService;
 
         _drawables = [];
@@ -233,16 +236,21 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
                 _imageDrawable = new(topLeft, imageFile, ImageSize);
                 Drawables.Add(_imageDrawable);
-            }
 
-            bool isChromaKeyEnabled = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval);
-            IsChromaKeyEnabled = isChromaKeyEnabled;
-            if (isChromaKeyEnabled)
-            {
-                ChromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
-                foreach (var preset in ChromaKeyColorOptionPresets.All)
+                bool isChromaKeyEnabled = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval);
+                IsChromaKeyEnabled = isChromaKeyEnabled;
+                if (isChromaKeyEnabled)
                 {
-                    ChromaKeyColorOptions.Add(preset);
+                    // Empty option disables the effect.
+                    ChromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
+
+                    // Add top detected colors
+                    var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 5, 4);
+                    foreach (var topColor in topColors)
+                    {
+                        ChromaKeyColorOption colorOption = new(topColor);
+                        ChromaKeyColorOptions.Add(colorOption);
+                    }
                 }
             }
 

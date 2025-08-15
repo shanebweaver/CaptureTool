@@ -384,10 +384,10 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="ChromaKeyToolbar_KeyColor.Header" xml:space="preserve">
     <value>Schlüssel­farbe</value>
   </data>
-  <data name="ChromaKeyToolbar_Tolerance.Header" xml:space="preserve">
+  <data name="ChromaKeyToolbar_Tolerance.Text" xml:space="preserve">
     <value>Schlüssel­toleranz</value>
   </data>
-  <data name="ChromaKeyToolbar_Desaturation.Header" xml:space="preserve">
+  <data name="ChromaKeyToolbar_Desaturation.Text" xml:space="preserve">
     <value>Schlüssel-Entsättigung</value>
   </data>
   <data name="AddOns_TitleLabel.Text" xml:space="preserve">

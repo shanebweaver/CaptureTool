@@ -33,7 +33,22 @@
                     <KeyboardAccelerator x:Uid="AppMenu_OpenFileItem_KeyboardAccelerator" />
                 </MenuFlyoutItem.KeyboardAccelerators>
             </MenuFlyoutItem>
+
             <MenuFlyoutSeparator />
+
+            <!--  Add-ons  -->
+            <MenuFlyoutItem
+                x:Uid="AppMenu_AddOnsItem"
+                Command="{x:Bind ViewModel.ShowAddOnsCommand}"
+                Icon="Shop"
+                IsEnabled="False"
+                Visibility="Collapsed" />
+
+            <!--  Settings  -->
+            <MenuFlyoutItem
+                x:Uid="AppMenu_SettingsItem"
+                Command="{x:Bind ViewModel.NavigateToSettingsCommand}"
+                Icon="Setting" />
 
             <!--  Exit  -->
             <MenuFlyoutItem
@@ -44,21 +59,6 @@
                     <KeyboardAccelerator x:Uid="AppMenu_ExitItem_KeyboardAccelerator" />
                 </MenuFlyoutItem.KeyboardAccelerators>
             </MenuFlyoutItem>
-        </MenuBarItem>
-
-        <!--  Options  -->
-        <MenuBarItem x:Uid="AppMenu_OptionsMenuItem">
-            <!--  Add-ons  -->
-            <MenuFlyoutItem
-                x:Uid="AppMenu_AddOnsItem"
-                Command="{x:Bind ViewModel.ShowAddOnsCommand}"
-                Icon="Shop" />
-
-            <!--  Settings  -->
-            <MenuFlyoutItem
-                x:Uid="AppMenu_SettingsItem"
-                Command="{x:Bind ViewModel.NavigateToSettingsCommand}"
-                Icon="Setting" />
         </MenuBarItem>
 
         <!--  Help  -->

@@ -384,10 +384,10 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="ChromaKeyToolbar_KeyColor.Header" xml:space="preserve">
     <value>Color clave</value>
   </data>
-  <data name="ChromaKeyToolbar_Tolerance.Header" xml:space="preserve">
+  <data name="ChromaKeyToolbar_Tolerance.Text" xml:space="preserve">
     <value>Tolerancia de clave</value>
   </data>
-  <data name="ChromaKeyToolbar_Desaturation.Header" xml:space="preserve">
+  <data name="ChromaKeyToolbar_Desaturation.Text" xml:space="preserve">
     <value>Desaturación de clave</value>
   </data>
   <data name="AddOns_TitleLabel.Text" xml:space="preserve">

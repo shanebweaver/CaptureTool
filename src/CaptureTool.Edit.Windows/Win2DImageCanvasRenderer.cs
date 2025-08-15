@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Edit.Drawable;
+using CaptureTool.Edit.Windows.ChromaKey;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.UI;
@@ -81,6 +82,7 @@ public static partial class Win2DImageCanvasRenderer
 
     private static void DrawImage(ImageDrawable drawable, CanvasDrawingSession drawingSession)
     {
+        ChromaKeyProcessor processor = new();
         ICanvasImage? preparedImage = drawable.GetPreparedImage();
         if (preparedImage != null)
         {
@@ -93,10 +95,9 @@ public static partial class Win2DImageCanvasRenderer
                     imageChromaKeyEffect.Color.B);
                 var tolerance = imageChromaKeyEffect.Tolerance;
                 var desaturation = imageChromaKeyEffect.Desaturation;
-                var finalResult = ApplyChromaCleanup(preparedImage, keyColor, tolerance, desaturation);
 
                 drawingSession.Clear(Colors.White);
-                drawingSession.DrawImage(finalResult, drawable.Offset);
+                processor.DrawChromaKeyMaskedImage(drawingSession, preparedImage, drawable.Offset, keyColor, tolerance, desaturation);
             }
             else
             {
@@ -110,102 +111,5 @@ public static partial class Win2DImageCanvasRenderer
     {
         ICanvasImage prepared = await CanvasBitmap.LoadAsync(resourceCreator, imageDrawable.FileName.Path);
         imageDrawable.SetPreparedImage(prepared);
-    }
-
-    public static ICanvasImage ApplyChromaCleanup(
-        ICanvasImage originalImage,
-        Color chromaColor,
-        float keyTolerance = 0.1f,
-        float desaturation = 0f,
-        float blur = 0.0f
-    )
-    {
-        // Step 1: Remove the background
-        var chromaKeyRemoved = new ChromaKeyEffect
-        {
-            Source = originalImage,
-            Color = chromaColor,
-            Tolerance = keyTolerance,
-            InvertAlpha = false,
-            Feather = true,
-        };
-
-        // Step 2: Create mask of pixels matching chroma color (for desaturation)
-        var chromaColorMask = new ChromaKeyEffect
-        {
-            Source = originalImage,
-            Color = chromaColor,
-            Tolerance = desaturation,
-            InvertAlpha = true,
-            Feather = false,
-        };
-
-        // Step 3: Extract alpha from chromaKeyRemoved as second mask
-        var chromaKeyAlphaMask = new OpacityEffect
-        {
-            Source = chromaKeyRemoved
-        };
-
-        // Step 4: Combine both masks with ArithmeticCompositeEffect
-        var combinedMask = new ArithmeticCompositeEffect
-        {
-            Source1 = chromaColorMask,
-            Source2 = chromaKeyAlphaMask,
-            MultiplyAmount = 1,
-            Source1Amount = 0,
-            Source2Amount = 0,
-            Offset = 0
-        };
-
-        ICanvasImage finalMask = combinedMask;
-
-        if (blur > 0f)
-        {
-            finalMask = new GaussianBlurEffect
-            {
-                Source = combinedMask,
-                BlurAmount = blur,
-                Optimization = EffectOptimization.Balanced
-            };
-        }
-
-        // Step 5: Create desaturated version of the original image
-        var desaturated = new ColorMatrixEffect
-        {
-            Source = originalImage,
-            ColorMatrix = new Matrix5x4
-            {
-                M11 = 0.3f,
-                M12 = 0.3f,
-                M13 = 0.3f,
-                M21 = 0.59f,
-                M22 = 0.59f,
-                M23 = 0.59f,
-                M31 = 0.11f,
-                M32 = 0.11f,
-                M33 = 0.11f,
-                M44 = 1f,
-            }
-        };
-
-        // Step 6: Mask the desaturated version with the combined mask
-        var maskedDesaturated = new AlphaMaskEffect
-        {
-            Source = desaturated,
-            AlphaMask = finalMask
-        };
-
-        // Step 7: Composite the masked grayscale image over the background-removed image
-        var final = new CompositeEffect
-        {
-            Mode = CanvasComposite.SourceOver,
-            Sources =
-            {
-                chromaKeyRemoved,
-                maskedDesaturated
-            }
-        };
-
-        return final;
     }
 }

@@ -35,6 +35,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
             SuggestedStartLocation = PickerLocationId.PicturesLibrary
         };
         filePicker.FileTypeFilter.Add(".png");
+        filePicker.FileTypeFilter.Add(".jpg");
 
         WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
 
@@ -53,6 +54,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         {
 #pragma warning disable IDE0028 // Simplify collection initialization
             filePicker.FileTypeChoices.Add("PNG", new List<string>() { ".png" });
+            filePicker.FileTypeChoices.Add("JPG", new List<string>() { ".jpg" });
 #pragma warning restore IDE0028 // Simplify collection initialization
         }
 

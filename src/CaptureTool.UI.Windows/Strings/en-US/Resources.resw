@@ -473,11 +473,11 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Key color</value>
     <comment>The text for the header of the key color combo box in the chroma key toolbar.</comment>
   </data>
-  <data name="ChromaKeyToolbar_Tolerance.Header" xml:space="preserve">
+  <data name="ChromaKeyToolbar_Tolerance.Text" xml:space="preserve">
     <value>Key removal</value>
     <comment>The text for the header of the tolerance slider in the chroma key toolbar.</comment>
   </data>
-  <data name="ChromaKeyToolbar_Desaturation.Header" xml:space="preserve">
+  <data name="ChromaKeyToolbar_Desaturation.Text" xml:space="preserve">
     <value>Key desaturation</value>
     <comment>The text for the header of the desaturation slider in the chroma key toolbar.</comment>
   </data>

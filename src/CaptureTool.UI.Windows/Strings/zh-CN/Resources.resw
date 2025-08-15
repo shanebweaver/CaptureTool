@@ -384,10 +384,10 @@
   <data name="ChromaKeyToolbar_KeyColor.Header" xml:space="preserve">
     <value>键颜色</value>
   </data>
-  <data name="ChromaKeyToolbar_Tolerance.Header" xml:space="preserve">
+  <data name="ChromaKeyToolbar_Tolerance.Text" xml:space="preserve">
     <value>键容差</value>
   </data>
-  <data name="ChromaKeyToolbar_Desaturation.Header" xml:space="preserve">
+  <data name="ChromaKeyToolbar_Desaturation.Text" xml:space="preserve">
     <value>键颜色去饱和</value>
   </data>
   <data name="AddOns_TitleLabel.Text" xml:space="preserve">

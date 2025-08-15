@@ -71,6 +71,9 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
         private set => Set(ref _areEffectOptionsEnabled, value);
     }
 
+    public int[] ToleranceOptions = [.. Enumerable.Range(1, 99)];
+    public int[] DesaturationOptions = [.. Enumerable.Range(1, 99)];
+
     public ChromaKeyToolbar()
     {
         InitializeComponent();

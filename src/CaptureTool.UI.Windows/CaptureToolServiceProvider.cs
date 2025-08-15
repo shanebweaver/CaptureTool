@@ -1,6 +1,8 @@
 ﻿using CaptureTool.Core.AppController;
 using CaptureTool.Edit;
+using CaptureTool.Edit.ChromaKey;
 using CaptureTool.Edit.Windows;
+using CaptureTool.Edit.Windows.ChromaKey;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
@@ -16,8 +18,8 @@ using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
 using CaptureTool.Services.Windows.Localization;
 using CaptureTool.Services.Windows.Storage;
-using CaptureTool.Services.Windows.TaskEnvironment;
 using CaptureTool.Services.Windows.Store;
+using CaptureTool.Services.Windows.TaskEnvironment;
 using CaptureTool.Services.Windows.Themes;
 using CaptureTool.ViewModels;
 using CaptureTool.ViewModels.Factories;
@@ -44,6 +46,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
 
         // Windows Services
         collection.AddSingleton<IStoreService, WindowsStoreService>();
+        collection.AddSingleton<IChromaKeyService, Win2DChromaKeyService>();
         collection.AddSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();
         collection.AddSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
         collection.AddSingleton<IFilePickerService, WindowsFilePickerService>();
