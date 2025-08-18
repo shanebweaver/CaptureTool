@@ -4,4 +4,8 @@
     <UseVSTest>true</UseVSTest>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -6,7 +6,7 @@ namespace CaptureTool.Services.Cancellation;
 
 public sealed partial class CancellationService : ICancellationService, IDisposable
 {
-    private readonly CancellationTokenSource _rootTokenSource;
+    private CancellationTokenSource _rootTokenSource;
     private bool disposed;
 
     public CancellationService()
@@ -16,12 +16,26 @@ public sealed partial class CancellationService : ICancellationService, IDisposa
 
     public CancellationTokenSource GetLinkedCancellationTokenSource(CancellationToken? cancellationToken = null)
     {
+        if (_rootTokenSource.IsCancellationRequested)
+        {
+            Reset();
+        }
+
         if (cancellationToken is not null)
         {
             return CancellationTokenSource.CreateLinkedTokenSource(_rootTokenSource.Token, cancellationToken.Value);
         }
 
         return CancellationTokenSource.CreateLinkedTokenSource(_rootTokenSource.Token);
+    }
+
+    public void Reset()
+    {
+        if (!_rootTokenSource.TryReset())
+        {
+            _rootTokenSource.Dispose();
+            _rootTokenSource = new();
+        }
     }
 
     public void CancelAll()
