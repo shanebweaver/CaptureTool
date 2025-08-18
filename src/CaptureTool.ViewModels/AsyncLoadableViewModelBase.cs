@@ -1,8 +1,10 @@
 ﻿using CaptureTool.Common.Loading;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public abstract partial class LoadableViewModelBase : ViewModelBase, ILoadable
+public abstract partial class AsyncLoadableViewModelBase : ViewModelBase, IAsyncLoadable
 {
     private LoadState _loadState;
     public LoadState LoadState
@@ -19,9 +21,10 @@ public abstract partial class LoadableViewModelBase : ViewModelBase, ILoadable
     public bool IsUnloaded => LoadState == LoadState.Unloaded;
     public bool IsLoaded => LoadState == LoadState.Loaded;
 
-    public virtual void Load(object? parameter)
+    public virtual Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
         LoadingComplete();
+        return Task.CompletedTask;
     }
 
     public virtual void Unload()

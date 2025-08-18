@@ -31,9 +31,13 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
 
         try
         {
-            if (ViewModel is ILoadable loadable && loadable.IsUnloaded)
+            if (ViewModel is IAsyncLoadable asyncLoadable && asyncLoadable.IsUnloaded)
             {
-                await loadable.LoadAsync(null, _loadCts.Token);
+                await asyncLoadable.LoadAsync(null, _loadCts.Token);
+            }
+            else if (ViewModel is ILoadable loadable && loadable.IsUnloaded)
+            {
+                loadable.Load(null);
             }
         }
         catch (OperationCanceledException ex)
@@ -55,9 +59,9 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
             _loadCts = null;
         }
 
-        if (ViewModel is ILoadable loadable && loadable.IsLoaded)
+        if (ViewModel is IUnloadable unloadable)
         {
-            loadable.Unload();
+            unloadable.Unload();
         }
     }
 }

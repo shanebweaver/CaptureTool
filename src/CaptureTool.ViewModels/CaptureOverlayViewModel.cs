@@ -40,7 +40,7 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
             {
                 OnCaptureAreaChanged(windowVM);
             }
-            else if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.SelectedCaptureModeIndex))
+            else if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.SelectedCaptureMode))
             {
                 foreach (var windowViewModel in _windowViewModels)
                 {

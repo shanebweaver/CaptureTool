@@ -7,9 +7,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:templateselectors="using:CaptureTool.UI.Windows.Xaml.TemplateSelectors"
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
     mc:Ignorable="d">
-
     <Grid
         x:Name="ToolbarPanel"
         Margin="0,12,0,0"
@@ -26,9 +26,16 @@
                 Margin="0,0,8,0"
                 SelectedIndex="{x:Bind SelectedCaptureModeIndex, Mode=TwoWay}"
                 SelectionMode="Single"
+                SingleSelectionFollowsFocus="True"
                 Visibility="{x:Bind IsVideoCaptureEnabled, Mode=OneWay}">
-                <toolkit:SegmentedItem Icon="Camera" IsSelected="True" />
-                <toolkit:SegmentedItem Icon="Video" />
+                <toolkit:SegmentedItem
+                    x:Name="ImageTypeMenuItem"
+                    x:Load="{x:Bind IsCaptureModeSupported(capture:CaptureMode.Image), Mode=OneWay}"
+                    Icon="Camera" />
+                <toolkit:SegmentedItem
+                    x:Name="VideoTypeMenuItem"
+                    x:Load="{x:Bind IsCaptureModeSupported(capture:CaptureMode.Video), Mode=OneWay}"
+                    Icon="Video" />
             </toolkit:Segmented>
 
             <!--  Capture type  -->
@@ -39,7 +46,7 @@
                 BorderThickness="0"
                 SelectedIndex="{x:Bind SelectedCaptureTypeIndex, Mode=TwoWay}"
                 Visibility="Visible">
-                <ComboBoxItem IsEnabled="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Rectangle), Mode=OneWay}">
+                <ComboBoxItem x:Name="RectangleModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Rectangle), Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource RectangularClipping}" />
                         <TextBlock x:Uid="CaptureType_Rectangle" />

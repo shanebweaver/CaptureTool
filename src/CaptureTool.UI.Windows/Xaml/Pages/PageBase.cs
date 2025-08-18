@@ -25,9 +25,13 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
 
         try
         {
-            if (ViewModel is ILoadable loadable && loadable.IsUnloaded)
+            if (ViewModel is IAsyncLoadable asyncLoadable && asyncLoadable.IsUnloaded)
             {
-                await loadable.LoadAsync(e.Parameter, _loadCts.Token);
+                await asyncLoadable.LoadAsync(e.Parameter, _loadCts.Token);
+            }
+            else if (ViewModel is ILoadable loadable && loadable.IsUnloaded)
+            {
+                loadable.Load(e.Parameter);
             }
         }
         catch (OperationCanceledException ex)
@@ -52,9 +56,9 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
             _loadCts = null;
         }
 
-        if (ViewModel is ILoadable loadable && loadable.IsLoaded)
+        if (ViewModel is IUnloadable unloadable)
         {
-            loadable.Unload();
+            unloadable.Unload();
         }
 
         base.OnNavigatedFrom(e);

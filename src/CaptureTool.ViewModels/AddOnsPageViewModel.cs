@@ -10,7 +10,7 @@ using static CaptureTool.Core.CaptureToolStoreProducts;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class AddOnsPageViewModel : LoadableViewModelBase
+public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 {
     private readonly IAppController _appController;
     private readonly IStoreService _storeService;

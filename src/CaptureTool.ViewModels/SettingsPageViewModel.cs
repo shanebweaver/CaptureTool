@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class SettingsPageViewModel : LoadableViewModelBase
+public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 {
     private readonly struct ActivityIds
     {

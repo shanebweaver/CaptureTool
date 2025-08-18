@@ -18,7 +18,6 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
         DispatcherQueue.TryEnqueue(() =>
         {
             UpdateRequestedAppTheme();
-            LoadBackgroundImage();
         });
 
         Loaded += CaptureOverlayWindowView_Loaded;
@@ -38,9 +37,14 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
         SecretEscapeButton.Click += OnEscapeRequested;
         SelectionOverlay.SelectionComplete += SelectionOverlay_SelectionComplete;
 
-        SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
-        SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
-        SelectionOverlay.CaptureType = ViewModel.SelectedCaptureType;
+        if (ViewModel.IsLoaded)
+        {
+            SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
+            SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
+            SelectionOverlay.CaptureType = ViewModel.SelectedCaptureType ?? 0;
+
+            LoadBackgroundImage();
+        }
     }
 
     private void CaptureOverlayWindowView_Unloaded(object sender, RoutedEventArgs e)
@@ -60,13 +64,16 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
         switch (e.PropertyName)
         {
             case nameof(CaptureOverlayWindowViewModel.SelectedCaptureType):
-                SelectionOverlay.CaptureType = ViewModel.SelectedCaptureType;
+                SelectionOverlay.CaptureType = ViewModel.SelectedCaptureType ?? 0;
                 break;
             case nameof(CaptureOverlayWindowViewModel.CaptureArea):
                 SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
                 break;
             case nameof(CaptureOverlayWindowViewModel.MonitorWindows):
                 SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
+                break;
+            case nameof(CaptureOverlayWindowViewModel.Monitor):
+                LoadBackgroundImage();
                 break;
         }
     }

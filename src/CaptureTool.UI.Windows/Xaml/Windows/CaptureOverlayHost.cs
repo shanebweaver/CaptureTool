@@ -43,6 +43,9 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
         foreach (var monitor in monitors)
         {
+            if (!monitor.IsPrimary)
+                continue;
+
             _monitors.Add(monitor);
 
             // Scale window dimensions per monitor.

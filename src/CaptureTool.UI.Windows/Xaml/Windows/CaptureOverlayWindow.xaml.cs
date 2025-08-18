@@ -4,6 +4,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
@@ -37,7 +38,10 @@ public sealed partial class CaptureOverlayWindow : Window
 
         InitializeComponent();
 
-        ViewModel.Load(monitor, monitorWindows, options);
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _ = ViewModel.LoadAsync((monitor, monitorWindows, options), CancellationToken.None);
+        });
     }
 
     private void CaptureOverlayWindow_Closed(object sender, WindowEventArgs args)
@@ -54,11 +58,17 @@ public sealed partial class CaptureOverlayWindow : Window
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            if (!IsClosed && args.WindowActivationState != WindowActivationState.Deactivated)
+            try
             {
-                // Must call SetForegroundWindow or focus will not move to the new window on activation.
-                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-                global::Windows.Win32.PInvoke.SetForegroundWindow(new(hwnd));
+                if (!IsClosed && args.WindowActivationState != WindowActivationState.Deactivated)
+                {
+                    // Must call SetForegroundWindow or focus will not move to the new window on activation.
+                    var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+                    global::Windows.Win32.PInvoke.SetForegroundWindow(new(hwnd));
+                }
+            }
+            catch
+            {
             }
         });
     }

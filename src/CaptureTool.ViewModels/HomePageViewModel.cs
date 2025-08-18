@@ -1,4 +1,5 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Capture;
+using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Telemetry;
@@ -40,7 +41,8 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
         try
         {
-            _appController.ShowCaptureOverlay();
+            CaptureOptions options = new(CaptureMode.Image, CaptureType.Rectangle);
+            _appController.ShowCaptureOverlay(options);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -56,8 +58,9 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
         try
         {
-            throw new NotImplementedException();
-            //_telemetryService.ActivityCompleted(activityId);
+            CaptureOptions options = new(CaptureMode.Video, CaptureType.FullScreen);
+            _appController.ShowCaptureOverlay(options);
+            _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
         {

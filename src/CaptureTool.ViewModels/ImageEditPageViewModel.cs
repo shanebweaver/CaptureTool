@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
+public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
 {
     private readonly struct ActivityIds
     {

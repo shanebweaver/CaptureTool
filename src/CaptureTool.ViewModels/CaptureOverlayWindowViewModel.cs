@@ -7,10 +7,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
+public sealed partial class CaptureOverlayWindowViewModel : AsyncLoadableViewModelBase
 {
     private readonly IThemeService _themeService;
     private readonly IAppController _appController;
@@ -34,14 +37,13 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         set
         {
             Set(ref _selectedCaptureTypeIndex, value);
+            RaisePropertyChanged(nameof(SelectedCaptureType));
             OnSelectedCaptureTypeIndexChanged();
         }
     }
 
     private void OnSelectedCaptureTypeIndexChanged()
     {
-        RaisePropertyChanged(nameof(SelectedCaptureType));
-
         switch (SelectedCaptureType)
         {
             case CaptureType.FullScreen:
@@ -74,15 +76,13 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         get => _selectedCaptureModeIndex;
         set
         {
-            if (Set(ref _selectedCaptureModeIndex, value))
-            {
-                RaisePropertyChanged(nameof(SelectedCaptureMode));
-            }
+            Set(ref _selectedCaptureModeIndex, value);
+            RaisePropertyChanged(nameof(SelectedCaptureMode));
         }
     }
 
-    public CaptureMode SelectedCaptureMode => SupportedCaptureModes[SelectedCaptureModeIndex];
-    public CaptureType SelectedCaptureType => SupportedCaptureTypes[Math.Min(SelectedCaptureTypeIndex, SupportedCaptureTypes.Count - 1)];
+    public CaptureMode? SelectedCaptureMode => SupportedCaptureModes[Math.Min(SelectedCaptureTypeIndex, SupportedCaptureModes.Count - 1)];
+    public CaptureType? SelectedCaptureType => SupportedCaptureTypes[Math.Min(SelectedCaptureTypeIndex, SupportedCaptureTypes.Count - 1)];
 
     private Rectangle _captureArea;
     public Rectangle CaptureArea
@@ -143,7 +143,6 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         {
             _supportedCaptureModes.Add(CaptureMode.Video);
         }
-        _selectedCaptureModeIndex = 0;
 
         _supportedCaptureTypes = [CaptureType.Rectangle];
          _supportedCaptureTypes.Add(CaptureType.Window);
@@ -153,26 +152,32 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
             _supportedCaptureTypes.Add(CaptureType.Freeform);
         }
         _supportedCaptureTypes.Add(CaptureType.AllScreens);
-        _selectedCaptureTypeIndex = 0;
     }
 
-    public void Load(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows, CaptureOptions options)
+    public override Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        Monitor = monitor;
-        MonitorWindows = [.. monitorWindows];
+        StartLoading();
 
-        if (SupportedCaptureModes.Contains(options.CaptureMode))
+        if (parameter is (MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows, CaptureOptions options))
         {
-            SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(options.CaptureMode);
+            Monitor = monitor;
+            MonitorWindows = [.. monitorWindows];
+
+            if (SupportedCaptureModes.Contains(options.CaptureMode))
+            {
+                SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(options.CaptureMode);
+            }
+
+            if (SupportedCaptureTypes.Contains(options.CaptureType))
+            {
+                SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(options.CaptureType);
+            }
         }
 
-        if (SupportedCaptureTypes.Contains(options.CaptureType))
-        {
-            SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(options.CaptureType);
-        }
+        return base.LoadAsync(parameter, cancellationToken);
     }
 
-    public void Unload()
+    public override void Unload()
     {
         _selectedCaptureTypeIndex = default;
         _selectedCaptureModeIndex = default;

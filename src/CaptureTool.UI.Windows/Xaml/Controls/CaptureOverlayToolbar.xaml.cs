@@ -2,6 +2,7 @@ using CaptureTool.Capture;
 using Microsoft.UI.Xaml;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;
 
@@ -9,7 +10,7 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
 {
     public static readonly DependencyProperty SupportedCaptureTypesProperty = DependencyProperty.Register(
         nameof(SupportedCaptureTypes),
-        typeof(ICollection<CaptureType>),
+        typeof(IEnumerable<CaptureType>),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
@@ -21,7 +22,7 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
 
     public static readonly DependencyProperty SupportedCaptureModesProperty = DependencyProperty.Register(
         nameof(SupportedCaptureModes),
-        typeof(ICollection<CaptureMode>),
+        typeof(IEnumerable<CaptureMode>),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
@@ -37,9 +38,9 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
-    public ICollection<CaptureType> SupportedCaptureTypes
+    public IEnumerable<CaptureType> SupportedCaptureTypes
     {
-        get => Get<ICollection<CaptureType>>(SupportedCaptureTypesProperty);
+        get => Get<IEnumerable<CaptureType>>(SupportedCaptureTypesProperty);
         set => Set(SupportedCaptureTypesProperty, value);
     }
 
@@ -49,9 +50,9 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         set => Set(SelectedCaptureTypeIndexProperty, value);
     }
 
-    public ICollection<CaptureMode> SupportedCaptureModes
+    public IEnumerable<CaptureMode> SupportedCaptureModes
     {
-        get => Get<ICollection<CaptureMode>>(SupportedCaptureModesProperty);
+        get => Get<IEnumerable<CaptureMode>>(SupportedCaptureModesProperty);
         set => Set(SupportedCaptureModesProperty, value);
     }
 
@@ -84,6 +85,16 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         if (SupportedCaptureTypes != null)
         {
             return SupportedCaptureTypes.Contains(captureType);
+        }
+
+        return false;
+    }
+
+    private bool IsCaptureModeSupported(CaptureMode captureMode)
+    {
+        if (SupportedCaptureModes != null)
+        {
+            return SupportedCaptureModes.Contains(captureMode);    
         }
 
         return false;
