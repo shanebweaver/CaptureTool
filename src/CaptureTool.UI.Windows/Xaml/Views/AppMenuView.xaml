@@ -41,8 +41,8 @@
                 x:Uid="AppMenu_AddOnsItem"
                 Command="{x:Bind ViewModel.ShowAddOnsCommand}"
                 Icon="Shop"
-                IsEnabled="False"
-                Visibility="Collapsed" />
+                IsEnabled="{x:Bind ViewModel.ShowAddOnsOption}"
+                Visibility="{x:Bind ViewModel.ShowAddOnsOption}" />
 
             <!--  Settings  -->
             <MenuFlyoutItem

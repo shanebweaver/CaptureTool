@@ -24,12 +24,12 @@
             <AppBarToggleButton
                 x:Uid="ImageEdit_ChromaKeyButton"
                 IsChecked="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=TwoWay}"
-                Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}">
+                Visibility="{x:Bind ViewModel.IsChromaKeyAddOnOwned, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="{StaticResource Color}" />
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
-            <AppBarSeparator Visibility="{x:Bind ViewModel.IsChromaKeyEnabled, Mode=OneWay}" />
+            <AppBarSeparator Visibility="{x:Bind ViewModel.IsChromaKeyAddOnOwned, Mode=OneWay}" />
             <!--  Crop and orientation  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_CropButton"

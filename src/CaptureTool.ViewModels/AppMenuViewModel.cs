@@ -1,6 +1,7 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
@@ -35,16 +36,21 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     public RelayCommand ShowAddOnsCommand => new(ShowAddOns); 
     public RelayCommand ExitApplicationCommand => new(ExitApplication);
 
+    public bool ShowAddOnsOption { get; }
+
     public AppMenuViewModel(
         ITelemetryService telemetryService,
         IAppController appController,
         INavigationService navigationService,
-        IFilePickerService filePickerService)
+        IFilePickerService filePickerService,
+        IFeatureManager featureManager)
     {
         _telemetryService = telemetryService;
         _appController = appController;
         _navigationService = navigationService;
         _filePickerService = filePickerService;
+
+        ShowAddOnsOption = featureManager.IsEnabled(CaptureToolFeatures.Feature_AddOns_Store);
     }
 
     private void NewImageCapture()
