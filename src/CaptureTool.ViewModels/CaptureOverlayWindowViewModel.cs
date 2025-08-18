@@ -120,7 +120,6 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
     }
 
     public bool IsVideoCaptureEnabled { get; }
-    public bool IsWindowModeEnabled { get; }
     public bool IsFreeformModeEnabled { get; }
 
     public CaptureOverlayWindowViewModel(
@@ -137,7 +136,6 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         CurrentAppTheme = _themeService.CurrentTheme;
 
         IsVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
-        IsWindowModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_WindowMode);
         IsFreeformModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_FreeformMode);
 
         _supportedCaptureModes = [ CaptureMode.Image ];
@@ -148,10 +146,7 @@ public sealed partial class CaptureOverlayWindowViewModel : ViewModelBase
         _selectedCaptureModeIndex = 0;
 
         _supportedCaptureTypes = [CaptureType.Rectangle];
-        if (IsWindowModeEnabled)
-        {
-            _supportedCaptureTypes.Add(CaptureType.Window);
-        }
+         _supportedCaptureTypes.Add(CaptureType.Window);
         _supportedCaptureTypes.Add(CaptureType.FullScreen);
         if (IsFreeformModeEnabled)
         {

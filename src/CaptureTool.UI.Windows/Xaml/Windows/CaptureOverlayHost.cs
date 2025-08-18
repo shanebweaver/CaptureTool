@@ -5,6 +5,7 @@ using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using Windows.Win32;
 using WinRT.Interop;
@@ -44,9 +45,19 @@ internal sealed partial class CaptureOverlayHost : IDisposable
         {
             _monitors.Add(monitor);
 
-            var monitorWindows = allWindows.Select(w => w.Position).Where(p =>
-                monitor.MonitorBounds.IntersectsWith(p) ||
-                monitor.MonitorBounds.Contains(p));
+            // Scale window dimensions per monitor.
+            var monitorBounds = monitor.MonitorBounds;
+            var scale = monitor.Scale;
+            var monitorWindows = allWindows
+                .Select(w => w.Position)
+                .Where(p =>
+                    monitorBounds.IntersectsWith(p) ||
+                    monitorBounds.Contains(p))
+                .Select(r => new Rectangle(
+                    (int)((r.X - monitorBounds.X) / scale),
+                    (int)((r.Y - monitorBounds.Y) / scale),
+                    (int)(r.Width / scale),
+                    (int)(r.Height / scale)));
 
             var window = new CaptureOverlayWindow(monitor, [.. monitorWindows], options);
             _windows.Add(window);

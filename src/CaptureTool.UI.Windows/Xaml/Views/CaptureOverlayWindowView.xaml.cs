@@ -37,6 +37,10 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
         Toolbar.CloseRequested += OnCloseRequested;
         SecretEscapeButton.Click += OnEscapeRequested;
         SelectionOverlay.SelectionComplete += SelectionOverlay_SelectionComplete;
+
+        SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
+        SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
+        SelectionOverlay.CaptureType = ViewModel.SelectedCaptureType;
     }
 
     private void CaptureOverlayWindowView_Unloaded(object sender, RoutedEventArgs e)
@@ -45,6 +49,10 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
         Toolbar.CloseRequested -= OnCloseRequested;
         SecretEscapeButton.Click -= OnEscapeRequested;
         SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;
+
+        SelectionOverlay.WindowRects = [];
+        SelectionOverlay.SelectionRect = Rectangle.Empty;
+        SelectionOverlay.CaptureType = 0;
     }
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
