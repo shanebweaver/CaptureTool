@@ -4,4 +4,8 @@
     <UseVSTest>true</UseVSTest>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.ViewModels\CaptureTool.ViewModels.csproj" />
+  </ItemGroup>
+
 </Project>
