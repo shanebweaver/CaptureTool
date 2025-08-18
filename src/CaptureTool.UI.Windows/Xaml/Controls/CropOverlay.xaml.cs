@@ -36,6 +36,8 @@ public sealed partial class CropOverlay : UserControlBase
         set => SetValue(CropRectProperty, value);
     }
 
+    public event EventHandler<Rectangle>? InteractionComplete;
+
     public CropOverlay()
     {
         InitializeComponent();
@@ -187,6 +189,8 @@ public sealed partial class CropOverlay : UserControlBase
         _dragMode = DragMode.Resize;
         ((UIElement)sender).CapturePointer(e.Pointer);
         e.Handled = true;
+
+        StartInteraction();
     }
 
     private void AnchorBox_AnchorMoved(object sender, PointerRoutedEventArgs e)
@@ -233,6 +237,8 @@ public sealed partial class CropOverlay : UserControlBase
             _dragMode = DragMode.Move;
             _lastPointerPosition = pos;
             CropBoundary.CapturePointer(e.Pointer);
+
+            StartInteraction();
             e.Handled = true;
         }
     }
@@ -258,6 +264,13 @@ public sealed partial class CropOverlay : UserControlBase
         }
     }
 
+    private Rectangle _oldCropRect = Rectangle.Empty;
+
+    private void StartInteraction()
+    {
+        _oldCropRect = CropRect;
+    }
+
     private void EndInteraction(object sender, PointerRoutedEventArgs e)
     {
         if (sender is UIElement element)
@@ -266,6 +279,9 @@ public sealed partial class CropOverlay : UserControlBase
         _dragMode = DragMode.None;
         _activeAnchor = null;
         ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
+
+        InteractionComplete?.Invoke(this, _oldCropRect);
+
         e.Handled = true;
     }
 

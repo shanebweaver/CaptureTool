@@ -5,12 +5,14 @@ using CaptureTool.Core.AppController;
 using CaptureTool.Edit;
 using CaptureTool.Edit.ChromaKey;
 using CaptureTool.Edit.Drawable;
+using CaptureTool.Edit.Operations;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Store;
 using CaptureTool.Services.Telemetry;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -48,19 +50,40 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
     private readonly IFeatureManager _featureManager;
 
     private ImageDrawable? _imageDrawable;
+    private readonly Stack<CanvasOperation> _operationsUndoStack;
+    private readonly Stack<CanvasOperation> _operationsRedoStack;
 
     public event EventHandler? InvalidateCanvasRequested;
 
+    // Public commands for use by the View.
     public RelayCommand CopyCommand => new(Copy);
     public RelayCommand ToggleCropModeCommand => new(ToggleCropMode);
     public RelayCommand SaveCommand => new(Save);
-    public RelayCommand UndoCommand => new(Undo, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo));
-    public RelayCommand RedoCommand => new(Redo, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo));
+    public RelayCommand UndoCommand => new(Undo);
+    public RelayCommand RedoCommand => new(Redo);
     public RelayCommand RotateCommand => new(Rotate);
     public RelayCommand FlipHorizontalCommand => new(() => Flip(FlipDirection.Horizontal));
     public RelayCommand FlipVerticalCommand => new(() => Flip(FlipDirection.Vertical));
     public RelayCommand PrintCommand => new(Print);
     public RelayCommand<Color> UpdateChromaKeyColorCommand => new(UpdateChromaKeyColor, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
+
+    // Private commands to handle undo/redo operations.
+    private RelayCommand<ImageOrientation> UpdateOrientationCommand => new(UpdateOrientation);
+    private RelayCommand<Rectangle> UpdateCropRectCommand => new(UpdateCropRect);
+
+    private bool _hasUndoStack;
+    public bool HasUndoStack
+    {
+        get => _hasUndoStack;
+        set => Set(ref _hasUndoStack, value);
+    }
+
+    private bool _hasRedoStack;
+    public bool HasRedoStack
+    {
+        get => _hasRedoStack;
+        set => Set(ref _hasRedoStack, value);
+    }
 
     private ObservableCollection<IDrawable> _drawables;
     public ObservableCollection<IDrawable> Drawables
@@ -183,8 +206,6 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         set => Set(ref _isChromaKeyAddOnOwned, value);
     }
 
-    public bool IsUndoRedoEnabled => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo);
-
     public ImageEditPageViewModel(
         IStoreService storeService,
         IAppController appController,
@@ -214,6 +235,8 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _chromaKeyColor = Color.Empty;
         _selectedChromaKeyColorOptionIndex = 0;
         _chromaKeyColorOptions = [];
+        _operationsUndoStack = [];
+        _operationsRedoStack = [];
     }
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -392,7 +415,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
     private void Undo()
     {
-        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo))
+        if (_operationsUndoStack.Count == 0)
         {
             return;
         }
@@ -401,7 +424,11 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            throw new NotImplementedException();
+            var operation = _operationsUndoStack.Pop();
+            _operationsRedoStack.Push(operation);
+            UpdateUndoRedoStackProperties();
+
+            operation.Undo();
         }
         catch (Exception e)
         {
@@ -411,7 +438,7 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
     private void Redo()
     {
-        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_UndoRedo))
+        if (_operationsRedoStack.Count == 0)
         {
             return;
         }
@@ -420,7 +447,11 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            throw new NotImplementedException();
+            var operation = _operationsRedoStack.Pop();
+            _operationsUndoStack.Push(operation);
+            UpdateUndoRedoStackProperties();
+
+            operation.Redo();
         }
         catch (Exception e)
         {
@@ -441,12 +472,30 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
             CropRect = newCropRect;
             Orientation = newOrientation;
 
+            _operationsRedoStack.Clear();
+            _operationsUndoStack.Push(new OrientationOperation(UpdateOrientationCommand, oldOrientation, newOrientation));
+            UpdateUndoRedoStackProperties();
+
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
         {
             _telemetryService.ActivityError(activityId, e);
         }
+    }
+
+    private void UpdateUndoRedoStackProperties()
+    {
+        HasUndoStack = _operationsUndoStack.Count > 0;
+        HasRedoStack = _operationsRedoStack.Count > 0;
+    }
+
+    private void UpdateOrientation(ImageOrientation newOrientation)
+    {
+        ImageOrientation oldOrientation = Orientation;
+        Rectangle newCropRect = ImageOrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
+        CropRect = newCropRect;
+        Orientation = newOrientation;
     }
 
     private void Flip(FlipDirection flipDirection)
@@ -461,9 +510,17 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
 
         try
         {
+            ImageOrientation oldOrientation = Orientation;
+            ImageOrientation newOrientation = ImageOrientationHelper.GetFlippedOrientation(Orientation, flipDirection);
             Size imageSize = ImageOrientationHelper.GetOrientedImageSize(ImageSize, Orientation);
-            CropRect = ImageOrientationHelper.GetFlippedCropRect(CropRect, imageSize, flipDirection);
-            Orientation = ImageOrientationHelper.GetFlippedOrientation(Orientation, flipDirection);
+            Rectangle newCropRect = ImageOrientationHelper.GetFlippedCropRect(CropRect, imageSize, flipDirection);
+
+            CropRect = newCropRect;
+            Orientation = newOrientation;
+
+            _operationsRedoStack.Clear();
+            _operationsUndoStack.Push(new OrientationOperation(UpdateOrientationCommand, oldOrientation, newOrientation));
+            UpdateUndoRedoStackProperties();
 
             _telemetryService.ActivityCompleted(activityId);
         }
@@ -486,5 +543,21 @@ public sealed partial class ImageEditPageViewModel : LoadableViewModelBase
         {
             _telemetryService.ActivityError(activityId, e);
         }
+    }
+
+    public void OnCropInteractionComplete(Rectangle oldCropRect)
+    {
+        Rectangle newCropRect = CropRect;
+        if (newCropRect != oldCropRect)
+        {
+            _operationsRedoStack.Clear();
+            _operationsUndoStack.Push(new CropOperation(UpdateCropRectCommand, oldCropRect, newCropRect));
+            UpdateUndoRedoStackProperties();
+        }
+    }
+
+    private void UpdateCropRect(Rectangle newCropRect)
+    {
+        CropRect = newCropRect;
     }
 }

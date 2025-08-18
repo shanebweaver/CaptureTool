@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 
 namespace CaptureTool.UI.Windows.Xaml.Pages;
 
@@ -24,5 +25,10 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void InvalidateCanvas()
     {
         DispatcherQueue.TryEnqueue(ImageCanvas.InvalidateCanvas);
+    }
+
+    private void ImageCanvas_InteractionComplete(object sender, Rectangle e)
+    {
+        ViewModel.OnCropInteractionComplete(e);
     }
 }

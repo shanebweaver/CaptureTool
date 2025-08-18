@@ -43,6 +43,7 @@
                 <local:CropOverlay
                     x:Name="CropOverlay"
                     CropRect="{x:Bind CropRect, Mode=TwoWay}"
+                    InteractionComplete="CropOverlay_InteractionComplete"
                     Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
             </Grid>
         </ScrollView>
