@@ -19,4 +19,8 @@ internal sealed partial class MockCancellationService : ICancellationService
     {
         return CancellationTokenSource.CreateLinkedTokenSource(cancellationToken ?? CancellationToken.None);
     }
+
+    public void Reset()
+    {
+    }
 }
