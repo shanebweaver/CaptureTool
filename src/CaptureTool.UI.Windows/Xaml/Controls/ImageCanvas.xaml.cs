@@ -250,7 +250,8 @@ public sealed partial class ImageCanvas : UserControlBase
     #region Drawing
     public void InvalidateCanvas()
     {
-        RenderCanvas.Invalidate();
+        UpdateDrawingCanvasSize();
+        ZoomAndCenter();
     }
 
     private void CanvasControl_Draw(CanvasControl sender, CanvasDrawEventArgs args)
