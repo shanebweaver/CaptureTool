@@ -490,14 +490,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
         HasRedoStack = _operationsRedoStack.Count > 0;
     }
 
-    private void UpdateOrientation(ImageOrientation newOrientation)
-    {
-        ImageOrientation oldOrientation = Orientation;
-        Rectangle newCropRect = ImageOrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
-        CropRect = newCropRect;
-        Orientation = newOrientation;
-    }
-
     private void Flip(FlipDirection flipDirection)
     {
         string activityId = flipDirection switch
@@ -556,8 +548,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
         }
     }
 
+    private void UpdateOrientation(ImageOrientation newOrientation)
+    {
+        ImageOrientation oldOrientation = Orientation;
+        Rectangle newCropRect = ImageOrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
+        CropRect = newCropRect;
+        Orientation = newOrientation;
+        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+    }
+
     private void UpdateCropRect(Rectangle newCropRect)
     {
         CropRect = newCropRect;
+        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 }
