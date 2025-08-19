@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -92,6 +91,8 @@ public static partial class MonitorCaptureHelper
                 dpiY: out uint dpiY
             );
 
+            var isPrimary = mi.monitorInfo.dwFlags == 1;// MONITORINFOF_PRIMARY;
+
             // Initialize handles
             HDC hdcScreen = default;
             HDC hdcMem = default;
@@ -164,7 +165,8 @@ public static partial class MonitorCaptureHelper
                     mi.monitorInfo.rcWork.left,
                     mi.monitorInfo.rcWork.top,
                     workW,
-                    workH)
+                    workH),
+                isPrimary
             ));
 
             return true;

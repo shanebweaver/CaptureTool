@@ -4,7 +4,6 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Threading;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
@@ -38,10 +37,7 @@ public sealed partial class CaptureOverlayWindow : Window
 
         InitializeComponent();
 
-        DispatcherQueue.TryEnqueue(() =>
-        {
-            _ = ViewModel.LoadAsync((monitor, monitorWindows, options), CancellationToken.None);
-        });
+        ViewModel.Load((monitor, monitorWindows, options));
     }
 
     private void CaptureOverlayWindow_Closed(object sender, WindowEventArgs args)

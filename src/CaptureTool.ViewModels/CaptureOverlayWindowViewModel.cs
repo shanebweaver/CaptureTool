@@ -7,13 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class CaptureOverlayWindowViewModel : AsyncLoadableViewModelBase
+public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBase
 {
     private readonly IThemeService _themeService;
     private readonly IAppController _appController;
@@ -21,7 +18,7 @@ public sealed partial class CaptureOverlayWindowViewModel : AsyncLoadableViewMod
     public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
 
-    public bool IsPrimary => Monitor?.MonitorBounds.Top == 0 && Monitor?.MonitorBounds.Left == 0;
+    public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
     private ObservableCollection<CaptureType> _supportedCaptureTypes;
     public ObservableCollection<CaptureType> SupportedCaptureTypes
@@ -154,10 +151,8 @@ public sealed partial class CaptureOverlayWindowViewModel : AsyncLoadableViewMod
         _supportedCaptureTypes.Add(CaptureType.AllScreens);
     }
 
-    public override Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    public override void Load(object? parameter)
     {
-        StartLoading();
-
         if (parameter is (MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows, CaptureOptions options))
         {
             Monitor = monitor;
@@ -174,7 +169,7 @@ public sealed partial class CaptureOverlayWindowViewModel : AsyncLoadableViewMod
             }
         }
 
-        return base.LoadAsync(parameter, cancellationToken);
+        base.Load(parameter);
     }
 
     public override void Unload()
