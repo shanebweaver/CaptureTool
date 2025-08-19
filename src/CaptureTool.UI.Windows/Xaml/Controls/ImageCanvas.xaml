@@ -32,6 +32,7 @@
             ZoomMode="Enabled">
             <Grid
                 x:Name="CanvasContainer"
+                Margin="24"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center">
 
