@@ -31,7 +31,12 @@ public static partial class WindowInfoHelper
                             return false;
                         }
 
-                        PInvoke.GetWindowRect(hWnd, out RECT rect);
+                        if (!DwmSafe.TryGetExtendedFrameBounds(hWnd, out RECT rect))
+                        {
+                            // fallback to normal rect if DWM call fails
+                            PInvoke.GetWindowRect(hWnd, out rect);
+                        }
+
                         windows.Add(new WindowInfo(hWnd, title, rect));
                     }
                     finally
