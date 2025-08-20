@@ -95,23 +95,17 @@ internal partial class CaptureToolAppController : IAppController
                 // PrtSc key modern behavior.
                 // Windows 11 has a global setting and will only call ms-screenclip if the user want to show the capture app.
                 // In Windows Settings > Accessibility > Keyboard, "Use the Print screen key to open screen capture"
-                PerformAllScreensCapture();
+                ShowCaptureOverlay(CaptureOptions.ImageDefault);
             }
             else if (source == "ScreenRecorderHotKey" || isRecordingType)
             {
                 // Video capture
-                CaptureMode captureMode = CaptureMode.Video;
-                CaptureType captureType = CaptureType.Rectangle;
-                CaptureOptions captureOptions = new(captureMode, captureType);
-                ShowCaptureOverlay(captureOptions);
+                ShowCaptureOverlay(CaptureOptions.VideoDefault);
             }
             else if (source == "HotKey")
             {
                 // Image capture
-                CaptureMode captureMode = CaptureMode.Image;
-                CaptureType captureType = CaptureType.Rectangle;
-                CaptureOptions captureOptions = new(captureMode, captureType);
-                ShowCaptureOverlay(captureOptions);
+                ShowCaptureOverlay(CaptureOptions.ImageDefault);
             }
         }
     }
