@@ -15,20 +15,6 @@
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
 
-  <!-- Project assets -->
-  <ItemGroup>
-    <!-- Images -->
-    <Content Include="Assets\SplashScreen.scale-200.png" />
-    <Content Include="Assets\LockScreenLogo.scale-200.png" />
-    <Content Include="Assets\Square150x150Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-
-    <!-- Fonts -->
-    <Content Include="Fonts\FluentSystemIcons-Regular.ttf" />
-  </ItemGroup>
-
   <!-- App manifest -->
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
