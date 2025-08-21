@@ -272,7 +272,7 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
-    public void PerformCapture(MonitorCaptureResult monitor, Rectangle area)
+    public void PerformImageCapture(MonitorCaptureResult monitor, Rectangle area)
     {
         ThrowIfNotInitialized();
 
@@ -323,6 +323,11 @@ internal partial class CaptureToolAppController : IAppController
         _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
         TryAutoSaveImage(imageFile);
         _ = TryAutoCopyImageAsync(imageFile);
+    }
+
+    public void PrepareForVideoCapture(MonitorCaptureResult monitor, Rectangle area)
+    {
+        // TODO: Transition the overlay to show the recording toolbar.
     }
 
     public nint GetMainWindowHandle()

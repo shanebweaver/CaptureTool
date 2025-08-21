@@ -193,7 +193,14 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
     {
         if (Monitor != null && CaptureArea != Rectangle.Empty)
         {
-            _appController.PerformCapture(Monitor.Value, CaptureArea);
+            if (SelectedCaptureMode == CaptureMode.Image)
+            {
+                _appController.PerformImageCapture(Monitor.Value, CaptureArea);
+            }
+            else if (SelectedCaptureMode == CaptureMode.Video)
+            {
+                _appController.PrepareForVideoCapture(Monitor.Value, CaptureArea);
+            }
         }
     }
 }

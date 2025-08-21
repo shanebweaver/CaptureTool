@@ -15,7 +15,8 @@ public interface IAppController
 
     void ShowCaptureOverlay(CaptureOptions? options = null);
     void CloseCaptureOverlay();
-    void PerformCapture(MonitorCaptureResult monitor, Rectangle captureArea);
+    void PerformImageCapture(MonitorCaptureResult monitor, Rectangle captureArea);
+    void PrepareForVideoCapture(MonitorCaptureResult monitor, Rectangle captureArea);
     void PerformAllScreensCapture();
 
     string GetDefaultScreenshotsFolderPath();
