@@ -18,13 +18,26 @@
   <style>
     @font-face {
       font-family: 'FluentSystemIcons';
-      src: url(https://github.com/shanebweaver/CaptureTool/raw/main/src/CaptureTool.UI.Windows/Fonts/FluentSystemIcons-Regular.ttf);
+      src: url(FluentSystemIcons-Regular.ttf);
       font-weight: normal;
       font-style: normal;
     }
 
-    .camera-icon::before {
-      content: "\E722";
+    
+    .about-icon::before {
+      content: "\F732";
+      font-family: 'FluentSystemIcons';
+      font-size: 48px;
+    }
+
+    .shortcuts-icon::before {
+      content: "\F4B9";
+      font-family: 'FluentSystemIcons';
+      font-size: 48px;
+    }
+
+    .author-icon::before {
+      content: "\F0461";
       font-family: 'FluentSystemIcons';
       font-size: 48px;
     }
@@ -137,7 +150,7 @@
 
     /* About */
     .about-grid { display: grid; grid-template-columns: 120px 1fr; gap: 20px; align-items: center; }
-    .avatar { width: 100px; height: 100px; border-radius: 18px; background: linear-gradient(135deg, var(--win-blue-700), var(--win-accent)); display: grid; place-items: center; color: white; font-weight: 800; box-shadow: var(--shadow-subtle); }
+    .avatar { width: 100px; height: 100px; border-radius: 18px; background: linear-gradient(135deg, var(--win-blue-700), var(--win-accent)); display: grid; place-items: center; color: white; box-shadow: var(--shadow-subtle); }
 
     /* Footer */
     footer { color: rgba(255,255,255,.9); padding: 36px 0 56px; }
@@ -179,7 +192,7 @@
   <section class="hero">
     <div class="container hero-grid">
       <div>
-        <h1 class="headline">Capture, edit, and share screenshots—fast.</h1>
+        <h1 class="headline">Capture, edit, and share screenshots — fast.</h1>
         <p class="subhead">Capture Tool is a lightweight and efficient screen capture utility designed for Windows. Whether you're grabbing a quick screenshot or preparing an image for sharing, Capture Tool helps you get it done with ease.</p>
         <div class="hero-card glass">
           <div class="meta">
@@ -306,7 +319,9 @@
   <section class="section">
     <div class="container glass">
       <div class="about-grid">
-        <div class="avatar" aria-hidden="true">A</div>
+        <div class="avatar" aria-hidden="true">
+          <div class="about-icon"></div>
+        </div>
         <div>
           <h2 style="margin:0 0 6px;">About Capture Tool</h2>
           <p style="margin:0; color:var(--muted); max-width:70ch;">Capture Tool is a Windows screen capture utility developed in <strong>C#</strong> and <strong>XAML</strong> with <strong>WinUI 3</strong>. It’s built to be fast and distraction‑free, with powerful essentials like cropping, rotate/flip/mirror, and streamlined export options.</p>
@@ -324,7 +339,9 @@
   <section class="section">
     <div class="container glass">
       <div class="about-grid">
-        <div class="avatar" aria-hidden="true">SW</div>
+        <div class="avatar" aria-hidden="true">
+          <div class="shortcuts-icon"></div>
+        </div>
         <div style="display:grid; gap:12px;">
           <h2 style="margin:0;">Launch with familiar shortcuts</h2>
           <p class="fine" style="margin:0; color:var(--muted)">Capture Tool integrates with Windows shortcut flows so you can start capturing the way you’re used to.</p>
@@ -343,7 +360,7 @@
     <div class="container glass" style="padding:18px;">
       <div class="about-grid">
         <div class="avatar" aria-hidden="true">
-          <div class="camera-icon"></div>
+          <div class="author-icon"></div>
         </div>
         <div>
           <h2 style="margin:0 0 6px;">Built by Shane Weaver</h2>
