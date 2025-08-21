@@ -115,15 +115,17 @@
     }
     .frame .chrome { height: 16px; display: flex; flex-direction: row-reverse; text-align: center; gap: 6px; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #374151; }
-    .viewport { background: linear-gradient(145deg, #0b1b4a 0%, #102768 60%, #0b1b4a 100%); border-radius: 10px; height: clamp(240px, 42vh, 460px); display: grid; place-items: center; overflow: hidden; border: 1px solid #18284b; }
+    .viewport { background: linear-gradient(145deg, #0b1b4a 0%, #102768 60%, #0b1b4a 100%); border-radius: 10px; display: grid; place-items: center; overflow: hidden; border: 1px solid #18284b; }
 
     /* Placeholder images */
     .placeholder {
-      width: min(92%, 760px); aspect-ratio: 16 / 9; border-radius: 12px;
+      width: min(100%, 760px); aspect-ratio: 3 / 2; border-radius: 12px;
       background:
         linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04)),
         repeating-linear-gradient(45deg, rgba(255,255,255,.08) 0 10px, rgba(255,255,255,.02) 10px 20px);
-      border: 2px dashed rgba(255,255,255,.5);
+      background-position: center; 
+      background-size: contain; 
+      background-repeat: no-repeat;
       display: grid; place-items: center; color: rgba(255,255,255,.85);
       text-align: center; font-weight: 600;
     }
@@ -165,8 +167,10 @@
       .feature { grid-column: span 6; }
       .shot { grid-column: span 12; }
       .foot-card { grid-column: span 12; }
-      .about-grid { grid-template-columns: 1fr; text-align: center; }
+      .about-grid { grid-template-columns: 1fr; text-align: center; justify-content: center; }
+      .about-grid div { justify-self: center; }
       .avatar { margin: 0 auto; }
+      .meta { justify-content: center; }
     }
   </style>
 </head>
@@ -215,11 +219,7 @@
             <div class="dot"></div><div class="dot"></div><div class="dot"></div>
           </div>
           <div class="viewport">
-            <div class="placeholder">
-              <div>
-                <div>Hero Screenshot Placeholder</div>
-                <small>Replace with <code>assets/hero.png</code> (16:9)</small>
-              </div>
+            <div class="placeholder" style="background-image: url('../StoreAssets/home_light.png');">
             </div>
           </div>
         </div>
@@ -291,25 +291,25 @@
       <div class="shots-grid">
         <div class="shot shot-card">
           <figure class="glass">
-            <img src="assets/screenshot-1.png" alt="Screenshot placeholder 1 – replace with editor view" onerror="this.outerHTML='\n<div class=\'shot-ph\'>Add screenshot: <code>assets/screenshot-1.png</code></div>\n'"/>
+            <img src="../StoreAssets/crop-mode_light.png" alt="Screenshot placeholder 1 – replace with editor view" />
           </figure>
           <figcaption class="fine" style="margin-left: 40px;">Editor with crop controls</figcaption>
         </div>
         <div class="shot shot-card">
           <figure class="glass">
-            <img src="assets/screenshot-2.png" alt="Screenshot placeholder 2 – replace with capture overlay" onerror="this.outerHTML='\n<div class=\'shot-ph\'>Add screenshot: <code>assets/screenshot-2.png</code></div>\n'"/>
+            <img src="assets/screenshot-2.png" alt="Screenshot placeholder 2 – replace with capture overlay" />
           </figure>
           <figcaption class="fine" style="margin-left: 40px;">Capture overlay across multiple monitors</figcaption>
         </div>
         <div class="shot shot-card">
           <figure class="glass">
-            <img src="assets/screenshot-3.png" alt="Screenshot placeholder 3 – replace with export dialog" onerror="this.outerHTML='\n<div class=\'shot-ph\'>Add screenshot: <code>assets/screenshot-3.png</code></div>\n'"/>
+            <img src="../StoreAssets/image-flip-rotate_light.png" alt="Screenshot placeholder 3 – replace with export dialog" />
           </figure>
           <figcaption class="fine" style="margin-left: 40px;">Quick export & sharing</figcaption>
         </div>
         <div class="shot shot-card">
           <figure class="glass">
-            <img src="assets/screenshot-4.png" alt="Screenshot placeholder 4 – replace with settings view" onerror="this.outerHTML='\n<div class=\'shot-ph\'>Add screenshot: <code>assets/screenshot-4.png</code></div>\n'"/>
+            <img src="../StoreAssets/home_light.png" alt="Screenshot placeholder 4 – replace with settings view" />
           </figure>
           <figcaption class="fine" style="margin-left: 40px;">Settings & shortcuts</figcaption>
         </div>
@@ -324,7 +324,7 @@
         <div class="avatar" aria-hidden="true">
           <div class="fluent-icon about-icon"></div>
         </div>
-        <div>
+        <div style="display: flex; flex-direction: column;">
           <h2 style="margin:0 0 6px;">About Capture Tool</h2>
           <p style="margin:0; color:var(--muted); max-width:70ch;">Capture Tool is a Windows screen capture utility developed in <strong>C#</strong> and <strong>XAML</strong> with <strong>WinUI 3</strong>. It’s built to be fast and distraction‑free, with powerful essentials like cropping, rotate/flip/mirror, and streamlined export options.</p>
           <div class="meta" style="margin-top:12px;">
@@ -347,7 +347,7 @@
         <div style="display:grid; gap:12px;">
           <h2 style="margin:0;">Launch with familiar shortcuts</h2>
           <p class="fine" style="margin:0; color:var(--muted)">Capture Tool integrates with Windows shortcut flows so you can start capturing the way you’re used to.</p>
-          <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+          <div class="meta" style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
             <div class="btn" aria-label="Windows key plus Shift plus S shortcut"><kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></div>
             <div class="btn" aria-label="Windows key plus Shift plus R shortcut"><kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd></div>
             <div class="btn" aria-label="Print Screen shortcut"><kbd>Print Screen</kbd></div>
