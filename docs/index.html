@@ -24,23 +24,25 @@
     }
 
     
-    .about-icon::before {
-      content: "\F732";
+    .fluent-icon {
       font-family: 'FluentSystemIcons';
+    }
+
+    .avatar .fluent-icon {
       font-size: 48px;
     }
 
-    .shortcuts-icon::before {
-      content: "\F4B9";
-      font-family: 'FluentSystemIcons';
-      font-size: 48px;
-    }
+    .about-icon::before { content: "\F732"; }
+    .shortcuts-icon::before { content: "\F4B9"; }
+    .author-icon::before { content: "\F0461"; }
+    .feature-1-icon::before { content: "\E48E"; }
+    .feature-2-icon::before { content: "\E719"; }
+    .feature-3-icon::before { content: "\E0C7"; }
+    .feature-4-icon::before { content: "\E74A"; }
+    .feature-5-icon::before { content: "\E050"; }
+    .feature-6-icon::before { content: "\E9B1"; }
 
-    .author-icon::before {
-      content: "\F0461";
-      font-family: 'FluentSystemIcons';
-      font-size: 48px;
-    }
+
 
     :root {
       --win-blue-600: #2563eb; /* base */
@@ -233,7 +235,7 @@
       <div class="features">
         <article class="feature">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="3"/><path d="M9 8h6M9 12h6"/></svg>
+            <div class="fluent-icon feature-1-icon"></div>
           </div>
           <h3>Flexible Capture Options</h3>
           <p>Quickly capture a region, one screen, or multiple screens with precision.</p>
@@ -241,7 +243,7 @@
 
         <article class="feature">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 17h10"/><rect x="7" y="9" width="10" height="6" rx="2"/></svg>
+            <div class="fluent-icon feature-2-icon"></div>
           </div>
           <h3>Built‑in Image Editing</h3>
           <p>Crop, rotate, flip, and mirror your captures directly in the app—no extra software.</p>
@@ -249,7 +251,7 @@
 
         <article class="feature">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            <div class="fluent-icon feature-3-icon"></div>
           </div>
           <h3>Easy Export & Sharing</h3>
           <p>Copy to clipboard, save to files, or print—right from the editor.</p>
@@ -257,7 +259,7 @@
 
         <article class="feature">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3v4a2 2 0 0 0 2 2h4"/><path d="M5 8V5a2 2 0 0 1 2-2h6l6 6v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/></svg>
+            <div class="fluent-icon feature-4-icon"></div>
           </div>
           <h3>Keyboard Shortcut Support</h3>
           <p>Launch with familiar shortcuts like <kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> or <kbd>Print Screen</kbd>.</p>
@@ -265,7 +267,7 @@
 
         <article class="feature">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            <div class="fluent-icon feature-5-icon"></div>
           </div>
           <h3>Lightweight & Efficient</h3>
           <p>Fast, simple, no‑fuss—focus on the capture, not the clutter.</p>
@@ -273,7 +275,7 @@
 
         <article class="feature">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <div class="fluent-icon feature-6-icon"></div>
           </div>
           <h3>Built for Windows</h3>
           <p>Designed with WinUI 3 to feel right at home on Windows 11.</p>
@@ -320,14 +322,14 @@
     <div class="container glass">
       <div class="about-grid">
         <div class="avatar" aria-hidden="true">
-          <div class="about-icon"></div>
+          <div class="fluent-icon about-icon"></div>
         </div>
         <div>
           <h2 style="margin:0 0 6px;">About Capture Tool</h2>
           <p style="margin:0; color:var(--muted); max-width:70ch;">Capture Tool is a Windows screen capture utility developed in <strong>C#</strong> and <strong>XAML</strong> with <strong>WinUI 3</strong>. It’s built to be fast and distraction‑free, with powerful essentials like cropping, rotate/flip/mirror, and streamlined export options.</p>
           <div class="meta" style="margin-top:12px;">
             <div><strong>Store:</strong> <a href="https://apps.microsoft.com/detail/9N7W6J13C4W0?hl=en-us&gl=US&ocid=pdpshare" target="_blank" rel="noopener">Microsoft Store Listing</a></div>
-            <div><strong>License:</strong> Proprietary</div>
+            <div><strong>License:</strong> Noncommercial</div>
             <div><strong>Status:</strong> Active development</div>
           </div>
         </div>
@@ -340,7 +342,7 @@
     <div class="container glass">
       <div class="about-grid">
         <div class="avatar" aria-hidden="true">
-          <div class="shortcuts-icon"></div>
+          <div class="fluent-icon shortcuts-icon"></div>
         </div>
         <div style="display:grid; gap:12px;">
           <h2 style="margin:0;">Launch with familiar shortcuts</h2>
@@ -360,7 +362,7 @@
     <div class="container glass" style="padding:18px;">
       <div class="about-grid">
         <div class="avatar" aria-hidden="true">
-          <div class="author-icon"></div>
+          <div class="fluent-icon author-icon"></div>
         </div>
         <div>
           <h2 style="margin:0 0 6px;">Built by Shane Weaver</h2>
