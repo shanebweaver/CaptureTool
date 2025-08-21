@@ -1,5 +1,426 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Capture Tool – Fast, Simple Screenshot Utility for Windows</title>
+  <meta name="description" content="Capture Tool: capture, edit, and share screenshots—fast. Lightweight WinUI 3 app by Shane Weaver." />
+  <meta name="theme-color" content="#0b5cff" />
+  <link rel="icon" href="favicon.ico" />
+  
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Capture Tool – Fast, Simple Screenshot Utility for Windows" />
+  <meta property="og:description" content="Capture, edit, and share screenshots—fast. Lightweight WinUI 3 app by Shane Weaver." />
+  <meta property="og:image" content="assets/social-preview.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <style>
+    @font-face {
+      font-family: 'FluentSystemIcons';
+      src: url(https://github.com/shanebweaver/CaptureTool/raw/main/src/CaptureTool.UI.Windows/Fonts/FluentSystemIcons-Regular.ttf);
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    .camera-icon::before {
+      content: "\E722";
+      font-family: 'FluentSystemIcons';
+      font-size: 48px;
+    }
+
+    :root {
+      --win-blue-600: #2563eb; /* base */
+      --win-blue-700: #1d4ed8; /* darker */
+      --win-blue-800: #1e40af; /* darkest */
+      --win-accent: #0ea5e9;   /* cyan accent */
+      --surface: rgba(255,255,255,0.72);
+      --surface-strong: rgba(255,255,255,0.86);
+      --text: #0b1220;
+      --muted: #334155;
+      --ring: rgba(14,165,233,0.5);
+      --radius-xl: 20px;
+      --shadow-soft: 0 10px 30px rgba(2, 6, 23, 0.25);
+      --shadow-subtle: 0 4px 16px rgba(2, 6, 23, 0.15);
+    }
+
+    /* Windows 11-esque backdrop and rounded feel */
+    html, body {
+      margin: 0;
+      height: 100%;
+      scroll-behavior: smooth;
+      background: radial-gradient(1200px 600px at 75% -10%, var(--win-blue-600) 0%, var(--win-blue-800) 45%, #0b1b4a 100%) fixed;
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji";
+      line-height: 1.45;
+    }
+
+    a { color: var(--win-accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container { max-width: 1120px; margin: 0 auto; padding: 24px; }
+
+    /* Top navigation */
+    .nav {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: saturate(160%) blur(16px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.35));
+      border-bottom: 1px solid rgba(255,255,255,0.35);
+    }
+    .nav-inner { display: flex; align-items: center; gap: 16px; padding: 12px 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .2px; }
+    .brand-mark { border-radius: 8px; background: white; box-shadow: var(--shadow-subtle); display: grid; place-items: center; }
+    .brand-mark svg { width: 18px; height: 18px; fill: white; opacity: .95; }
+    .spacer { flex: 1; }
+    .nav a.btn { text-decoration: none; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+      border: 1px solid rgba(2, 6, 23, 0.08);
+      border-radius: calc(var(--radius-xl) - 6px);
+      padding: 10px 16px; font-weight: 600; color: var(--text);
+      box-shadow: var(--shadow-subtle);
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+    .btn-primary { background: linear-gradient(180deg, #e6f2ff, #d9ecff); border-color: rgba(29,78,216,.18); }
+
+    /* Hero */
+    .hero { padding: 56px 0 24px; color: #0b1220; }
+    .hero-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 28px; align-items: center; padding: 0 28px; }
+    .headline { font-size: clamp(32px, 5vw, 54px); font-weight: 800; letter-spacing: -0.02em; color: white; }
+    .subhead { font-size: clamp(16px, 2.2vw, 20px); color: rgba(255,255,255,.9); max-width: 56ch; }
+    .hero-card { margin-top: 18px; border: 1px solid rgba(2,6,23,.06); border-radius: var(--radius-xl); padding: 18px;}
+    .meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; }
+
+    /* Screenshot device frame */
+    .frame {
+      border-radius: 16px; background: #0b1220; padding: 10px; box-shadow: 0 18px 60px rgba(0,0,0,.35);
+    }
+    .frame .chrome { height: 16px; display: flex; flex-direction: row-reverse; text-align: center; gap: 6px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #374151; }
+    .viewport { background: linear-gradient(145deg, #0b1b4a 0%, #102768 60%, #0b1b4a 100%); border-radius: 10px; height: clamp(240px, 42vh, 460px); display: grid; place-items: center; overflow: hidden; border: 1px solid #18284b; }
+
+    /* Placeholder images */
+    .placeholder {
+      width: min(92%, 760px); aspect-ratio: 16 / 9; border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04)),
+        repeating-linear-gradient(45deg, rgba(255,255,255,.08) 0 10px, rgba(255,255,255,.02) 10px 20px);
+      border: 2px dashed rgba(255,255,255,.5);
+      display: grid; place-items: center; color: rgba(255,255,255,.85);
+      text-align: center; font-weight: 600;
+    }
+    .placeholder small { font-weight: 500; opacity: .9; }
+
+    /* Features */
+    .section { padding: 28px 0; margin: 0 28px; }
+    .glass { background: var(--surface); border: 1px solid rgba(2, 6, 23, 0.08); border-radius: var(--radius-xl); box-shadow: var(--shadow-subtle); backdrop-filter: blur(10px) saturate(140%); }
+    .features { display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); }
+    .feature { grid-column: span 4; padding: 18px; }
+    .feature h3 { margin: 6px 0 6px; font-size: 18px; }
+    .feature p { margin: 0; color: var(--muted); }
+    .icon { width: 28px; height: 28px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(180deg, #e8f1ff, #e6f7ff); border: 1px solid rgba(29,78,216,.15); box-shadow: var(--shadow-subtle); }
+    .icon svg { width: 16px; height: 16px; }
+
+    /* Screenshots grid */
+    .shots-grid { display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); }
+    .shot { grid-column: span 6; }
+    .shot .shot-card { padding: 12px; }
+    .shot img, .shot .shot-ph {
+      width: 100%; aspect-ratio: 16/9; border-radius: 12px;
+      background: repeating-linear-gradient(45deg, rgba(2,6,23,.08) 0 10px, rgba(2,6,23,.02) 10px 20px);
+      border: 2px dashed rgba(2, 6, 23, 0.2);
+      display: grid; place-items: center; color: #334155; font-weight: 600;
+    }
+
+    /* About */
+    .about-grid { display: grid; grid-template-columns: 120px 1fr; gap: 20px; align-items: center; }
+    .avatar { width: 100px; height: 100px; border-radius: 18px; background: linear-gradient(135deg, var(--win-blue-700), var(--win-accent)); display: grid; place-items: center; color: white; font-weight: 800; box-shadow: var(--shadow-subtle); }
+
+    /* Footer */
+    footer { color: rgba(255,255,255,.9); padding: 36px 0 56px; }
+    .foot-grid { display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); }
+    .foot-card { grid-column: span 4; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: var(--radius-xl); padding: 16px; }
+    .fine { color: rgba(255,255,255,.7); font-size: 13px; }
+
+    @media (max-width: 960px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .feature { grid-column: span 6; }
+      .shot { grid-column: span 12; }
+      .foot-card { grid-column: span 12; }
+      .about-grid { grid-template-columns: 1fr; text-align: center; }
+      .avatar { margin: 0 auto; }
+    }
+  </style>
+</head>
 <body>
-Hello Capture Tool
+  <!-- Top Navigation -->
+  <header class="nav" role="banner">
+    <div class="nav-inner container">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <img src="https://github.com/shanebweaver/CaptureTool/raw/main/src/CaptureTool.UI.Windows/Assets/StoreLogo.scale-100.png" />  
+        </div>
+        <span>Capture Tool</span>
+      </div>
+      <div class="spacer"></div>
+      <nav aria-label="Primary navigation" style="display:flex; gap:10px;">
+        <a class="btn" href="#features">Features</a>
+        <a class="btn" href="#screenshots">Screenshots</a>
+        <a class="btn" href="#about">About</a>
+        <a class="btn btn-primary" href="https://apps.microsoft.com/detail/9N7W6J13C4W0?hl=en-us&gl=US&ocid=pdpshare" target="_blank" rel="noopener" aria-label="Open Microsoft Store listing">Get it on Microsoft Store</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <h1 class="headline">Capture, edit, and share screenshots—fast.</h1>
+        <p class="subhead">Capture Tool is a lightweight and efficient screen capture utility designed for Windows. Whether you're grabbing a quick screenshot or preparing an image for sharing, Capture Tool helps you get it done with ease.</p>
+        <div class="hero-card glass">
+          <div class="meta">
+            <div><strong>Tech:</strong> C#, XAML, WinUI 3</div>
+            <div><strong>Platform:</strong> Windows 10/11</div>
+            <div><strong>Author:</strong> Shane Weaver</div>
+          </div>
+          <div style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap;">
+            <a class="btn btn-primary" href="https://apps.microsoft.com/detail/9N7W6J13C4W0?hl=en-us&gl=US&ocid=pdpshare" target="_blank" rel="noopener">Open in Microsoft Store</a>
+            <a class="btn" href="#screenshots">View Screenshots</a>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="frame" aria-hidden="true">
+          <div class="chrome">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+          <div class="viewport">
+            <div class="placeholder">
+              <div>
+                <div>Hero Screenshot Placeholder</div>
+                <small>Replace with <code>assets/hero.png</code> (16:9)</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- If you prefer an actual <img>, uncomment this and place your file
+        <img src="assets/hero.png" alt="Capture Tool editor showing an annotated screenshot" /> -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section">
+    <div class="container glass">
+      <div class="features">
+        <article class="feature">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="3"/><path d="M9 8h6M9 12h6"/></svg>
+          </div>
+          <h3>Flexible Capture Options</h3>
+          <p>Quickly capture a region, one screen, or multiple screens with precision.</p>
+        </article>
+
+        <article class="feature">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 17h10"/><rect x="7" y="9" width="10" height="6" rx="2"/></svg>
+          </div>
+          <h3>Built‑in Image Editing</h3>
+          <p>Crop, rotate, flip, and mirror your captures directly in the app—no extra software.</p>
+        </article>
+
+        <article class="feature">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          <h3>Easy Export & Sharing</h3>
+          <p>Copy to clipboard, save to files, or print—right from the editor.</p>
+        </article>
+
+        <article class="feature">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3v4a2 2 0 0 0 2 2h4"/><path d="M5 8V5a2 2 0 0 1 2-2h6l6 6v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/></svg>
+          </div>
+          <h3>Keyboard Shortcut Support</h3>
+          <p>Launch with familiar shortcuts like <kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> or <kbd>Print Screen</kbd>.</p>
+        </article>
+
+        <article class="feature">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <h3>Lightweight & Efficient</h3>
+          <p>Fast, simple, no‑fuss—focus on the capture, not the clutter.</p>
+        </article>
+
+        <article class="feature">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <h3>Built for Windows</h3>
+          <p>Designed with WinUI 3 to feel right at home on Windows 11.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section id="screenshots" class="section">
+    <div class="container">
+      <h2 style="color:white; margin:0 0 16px; font-size: clamp(22px, 3vw, 32px);">Screenshots</h2>
+      <div class="shots-grid">
+        <div class="shot shot-card">
+          <figure class="glass">
+            <img src="assets/screenshot-1.png" alt="Screenshot placeholder 1 – replace with editor view" onerror="this.outerHTML='\n<div class=\'shot-ph\'>Add screenshot: <code>assets/screenshot-1.png</code></div>\n'"/>
+          </figure>
+          <figcaption class="fine" style="margin-left: 40px;">Editor with crop controls</figcaption>
+        </div>
+        <div class="shot shot-card">
+          <figure class="glass">
+            <img src="assets/screenshot-2.png" alt="Screenshot placeholder 2 – replace with capture overlay" onerror="this.outerHTML='\n<div class=\'shot-ph\'>Add screenshot: <code>assets/screenshot-2.png</code></div>\n'"/>
+          </figure>
+          <figcaption class="fine" style="margin-left: 40px;">Capture overlay across multiple monitors</figcaption>
+        </div>
+        <div class="shot shot-card">
+          <figure class="glass">
+            <img src="assets/screenshot-3.png" alt="Screenshot placeholder 3 – replace with export dialog" onerror="this.outerHTML='\n<div class=\'shot-ph\'>Add screenshot: <code>assets/screenshot-3.png</code></div>\n'"/>
+          </figure>
+          <figcaption class="fine" style="margin-left: 40px;">Quick export & sharing</figcaption>
+        </div>
+        <div class="shot shot-card">
+          <figure class="glass">
+            <img src="assets/screenshot-4.png" alt="Screenshot placeholder 4 – replace with settings view" onerror="this.outerHTML='\n<div class=\'shot-ph\'>Add screenshot: <code>assets/screenshot-4.png</code></div>\n'"/>
+          </figure>
+          <figcaption class="fine" style="margin-left: 40px;">Settings & shortcuts</figcaption>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About the app -->
+  <section class="section">
+    <div class="container glass">
+      <div class="about-grid">
+        <div class="avatar" aria-hidden="true">A</div>
+        <div>
+          <h2 style="margin:0 0 6px;">About Capture Tool</h2>
+          <p style="margin:0; color:var(--muted); max-width:70ch;">Capture Tool is a Windows screen capture utility developed in <strong>C#</strong> and <strong>XAML</strong> with <strong>WinUI 3</strong>. It’s built to be fast and distraction‑free, with powerful essentials like cropping, rotate/flip/mirror, and streamlined export options.</p>
+          <div class="meta" style="margin-top:12px;">
+            <div><strong>Store:</strong> <a href="https://apps.microsoft.com/detail/9N7W6J13C4W0?hl=en-us&gl=US&ocid=pdpshare" target="_blank" rel="noopener">Microsoft Store Listing</a></div>
+            <div><strong>License:</strong> Proprietary</div>
+            <div><strong>Status:</strong> Active development</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Keyboard shortcuts highlight -->
+  <section class="section">
+    <div class="container glass">
+      <div class="about-grid">
+        <div class="avatar" aria-hidden="true">SW</div>
+        <div style="display:grid; gap:12px;">
+          <h2 style="margin:0;">Launch with familiar shortcuts</h2>
+          <p class="fine" style="margin:0; color:var(--muted)">Capture Tool integrates with Windows shortcut flows so you can start capturing the way you’re used to.</p>
+          <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+            <div class="btn" aria-label="Windows key plus Shift plus S shortcut"><kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></div>
+            <div class="btn" aria-label="Windows key plus Shift plus R shortcut"><kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd></div>
+            <div class="btn" aria-label="Print Screen shortcut"><kbd>Print Screen</kbd></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Shane -->
+  <section id="about" class="section">
+    <div class="container glass" style="padding:18px;">
+      <div class="about-grid">
+        <div class="avatar" aria-hidden="true">
+          <div class="camera-icon"></div>
+        </div>
+        <div>
+          <h2 style="margin:0 0 6px;">Built by Shane Weaver</h2>
+          <p style="margin:0; color:var(--muted); max-width:70ch;">I’m a Senior Software Engineer and former member of Microsoft’s Windows team, where I worked on <strong>Snipping Tool</strong>. Capture Tool is my take on a fast, focused screenshot app—no bloat, just the essentials.</p>
+          <div class="meta" style="margin-top:12px;">
+            <div><strong>Tech Stack:</strong> C#, XAML, WinUI 3</div>
+            <div><strong>Focus:</strong> Performance, UX, accessibility</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to action -->
+  <section class="section" aria-label="Get the app">
+    <div class="container" style="text-align:center;">
+      <a class="btn btn-primary" href="https://apps.microsoft.com/detail/9N7W6J13C4W0?hl=en-us&gl=US&ocid=pdpshare" target="_blank" rel="noopener" style="font-size:18px; padding:14px 22px;">Get Capture Tool on Microsoft Store</a>
+      <p class="fine" style="margin-top:10px;">Works great on Windows 11. Designed with the Windows design language in mind.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="foot-grid">
+        <div class="foot-card">
+          <strong>Contact</strong>
+          <p class="fine">Have feedback or issues?<br /><a href="https://github.com/shanebweaver/CaptureTool/issues" target="_blank">Create a new issue on GitHub</a></p>
+        </div>
+        <div class="foot-card">
+          <strong>Privacy</strong>
+          <p class="fine">Capture Tool does not collect, store, or transmit personal data. By using this application you acknowledge that you are responsible for managing content created or saved on your device.</p>
+        </div>
+        <div class="foot-card">
+          <strong>Open-Source</strong>
+          <p class="fine">Capture Tool is an Open-Source project.<br /><a href="https://github.com/shanebweaver/CaptureTool" target="_blank">See the code on GitHub</a></p>
+        </div>
+      </div>
+      <p class="fine" style="margin-top:16px;">© <span id="y"></span> Shane Weaver. Capture Tool for Windows.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Set current year
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+
+  <!-- SEO structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Capture Tool",
+    "alternateName": "CaptureTool",
+    "operatingSystem": "Windows",
+    "applicationCategory": "MultimediaApplication",
+    "description": "Capture, edit, and share screenshots—fast. Lightweight Windows screen capture utility built with WinUI 3.",
+    "author": {
+      "@type": "Person",
+      "name": "Shane Weaver"
+    },
+    "publisher": {
+      "@type": "Person",
+      "name": "Shane Weaver"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "url": "https://apps.microsoft.com/detail/9N7W6J13C4W0?hl=en-us&gl=US&ocid=pdpshare",
+    "screenshot": [
+      "assets/screenshot-1.png",
+      "assets/screenshot-2.png",
+      "assets/screenshot-3.png",
+      "assets/screenshot-4.png"
+    ]
+  }
+  </script>
 </body>
 </html>
