@@ -54,6 +54,10 @@
     <x:String x:Key="LocalLanguage24Regular">&#xF4F4;</x:String>
     <x:String x:Key="LocalLanguage28Regular">&#xF4F5;</x:String>
 
+    <x:String x:Key="Record16Regular">&#xF660;</x:String>
+    <x:String x:Key="Record20Regular">&#xF661;</x:String>
+    <x:String x:Key="Record24Regular">&#xF662;</x:String>
+
     <x:String x:Key="Window16Regular">&#xEE5D;</x:String>
     <x:String x:Key="Window24Regular">&#xEE5E;</x:String>
     <x:String x:Key="Window28Regular">&#xEE5F;</x:String>
@@ -75,6 +79,11 @@
     <x:String x:Key="ScreenshotRecord20Regular">&#xF0414;</x:String>
     <x:String x:Key="ScreenshotRecord24Regular">&#xF0415;</x:String>
     <x:String x:Key="ScreenshotRecord28Regular">&#xF045D;</x:String>
+
+    <x:String x:Key="DesktopSpeaker20Regular">&#xE4A4;</x:String>
+    <x:String x:Key="DesktopSpeaker24Regular">&#xE4A5;</x:String>
+    <x:String x:Key="DesktopSpeakerOff20Regular">&#xE4A6;</x:String>
+    <x:String x:Key="DesktopSpeakerOff24Regular">&#xE4A7;</x:String>
 
     <!--  Segoe Fluent Icons  -->
     <x:String x:Key="Record">&#xE7C8;</x:String>

@@ -23,6 +23,14 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
         _windowViewModels.Add(newVM);
     }
 
+    public void TransitionToVideoMode()
+    {
+        foreach ( var windowViewModel in _windowViewModels)
+        {
+            windowViewModel.TransitionToVideoModeCommand.Execute();
+        }
+    }
+
     public void Unload()
     {
         foreach (var windowViewModel in _windowViewModels)
@@ -64,7 +72,7 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
                     windowViewModel.SelectedCaptureTypeIndex = windowVM.SelectedCaptureTypeIndex;
                 }
 
-                if (windowVM.SelectedCaptureType == Capture.CaptureType.AllScreens)
+                if (windowVM.SelectedCaptureType == Capture.CaptureType.AllScreens && windowVM.SelectedCaptureMode == Capture.CaptureMode.Image)
                 {
                     _appController.PerformAllScreensCapture();
                 }

@@ -32,9 +32,15 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
-    public static readonly DependencyProperty IsVideoCaptureEnabledProperty = DependencyProperty.Register(
-        nameof(IsVideoCaptureEnabled),
+    public static readonly DependencyProperty IsDesktopAudioEnabledProperty = DependencyProperty.Register(
+        nameof(IsDesktopAudioEnabled),
         typeof(bool),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(DependencyProperty.UnsetValue));
+
+    public static readonly DependencyProperty ActiveCaptureModeProperty = DependencyProperty.Register(
+        nameof(ActiveCaptureMode),
+        typeof(CaptureMode),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
@@ -62,11 +68,25 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         set => Set(SelectedCaptureModeIndexProperty, value);
     }
 
-    public bool IsVideoCaptureEnabled
+    public bool IsDesktopAudioEnabled
     {
-        get => Get<bool>(IsVideoCaptureEnabledProperty);
-        set => Set(IsVideoCaptureEnabledProperty, value);
+        get => Get<bool>(IsDesktopAudioEnabledProperty);
+        set => Set(IsDesktopAudioEnabledProperty, value);
     }
+
+    public CaptureMode ActiveCaptureMode
+    {
+        get => Get<CaptureMode>(ActiveCaptureModeProperty);
+        set
+        {
+            Set(ActiveCaptureModeProperty, value);
+            RaisePropertyChanged(nameof(IsActiveCaptureModeImage));
+            RaisePropertyChanged(nameof(IsActiveCaptureModeVideo));
+        }
+    }
+
+    public bool IsActiveCaptureModeImage => ActiveCaptureMode == CaptureMode.Image;
+    public bool IsActiveCaptureModeVideo => ActiveCaptureMode == CaptureMode.Video;
 
     public event EventHandler? CloseRequested;
 
@@ -98,5 +118,25 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         }
 
         return false;
+    }
+
+    private Visibility BoolToVisibility(bool? value)
+    {
+        return value == true ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private Visibility InverseBoolToVisibility(bool? value)
+    {
+        return value != true ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void LocalAudioToggle_Click(object sender, RoutedEventArgs e)
+    {
+        IsDesktopAudioEnabled = !IsDesktopAudioEnabled;
+    }
+
+    private void BackButton_Click(object sender, RoutedEventArgs e)
+    {
+        ActiveCaptureMode = CaptureMode.Image;
     }
 }

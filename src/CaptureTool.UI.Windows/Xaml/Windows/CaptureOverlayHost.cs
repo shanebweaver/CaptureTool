@@ -43,8 +43,8 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
         foreach (var monitor in monitors)
         {
-            //if (!monitor.IsPrimary)
-            //    continue;
+            if (!monitor.IsPrimary)
+                continue;
 
             _monitors.Add(monitor);
 
@@ -80,12 +80,17 @@ internal sealed partial class CaptureOverlayHost : IDisposable
         _primaryWindow?.Activate();
     }
 
+    public void TransitionToVideoMode()
+    {
+        _viewModel?.TransitionToVideoMode();
+    }
+
     private void OnPrimaryWindowActivated(object sender, WindowActivatedEventArgs args)
     {
         if (sender is Window window)
         {
             window.Activated -= OnPrimaryWindowActivated;
-            StartForegroundMonitor();
+            //StartForegroundMonitor();
         }
     }
 

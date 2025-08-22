@@ -17,6 +17,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
 
     public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
+    public RelayCommand TransitionToVideoModeCommand => new(TransitionToVideoMode);
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
@@ -24,7 +25,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
     public ObservableCollection<CaptureType> SupportedCaptureTypes
     {
         get => _supportedCaptureTypes;
-        set => Set(ref _supportedCaptureTypes, value);
+        private set => Set(ref _supportedCaptureTypes, value);
     }
 
     private int _selectedCaptureTypeIndex;
@@ -64,7 +65,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
     public ObservableCollection<CaptureMode> SupportedCaptureModes
     {
         get => _supportedCaptureModes;
-        set => Set(ref _supportedCaptureModes, value);
+        private set => Set(ref _supportedCaptureModes, value);
     }
 
     private int _selectedCaptureModeIndex;
@@ -78,7 +79,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
         }
     }
 
-    public CaptureMode? SelectedCaptureMode => SupportedCaptureModes[Math.Min(SelectedCaptureTypeIndex, SupportedCaptureModes.Count - 1)];
+    public CaptureMode? SelectedCaptureMode => SupportedCaptureModes[Math.Min(SelectedCaptureModeIndex, SupportedCaptureModes.Count - 1)];
     public CaptureType? SelectedCaptureType => SupportedCaptureTypes[Math.Min(SelectedCaptureTypeIndex, SupportedCaptureTypes.Count - 1)];
 
     private Rectangle _captureArea;
@@ -106,14 +107,28 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
     public AppTheme CurrentAppTheme
     {
         get => _currentAppTheme;
-        set => Set(ref _currentAppTheme, value);
+        private set => Set(ref _currentAppTheme, value);
     }
 
     private AppTheme _defaultAppTheme;
     public AppTheme DefaultAppTheme
     {
         get => _defaultAppTheme;
-        set => Set(ref _defaultAppTheme, value);
+        private set => Set(ref _defaultAppTheme, value);
+    }
+
+    private CaptureMode _activeCaptureMode;
+    public CaptureMode ActiveCaptureMode
+    {
+        get => _activeCaptureMode;
+        set => Set(ref _activeCaptureMode, value);
+    }
+
+    private bool _isDesktopAudioEnabled;
+    public bool IsDesktopAudioEnabled
+    {
+        get => _isDesktopAudioEnabled;
+        set => Set(ref _isDesktopAudioEnabled, value);
     }
 
     public bool IsVideoCaptureEnabled { get; }
@@ -149,6 +164,9 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
             _supportedCaptureTypes.Add(CaptureType.Freeform);
         }
         _supportedCaptureTypes.Add(CaptureType.AllScreens);
+
+        _activeCaptureMode = CaptureMode.Image;
+        _isDesktopAudioEnabled = true;
     }
 
     public override void Load(object? parameter)
@@ -183,6 +201,11 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
         _captureArea = Rectangle.Empty;
     }
 
+    private void TransitionToVideoMode()
+    {
+        ActiveCaptureMode = CaptureMode.Video;
+    }
+
     private void CloseOverlay()
     {
         _appController.CloseCaptureOverlay();
@@ -199,7 +222,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
             }
             else if (SelectedCaptureMode == CaptureMode.Video)
             {
-                _appController.PrepareForVideoCapture(Monitor.Value, CaptureArea);
+                TransitionToVideoMode();
             }
         }
     }

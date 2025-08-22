@@ -327,7 +327,11 @@ internal partial class CaptureToolAppController : IAppController
 
     public void PrepareForVideoCapture(MonitorCaptureResult monitor, Rectangle area)
     {
-        // TODO: Transition the overlay to show the recording toolbar.
+        if (_overlayHost == null)
+        {
+            ShowCaptureOverlay();
+        }
+        _overlayHost?.TransitionToVideoMode();
     }
 
     public nint GetMainWindowHandle()

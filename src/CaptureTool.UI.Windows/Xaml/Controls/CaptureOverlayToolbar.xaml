@@ -19,68 +19,112 @@
         Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
         CornerRadius="4">
 
-        <StackPanel Orientation="Horizontal">
-            <!--  Capture mode  -->
-            <toolkit:Segmented
-                x:Name="CaptureModeSegmentedControl"
-                Margin="0,0,8,0"
-                SelectedIndex="{x:Bind SelectedCaptureModeIndex, Mode=TwoWay}"
-                SelectionMode="Single"
-                SingleSelectionFollowsFocus="True"
-                Visibility="{x:Bind IsVideoCaptureEnabled, Mode=OneWay}">
-                <toolkit:SegmentedItem
-                    x:Name="ImageTypeMenuItem"
-                    x:Load="{x:Bind IsCaptureModeSupported(capture:CaptureMode.Image), Mode=OneWay}"
-                    Icon="Camera" />
-                <toolkit:SegmentedItem
-                    x:Name="VideoTypeMenuItem"
-                    x:Load="{x:Bind IsCaptureModeSupported(capture:CaptureMode.Video), Mode=OneWay}"
-                    Icon="Video" />
-            </toolkit:Segmented>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <Grid>
+                <!--  Region selection controls  -->
+                <StackPanel
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    Visibility="{x:Bind BoolToVisibility(IsActiveCaptureModeImage), Mode=OneWay}">
+                    <!--  Capture mode  -->
+                    <toolkit:Segmented
+                        x:Name="CaptureModeSegmentedControl"
+                        SelectedIndex="{x:Bind SelectedCaptureModeIndex, Mode=TwoWay}"
+                        SelectionMode="Single"
+                        SingleSelectionFollowsFocus="True">
+                        <toolkit:SegmentedItem
+                            x:Name="ImageTypeMenuItem"
+                            x:Load="{x:Bind IsCaptureModeSupported(capture:CaptureMode.Image), Mode=OneWay}"
+                            Icon="Camera" />
+                        <toolkit:SegmentedItem
+                            x:Name="VideoTypeMenuItem"
+                            x:Load="{x:Bind IsCaptureModeSupported(capture:CaptureMode.Video), Mode=OneWay}"
+                            Icon="Video" />
+                    </toolkit:Segmented>
 
-            <!--  Capture type  -->
-            <ComboBox
-                MinWidth="148"
-                Margin="0,0,8,0"
-                Background="Transparent"
-                BorderThickness="0"
-                SelectedIndex="{x:Bind SelectedCaptureTypeIndex, Mode=TwoWay}"
-                Visibility="Visible">
-                <ComboBoxItem x:Name="RectangleModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Rectangle), Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource RectangularClipping}" />
-                        <TextBlock x:Uid="CaptureType_Rectangle" />
-                    </StackPanel>
-                </ComboBoxItem>
-                <ComboBoxItem x:Name="WindowModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Window), Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource WindowSnipping}" />
-                        <TextBlock x:Uid="CaptureType_Window" />
-                    </StackPanel>
-                </ComboBoxItem>
-                <ComboBoxItem x:Name="FullScreenModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.FullScreen), Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource FitPage}" />
-                        <TextBlock x:Uid="CaptureType_FullScreen" />
-                    </StackPanel>
-                </ComboBoxItem>
-                <ComboBoxItem x:Name="FreeformModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Freeform), Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource FreeFormClipping}" />
-                        <TextBlock x:Uid="CaptureType_Freeform" />
-                    </StackPanel>
-                </ComboBoxItem>
-                <ComboBoxItem x:Name="AllScreensModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.AllScreens), Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Project}" />
-                        <TextBlock x:Uid="CaptureType_AllScreens" />
-                    </StackPanel>
-                </ComboBoxItem>
-            </ComboBox>
+                    <!--  Capture type  -->
+                    <ComboBox
+                        MinWidth="148"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        SelectedIndex="{x:Bind SelectedCaptureTypeIndex, Mode=TwoWay}">
+                        <ComboBoxItem x:Name="RectangleModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Rectangle), Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource RectangularClipping}" />
+                                <TextBlock x:Uid="CaptureType_Rectangle" />
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem x:Name="WindowModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Window), Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource WindowSnipping}" />
+                                <TextBlock x:Uid="CaptureType_Window" />
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem x:Name="FullScreenModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.FullScreen), Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource FitPage}" />
+                                <TextBlock x:Uid="CaptureType_FullScreen" />
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem x:Name="FreeformModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Freeform), Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource FreeFormClipping}" />
+                                <TextBlock x:Uid="CaptureType_Freeform" />
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem x:Name="AllScreensModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.AllScreens), Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Project}" />
+                                <TextBlock x:Uid="CaptureType_AllScreens" />
+                            </StackPanel>
+                        </ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+
+                <!--  Video controls  -->
+                <StackPanel
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    Visibility="{x:Bind BoolToVisibility(IsActiveCaptureModeVideo), Mode=OneWay}">
+                    <Button Click="BackButton_Click" Style="{StaticResource IconButtonStyle}">
+                        <SymbolIcon Symbol="Back" />
+                    </Button>
+
+                    <Button MinWidth="100" Background="#AAFF3340">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon
+                                Margin="0,0,0,-2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource FluentSystemIcons}"
+                                FontSize="16"
+                                Glyph="{StaticResource Record16Regular}" />
+                            <TextBlock VerticalAlignment="Center" Text="Record" />
+                        </StackPanel>
+                    </Button>
+                    <TextBlock
+                        Margin="8,0"
+                        VerticalAlignment="Center"
+                        Text="00:00:00" />
+                    <Button
+                        x:Name="LocalAudioToggle"
+                        Click="LocalAudioToggle_Click"
+                        Style="{StaticResource IconButtonStyle}">
+                        <Grid>
+                            <FontIcon
+                                FontFamily="{StaticResource FluentSystemIcons}"
+                                Glyph="{StaticResource DesktopSpeaker20Regular}"
+                                Visibility="{x:Bind BoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
+                            <FontIcon
+                                FontFamily="{StaticResource FluentSystemIcons}"
+                                Glyph="{StaticResource DesktopSpeakerOff20Regular}"
+                                Visibility="{x:Bind InverseBoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </Grid>
 
             <!--  Close  -->
             <Button
-                x:Name="CloseButton"
                 x:Uid="SelectionOverlay_CloseButton"
                 Click="CloseButton_Click"
                 Style="{StaticResource IconButtonStyle}">

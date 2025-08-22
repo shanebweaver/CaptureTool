@@ -23,6 +23,7 @@ public sealed partial class CropOverlay : UserControlBase
     private Point _lastPointerPosition;
     private FrameworkElement? _activeAnchor;
     private DragMode _dragMode = DragMode.None;
+    private Rectangle _oldCropRect = Rectangle.Empty;
 
     public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
         nameof(CropRect),
@@ -263,8 +264,6 @@ public sealed partial class CropOverlay : UserControlBase
             EndInteraction(sender, e);
         }
     }
-
-    private Rectangle _oldCropRect = Rectangle.Empty;
 
     private void StartInteraction()
     {
