@@ -21,6 +21,72 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
+    <Style x:Key="CropAnchorPolygonStyle" TargetType="Polygon">
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Fill" Value="White" />
+        <Setter Property="Stroke" Value="Black" />
+        <Setter Property="IsTabStop" Value="True" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+    </Style>
+
+    <DataTemplate x:Key="CropAnchor_TopLeft">
+        <Polygon Points="0,0 40,0 40,8, 8,8 8,40, 0,40" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="-9" Y="-9" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="CropAnchor_TopRight">
+        <Polygon Points="0,0 40,0 40,40 32,40 32,8 0,8" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="10" Y="-9" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="CropAnchor_BottomLeft">
+        <Polygon Points="0,0 8,0 8,32 40,32 40,40 0,40" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="-9" Y="9" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="CropAnchor_BottomRight">
+        <Polygon Points="32,0 40,0 40,40 0,40 0,32 32,32" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="10" Y="10" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="CropAnchor_Top">
+        <Polygon Points="0,0 40,0 40,8 0,8" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform Y="-9" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="CropAnchor_Left">
+        <Polygon Points="0,0 8,0 8,40 0,40" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="-9" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="CropAnchor_Right">
+        <Polygon Points="32,0 40,0 40,40 32,40" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="10" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="CropAnchor_Bottom">
+        <Polygon Points="0,32 40,32 40,40 0,40" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform Y="10" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+
     <Style
         x:Key="IconButtonStyle"
         BasedOn="{StaticResource DefaultButtonStyle}"
