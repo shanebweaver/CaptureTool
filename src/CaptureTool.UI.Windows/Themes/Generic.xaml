@@ -87,6 +87,63 @@
         </Polygon>
     </DataTemplate>
 
+    <DataTemplate x:Key="VideoAnchor_TopLeft">
+        <Polygon Points="0,0 40,0 40,8, 8,8 8,40, 0,40" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="-1" Y="-1" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="VideoAnchor_TopRight">
+        <Polygon Points="0,0 40,0 40,40 32,40 32,8 0,8" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="2" Y="-1" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="VideoAnchor_BottomLeft">
+        <Polygon Points="0,0 8,0 8,32 40,32 40,40 0,40" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="-1" Y="1" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="VideoAnchor_BottomRight">
+        <Polygon Points="32,0 40,0 40,40 0,40 0,32 32,32" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="2" Y="2" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="VideoAnchor_Top">
+        <Polygon Points="0,0 40,0 40,8 0,8" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform Y="-1" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="VideoAnchor_Left">
+        <Polygon Points="0,0 8,0 8,40 0,40" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="-1" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="VideoAnchor_Right">
+        <Polygon Points="32,0 40,0 40,40 32,40" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform X="2" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+    <DataTemplate x:Key="VideoAnchor_Bottom">
+        <Polygon Points="0,32 40,32 40,40 0,40" Style="{StaticResource CropAnchorPolygonStyle}">
+            <Polygon.RenderTransform>
+                <TranslateTransform Y="2" />
+            </Polygon.RenderTransform>
+        </Polygon>
+    </DataTemplate>
+
     <Style
         x:Key="IconButtonStyle"
         BasedOn="{StaticResource DefaultButtonStyle}"

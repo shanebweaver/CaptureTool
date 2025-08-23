@@ -13,7 +13,21 @@
     mc:Ignorable="d">
 
     <Grid x:Name="RootPanel">
-        <controls:SelectionOverlay x:Name="SelectionOverlay" />
+        <Grid>
+            <controls:SelectionOverlay x:Name="SelectionOverlay" Visibility="{x:Bind ViewModel.IsActiveCaptureModeImage, Mode=OneWay}" />
+            <controls:CropOverlay
+                x:Name="CropOverlay"
+                AnchorBottom="{StaticResource VideoAnchor_Bottom}"
+                AnchorBottomLeft="{StaticResource VideoAnchor_BottomLeft}"
+                AnchorBottomRight="{StaticResource VideoAnchor_BottomRight}"
+                AnchorLeft="{StaticResource VideoAnchor_Left}"
+                AnchorRight="{StaticResource VideoAnchor_Right}"
+                AnchorTop="{StaticResource VideoAnchor_Top}"
+                AnchorTopLeft="{StaticResource VideoAnchor_TopLeft}"
+                AnchorTopRight="{StaticResource VideoAnchor_TopRight}"
+                SelectionArea="{x:Bind ViewModel.CaptureArea, Mode=TwoWay}"
+                Visibility="{x:Bind ViewModel.IsActiveCaptureModeVideo, Mode=OneWay}" />
+        </Grid>
 
         <controls:CaptureOverlayToolbar
             x:Name="Toolbar"

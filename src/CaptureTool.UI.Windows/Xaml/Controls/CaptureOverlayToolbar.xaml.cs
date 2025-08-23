@@ -120,16 +120,6 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         return false;
     }
 
-    private Visibility BoolToVisibility(bool? value)
-    {
-        return value == true ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private Visibility InverseBoolToVisibility(bool? value)
-    {
-        return value != true ? Visibility.Visible : Visibility.Collapsed;
-    }
-
     private void LocalAudioToggle_Click(object sender, RoutedEventArgs e)
     {
         IsDesktopAudioEnabled = !IsDesktopAudioEnabled;

@@ -121,7 +121,13 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
     public CaptureMode ActiveCaptureMode
     {
         get => _activeCaptureMode;
-        set => Set(ref _activeCaptureMode, value);
+        set
+        {
+            Set(ref _activeCaptureMode, value);
+            OnActiveCaptureModeChanged();
+            RaisePropertyChanged(nameof(IsActiveCaptureModeImage));
+            RaisePropertyChanged(nameof(IsActiveCaptureModeVideo));
+        }
     }
 
     private bool _isDesktopAudioEnabled;
@@ -130,6 +136,9 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
         get => _isDesktopAudioEnabled;
         set => Set(ref _isDesktopAudioEnabled, value);
     }
+
+    public bool IsActiveCaptureModeImage => _activeCaptureMode == CaptureMode.Image;
+    public bool IsActiveCaptureModeVideo => _activeCaptureMode == CaptureMode.Video;
 
     public bool IsVideoCaptureEnabled { get; }
     public bool IsFreeformModeEnabled { get; }
@@ -199,6 +208,14 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
         _monitor = null;
         _monitorWindows.Clear();
         _captureArea = Rectangle.Empty;
+    }
+
+    private void OnActiveCaptureModeChanged()
+    {
+        if (_activeCaptureMode == CaptureMode.Image)
+        {
+            CaptureArea = Rectangle.Empty;
+        }
     }
 
     private void TransitionToVideoMode()

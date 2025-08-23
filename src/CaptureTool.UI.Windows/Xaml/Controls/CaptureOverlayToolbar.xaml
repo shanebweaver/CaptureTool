@@ -9,6 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:templateselectors="using:CaptureTool.UI.Windows.Xaml.TemplateSelectors"
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:utils="using:CaptureTool.UI.Windows.Utils"
     mc:Ignorable="d">
     <Grid
         x:Name="ToolbarPanel"
@@ -25,7 +26,7 @@
                 <StackPanel
                     Orientation="Horizontal"
                     Spacing="8"
-                    Visibility="{x:Bind BoolToVisibility(IsActiveCaptureModeImage), Mode=OneWay}">
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsActiveCaptureModeImage), Mode=OneWay}">
                     <!--  Capture mode  -->
                     <toolkit:Segmented
                         x:Name="CaptureModeSegmentedControl"
@@ -85,7 +86,7 @@
                 <StackPanel
                     Orientation="Horizontal"
                     Spacing="8"
-                    Visibility="{x:Bind BoolToVisibility(IsActiveCaptureModeVideo), Mode=OneWay}">
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsActiveCaptureModeVideo), Mode=OneWay}">
                     <Button Click="BackButton_Click" Style="{StaticResource IconButtonStyle}">
                         <SymbolIcon Symbol="Back" />
                     </Button>
@@ -113,11 +114,11 @@
                             <FontIcon
                                 FontFamily="{StaticResource FluentSystemIcons}"
                                 Glyph="{StaticResource DesktopSpeaker20Regular}"
-                                Visibility="{x:Bind BoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
                             <FontIcon
                                 FontFamily="{StaticResource FluentSystemIcons}"
                                 Glyph="{StaticResource DesktopSpeakerOff20Regular}"
-                                Visibility="{x:Bind InverseBoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
+                                Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
                         </Grid>
                     </Button>
                 </StackPanel>

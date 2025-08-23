@@ -14,6 +14,10 @@ namespace CaptureTool.UI.Windows.Xaml.Windows;
 
 internal sealed partial class CaptureOverlayHost : IDisposable
 {
+#if DEBUG
+    private static readonly bool SingleMonitorNoWindowWatcher = true;
+#endif
+
     private readonly Action _onClosed;
 
     private readonly HashSet<MonitorCaptureResult> _monitors = [];
@@ -43,8 +47,10 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
         foreach (var monitor in monitors)
         {
-            if (!monitor.IsPrimary)
+#if DEBUG
+            if (SingleMonitorNoWindowWatcher && !monitor.IsPrimary)
                 continue;
+#endif
 
             _monitors.Add(monitor);
 
@@ -90,14 +96,23 @@ internal sealed partial class CaptureOverlayHost : IDisposable
         if (sender is Window window)
         {
             window.Activated -= OnPrimaryWindowActivated;
-            //StartForegroundMonitor();
+            StartForegroundWindowWatcher();
         }
     }
 
-    private void StartForegroundMonitor()
+    private void StartForegroundWindowWatcher()
     {
-        if (_foregroundTimer != null)
+#if DEBUG
+        if (SingleMonitorNoWindowWatcher)
+        {
             return;
+        }
+#endif
+
+        if (_foregroundTimer != null)
+        {
+            return;
+        }
 
         _foregroundTimer = new DispatcherTimer
         {

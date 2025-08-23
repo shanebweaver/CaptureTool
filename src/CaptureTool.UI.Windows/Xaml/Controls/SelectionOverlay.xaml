@@ -18,6 +18,7 @@
             <!--  Border  -->
             <Rectangle
                 x:Name="SelectionRectangle"
+                Margin="-2"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 Fill="Transparent"

@@ -19,7 +19,7 @@
 
             <!--  Border  -->
             <Rectangle
-                Margin="-3"
+                Margin="-1"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 Stroke="White"
