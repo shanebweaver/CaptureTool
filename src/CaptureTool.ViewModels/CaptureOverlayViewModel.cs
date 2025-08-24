@@ -1,8 +1,10 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Sync;
 using CaptureTool.Core.AppController;
+using CaptureTool.FeatureManagement;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace CaptureTool.ViewModels;
@@ -10,11 +12,15 @@ namespace CaptureTool.ViewModels;
 public sealed partial class CaptureOverlayViewModel : ViewModelBase
 {
     private readonly IAppController _appController;
+    private readonly IFeatureManager _featureManager;
     private readonly List<CaptureOverlayWindowViewModel> _windowViewModels = [];
 
-    public CaptureOverlayViewModel(IAppController appController)
+    public CaptureOverlayViewModel(
+        IAppController appController,
+        IFeatureManager featureManager)
     {
         _appController = appController;
+        _featureManager = featureManager;
     }
 
     public void AddWindowViewModel(CaptureOverlayWindowViewModel newVM)
@@ -32,6 +38,8 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
 
     public void TransitionToVideoMode(MonitorCaptureResult monitor, Rectangle area)
     {
+        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
+
         foreach (var windowViewModel in _windowViewModels)
         {
             if (windowViewModel.Monitor.HasValue && windowViewModel.Monitor.Value.HMonitor == monitor.HMonitor)
@@ -108,6 +116,7 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
 
         if (windowVM.SelectedCaptureMode == CaptureMode.Video)
         {
+            Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
             _appController.PrepareForVideoCapture(windowVM.Monitor.Value, windowVM.CaptureArea);
         }
     }

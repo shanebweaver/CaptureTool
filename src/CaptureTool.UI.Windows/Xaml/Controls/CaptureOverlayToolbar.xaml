@@ -31,6 +31,7 @@
                     <!--  Capture mode  -->
                     <toolkit:Segmented
                         x:Name="CaptureModeSegmentedControl"
+                        x:Load="False"
                         SelectedIndex="{x:Bind SelectedCaptureModeIndex, Mode=TwoWay}"
                         SelectionMode="Single"
                         SingleSelectionFollowsFocus="True">

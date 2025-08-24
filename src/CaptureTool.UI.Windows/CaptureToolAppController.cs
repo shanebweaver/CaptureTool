@@ -3,6 +3,7 @@ using CaptureTool.Capture.Windows;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
@@ -32,6 +33,7 @@ internal partial class CaptureToolAppController : IAppController
     private readonly INavigationService _navigationService;
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
+    private readonly IFeatureManager _featureManager;
 
     private CaptureOverlayHost? _overlayHost;
     private MainWindowHost? _mainWindowHost;
@@ -43,12 +45,14 @@ internal partial class CaptureToolAppController : IAppController
         ILogService logService,
         INavigationService navigationService,
         ICancellationService cancellationService,
-        ISettingsService settingsService) 
+        ISettingsService settingsService,
+        IFeatureManager featureManager) 
     {
         _logService = logService;
         _navigationService = navigationService;
         _cancellationService = cancellationService;
         _settingsService = settingsService;
+        _featureManager = featureManager;
     }
 
     public async Task InitializeAsync()
@@ -92,20 +96,26 @@ internal partial class CaptureToolAppController : IAppController
             string source = queryParams.Get("source") ?? string.Empty;
             if (source == "PrintScreen")
             {
-                // PrtSc key modern behavior.
-                // Windows 11 has a global setting and will only call ms-screenclip if the user want to show the capture app.
-                // In Windows Settings > Accessibility > Keyboard, "Use the Print screen key to open screen capture"
                 ShowCaptureOverlay(CaptureOptions.ImageDefault);
             }
             else if (source == "ScreenRecorderHotKey" || isRecordingType)
             {
-                // Video capture
-                ShowCaptureOverlay(CaptureOptions.VideoDefault);
+                if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
+                {
+                    ShowCaptureOverlay(CaptureOptions.VideoDefault);
+                }
+                else
+                {
+                    ShowCaptureOverlay(CaptureOptions.ImageDefault);
+                }
             }
             else if (source == "HotKey")
             {
-                // Image capture
                 ShowCaptureOverlay(CaptureOptions.ImageDefault);
+            }
+            else
+            {
+                RestoreMainWindow();
             }
         }
     }
@@ -327,6 +337,8 @@ internal partial class CaptureToolAppController : IAppController
 
     public void PrepareForVideoCapture(MonitorCaptureResult monitor, Rectangle area)
     {
+        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
+
         if (_overlayHost == null)
         {
             ShowCaptureOverlay();

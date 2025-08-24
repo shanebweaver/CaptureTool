@@ -1,4 +1,5 @@
 using CaptureTool.Capture;
+using CaptureTool.FeatureManagement;
 using Microsoft.UI.Xaml;
 using System;
 using System.Collections.Generic;
@@ -116,6 +117,11 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     public CaptureOverlayToolbar()
     {
         InitializeComponent();
+
+        if (ServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
+        {
+            FindName(nameof(CaptureModeSegmentedControl));
+        }
     }
 
     private bool IsCaptureTypeSupported(CaptureType captureType)

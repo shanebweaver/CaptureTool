@@ -6,6 +6,7 @@ using CaptureTool.Services.Themes;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace CaptureTool.ViewModels;
@@ -14,6 +15,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
 {
     private readonly IThemeService _themeService;
     private readonly IAppController _appController;
+    private readonly IFeatureManager _featureManager;
 
     public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
@@ -149,6 +151,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
         IThemeService themeService,
         IAppController appController)
     {
+        _featureManager = featureManager;
         _appController = appController;
         _captureArea = Rectangle.Empty;
         _monitorWindows = [];
@@ -221,6 +224,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
 
     private void TransitionToVideoMode()
     {
+        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
         ActiveCaptureMode = CaptureMode.Video;
     }
 
@@ -247,6 +251,6 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
 
     private void StartVideoCapture()
     {
-
+        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
     }
 }
