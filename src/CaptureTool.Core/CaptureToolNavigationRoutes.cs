@@ -11,4 +11,5 @@ public static partial class CaptureToolNavigationRoutes
     public static readonly NavigationRoute About = new("About");
     public static readonly NavigationRoute AddOns = new("AddOns");
     public static readonly NavigationRoute ImageEdit = new("ImageEdit");
+    public static readonly NavigationRoute VideoEdit = new("VideoEdit");
 }

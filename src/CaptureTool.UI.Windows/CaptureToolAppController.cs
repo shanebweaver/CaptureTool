@@ -3,6 +3,7 @@ using CaptureTool.Capture.Windows;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
@@ -32,6 +33,7 @@ internal partial class CaptureToolAppController : IAppController
     private readonly INavigationService _navigationService;
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
+    private readonly IFeatureManager _featureManager;
 
     private CaptureOverlayHost? _overlayHost;
     private MainWindowHost? _mainWindowHost;
@@ -43,12 +45,14 @@ internal partial class CaptureToolAppController : IAppController
         ILogService logService,
         INavigationService navigationService,
         ICancellationService cancellationService,
-        ISettingsService settingsService) 
+        ISettingsService settingsService,
+        IFeatureManager featureManager) 
     {
         _logService = logService;
         _navigationService = navigationService;
         _cancellationService = cancellationService;
         _settingsService = settingsService;
+        _featureManager = featureManager;
     }
 
     public async Task InitializeAsync()
@@ -92,20 +96,26 @@ internal partial class CaptureToolAppController : IAppController
             string source = queryParams.Get("source") ?? string.Empty;
             if (source == "PrintScreen")
             {
-                // PrtSc key modern behavior.
-                // Windows 11 has a global setting and will only call ms-screenclip if the user want to show the capture app.
-                // In Windows Settings > Accessibility > Keyboard, "Use the Print screen key to open screen capture"
                 ShowCaptureOverlay(CaptureOptions.ImageDefault);
             }
             else if (source == "ScreenRecorderHotKey" || isRecordingType)
             {
-                // Video capture
-                ShowCaptureOverlay(CaptureOptions.VideoDefault);
+                if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
+                {
+                    ShowCaptureOverlay(CaptureOptions.VideoDefault);
+                }
+                else
+                {
+                    ShowCaptureOverlay(CaptureOptions.ImageDefault);
+                }
             }
             else if (source == "HotKey")
             {
-                // Image capture
                 ShowCaptureOverlay(CaptureOptions.ImageDefault);
+            }
+            else
+            {
+                RestoreMainWindow();
             }
         }
     }
@@ -196,82 +206,6 @@ internal partial class CaptureToolAppController : IAppController
         });
     }
 
-    private async Task<bool> TryAutoCopyImageAsync(ImageFile imageFile)
-    {
-        try
-        {
-            bool autoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
-            if (!autoCopy)
-            {
-                return false;
-            }
-
-            // Load the file
-            global::Windows.Storage.StorageFile file = await global::Windows.Storage.StorageFile.GetFileFromPathAsync(imageFile.Path);
-
-            // Open the file as a stream
-            using IRandomAccessStream stream = await file.OpenAsync(global::Windows.Storage.FileAccessMode.Read);
-
-            // Decode the bitmap
-            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
-            SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync();
-
-            // Convert to a compatible format (Clipboard requires BGRA8 with premultiplied alpha)
-            SoftwareBitmap converted = SoftwareBitmap.Convert(
-                softwareBitmap,
-                BitmapPixelFormat.Bgra8,
-                BitmapAlphaMode.Premultiplied
-            );
-
-            // Encode to PNG into a stream
-            InMemoryRandomAccessStream inMemoryStream = new();
-            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, inMemoryStream);
-            encoder.SetSoftwareBitmap(converted);
-            await encoder.FlushAsync();
-
-            // Prepare clipboard content
-            DataPackage dataPackage = new();
-            dataPackage.SetBitmap(RandomAccessStreamReference.CreateFromStream(inMemoryStream));
-            Clipboard.SetContent(dataPackage);
-            Clipboard.Flush();
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private bool TryAutoSaveImage(ImageFile imageFile)
-    {
-        try
-        {
-            bool autoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
-            if (!autoSave)
-            {
-                return false;
-            }
-
-            string screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
-            if (string.IsNullOrWhiteSpace(screenshotsFolder))
-            {
-                screenshotsFolder = GetDefaultScreenshotsFolderPath();
-            }
-
-            string tempFilePath = imageFile.Path;
-            string fileName = Path.GetFileName(tempFilePath);
-            string newFilePath = Path.Combine(screenshotsFolder, fileName);
-
-            File.Copy(tempFilePath, newFilePath, true);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     public void PerformImageCapture(MonitorCaptureResult monitor, Rectangle area)
     {
         ThrowIfNotInitialized();
@@ -327,12 +261,23 @@ internal partial class CaptureToolAppController : IAppController
 
     public void PrepareForVideoCapture(MonitorCaptureResult monitor, Rectangle area)
     {
-        // TODO: Transition the overlay to show the recording toolbar.
+        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
+
+        if (_overlayHost == null)
+        {
+            ShowCaptureOverlay();
+        }
+        _overlayHost?.TransitionToVideoMode(monitor, area);
     }
 
     public nint GetMainWindowHandle()
     {
         return _mainWindowHost?.Handle ?? IntPtr.Zero;
+    }
+
+    public string GetDefaultScreenshotsFolderPath()
+    {
+        return global::Windows.Storage.KnownFolders.SavedPictures.Path;
     }
 
     public void GoHome()
@@ -433,8 +378,80 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
-    public string GetDefaultScreenshotsFolderPath()
+    private async Task<bool> TryAutoCopyImageAsync(ImageFile imageFile)
     {
-        return global::Windows.Storage.KnownFolders.SavedPictures.Path;
+        try
+        {
+            bool autoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
+            if (!autoCopy)
+            {
+                return false;
+            }
+
+            // Load the file
+            global::Windows.Storage.StorageFile file = await global::Windows.Storage.StorageFile.GetFileFromPathAsync(imageFile.Path);
+
+            // Open the file as a stream
+            using IRandomAccessStream stream = await file.OpenAsync(global::Windows.Storage.FileAccessMode.Read);
+
+            // Decode the bitmap
+            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
+            SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+
+            // Convert to a compatible format (Clipboard requires BGRA8 with premultiplied alpha)
+            SoftwareBitmap converted = SoftwareBitmap.Convert(
+                softwareBitmap,
+                BitmapPixelFormat.Bgra8,
+                BitmapAlphaMode.Premultiplied
+            );
+
+            // Encode to PNG into a stream
+            InMemoryRandomAccessStream inMemoryStream = new();
+            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, inMemoryStream);
+            encoder.SetSoftwareBitmap(converted);
+            await encoder.FlushAsync();
+
+            // Prepare clipboard content
+            DataPackage dataPackage = new();
+            dataPackage.SetBitmap(RandomAccessStreamReference.CreateFromStream(inMemoryStream));
+            Clipboard.SetContent(dataPackage);
+            Clipboard.Flush();
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
+
+    private bool TryAutoSaveImage(ImageFile imageFile)
+    {
+        try
+        {
+            bool autoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
+            if (!autoSave)
+            {
+                return false;
+            }
+
+            string screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
+            if (string.IsNullOrWhiteSpace(screenshotsFolder))
+            {
+                screenshotsFolder = GetDefaultScreenshotsFolderPath();
+            }
+
+            string tempFilePath = imageFile.Path;
+            string fileName = Path.GetFileName(tempFilePath);
+            string newFilePath = Path.Combine(screenshotsFolder, fileName);
+
+            File.Copy(tempFilePath, newFilePath, true);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
 }

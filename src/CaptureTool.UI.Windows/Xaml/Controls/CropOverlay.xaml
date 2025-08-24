@@ -7,29 +7,20 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=controls:CropOverlay}"
     mc:Ignorable="d">
-    <Canvas x:Name="CropCanvas">
+    <Canvas x:Name="RootCanvas">
         <Grid
-            x:Name="CropBoundary"
+            x:Name="Boundary"
             Background="Transparent"
             BorderThickness="0">
-            <Grid.Resources>
-                <Style x:Key="CropAnchorPolygonStyle" TargetType="Polygon">
-                    <Setter Property="Width" Value="40" />
-                    <Setter Property="Height" Value="40" />
-                    <Setter Property="Fill" Value="White" />
-                    <Setter Property="Stroke" Value="Black" />
-                    <Setter Property="IsTabStop" Value="True" />
-                    <Setter Property="UseSystemFocusVisuals" Value="True" />
-                </Style>
-            </Grid.Resources>
             <Grid.BorderBrush>
                 <SolidColorBrush Opacity=".5" Color="Black" />
             </Grid.BorderBrush>
 
             <!--  Border  -->
             <Rectangle
-                Margin="-3"
+                Margin="-1"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 Stroke="White"
@@ -38,123 +29,75 @@
             <!--  Crop anchors  -->
             <!--  Top left  -->
             <Grid
-                x:Name="CropAnchorBox_TopLeft"
+                x:Name="AnchorBox_TopLeft"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Background="Transparent">
-                <Polygon
-                    x:Name="CropAnchor_TopLeft"
-                    Points="0,0 40,0 40,8, 8,8 8,40, 0,40"
-                    Style="{StaticResource CropAnchorPolygonStyle}">
-                    <Polygon.RenderTransform>
-                        <TranslateTransform X="-9" Y="-9" />
-                    </Polygon.RenderTransform>
-                </Polygon>
+                Background="Transparent"
+                Visibility="{x:Bind CanResize, Mode=OneWay}">
+                <ContentPresenter x:Name="Anchor_TopLeft" ContentTemplate="{x:Bind AnchorTopLeft, Mode=OneWay}" />
             </Grid>
             <!--  Top right  -->
             <Grid
-                x:Name="CropAnchorBox_TopRight"
+                x:Name="AnchorBox_TopRight"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
-                Background="Transparent">
-                <Polygon
-                    x:Name="CropAnchor_TopRight"
-                    Points="0,0 40,0 40,40 32,40 32,8 0,8"
-                    Style="{StaticResource CropAnchorPolygonStyle}">
-                    <Polygon.RenderTransform>
-                        <TranslateTransform X="10" Y="-9" />
-                    </Polygon.RenderTransform>
-                </Polygon>
+                Background="Transparent"
+                Visibility="{x:Bind CanResize, Mode=OneWay}">
+                <ContentPresenter x:Name="Anchor_TopRight" ContentTemplate="{x:Bind AnchorTopRight, Mode=OneWay}" />
             </Grid>
             <!--  Bottom left  -->
             <Grid
-                x:Name="CropAnchorBox_BottomLeft"
+                x:Name="AnchorBox_BottomLeft"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Bottom"
-                Background="Transparent">
-                <Polygon
-                    x:Name="CropAnchor_BottomLeft"
-                    Points="0,0 8,0 8,32 40,32 40,40 0,40"
-                    Style="{StaticResource CropAnchorPolygonStyle}">
-                    <Polygon.RenderTransform>
-                        <TranslateTransform X="-9" Y="9" />
-                    </Polygon.RenderTransform>
-                </Polygon>
+                Background="Transparent"
+                Visibility="{x:Bind CanResize, Mode=OneWay}">
+                <ContentPresenter x:Name="Anchor_BottomLeft" ContentTemplate="{x:Bind AnchorBottomLeft, Mode=OneWay}" />
             </Grid>
             <!--  Bottom right  -->
             <Grid
-                x:Name="CropAnchorBox_BottomRight"
+                x:Name="AnchorBox_BottomRight"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
-                Background="Transparent">
-                <Polygon
-                    x:Name="CropAnchor_BottomRight"
-                    Points="32,0 40,0 40,40 0,40 0,32 32,32"
-                    Style="{StaticResource CropAnchorPolygonStyle}">
-                    <Polygon.RenderTransform>
-                        <TranslateTransform X="10" Y="10" />
-                    </Polygon.RenderTransform>
-                </Polygon>
+                Background="Transparent"
+                Visibility="{x:Bind CanResize, Mode=OneWay}">
+                <ContentPresenter x:Name="Anchor_BottomRight" ContentTemplate="{x:Bind AnchorBottomRight, Mode=OneWay}" />
             </Grid>
             <!--  Top  -->
             <Grid
-                x:Name="CropAnchorBox_Top"
+                x:Name="AnchorBox_Top"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
-                Background="Transparent">
-                <Polygon
-                    x:Name="CropAnchor_Top"
-                    Points="0,0 40,0 40,8 0,8"
-                    Style="{StaticResource CropAnchorPolygonStyle}">
-                    <Polygon.RenderTransform>
-                        <TranslateTransform Y="-9" />
-                    </Polygon.RenderTransform>
-                </Polygon>
+                Background="Transparent"
+                Visibility="{x:Bind CanResize, Mode=OneWay}">
+                <ContentPresenter x:Name="Anchor_Top" ContentTemplate="{x:Bind AnchorTop, Mode=OneWay}" />
             </Grid>
             <!--  Left  -->
             <Grid
-                x:Name="CropAnchorBox_Left"
+                x:Name="AnchorBox_Left"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Background="Transparent">
-                <Polygon
-                    x:Name="CropAnchor_Left"
-                    Points="0,0 8,0 8,40 0,40"
-                    Style="{StaticResource CropAnchorPolygonStyle}">
-                    <Polygon.RenderTransform>
-                        <TranslateTransform X="-9" />
-                    </Polygon.RenderTransform>
-                </Polygon>
+                Background="Transparent"
+                Visibility="{x:Bind CanResize, Mode=OneWay}">
+                <ContentPresenter x:Name="Anchor_Left" ContentTemplate="{x:Bind AnchorLeft, Mode=OneWay}" />
             </Grid>
             <!--  Right  -->
             <Grid
-                x:Name="CropAnchorBox_Right"
+                x:Name="AnchorBox_Right"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
-                Background="Transparent">
-                <Polygon
-                    x:Name="CropAnchor_Right"
-                    Points="32,0 40,0 40,40 32,40"
-                    Style="{StaticResource CropAnchorPolygonStyle}">
-                    <Polygon.RenderTransform>
-                        <TranslateTransform X="10" />
-                    </Polygon.RenderTransform>
-                </Polygon>
+                Background="Transparent"
+                Visibility="{x:Bind CanResize, Mode=OneWay}">
+                <ContentPresenter x:Name="Anchor_Right" ContentTemplate="{x:Bind AnchorRight, Mode=OneWay}" />
             </Grid>
             <!--  Bottom  -->
             <Grid
-                x:Name="CropAnchorBox_Bottom"
+                x:Name="AnchorBox_Bottom"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Bottom"
-                Background="Transparent">
-                <Polygon
-                    x:Name="CropAnchor_Bottom"
-                    Points="0,32 40,32 40,40 0,40"
-                    Style="{StaticResource CropAnchorPolygonStyle}">
-                    <Polygon.RenderTransform>
-                        <TranslateTransform Y="10" />
-                    </Polygon.RenderTransform>
-                </Polygon>
+                Background="Transparent"
+                Visibility="{x:Bind CanResize, Mode=OneWay}">
+                <ContentPresenter x:Name="Anchor_Bottom" ContentTemplate="{x:Bind AnchorBottom, Mode=OneWay}" />
             </Grid>
         </Grid>
     </Canvas>

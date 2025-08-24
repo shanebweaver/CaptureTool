@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=local:ImageCanvas}"
     Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
     mc:Ignorable="d">
     <Grid
@@ -43,8 +44,16 @@
 
                 <local:CropOverlay
                     x:Name="CropOverlay"
-                    CropRect="{x:Bind CropRect, Mode=TwoWay}"
+                    AnchorBottom="{StaticResource CropAnchor_Bottom}"
+                    AnchorBottomLeft="{StaticResource CropAnchor_BottomLeft}"
+                    AnchorBottomRight="{StaticResource CropAnchor_BottomRight}"
+                    AnchorLeft="{StaticResource CropAnchor_Left}"
+                    AnchorRight="{StaticResource CropAnchor_Right}"
+                    AnchorTop="{StaticResource CropAnchor_Top}"
+                    AnchorTopLeft="{StaticResource CropAnchor_TopLeft}"
+                    AnchorTopRight="{StaticResource CropAnchor_TopRight}"
                     InteractionComplete="CropOverlay_InteractionComplete"
+                    SelectionArea="{x:Bind CropRect, Mode=TwoWay}"
                     Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
             </Grid>
         </ScrollView>

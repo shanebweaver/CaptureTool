@@ -3,7 +3,7 @@ using CaptureTool.Services.Themes;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media.Imaging;
-using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices.WindowsRuntime;
 
@@ -33,8 +33,6 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
     private void CaptureOverlayWindowView_Loaded(object sender, RoutedEventArgs e)
     {
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
-        Toolbar.CloseRequested += OnCloseRequested;
-        SecretEscapeButton.Click += OnEscapeRequested;
         SelectionOverlay.SelectionComplete += SelectionOverlay_SelectionComplete;
 
         if (ViewModel.IsLoaded)
@@ -50,16 +48,10 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
     private void CaptureOverlayWindowView_Unloaded(object sender, RoutedEventArgs e)
     {
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
-        Toolbar.CloseRequested -= OnCloseRequested;
-        SecretEscapeButton.Click -= OnEscapeRequested;
         SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;
-
-        SelectionOverlay.WindowRects = [];
-        SelectionOverlay.SelectionRect = Rectangle.Empty;
-        SelectionOverlay.CaptureType = 0;
     }
 
-    private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
         {
@@ -130,15 +122,5 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
         {
             ViewModel.RequestCaptureCommand.Execute(null);
         }
-    }
-
-    private void OnCloseRequested(object? sender, EventArgs e)
-    {
-        ViewModel.CloseOverlayCommand.Execute(null);
-    }
-
-    private void OnEscapeRequested(object? sender, RoutedEventArgs e)
-    {
-        ViewModel.CloseOverlayCommand.Execute(null);
     }
 }
