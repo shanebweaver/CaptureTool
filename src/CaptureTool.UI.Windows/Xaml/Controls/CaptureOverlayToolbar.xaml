@@ -10,6 +10,7 @@
     xmlns:templateselectors="using:CaptureTool.UI.Windows.Xaml.TemplateSelectors"
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
     xmlns:utils="using:CaptureTool.UI.Windows.Utils"
+    d:DataContext="{d:DesignInstance Type=local:CaptureOverlayToolbar}"
     mc:Ignorable="d">
     <Grid
         x:Name="ToolbarPanel"
