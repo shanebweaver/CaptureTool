@@ -18,6 +18,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
     public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
     public RelayCommand TransitionToVideoModeCommand => new(TransitionToVideoMode);
+    public RelayCommand StartVideoCaptureCommand => new(StartVideoCapture);
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
@@ -242,5 +243,10 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
                 TransitionToVideoMode();
             }
         }
+    }
+
+    private void StartVideoCapture()
+    {
+
     }
 }

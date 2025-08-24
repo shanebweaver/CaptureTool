@@ -32,9 +32,11 @@
         <controls:CaptureOverlayToolbar
             x:Name="Toolbar"
             ActiveCaptureMode="{x:Bind ViewModel.ActiveCaptureMode, Mode=TwoWay}"
+            CloseCommand="{x:Bind ViewModel.CloseOverlayCommand, Mode=OneWay}"
             IsDesktopAudioEnabled="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=TwoWay}"
             SelectedCaptureModeIndex="{x:Bind ViewModel.SelectedCaptureModeIndex, Mode=TwoWay}"
             SelectedCaptureTypeIndex="{x:Bind ViewModel.SelectedCaptureTypeIndex, Mode=TwoWay}"
+            StartVideoCaptureCommand="{x:Bind ViewModel.StartVideoCaptureCommand, Mode=OneWay}"
             SupportedCaptureModes="{x:Bind ViewModel.SupportedCaptureModes, Mode=OneWay}"
             SupportedCaptureTypes="{x:Bind ViewModel.SupportedCaptureTypes, Mode=OneWay}"
             Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}" />
@@ -42,6 +44,7 @@
         <!--  Secret button to allow escape to work on all monitors.  -->
         <Button
             x:Name="SecretEscapeButton"
+            Command="{x:Bind ViewModel.CloseOverlayCommand, Mode=OneWay}"
             IsTabStop="False"
             Opacity="0">
             <Button.KeyboardAccelerators>

@@ -91,7 +91,10 @@
                         <SymbolIcon Symbol="Back" />
                     </Button>
 
-                    <Button MinWidth="100" Background="#AAFF3340">
+                    <Button
+                        MinWidth="100"
+                        Background="#AAFF3340"
+                        Command="{x:Bind StartVideoCaptureCommand, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon
                                 Margin="0,0,0,-2"
@@ -106,10 +109,7 @@
                         Margin="8,0"
                         VerticalAlignment="Center"
                         Text="00:00:00" />
-                    <Button
-                        x:Name="LocalAudioToggle"
-                        Click="LocalAudioToggle_Click"
-                        Style="{StaticResource IconButtonStyle}">
+                    <Button Click="LocalAudioToggle_Click" Style="{StaticResource IconButtonStyle}">
                         <Grid>
                             <FontIcon
                                 FontFamily="{StaticResource FluentSystemIcons}"
@@ -127,7 +127,7 @@
             <!--  Close  -->
             <Button
                 x:Uid="SelectionOverlay_CloseButton"
-                Click="CloseButton_Click"
+                Command="{x:Bind CloseCommand, Mode=OneWay}"
                 Style="{StaticResource IconButtonStyle}">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Cancel}" />
             </Button>
