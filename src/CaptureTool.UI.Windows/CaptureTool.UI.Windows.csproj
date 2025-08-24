@@ -14,9 +14,6 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="Xaml\Pages\VideoEditPage.xaml" />
-  </ItemGroup>
 
   <!-- App manifest -->
   <ItemGroup>
@@ -79,11 +76,6 @@
   <!-- Publish profiles -->
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Xaml\Pages\VideoEditPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
 
   <!-- Publish Properties -->
