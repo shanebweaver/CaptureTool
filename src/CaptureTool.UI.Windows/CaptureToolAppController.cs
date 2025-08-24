@@ -206,82 +206,6 @@ internal partial class CaptureToolAppController : IAppController
         });
     }
 
-    private async Task<bool> TryAutoCopyImageAsync(ImageFile imageFile)
-    {
-        try
-        {
-            bool autoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
-            if (!autoCopy)
-            {
-                return false;
-            }
-
-            // Load the file
-            global::Windows.Storage.StorageFile file = await global::Windows.Storage.StorageFile.GetFileFromPathAsync(imageFile.Path);
-
-            // Open the file as a stream
-            using IRandomAccessStream stream = await file.OpenAsync(global::Windows.Storage.FileAccessMode.Read);
-
-            // Decode the bitmap
-            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
-            SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync();
-
-            // Convert to a compatible format (Clipboard requires BGRA8 with premultiplied alpha)
-            SoftwareBitmap converted = SoftwareBitmap.Convert(
-                softwareBitmap,
-                BitmapPixelFormat.Bgra8,
-                BitmapAlphaMode.Premultiplied
-            );
-
-            // Encode to PNG into a stream
-            InMemoryRandomAccessStream inMemoryStream = new();
-            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, inMemoryStream);
-            encoder.SetSoftwareBitmap(converted);
-            await encoder.FlushAsync();
-
-            // Prepare clipboard content
-            DataPackage dataPackage = new();
-            dataPackage.SetBitmap(RandomAccessStreamReference.CreateFromStream(inMemoryStream));
-            Clipboard.SetContent(dataPackage);
-            Clipboard.Flush();
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private bool TryAutoSaveImage(ImageFile imageFile)
-    {
-        try
-        {
-            bool autoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
-            if (!autoSave)
-            {
-                return false;
-            }
-
-            string screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
-            if (string.IsNullOrWhiteSpace(screenshotsFolder))
-            {
-                screenshotsFolder = GetDefaultScreenshotsFolderPath();
-            }
-
-            string tempFilePath = imageFile.Path;
-            string fileName = Path.GetFileName(tempFilePath);
-            string newFilePath = Path.Combine(screenshotsFolder, fileName);
-
-            File.Copy(tempFilePath, newFilePath, true);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     public void PerformImageCapture(MonitorCaptureResult monitor, Rectangle area)
     {
         ThrowIfNotInitialized();
@@ -349,6 +273,11 @@ internal partial class CaptureToolAppController : IAppController
     public nint GetMainWindowHandle()
     {
         return _mainWindowHost?.Handle ?? IntPtr.Zero;
+    }
+
+    public string GetDefaultScreenshotsFolderPath()
+    {
+        return global::Windows.Storage.KnownFolders.SavedPictures.Path;
     }
 
     public void GoHome()
@@ -449,8 +378,80 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
-    public string GetDefaultScreenshotsFolderPath()
+    private async Task<bool> TryAutoCopyImageAsync(ImageFile imageFile)
     {
-        return global::Windows.Storage.KnownFolders.SavedPictures.Path;
+        try
+        {
+            bool autoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
+            if (!autoCopy)
+            {
+                return false;
+            }
+
+            // Load the file
+            global::Windows.Storage.StorageFile file = await global::Windows.Storage.StorageFile.GetFileFromPathAsync(imageFile.Path);
+
+            // Open the file as a stream
+            using IRandomAccessStream stream = await file.OpenAsync(global::Windows.Storage.FileAccessMode.Read);
+
+            // Decode the bitmap
+            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
+            SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+
+            // Convert to a compatible format (Clipboard requires BGRA8 with premultiplied alpha)
+            SoftwareBitmap converted = SoftwareBitmap.Convert(
+                softwareBitmap,
+                BitmapPixelFormat.Bgra8,
+                BitmapAlphaMode.Premultiplied
+            );
+
+            // Encode to PNG into a stream
+            InMemoryRandomAccessStream inMemoryStream = new();
+            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, inMemoryStream);
+            encoder.SetSoftwareBitmap(converted);
+            await encoder.FlushAsync();
+
+            // Prepare clipboard content
+            DataPackage dataPackage = new();
+            dataPackage.SetBitmap(RandomAccessStreamReference.CreateFromStream(inMemoryStream));
+            Clipboard.SetContent(dataPackage);
+            Clipboard.Flush();
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
+
+    private bool TryAutoSaveImage(ImageFile imageFile)
+    {
+        try
+        {
+            bool autoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
+            if (!autoSave)
+            {
+                return false;
+            }
+
+            string screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
+            if (string.IsNullOrWhiteSpace(screenshotsFolder))
+            {
+                screenshotsFolder = GetDefaultScreenshotsFolderPath();
+            }
+
+            string tempFilePath = imageFile.Path;
+            string fileName = Path.GetFileName(tempFilePath);
+            string newFilePath = Path.Combine(screenshotsFolder, fileName);
+
+            File.Copy(tempFilePath, newFilePath, true);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
 }
