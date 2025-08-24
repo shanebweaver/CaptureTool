@@ -331,7 +331,7 @@ internal partial class CaptureToolAppController : IAppController
         {
             ShowCaptureOverlay();
         }
-        _overlayHost?.TransitionToVideoMode();
+        _overlayHost?.TransitionToVideoMode(monitor, area);
     }
 
     public nint GetMainWindowHandle()

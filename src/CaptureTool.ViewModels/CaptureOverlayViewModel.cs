@@ -1,5 +1,8 @@
-﻿using CaptureTool.Core.AppController;
+﻿using CaptureTool.Capture;
+using CaptureTool.Common.Sync;
+using CaptureTool.Core.AppController;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 
 namespace CaptureTool.ViewModels;
@@ -18,15 +21,24 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
     {
         if (newVM.IsPrimary)
         {
-            newVM.PropertyChanged += CaptureOverlayWindowViewModel_PropertyChanged;
+            newVM.PropertyChanged += OnPrimaryWindowViewModelPropertyChanged;
+        }
+        else
+        {
+            newVM.PropertyChanged += OnSecondaryWindowViewModelPropertyChanged;
         }
         _windowViewModels.Add(newVM);
     }
 
-    public void TransitionToVideoMode()
+    public void TransitionToVideoMode(MonitorCaptureResult monitor, Rectangle area)
     {
-        foreach ( var windowViewModel in _windowViewModels)
+        foreach (var windowViewModel in _windowViewModels)
         {
+            if (windowViewModel.Monitor.HasValue && windowViewModel.Monitor.Value.HMonitor == monitor.HMonitor)
+            {
+                windowViewModel.CaptureArea = area;
+            }
+
             windowViewModel.TransitionToVideoModeCommand.Execute();
         }
     }
@@ -35,62 +47,95 @@ public sealed partial class CaptureOverlayViewModel : ViewModelBase
     {
         foreach (var windowViewModel in _windowViewModels)
         {
-            windowViewModel.PropertyChanged -= CaptureOverlayWindowViewModel_PropertyChanged;
+            if (windowViewModel.IsPrimary)
+            {
+                windowViewModel.PropertyChanged -= OnPrimaryWindowViewModelPropertyChanged;
+            }
+            else
+            {
+                windowViewModel.PropertyChanged -= OnSecondaryWindowViewModelPropertyChanged;
+            }
         }
         _windowViewModels.Clear();
     }
 
-    private void CaptureOverlayWindowViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnPrimaryWindowViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (sender is CaptureOverlayWindowViewModel windowVM)
         {
-            if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.CaptureArea))
+            switch (e.PropertyName)
             {
-                OnCaptureAreaChanged(windowVM);
+                case nameof(CaptureOverlayWindowViewModel.CaptureArea):
+                    OnCaptureAreaChanged(windowVM);
+                    break;
+
+                case nameof(CaptureOverlayWindowViewModel.SelectedCaptureMode):
+                    OnSelectedCaptureModeChanged(windowVM);
+                    break;
+
+                case nameof(CaptureOverlayWindowViewModel.SelectedCaptureTypeIndex):
+                    OnSelectedCaptureTypeIndexChanged(windowVM);
+                    break;
+
+                case nameof(CaptureOverlayWindowViewModel.ActiveCaptureMode):
+                    OnActiveCaptureModeChanged(windowVM);
+                    break;
             }
-            else if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.SelectedCaptureMode))
+        }
+    }
+
+    private void OnSecondaryWindowViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is CaptureOverlayWindowViewModel windowVM)
+        {
+            switch (e.PropertyName)
             {
-                foreach (var windowViewModel in _windowViewModels)
-                {
-                    if (windowViewModel == windowVM)
-                    {
-                        continue;
-                    }
-
-                    windowViewModel.SelectedCaptureModeIndex = windowVM.SelectedCaptureModeIndex;
-                }
-            }
-            else if (e.PropertyName == nameof(CaptureOverlayWindowViewModel.SelectedCaptureTypeIndex))
-            {
-                foreach (var windowViewModel in _windowViewModels)
-                {
-                    if (windowViewModel == windowVM)
-                    {
-                        continue;
-                    }
-
-                    windowViewModel.SelectedCaptureTypeIndex = windowVM.SelectedCaptureTypeIndex;
-                }
-
-                if (windowVM.SelectedCaptureType == Capture.CaptureType.AllScreens && windowVM.SelectedCaptureMode == Capture.CaptureMode.Image)
-                {
-                    _appController.PerformAllScreensCapture();
-                }
+                case nameof(CaptureOverlayWindowViewModel.CaptureArea):
+                    OnCaptureAreaChanged(windowVM);
+                    break;
             }
         }
     }
 
     private void OnCaptureAreaChanged(CaptureOverlayWindowViewModel windowVM)
     {
-        if (!windowVM.CaptureArea.IsEmpty)
+        if (windowVM.CaptureArea.IsEmpty || !windowVM.Monitor.HasValue)
         {
-            foreach (var tempWindowVM in _windowViewModels)
+            return;
+        }
+
+        SyncHelper.SetProperty(windowVM, _windowViewModels, vm => vm.CaptureArea, Rectangle.Empty);
+
+        if (windowVM.SelectedCaptureMode == CaptureMode.Video)
+        {
+            _appController.PrepareForVideoCapture(windowVM.Monitor.Value, windowVM.CaptureArea);
+        }
+    }
+
+    private void OnSelectedCaptureModeChanged(CaptureOverlayWindowViewModel windowVM)
+    {
+        SyncHelper.SyncProperty(windowVM, _windowViewModels, vm => vm.SelectedCaptureModeIndex);
+    }
+
+    private void OnSelectedCaptureTypeIndexChanged(CaptureOverlayWindowViewModel windowVM)
+    {
+        SyncHelper.SyncProperty(windowVM, _windowViewModels, vm => vm.SelectedCaptureTypeIndex);
+
+        if (windowVM.SelectedCaptureType == CaptureType.AllScreens)
+        {
+            if (windowVM.SelectedCaptureMode == CaptureMode.Image)
             {
-                if (tempWindowVM != windowVM)
-                {
-                    tempWindowVM.CaptureArea = Rectangle.Empty;
-                }
+                _appController.PerformAllScreensCapture();
+            }
+            else if (windowVM.SelectedCaptureMode == CaptureMode.Video)
+            {
+                throw new System.NotImplementedException();
             }
         }
+    }
+
+    private void OnActiveCaptureModeChanged(CaptureOverlayWindowViewModel windowVM)
+    {
+        SyncHelper.SyncProperty(windowVM, _windowViewModels, vm => vm.ActiveCaptureMode);
     }
 }

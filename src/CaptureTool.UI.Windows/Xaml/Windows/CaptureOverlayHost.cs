@@ -15,7 +15,7 @@ namespace CaptureTool.UI.Windows.Xaml.Windows;
 internal sealed partial class CaptureOverlayHost : IDisposable
 {
 #if DEBUG
-    private static readonly bool SingleMonitorNoWindowWatcher = true;
+    private static readonly bool SingleMonitorNoWindowWatcher = false;
 #endif
 
     private readonly Action _onClosed;
@@ -86,9 +86,9 @@ internal sealed partial class CaptureOverlayHost : IDisposable
         _primaryWindow?.Activate();
     }
 
-    public void TransitionToVideoMode()
+    public void TransitionToVideoMode(MonitorCaptureResult monitor, Rectangle area)
     {
-        _viewModel?.TransitionToVideoMode();
+        _viewModel?.TransitionToVideoMode(monitor, area);
     }
 
     private void OnPrimaryWindowActivated(object sender, WindowActivatedEventArgs args)
