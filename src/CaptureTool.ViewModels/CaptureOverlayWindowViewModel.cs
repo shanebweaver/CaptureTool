@@ -252,5 +252,9 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
     private void StartVideoCapture()
     {
         Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
+        if (Monitor.HasValue)
+        {
+            _appController.StartVideoCapture(Monitor.Value, CaptureArea);
+        }
     }
 }
