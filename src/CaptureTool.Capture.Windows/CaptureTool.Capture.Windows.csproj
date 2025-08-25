@@ -4,10 +4,12 @@
   <PropertyGroup>
     <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
     <Platforms>x64;ARM64</Platforms>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- Project references -->
   <ItemGroup>
+    <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj" />
     <ProjectReference Include="..\CaptureTool.Capture\CaptureTool.Capture.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
     <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
