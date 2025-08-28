@@ -1,15 +1,18 @@
-﻿namespace CaptureTool.Capture.Windows;
+﻿using System;
+using System.Diagnostics;
 
-public sealed partial class ScreenRecorder
+namespace CaptureTool.Capture.Windows;
+
+public static partial class ScreenRecorder
 {
-    public void StartRecording()
+    public static bool StartRecording(IntPtr hMonitor, string outputPath)
     {
-        var result = CaptureInterop.AddNumbers(3, 4);
-        System.Diagnostics.Debug.WriteLine(result);
+        bool success = CaptureInterop.TryStartRecording(hMonitor, outputPath);
+        Debug.WriteLine(success);
+        return success;
     }
 
-    public void StopRecording()
-    {
+    public static void PauseRecording() => CaptureInterop.TryPauseRecording();
 
-    }
+    public static void StopRecording() => CaptureInterop.TryStopRecording();
 }

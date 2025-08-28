@@ -278,8 +278,7 @@ internal partial class CaptureToolAppController : IAppController
             _overlayHost?.TransitionToVideoMode(monitor, area);
         }
 
-        var screenRecorder = new ScreenRecorder();// (monitor.HMonitor, area, Path.Join(GetDefaultScreenshotsFolderPath(), "test.mp4"));
-        screenRecorder.StartRecording();
+        ScreenRecorder.StartRecording(monitor.HMonitor, Path.Join(GetDefaultScreenshotsFolderPath(), "test.mp4"));
 
         //Debug.WriteLine("Recording...");
 
