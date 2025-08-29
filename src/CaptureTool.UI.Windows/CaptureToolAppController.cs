@@ -270,7 +270,7 @@ internal partial class CaptureToolAppController : IAppController
         _overlayHost?.TransitionToVideoMode(monitor, area);
     }
 
-    public void StartVideoCapture(MonitorCaptureResult monitor, Rectangle area)
+    public async void StartVideoCapture(MonitorCaptureResult monitor, Rectangle area)
     {
         if (_overlayHost == null)
         {
@@ -280,15 +280,15 @@ internal partial class CaptureToolAppController : IAppController
 
         ScreenRecorder.StartRecording(monitor.HMonitor, Path.Join(GetDefaultScreenshotsFolderPath(), "test.mp4"));
 
-        //Debug.WriteLine("Recording...");
+        Debug.WriteLine("Recording...");
 
-        //await Task.Delay(5000);
+        await Task.Delay(5000);
 
-        //Debug.WriteLine("Recorded 5 seconds");
+        Debug.WriteLine("Recorded 5 seconds");
 
-        //screenRecorder.StopRecording();
+        ScreenRecorder.StopRecording();
 
-        //Debug.WriteLine("ScreenRecorder stopped");
+        Debug.WriteLine("ScreenRecorder stopped");
 
         //screenRecorder.Dispose();
         //Debug.WriteLine("ScreenRecorder disposed");
