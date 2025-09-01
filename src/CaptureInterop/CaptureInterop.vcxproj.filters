@@ -27,6 +27,12 @@
     <ClInclude Include="MP4SinkWriter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FrameArrivedHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsCaptureHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -36,6 +42,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ScreenRecorder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MP4SinkWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FrameArrivedHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

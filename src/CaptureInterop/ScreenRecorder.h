@@ -1,7 +1,5 @@
 #pragma once
 
-#include <dxgi.h>
-
 extern "C"
 {    
 	__declspec(dllexport) bool TryStartRecording(HMONITOR hMonitor, const wchar_t* outputPath);
