@@ -8,3 +8,4 @@ GetWindowRect
 GetDpiForWindow
 SetWindowPos
 GetForegroundWindow
+SetWindowDisplayAffinity

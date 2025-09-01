@@ -61,6 +61,7 @@ public sealed partial class CaptureOverlayWindow : Window
                     // Must call SetForegroundWindow or focus will not move to the new window on activation.
                     var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
                     global::Windows.Win32.PInvoke.SetForegroundWindow(new(hwnd));
+                    global::Windows.Win32.PInvoke.SetWindowDisplayAffinity(new(hwnd), global::Windows.Win32.UI.WindowsAndMessaging.WINDOW_DISPLAY_AFFINITY.WDA_EXCLUDEFROMCAPTURE);
                 }
             }
             catch
