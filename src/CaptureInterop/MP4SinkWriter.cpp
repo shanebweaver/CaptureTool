@@ -94,9 +94,9 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture)
 
     for (UINT row = 0; row < m_height; ++row)
     {
-        memcpy(pData + row * mapped.RowPitch,
-            (BYTE*)mapped.pData + row * mapped.RowPitch,
-            mapped.RowPitch);
+        BYTE* destRow = pData + row * mapped.RowPitch;
+        BYTE* srcRow = (BYTE*)mapped.pData + (m_height - 1 - row) * mapped.RowPitch;
+        memcpy(destRow, srcRow, mapped.RowPitch);
     }
 
     buffer->SetCurrentLength(mapped.RowPitch * m_height);
