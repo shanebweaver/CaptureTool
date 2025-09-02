@@ -12,6 +12,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
 {
     private readonly struct ActivityIds
     {
+        public static readonly string ShowThirdParty = "AboutPageViewModel_ShowThirdParty";
         public static readonly string ShowPrivacyPolicy = "AboutPageViewModel_ShowPrivacyPolicy";
         public static readonly string ShowDisclaimerOfLiability = "AboutPageViewModel_ShowDisclaimerOfLiability";
         public static readonly string ShowTermsOfUse = "AboutPageViewModel_ShowTermsOfUse";
@@ -23,6 +24,8 @@ public sealed partial class AboutPageViewModel : ViewModelBase
 
     public event EventHandler<(string title, string content)>? ShowDialogRequested;
 
+    public RelayCommand ShowThirdPartyCommand =>
+        new(() => ShowDialog("About_ThirdParty_DialogTitle", "About_ThirdParty_DialogContent", ActivityIds.ShowThirdParty));
     public RelayCommand ShowPrivacyPolicyCommand => 
         new(() => ShowDialog("About_PrivacyPolicy_DialogTitle", "About_PrivacyPolicy_DialogContent", ActivityIds.ShowPrivacyPolicy));
     public RelayCommand ShowTermsOfUseCommand => 

@@ -21,6 +21,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
     public RelayCommand TransitionToVideoModeCommand => new(TransitionToVideoMode);
     public RelayCommand StartVideoCaptureCommand => new(StartVideoCapture);
+    public RelayCommand StopVideoCaptureCommand => new(StopVideoCapture);
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
@@ -140,11 +141,18 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
         set => Set(ref _isDesktopAudioEnabled, value);
     }
 
+    private bool _isCapturingVideo;
+    public bool IsCapturingVideo
+    {
+        get => _isCapturingVideo;
+        set => Set(ref _isCapturingVideo, value);
+    }
+
     public bool IsActiveCaptureModeImage => _activeCaptureMode == CaptureMode.Image;
     public bool IsActiveCaptureModeVideo => _activeCaptureMode == CaptureMode.Video;
 
-    public bool IsVideoCaptureEnabled { get; }
-    public bool IsFreeformModeEnabled { get; }
+    private bool IsVideoCaptureFeatureEnabled { get; }
+    private bool IsFreeformModeFeatureEnabled { get; }
 
     public CaptureOverlayWindowViewModel(
         IFeatureManager featureManager,
@@ -160,11 +168,11 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
         DefaultAppTheme = _themeService.DefaultTheme;
         CurrentAppTheme = _themeService.CurrentTheme;
 
-        IsVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
-        IsFreeformModeEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_FreeformMode);
+        IsVideoCaptureFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
+        IsFreeformModeFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_FreeformMode);
 
         _supportedCaptureModes = [ CaptureMode.Image ];
-        if (IsVideoCaptureEnabled)
+        if (IsVideoCaptureFeatureEnabled)
         {
             _supportedCaptureModes.Add(CaptureMode.Video);
         }
@@ -172,7 +180,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
         _supportedCaptureTypes = [CaptureType.Rectangle];
          _supportedCaptureTypes.Add(CaptureType.Window);
         _supportedCaptureTypes.Add(CaptureType.FullScreen);
-        if (IsFreeformModeEnabled)
+        if (IsFreeformModeFeatureEnabled)
         {
             _supportedCaptureTypes.Add(CaptureType.Freeform);
         }
@@ -212,6 +220,8 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
         _monitor = null;
         _monitorWindows.Clear();
         _captureArea = Rectangle.Empty;
+        _isDesktopAudioEnabled = false;
+        _isCapturingVideo = false;
     }
 
     private void OnActiveCaptureModeChanged()
@@ -252,9 +262,27 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
     private void StartVideoCapture()
     {
         Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
+
+        if (IsCapturingVideo)
+        {
+            return;
+        }
+
         if (Monitor.HasValue)
         {
             _appController.StartVideoCapture(Monitor.Value, CaptureArea);
+            IsCapturingVideo = true;
         }
+    }
+
+    private void StopVideoCapture()
+    {
+        if (!IsCapturingVideo)
+        {
+            return;
+        }
+
+        _appController.StopVideoCapture();
+        IsCapturingVideo = false;
     }
 }

@@ -35,11 +35,11 @@ internal partial class CaptureToolAppController : IAppController
     private readonly ISettingsService _settingsService;
     private readonly IFeatureManager _featureManager;
 
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private bool _isInitialized;
+    private string? _tempVideoPath;
     private CaptureOverlayHost? _overlayHost;
     private MainWindowHost? _mainWindowHost;
-
-    private readonly SemaphoreSlim _semaphore = new(1,1);
-    private bool _isInitialized;
 
     public CaptureToolAppController(
         ILogService logService,
@@ -268,9 +268,10 @@ internal partial class CaptureToolAppController : IAppController
             ShowCaptureOverlay();
         }
         _overlayHost?.TransitionToVideoMode(monitor, area);
+        _tempVideoPath = null;
     }
 
-    public async void StartVideoCapture(MonitorCaptureResult monitor, Rectangle area)
+    public void StartVideoCapture(MonitorCaptureResult monitor, Rectangle area)
     {
         if (_overlayHost == null)
         {
@@ -278,21 +279,28 @@ internal partial class CaptureToolAppController : IAppController
             _overlayHost?.TransitionToVideoMode(monitor, area);
         }
 
-        ScreenRecorder.StartRecording(monitor.HMonitor, Path.Join(GetDefaultScreenshotsFolderPath(), "test.mp4"));
+        _tempVideoPath = Path.Combine(
+            ApplicationData.GetDefault().TemporaryPath,
+            $"capture_{Guid.NewGuid()}.mp4"
+        );
 
-        Debug.WriteLine("Recording...");
+        ScreenRecorder.StartRecording(monitor.HMonitor, _tempVideoPath);
+    }
 
-        await Task.Delay(5000);
-
-        Debug.WriteLine("Recorded 5 seconds");
+    public void StopVideoCapture()
+    {
+        if (string.IsNullOrEmpty(_tempVideoPath))
+        {
+            return;
+        }
 
         ScreenRecorder.StopRecording();
+        RestoreMainWindow();
+        CloseCaptureOverlay();
 
-        Debug.WriteLine("ScreenRecorder stopped");
-
-        //screenRecorder.Dispose();
-        //Debug.WriteLine("ScreenRecorder disposed");
-
+        VideoFile videoFile = new(_tempVideoPath);
+        _navigationService.Navigate(CaptureToolNavigationRoutes.VideoEdit, videoFile);
+        _tempVideoPath = null;
     }
 
     public nint GetMainWindowHandle()

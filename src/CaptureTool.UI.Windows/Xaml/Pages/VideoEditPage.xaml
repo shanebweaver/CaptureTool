@@ -11,6 +11,6 @@
     mc:Ignorable="d">
 
     <Grid>
-        <TextBlock Text="Video edit page" />
+        <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" />
     </Grid>
 </local:VideoEditPageBase>
