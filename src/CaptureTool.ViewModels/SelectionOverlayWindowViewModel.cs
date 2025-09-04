@@ -11,7 +11,7 @@ using System.Drawing;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBase
+public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase
 {
     private readonly IThemeService _themeService;
     private readonly IAppController _appController;
@@ -154,7 +154,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
     private bool IsVideoCaptureFeatureEnabled { get; }
     private bool IsFreeformModeFeatureEnabled { get; }
 
-    public CaptureOverlayWindowViewModel(
+    public SelectionOverlayWindowViewModel(
         IFeatureManager featureManager,
         IThemeService themeService,
         IAppController appController)
@@ -240,7 +240,7 @@ public sealed partial class CaptureOverlayWindowViewModel : LoadableViewModelBas
 
     private void CloseOverlay()
     {
-        _appController.CloseCaptureOverlay();
+        _appController.CloseSelectionOverlay();
         _appController.ShowMainWindow();
     }
 

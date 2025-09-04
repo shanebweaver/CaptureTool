@@ -60,7 +60,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
         try
         {
-            _appController.ShowCaptureOverlay();
+            _appController.ShowSelectionOverlay();
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

@@ -9,9 +9,9 @@ using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace CaptureTool.UI.Windows.Xaml.Views;
 
-public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewBase
+public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowViewBase
 {
-    public CaptureOverlayWindowView()
+    public SelectionOverlayWindowView()
     {
         InitializeComponent();
 
@@ -20,17 +20,17 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
             UpdateRequestedAppTheme();
         });
 
-        Loaded += CaptureOverlayWindowView_Loaded;
-        Unloaded += CaptureOverlayWindowView_Unloaded;
+        Loaded += SelectionOverlayWindowView_Loaded;
+        Unloaded += SelectionOverlayWindowView_Unloaded;
     }
 
-    ~CaptureOverlayWindowView()
+    ~SelectionOverlayWindowView()
     {
-        Loaded -= CaptureOverlayWindowView_Loaded;
-        Unloaded -= CaptureOverlayWindowView_Unloaded;
+        Loaded -= SelectionOverlayWindowView_Loaded;
+        Unloaded -= SelectionOverlayWindowView_Unloaded;
     }
 
-    private void CaptureOverlayWindowView_Loaded(object sender, RoutedEventArgs e)
+    private void SelectionOverlayWindowView_Loaded(object sender, RoutedEventArgs e)
     {
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete += SelectionOverlay_SelectionComplete;
@@ -45,7 +45,7 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
         }
     }
 
-    private void CaptureOverlayWindowView_Unloaded(object sender, RoutedEventArgs e)
+    private void SelectionOverlayWindowView_Unloaded(object sender, RoutedEventArgs e)
     {
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;
@@ -55,16 +55,16 @@ public sealed partial class CaptureOverlayWindowView : CaptureOverlayWindowViewB
     {
         switch (e.PropertyName)
         {
-            case nameof(CaptureOverlayWindowViewModel.SelectedCaptureType):
+            case nameof(SelectionOverlayWindowViewModel.SelectedCaptureType):
                 SelectionOverlay.CaptureType = ViewModel.SelectedCaptureType ?? 0;
                 break;
-            case nameof(CaptureOverlayWindowViewModel.CaptureArea):
+            case nameof(SelectionOverlayWindowViewModel.CaptureArea):
                 SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
                 break;
-            case nameof(CaptureOverlayWindowViewModel.MonitorWindows):
+            case nameof(SelectionOverlayWindowViewModel.MonitorWindows):
                 SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
                 break;
-            case nameof(CaptureOverlayWindowViewModel.Monitor):
+            case nameof(SelectionOverlayWindowViewModel.Monitor):
                 LoadBackgroundImage();
                 break;
         }

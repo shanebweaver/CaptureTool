@@ -58,7 +58,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         // ViewModels
         // Windows
         collection.AddTransient<MainWindowViewModel>();
-        collection.AddTransient<CaptureOverlayWindowViewModel>();
+        collection.AddTransient<SelectionOverlayWindowViewModel>();
         // Pages
         collection.AddTransient<ErrorPageViewModel>();
         collection.AddTransient<AboutPageViewModel>();
@@ -70,7 +70,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<VideoEditPageViewModel>();
         // Views
         collection.AddTransient<AppMenuViewModel>();
-        collection.AddTransient<CaptureOverlayViewModel>();
+        collection.AddTransient<SelectionOverlayHostViewModel>();
         // Factories
         collection.AddSingleton<IFactoryService<AppLanguageViewModel, AppLanguage?>, AppLanguageViewModelFactory>();
         collection.AddSingleton<IFactoryService<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();

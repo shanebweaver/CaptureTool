@@ -42,7 +42,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
         try
         {
             CaptureOptions options = new(CaptureMode.Image, CaptureType.Rectangle);
-            _appController.ShowCaptureOverlay(CaptureOptions.ImageDefault);
+            _appController.ShowSelectionOverlay(CaptureOptions.ImageDefault);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -58,7 +58,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
         try
         {
-            _appController.ShowCaptureOverlay(CaptureOptions.VideoDefault);
+            _appController.ShowSelectionOverlay(CaptureOptions.VideoDefault);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Window
-    x:Class="CaptureTool.UI.Windows.Xaml.Windows.CaptureOverlayWindow"
+    x:Class="CaptureTool.UI.Windows.Xaml.Windows.SelectionOverlayWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CaptureTool.UI.Windows.Xaml.Controls"
@@ -11,6 +11,6 @@
     xmlns:views="using:CaptureTool.UI.Windows.Xaml.Views"
     mc:Ignorable="d">
 
-    <views:CaptureOverlayWindowView x:Name="RootView" />
+    <views:SelectionOverlayWindowView x:Name="RootView" />
 
 </Window>

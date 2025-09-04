@@ -8,7 +8,7 @@ namespace CaptureTool.ViewModels.Tests.Mocks;
 
 internal sealed partial class MockAppController : IAppController
 {
-    public void CloseCaptureOverlay()
+    public void CloseSelectionOverlay()
     {
     }
 
@@ -60,7 +60,7 @@ internal sealed partial class MockAppController : IAppController
     {
     }
 
-    public void ShowCaptureOverlay(CaptureOptions? options = null)
+    public void ShowSelectionOverlay(CaptureOptions? options = null)
     {
     }
 

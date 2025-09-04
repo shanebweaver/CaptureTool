@@ -12,7 +12,7 @@ using WinRT.Interop;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
-internal sealed partial class CaptureOverlayHost : IDisposable
+internal sealed partial class SelectionOverlayHost : IDisposable
 {
 #if DEBUG
     private static readonly bool SingleMonitorNoWindowWatcher = true;
@@ -21,9 +21,9 @@ internal sealed partial class CaptureOverlayHost : IDisposable
     private readonly Action _onClosed;
 
     private readonly HashSet<MonitorCaptureResult> _monitors = [];
-    private readonly HashSet<CaptureOverlayWindow> _windows = [];
+    private readonly HashSet<SelectionOverlayWindow> _windows = [];
     private readonly HashSet<nint> _windowHandles = [];
-    private CaptureOverlayViewModel? _viewModel;
+    private SelectionOverlayHostViewModel? _viewModel;
     private DispatcherTimer? _foregroundTimer;
     private Window? _primaryWindow;
 
@@ -32,7 +32,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
         return [.. _monitors];
     }
 
-    public CaptureOverlayHost(Action onClosed)
+    public SelectionOverlayHost(Action onClosed)
     {
         _onClosed = onClosed;
     }
@@ -40,7 +40,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
     public void Show(CaptureOptions options)
     {
         Close();
-        _viewModel = ViewModelLocator.GetViewModel<CaptureOverlayViewModel>();
+        _viewModel = ViewModelLocator.GetViewModel<SelectionOverlayHostViewModel>();
 
         var allWindows = WindowInfoHelper.GetAllWindows();
         var monitors = MonitorCaptureHelper.CaptureAllMonitors();
@@ -68,7 +68,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
                     (int)(r.Width / scale),
                     (int)(r.Height / scale)));
 
-            var window = new CaptureOverlayWindow(monitor, [.. monitorWindows], options);
+            var window = new SelectionOverlayWindow(monitor, [.. monitorWindows], options);
             _windows.Add(window);
 
             var hwnd = WindowNative.GetWindowHandle(window);
@@ -147,7 +147,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
         _viewModel?.Unload();
         _viewModel = null;
 
-        foreach (CaptureOverlayWindow window in _windows)
+        foreach (SelectionOverlayWindow window in _windows)
         {
             try
             {

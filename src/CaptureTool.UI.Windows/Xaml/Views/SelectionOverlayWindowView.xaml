@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<local:CaptureOverlayWindowViewBase
-    x:Class="CaptureTool.UI.Windows.Xaml.Views.CaptureOverlayWindowView"
+<local:SelectionOverlayWindowViewBase
+    x:Class="CaptureTool.UI.Windows.Xaml.Views.SelectionOverlayWindowView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:capture="using:CaptureTool.Capture"
@@ -9,7 +9,7 @@
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:CaptureTool.ViewModels"
-    d:DataContext="{d:DesignInstance Type=viewmodels:CaptureOverlayWindowViewModel}"
+    d:DataContext="{d:DesignInstance Type=viewmodels:SelectionOverlayWindowViewModel}"
     mc:Ignorable="d">
 
     <Grid x:Name="RootPanel">
@@ -29,7 +29,7 @@
                 Visibility="{x:Bind ViewModel.IsActiveCaptureModeVideo, Mode=OneWay}" />
         </Grid>
 
-        <controls:CaptureOverlayToolbar
+        <controls:SelectionOverlayToolbar
             x:Name="Toolbar"
             ActiveCaptureMode="{x:Bind ViewModel.ActiveCaptureMode, Mode=TwoWay}"
             CloseCommand="{x:Bind ViewModel.CloseOverlayCommand, Mode=OneWay}"
@@ -52,4 +52,4 @@
             </Button.KeyboardAccelerators>
         </Button>
     </Grid>
-</local:CaptureOverlayWindowViewBase>
+</local:SelectionOverlayWindowViewBase>

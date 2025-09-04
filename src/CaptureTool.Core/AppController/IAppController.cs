@@ -13,8 +13,8 @@ public interface IAppController
     void Shutdown(); 
     bool TryRestart();
 
-    void ShowCaptureOverlay(CaptureOptions? options = null);
-    void CloseCaptureOverlay();
+    void ShowSelectionOverlay(CaptureOptions? options = null);
+    void CloseSelectionOverlay();
     void PerformImageCapture(MonitorCaptureResult monitor, Rectangle captureArea);
     void PrepareForVideoCapture(MonitorCaptureResult monitor, Rectangle captureArea);
     void StartVideoCapture(MonitorCaptureResult monitor, Rectangle captureArea);

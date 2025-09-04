@@ -7,18 +7,18 @@ using System.Drawing;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
-public sealed partial class CaptureOverlayWindow : Window
+public sealed partial class SelectionOverlayWindow : Window
 {
-    public CaptureOverlayWindowViewModel ViewModel => RootView.ViewModel;
+    public SelectionOverlayWindowViewModel ViewModel => RootView.ViewModel;
 
     public bool IsClosed { get; private set; }
 
-    public CaptureOverlayWindow(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows, CaptureOptions options)
+    public SelectionOverlayWindow(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows, CaptureOptions options)
     {
         if (monitor.IsPrimary)
         {
-            Activated += CaptureOverlayWindow_Activated;
-            Closed += CaptureOverlayWindow_Closed;
+            Activated += SelectionOverlayWindow_Activated;
+            Closed += SelectionOverlayWindow_Closed;
         }
 
         AppWindow.IsShownInSwitchers = false;
@@ -40,17 +40,17 @@ public sealed partial class CaptureOverlayWindow : Window
         ViewModel.Load((monitor, monitorWindows, options));
     }
 
-    private void CaptureOverlayWindow_Closed(object sender, WindowEventArgs args)
+    private void SelectionOverlayWindow_Closed(object sender, WindowEventArgs args)
     {
-        Activated -= CaptureOverlayWindow_Activated;
-        Closed -= CaptureOverlayWindow_Closed;
+        Activated -= SelectionOverlayWindow_Activated;
+        Closed -= SelectionOverlayWindow_Closed;
 
         ViewModel.Unload();
         Content = null;
         IsClosed = true;
     }
 
-    private void CaptureOverlayWindow_Activated(object sender, WindowActivatedEventArgs args)
+    private void SelectionOverlayWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
         DispatcherQueue.TryEnqueue(() =>
         {

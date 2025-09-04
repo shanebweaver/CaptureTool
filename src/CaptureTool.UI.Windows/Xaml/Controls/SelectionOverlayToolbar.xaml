@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <local:UserControlBase
-    x:Class="CaptureTool.UI.Windows.Xaml.Controls.CaptureOverlayToolbar"
+    x:Class="CaptureTool.UI.Windows.Xaml.Controls.SelectionOverlayToolbar"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:capture="using:CaptureTool.Capture"
@@ -10,7 +10,7 @@
     xmlns:templateselectors="using:CaptureTool.UI.Windows.Xaml.TemplateSelectors"
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
     xmlns:utils="using:CaptureTool.UI.Windows.Utils"
-    d:DataContext="{d:DesignInstance Type=local:CaptureOverlayToolbar}"
+    d:DataContext="{d:DesignInstance Type=local:SelectionOverlayToolbar}"
     mc:Ignorable="d">
     <Grid
         x:Name="ToolbarPanel"

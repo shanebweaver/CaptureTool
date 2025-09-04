@@ -38,7 +38,7 @@ internal partial class CaptureToolAppController : IAppController
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _isInitialized;
     private string? _tempVideoPath;
-    private CaptureOverlayHost? _overlayHost;
+    private SelectionOverlayHost? _overlayHost;
     private MainWindowHost? _mainWindowHost;
 
     public CaptureToolAppController(
@@ -96,22 +96,22 @@ internal partial class CaptureToolAppController : IAppController
             string source = queryParams.Get("source") ?? string.Empty;
             if (source == "PrintScreen")
             {
-                ShowCaptureOverlay(CaptureOptions.ImageDefault);
+                ShowSelectionOverlay(CaptureOptions.ImageDefault);
             }
             else if (source == "ScreenRecorderHotKey" || isRecordingType)
             {
                 if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
                 {
-                    ShowCaptureOverlay(CaptureOptions.VideoDefault);
+                    ShowSelectionOverlay(CaptureOptions.VideoDefault);
                 }
                 else
                 {
-                    ShowCaptureOverlay(CaptureOptions.ImageDefault);
+                    ShowSelectionOverlay(CaptureOptions.ImageDefault);
                 }
             }
             else if (source == "HotKey")
             {
-                ShowCaptureOverlay(CaptureOptions.ImageDefault);
+                ShowSelectionOverlay(CaptureOptions.ImageDefault);
             }
             else
             {
@@ -143,27 +143,27 @@ internal partial class CaptureToolAppController : IAppController
         return false;
     }
 
-    public async void ShowCaptureOverlay(CaptureOptions? options = null)
+    public async void ShowSelectionOverlay(CaptureOptions? options = null)
     {
         ThrowIfNotInitialized();
 
-        CloseCaptureOverlay();
+        CloseSelectionOverlay();
         HideMainWindow();
         await Task.Delay(200);
 
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
-            _overlayHost = new CaptureOverlayHost(() =>
+            _overlayHost = new SelectionOverlayHost(() =>
             {
                 ShowMainWindow(false);
-                CloseCaptureOverlay();
+                CloseSelectionOverlay();
             });
 
             _overlayHost.Show(options ?? new(CaptureMode.Image, CaptureType.Rectangle));
         });
     }
 
-    public void CloseCaptureOverlay()
+    public void CloseSelectionOverlay()
     {
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
@@ -191,7 +191,7 @@ internal partial class CaptureToolAppController : IAppController
                     combined.Save(tempPath, ImageFormat.Png);
 
                     RestoreMainWindow();
-                    CloseCaptureOverlay();
+                    CloseSelectionOverlay();
 
                     var imageFile = new ImageFile(tempPath);
                     _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
@@ -251,7 +251,7 @@ internal partial class CaptureToolAppController : IAppController
         croppedBmp.Save(tempPath, ImageFormat.Png);
 
         RestoreMainWindow();
-        CloseCaptureOverlay();
+        CloseSelectionOverlay();
 
         var imageFile = new ImageFile(tempPath);
         _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
@@ -265,7 +265,7 @@ internal partial class CaptureToolAppController : IAppController
 
         if (_overlayHost == null)
         {
-            ShowCaptureOverlay();
+            ShowSelectionOverlay();
         }
         _overlayHost?.TransitionToVideoMode(monitor, area);
         _tempVideoPath = null;
@@ -275,7 +275,7 @@ internal partial class CaptureToolAppController : IAppController
     {
         if (_overlayHost == null)
         {
-            ShowCaptureOverlay();
+            ShowSelectionOverlay();
             _overlayHost?.TransitionToVideoMode(monitor, area);
         }
 
@@ -296,7 +296,7 @@ internal partial class CaptureToolAppController : IAppController
 
         ScreenRecorder.StopRecording();
         RestoreMainWindow();
-        CloseCaptureOverlay();
+        CloseSelectionOverlay();
 
         VideoFile videoFile = new(_tempVideoPath);
         _navigationService.Navigate(CaptureToolNavigationRoutes.VideoEdit, videoFile);
@@ -356,7 +356,7 @@ internal partial class CaptureToolAppController : IAppController
         {
             try
             {
-                CloseCaptureOverlay();
+                CloseSelectionOverlay();
                 CleanupMainWindow();
                 _cancellationService.CancelAll();
             }

@@ -8,54 +8,54 @@ using System.Windows.Input;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;
 
-public sealed partial class CaptureOverlayToolbar : UserControlBase
+public sealed partial class SelectionOverlayToolbar : UserControlBase
 {
     public static readonly DependencyProperty SupportedCaptureTypesProperty = DependencyProperty.Register(
         nameof(SupportedCaptureTypes),
         typeof(IEnumerable<CaptureType>),
-        typeof(CaptureOverlayToolbar),
+        typeof(SelectionOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty SelectedCaptureTypeIndexProperty = DependencyProperty.Register(
         nameof(SelectedCaptureTypeIndex),
         typeof(int),
-        typeof(CaptureOverlayToolbar),
+        typeof(SelectionOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty SupportedCaptureModesProperty = DependencyProperty.Register(
         nameof(SupportedCaptureModes),
         typeof(IEnumerable<CaptureMode>),
-        typeof(CaptureOverlayToolbar),
+        typeof(SelectionOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty SelectedCaptureModeIndexProperty = DependencyProperty.Register(
         nameof(SelectedCaptureModeIndex),
         typeof(int),
-        typeof(CaptureOverlayToolbar),
+        typeof(SelectionOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty IsDesktopAudioEnabledProperty = DependencyProperty.Register(
         nameof(IsDesktopAudioEnabled),
         typeof(bool),
-        typeof(CaptureOverlayToolbar),
+        typeof(SelectionOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty ActiveCaptureModeProperty = DependencyProperty.Register(
         nameof(ActiveCaptureMode),
         typeof(CaptureMode),
-        typeof(CaptureOverlayToolbar),
+        typeof(SelectionOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty CloseCommandProperty = DependencyProperty.Register(
         nameof(CloseCommand),
         typeof(ICommand),
-        typeof(CaptureOverlayToolbar),
+        typeof(SelectionOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty StartVideoCaptureCommandProperty = DependencyProperty.Register(
         nameof(StartVideoCaptureCommand),
         typeof(ICommand),
-        typeof(CaptureOverlayToolbar),
+        typeof(SelectionOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public IEnumerable<CaptureType> SupportedCaptureTypes
@@ -114,7 +114,7 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     public bool IsActiveCaptureModeImage => ActiveCaptureMode == CaptureMode.Image;
     public bool IsActiveCaptureModeVideo => ActiveCaptureMode == CaptureMode.Video;
 
-    public CaptureOverlayToolbar()
+    public SelectionOverlayToolbar()
     {
         InitializeComponent();
 
