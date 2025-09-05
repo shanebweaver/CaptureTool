@@ -16,11 +16,13 @@ public interface IAppController
     void ShowSelectionOverlay(CaptureOptions? options = null);
     void CloseSelectionOverlay();
     void PerformImageCapture(MonitorCaptureResult monitor, Rectangle captureArea);
-    void PrepareForVideoCapture(MonitorCaptureResult monitor, Rectangle captureArea);
+    void PerformAllScreensCapture();
+
+    void ShowCaptureOverlay(MonitorCaptureResult monitor, Rectangle captureArea);
+    void CloseCaptureOverlay();
     void StartVideoCapture(MonitorCaptureResult monitor, Rectangle captureArea);
     void StopVideoCapture();
-    void PerformAllScreensCapture();
-    void CloseCaptureOverlay();
+    void CancelVideoCapture();
 
     string GetDefaultScreenshotsFolderPath();
 

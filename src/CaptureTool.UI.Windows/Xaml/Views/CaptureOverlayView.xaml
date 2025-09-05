@@ -10,6 +10,11 @@
     mc:Ignorable="d">
 
     <Grid>
-        <controls:CaptureOverlayToolbar CloseCommand="{x:Bind ViewModel.CloseOverlayCommand}" />
+        <controls:CaptureOverlayToolbar
+            CloseCommand="{x:Bind ViewModel.CloseOverlayCommand}"
+            GoBackCommand="{x:Bind ViewModel.GoBackCommand}"
+            IsRecording="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
+            StartVideoCaptureCommand="{x:Bind ViewModel.StartVideoCaptureCommand}"
+            StopVideoCaptureCommand="{x:Bind ViewModel.StopVideoCaptureCommand}" />
     </Grid>
 </local:CaptureOverlayViewBase>

@@ -203,7 +203,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             }
             else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
             {
-                _appController.PrepareForVideoCapture(Monitor.Value, CaptureArea);
+                _appController.ShowCaptureOverlay(Monitor.Value, CaptureArea);
             }
         }
     }

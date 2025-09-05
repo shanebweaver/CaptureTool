@@ -78,11 +78,13 @@ internal sealed partial class CaptureOverlayHost : IDisposable
                 128, //255,
                 0); // 0 = use per-pixel alpha
 
+            PInvoke.SetWindowDisplayAffinity(hwnd, WINDOW_DISPLAY_AFFINITY.WDA_EXCLUDEFROMCAPTURE);
+
             DesktopWindowXamlSource xamlSource = new();
             WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             xamlSource.Initialize(windowId);
 
-            xamlSource.Content = new CaptureOverlayView();
+            xamlSource.Content = new CaptureOverlayView(monitor, area);
 
             _hwnd = hwnd;
         }

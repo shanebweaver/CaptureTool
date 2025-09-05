@@ -4,7 +4,6 @@ using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 
 namespace CaptureTool.ViewModels;
@@ -12,15 +11,12 @@ namespace CaptureTool.ViewModels;
 public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 {
     private readonly IAppController _appController;
-    private readonly IFeatureManager _featureManager;
     private readonly List<SelectionOverlayWindowViewModel> _windowViewModels = [];
 
     public SelectionOverlayHostViewModel(
-        IAppController appController,
-        IFeatureManager featureManager)
+        IAppController appController)
     {
         _appController = appController;
-        _featureManager = featureManager;
     }
 
     public void AddWindowViewModel(SelectionOverlayWindowViewModel newVM)

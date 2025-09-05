@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml;
+using System;
 using System.Windows.Input;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;
@@ -10,6 +11,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(bool),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
+
+    public static readonly DependencyProperty IsRecordingProperty = DependencyProperty.Register(
+           nameof(IsRecording),
+           typeof(bool),
+           typeof(CaptureOverlayToolbar),
+           new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty CloseCommandProperty = DependencyProperty.Register(
         nameof(CloseCommand),
@@ -29,7 +36,6 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
-
     public static readonly DependencyProperty StopVideoCaptureCommandProperty = DependencyProperty.Register(
         nameof(StopVideoCaptureCommand),
         typeof(ICommand),
@@ -42,10 +48,29 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
+
+    public static readonly DependencyProperty RecordingTimeProperty = DependencyProperty.Register(
+        nameof(RecordingTime),
+        typeof(TimeSpan),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(DependencyProperty.UnsetValue));
+
+    public TimeSpan RecordingTime
+    {
+        get => Get<TimeSpan>(RecordingTimeProperty);
+        set => Set(RecordingTimeProperty, value);
+    }
+
     public bool IsDesktopAudioEnabled
     {
         get => Get<bool>(IsDesktopAudioEnabledProperty);
         set => Set(IsDesktopAudioEnabledProperty, value);
+    }
+
+    public bool IsRecording
+    {
+        get => Get<bool>(IsRecordingProperty);
+        set => Set(IsRecordingProperty, value);
     }
 
     public ICommand CloseCommand

@@ -56,7 +56,7 @@ internal sealed partial class MockAppController : IAppController
     {
     }
 
-    public void PrepareForVideoCapture(MonitorCaptureResult monitor, Rectangle captureArea)
+    public void ShowCaptureOverlay(MonitorCaptureResult monitor, Rectangle captureArea)
     {
     }
 

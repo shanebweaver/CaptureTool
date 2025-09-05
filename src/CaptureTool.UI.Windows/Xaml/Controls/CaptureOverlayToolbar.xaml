@@ -25,20 +25,38 @@
                 <SymbolIcon Symbol="Back" />
             </Button>
 
-            <Button
-                MinWidth="100"
-                Background="#AAFF3340"
-                Command="{x:Bind StartVideoCaptureCommand, Mode=OneWay}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon
-                        Margin="0,0,0,-2"
-                        VerticalAlignment="Center"
-                        FontFamily="{StaticResource FluentSystemIcons}"
-                        FontSize="16"
-                        Glyph="{StaticResource Record16Regular}" />
-                    <TextBlock VerticalAlignment="Center" Text="Record" />
-                </StackPanel>
-            </Button>
+            <Grid>
+                <Button
+                    MinWidth="100"
+                    Background="#AAFF3340"
+                    Command="{x:Bind StartVideoCaptureCommand, Mode=OneWay}"
+                    Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsRecording), Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon
+                            Margin="0,0,0,-2"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            FontSize="16"
+                            Glyph="{StaticResource Record16Regular}" />
+                        <TextBlock VerticalAlignment="Center" Text="Record" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    MinWidth="100"
+                    Background="#AAFF3340"
+                    Command="{x:Bind StopVideoCaptureCommand, Mode=OneWay}"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsRecording), Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon
+                            Margin="0,0,0,-2"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            FontSize="16"
+                            Glyph="{StaticResource Record16Regular}" />
+                        <TextBlock VerticalAlignment="Center" Text="Stop" />
+                    </StackPanel>
+                </Button>
+            </Grid>
 
             <TextBlock
                 Margin="8,0"

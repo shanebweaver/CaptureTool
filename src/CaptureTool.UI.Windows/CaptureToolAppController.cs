@@ -260,17 +260,12 @@ internal partial class CaptureToolAppController : IAppController
         _ = TryAutoCopyImageAsync(imageFile);
     }
 
-    public void PrepareForVideoCapture(MonitorCaptureResult monitor, Rectangle area)
-    {
-        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
-
-        ShowCaptureOverlay(monitor, area);
-        _tempVideoPath = null;
-    }
-
     public void StartVideoCapture(MonitorCaptureResult monitor, Rectangle area)
     {
-        ShowCaptureOverlay(monitor, area);
+        if (_captureOverlayHost == null)
+        {
+            ShowCaptureOverlay(monitor, area);
+        }
 
         _tempVideoPath = Path.Combine(
             ApplicationData.GetDefault().TemporaryPath,
@@ -280,16 +275,17 @@ internal partial class CaptureToolAppController : IAppController
         ScreenRecorder.StartRecording(monitor.HMonitor, _tempVideoPath);
     }
 
-    private void ShowCaptureOverlay(MonitorCaptureResult monitor, Rectangle area)
+    public void ShowCaptureOverlay(MonitorCaptureResult monitor, Rectangle area)
     {
+        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
         ThrowIfNotInitialized();
 
         CloseSelectionOverlay();
         HideMainWindow();
 
         App.Current.DispatcherQueue.TryEnqueue(() => {
-            _captureOverlayHost = new();
-
+            _tempVideoPath = null;
+            _captureOverlayHost ??= new();
             _captureOverlayHost.Show(monitor, area);
         });
     }
@@ -303,10 +299,16 @@ internal partial class CaptureToolAppController : IAppController
 
         ScreenRecorder.StopRecording();
         RestoreMainWindow();
-        CloseSelectionOverlay();
+        CloseCaptureOverlay();
 
         VideoFile videoFile = new(_tempVideoPath);
         _navigationService.Navigate(CaptureToolNavigationRoutes.VideoEdit, videoFile);
+        _tempVideoPath = null;
+    }
+
+    public void CancelVideoCapture()
+    {
+        ScreenRecorder.StopRecording();
         _tempVideoPath = null;
     }
 
