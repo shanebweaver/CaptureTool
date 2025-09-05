@@ -1,21 +1,22 @@
-﻿using CaptureTool.Services;
+﻿using CaptureTool.Capture;
+using CaptureTool.Services;
 using CaptureTool.Services.Localization;
 
 namespace CaptureTool.ViewModels.Factories;
 
-public sealed partial class AppLanguageViewModelFactory : IFactoryService<AppLanguageViewModel, AppLanguage?>
+public sealed partial class CaptureTypeViewModelFactory : IFactoryService<CaptureTypeViewModel, CaptureType>
 {
     private readonly ILocalizationService _localizationService;
-    public AppLanguageViewModelFactory(
+    public CaptureTypeViewModelFactory(
         ILocalizationService localizationService)
     {
         _localizationService = localizationService;
     }
 
-    public AppLanguageViewModel Create(AppLanguage? language)
+    public CaptureTypeViewModel Create(CaptureType captureType)
     {
         return new(
-            language, 
+            captureType,
             _localizationService);
     }
 }

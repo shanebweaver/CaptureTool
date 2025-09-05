@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.UI.Windows.Xaml.Controls.CaptureOverlayToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:capture="using:CaptureTool.Capture"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.UI.Windows.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:templateselectors="using:CaptureTool.UI.Windows.Xaml.TemplateSelectors"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:utils="using:CaptureTool.UI.Windows.Utils"
+    d:DataContext="{d:DesignInstance Type=local:CaptureOverlayToolbar}"
+    mc:Ignorable="d">
+    <Grid
+        x:Name="ToolbarPanel"
+        Padding="8"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Top"
+        Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+        CornerRadius="4">
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Command="{x:Bind GoBackCommand, Mode=OneWay}" Style="{StaticResource IconButtonStyle}">
+                <SymbolIcon Symbol="Back" />
+            </Button>
+
+            <Button
+                MinWidth="100"
+                Background="#AAFF3340"
+                Command="{x:Bind StartVideoCaptureCommand, Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon
+                        Margin="0,0,0,-2"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        FontSize="16"
+                        Glyph="{StaticResource Record16Regular}" />
+                    <TextBlock VerticalAlignment="Center" Text="Record" />
+                </StackPanel>
+            </Button>
+
+            <TextBlock
+                Margin="8,0"
+                VerticalAlignment="Center"
+                Text="00:00:00" />
+
+            <Button Command="{x:Bind ToggleDesktopAudioCommand, Mode=OneWay}" Style="{StaticResource IconButtonStyle}">
+                <Grid>
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        Glyph="{StaticResource DesktopSpeaker20Regular}"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        Glyph="{StaticResource DesktopSpeakerOff20Regular}"
+                        Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
+                </Grid>
+            </Button>
+
+            <Button
+                x:Uid="SelectionOverlay_CloseButton"
+                Command="{x:Bind CloseCommand, Mode=OneWay}"
+                Style="{StaticResource IconButtonStyle}">
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Cancel}" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</local:UserControlBase>

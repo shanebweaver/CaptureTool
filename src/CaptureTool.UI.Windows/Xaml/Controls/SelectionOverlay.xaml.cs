@@ -133,9 +133,6 @@ public sealed partial class SelectionOverlay : UserControlBase
                 e.Handled = true;
             }
         }
-        else if (CaptureType == CaptureType.Freeform)
-        {
-        }
     }
 
     private void SelectionCanvas_PointerMoved(object sender, PointerRoutedEventArgs e)
@@ -215,9 +212,6 @@ public sealed partial class SelectionOverlay : UserControlBase
         {
             SelectionRect = new(0,0, (int)SelectionCanvas.Width, (int)SelectionCanvas.Height);
             e.Handled = true;
-        }
-        else if (CaptureType == CaptureType.Freeform)
-        {
         }
     }
 

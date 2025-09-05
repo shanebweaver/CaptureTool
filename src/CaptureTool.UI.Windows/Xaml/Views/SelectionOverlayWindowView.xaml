@@ -14,32 +14,18 @@
 
     <Grid x:Name="RootPanel">
         <Grid>
-            <controls:SelectionOverlay x:Name="SelectionOverlay" Visibility="{x:Bind ViewModel.IsActiveCaptureModeImage, Mode=OneWay}" />
-            <controls:CropOverlay
-                x:Name="CropOverlay"
-                AnchorBottom="{StaticResource VideoAnchor_Bottom}"
-                AnchorBottomLeft="{StaticResource VideoAnchor_BottomLeft}"
-                AnchorBottomRight="{StaticResource VideoAnchor_BottomRight}"
-                AnchorLeft="{StaticResource VideoAnchor_Left}"
-                AnchorRight="{StaticResource VideoAnchor_Right}"
-                AnchorTop="{StaticResource VideoAnchor_Top}"
-                AnchorTopLeft="{StaticResource VideoAnchor_TopLeft}"
-                AnchorTopRight="{StaticResource VideoAnchor_TopRight}"
-                SelectionArea="{x:Bind ViewModel.CaptureArea, Mode=TwoWay}"
-                Visibility="{x:Bind ViewModel.IsActiveCaptureModeVideo, Mode=OneWay}" />
+            <controls:SelectionOverlay x:Name="SelectionOverlay" />
         </Grid>
 
-        <controls:SelectionOverlayToolbar
-            x:Name="Toolbar"
-            ActiveCaptureMode="{x:Bind ViewModel.ActiveCaptureMode, Mode=TwoWay}"
-            CloseCommand="{x:Bind ViewModel.CloseOverlayCommand, Mode=OneWay}"
-            IsDesktopAudioEnabled="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=TwoWay}"
-            SelectedCaptureModeIndex="{x:Bind ViewModel.SelectedCaptureModeIndex, Mode=TwoWay}"
-            SelectedCaptureTypeIndex="{x:Bind ViewModel.SelectedCaptureTypeIndex, Mode=TwoWay}"
-            StartVideoCaptureCommand="{x:Bind ViewModel.StartVideoCaptureCommand, Mode=OneWay}"
-            SupportedCaptureModes="{x:Bind ViewModel.SupportedCaptureModes, Mode=OneWay}"
-            SupportedCaptureTypes="{x:Bind ViewModel.SupportedCaptureTypes, Mode=OneWay}"
-            Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}" />
+        <Grid Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}">
+            <controls:SelectionOverlayToolbar
+                x:Name="SelectionToolbar"
+                CloseCommand="{x:Bind ViewModel.CloseOverlayCommand, Mode=OneWay}"
+                SelectedCaptureModeIndex="{x:Bind ViewModel.SelectedCaptureModeIndex, Mode=TwoWay}"
+                SelectedCaptureTypeIndex="{x:Bind ViewModel.SelectedCaptureTypeIndex, Mode=TwoWay}"
+                SupportedCaptureModes="{x:Bind ViewModel.SupportedCaptureModes, Mode=OneWay}"
+                SupportedCaptureTypes="{x:Bind ViewModel.SupportedCaptureTypes, Mode=OneWay}" />
+        </Grid>
 
         <!--  Secret button to allow escape to work on all monitors.  -->
         <Button

@@ -10,129 +10,60 @@
     xmlns:templateselectors="using:CaptureTool.UI.Windows.Xaml.TemplateSelectors"
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
     xmlns:utils="using:CaptureTool.UI.Windows.Utils"
+    xmlns:viewmodels="using:CaptureTool.ViewModels"
     d:DataContext="{d:DesignInstance Type=local:SelectionOverlayToolbar}"
     mc:Ignorable="d">
-    <Grid
+    <StackPanel
         x:Name="ToolbarPanel"
         Margin="0,12,0,0"
         Padding="8"
         HorizontalAlignment="Center"
         VerticalAlignment="Top"
         Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
-        CornerRadius="4">
+        CornerRadius="4"
+        Orientation="Horizontal"
+        Spacing="8">
+        <!--  Capture mode  -->
+        <toolkit:Segmented
+            x:Name="CaptureModeSegmentedControl"
+            x:Load="False"
+            ItemsSource="{x:Bind SupportedCaptureModes, Mode=OneWay}"
+            SelectedIndex="{x:Bind SelectedCaptureModeIndex, Mode=TwoWay}"
+            SelectionMode="Single"
+            SingleSelectionFollowsFocus="True">
+            <toolkit:Segmented.ItemTemplate>
+                <DataTemplate x:DataType="viewmodels:CaptureModeViewModel">
+                    <SymbolIcon AutomationProperties.Name="{x:Bind AutomationName}" Symbol="{x:Bind IconSymbolName}" />
+                </DataTemplate>
+            </toolkit:Segmented.ItemTemplate>
+        </toolkit:Segmented>
 
-        <StackPanel Orientation="Horizontal" Spacing="8">
-            <Grid>
-                <!--  Region selection controls  -->
-                <StackPanel
-                    Orientation="Horizontal"
-                    Spacing="8"
-                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsActiveCaptureModeImage), Mode=OneWay}">
-                    <!--  Capture mode  -->
-                    <toolkit:Segmented
-                        x:Name="CaptureModeSegmentedControl"
-                        x:Load="False"
-                        SelectedIndex="{x:Bind SelectedCaptureModeIndex, Mode=TwoWay}"
-                        SelectionMode="Single"
-                        SingleSelectionFollowsFocus="True">
-                        <toolkit:SegmentedItem
-                            x:Name="ImageTypeMenuItem"
-                            x:Load="{x:Bind IsCaptureModeSupported(capture:CaptureMode.Image), Mode=OneWay}"
-                            Icon="Camera" />
-                        <toolkit:SegmentedItem
-                            x:Name="VideoTypeMenuItem"
-                            x:Load="{x:Bind IsCaptureModeSupported(capture:CaptureMode.Video), Mode=OneWay}"
-                            Icon="Video" />
-                    </toolkit:Segmented>
+        <!--  Capture type  -->
+        <ComboBox
+            MinWidth="148"
+            Background="Transparent"
+            BorderThickness="0"
+            ItemsSource="{x:Bind SupportedCaptureTypes, Mode=OneWay}"
+            SelectedIndex="{x:Bind SelectedCaptureTypeIndex, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="viewmodels:CaptureTypeViewModel">
+                    <StackPanel
+                        AutomationProperties.Name="{x:Bind AutomationName}"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{x:Bind utils:ResourceUtility.GetStaticResourceString(IconGlyphName)}" />
+                        <TextBlock Text="{x:Bind DisplayName}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
 
-                    <!--  Capture type  -->
-                    <ComboBox
-                        MinWidth="148"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        SelectedIndex="{x:Bind SelectedCaptureTypeIndex, Mode=TwoWay}">
-                        <ComboBoxItem x:Name="RectangleModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Rectangle), Mode=OneWay}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource RectangularClipping}" />
-                                <TextBlock x:Uid="CaptureType_Rectangle" />
-                            </StackPanel>
-                        </ComboBoxItem>
-                        <ComboBoxItem x:Name="WindowModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Window), Mode=OneWay}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource WindowSnipping}" />
-                                <TextBlock x:Uid="CaptureType_Window" />
-                            </StackPanel>
-                        </ComboBoxItem>
-                        <ComboBoxItem x:Name="FullScreenModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.FullScreen), Mode=OneWay}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource FitPage}" />
-                                <TextBlock x:Uid="CaptureType_FullScreen" />
-                            </StackPanel>
-                        </ComboBoxItem>
-                        <ComboBoxItem x:Name="FreeformModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.Freeform), Mode=OneWay}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource FreeFormClipping}" />
-                                <TextBlock x:Uid="CaptureType_Freeform" />
-                            </StackPanel>
-                        </ComboBoxItem>
-                        <ComboBoxItem x:Name="AllScreensModeMenuItem" x:Load="{x:Bind IsCaptureTypeSupported(capture:CaptureType.AllScreens), Mode=OneWay}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Project}" />
-                                <TextBlock x:Uid="CaptureType_AllScreens" />
-                            </StackPanel>
-                        </ComboBoxItem>
-                    </ComboBox>
-                </StackPanel>
-
-                <!--  Video controls  -->
-                <StackPanel
-                    Orientation="Horizontal"
-                    Spacing="8"
-                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsActiveCaptureModeVideo), Mode=OneWay}">
-                    <Button Click="BackButton_Click" Style="{StaticResource IconButtonStyle}">
-                        <SymbolIcon Symbol="Back" />
-                    </Button>
-
-                    <Button
-                        MinWidth="100"
-                        Background="#AAFF3340"
-                        Command="{x:Bind StartVideoCaptureCommand, Mode=OneWay}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon
-                                Margin="0,0,0,-2"
-                                VerticalAlignment="Center"
-                                FontFamily="{StaticResource FluentSystemIcons}"
-                                FontSize="16"
-                                Glyph="{StaticResource Record16Regular}" />
-                            <TextBlock VerticalAlignment="Center" Text="Record" />
-                        </StackPanel>
-                    </Button>
-                    <TextBlock
-                        Margin="8,0"
-                        VerticalAlignment="Center"
-                        Text="00:00:00" />
-                    <Button Click="LocalAudioToggle_Click" Style="{StaticResource IconButtonStyle}">
-                        <Grid>
-                            <FontIcon
-                                FontFamily="{StaticResource FluentSystemIcons}"
-                                Glyph="{StaticResource DesktopSpeaker20Regular}"
-                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
-                            <FontIcon
-                                FontFamily="{StaticResource FluentSystemIcons}"
-                                Glyph="{StaticResource DesktopSpeakerOff20Regular}"
-                                Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
-                        </Grid>
-                    </Button>
-                </StackPanel>
-            </Grid>
-
-            <!--  Close  -->
-            <Button
-                x:Uid="SelectionOverlay_CloseButton"
-                Command="{x:Bind CloseCommand, Mode=OneWay}"
-                Style="{StaticResource IconButtonStyle}">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Cancel}" />
-            </Button>
-        </StackPanel>
-    </Grid>
+        <!--  Close  -->
+        <Button
+            x:Uid="SelectionOverlay_CloseButton"
+            Command="{x:Bind CloseCommand, Mode=OneWay}"
+            Style="{StaticResource IconButtonStyle}">
+            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Cancel}" />
+        </Button>
+    </StackPanel>
 </local:UserControlBase>

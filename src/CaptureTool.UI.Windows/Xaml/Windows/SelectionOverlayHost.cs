@@ -86,11 +86,6 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         _primaryWindow?.Activate();
     }
 
-    public void TransitionToVideoMode(MonitorCaptureResult monitor, Rectangle area)
-    {
-        _viewModel?.TransitionToVideoMode(monitor, area);
-    }
-
     private void OnPrimaryWindowActivated(object sender, WindowActivatedEventArgs args)
     {
         if (sender is Window window)

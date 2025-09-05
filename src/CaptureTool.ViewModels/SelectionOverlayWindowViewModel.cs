@@ -2,12 +2,14 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
+using CaptureTool.Services;
 using CaptureTool.Services.Themes;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 
 namespace CaptureTool.ViewModels;
 
@@ -19,14 +21,13 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
-    public RelayCommand TransitionToVideoModeCommand => new(TransitionToVideoMode);
     public RelayCommand StartVideoCaptureCommand => new(StartVideoCapture);
     public RelayCommand StopVideoCaptureCommand => new(StopVideoCapture);
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
-    private ObservableCollection<CaptureType> _supportedCaptureTypes;
-    public ObservableCollection<CaptureType> SupportedCaptureTypes
+    private ObservableCollection<CaptureTypeViewModel> _supportedCaptureTypes;
+    public ObservableCollection<CaptureTypeViewModel> SupportedCaptureTypes
     {
         get => _supportedCaptureTypes;
         private set => Set(ref _supportedCaptureTypes, value);
@@ -38,35 +39,17 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         get => _selectedCaptureTypeIndex;
         set
         {
-            Set(ref _selectedCaptureTypeIndex, value);
-            RaisePropertyChanged(nameof(SelectedCaptureType));
-            OnSelectedCaptureTypeIndexChanged();
+            if (Set(ref _selectedCaptureTypeIndex, value))
+            {
+                RaisePropertyChanged(nameof(SelectedCaptureType));
+            }
         }
     }
 
-    private void OnSelectedCaptureTypeIndexChanged()
-    {
-        switch (SelectedCaptureType)
-        {
-            case CaptureType.FullScreen:
-                if (Monitor != null)
-                {
-                    CaptureArea = Monitor.Value.MonitorBounds;
-                }
-                break;
+    public CaptureTypeViewModel SelectedCaptureType => SupportedCaptureTypes[SelectedCaptureTypeIndex];
 
-            case CaptureType.Window:
-            case CaptureType.Rectangle:
-            case CaptureType.Freeform:
-            case CaptureType.AllScreens:
-            default:
-                CaptureArea = Rectangle.Empty;
-                break;
-        }
-    }
-
-    private ObservableCollection<CaptureMode> _supportedCaptureModes;
-    public ObservableCollection<CaptureMode> SupportedCaptureModes
+    private ObservableCollection<CaptureModeViewModel> _supportedCaptureModes;
+    public ObservableCollection<CaptureModeViewModel> SupportedCaptureModes
     {
         get => _supportedCaptureModes;
         private set => Set(ref _supportedCaptureModes, value);
@@ -78,13 +61,14 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         get => _selectedCaptureModeIndex;
         set
         {
-            Set(ref _selectedCaptureModeIndex, value);
-            RaisePropertyChanged(nameof(SelectedCaptureMode));
+            if (Set(ref _selectedCaptureModeIndex, value))
+            {
+                RaisePropertyChanged(nameof(SelectedCaptureMode));
+            }
         }
     }
 
-    public CaptureMode? SelectedCaptureMode => SupportedCaptureModes[Math.Min(SelectedCaptureModeIndex, SupportedCaptureModes.Count - 1)];
-    public CaptureType? SelectedCaptureType => SupportedCaptureTypes[Math.Min(SelectedCaptureTypeIndex, SupportedCaptureTypes.Count - 1)];
+    public CaptureModeViewModel SelectedCaptureMode => SupportedCaptureModes[SelectedCaptureModeIndex];
 
     private Rectangle _captureArea;
     public Rectangle CaptureArea
@@ -121,19 +105,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         private set => Set(ref _defaultAppTheme, value);
     }
 
-    private CaptureMode _activeCaptureMode;
-    public CaptureMode ActiveCaptureMode
-    {
-        get => _activeCaptureMode;
-        set
-        {
-            Set(ref _activeCaptureMode, value);
-            OnActiveCaptureModeChanged();
-            RaisePropertyChanged(nameof(IsActiveCaptureModeImage));
-            RaisePropertyChanged(nameof(IsActiveCaptureModeVideo));
-        }
-    }
-
     private bool _isDesktopAudioEnabled;
     public bool IsDesktopAudioEnabled
     {
@@ -148,16 +119,14 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         set => Set(ref _isCapturingVideo, value);
     }
 
-    public bool IsActiveCaptureModeImage => _activeCaptureMode == CaptureMode.Image;
-    public bool IsActiveCaptureModeVideo => _activeCaptureMode == CaptureMode.Video;
-
     private bool IsVideoCaptureFeatureEnabled { get; }
-    private bool IsFreeformModeFeatureEnabled { get; }
 
     public SelectionOverlayWindowViewModel(
         IFeatureManager featureManager,
         IThemeService themeService,
-        IAppController appController)
+        IAppController appController,
+        IFactoryService<CaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
+        IFactoryService<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
     {
         _featureManager = featureManager;
         _appController = appController;
@@ -169,24 +138,22 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         CurrentAppTheme = _themeService.CurrentTheme;
 
         IsVideoCaptureFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
-        IsFreeformModeFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageCapture_FreeformMode);
 
-        _supportedCaptureModes = [ CaptureMode.Image ];
+        CaptureModeViewModel imageModeVM = captureModeViewModelFactory.Create(CaptureMode.Image);
+        _supportedCaptureModes = [imageModeVM];
         if (IsVideoCaptureFeatureEnabled)
         {
-            _supportedCaptureModes.Add(CaptureMode.Video);
+            CaptureModeViewModel videoModeVM = captureModeViewModelFactory.Create(CaptureMode.Video);
+            _supportedCaptureModes.Add(videoModeVM);
         }
 
-        _supportedCaptureTypes = [CaptureType.Rectangle];
-         _supportedCaptureTypes.Add(CaptureType.Window);
-        _supportedCaptureTypes.Add(CaptureType.FullScreen);
-        if (IsFreeformModeFeatureEnabled)
-        {
-            _supportedCaptureTypes.Add(CaptureType.Freeform);
-        }
-        _supportedCaptureTypes.Add(CaptureType.AllScreens);
+        _supportedCaptureTypes = [
+            captureTypeViewModelFactory.Create(CaptureType.Rectangle),
+            captureTypeViewModelFactory.Create(CaptureType.Window),
+            captureTypeViewModelFactory.Create(CaptureType.FullScreen),
+            captureTypeViewModelFactory.Create(CaptureType.AllScreens),
+        ];
 
-        _activeCaptureMode = CaptureMode.Image;
         _isDesktopAudioEnabled = true;
     }
 
@@ -197,15 +164,11 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             Monitor = monitor;
             MonitorWindows = [.. monitorWindows];
 
-            if (SupportedCaptureModes.Contains(options.CaptureMode))
-            {
-                SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(options.CaptureMode);
-            }
+            var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureMode);
+            SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(targetMode);
 
-            if (SupportedCaptureTypes.Contains(options.CaptureType))
-            {
-                SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(options.CaptureType);
-            }
+            var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureType);
+            SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(targetType);
         }
 
         base.Load(parameter);
@@ -224,20 +187,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _isCapturingVideo = false;
     }
 
-    private void OnActiveCaptureModeChanged()
-    {
-        if (_activeCaptureMode == CaptureMode.Image)
-        {
-            CaptureArea = Rectangle.Empty;
-        }
-    }
-
-    private void TransitionToVideoMode()
-    {
-        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
-        ActiveCaptureMode = CaptureMode.Video;
-    }
-
     private void CloseOverlay()
     {
         _appController.CloseSelectionOverlay();
@@ -248,13 +197,13 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     {
         if (Monitor != null && CaptureArea != Rectangle.Empty)
         {
-            if (SelectedCaptureMode == CaptureMode.Image)
+            if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
             {
                 _appController.PerformImageCapture(Monitor.Value, CaptureArea);
             }
-            else if (SelectedCaptureMode == CaptureMode.Video)
+            else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
             {
-                TransitionToVideoMode();
+                _appController.PrepareForVideoCapture(Monitor.Value, CaptureArea);
             }
         }
     }

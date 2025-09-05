@@ -9,3 +9,7 @@ GetDpiForWindow
 SetWindowPos
 GetForegroundWindow
 SetWindowDisplayAffinity
+RegisterClassEx
+CreateWindowEx
+SetLayeredWindowAttributes
+DefWindowProc

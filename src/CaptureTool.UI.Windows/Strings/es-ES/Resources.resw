@@ -363,17 +363,14 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Usar el tema del sistema</value>
   </data>
-  <data name="CaptureType_Rectangle.Text" xml:space="preserve">
+  <data name="CaptureType_Rectangle" xml:space="preserve">
     <value>Rectángulo</value>
   </data>
-  <data name="CaptureType_Window.Text" xml:space="preserve">
+  <data name="CaptureType_Window" xml:space="preserve">
     <value>Ventana</value>
   </data>
-  <data name="CaptureType_FullScreen.Text" xml:space="preserve">
+  <data name="CaptureType_FullScreen" xml:space="preserve">
     <value>Pantalla completa</value>
-  </data>
-  <data name="CaptureType_Freeform.Text" xml:space="preserve">
-    <value>Forma libre</value>
   </data>
   <data name="ImageEdit_ChromaKeyButton.Label" xml:space="preserve">
     <value>Clave de croma</value>
@@ -396,7 +393,7 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="AppMenu_AddOnsItem.Text" xml:space="preserve">
     <value>Complementos</value>
   </data>
-  <data name="CaptureType_AllScreens.Text" xml:space="preserve">
+  <data name="CaptureType_AllScreens" xml:space="preserve">
     <value>Todas las pantallas</value>
   </data>
   <data name="Settings_ImageCaptureHeaderLabel.Text" xml:space="preserve">

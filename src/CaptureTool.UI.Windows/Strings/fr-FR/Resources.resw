@@ -363,17 +363,14 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Utiliser les paramètres par défaut du système</value>
   </data>
-  <data name="CaptureType_Rectangle.Text" xml:space="preserve">
+  <data name="CaptureType_Rectangle" xml:space="preserve">
     <value>Rectangle</value>
   </data>
-  <data name="CaptureType_Window.Text" xml:space="preserve">
+  <data name="CaptureType_Window" xml:space="preserve">
     <value>Fenêtre</value>
   </data>
-  <data name="CaptureType_FullScreen.Text" xml:space="preserve">
+  <data name="CaptureType_FullScreen" xml:space="preserve">
     <value>Plein écran</value>
-  </data>
-  <data name="CaptureType_Freeform.Text" xml:space="preserve">
-    <value>Forme libre</value>
   </data>
   <data name="ImageEdit_ChromaKeyButton.Label" xml:space="preserve">
     <value>Incrustation chroma</value>
@@ -396,7 +393,7 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="AppMenu_AddOnsItem.Text" xml:space="preserve">
     <value>Modules complémentaires</value>
   </data>
-  <data name="CaptureType_AllScreens.Text" xml:space="preserve">
+  <data name="CaptureType_AllScreens" xml:space="preserve">
     <value>Tous les écrans</value>
   </data>
   <data name="Settings_ImageCaptureHeaderLabel.Text" xml:space="preserve">

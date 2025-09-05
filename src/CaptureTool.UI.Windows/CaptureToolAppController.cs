@@ -38,7 +38,8 @@ internal partial class CaptureToolAppController : IAppController
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _isInitialized;
     private string? _tempVideoPath;
-    private SelectionOverlayHost? _overlayHost;
+    private SelectionOverlayHost? _selectionOverlayHost;
+    private CaptureOverlayHost? _captureOverlayHost;
     private MainWindowHost? _mainWindowHost;
 
     public CaptureToolAppController(
@@ -153,13 +154,13 @@ internal partial class CaptureToolAppController : IAppController
 
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
-            _overlayHost = new SelectionOverlayHost(() =>
+            _selectionOverlayHost = new SelectionOverlayHost(() =>
             {
                 ShowMainWindow(false);
                 CloseSelectionOverlay();
             });
 
-            _overlayHost.Show(options ?? new(CaptureMode.Image, CaptureType.Rectangle));
+            _selectionOverlayHost.Show(options ?? new(CaptureMode.Image, CaptureType.Rectangle));
         });
     }
 
@@ -167,8 +168,8 @@ internal partial class CaptureToolAppController : IAppController
     {
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
-            _overlayHost?.Dispose();
-            _overlayHost = null;
+            _selectionOverlayHost?.Dispose();
+            _selectionOverlayHost = null;
         });
     }
 
@@ -178,7 +179,7 @@ internal partial class CaptureToolAppController : IAppController
 
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
-            MonitorCaptureResult[] monitors = _overlayHost?.GetMonitors() ?? MonitorCaptureHelper.CaptureAllMonitors();
+            MonitorCaptureResult[] monitors = _selectionOverlayHost?.GetMonitors() ?? MonitorCaptureHelper.CaptureAllMonitors();
             Bitmap? combined = MonitorCaptureHelper.CombineMonitors(monitors);
             if (combined != null)
             {
@@ -263,21 +264,13 @@ internal partial class CaptureToolAppController : IAppController
     {
         Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
 
-        if (_overlayHost == null)
-        {
-            ShowSelectionOverlay();
-        }
-        _overlayHost?.TransitionToVideoMode(monitor, area);
+        ShowCaptureOverlay(monitor, area);
         _tempVideoPath = null;
     }
 
     public void StartVideoCapture(MonitorCaptureResult monitor, Rectangle area)
     {
-        if (_overlayHost == null)
-        {
-            ShowSelectionOverlay();
-            _overlayHost?.TransitionToVideoMode(monitor, area);
-        }
+        ShowCaptureOverlay(monitor, area);
 
         _tempVideoPath = Path.Combine(
             ApplicationData.GetDefault().TemporaryPath,
@@ -285,6 +278,20 @@ internal partial class CaptureToolAppController : IAppController
         );
 
         ScreenRecorder.StartRecording(monitor.HMonitor, _tempVideoPath);
+    }
+
+    private void ShowCaptureOverlay(MonitorCaptureResult monitor, Rectangle area)
+    {
+        ThrowIfNotInitialized();
+
+        CloseSelectionOverlay();
+        HideMainWindow();
+
+        App.Current.DispatcherQueue.TryEnqueue(() => {
+            _captureOverlayHost = new();
+
+            _captureOverlayHost.Show(monitor, area);
+        });
     }
 
     public void StopVideoCapture()

@@ -363,17 +363,14 @@
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>使用系统默认</value>
   </data>
-  <data name="CaptureType_Rectangle.Text" xml:space="preserve">
+  <data name="CaptureType_Rectangle" xml:space="preserve">
     <value>矩形</value>
   </data>
-  <data name="CaptureType_Window.Text" xml:space="preserve">
+  <data name="CaptureType_Window" xml:space="preserve">
     <value>窗口</value>
   </data>
-  <data name="CaptureType_FullScreen.Text" xml:space="preserve">
+  <data name="CaptureType_FullScreen" xml:space="preserve">
     <value>全屏</value>
-  </data>
-  <data name="CaptureType_Freeform.Text" xml:space="preserve">
-    <value>自由形式</value>
   </data>
   <data name="ImageEdit_ChromaKeyButton.Label" xml:space="preserve">
     <value>色度键</value>
@@ -396,7 +393,7 @@
   <data name="AppMenu_AddOnsItem.Text" xml:space="preserve">
     <value>加载项</value>
   </data>
-  <data name="CaptureType_AllScreens.Text" xml:space="preserve">
+  <data name="CaptureType_AllScreens" xml:space="preserve">
     <value>所有屏幕</value>
   </data>
   <data name="Settings_ImageCaptureHeaderLabel.Text" xml:space="preserve">

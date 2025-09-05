@@ -76,6 +76,10 @@ internal sealed partial class MockAppController : IAppController
     {
     }
 
+    public void StopVideoCapture()
+    {
+    }
+
     public bool TryGoBack()
     {
         return false;

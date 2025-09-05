@@ -445,21 +445,17 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Use system default</value>
     <comment>The label for the system default language option.</comment>
   </data>
-  <data name="CaptureType_Rectangle.Text" xml:space="preserve">
+  <data name="CaptureType_Rectangle" xml:space="preserve">
     <value>Rectangle</value>
     <comment>The label for the Rectangle capture type</comment>
   </data>
-  <data name="CaptureType_Window.Text" xml:space="preserve">
+  <data name="CaptureType_Window" xml:space="preserve">
     <value>Window</value>
     <comment>The label for the Window capture type.</comment>
   </data>
-  <data name="CaptureType_FullScreen.Text" xml:space="preserve">
+  <data name="CaptureType_FullScreen" xml:space="preserve">
     <value>Full screen</value>
     <comment>The label for the Full screen capture type.</comment>
-  </data>
-  <data name="CaptureType_Freeform.Text" xml:space="preserve">
-    <value>Freeform</value>
-    <comment>The label for the Freeform capture type.</comment>
   </data>
   <data name="ImageEdit_ChromaKeyButton.Label" xml:space="preserve">
     <value>Chroma key</value>
@@ -489,7 +485,7 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Add-ons</value>
     <comment>The label for the menu item that shows the app add-ons page.</comment>
   </data>
-  <data name="CaptureType_AllScreens.Text" xml:space="preserve">
+  <data name="CaptureType_AllScreens" xml:space="preserve">
     <value>All screens</value>
     <comment>The label for the All Screens capture type.</comment>
   </data>

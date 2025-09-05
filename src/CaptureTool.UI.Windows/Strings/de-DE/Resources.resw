@@ -363,17 +363,14 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Systemstandard verwenden</value>
   </data>
-  <data name="CaptureType_Rectangle.Text" xml:space="preserve">
+  <data name="CaptureType_Rectangle" xml:space="preserve">
     <value>Rechteck</value>
   </data>
-  <data name="CaptureType_Window.Text" xml:space="preserve">
+  <data name="CaptureType_Window" xml:space="preserve">
     <value>Fenster</value>
   </data>
-  <data name="CaptureType_FullScreen.Text" xml:space="preserve">
+  <data name="CaptureType_FullScreen" xml:space="preserve">
     <value>Vollbild</value>
-  </data>
-  <data name="CaptureType_Freeform.Text" xml:space="preserve">
-    <value>Freiform</value>
   </data>
   <data name="ImageEdit_ChromaKeyButton.Label" xml:space="preserve">
     <value>Chroma-Key</value>
@@ -396,7 +393,7 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="AppMenu_AddOnsItem.Text" xml:space="preserve">
     <value>Add-Ons</value>
   </data>
-  <data name="CaptureType_AllScreens.Text" xml:space="preserve">
+  <data name="CaptureType_AllScreens" xml:space="preserve">
     <value>Alle Bildschirme</value>
   </data>
   <data name="Settings_ImageCaptureHeaderLabel.Text" xml:space="preserve">
