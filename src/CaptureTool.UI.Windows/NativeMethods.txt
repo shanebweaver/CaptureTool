@@ -13,3 +13,4 @@ RegisterClassEx
 CreateWindowEx
 SetLayeredWindowAttributes
 DefWindowProc
+DestroyWindow

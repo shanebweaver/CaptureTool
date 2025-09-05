@@ -20,6 +20,7 @@ public interface IAppController
     void StartVideoCapture(MonitorCaptureResult monitor, Rectangle captureArea);
     void StopVideoCapture();
     void PerformAllScreensCapture();
+    void CloseCaptureOverlay();
 
     string GetDefaultScreenshotsFolderPath();
 

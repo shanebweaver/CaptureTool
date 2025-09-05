@@ -1,5 +1,5 @@
 ﻿using CaptureTool.Capture;
-using CaptureTool.UI.Windows.Xaml.Controls;
+using CaptureTool.UI.Windows.Xaml.Views;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.Win32.SafeHandles;
@@ -13,7 +13,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
-internal sealed partial class CaptureOverlayHost
+internal sealed partial class CaptureOverlayHost : IDisposable
 {
     internal sealed partial class DestroyIconSafeHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
@@ -27,14 +27,14 @@ internal sealed partial class CaptureOverlayHost
         }
     }
 
+    private HWND? _hwnd;
+
     public void Show(MonitorCaptureResult monitor, Rectangle area)
     {
         unsafe
         {
-            // Need to register the class first.
             const string className = "CaptureOverlayWindow";
 
-            // Define the window class
             WNDCLASSEXW wndClass = new()
             {
                 cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
@@ -82,7 +82,9 @@ internal sealed partial class CaptureOverlayHost
             WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             xamlSource.Initialize(windowId);
 
-            xamlSource.Content = new CaptureOverlayToolbar();
+            xamlSource.Content = new CaptureOverlayView();
+
+            _hwnd = hwnd;
         }
     }
 
@@ -90,5 +92,13 @@ internal sealed partial class CaptureOverlayHost
     private static LRESULT WindowProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
         return PInvoke.DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+
+    public void Dispose()
+    {
+        if (_hwnd != null)
+        {
+            PInvoke.DestroyWindow(_hwnd.Value);
+        }
     }
 }

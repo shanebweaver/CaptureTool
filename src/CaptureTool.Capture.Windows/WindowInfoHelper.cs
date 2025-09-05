@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.Graphics.Dwm;
 
 namespace CaptureTool.Capture.Windows;
 
@@ -31,7 +32,7 @@ public static partial class WindowInfoHelper
                             return false;
                         }
 
-                        if (!DwmSafe.TryGetExtendedFrameBounds(hWnd, out RECT rect))
+                        if (!TryGetExtendedFrameBounds(hWnd, out RECT rect))
                         {
                             // fallback to normal rect if DWM call fails
                             PInvoke.GetWindowRect(hWnd, out rect);
@@ -49,5 +50,28 @@ public static partial class WindowInfoHelper
         }, IntPtr.Zero);
 
         return windows;
+    }
+
+    private static bool TryGetExtendedFrameBounds(HWND hwnd, out RECT rect)
+    {
+        rect = default;
+
+        unsafe
+        {
+            RECT tmp;
+            var hr = PInvoke.DwmGetWindowAttribute(
+                hwnd,
+                DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS,
+                &tmp,
+                (uint)sizeof(RECT));
+
+            if (hr.Failed)
+            {
+                return false;
+            }
+
+            rect = tmp;
+            return true;
+        }
     }
 }

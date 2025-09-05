@@ -494,4 +494,12 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
+    public void CloseCaptureOverlay()
+    {
+        App.Current.DispatcherQueue.TryEnqueue(() =>
+        {
+            _captureOverlayHost?.Dispose();
+            _captureOverlayHost = null;
+        });
+    }
 }
