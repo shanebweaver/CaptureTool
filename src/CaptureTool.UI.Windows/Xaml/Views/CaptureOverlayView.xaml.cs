@@ -42,7 +42,7 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
         DropShadow? shadow = compositor.CreateDropShadow();
         shadow.Color = Colors.Black;
         shadow.BlurRadius = 12;
-        shadow.Opacity = 0.6f;
+        shadow.Opacity = 0.3f;
         shadow.Offset = new Vector3(0, 4, 0);
 
         SpriteVisual shadowVisual = compositor.CreateSpriteVisual();

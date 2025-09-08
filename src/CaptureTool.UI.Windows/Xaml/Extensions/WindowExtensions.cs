@@ -47,7 +47,7 @@ internal static partial class WindowExtensions
             global::Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
         global::Windows.Win32.Graphics.Gdi.MONITORINFO info = new()
         {
-            cbSize = 40
+            cbSize = (uint)Marshal.SizeOf<global::Windows.Win32.Graphics.Gdi.MONITORINFO>()
         };
         global::Windows.Win32.PInvoke.GetMonitorInfo(hwndDesktop, ref info);
         var dpi = global::Windows.Win32.PInvoke.GetDpiForWindow(new(hwnd));
@@ -69,7 +69,7 @@ internal static partial class WindowExtensions
             global::Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
         global::Windows.Win32.Graphics.Gdi.MONITORINFO info = new()
         {
-            cbSize = 40
+            cbSize = (uint)Marshal.SizeOf<global::Windows.Win32.Graphics.Gdi.MONITORINFO>()
         };
         global::Windows.Win32.PInvoke.GetMonitorInfo(hwndDesktop, ref info);
         var dpi = global::Windows.Win32.PInvoke.GetDpiForWindow(new(hwnd));

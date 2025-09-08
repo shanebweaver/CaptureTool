@@ -64,20 +64,13 @@ internal sealed partial class CaptureOverlayHost : IDisposable
                 "Capture Overlay Window", // TODO: Replace with a localized string
                 WINDOW_STYLE.WS_VISIBLE | WINDOW_STYLE.WS_POPUP,
                 24, // x
-                24, // y
-                400, // w
-                66, //h
+                14, // y
+                408, // w
+                76, //h
                 new(IntPtr.Zero),
                 null,
                 new DestroyIconSafeHandle(wndClass.hInstance),
                 null);
-
-            // Enable per-pixel alpha transparency
-            PInvoke.SetLayeredWindowAttributes(
-                hwnd,
-                new COLORREF(0),
-                0, //255,
-                0); // 0 = use per-pixel alpha
 
             PInvoke.SetWindowDisplayAffinity(hwnd, WINDOW_DISPLAY_AFFINITY.WDA_EXCLUDEFROMCAPTURE);
 

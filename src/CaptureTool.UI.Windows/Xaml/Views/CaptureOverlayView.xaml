@@ -11,8 +11,8 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:CaptureOverlayViewModel}"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootPanel">
-        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Grid x:Name="RootPanel" CornerRadius="8">
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Top">
             <Grid x:Name="ToolbarHost" />
             <controls:CaptureOverlayToolbar
                 x:Name="Toolbar"
