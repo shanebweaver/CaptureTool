@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Capture;
+using CaptureTool.UI.Windows.Xaml.Extensions;
 using CaptureTool.UI.Windows.Xaml.Views;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Hosting;
@@ -75,7 +76,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             PInvoke.SetLayeredWindowAttributes(
                 hwnd,
                 new COLORREF(0),
-                128, //255,
+                0, //255,
                 0); // 0 = use per-pixel alpha
 
             PInvoke.SetWindowDisplayAffinity(hwnd, WINDOW_DISPLAY_AFFINITY.WDA_EXCLUDEFROMCAPTURE);
@@ -83,10 +84,14 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             DesktopWindowXamlSource xamlSource = new();
             WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             xamlSource.Initialize(windowId);
-
             xamlSource.Content = new CaptureOverlayView(monitor, area);
 
             _hwnd = hwnd;
+
+            WindowExtensions.HorizontalCenterOnScreen(hwnd);
+
+            // TODO: Also create a window to represent the capture area border and position it appropriately.
+            // Hide the window when the recording starts.
         }
     }
 

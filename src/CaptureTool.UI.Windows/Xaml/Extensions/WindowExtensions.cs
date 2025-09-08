@@ -40,7 +40,7 @@ internal static partial class WindowExtensions
     /// <param name="hwnd">Window handle</param>
     /// <param name="width">Width of the window in device independent pixels, or <c>null</c> if keeping the current size</param>
     /// <param name="height">Height of the window in device independent pixels, or <c>null</c> if keeping the current size</param>
-    private static void CenterOnScreen(IntPtr hwnd, double? width = null, double? height = null)
+    public static void CenterOnScreen(IntPtr hwnd, double? width = null, double? height = null)
     {
         var hwndDesktop = global::Windows.Win32.PInvoke.MonitorFromWindow(
             new global::Windows.Win32.Foundation.HWND(hwnd), 
@@ -59,6 +59,27 @@ internal static partial class WindowExtensions
         var cy = (info.rcMonitor.bottom + info.rcMonitor.top) / 2;
         var left = cx - (w / 2);
         var top = cy - (h / 2);
+        SetWindowPosOrThrow(new global::Windows.Win32.Foundation.HWND(hwnd), new global::Windows.Win32.Foundation.HWND(), left, top, w, h, 0);
+    }
+
+    public static void HorizontalCenterOnScreen(IntPtr hwnd, double? width = null, double? height = null)
+    {
+        var hwndDesktop = global::Windows.Win32.PInvoke.MonitorFromWindow(
+            new global::Windows.Win32.Foundation.HWND(hwnd),
+            global::Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        global::Windows.Win32.Graphics.Gdi.MONITORINFO info = new()
+        {
+            cbSize = 40
+        };
+        global::Windows.Win32.PInvoke.GetMonitorInfo(hwndDesktop, ref info);
+        var dpi = global::Windows.Win32.PInvoke.GetDpiForWindow(new(hwnd));
+        global::Windows.Win32.PInvoke.GetWindowRect(new(hwnd), out global::Windows.Win32.Foundation.RECT windowRect);
+        var scalingFactor = dpi / 96d;
+        var w = width.HasValue ? (int)(width * scalingFactor) : windowRect.right - windowRect.left;
+        var h = height.HasValue ? (int)(height * scalingFactor) : windowRect.bottom - windowRect.top;
+        var cx = (info.rcMonitor.left + info.rcMonitor.right) / 2;
+        var left = cx - (w / 2);
+        var top = windowRect.top;
         SetWindowPosOrThrow(new global::Windows.Win32.Foundation.HWND(hwnd), new global::Windows.Win32.Foundation.HWND(), left, top, w, h, 0);
     }
 

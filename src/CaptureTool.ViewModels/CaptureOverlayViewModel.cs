@@ -1,6 +1,7 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
+using CaptureTool.Services.Themes;
 using System;
 using System.Drawing;
 
@@ -26,14 +27,33 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
         private set => Set(ref _captureTime, value);
     }
 
+    private AppTheme _currentAppTheme;
+    public AppTheme CurrentAppTheme
+    {
+        get => _currentAppTheme;
+        private set => Set(ref _currentAppTheme, value);
+    }
+
+    private AppTheme _defaultAppTheme;
+    public AppTheme DefaultAppTheme
+    {
+        get => _defaultAppTheme;
+        private set => Set(ref _defaultAppTheme, value);
+    }
+
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
     public RelayCommand GoBackCommand => new(GoBack);
     public RelayCommand StartVideoCaptureCommand => new(StartVideoCapture);
     public RelayCommand StopVideoCaptureCommand => new(StopVideoCapture);
 
-    public CaptureOverlayViewModel(IAppController appController) 
+    public CaptureOverlayViewModel(
+        IThemeService themeService,
+        IAppController appController) 
     {
         _appController = appController;
+
+        DefaultAppTheme = themeService.DefaultTheme;
+        CurrentAppTheme = themeService.CurrentTheme;
     }
 
     public override void Load(object? parameter)

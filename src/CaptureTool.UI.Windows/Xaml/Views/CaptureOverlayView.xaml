@@ -7,14 +7,20 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.UI.Windows.Xaml.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:CaptureTool.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:CaptureOverlayViewModel}"
     mc:Ignorable="d">
 
-    <Grid>
-        <controls:CaptureOverlayToolbar
-            CloseCommand="{x:Bind ViewModel.CloseOverlayCommand}"
-            GoBackCommand="{x:Bind ViewModel.GoBackCommand}"
-            IsRecording="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
-            StartVideoCaptureCommand="{x:Bind ViewModel.StartVideoCaptureCommand}"
-            StopVideoCaptureCommand="{x:Bind ViewModel.StopVideoCaptureCommand}" />
+    <Grid x:Name="RootPanel">
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid x:Name="ToolbarHost" />
+            <controls:CaptureOverlayToolbar
+                x:Name="Toolbar"
+                CloseCommand="{x:Bind ViewModel.CloseOverlayCommand}"
+                GoBackCommand="{x:Bind ViewModel.GoBackCommand}"
+                IsRecording="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
+                StartVideoCaptureCommand="{x:Bind ViewModel.StartVideoCaptureCommand}"
+                StopVideoCaptureCommand="{x:Bind ViewModel.StopVideoCaptureCommand}" />
+        </Grid>
     </Grid>
 </local:CaptureOverlayViewBase>

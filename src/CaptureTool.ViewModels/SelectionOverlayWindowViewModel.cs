@@ -15,7 +15,6 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase
 {
-    private readonly IThemeService _themeService;
     private readonly IAppController _appController;
     private readonly IFeatureManager _featureManager;
 
@@ -133,9 +132,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _captureArea = Rectangle.Empty;
         _monitorWindows = [];
 
-        _themeService = themeService;
-        DefaultAppTheme = _themeService.DefaultTheme;
-        CurrentAppTheme = _themeService.CurrentTheme;
+        DefaultAppTheme = themeService.DefaultTheme;
+        CurrentAppTheme = themeService.CurrentTheme;
 
         IsVideoCaptureFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
 
