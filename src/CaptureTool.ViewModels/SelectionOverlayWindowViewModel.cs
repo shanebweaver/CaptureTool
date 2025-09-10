@@ -17,6 +17,19 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 {
     private readonly IAppController _appController;
     private readonly IFeatureManager _featureManager;
+    private readonly IFactoryService<CaptureModeViewModel, CaptureMode> _captureModeViewModelFactory;
+    private readonly IFactoryService<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
+
+    private static readonly CaptureType[] _imageCaptureTypes = [
+        CaptureType.Rectangle,
+        CaptureType.Window,
+        CaptureType.FullScreen,
+        CaptureType.AllScreens,
+    ];
+
+    private static readonly CaptureType[] _videoCaptureTypes = [
+        CaptureType.FullScreen,
+    ];
 
     public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
@@ -63,6 +76,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             if (Set(ref _selectedCaptureModeIndex, value))
             {
                 RaisePropertyChanged(nameof(SelectedCaptureMode));
+                UpdateSupportedCaptureTypes();
             }
         }
     }
@@ -129,6 +143,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     {
         _featureManager = featureManager;
         _appController = appController;
+        _captureModeViewModelFactory = captureModeViewModelFactory;
+        _captureTypeViewModelFactory = captureTypeViewModelFactory;
         _captureArea = Rectangle.Empty;
         _monitorWindows = [];
 
@@ -145,13 +161,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             _supportedCaptureModes.Add(videoModeVM);
         }
 
-        _supportedCaptureTypes = [
-            captureTypeViewModelFactory.Create(CaptureType.Rectangle),
-            captureTypeViewModelFactory.Create(CaptureType.Window),
-            captureTypeViewModelFactory.Create(CaptureType.FullScreen),
-            captureTypeViewModelFactory.Create(CaptureType.AllScreens),
-        ];
-
+        _supportedCaptureTypes = [];
         _isDesktopAudioEnabled = true;
     }
 
@@ -164,6 +174,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
             var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureMode);
             SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(targetMode);
+
+            UpdateSupportedCaptureTypes();
 
             var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureType);
             SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(targetType);
@@ -189,6 +201,30 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     {
         _appController.CloseSelectionOverlay();
         _appController.ShowMainWindow();
+    }
+
+    private void UpdateSupportedCaptureTypes()
+    {
+        SupportedCaptureTypes.Clear();
+        if (SupportedCaptureModes.Count == 0)
+        {
+            SelectedCaptureTypeIndex = -1;
+            return;
+        }
+
+        var supportedCaptureTypes = SelectedCaptureMode.CaptureMode switch
+        {
+            CaptureMode.Image => _imageCaptureTypes,
+            CaptureMode.Video => _videoCaptureTypes,
+            _ => []
+        };
+
+        foreach (var supportedCaptureType in supportedCaptureTypes)
+        {
+            SupportedCaptureTypes.Add(_captureTypeViewModelFactory.Create(supportedCaptureType));
+        }
+
+        SelectedCaptureTypeIndex = 0;
     }
 
     private void RequestCapture()

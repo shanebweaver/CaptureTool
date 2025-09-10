@@ -37,7 +37,10 @@ public sealed partial class SelectionOverlayWindow : Window
 
         InitializeComponent();
 
-        ViewModel.Load((monitor, monitorWindows, options));
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            ViewModel.Load((monitor, monitorWindows, options));
+        });
     }
 
     private void SelectionOverlayWindow_Closed(object sender, WindowEventArgs args)

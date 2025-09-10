@@ -41,10 +41,19 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
         private set => Set(ref _defaultAppTheme, value);
     }
 
+    private bool _isDesktopAudioEnabled;
+    public bool IsDesktopAudioEnabled
+    {
+        get => _isDesktopAudioEnabled;
+        set => Set(ref _isDesktopAudioEnabled, value);
+    }
+
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
     public RelayCommand GoBackCommand => new(GoBack);
     public RelayCommand StartVideoCaptureCommand => new(StartVideoCapture);
     public RelayCommand StopVideoCaptureCommand => new(StopVideoCapture);
+    public RelayCommand ToggleDesktopAudioCommand => new(ToggleDesktopAudio);
+    
 
     public CaptureOverlayViewModel(
         IThemeService themeService,
@@ -110,5 +119,10 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
             IsRecording = false;
             _appController.StopVideoCapture();
         }
+    }
+
+    private void ToggleDesktopAudio()
+    {
+        IsDesktopAudioEnabled = !IsDesktopAudioEnabled;
     }
 }
