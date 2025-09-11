@@ -15,6 +15,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Xaml\Controls\CaptureOverlayBorder.xaml" />
     <None Remove="Xaml\Controls\ClockTimer.xaml" />
   </ItemGroup>
 
@@ -79,6 +80,11 @@
   <!-- Publish profiles -->
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Xaml\Controls\CaptureOverlayBorder.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Xaml\Controls\ClockTimer.xaml">

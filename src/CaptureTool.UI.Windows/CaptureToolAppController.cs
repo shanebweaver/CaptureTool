@@ -267,6 +267,8 @@ internal partial class CaptureToolAppController : IAppController
             ShowCaptureOverlay(monitor, area);
         }
 
+        _captureOverlayHost?.HideBorder();
+
         _tempVideoPath = Path.Combine(
             ApplicationData.GetDefault().TemporaryPath,
             $"capture_{Guid.NewGuid()}.mp4"
