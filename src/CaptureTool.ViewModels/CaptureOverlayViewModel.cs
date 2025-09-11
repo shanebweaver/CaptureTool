@@ -4,6 +4,7 @@ using CaptureTool.Core.AppController;
 using CaptureTool.Services.Themes;
 using System;
 using System.Drawing;
+using System.Timers;
 
 namespace CaptureTool.ViewModels;
 
@@ -12,6 +13,10 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
     private readonly IAppController _appController;
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
+
+    private static readonly TimeSpan TimerInterval = TimeSpan.FromMilliseconds(100);
+    private Timer? _timer;
+    private DateTime _captureStartTime;
 
     private bool _isRecording;
     public bool IsRecording
@@ -78,6 +83,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
 
     public override void Unload()
     {
+        StopTimer();
         base.Unload();
     }
 
@@ -107,7 +113,10 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
     {
         if (!IsRecording && _monitorCaptureResult != null && _captureArea != null)
         {
-           IsRecording = true;
+            IsRecording = true;
+            CaptureTime = TimeSpan.Zero;
+            _captureStartTime = DateTime.UtcNow;
+            StartTimer();
             _appController.StartVideoCapture(_monitorCaptureResult.Value, _captureArea.Value);
         }
     }
@@ -117,6 +126,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
         if (IsRecording)
         {
             IsRecording = false;
+            StopTimer();
             _appController.StopVideoCapture();
         }
     }
@@ -124,5 +134,26 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
     private void ToggleDesktopAudio()
     {
         IsDesktopAudioEnabled = !IsDesktopAudioEnabled;
+    }
+
+    private void StartTimer()
+    {
+        if (_timer == null)
+        {
+            _timer = new Timer(TimerInterval.TotalMilliseconds);
+            _timer.Elapsed += Timer_Elapsed;
+            _timer.AutoReset = true;
+        }
+        _timer.Start();
+    }
+
+    private void StopTimer()
+    {
+        _timer?.Stop();
+    }
+
+    private void Timer_Elapsed(object? sender, ElapsedEventArgs e)
+    {
+        CaptureTime = DateTime.UtcNow - _captureStartTime;
     }
 }

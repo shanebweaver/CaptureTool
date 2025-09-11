@@ -1,5 +1,4 @@
 using Microsoft.UI.Xaml;
-using System;
 using System.Windows.Input;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;
@@ -47,19 +46,6 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(ICommand),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
-
-
-    public static readonly DependencyProperty RecordingTimeProperty = DependencyProperty.Register(
-        nameof(RecordingTime),
-        typeof(TimeSpan),
-        typeof(CaptureOverlayToolbar),
-        new PropertyMetadata(DependencyProperty.UnsetValue));
-
-    public TimeSpan RecordingTime
-    {
-        get => Get<TimeSpan>(RecordingTimeProperty);
-        set => Set(RecordingTimeProperty, value);
-    }
 
     public bool IsDesktopAudioEnabled
     {

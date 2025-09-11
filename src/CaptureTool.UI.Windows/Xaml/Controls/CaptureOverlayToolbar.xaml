@@ -58,10 +58,9 @@
                 </Button>
             </Grid>
 
-            <TextBlock
-                Margin="8,0"
-                VerticalAlignment="Center"
-                Text="00:00:00" />
+            <Grid Margin="8,0" VerticalAlignment="Center">
+                <local:ClockTimer IsActive="{x:Bind IsRecording, Mode=OneWay}" />
+            </Grid>
 
             <Button Command="{x:Bind ToggleDesktopAudioCommand, Mode=OneWay}" Style="{StaticResource IconButtonStyle}">
                 <Grid>

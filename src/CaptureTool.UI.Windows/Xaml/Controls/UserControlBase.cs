@@ -17,7 +17,8 @@ public abstract partial class UserControlBase : UserControl, INotifyPropertyChan
 
     protected void Set<T>(DependencyProperty dp, T value, [CallerMemberName] string? propertyName = null)
     {
-        if (GetValue(dp) is not T t || !EqualityComparer<T>.Default.Equals(value, t))
+        var current = GetValue(dp);
+        if (current == DependencyProperty.UnsetValue || current is not T t || !EqualityComparer<T>.Default.Equals(value, t))
         {
             SetValue(dp, value);
             RaisePropertyChanged(propertyName);

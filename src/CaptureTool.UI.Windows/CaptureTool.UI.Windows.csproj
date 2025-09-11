@@ -14,6 +14,9 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Xaml\Controls\ClockTimer.xaml" />
+  </ItemGroup>
 
   <!-- App manifest -->
   <ItemGroup>
@@ -76,6 +79,11 @@
   <!-- Publish profiles -->
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Xaml\Controls\ClockTimer.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <!-- Publish Properties -->

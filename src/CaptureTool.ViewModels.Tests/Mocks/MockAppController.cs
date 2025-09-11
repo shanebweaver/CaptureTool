@@ -89,4 +89,12 @@ internal sealed partial class MockAppController : IAppController
     {
         return false;
     }
+
+    public void CloseCaptureOverlay()
+    {
+    }
+
+    public void CancelVideoCapture()
+    {
+    }
 }
