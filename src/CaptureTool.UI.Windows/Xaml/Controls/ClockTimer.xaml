@@ -16,8 +16,8 @@
             Orientation="Horizontal">
             <TextBlock
                 x:Name="HoursTensText"
-                MinWidth="9"
-                MaxWidth="9"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
                 FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
                 IsTextScaleFactorEnabled="False"
@@ -25,8 +25,8 @@
                 TextAlignment="Center" />
             <TextBlock
                 x:Name="HoursOnesText"
-                MinWidth="9"
-                MaxWidth="9"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
                 FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
                 IsTextScaleFactorEnabled="False"
@@ -34,7 +34,6 @@
                 TextAlignment="Center" />
             <TextBlock
                 x:Name="Separator1"
-                Margin="0,-4,0,0"
                 VerticalAlignment="Center"
                 FontFamily="{x:Bind SeparatorFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind SeparatorFontSize, Mode=OneWay}"
@@ -42,8 +41,8 @@
                 Text=":" />
             <TextBlock
                 x:Name="MinutesTensText"
-                MinWidth="9"
-                MaxWidth="9"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
                 VerticalAlignment="Center"
                 FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
@@ -52,8 +51,8 @@
                 TextAlignment="Center" />
             <TextBlock
                 x:Name="MinutesOnesText"
-                MinWidth="9"
-                MaxWidth="9"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
                 VerticalAlignment="Center"
                 FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
@@ -62,7 +61,6 @@
                 TextAlignment="Center" />
             <TextBlock
                 x:Name="Separator2"
-                Margin="0,-4,0,0"
                 VerticalAlignment="Center"
                 FontFamily="{x:Bind SeparatorFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind SeparatorFontSize, Mode=OneWay}"
@@ -70,8 +68,8 @@
                 Text=":" />
             <TextBlock
                 x:Name="SecondsTensText"
-                MinWidth="9"
-                MaxWidth="9"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
                 VerticalAlignment="Center"
                 FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
@@ -80,8 +78,8 @@
                 TextAlignment="Center" />
             <TextBlock
                 x:Name="SecondsOnesText"
-                MinWidth="9"
-                MaxWidth="9"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
                 VerticalAlignment="Center"
                 FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind DigitFontSize, Mode=OneWay}"

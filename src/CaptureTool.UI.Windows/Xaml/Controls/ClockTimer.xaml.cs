@@ -9,6 +9,7 @@ public sealed partial class ClockTimer : UserControlBase
 {
     private static readonly double DefaultFontSize = 16d;
     private static readonly FontFamily DefaultFontFamily = FontFamily.XamlAutoFontFamily;
+    private static readonly double DefaultDigitWidth = 9d;
 
     public static readonly DependencyProperty IsActiveProperty = DependencyProperty.Register(
         nameof(IsActive), typeof(bool), typeof(ClockTimer), new PropertyMetadata(false, OnIsActiveChanged));
@@ -24,6 +25,9 @@ public sealed partial class ClockTimer : UserControlBase
 
     public static readonly DependencyProperty SeparatorFontFamilyProperty = DependencyProperty.Register(
         nameof(SeparatorFontFamily), typeof(FontFamily), typeof(ClockTimer), new PropertyMetadata(DefaultFontFamily));
+
+    public static readonly DependencyProperty DigitWidthProperty = DependencyProperty.Register(
+        nameof(DigitWidth), typeof(double), typeof(ClockTimer), new PropertyMetadata(DefaultDigitWidth));
 
     public bool IsActive
     {
@@ -53,6 +57,12 @@ public sealed partial class ClockTimer : UserControlBase
     {
         get => Get<FontFamily>(SeparatorFontFamilyProperty);
         set => Set(SeparatorFontFamilyProperty, value);
+    }
+
+    public double DigitWidth
+    {
+        get => Get<double>(DigitWidthProperty);
+        set => Set(DigitWidthProperty, value);
     }
 
     private int _hours;
