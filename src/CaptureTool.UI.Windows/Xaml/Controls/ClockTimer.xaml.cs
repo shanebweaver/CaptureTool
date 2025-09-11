@@ -27,32 +27,32 @@ public sealed partial class ClockTimer : UserControlBase
 
     public bool IsActive
     {
-        get => (bool)GetValue(IsActiveProperty);
-        set => SetValue(IsActiveProperty, value);
+        get => Get<bool>(IsActiveProperty);
+        set => Set(IsActiveProperty, value);
     }
 
     public double DigitFontSize
     {
-        get => (double)GetValue(DigitFontSizeProperty);
-        set => SetValue(DigitFontSizeProperty, value);
+        get => Get<double>(DigitFontSizeProperty);
+        set => Set(DigitFontSizeProperty, value);
     }
 
     public FontFamily DigitFontFamily
     {
-        get => (FontFamily)GetValue(DigitFontFamilyProperty);
-        set => SetValue(DigitFontFamilyProperty, value);
+        get => Get<FontFamily>(DigitFontFamilyProperty);
+        set => Set(DigitFontFamilyProperty, value);
     }
 
     public double SeparatorFontSize
     {
-        get => (double)GetValue(SeparatorFontSizeProperty);
-        set => SetValue(SeparatorFontSizeProperty, value);
+        get => Get<double>(SeparatorFontSizeProperty);
+        set => Set(SeparatorFontSizeProperty, value);
     }
 
     public FontFamily SeparatorFontFamily
     {
-        get => (FontFamily)GetValue(SeparatorFontFamilyProperty);
-        set => SetValue(SeparatorFontFamilyProperty, value);
+        get => Get<FontFamily>(SeparatorFontFamilyProperty);
+        set => Set(SeparatorFontFamilyProperty, value);
     }
 
     private int _hours;
@@ -90,7 +90,7 @@ public sealed partial class ClockTimer : UserControlBase
 
     private void OnTimerTick(object? state)
     {
-        DispatcherQueue.TryEnqueue(() =>
+        _ = DispatcherQueue.TryEnqueue(() =>
         {
             _seconds++;
             if (_seconds >= 60)
@@ -118,9 +118,12 @@ public sealed partial class ClockTimer : UserControlBase
     private void UpdateDisplay()
     {
         var separator = CultureInfo.CurrentCulture.DateTimeFormat.TimeSeparator;
-        HoursText.Text = _hours.ToString("D2");
-        MinutesText.Text = _minutes.ToString("D2");
-        SecondsText.Text = _seconds.ToString("D2");
+        HoursTensText.Text = (_hours / 10).ToString();
+        HoursOnesText.Text = (_hours % 10).ToString();
+        MinutesTensText.Text = (_minutes / 10).ToString();
+        MinutesOnesText.Text = (_minutes % 10).ToString();
+        SecondsTensText.Text = (_seconds / 10).ToString();
+        SecondsOnesText.Text = (_seconds % 10).ToString();
         Separator1.Text = separator;
         Separator2.Text = separator;
     }

@@ -15,40 +15,79 @@
             VerticalAlignment="Center"
             Orientation="Horizontal">
             <TextBlock
-                x:Name="HoursText"
-                VerticalAlignment="Center"
+                x:Name="HoursTensText"
+                MinWidth="9"
+                MaxWidth="9"
                 FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
                 IsTextScaleFactorEnabled="False"
-                Text="00" />
+                Text="0"
+                TextAlignment="Center" />
+            <TextBlock
+                x:Name="HoursOnesText"
+                MinWidth="9"
+                MaxWidth="9"
+                FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
+                FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
+                IsTextScaleFactorEnabled="False"
+                Text="0"
+                TextAlignment="Center" />
             <TextBlock
                 x:Name="Separator1"
+                Margin="0,-4,0,0"
                 VerticalAlignment="Center"
                 FontFamily="{x:Bind SeparatorFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind SeparatorFontSize, Mode=OneWay}"
                 IsTextScaleFactorEnabled="False"
                 Text=":" />
             <TextBlock
-                x:Name="MinutesText"
+                x:Name="MinutesTensText"
+                MinWidth="9"
+                MaxWidth="9"
                 VerticalAlignment="Center"
                 FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
                 IsTextScaleFactorEnabled="False"
-                Text="00" />
+                Text="0"
+                TextAlignment="Center" />
+            <TextBlock
+                x:Name="MinutesOnesText"
+                MinWidth="9"
+                MaxWidth="9"
+                VerticalAlignment="Center"
+                FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
+                FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
+                IsTextScaleFactorEnabled="False"
+                Text="0"
+                TextAlignment="Center" />
             <TextBlock
                 x:Name="Separator2"
+                Margin="0,-4,0,0"
                 VerticalAlignment="Center"
                 FontFamily="{x:Bind SeparatorFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind SeparatorFontSize, Mode=OneWay}"
                 IsTextScaleFactorEnabled="False"
                 Text=":" />
             <TextBlock
-                x:Name="SecondsText"
+                x:Name="SecondsTensText"
+                MinWidth="9"
+                MaxWidth="9"
                 VerticalAlignment="Center"
                 FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
                 FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
                 IsTextScaleFactorEnabled="False"
-                Text="00" />
+                Text="0"
+                TextAlignment="Center" />
+            <TextBlock
+                x:Name="SecondsOnesText"
+                MinWidth="9"
+                MaxWidth="9"
+                VerticalAlignment="Center"
+                FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
+                FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
+                IsTextScaleFactorEnabled="False"
+                Text="0"
+                TextAlignment="Center" />
         </StackPanel>
     </Grid>
 </local:UserControlBase>
