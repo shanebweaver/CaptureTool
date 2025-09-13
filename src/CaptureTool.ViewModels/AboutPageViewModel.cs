@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
@@ -18,6 +19,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
         public static readonly string ShowTermsOfUse = "AboutPageViewModel_ShowTermsOfUse";
     }
 
+    private readonly INavigationService _navigationService;
     private readonly ILocalizationService _localizationService;
     private readonly ITelemetryService _telemetryService;
     private readonly IAppController _appController;
@@ -35,10 +37,12 @@ public sealed partial class AboutPageViewModel : ViewModelBase
     public RelayCommand GoBackCommand => new(GoBack);
 
     public AboutPageViewModel(
+        INavigationService navigationService,
         ILocalizationService localizationService,
         ITelemetryService telemetryService,
         IAppController appController)
     {
+        _navigationService = navigationService;
         _localizationService = localizationService;
         _telemetryService = telemetryService;
         _appController = appController;
@@ -64,6 +68,13 @@ public sealed partial class AboutPageViewModel : ViewModelBase
 
     private void GoBack()
     {
-        _appController.GoBackOrHome();
+        if (_navigationService.CanGoBack)
+        {
+            _navigationService.GoBack();
+        }
+        else
+        {
+            _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
+        }
     }
 }

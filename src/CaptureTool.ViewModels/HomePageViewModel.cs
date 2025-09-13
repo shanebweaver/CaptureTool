@@ -1,7 +1,9 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
+using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;
 using System;
 
@@ -15,8 +17,8 @@ public sealed partial class HomePageViewModel : ViewModelBase
         public static readonly string NewVideoCapture = "HomePageViewModel_NewVideoCapture";
     }
 
+    private readonly INavigationService  _navigationService;
     private readonly ITelemetryService _telemetryService;
-    private readonly IAppController _appController;
 
     public RelayCommand NewImageCaptureCommand => new(NewImageCapture);
     public RelayCommand NewVideoCaptureCommand => new(NewVideoCapture, () => IsVideoCaptureEnabled);
@@ -24,12 +26,12 @@ public sealed partial class HomePageViewModel : ViewModelBase
     public bool IsVideoCaptureEnabled { get; }
 
     public HomePageViewModel(
+        INavigationService navigationService,
         IFeatureManager featureManager,
-        ITelemetryService telemetryService,
-        IAppController appController)
+        ITelemetryService telemetryService)
     {
+        _navigationService = navigationService;
         _telemetryService = telemetryService;
-        _appController = appController;
 
         IsVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
     }
@@ -41,8 +43,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
         try
         {
-            CaptureOptions options = new(CaptureMode.Image, CaptureType.Rectangle);
-            _appController.ShowSelectionOverlay(CaptureOptions.ImageDefault);
+            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.ImageDefault);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -58,7 +59,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
         try
         {
-            _appController.ShowSelectionOverlay(CaptureOptions.VideoDefault);
+            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.VideoDefault);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

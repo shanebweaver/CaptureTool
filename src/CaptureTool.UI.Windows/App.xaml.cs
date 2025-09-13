@@ -46,7 +46,7 @@ public partial class App : Application
                 switch (args.Kind)
                 {
                     case ExtendedActivationKind.Launch:
-                        appController.HandleLaunchActicationAsync();
+                        appController.HandleLaunchActivationAsync();
                         break;
                     case ExtendedActivationKind.Protocol:
                         if (args.Data is global::Windows.ApplicationModel.Activation.IProtocolActivatedEventArgs protocolArgs)

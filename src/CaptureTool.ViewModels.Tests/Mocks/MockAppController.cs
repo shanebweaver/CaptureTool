@@ -30,7 +30,7 @@ internal sealed partial class MockAppController : IAppController
     {
     }
 
-    public Task HandleLaunchActicationAsync()
+    public Task HandleLaunchActivationAsync()
     {
         return Task.CompletedTask;
     }

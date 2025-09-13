@@ -1,25 +1,20 @@
-﻿using CaptureTool.UI.Windows.Xaml.Extensions;
+﻿using CaptureTool.Services.Navigation;
+using CaptureTool.UI.Windows.Xaml.Extensions;
 using System;
 using Windows.Win32;
 using WinRT.Interop;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
-internal sealed partial class MainWindowHost : IDisposable
+internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 {
     private MainWindow? _mainWindow;
-    private readonly Action _onClosed;
-
-    public MainWindowHost(Action onClosed)
-    {
-        _onClosed = onClosed;
-    }
 
     public nint Handle => _mainWindow is not null
         ? WindowNative.GetWindowHandle(_mainWindow)
         : IntPtr.Zero;
 
-    public void EnsureCreated()
+    private void EnsureCreated()
     {
         if (_mainWindow != null)
         {
@@ -27,11 +22,6 @@ internal sealed partial class MainWindowHost : IDisposable
         }
 
         _mainWindow = new MainWindow();
-        _mainWindow.Closed += (_, _) =>
-        {
-            CleanupMainWindow();
-            _onClosed?.Invoke();
-        };
     }
 
     public void Restore()
@@ -55,6 +45,8 @@ internal sealed partial class MainWindowHost : IDisposable
 
     public void Show(bool activate = true)
     {
+        EnsureCreated();
+
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
             if (_mainWindow == null)
@@ -87,15 +79,12 @@ internal sealed partial class MainWindowHost : IDisposable
 
     public void Dispose()
     {
-        CleanupMainWindow();
+        _mainWindow = null;
     }
 
-    private void CleanupMainWindow()
+    public void HandleNavigationRequest(NavigationRequest request)
     {
-        if (_mainWindow != null)
-        {
-            _mainWindow.Close();
-            _mainWindow = null;
-        }
+        Show();
+        _mainWindow?.ViewModel.HandleNavigationRequest(request);
     }
 }

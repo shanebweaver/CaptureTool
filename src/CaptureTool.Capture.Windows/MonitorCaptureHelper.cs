@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -10,10 +11,12 @@ namespace CaptureTool.Capture.Windows;
 
 public static partial class MonitorCaptureHelper
 {
-    public static Bitmap? CombineMonitors(IList<MonitorCaptureResult> monitors)
+    public static Bitmap CombineMonitors(IList<MonitorCaptureResult> monitors)
     {
         if (monitors.Count == 0)
-            return null;
+        {
+            throw new ArgumentException("At least one monitor must be provided.", nameof(monitors));
+        }
 
         // Step 1: Calculate the union of all monitor bounds
         Rectangle unionBounds = monitors[0].MonitorBounds;
@@ -40,12 +43,12 @@ public static partial class MonitorCaptureHelper
                 int srcRowStart = y * width * 4;
                 int dstRowStart = ((offsetY + y) * finalWidth + offsetX) * 4;
 
-                System.Buffer.BlockCopy(src, srcRowStart, finalBuffer, dstRowStart, width * 4);
+                Buffer.BlockCopy(src, srcRowStart, finalBuffer, dstRowStart, width * 4);
             }
         }
 
         // Step 3: Create System.Drawing.Bitmap
-        var bmp = new Bitmap(finalWidth, finalHeight, PixelFormat.Format32bppArgb);
+        Bitmap bmp = new(finalWidth, finalHeight, PixelFormat.Format32bppArgb);
         var bmpData = bmp.LockBits(
             new Rectangle(0, 0, finalWidth, finalHeight),
             ImageLockMode.WriteOnly,

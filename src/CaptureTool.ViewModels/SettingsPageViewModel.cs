@@ -4,6 +4,7 @@ using CaptureTool.Core.AppController;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
+using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
@@ -35,6 +36,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         public static readonly string UpdateShowAppLanguageRestartMessage = "SettingsPageViewModel_UpdateShowAppLanguageRestartMessage";
     }
 
+    private readonly INavigationService _navigationService;
     private readonly ITelemetryService _telemetryService;
     private readonly IAppController _appController;
     private readonly ILocalizationService _localizationService;
@@ -136,6 +138,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public SettingsPageViewModel(
+        INavigationService navigationService,
         ITelemetryService telemetryService,
         IAppController appController,
         ILocalizationService localizationService,
@@ -146,6 +149,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IFactoryService<AppLanguageViewModel, AppLanguage?> appLanguageViewModelFactory,
         IFactoryService<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
+        _navigationService = navigationService;
         _telemetryService = telemetryService;
         _appController = appController;
         _localizationService = localizationService;
@@ -367,7 +371,16 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void GoBack()
     {
-        ExecuteActivity(ActivityIds.GoBack, () => _appController.GoBackOrHome());
+        ExecuteActivity(ActivityIds.GoBack, () => {
+            if (_navigationService.CanGoBack)
+            {
+                _navigationService.GoBack();
+            }
+            else
+            {
+                _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
+            }
+        });
     }
 
     private void ExecuteActivity(string activityId, Action activityAction)

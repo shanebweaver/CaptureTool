@@ -1,4 +1,5 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Capture;
+using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
@@ -60,7 +61,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
         try
         {
-            _appController.ShowSelectionOverlay();
+            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.ImageDefault);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

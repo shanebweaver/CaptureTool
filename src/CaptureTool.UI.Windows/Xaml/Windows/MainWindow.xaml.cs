@@ -124,6 +124,9 @@ public sealed partial class MainWindow : Window
         {
             Activated -= OnActivated;
             RestoreAppWindowSizeAndPosition();
+
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            global::Windows.Win32.PInvoke.SetWindowDisplayAffinity(new(hwnd), global::Windows.Win32.UI.WindowsAndMessaging.WINDOW_DISPLAY_AFFINITY.WDA_EXCLUDEFROMCAPTURE);
         }
     }
 
@@ -136,6 +139,9 @@ public sealed partial class MainWindow : Window
 
         _activationCts.Cancel();
         _activationCts.Dispose();
+
+        // IMPORTANT: Closing the main window will crash the app unless we forcefully exit immediately.
+        ServiceLocator.AppController.Shutdown();
     }
 
     private void OnViewModelNavigationRequested(object? sender, NavigationRequest navigationRequest)
@@ -149,7 +155,10 @@ public sealed partial class MainWindow : Window
             else
             {
                 Type pageType = PageLocator.GetPageType(navigationRequest.Route);
-                NavigationFrame.Navigate(pageType, navigationRequest.Parameter);
+                if (NavigationFrame.CurrentSourcePageType != pageType)
+                {
+                    NavigationFrame.Navigate(pageType, navigationRequest.Parameter);
+                }
             }
         });
     }

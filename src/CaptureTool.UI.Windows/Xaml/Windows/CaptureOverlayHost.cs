@@ -34,6 +34,11 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
     private void ShowCaptureOverlayWindow(MonitorCaptureResult monitor, Rectangle area)
     {
+        if (_hwnd != null)
+        {
+            return;
+        }
+
         unsafe
         {
             const string className = "CaptureOverlayWindow";
@@ -87,6 +92,11 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
     private void ShowCaptureOverlayBorderWindow(MonitorCaptureResult monitor, Rectangle area)
     {
+        if (_borderHwnd != null)
+        {
+            return;
+        }
+
         unsafe
         {
             const string borderClassName = "CaptureOverlayWindowBorder";
@@ -142,10 +152,31 @@ internal sealed partial class CaptureOverlayHost : IDisposable
         }
     }
 
-    public void Show(MonitorCaptureResult monitor, Rectangle area)
+    public void Show(NewCaptureArgs args)
     {
+        var monitor = args.Monitor;
+        var area = args.Area;
         ShowCaptureOverlayWindow(monitor, area);
         ShowCaptureOverlayBorderWindow(monitor, area);
+    }
+
+    public void Close()
+    {
+        if (_hwnd != null)
+        {
+            PInvoke.DestroyWindow(_hwnd.Value);
+            _hwnd = null;
+        }
+        HideBorder();
+    }
+
+    public void HideBorder()
+    {
+        if (_borderHwnd != null)
+        {
+            PInvoke.DestroyWindow(_borderHwnd.Value);
+            _borderHwnd = null;
+        }
     }
 
     [UnmanagedCallersOnly(CallConvs = new Type[] { typeof(System.Runtime.CompilerServices.CallConvStdcall) })]
@@ -165,18 +196,12 @@ internal sealed partial class CaptureOverlayHost : IDisposable
         if (_hwnd != null)
         {
             PInvoke.DestroyWindow(_hwnd.Value);
+            _hwnd = null;
         }
         if (_borderHwnd != null)
         {
             PInvoke.DestroyWindow(_borderHwnd.Value);
-        }
-    }
-
-    public void HideBorder()
-    {
-        if (_borderHwnd != null)
-        {
-            PInvoke.DestroyWindow(_borderHwnd.Value);
+            _borderHwnd = null;
         }
     }
 }

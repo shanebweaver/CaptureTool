@@ -1,13 +1,15 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
+using CaptureTool.Common.Storage;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
+using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 
@@ -15,9 +17,8 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase
 {
+    private readonly INavigationService _navigationService;
     private readonly IAppController _appController;
-    private readonly IFeatureManager _featureManager;
-    private readonly IFactoryService<CaptureModeViewModel, CaptureMode> _captureModeViewModelFactory;
     private readonly IFactoryService<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
     private static readonly CaptureType[] _imageCaptureTypes = [
@@ -33,8 +34,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public RelayCommand RequestCaptureCommand => new(RequestCapture);
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
-    public RelayCommand StartVideoCaptureCommand => new(StartVideoCapture);
-    public RelayCommand StopVideoCaptureCommand => new(StopVideoCapture);
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
@@ -135,15 +134,15 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private bool IsVideoCaptureFeatureEnabled { get; }
 
     public SelectionOverlayWindowViewModel(
+        INavigationService navigationService,
         IFeatureManager featureManager,
         IThemeService themeService,
         IAppController appController,
         IFactoryService<CaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
         IFactoryService<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
     {
-        _featureManager = featureManager;
+        _navigationService = navigationService;
         _appController = appController;
-        _captureModeViewModelFactory = captureModeViewModelFactory;
         _captureTypeViewModelFactory = captureTypeViewModelFactory;
         _captureArea = Rectangle.Empty;
         _monitorWindows = [];
@@ -199,8 +198,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void CloseOverlay()
     {
-        _appController.CloseSelectionOverlay();
-        _appController.ShowMainWindow();
+        _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
     }
 
     private void UpdateSupportedCaptureTypes()
@@ -233,39 +231,16 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         {
             if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
             {
-                _appController.PerformImageCapture(Monitor.Value, CaptureArea);
+                NewCaptureArgs args = new(Monitor.Value, CaptureArea);
+                ImageFile image = _appController.PerformImageCapture(args);
+                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, image, true);
+
             }
             else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
             {
-                _appController.ShowCaptureOverlay(Monitor.Value, CaptureArea);
+                NewCaptureArgs args = new(Monitor.Value, CaptureArea);
+                _navigationService.Navigate(CaptureToolNavigationRoutes.VideoCapture, args);
             }
         }
-    }
-
-    private void StartVideoCapture()
-    {
-        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
-
-        if (IsCapturingVideo)
-        {
-            return;
-        }
-
-        if (Monitor.HasValue)
-        {
-            _appController.StartVideoCapture(Monitor.Value, CaptureArea);
-            IsCapturingVideo = true;
-        }
-    }
-
-    private void StopVideoCapture()
-    {
-        if (!IsCapturingVideo)
-        {
-            return;
-        }
-
-        _appController.StopVideoCapture();
-        IsCapturingVideo = false;
     }
 }

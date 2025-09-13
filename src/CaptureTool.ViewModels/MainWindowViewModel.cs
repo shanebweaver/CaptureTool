@@ -7,7 +7,6 @@ namespace CaptureTool.ViewModels;
 public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHandler
 {
     private readonly IThemeService _themeService;
-    private readonly INavigationService _navigationService;
 
     public event EventHandler<NavigationRequest>? NavigationRequested;
 
@@ -26,13 +25,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
     }
 
     public MainWindowViewModel(
-        IThemeService themeService,
-        INavigationService navigationService)
+        IThemeService themeService)
     {
         _themeService = themeService;
-        _navigationService = navigationService;
-
-        _navigationService.SetNavigationHandler(this);
         _themeService.CurrentThemeChanged += OnCurrentThemeChanged;
         DefaultAppTheme = _themeService.DefaultTheme;
         CurrentAppTheme = _themeService.CurrentTheme;

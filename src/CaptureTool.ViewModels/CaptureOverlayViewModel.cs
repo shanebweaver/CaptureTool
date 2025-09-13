@@ -1,15 +1,19 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using System;
 using System.Drawing;
+using System.IO;
 using System.Timers;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
 {
+    private readonly INavigationService _navigationService;
     private readonly IAppController _appController;
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
@@ -61,9 +65,11 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
     
 
     public CaptureOverlayViewModel(
+        INavigationService navigationService,
         IThemeService themeService,
         IAppController appController) 
     {
+        _navigationService = navigationService;
         _appController = appController;
 
         DefaultAppTheme = themeService.DefaultTheme;
@@ -94,8 +100,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
             _appController.CancelVideoCapture();
         }
 
-        _appController.CloseCaptureOverlay();
-        _appController.ShowMainWindow(true);
+        _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
     }
 
     private void GoBack()
@@ -105,8 +110,14 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
             _appController.CancelVideoCapture();
         }
 
-        _appController.CloseCaptureOverlay();
-        _appController.ShowSelectionOverlay();
+        if (_navigationService.CanGoBack)
+        {
+            _navigationService.GoBack();
+        }
+        else
+        {
+            _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
+        }
     }
 
     private void StartVideoCapture()
@@ -117,7 +128,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
             CaptureTime = TimeSpan.Zero;
             _captureStartTime = DateTime.UtcNow;
             StartTimer();
-            _appController.StartVideoCapture(_monitorCaptureResult.Value, _captureArea.Value);
+            _appController.StartVideoCapture(new(_monitorCaptureResult.Value, _captureArea.Value));
         }
     }
 

@@ -1,36 +1,32 @@
 ﻿using CaptureTool.Capture;
-using System;
-using System.Drawing;
-using System.Threading.Tasks;
+using CaptureTool.Services.Activation;
+using CaptureTool.Services.Navigation;
 
 namespace CaptureTool.Core.AppController;
 
-public interface IAppController
+public partial interface IAppController : INavigationHandler, IActivationHandler, IImageCaptureHandler, IVideoCaptureHandler
 {
-    Task HandleLaunchActicationAsync();
-    Task HandleProtocolActivationAsync(Uri protocolUri);
-
     void Shutdown(); 
     bool TryRestart();
 
-    void ShowSelectionOverlay(CaptureOptions? options = null);
-    void CloseSelectionOverlay();
-    void PerformImageCapture(MonitorCaptureResult monitor, Rectangle captureArea);
-    void PerformAllScreensCapture();
+    //void ShowSelectionOverlay(CaptureOptions? options = null);
+    //void CloseSelectionOverlay();
+    //void PerformImageCapture(MonitorCaptureResult monitor, Rectangle captureArea);
+    //void PerformAllScreensCapture();
 
-    void ShowCaptureOverlay(MonitorCaptureResult monitor, Rectangle captureArea);
-    void CloseCaptureOverlay();
-    void StartVideoCapture(MonitorCaptureResult monitor, Rectangle captureArea);
-    void StopVideoCapture();
-    void CancelVideoCapture();
+    //void ShowCaptureOverlay(MonitorCaptureResult monitor, Rectangle captureArea);
+    //void CloseCaptureOverlay();
+    //void StartVideoCapture(MonitorCaptureResult monitor, Rectangle captureArea);
+    //void StopVideoCapture();
+    //void CancelVideoCapture();
 
     string GetDefaultScreenshotsFolderPath();
 
-    void HideMainWindow();
-    void ShowMainWindow(bool activate = true);
+    //void HideMainWindow();
+    //void ShowMainWindow(bool activate = true);
     nint GetMainWindowHandle();
 
-    void GoHome();
-    bool TryGoBack();
-    void GoBackOrHome();
+    //void GoHome();
+    //bool TryGoBack();
+    //void GoBackOrHome();
 }

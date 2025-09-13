@@ -1,7 +1,6 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Capture.Windows;
 using CaptureTool.ViewModels;
-using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml;
 using System;
 using System.Collections.Generic;
@@ -15,10 +14,8 @@ namespace CaptureTool.UI.Windows.Xaml.Windows;
 internal sealed partial class SelectionOverlayHost : IDisposable
 {
 #if DEBUG
-    private static readonly bool SingleMonitorNoWindowWatcher = false;
+    private static readonly bool SingleMonitorNoWindowWatcher = true;
 #endif
-
-    private readonly Action _onClosed;
 
     private readonly HashSet<MonitorCaptureResult> _monitors = [];
     private readonly HashSet<SelectionOverlayWindow> _windows = [];
@@ -27,19 +24,19 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private DispatcherTimer? _foregroundTimer;
     private Window? _primaryWindow;
 
+    public event EventHandler? LostFocus;
+
     public MonitorCaptureResult[] GetMonitors()
     {
         return [.. _monitors];
     }
 
-    public SelectionOverlayHost(Action onClosed)
-    {
-        _onClosed = onClosed;
-    }
-
     public void Show(CaptureOptions options)
     {
-        Close();
+        if (_viewModel != null)
+        {
+            return;
+        }
         _viewModel = ViewModelLocator.GetViewModel<SelectionOverlayHostViewModel>();
 
         var allWindows = WindowInfoHelper.GetAllWindows();
@@ -49,7 +46,9 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         {
 #if DEBUG
             if (SingleMonitorNoWindowWatcher && !monitor.IsPrimary)
+            {
                 continue;
+            }
 #endif
 
             _monitors.Add(monitor);
@@ -76,7 +75,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
 
             _viewModel.AddWindowViewModel(window.ViewModel);
 
-            if (window.ViewModel.IsPrimary)
+            if (monitor.IsPrimary)
             {
                 _primaryWindow = window;
                 _primaryWindow.Activated += OnPrimaryWindowActivated;
@@ -84,6 +83,35 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         }
 
         _primaryWindow?.Activate();
+    }
+
+    public void Close()
+    {
+        if (_viewModel == null)
+        {
+            return;
+        }
+
+        StopForegroundMonitor();
+        _windowHandles.Clear();
+        _monitors.Clear();
+
+        _viewModel?.Unload();
+        _viewModel = null;
+
+        foreach (SelectionOverlayWindow window in _windows)
+        {
+            try
+            {
+                if (!window.IsClosed)
+                {
+                    window.DispatcherQueue.TryEnqueue(window.Close);
+                }
+            }
+            catch (Exception) { }
+        }
+
+        _windows.Clear();
     }
 
     private void OnPrimaryWindowActivated(object sender, WindowActivatedEventArgs args)
@@ -120,7 +148,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             if (!_windowHandles.Contains(foregroundHwnd))
             {
                 Close();
-                _onClosed.Invoke();
+                LostFocus?.Invoke(this, EventArgs.Empty);
             }
         };
 
@@ -133,32 +161,18 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         _foregroundTimer = null;
     }
 
-    public void Close()
+    public void Dispose()
     {
-        StopForegroundMonitor();
+        _foregroundTimer?.Stop();
+        _foregroundTimer = null;
+
         _windowHandles.Clear();
         _monitors.Clear();
 
         _viewModel?.Unload();
         _viewModel = null;
 
-        foreach (SelectionOverlayWindow window in _windows)
-        {
-            try
-            {
-                if (!window.IsClosed)
-                {
-                    window.DispatcherQueue.EnqueueAsync(() => window.Close());
-                }
-            }
-            catch (Exception){ }
-        }
-
+        _primaryWindow = null;
         _windows.Clear();
-    }
-
-    public void Dispose()
-    {
-        Close();
     }
 }

@@ -29,6 +29,14 @@ namespace CaptureTool.UI.Windows;
 
 internal partial class CaptureToolAppController : IAppController
 {
+    private enum UXHost
+    {
+        None,
+        MainWindow,
+        SelectionOverlay,
+        CaptureOverlay
+    }
+
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
     private readonly ICancellationService _cancellationService;
@@ -38,9 +46,11 @@ internal partial class CaptureToolAppController : IAppController
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _isInitialized;
     private string? _tempVideoPath;
-    private SelectionOverlayHost? _selectionOverlayHost;
-    private CaptureOverlayHost? _captureOverlayHost;
-    private MainWindowHost? _mainWindowHost;
+    private readonly SelectionOverlayHost _selectionOverlayHost = new();
+    private readonly CaptureOverlayHost _captureOverlayHost = new();
+    private readonly MainWindowHost _mainWindowHost = new();
+
+    private UXHost _activeHost;
 
     public CaptureToolAppController(
         ILogService logService,
@@ -54,9 +64,16 @@ internal partial class CaptureToolAppController : IAppController
         _cancellationService = cancellationService;
         _settingsService = settingsService;
         _featureManager = featureManager;
+
+        _navigationService.SetNavigationHandler(this);
+
+        _selectionOverlayHost.LostFocus += (s, e) =>
+        {
+            GoHome();
+        };
     }
 
-    public async Task InitializeAsync()
+    private async Task InitializeAsync()
     {
         await _semaphore.WaitAsync();
 
@@ -78,139 +95,162 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
-    public async Task HandleLaunchActicationAsync()
+    #region INavigationHandler
+    public void HandleNavigationRequest(NavigationRequest request)
+    {
+        if (request.Route == CaptureToolNavigationRoutes.Home ||
+            request.Route == CaptureToolNavigationRoutes.Loading ||
+            request.Route == CaptureToolNavigationRoutes.AddOns ||
+            request.Route == CaptureToolNavigationRoutes.Error ||
+            request.Route == CaptureToolNavigationRoutes.About ||
+            request.Route == CaptureToolNavigationRoutes.Settings ||
+            request.Route == CaptureToolNavigationRoutes.ImageEdit ||
+            request.Route == CaptureToolNavigationRoutes.VideoEdit)
+        {
+            switch (_activeHost)
+            {
+                case UXHost.MainWindow:
+                    break;
+
+                case UXHost.SelectionOverlay:
+                    _selectionOverlayHost.Close();
+                    break;
+
+                case UXHost.CaptureOverlay:
+                    _captureOverlayHost.Close();
+                    break;
+            }
+
+            _mainWindowHost.HandleNavigationRequest(request);
+            _activeHost = UXHost.MainWindow;
+        }
+        else if (
+            request.Route == CaptureToolNavigationRoutes.ImageCapture &&
+            request.Parameter is CaptureOptions options)
+        {
+            switch (_activeHost)
+            {
+                case UXHost.MainWindow:
+                    _mainWindowHost.Hide();
+                    Thread.Sleep(200);
+                    break;
+
+                case UXHost.SelectionOverlay:
+                    return;
+
+                case UXHost.CaptureOverlay:
+                    _captureOverlayHost.Close();
+                    break;
+            }
+
+            _selectionOverlayHost.Show(options);
+            _activeHost = UXHost.SelectionOverlay;
+        }
+        else if (
+            request.Route == CaptureToolNavigationRoutes.VideoCapture &&
+            request.Parameter is NewCaptureArgs args)
+        {
+            switch (_activeHost)
+            {
+                case UXHost.MainWindow:
+                    _mainWindowHost.Hide();
+                    break;
+
+                case UXHost.SelectionOverlay:
+                    _selectionOverlayHost.Close();
+                    break;
+
+                case UXHost.CaptureOverlay:
+                    return;
+            }
+
+            _captureOverlayHost.Show(args);
+            _activeHost = UXHost.CaptureOverlay;
+        }
+        else
+        {
+            throw new ArgumentOutOfRangeException(nameof(request));
+        }
+    }
+    #endregion
+
+    #region IActivationHandler
+    public async Task HandleLaunchActivationAsync()
     {
         await InitializeAsync();
-        RestoreMainWindow();
         GoHome();
     }
 
     public async Task HandleProtocolActivationAsync(Uri protocolUri)
     {
-        if (protocolUri.Scheme == "ms-screenclip")
+        if (protocolUri.Scheme.Equals("ms-screenclip", StringComparison.InvariantCultureIgnoreCase))
         {
             await InitializeAsync();
 
             NameValueCollection queryParams = HttpUtility.ParseQueryString(protocolUri.Query) ?? [];
-            bool isRecordingType = queryParams.Get("type") is string type && type == "recording";
+            bool isRecordingType = queryParams.Get("type") is string type && type.Equals("recording", StringComparison.InvariantCultureIgnoreCase);
 
             string source = queryParams.Get("source") ?? string.Empty;
-            if (source == "PrintScreen")
+            if (source.Equals("PrintScreen", StringComparison.InvariantCultureIgnoreCase))
             {
-                ShowSelectionOverlay(CaptureOptions.ImageDefault);
+                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.ImageDefault);
             }
-            else if (source == "ScreenRecorderHotKey" || isRecordingType)
+            else if (source.Equals("ScreenRecorderHotKey", StringComparison.InvariantCultureIgnoreCase) || isRecordingType)
             {
                 if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
                 {
-                    ShowSelectionOverlay(CaptureOptions.VideoDefault);
+                    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.VideoDefault);
                 }
                 else
                 {
-                    ShowSelectionOverlay(CaptureOptions.ImageDefault);
+                    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.ImageDefault);
                 }
             }
-            else if (source == "HotKey")
+            else if (source.Equals("HotKey", StringComparison.InvariantCultureIgnoreCase))
             {
-                ShowSelectionOverlay(CaptureOptions.ImageDefault);
+                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.ImageDefault);
             }
             else
             {
-                RestoreMainWindow();
+                GoHome();
             }
         }
     }
+    #endregion
 
-    public bool TryRestart()
+    #region IImageCaptureHandler
+    public ImageFile PerformAllScreensCapture()
     {
-        global::Windows.ApplicationModel.Core.AppRestartFailureReason restartError = AppInstance.Restart(string.Empty);
+        ThrowIfNotInitialized();
 
-        switch (restartError)
+        MonitorCaptureResult[] monitors = _selectionOverlayHost?.GetMonitors() ?? MonitorCaptureHelper.CaptureAllMonitors();
+        Bitmap combined = MonitorCaptureHelper.CombineMonitors(monitors);
+        try
         {
-            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.NotInForeground:
-                _logService.LogWarning("The app is not in the foreground.");
-                break;
-            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.RestartPending:
-                _logService.LogWarning("Another restart is currently pending.");
-                break;
-            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.InvalidUser:
-                _logService.LogWarning("Current user is not signed in or not a valid user.");
-                break;
-            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.Other:
-                _logService.LogWarning("Failure restarting.");
-                break;
+            var tempPath = Path.Combine(
+                ApplicationData.GetDefault().TemporaryPath,
+                $"capture_{Guid.NewGuid()}.png"
+            );
+            combined.Save(tempPath, ImageFormat.Png);
+
+            ImageFile imageFile = new(tempPath);
+            TryAutoSaveImage(imageFile);
+            _ = TryAutoCopyImageAsync(imageFile);
+
+            return imageFile;
         }
-
-        return false;
+        finally
+        {
+            combined.Dispose();
+        }
     }
 
-    public async void ShowSelectionOverlay(CaptureOptions? options = null)
+    public ImageFile PerformImageCapture(NewCaptureArgs args)
     {
         ThrowIfNotInitialized();
 
-        CloseSelectionOverlay();
-        HideMainWindow();
-        await Task.Delay(200);
-
-        App.Current.DispatcherQueue.TryEnqueue(() =>
-        {
-            _selectionOverlayHost = new SelectionOverlayHost(() =>
-            {
-                ShowMainWindow(false);
-                CloseSelectionOverlay();
-            });
-
-            _selectionOverlayHost.Show(options ?? new(CaptureMode.Image, CaptureType.Rectangle));
-        });
-    }
-
-    public void CloseSelectionOverlay()
-    {
-        App.Current.DispatcherQueue.TryEnqueue(() =>
-        {
-            _selectionOverlayHost?.Dispose();
-            _selectionOverlayHost = null;
-        });
-    }
-
-    public void PerformAllScreensCapture()
-    {
-        ThrowIfNotInitialized();
-
-        App.Current.DispatcherQueue.TryEnqueue(() =>
-        {
-            MonitorCaptureResult[] monitors = _selectionOverlayHost?.GetMonitors() ?? MonitorCaptureHelper.CaptureAllMonitors();
-            Bitmap? combined = MonitorCaptureHelper.CombineMonitors(monitors);
-            if (combined != null)
-            {
-                try
-                {
-                    var tempPath = Path.Combine(
-                        ApplicationData.GetDefault().TemporaryPath,
-                        $"capture_{Guid.NewGuid()}.png"
-                    );
-                    combined.Save(tempPath, ImageFormat.Png);
-
-                    RestoreMainWindow();
-                    CloseSelectionOverlay();
-
-                    var imageFile = new ImageFile(tempPath);
-                    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
-                    TryAutoSaveImage(imageFile);
-                    _ = TryAutoCopyImageAsync(imageFile);
-                }
-                finally
-                {
-                    combined.Dispose();
-                }
-            }
-        });
-    }
-
-    public void PerformImageCapture(MonitorCaptureResult monitor, Rectangle area)
-    {
-        ThrowIfNotInitialized();
-
+        var monitor = args.Monitor;
+        var area = args.Area;
         var monitorBounds = monitor.MonitorBounds;
 
         // Create a bitmap for the full monitor
@@ -251,20 +291,20 @@ internal partial class CaptureToolAppController : IAppController
         using var croppedBmp = fullBmp.Clone(cropRect, fullBmp.PixelFormat);
         croppedBmp.Save(tempPath, ImageFormat.Png);
 
-        RestoreMainWindow();
-        CloseSelectionOverlay();
-
         var imageFile = new ImageFile(tempPath);
-        _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
         TryAutoSaveImage(imageFile);
         _ = TryAutoCopyImageAsync(imageFile);
-    }
 
-    public void StartVideoCapture(MonitorCaptureResult monitor, Rectangle area)
+        return imageFile;
+    }
+    #endregion
+
+    #region IVideoCaptureHandler
+    public void StartVideoCapture(NewCaptureArgs args)
     {
-        if (_captureOverlayHost == null)
+        if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.VideoCapture)
         {
-            ShowCaptureOverlay(monitor, area);
+            _navigationService.Navigate(CaptureToolNavigationRoutes.VideoCapture, args);
         }
 
         _captureOverlayHost?.HideBorder();
@@ -274,38 +314,23 @@ internal partial class CaptureToolAppController : IAppController
             $"capture_{Guid.NewGuid()}.mp4"
         );
 
-        ScreenRecorder.StartRecording(monitor.HMonitor, _tempVideoPath);
+        ScreenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath);
     }
 
-    public void ShowCaptureOverlay(MonitorCaptureResult monitor, Rectangle area)
-    {
-        Trace.Assert(_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture));
-        ThrowIfNotInitialized();
-
-        CloseSelectionOverlay();
-        HideMainWindow();
-
-        App.Current.DispatcherQueue.TryEnqueue(() => {
-            _tempVideoPath = null;
-            _captureOverlayHost ??= new();
-            _captureOverlayHost.Show(monitor, area);
-        });
-    }
-
-    public void StopVideoCapture()
+    public VideoFile StopVideoCapture()
     {
         if (string.IsNullOrEmpty(_tempVideoPath))
         {
-            return;
+            throw new InvalidOperationException("Cannot stop, no video is recording.");
         }
 
         ScreenRecorder.StopRecording();
-        RestoreMainWindow();
-        CloseCaptureOverlay();
 
         VideoFile videoFile = new(_tempVideoPath);
         _navigationService.Navigate(CaptureToolNavigationRoutes.VideoEdit, videoFile);
         _tempVideoPath = null;
+
+        return videoFile;
     }
 
     public void CancelVideoCapture()
@@ -313,52 +338,29 @@ internal partial class CaptureToolAppController : IAppController
         ScreenRecorder.StopRecording();
         _tempVideoPath = null;
     }
+    #endregion
 
-    public nint GetMainWindowHandle()
+    public bool TryRestart()
     {
-        return _mainWindowHost?.Handle ?? IntPtr.Zero;
-    }
+        global::Windows.ApplicationModel.Core.AppRestartFailureReason restartError = AppInstance.Restart(string.Empty);
 
-    public string GetDefaultScreenshotsFolderPath()
-    {
-        return global::Windows.Storage.KnownFolders.SavedPictures.Path;
-    }
-
-    public void GoHome()
-    {
-        if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.Home)
+        switch (restartError)
         {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
-        }
-    }
-
-    public void HideMainWindow()
-    {
-        _mainWindowHost?.Hide();
-    }
-
-    public void ShowMainWindow(bool activate = true)
-    {
-        _mainWindowHost?.Show(activate);
-    }
-
-    public bool TryGoBack()
-    {
-        if (_navigationService.CanGoBack)
-        {
-            _navigationService.GoBack();
-            return true;
+            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.NotInForeground:
+                _logService.LogWarning("The app is not in the foreground.");
+                break;
+            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.RestartPending:
+                _logService.LogWarning("Another restart is currently pending.");
+                break;
+            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.InvalidUser:
+                _logService.LogWarning("Current user is not signed in or not a valid user.");
+                break;
+            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.Other:
+                _logService.LogWarning("Failure restarting.");
+                break;
         }
 
         return false;
-    }
-
-    public void GoBackOrHome()
-    {
-        if (!TryGoBack())
-        {
-            GoHome();
-        }
     }
 
     public void Shutdown()
@@ -367,8 +369,9 @@ internal partial class CaptureToolAppController : IAppController
         {
             try
             {
-                CloseSelectionOverlay();
-                CleanupMainWindow();
+                _captureOverlayHost.Dispose();
+                _selectionOverlayHost.Dispose();
+                _mainWindowHost.Dispose();
                 _cancellationService.CancelAll();
             }
             catch (Exception e)
@@ -380,30 +383,22 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
-    private void CheckExit()
+    public nint GetMainWindowHandle()
     {
-        if (_mainWindowHost == null)
+        return _mainWindowHost.Handle;
+    }
+
+    public string GetDefaultScreenshotsFolderPath()
+    {
+        return global::Windows.Storage.KnownFolders.SavedPictures.Path;
+    }
+
+    private void GoHome()
+    {
+        if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.Home)
         {
-            Shutdown();
+            _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
         }
-    }
-
-    private void RestoreMainWindow()
-    {
-        _mainWindowHost ??= new MainWindowHost(OnMainWindowClosed);
-        _mainWindowHost.Restore();
-    }
-
-    private void OnMainWindowClosed()
-    {
-        CleanupMainWindow();
-        CheckExit();
-    }
-
-    private void CleanupMainWindow()
-    {
-        _mainWindowHost?.Dispose();
-        _mainWindowHost = null;
     }
 
     private async Task InitializeSettingsServiceAsync(CancellationToken cancellationToken)
@@ -496,14 +491,5 @@ internal partial class CaptureToolAppController : IAppController
         {
             return false;
         }
-    }
-
-    public void CloseCaptureOverlay()
-    {
-        App.Current.DispatcherQueue.TryEnqueue(() =>
-        {
-            _captureOverlayHost?.Dispose();
-            _captureOverlayHost = null;
-        });
     }
 }
