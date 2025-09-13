@@ -26,7 +26,9 @@ public class NavigationService : INavigationService
         lock (_navigationLock)
         {
             if (_navigationStack.Count <= 1)
+            {
                 throw new InvalidOperationException("Cannot go back. No previous navigation entry exists.");
+            }
 
             _navigationStack.Pop();
             NavigationRequest backRequest = _navigationStack.Peek();
@@ -59,5 +61,26 @@ public class NavigationService : INavigationService
 
         _navigationHandler.HandleNavigationRequest(request);
         Navigated?.Invoke(this, new NavigationEventArgs(request));
+    }
+
+    public void GoBackWhile(Func<NavigationRequest, bool> assesRequest)
+    {
+        lock (_navigationLock)
+        {
+            if (_navigationStack.Count <= 1)
+            {
+                throw new InvalidOperationException("Cannot go back. No previous navigation entry exists.");
+            }
+
+            NavigationRequest backRequest;
+            do
+            {
+                _navigationStack.Pop();
+                backRequest = _navigationStack.Peek();
+            }
+            while (assesRequest(backRequest));
+
+            Navigate(new NavigationRequest(backRequest.Route, backRequest.Parameter, true));
+        }
     }
 }

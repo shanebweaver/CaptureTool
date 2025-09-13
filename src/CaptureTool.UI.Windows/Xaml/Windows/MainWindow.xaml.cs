@@ -141,6 +141,7 @@ public sealed partial class MainWindow : Window
         _activationCts.Dispose();
 
         // IMPORTANT: Closing the main window will crash the app unless we forcefully exit immediately.
+        // TODO: Figure out what the cause is. I don't think this is normal.
         ServiceLocator.AppController.Shutdown();
     }
 
@@ -148,14 +149,14 @@ public sealed partial class MainWindow : Window
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            if (navigationRequest.IsBackNavigation)
+            Type pageType = PageLocator.GetPageType(navigationRequest.Route);
+            if (NavigationFrame.CurrentSourcePageType != pageType)
             {
-                NavigationFrame.GoBack();
-            }
-            else
-            {
-                Type pageType = PageLocator.GetPageType(navigationRequest.Route);
-                if (NavigationFrame.CurrentSourcePageType != pageType)
+                if (navigationRequest.IsBackNavigation && NavigationFrame.CanGoBack)
+                {
+                    NavigationFrame.GoBack();
+                }
+                else
                 {
                     NavigationFrame.Navigate(pageType, navigationRequest.Parameter);
                 }

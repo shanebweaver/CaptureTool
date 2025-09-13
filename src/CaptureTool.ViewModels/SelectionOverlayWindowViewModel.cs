@@ -198,7 +198,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void CloseOverlay()
     {
-        _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
+        _navigationService.GoBackWhile(r => r.Route == CaptureToolNavigationRoutes.ImageCapture || r.Route == CaptureToolNavigationRoutes.VideoCapture);
     }
 
     private void UpdateSupportedCaptureTypes()

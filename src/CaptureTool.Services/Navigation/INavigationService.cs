@@ -10,4 +10,5 @@ public interface INavigationService
     void SetNavigationHandler(INavigationHandler handler);
     void Navigate(NavigationRoute route, object? parameter = null, bool clearHistory = false);
     void GoBack();
+    void GoBackWhile(Func<NavigationRequest, bool> previousRequest);
 }

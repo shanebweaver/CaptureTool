@@ -395,10 +395,7 @@ internal partial class CaptureToolAppController : IAppController
 
     private void GoHome()
     {
-        if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.Home)
-        {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
-        }
+        _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
     }
 
     private async Task InitializeSettingsServiceAsync(CancellationToken cancellationToken)

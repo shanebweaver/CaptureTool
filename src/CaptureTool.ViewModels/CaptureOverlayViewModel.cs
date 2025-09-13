@@ -6,7 +6,6 @@ using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using System;
 using System.Drawing;
-using System.IO;
 using System.Timers;
 
 namespace CaptureTool.ViewModels;
@@ -100,7 +99,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
             _appController.CancelVideoCapture();
         }
 
-        _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
+        _navigationService.GoBackWhile(r => r.Route == CaptureToolNavigationRoutes.ImageCapture || r.Route == CaptureToolNavigationRoutes.VideoCapture);
     }
 
     private void GoBack()
