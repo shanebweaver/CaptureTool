@@ -64,6 +64,26 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         return (file != null) ? new ImageFile(file.Path) : null;
     }
 
+    public async Task<VideoFile?> SaveVideoFileAsync(nint hwnd)
+    {
+        var filePicker = new FileSavePicker
+        {
+            SuggestedStartLocation = PickerLocationId.VideosLibrary
+        };
+
+        unsafe
+        {
+#pragma warning disable IDE0028 // Simplify collection initialization
+            filePicker.FileTypeChoices.Add("MP4", new List<string>() { ".mp4" });
+#pragma warning restore IDE0028 // Simplify collection initialization
+        }
+
+        WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
+
+        StorageFile file = await filePicker.PickSaveFileAsync();
+        return (file != null) ? new VideoFile(file.Path) : null;
+    }
+
     public Size GetImageSize(ImageFile imageFile)
     {
         using FileStream file = new(imageFile.Path, FileMode.Open, FileAccess.Read);

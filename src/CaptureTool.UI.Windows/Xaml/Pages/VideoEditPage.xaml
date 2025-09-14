@@ -11,6 +11,10 @@
     mc:Ignorable="d">
 
     <Grid>
+        <!--  TODO: Put toolbar here with save button like on the image edit page  -->
+
         <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" />
+
+        <Button Command="{x:Bind ViewModel.SaveVideoCommand}" Content="Save" />
     </Grid>
 </local:VideoEditPageBase>
