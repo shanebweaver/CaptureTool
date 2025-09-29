@@ -522,4 +522,10 @@ SOFTWARE.
   <data name="About_ThirdParty_DialogTitle" xml:space="preserve">
     <value>Licencias de terceros</value>
   </data>
+  <data name="VideoEdit_SaveButton.AccessKey" xml:space="preserve">
+    <value>S</value>
+  </data>
+  <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
 </root>

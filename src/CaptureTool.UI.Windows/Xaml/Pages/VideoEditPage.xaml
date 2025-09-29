@@ -11,10 +11,37 @@
     mc:Ignorable="d">
 
     <Grid>
-        <!--  TODO: Put toolbar here with save button like on the image edit page  -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
 
-        <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" />
+        <!--  Toolbar  -->
+        <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+            <!--  Copy  -->
+            <AppBarButton
+                x:Uid="VideoEdit_CopyButton"
+                Command="{x:Bind ViewModel.CopyCommand}"
+                Icon="Copy">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="C" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
 
-        <Button Command="{x:Bind ViewModel.SaveVideoCommand}" Content="Save" />
+            <!--  Save  -->
+            <AppBarButton
+                x:Uid="VideoEdit_SaveButton"
+                Command="{x:Bind ViewModel.SaveCommand}"
+                Icon="Save">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="S" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+        </CommandBar>
+
+        <!--  Content  -->
+        <Grid Grid.Row="1">
+            <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" />
+        </Grid>
     </Grid>
 </local:VideoEditPageBase>

@@ -17,9 +17,11 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase
         public static readonly string Load = $"{nameof(VideoEditPageViewModel)}_Load";
         public static readonly string Unload = $"{nameof(VideoEditPageViewModel)}_Unload";
         public static readonly string Save = $"{nameof(VideoEditPageViewModel)}_Save";
+        public static readonly string Copy = $"{nameof(VideoEditPageViewModel)}_Copy";
     }
 
-    public RelayCommand SaveVideoCommand => new(SaveVideo);
+    public RelayCommand SaveCommand => new(Save);
+    public RelayCommand CopyCommand => new(Copy);
 
     private string? _videoPath;
     public string? VideoPath
@@ -58,7 +60,7 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase
         base.Unload();
     }
 
-    private async void SaveVideo()
+    private async void Save()
     {
         string activityId = ActivityIds.Save;
         _telemetryService.ActivityInitiated(activityId);
@@ -75,6 +77,28 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase
             {
                 _telemetryService.ActivityCompleted(activityId, "User canceled");
             }
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
+    }
+
+    private void Copy()
+    {
+        string activityId = ActivityIds.Copy;
+        _telemetryService.ActivityInitiated(activityId);
+        try
+        {
+            // TODO: Copy to clipboard
+            // Put this in a service
+            /*
+            DataPackage dataPackage = new();
+            //dataPackage.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
+            Clipboard.SetContent(dataPackage);
+            Clipboard.Flush();*/
+
+            _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
         {

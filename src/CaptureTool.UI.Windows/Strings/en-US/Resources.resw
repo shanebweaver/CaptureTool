@@ -638,4 +638,12 @@ SOFTWARE.
     <value>Third-Party Software Acknowledgments</value>
     <comment>License text for all third party software used in the app</comment>
   </data>
+  <data name="VideoEdit_SaveButton.AccessKey" xml:space="preserve">
+    <value>S</value>
+    <comment>The access key for the save button on the video edit page.</comment>
+  </data>
+  <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
+    <value>Save</value>
+    <comment>The label for the save button on the video edit page.</comment>
+  </data>
 </root>
