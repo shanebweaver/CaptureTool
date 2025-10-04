@@ -2,11 +2,11 @@
 
 namespace CaptureTool.Services.Clipboard;
 
-public class ClipboardImageWrapper : IClipboardImage
+public class ClipboardStreamWrapper : IClipboardStream
 {
     private readonly Stream _stream;
 
-    public ClipboardImageWrapper(Stream stream)
+    public ClipboardStreamWrapper(Stream stream)
     {
         _stream = stream;
     }

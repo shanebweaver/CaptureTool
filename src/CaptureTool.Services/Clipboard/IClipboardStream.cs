@@ -2,7 +2,7 @@
 
 namespace CaptureTool.Services.Clipboard;
 
-public interface IClipboardImage
+public interface IClipboardStream
 {
     Stream GetStream();
 }

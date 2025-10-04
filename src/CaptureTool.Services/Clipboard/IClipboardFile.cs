@@ -1,6 +1,6 @@
 ﻿namespace CaptureTool.Services.Clipboard;
 
-public interface IClipboardVideo
+public interface IClipboardFile
 {
     string FilePath {  get; }
 }

@@ -99,8 +99,8 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase
                 throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
             }
 
-            ClipboardVideoWrapper clipboardVideo = new(_videoPath);
-            await _clipboardService.CopyVideoAsync(clipboardVideo);
+            ClipboardFileWrapper clipboardVideo = new(_videoPath);
+            await _clipboardService.CopyFileAsync(clipboardVideo);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

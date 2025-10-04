@@ -1,10 +1,10 @@
 ﻿namespace CaptureTool.Services.Clipboard;
 
-public class ClipboardVideoWrapper : IClipboardVideo
+public class ClipboardFileWrapper : IClipboardFile
 {
     public string FilePath { get; }
 
-    public ClipboardVideoWrapper(string filePath)
+    public ClipboardFileWrapper(string filePath)
     {
         FilePath = filePath;
     }

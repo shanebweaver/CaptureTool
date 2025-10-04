@@ -11,9 +11,9 @@ namespace CaptureTool.Services.Windows.Clipboard;
 
 public partial class WindowsClipboardService : IClipboardService
 {
-    public Task CopyImageAsync(IClipboardImage image)
+    public Task CopyStreamAsync(IClipboardStream clipboardStream)
     {
-        using var stream = image.GetStream();
+        using var stream = clipboardStream.GetStream();
         var randomAccessStream = stream.AsRandomAccessStream();
 
         var bitmap = RandomAccessStreamReference.CreateFromStream(randomAccessStream);
@@ -25,15 +25,15 @@ public partial class WindowsClipboardService : IClipboardService
         return Task.CompletedTask;
     }
 
-    public async Task CopyVideoAsync(IClipboardVideo video)
+    public async Task CopyFileAsync(IClipboardFile clipboardFile)
     {
-        if (!File.Exists(video.FilePath))
+        if (!File.Exists(clipboardFile.FilePath))
         {
             return;
         }
 
         var package = new DataPackage();
-        var file = await StorageFile.GetFileFromPathAsync(video.FilePath);
+        var file = await StorageFile.GetFileFromPathAsync(clipboardFile.FilePath);
         List<IStorageItem> items = [file];
         package.SetStorageItems(items);
         global::Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);

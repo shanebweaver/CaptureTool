@@ -33,8 +33,8 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
         using var stream = new InMemoryRandomAccessStream();
         await renderTarget.SaveAsync(stream, CanvasBitmapFileFormat.Png);
 
-        ClipboardImageWrapper clipboardImage = new(stream.AsStream());
-        await _clipboardService.CopyImageAsync(clipboardImage);
+        ClipboardStreamWrapper clipboardImage = new(stream.AsStream());
+        await _clipboardService.CopyStreamAsync(clipboardImage);
     }
 
     public async Task SaveImageAsync(string filePath, IDrawable[] drawables, ImageCanvasRenderOptions options)
