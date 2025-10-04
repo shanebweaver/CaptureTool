@@ -1,3 +1,4 @@
+using CaptureTool.FeatureManagement;
 using Microsoft.UI.Xaml;
 using System.Windows.Input;
 
@@ -5,17 +6,17 @@ namespace CaptureTool.UI.Windows.Xaml.Controls;
 
 public sealed partial class CaptureOverlayToolbar : UserControlBase
 {
-    public static readonly DependencyProperty IsDesktopAudioEnabledProperty = DependencyProperty.Register(
-        nameof(IsDesktopAudioEnabled),
+    public static readonly DependencyProperty IsLocalAudioEnabledProperty = DependencyProperty.Register(
+        nameof(IsLocalAudioEnabled),
         typeof(bool),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty IsRecordingProperty = DependencyProperty.Register(
-           nameof(IsRecording),
-           typeof(bool),
-           typeof(CaptureOverlayToolbar),
-           new PropertyMetadata(DependencyProperty.UnsetValue));
+        nameof(IsRecording),
+        typeof(bool),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(DependencyProperty.UnsetValue));
 
     public static readonly DependencyProperty CloseCommandProperty = DependencyProperty.Register(
         nameof(CloseCommand),
@@ -41,16 +42,26 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
-    public static readonly DependencyProperty ToggleDesktopAudioCommandProperty = DependencyProperty.Register(
-        nameof(ToggleDesktopAudioCommand),
+    public static readonly DependencyProperty ToggleLocalAudioCommandProperty = DependencyProperty.Register(
+        nameof(ToggleLocalAudioCommand),
         typeof(ICommand),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
-    public bool IsDesktopAudioEnabled
+    public CaptureOverlayToolbar()
     {
-        get => Get<bool>(IsDesktopAudioEnabledProperty);
-        set => Set(IsDesktopAudioEnabledProperty, value);
+        InitializeComponent();
+
+        if (ServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_LocalAudio))
+        {
+            LocalAudioToggleButton.Visibility = Visibility.Visible;
+        }
+    }
+
+    public bool IsLocalAudioEnabled
+    {
+        get => Get<bool>(IsLocalAudioEnabledProperty);
+        set => Set(IsLocalAudioEnabledProperty, value);
     }
 
     public bool IsRecording
@@ -83,14 +94,9 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         set => Set(StopVideoCaptureCommandProperty, value);
     }
 
-    public ICommand ToggleDesktopAudioCommand
+    public ICommand ToggleLocalAudioCommand
     {
-        get => Get<ICommand>(ToggleDesktopAudioCommandProperty);
-        set => Set(ToggleDesktopAudioCommandProperty, value);
-    }
-
-    public CaptureOverlayToolbar()
-    {
-        InitializeComponent();
+        get => Get<ICommand>(ToggleLocalAudioCommandProperty);
+        set => Set(ToggleLocalAudioCommandProperty, value);
     }
 }

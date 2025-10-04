@@ -38,7 +38,7 @@
                             FontFamily="{StaticResource FluentSystemIcons}"
                             FontSize="16"
                             Glyph="{StaticResource Record16Regular}" />
-                        <TextBlock VerticalAlignment="Center" Text="Record" />
+                        <TextBlock x:Uid="StartVideoCaptureButtonTextBlock" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button
@@ -53,7 +53,7 @@
                             FontFamily="{StaticResource FluentSystemIcons}"
                             FontSize="16"
                             Glyph="{StaticResource Record16Regular}" />
-                        <TextBlock VerticalAlignment="Center" Text="Stop" />
+                        <TextBlock x:Uid="StopVideoCaptureButtonTextBlock" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
             </Grid>
@@ -62,16 +62,20 @@
                 <local:ClockTimer IsActive="{x:Bind IsRecording, Mode=OneWay}" />
             </Grid>
 
-            <Button Command="{x:Bind ToggleDesktopAudioCommand, Mode=OneWay}" Style="{StaticResource IconButtonStyle}">
+            <Button
+                x:Name="LocalAudioToggleButton"
+                Command="{x:Bind ToggleLocalAudioCommand, Mode=OneWay}"
+                Style="{StaticResource IconButtonStyle}"
+                Visibility="Collapsed">
                 <Grid>
                     <FontIcon
                         FontFamily="{StaticResource FluentSystemIcons}"
                         Glyph="{StaticResource DesktopSpeaker20Regular}"
-                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsLocalAudioEnabled), Mode=OneWay}" />
                     <FontIcon
                         FontFamily="{StaticResource FluentSystemIcons}"
                         Glyph="{StaticResource DesktopSpeakerOff20Regular}"
-                        Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsDesktopAudioEnabled), Mode=OneWay}" />
+                        Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsLocalAudioEnabled), Mode=OneWay}" />
                 </Grid>
             </Button>
 

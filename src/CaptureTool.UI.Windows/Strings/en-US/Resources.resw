@@ -654,4 +654,12 @@ SOFTWARE.
     <value>C</value>
     <comment>The access key for the copy button on the video edit page.</comment>
   </data>
+  <data name="StartVideoCaptureButtonTextBlock.Text" xml:space="preserve">
+    <value>Record</value>
+    <comment>The label for the button that starts video capture.</comment>
+  </data>
+  <data name="StopVideoCaptureButtonTextBlock.Text" xml:space="preserve">
+    <value>Stop</value>
+    <comment>The label for the button that stops video capture.</comment>
+  </data>
 </root>

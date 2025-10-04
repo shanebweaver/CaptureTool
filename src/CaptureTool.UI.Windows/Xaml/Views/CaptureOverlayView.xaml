@@ -18,11 +18,11 @@
                 x:Name="Toolbar"
                 CloseCommand="{x:Bind ViewModel.CloseOverlayCommand}"
                 GoBackCommand="{x:Bind ViewModel.GoBackCommand}"
-                IsDesktopAudioEnabled="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=OneWay}"
+                IsLocalAudioEnabled="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=OneWay}"
                 IsRecording="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
                 StartVideoCaptureCommand="{x:Bind ViewModel.StartVideoCaptureCommand}"
                 StopVideoCaptureCommand="{x:Bind ViewModel.StopVideoCaptureCommand}"
-                ToggleDesktopAudioCommand="{x:Bind ViewModel.ToggleDesktopAudioCommand}" />
+                ToggleLocalAudioCommand="{x:Bind ViewModel.ToggleDesktopAudioCommand}" />
         </Grid>
     </Grid>
 </local:CaptureOverlayViewBase>

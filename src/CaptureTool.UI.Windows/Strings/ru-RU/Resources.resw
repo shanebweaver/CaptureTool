@@ -534,4 +534,10 @@ SOFTWARE.
   <data name="VideoEdit_CopyButton.AccessKey" xml:space="preserve">
     <value>C</value>
   </data>
+  <data name="StartVideoCaptureButtonTextBlock.Text" xml:space="preserve">
+    <value>Начать</value>
+  </data>
+  <data name="StopVideoCaptureButtonTextBlock.Text" xml:space="preserve">
+    <value>Стоп</value>
+  </data>
 </root>

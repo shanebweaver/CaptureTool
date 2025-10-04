@@ -29,7 +29,8 @@
             ItemsSource="{x:Bind SupportedCaptureModes, Mode=OneWay}"
             SelectedIndex="{x:Bind SelectedCaptureModeIndex, Mode=TwoWay}"
             SelectionMode="Single"
-            SingleSelectionFollowsFocus="True">
+            SingleSelectionFollowsFocus="True"
+            Visibility="Collapsed">
             <toolkit:Segmented.ItemTemplate>
                 <DataTemplate x:DataType="viewmodels:CaptureModeViewModel">
                     <SymbolIcon AutomationProperties.Name="{x:Bind AutomationName}" Symbol="{x:Bind IconSymbolName}" />
