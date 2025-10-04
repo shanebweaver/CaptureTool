@@ -312,7 +312,7 @@ public sealed class ImageOrientationHelperTests
         // Tips:
         // GetOrientedCropRect helps determine the new size and placement of the crop rectangle when transitioning from one orientation to another.
         // The method expects that the oldOrientation value matches the orientation of the provided cropRect.
-        // If oldOrientation is turned 90 degrees, the cropRect should oriented to match, swapping height and width.
+        // If oldOrientation is turned 90 degrees, the cropRect should be oriented to match, swapping height and width.
         // The imageSize should always be the correctly oriented size of the image, unaffected by rotation.
         // This test assumes that the image is portrait, taller than it is wide.
         // The resulting cropRect should be in the correct placement and size for the new orientation.

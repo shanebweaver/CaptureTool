@@ -63,6 +63,13 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
+    TimeSpan timestamp{};
+    hr = frame->get_SystemRelativeTime(&timestamp);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+
     wil::com_ptr<IDirect3DSurface> surface;
     hr = frame->get_Surface(surface.put());
     if (FAILED(hr) || !surface)
@@ -84,7 +91,13 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
-    return m_sinkWriter->WriteFrame(texture.get());
+    static LONGLONG firstTimestamp = 0;
+    LONGLONG relative = 0;
+    if (firstTimestamp == 0)
+        firstTimestamp = timestamp.Duration;
+    relative = timestamp.Duration - firstTimestamp;
+
+    return m_sinkWriter->WriteFrame(texture.get(), relative);
 }
 
 EventRegistrationToken RegisterFrameArrivedHandler(

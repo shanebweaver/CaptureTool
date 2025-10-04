@@ -30,7 +30,9 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
 
     // Output type: H.264
     wil::com_ptr<IMFMediaType> mediaTypeOut;
-    MFCreateMediaType(mediaTypeOut.put());
+    hr = MFCreateMediaType(mediaTypeOut.put());
+    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+
     mediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
     mediaTypeOut->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_H264);
     mediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, 5000000);
@@ -39,20 +41,29 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
     MFSetAttributeRatio(mediaTypeOut.get(), MF_MT_FRAME_RATE, 30, 1);
     MFSetAttributeRatio(mediaTypeOut.get(), MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
 
-    DWORD streamIndex;
-    sinkWriter->AddStream(mediaTypeOut.get(), &streamIndex);
+    DWORD streamIndex = 0;
+    hr = sinkWriter->AddStream(mediaTypeOut.get(), &streamIndex);
+    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     // Input type: RGB32
     wil::com_ptr<IMFMediaType> mediaTypeIn;
-    MFCreateMediaType(mediaTypeIn.put());
+    hr = MFCreateMediaType(mediaTypeIn.put());
+    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+    
     mediaTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
     mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_RGB32);
     MFSetAttributeSize(mediaTypeIn.get(), MF_MT_FRAME_SIZE, width, height);
     MFSetAttributeRatio(mediaTypeIn.get(), MF_MT_FRAME_RATE, 30, 1);
     MFSetAttributeRatio(mediaTypeIn.get(), MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
 
-    sinkWriter->SetInputMediaType(streamIndex, mediaTypeIn.get(), nullptr);
-    sinkWriter->BeginWriting();
+    LONG defaultStride = static_cast<LONG>(width * 4);
+    mediaTypeIn->SetUINT32(MF_MT_DEFAULT_STRIDE, static_cast<UINT32>(defaultStride));
+
+    hr = sinkWriter->SetInputMediaType(streamIndex, mediaTypeIn.get(), nullptr);
+    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+
+    hr = sinkWriter->BeginWriting();
+    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     m_sinkWriter = std::move(sinkWriter);
     m_streamIndex = streamIndex;
@@ -60,7 +71,7 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
     return true;
 }
 
-HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture)
+HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTicks)
 {
     if (!texture || !m_sinkWriter) return E_FAIL;
 
@@ -84,34 +95,49 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture)
     hr = m_context->Map(staging.get(), 0, D3D11_MAP_READ, 0, &mapped);
     if (FAILED(hr)) return hr;
 
+    const UINT32 bytesPerPixel = 4;
+    const UINT32 canonicalStride = m_width * bytesPerPixel;
+    const UINT32 bufferSize = canonicalStride * m_height;
+
     wil::com_ptr<IMFMediaBuffer> buffer;
     hr = MFCreateMemoryBuffer(mapped.RowPitch * m_height, buffer.put());
     if (FAILED(hr)) { m_context->Unmap(staging.get(), 0); return hr; }
 
     BYTE* pData = nullptr;
     DWORD maxLen = 0, curLen = 0;
-    buffer->Lock(&pData, &maxLen, &curLen);
+    hr = buffer->Lock(&pData, &maxLen, &curLen);
+    if (FAILED(hr)) { m_context->Unmap(staging.get(), 0); return hr; }
 
     for (UINT row = 0; row < m_height; ++row)
     {
-        BYTE* destRow = pData + row * mapped.RowPitch;
-        BYTE* srcRow = (BYTE*)mapped.pData + (m_height - 1 - row) * mapped.RowPitch;
-        memcpy(destRow, srcRow, mapped.RowPitch);
+        BYTE* destRow = pData + row * canonicalStride;
+        BYTE* srcRow = (BYTE*)mapped.pData + row * mapped.RowPitch;
+        memcpy(destRow, srcRow, canonicalStride);
     }
 
-    buffer->SetCurrentLength(mapped.RowPitch * m_height);
+    buffer->SetCurrentLength(bufferSize);
     buffer->Unlock();
     m_context->Unmap(staging.get(), 0);
 
     wil::com_ptr<IMFSample> sample;
-    MFCreateSample(sample.put());
+    hr = MFCreateSample(sample.put());
+    if (FAILED(hr)) return hr;
+
     sample->AddBuffer(buffer.get());
+    sample->SetSampleTime(relativeTicks);
 
-    LONGLONG rtStart = m_frameIndex * 333333; // 30fps
-    sample->SetSampleTime(rtStart);
-    sample->SetSampleDuration(333333);
+    if (m_prevTimestamp == 0)
+        m_prevTimestamp = relativeTicks;
+
+    const LONGLONG TICKS_PER_SECOND = 10000000LL;
+    const LONGLONG frameDuration = TICKS_PER_SECOND / 30; // 30 FPS
+
+    LONGLONG duration = relativeTicks - m_prevTimestamp;
+    if (duration <= 0) duration = frameDuration; // fallback ~30 fps
+    sample->SetSampleDuration(duration);
+    m_prevTimestamp = relativeTicks;
+
     m_frameIndex++;
-
     return m_sinkWriter->WriteSample(m_streamIndex, sample.get());
 }
 

@@ -10,7 +10,7 @@ public:
     bool Initialize(const wchar_t* outputPath, ID3D11Device* device, UINT32 width, UINT32 height, HRESULT* outHr = nullptr);
 
     // Write a frame to the MP4 file
-    HRESULT WriteFrame(ID3D11Texture2D* texture);
+    HRESULT WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTicks);
 
     // Finalize MP4 file
     void Finalize();
@@ -27,4 +27,5 @@ private:
     UINT32 m_height = 0;
     ID3D11Device* m_device = nullptr;
     ID3D11DeviceContext* m_context = nullptr;
+    LONGLONG m_prevTimestamp = 0;
 };
