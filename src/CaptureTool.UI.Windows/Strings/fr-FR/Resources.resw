@@ -528,4 +528,10 @@ SOFTWARE.
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
     <value>Enregistrer</value>
   </data>
+  <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
+    <value>Copier</value>
+  </data>
+  <data name="VideoEdit_CopyButton.AccessKey" xml:space="preserve">
+    <value>C</value>
+  </data>
 </root>

@@ -646,4 +646,12 @@ SOFTWARE.
     <value>Save</value>
     <comment>The label for the save button on the video edit page.</comment>
   </data>
+  <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
+    <value>Copy</value>
+    <comment>The label for the copy button on the video edit page.</comment>
+  </data>
+  <data name="VideoEdit_CopyButton.AccessKey" xml:space="preserve">
+    <value>C</value>
+    <comment>The access key for the copy button on the video edit page.</comment>
+  </data>
 </root>

@@ -1,6 +1,7 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core.AppController;
+using CaptureTool.Services.Clipboard;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
 using System;
@@ -30,15 +31,18 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase
         set => Set(ref _videoPath, value);
     }
 
+    private readonly IClipboardService _clipboardService;
     private readonly IFilePickerService _filePickerService;
     private readonly IAppController _appController;
     private readonly ITelemetryService _telemetryService;
 
     public VideoEditPageViewModel(
+        IClipboardService clipboardService,
         IFilePickerService filePickerService,
         IAppController appController,
         ITelemetryService telemetryService)
     {
+        _clipboardService = clipboardService;
         _filePickerService = filePickerService;
         _appController = appController;
         _telemetryService = telemetryService;
@@ -84,20 +88,19 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase
         }
     }
 
-    private void Copy()
+    private async void Copy()
     {
         string activityId = ActivityIds.Copy;
         _telemetryService.ActivityInitiated(activityId);
         try
         {
-            // TODO: Copy to clipboard
-            // Put this in a service
-            /*
-            DataPackage dataPackage = new();
-            //dataPackage.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
-            Clipboard.SetContent(dataPackage);
-            Clipboard.Flush();*/
+            if (string.IsNullOrEmpty(_videoPath))
+            {
+                throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
+            }
 
+            ClipboardVideoWrapper clipboardVideo = new(_videoPath);
+            await _clipboardService.CopyVideoAsync(clipboardVideo);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

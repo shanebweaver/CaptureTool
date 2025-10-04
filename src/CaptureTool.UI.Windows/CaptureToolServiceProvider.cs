@@ -7,6 +7,7 @@ using CaptureTool.Edit.Windows.ChromaKey;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Clipboard;
 using CaptureTool.Services.Globalization;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Logging;
@@ -17,6 +18,7 @@ using CaptureTool.Services.Store;
 using CaptureTool.Services.TaskEnvironment;
 using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
+using CaptureTool.Services.Windows.Clipboard;
 using CaptureTool.Services.Windows.Localization;
 using CaptureTool.Services.Windows.Storage;
 using CaptureTool.Services.Windows.Store;
@@ -46,6 +48,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<ITelemetryService, TelemetryService>();
 
         // Windows Services
+        collection.AddSingleton<IClipboardService, WindowsClipboardService>();
         collection.AddSingleton<IStoreService, WindowsStoreService>();
         collection.AddSingleton<IChromaKeyService, Win2DChromaKeyService>();
         collection.AddSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();

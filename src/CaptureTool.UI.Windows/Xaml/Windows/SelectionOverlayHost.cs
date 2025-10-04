@@ -14,7 +14,7 @@ namespace CaptureTool.UI.Windows.Xaml.Windows;
 internal sealed partial class SelectionOverlayHost : IDisposable
 {
 #if DEBUG
-    private static readonly bool SingleMonitorNoWindowWatcher = true;
+    private static readonly bool SingleMonitorNoWindowWatcher = false;
 #endif
 
     private readonly HashSet<MonitorCaptureResult> _monitors = [];
