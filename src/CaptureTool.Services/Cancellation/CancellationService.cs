@@ -7,7 +7,6 @@ namespace CaptureTool.Services.Cancellation;
 public sealed partial class CancellationService : ICancellationService, IDisposable
 {
     private CancellationTokenSource _rootTokenSource;
-    private bool disposed;
 
     public CancellationService()
     {
@@ -48,22 +47,9 @@ public sealed partial class CancellationService : ICancellationService, IDisposa
         await _rootTokenSource.CancelAsync();
     }
 
-    private void Dispose(bool disposing)
-    {
-        if (!disposed)
-        {
-            if (disposing)
-            {
-                _rootTokenSource.Dispose();
-            }
-
-            disposed = true;
-        }
-    }
-
     public void Dispose()
     {
-        Dispose(disposing: true);
+        _rootTokenSource.Dispose();
         GC.SuppressFinalize(this);
     }
 }

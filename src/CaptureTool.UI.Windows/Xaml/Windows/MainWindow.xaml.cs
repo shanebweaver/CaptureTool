@@ -141,7 +141,6 @@ public sealed partial class MainWindow : Window
         _activationCts.Dispose();
 
         // IMPORTANT: Closing the main window will crash the app unless we forcefully exit immediately.
-        // TODO: Figure out what the cause is. I don't think this is normal.
         ServiceLocator.AppController.Shutdown();
     }
 
