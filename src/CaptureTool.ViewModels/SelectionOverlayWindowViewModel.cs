@@ -53,6 +53,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             if (Set(ref _selectedCaptureTypeIndex, value))
             {
                 RaisePropertyChanged(nameof(SelectedCaptureType));
+                OnSelectedCaptureTypeIndexChanged();
             }
         }
     }
@@ -241,6 +242,22 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             {
                 NewCaptureArgs args = new(Monitor.Value, CaptureArea);
                 _navigationService.Navigate(CaptureToolNavigationRoutes.VideoCapture, args);
+            }
+        }
+    }
+
+    private void OnSelectedCaptureTypeIndexChanged()
+    {
+        if (SelectedCaptureTypeIndex > -1 && SelectedCaptureType.CaptureType == CaptureType.AllScreens)
+        {
+            if (SelectedCaptureMode.CaptureMode == CaptureMode.Image)
+            {
+                ImageFile image = _appController.PerformAllScreensCapture();
+                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, image);
+            }
+            else if (SelectedCaptureMode.CaptureMode == CaptureMode.Video)
+            {
+                //
             }
         }
     }

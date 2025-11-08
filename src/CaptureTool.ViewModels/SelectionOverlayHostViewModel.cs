@@ -115,18 +115,5 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
     private void OnSelectedCaptureTypeIndexChanged(SelectionOverlayWindowViewModel windowVM)
     {
         SyncHelper.SyncProperty(windowVM, _windowViewModels, vm => vm.SelectedCaptureTypeIndex);
-
-        if (windowVM.SelectedCaptureType.CaptureType == CaptureType.AllScreens)
-        {
-            if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Image)
-            {
-                ImageFile image = _appController.PerformAllScreensCapture();
-                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, image);
-            }
-            else if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Video)
-            {
-                throw new System.NotImplementedException();
-            }
-        }
     }
 }
