@@ -32,7 +32,7 @@ public class NavigationService : INavigationService
 
             _navigationStack.Pop();
             NavigationRequest backRequest = _navigationStack.Peek();
-            Navigate(new NavigationRequest(backRequest.Route, backRequest.Parameter, true));
+            Navigate(new NavigationRequest(backRequest.Route, backRequest.Parameter, true, false));
         }
     }
 
@@ -40,7 +40,7 @@ public class NavigationService : INavigationService
     {
         lock (_navigationLock)
         {
-            NavigationRequest request = new(route, parameter);
+            NavigationRequest request = new(route, parameter, false, clearHistory);
 
             if (clearHistory)
             {

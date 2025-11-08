@@ -154,10 +154,19 @@ public sealed partial class MainWindow : Window
                 if (navigationRequest.IsBackNavigation && NavigationFrame.CanGoBack)
                 {
                     NavigationFrame.GoBack();
+                    NavigationFrame.ForwardStack.Clear();
+                    GC.Collect();
                 }
                 else
                 {
                     NavigationFrame.Navigate(pageType, navigationRequest.Parameter);
+                }
+
+                if (navigationRequest.ClearHistory)
+                {
+                    NavigationFrame.ForwardStack.Clear();
+                    NavigationFrame.BackStack.Clear();
+                    GC.Collect();
                 }
             }
         });
