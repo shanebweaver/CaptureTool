@@ -1,14 +1,15 @@
 ﻿using CaptureTool.Capture;
+using CaptureTool.Common.Storage;
 using CaptureTool.Core.AppController;
+using CaptureTool.Services.Navigation;
 using System;
-using System.Drawing;
 using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels.Tests.Mocks;
 
 internal sealed partial class MockAppController : IAppController
 {
-    public void CloseSelectionOverlay()
+    public void CancelVideoCapture()
     {
     }
 
@@ -22,17 +23,13 @@ internal sealed partial class MockAppController : IAppController
         return 0;
     }
 
-    public void GoBackOrHome()
-    {
-    }
-
-    public void GoHome()
-    {
-    }
-
     public Task HandleLaunchActivationAsync()
     {
         return Task.CompletedTask;
+    }
+
+    public void HandleNavigationRequest(NavigationRequest request)
+    {
     }
 
     public Task HandleProtocolActivationAsync(Uri protocolUri)
@@ -40,61 +37,31 @@ internal sealed partial class MockAppController : IAppController
         return Task.CompletedTask;
     }
 
-    public void HideMainWindow()
+    public ImageFile PerformAllScreensCapture()
     {
+        return new ImageFile("path-to-file");
     }
 
-    public void PerformAllScreensCapture()
+    public ImageFile PerformImageCapture(NewCaptureArgs args)
     {
-    }
-
-    public void PerformCapture(MonitorCaptureResult monitor, Rectangle captureArea)
-    {
-    }
-
-    public void PerformImageCapture(MonitorCaptureResult monitor, Rectangle captureArea)
-    {
-    }
-
-    public void ShowCaptureOverlay(MonitorCaptureResult monitor, Rectangle captureArea)
-    {
-    }
-
-    public void ShowSelectionOverlay(CaptureOptions? options = null)
-    {
-    }
-
-    public void ShowMainWindow(bool activate = true)
-    {
+        return new ImageFile("path-to-file");
     }
 
     public void Shutdown()
     {
     }
 
-    public void StartVideoCapture(MonitorCaptureResult monitor, Rectangle captureArea)
+    public void StartVideoCapture(NewCaptureArgs args)
     {
     }
 
-    public void StopVideoCapture()
+    public VideoFile StopVideoCapture()
     {
-    }
-
-    public bool TryGoBack()
-    {
-        return false;
+        return new VideoFile("path-to-file");
     }
 
     public bool TryRestart()
     {
         return false;
-    }
-
-    public void CloseCaptureOverlay()
-    {
-    }
-
-    public void CancelVideoCapture()
-    {
     }
 }

@@ -31,4 +31,10 @@ internal sealed partial class MockFilePickerService : IFilePickerService
         ImageFile? result = null;
         return Task.FromResult(result);
     }
+
+    public Task<VideoFile?> SaveVideoFileAsync(nint hwnd)
+    {
+        VideoFile? result = null;
+        return Task.FromResult(result);
+    }
 }

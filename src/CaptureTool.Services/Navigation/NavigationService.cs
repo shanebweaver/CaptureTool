@@ -12,6 +12,7 @@ public class NavigationService : INavigationService
 
     public event EventHandler<NavigationEventArgs>? Navigated;
 
+    public NavigationRequest? CurrentRequest => _navigationStack.Count == 0 ? null : _navigationStack.Peek();
     public bool CanGoBack => _navigationStack.Count > 1;
 
     public void SetNavigationHandler(INavigationHandler navigationHandler)
