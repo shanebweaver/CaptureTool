@@ -2,7 +2,7 @@
 
 namespace CaptureTool.Capture;
 
-public sealed partial class NewCaptureArgs
+public readonly partial struct NewCaptureArgs
 {
     public MonitorCaptureResult Monitor { get; }
     public Rectangle Area { get; }

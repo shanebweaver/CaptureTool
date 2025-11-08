@@ -98,14 +98,7 @@ internal partial class CaptureToolAppController : IAppController
     #region INavigationHandler
     public void HandleNavigationRequest(NavigationRequest request)
     {
-        if (request.Route == CaptureToolNavigationRoutes.Home ||
-            request.Route == CaptureToolNavigationRoutes.Loading ||
-            request.Route == CaptureToolNavigationRoutes.AddOns ||
-            request.Route == CaptureToolNavigationRoutes.Error ||
-            request.Route == CaptureToolNavigationRoutes.About ||
-            request.Route == CaptureToolNavigationRoutes.Settings ||
-            request.Route == CaptureToolNavigationRoutes.ImageEdit ||
-            request.Route == CaptureToolNavigationRoutes.VideoEdit)
+        if (CaptureToolNavigationRoutes.IsMainWindowRoute(request.Route))
         {
             switch (_activeHost)
             {
@@ -124,10 +117,13 @@ internal partial class CaptureToolAppController : IAppController
             _mainWindowHost.HandleNavigationRequest(request);
             _activeHost = UXHost.MainWindow;
         }
-        else if (
-            request.Route == CaptureToolNavigationRoutes.ImageCapture &&
-            request.Parameter is CaptureOptions options)
+        else if (request.Route == CaptureToolNavigationRoutes.ImageCapture)
         {
+            if (request.Parameter is not CaptureOptions options)
+            {
+                throw new InvalidOperationException("Image capture cannot be started without options.");
+            }
+
             switch (_activeHost)
             {
                 case UXHost.MainWindow:
@@ -145,10 +141,13 @@ internal partial class CaptureToolAppController : IAppController
             _selectionOverlayHost.Show(options);
             _activeHost = UXHost.SelectionOverlay;
         }
-        else if (
-            request.Route == CaptureToolNavigationRoutes.VideoCapture &&
-            request.Parameter is NewCaptureArgs args)
+        else if (request.Route == CaptureToolNavigationRoutes.VideoCapture)
         {
+            if (request.Parameter is not NewCaptureArgs args)
+            {
+                throw new InvalidOperationException("Video capture cannot be started without arguments.");
+            }
+
             switch (_activeHost)
             {
                 case UXHost.MainWindow:
@@ -168,7 +167,7 @@ internal partial class CaptureToolAppController : IAppController
         }
         else
         {
-            throw new ArgumentOutOfRangeException(nameof(request));
+            throw new ArgumentOutOfRangeException(nameof(request), $"No handler found for route: {request.Route.Id}");
         }
     }
     #endregion

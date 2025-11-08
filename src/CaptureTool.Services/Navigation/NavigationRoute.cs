@@ -1,6 +1,6 @@
 ﻿namespace CaptureTool.Services.Navigation;
 
-public sealed partial class NavigationRoute(string routeName)
+public sealed partial class NavigationRoute(string routeId)
 {
-    public string RouteName { get; } = routeName;
+    public string Id { get; } = routeId;
 }

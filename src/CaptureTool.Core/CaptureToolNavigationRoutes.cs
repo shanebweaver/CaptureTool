@@ -14,4 +14,17 @@ public static partial class CaptureToolNavigationRoutes
     public static readonly NavigationRoute VideoCapture = new("VideoCapture");
     public static readonly NavigationRoute ImageEdit = new("ImageEdit");
     public static readonly NavigationRoute VideoEdit = new("VideoEdit");
+
+    public static bool IsMainWindowRoute(NavigationRoute navigationRoute)
+    {
+        return
+            navigationRoute == Home ||
+            navigationRoute == Loading ||
+            navigationRoute == AddOns ||
+            navigationRoute == Error ||
+            navigationRoute == About ||
+            navigationRoute == Settings ||
+            navigationRoute == ImageEdit ||
+            navigationRoute == VideoEdit;
+    }
 }
