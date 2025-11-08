@@ -14,10 +14,6 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="Xaml\Controls\CaptureOverlayBorder.xaml" />
-    <None Remove="Xaml\Controls\ClockTimer.xaml" />
-  </ItemGroup>
 
   <!-- App manifest -->
   <ItemGroup>
@@ -51,6 +47,11 @@
     <ProjectReference Include="..\CaptureTool.ViewModels\CaptureTool.ViewModels.csproj" />
   </ItemGroup>
 
+  <!-- Content files -->
+  <ItemGroup>
+    <Content Include="Fonts\FluentSystemIcons-Regular.ttf" />
+  </ItemGroup>
+	
   <!-- 
     Don't generate the XAML main function and use the one in Program.cs instead.
     https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/applifecycle/applifecycle-single-instance
@@ -80,16 +81,6 @@
   <!-- Publish profiles -->
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Xaml\Controls\CaptureOverlayBorder.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Xaml\Controls\ClockTimer.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
 
   <!-- Publish Properties -->
