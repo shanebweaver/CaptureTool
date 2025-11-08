@@ -3,12 +3,11 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.Common.Loading;
 
-public interface IAsyncLoadable : IUnloadable
+public interface IAsyncLoadable
 {
     LoadState LoadState { get; }
 
     bool IsLoaded => LoadState == LoadState.Loaded;
-    bool IsUnloaded => LoadState == LoadState.Unloaded;
 
     Task LoadAsync(object? parameter, CancellationToken cancellationToken);
 }

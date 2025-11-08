@@ -183,7 +183,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         base.Load(parameter);
     }
 
-    public override void Unload()
+    public override void Dispose()
     {
         _selectedCaptureTypeIndex = default;
         _selectedCaptureModeIndex = default;
@@ -194,6 +194,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _captureArea = Rectangle.Empty;
         _isDesktopAudioEnabled = false;
         _isCapturingVideo = false;
+        base.Dispose();
     }
 
     private void CloseOverlay()

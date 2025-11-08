@@ -16,7 +16,7 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase
     private readonly struct ActivityIds
     {
         public static readonly string Load = $"{nameof(VideoEditPageViewModel)}_Load";
-        public static readonly string Unload = $"{nameof(VideoEditPageViewModel)}_Unload";
+        public static readonly string Dispose = $"{nameof(VideoEditPageViewModel)}_Dispose";
         public static readonly string Save = $"{nameof(VideoEditPageViewModel)}_Save";
         public static readonly string Copy = $"{nameof(VideoEditPageViewModel)}_Copy";
     }
@@ -58,10 +58,10 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase
         return base.LoadAsync(parameter, cancellationToken);
     }
 
-    public override void Unload()
+    public override void Dispose()
     {
         _videoPath = null;
-        base.Unload();
+        base.Dispose();
     }
 
     private async void Save()

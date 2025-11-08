@@ -48,7 +48,7 @@ public sealed partial class SelectionOverlayWindow : Window
         Activated -= SelectionOverlayWindow_Activated;
         Closed -= SelectionOverlayWindow_Closed;
 
-        ViewModel.Unload();
+        ViewModel.Dispose();
         Content = null;
         IsClosed = true;
     }

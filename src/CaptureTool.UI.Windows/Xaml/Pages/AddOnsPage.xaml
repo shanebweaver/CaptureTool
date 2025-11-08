@@ -106,7 +106,7 @@
                                         Height="16"
                                         HorizontalAlignment="Center"
                                         IsActive="True"
-                                        Visibility="{x:Bind ViewModel.IsUnloaded, Mode=OneWay}" />
+                                        Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
                                     <TextBlock
                                         HorizontalAlignment="Left"
                                         FontWeight="SemiBold"

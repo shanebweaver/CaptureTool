@@ -37,7 +37,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
         _windowViewModels.Add(newVM);
     }
 
-    public void Unload()
+    public override void Dispose()
     {
         foreach (var windowViewModel in _windowViewModels)
         {

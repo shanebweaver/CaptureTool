@@ -14,7 +14,6 @@ using CaptureTool.Services.Telemetry;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 using System.Threading;
@@ -27,7 +26,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
     private readonly struct ActivityIds
     {
         public static readonly string Load = "ImageEditPageViewModel_Load";
-        public static readonly string Unload = "ImageEditPageViewModel_Unload";
+        public static readonly string Dispose = "ImageEditPageViewModel_Dispose";
         public static readonly string Copy = "ImageEditPageViewModel_Copy";
         public static readonly string ToggleCropMode = "ImageEditPageViewModel_ToggleCropMode";
         public static readonly string Save = "ImageEditPageViewModel_Save";
@@ -241,10 +240,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        Unload();
-        Debug.Assert(IsUnloaded);
-        StartLoading();
-
         string activityId = ActivityIds.Load;
         _telemetryService.ActivityInitiated(activityId);
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
@@ -300,9 +295,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
         await base.LoadAsync(parameter, cancellationToken);
     }
 
-    public override void Unload()
+    public override void Dispose()
     {
-        string activityId = ActivityIds.Unload;
+        string activityId = ActivityIds.Dispose;
         _telemetryService.ActivityInitiated(activityId);
         try
         {
@@ -318,7 +313,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
             _telemetryService.ActivityError(activityId, e);
         }
 
-        base.Unload();
+        base.Dispose();
     }
 
     private async void Copy()

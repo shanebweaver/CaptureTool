@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Common.Loading;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,7 +7,7 @@ namespace CaptureTool.ViewModels;
 
 public abstract partial class AsyncLoadableViewModelBase : ViewModelBase, IAsyncLoadable
 {
-    private LoadState _loadState;
+    private LoadState _loadState = LoadState.Loading;
     public LoadState LoadState
     {
         get => _loadState;
@@ -14,11 +15,11 @@ public abstract partial class AsyncLoadableViewModelBase : ViewModelBase, IAsync
         {
             Set(ref _loadState, value);
             RaisePropertyChanged(nameof(IsLoaded));
-            RaisePropertyChanged(nameof(IsUnloaded));
+            RaisePropertyChanged(nameof(IsLoading));
         }
     }
 
-    public bool IsUnloaded => LoadState == LoadState.Unloaded;
+    public bool IsLoading => LoadState == LoadState.Loading;
     public bool IsLoaded => LoadState == LoadState.Loaded;
 
     public virtual Task LoadAsync(object? parameter, CancellationToken cancellationToken)
@@ -27,18 +28,15 @@ public abstract partial class AsyncLoadableViewModelBase : ViewModelBase, IAsync
         return Task.CompletedTask;
     }
 
-    public virtual void Unload()
-    {
-        LoadState = LoadState.Unloaded;
-    }
-
-    protected void StartLoading()
-    {
-        LoadState = LoadState.Loading;
-    }
-
     protected void LoadingComplete()
     {
         LoadState = LoadState.Loaded;
+    }
+
+    public override void Dispose()
+    {
+        _loadState = LoadState.Error;
+        GC.SuppressFinalize(this);
+        base.Dispose();
     }
 }

@@ -25,11 +25,11 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
 
         try
         {
-            if (ViewModel is IAsyncLoadable asyncLoadable && asyncLoadable.IsUnloaded)
+            if (ViewModel is IAsyncLoadable asyncLoadable)
             {
                 await asyncLoadable.LoadAsync(e.Parameter, _loadCts.Token);
             }
-            else if (ViewModel is ILoadable loadable && loadable.IsUnloaded)
+            else if (ViewModel is ILoadable loadable)
             {
                 loadable.Load(e.Parameter);
             }
@@ -56,10 +56,7 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
             _loadCts = null;
         }
 
-        if (ViewModel is IUnloadable unloadable)
-        {
-            unloadable.Unload();
-        }
+        ViewModel.Dispose();
 
         base.OnNavigatedFrom(e);
     }

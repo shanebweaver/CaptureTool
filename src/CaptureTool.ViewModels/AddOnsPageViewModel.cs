@@ -83,13 +83,13 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         await base.LoadAsync(parameter, cancellationToken);
     }
 
-    public override void Unload()
+    public override void Dispose()
     {
         _isChromaKeyAddOnAvailable = false;
         _isChromaKeyAddOnOwned = false;
         _chromaKeyAddOnPrice = string.Empty;
         _chromaKeyAddOnLogoImage = null;
-        base.Unload();
+        base.Dispose();
     }
 
     private async void GetChromaKeyAddOn()

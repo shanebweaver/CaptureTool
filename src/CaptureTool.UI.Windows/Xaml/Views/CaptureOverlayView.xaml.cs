@@ -1,5 +1,6 @@
 using CaptureTool.Capture;
 using CaptureTool.Services.Themes;
+using CaptureTool.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
@@ -10,12 +11,18 @@ namespace CaptureTool.UI.Windows.Xaml.Views;
 
 public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
 {
+    private readonly MonitorCaptureResult _monitor;
+    private readonly System.Drawing.Rectangle _area;
+
     public CaptureOverlayView(MonitorCaptureResult monitor, System.Drawing.Rectangle area)
     {
-        InitializeComponent();
-        ViewModel.Load((monitor, area));
+        _monitor = monitor;
+        _area = area;
+
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
+
+        InitializeComponent();
 
         DispatcherQueue.TryEnqueue(() =>
         {
@@ -24,15 +31,20 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
         });
     }
 
+    ~CaptureOverlayView()
+    {
+        Loaded -= OnLoaded;
+        Unloaded -= OnUnloaded;
+    }
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-
+        ViewModel.Load(new CaptureOverlayViewModel.Options(_monitor, _area));
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        Unloaded -= OnUnloaded;
-        ViewModel.Unload();
+        ViewModel.Dispose();
     }
 
     private void AddToolbarShadow()

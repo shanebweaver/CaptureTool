@@ -15,22 +15,22 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
     {
         InitializeComponent();
 
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+
         DispatcherQueue.TryEnqueue(() =>
         {
             UpdateRequestedAppTheme();
         });
-
-        Loaded += SelectionOverlayWindowView_Loaded;
-        Unloaded += SelectionOverlayWindowView_Unloaded;
     }
 
     ~SelectionOverlayWindowView()
     {
-        Loaded -= SelectionOverlayWindowView_Loaded;
-        Unloaded -= SelectionOverlayWindowView_Unloaded;
+        Loaded -= OnLoaded;
+        Unloaded -= OnUnloaded;
     }
 
-    private void SelectionOverlayWindowView_Loaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(object sender, RoutedEventArgs e)
     {
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete += SelectionOverlay_SelectionComplete;
@@ -45,7 +45,7 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         }
     }
 
-    private void SelectionOverlayWindowView_Unloaded(object sender, RoutedEventArgs e)
+    private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;

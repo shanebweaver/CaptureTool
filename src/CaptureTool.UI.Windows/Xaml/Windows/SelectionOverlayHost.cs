@@ -96,7 +96,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         _windowHandles.Clear();
         _monitors.Clear();
 
-        _viewModel?.Unload();
+        _viewModel?.Dispose();
         _viewModel = null;
 
         foreach (SelectionOverlayWindow window in _windows)
@@ -170,7 +170,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         _windowHandles.Clear();
         _monitors.Clear();
 
-        _viewModel?.Unload();
+        _viewModel?.Dispose();
         _viewModel = null;
 
         _primaryWindow = null;

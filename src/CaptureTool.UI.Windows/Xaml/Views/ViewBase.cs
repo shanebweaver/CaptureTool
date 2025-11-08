@@ -31,11 +31,11 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
 
         try
         {
-            if (ViewModel is IAsyncLoadable asyncLoadable && asyncLoadable.IsUnloaded)
+            if (ViewModel is IAsyncLoadable asyncLoadable)
             {
                 await asyncLoadable.LoadAsync(null, _loadCts.Token);
             }
-            else if (ViewModel is ILoadable loadable && loadable.IsUnloaded)
+            else if (ViewModel is ILoadable loadable)
             {
                 loadable.Load(null);
             }
@@ -59,9 +59,6 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
             _loadCts = null;
         }
 
-        if (ViewModel is IUnloadable unloadable)
-        {
-            unloadable.Unload();
-        }
+        ViewModel.Dispose();
     }
 }

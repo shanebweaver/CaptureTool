@@ -23,7 +23,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly struct ActivityIds
     {
         public static readonly string Load = "SettingsPageViewModel_Load";
-        public static readonly string Unload = "SettingsPageViewModel_Unload";
+        public static readonly string Dispose = "SettingsPageViewModel_Dispose";
         public static readonly string RestartApp = "SettingsPageViewModel_RestartApp";
         public static readonly string GoBack = "SettingsPageViewModel_GoBack";
         public static readonly string UpdateImageCaptureAutoCopy = "SettingsPageViewModel_UpdateImageCaptureAutoCopy";
@@ -167,10 +167,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
     {
-        Unload();
-        Debug.Assert(IsUnloaded);
-        StartLoading();
-
         ExecuteActivity(ActivityIds.Load, () =>
         {
             var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
@@ -231,9 +227,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         await base.LoadAsync(parameter, cancellationToken);
     }
 
-    public override void Unload()
+    public override void Dispose()
     {
-        ExecuteActivity(ActivityIds.Unload, () =>
+        ExecuteActivity(ActivityIds.Dispose, () =>
         {
             _showAppLanguageRestartMessage = false;
             _selectedAppLanguageIndex = -1;
@@ -247,7 +243,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             _imageCaptureAutoCopy = false;
         });
 
-        base.Unload();
+        base.Dispose();
     }
 
     private void UpdateAppLanguage()

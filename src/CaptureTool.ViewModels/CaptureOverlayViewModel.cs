@@ -12,6 +12,12 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
 {
+    public readonly partial struct Options(MonitorCaptureResult monitor, Rectangle area)
+    {
+        public MonitorCaptureResult Monitor { get; } = monitor;
+        public Rectangle Area { get; } = area;
+    }
+
     private readonly INavigationService _navigationService;
     private readonly IAppController _appController;
     private MonitorCaptureResult? _monitorCaptureResult;
@@ -62,7 +68,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
     public RelayCommand StopVideoCaptureCommand => new(StopVideoCapture);
     public RelayCommand ToggleDesktopAudioCommand => new(ToggleDesktopAudio);
     
-
     public CaptureOverlayViewModel(
         INavigationService navigationService,
         IThemeService themeService,
@@ -77,19 +82,19 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
 
     public override void Load(object? parameter)
     {
-        if (parameter is (MonitorCaptureResult monitor, Rectangle area))
+        if (parameter is Options options)
         {
-            _monitorCaptureResult = monitor;
-            _captureArea = area;
+            _monitorCaptureResult = options.Monitor;
+            _captureArea = options.Area;
         }
 
         base.Load(parameter);
     }
 
-    public override void Unload()
+    public override void Dispose()
     {
         StopTimer();
-        base.Unload();
+        base.Dispose();
     }
 
     private void CloseOverlay()

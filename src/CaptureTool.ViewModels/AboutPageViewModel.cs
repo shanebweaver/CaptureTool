@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using CaptureTool.Common.Commands;
+﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core;
-using CaptureTool.Core.AppController;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;
+using System;
 
 namespace CaptureTool.ViewModels;
 
@@ -22,7 +20,6 @@ public sealed partial class AboutPageViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly ILocalizationService _localizationService;
     private readonly ITelemetryService _telemetryService;
-    private readonly IAppController _appController;
 
     public event EventHandler<(string title, string content)>? ShowDialogRequested;
 
@@ -39,13 +36,11 @@ public sealed partial class AboutPageViewModel : ViewModelBase
     public AboutPageViewModel(
         INavigationService navigationService,
         ILocalizationService localizationService,
-        ITelemetryService telemetryService,
-        IAppController appController)
+        ITelemetryService telemetryService)
     {
         _navigationService = navigationService;
         _localizationService = localizationService;
         _telemetryService = telemetryService;
-        _appController = appController;
     }
 
     private void ShowDialog(string titleResourceKey, string contentResourceKey, string activityId)

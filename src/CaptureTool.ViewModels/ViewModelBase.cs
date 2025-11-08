@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace CaptureTool.ViewModels;
 
-public abstract partial class ViewModelBase : INotifyPropertyChanged
+public abstract partial class ViewModelBase : INotifyPropertyChanged, IDisposable
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -26,5 +27,10 @@ public abstract partial class ViewModelBase : INotifyPropertyChanged
     protected void RaisePropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new(propertyName));
+    }
+
+    public virtual void Dispose()
+    {
+        GC.SuppressFinalize(this);
     }
 }

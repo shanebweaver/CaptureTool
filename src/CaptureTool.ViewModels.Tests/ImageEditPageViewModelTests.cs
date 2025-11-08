@@ -37,14 +37,14 @@ public sealed class ImageEditPageViewModelTests
     public async Task LoadTest()
     {
         Assert.IsFalse(_vm.IsLoaded);
-        Assert.IsTrue(_vm.IsUnloaded);
+        Assert.IsTrue(_vm.IsLoading);
 
         // Load
         string testImageFilePath = Guid.NewGuid().ToString();
         object parameter = new ImageFile(testImageFilePath);
         await _vm.LoadAsync(parameter, CancellationToken.None);
         Assert.IsTrue(_vm.IsLoaded);
-        Assert.IsFalse(_vm.IsUnloaded);
+        Assert.IsFalse(_vm.IsLoading);
         Assert.IsNotNull(_vm.ImageFile);
         Assert.AreEqual(testImageFilePath, _vm.ImageFile.Path);
         Assert.AreEqual(MockFilePickerService.DefaultImageSize, _vm.ImageSize);
@@ -64,10 +64,10 @@ public sealed class ImageEditPageViewModelTests
         Assert.AreEqual(testImageFilePath, imageDrawable.FileName.Path);
         Assert.AreEqual(MockFilePickerService.DefaultImageSize, imageDrawable.ImageSize);
 
-        // Unload
-        _vm.Unload();
+        // Dispose
+        _vm.Dispose();
         Assert.IsFalse(_vm.IsLoaded);
-        Assert.IsTrue(_vm.IsUnloaded);
+        Assert.IsFalse(_vm.IsLoading);
         Assert.AreEqual(Rectangle.Empty, _vm.CropRect);
         Assert.AreEqual(Size.Empty, _vm.ImageSize);
         Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, _vm.Orientation);

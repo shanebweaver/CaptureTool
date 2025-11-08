@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Common.Loading;
+using System;
 
 namespace CaptureTool.ViewModels;
 
@@ -12,21 +13,14 @@ public abstract partial class LoadableViewModelBase : ViewModelBase, ILoadable
         {
             Set(ref _loadState, value);
             RaisePropertyChanged(nameof(IsLoaded));
-            RaisePropertyChanged(nameof(IsUnloaded));
         }
     }
 
-    public bool IsUnloaded => LoadState == LoadState.Unloaded;
     public bool IsLoaded => LoadState == LoadState.Loaded;
 
     public virtual void Load(object? parameter)
     {
         LoadingComplete();
-    }
-
-    public virtual void Unload()
-    {
-        LoadState = LoadState.Unloaded;
     }
 
     protected void StartLoading()
@@ -37,5 +31,12 @@ public abstract partial class LoadableViewModelBase : ViewModelBase, ILoadable
     protected void LoadingComplete()
     {
         LoadState = LoadState.Loaded;
+    }
+
+    public override void Dispose()
+    {
+        _loadState = LoadState.Error;
+        GC.SuppressFinalize(this);
+        base.Dispose();
     }
 }

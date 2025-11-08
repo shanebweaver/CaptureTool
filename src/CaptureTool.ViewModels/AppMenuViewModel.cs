@@ -15,7 +15,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     private readonly struct ActivityIds
     {
         public static readonly string Load = "AppMenuViewModel_Load";
-        public static readonly string Unload = "AppMenuViewModel_Unload";
+        public static readonly string Dispose = "AppMenuViewModel_Dispose";
         public static readonly string NewImageCapture = "AppMenuViewModel_NewImageCapture";
         public static readonly string OpenFile = "AppMenuViewModel_OpenFile";
         public static readonly string NavigateToSettings = "AppMenuViewModel_NavigateToSettings";
