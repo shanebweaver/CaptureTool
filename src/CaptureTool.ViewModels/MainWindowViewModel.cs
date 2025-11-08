@@ -24,6 +24,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
         set => Set(ref _defaultAppTheme, value);
     }
 
+    private NavigationRequest? _currentRequest;
+
     public MainWindowViewModel(
         IThemeService themeService)
     {
@@ -36,6 +38,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
     ~MainWindowViewModel()
     {
         _themeService.CurrentThemeChanged -= OnCurrentThemeChanged;
+        _currentRequest = null;
     }
 
     private void OnCurrentThemeChanged(object? sender, AppTheme newTheme)
@@ -45,6 +48,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
 
     public void HandleNavigationRequest(NavigationRequest request)
     {
+        if (_currentRequest?.Route == request.Route && _currentRequest?.Parameter == request.Parameter)
+        {
+            return;
+        }
+
+        _currentRequest = request;
         NavigationRequested?.Invoke(this, request);
     }
 }

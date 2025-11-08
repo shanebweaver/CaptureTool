@@ -132,7 +132,6 @@ internal partial class CaptureToolAppController : IAppController
             {
                 case UXHost.MainWindow:
                     _mainWindowHost.Hide();
-                    Thread.Sleep(200);
                     break;
 
                 case UXHost.SelectionOverlay:
@@ -302,11 +301,7 @@ internal partial class CaptureToolAppController : IAppController
     #region IVideoCaptureHandler
     public void StartVideoCapture(NewCaptureArgs args)
     {
-        if (_navigationService.CurrentRoute != CaptureToolNavigationRoutes.VideoCapture)
-        {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.VideoCapture, args);
-        }
-
+        _navigationService.Navigate(CaptureToolNavigationRoutes.VideoCapture, args);
         _captureOverlayHost?.HideBorder();
 
         _tempVideoPath = Path.Combine(

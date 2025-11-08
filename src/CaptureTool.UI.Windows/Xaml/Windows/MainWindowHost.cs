@@ -66,15 +66,12 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 
     public void Hide()
     {
-        App.Current.DispatcherQueue.TryEnqueue(() =>
+        if (_mainWindow == null)
         {
-            if (_mainWindow == null)
-            {
-                return;
-            }
+            return;
+        }
 
-            _mainWindow.AppWindow.Hide();
-        });
+        _mainWindow.AppWindow.Hide();
     }
 
     public void Dispose()
