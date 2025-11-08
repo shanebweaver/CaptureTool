@@ -162,15 +162,26 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
     public void Close()
     {
+        DestroyBorderWindow();
+        DestroyOverlayWindow();
+        GC.Collect();
+    }
+
+    public void HideBorder()
+    {
+        DestroyBorderWindow();
+    }
+
+    private void DestroyOverlayWindow()
+    {
         if (_hwnd != null)
         {
             PInvoke.DestroyWindow(_hwnd.Value);
             _hwnd = null;
         }
-        HideBorder();
     }
 
-    public void HideBorder()
+    private void DestroyBorderWindow()
     {
         if (_borderHwnd != null)
         {

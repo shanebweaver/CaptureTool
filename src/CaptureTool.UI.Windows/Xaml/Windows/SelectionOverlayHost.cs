@@ -112,6 +112,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         }
 
         _windows.Clear();
+        GC.Collect();
     }
 
     private void OnPrimaryWindowActivated(object sender, WindowActivatedEventArgs args)
