@@ -29,13 +29,16 @@ jobs:
       run: |
         git clone https://github.com/microsoft/vcpkg.git
         .\vcpkg\bootstrap-vcpkg.bat
-        .\vcpkg\vcpkg install wil
+        .\vcpkg\vcpkg integrate install
+
+    - name: Set VCPKG_ROOT
+      run: echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" >> $env:GITHUB_ENV
 
     - name: Restore dependencies
       run: dotnet restore
 
     - name: Build solution
-      run: msbuild CaptureTool.sln /p:Configuration=Release /p:WindowsTargetPlatformVersion=10.0.19041.0 /p:VcpkgEnableManifest=false /p:VcpkgRoot="vcpkg"
+      run: msbuild CaptureTool.sln /p:Configuration=Release /p:WindowsTargetPlatformVersion=10.0.19041.0 /p:VcpkgEnableManifest=true /p:VcpkgRoot="vcpkg"
 
     - name: Run C# tests
       run: dotnet test "src/**/*.csproj" --no-build --verbosity normal
