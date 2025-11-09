@@ -24,6 +24,18 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
         _mainWindow = new MainWindow();
     }
 
+    public void ExcludeWindowFromCapture(bool exclude)
+    {
+        if (_mainWindow != null)
+        {
+            var hwnd = WindowNative.GetWindowHandle(_mainWindow);
+            var displayAffinity = exclude 
+                ? global::Windows.Win32.UI.WindowsAndMessaging.WINDOW_DISPLAY_AFFINITY.WDA_EXCLUDEFROMCAPTURE 
+                : global::Windows.Win32.UI.WindowsAndMessaging.WINDOW_DISPLAY_AFFINITY.WDA_NONE;
+            PInvoke.SetWindowDisplayAffinity(new(hwnd), displayAffinity);
+        }
+    }
+
     public void Restore()
     {
         EnsureCreated();

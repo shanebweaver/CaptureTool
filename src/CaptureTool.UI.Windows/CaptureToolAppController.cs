@@ -106,10 +106,12 @@ internal partial class CaptureToolAppController : IAppController
                     break;
 
                 case UXHost.SelectionOverlay:
+                    _mainWindowHost.ExcludeWindowFromCapture(false);
                     _selectionOverlayHost.Close();
                     break;
 
                 case UXHost.CaptureOverlay:
+                    _mainWindowHost.ExcludeWindowFromCapture(false);
                     _captureOverlayHost.Close();
                     break;
             }
@@ -127,7 +129,9 @@ internal partial class CaptureToolAppController : IAppController
             switch (_activeHost)
             {
                 case UXHost.MainWindow:
+                    _mainWindowHost.ExcludeWindowFromCapture(true);
                     _mainWindowHost.Hide();
+                    Thread.Sleep(200);
                     break;
 
                 case UXHost.SelectionOverlay:
@@ -151,7 +155,9 @@ internal partial class CaptureToolAppController : IAppController
             switch (_activeHost)
             {
                 case UXHost.MainWindow:
+                    _mainWindowHost.ExcludeWindowFromCapture(true);
                     _mainWindowHost.Hide();
+                    Thread.Sleep(200);
                     break;
 
                 case UXHost.SelectionOverlay:
