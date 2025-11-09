@@ -15,26 +15,18 @@ public sealed partial class SelectionOverlayWindow : Window
 
     public SelectionOverlayWindow(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows, CaptureOptions options)
     {
+        Activated += OnActivated;
+        Closed += OnClosed;
         if (monitor.IsPrimary)
         {
-            Activated += SelectionOverlayWindow_Activated;
-            Closed += SelectionOverlayWindow_Closed;
+            Activated += OnPrimaryActivated;
+            Closed += OnPrimaryClosed;
         }
-
-        AppWindow.IsShownInSwitchers = false;
-        AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
 
         var bounds = monitor.MonitorBounds;
         AppWindow.MoveAndResize(new(bounds.X, bounds.Y, bounds.Width, bounds.Height));
-
-        if (AppWindow.Presenter is OverlappedPresenter presenter)
-        {
-            presenter.IsAlwaysOnTop = true;
-            presenter.IsResizable = false;
-            presenter.SetBorderAndTitleBar(false, false);
-            presenter.Maximize();
-        }
-
+        
+        EnsureMaximized();
         InitializeComponent();
 
         DispatcherQueue.TryEnqueue(() =>
@@ -43,33 +35,61 @@ public sealed partial class SelectionOverlayWindow : Window
         });
     }
 
-    private void SelectionOverlayWindow_Closed(object sender, WindowEventArgs args)
+    private void EnsureMaximized()
     {
-        Activated -= SelectionOverlayWindow_Activated;
-        Closed -= SelectionOverlayWindow_Closed;
+        AppWindow.IsShownInSwitchers = false;
+        AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
+
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            presenter.IsAlwaysOnTop = true;
+            presenter.IsResizable = false;
+            presenter.SetBorderAndTitleBar(false, false);
+            presenter.Maximize();
+        }
+    }
+
+    private void OnActivated(object sender, WindowActivatedEventArgs args)
+    {
+        if (args.WindowActivationState == WindowActivationState.Deactivated)
+        {
+            return;
+        }
+
+        EnsureMaximized();
+    }
+
+    private void OnClosed(object sender, WindowEventArgs args)
+    {
+        Activated -= OnActivated;
+        Closed -= OnClosed;
 
         ViewModel.Dispose();
+
         Content = null;
         IsClosed = true;
     }
 
-    private void SelectionOverlayWindow_Activated(object sender, WindowActivatedEventArgs args)
+    private void OnPrimaryActivated(object sender, WindowActivatedEventArgs args)
     {
-        DispatcherQueue.TryEnqueue(() =>
+        try
         {
-            try
+            if (!IsClosed && args.WindowActivationState != WindowActivationState.Deactivated)
             {
-                if (!IsClosed && args.WindowActivationState != WindowActivationState.Deactivated)
-                {
-                    // Must call SetForegroundWindow or focus will not move to the new window on activation.
-                    var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-                    global::Windows.Win32.PInvoke.SetForegroundWindow(new(hwnd));
-                    global::Windows.Win32.PInvoke.SetWindowDisplayAffinity(new(hwnd), global::Windows.Win32.UI.WindowsAndMessaging.WINDOW_DISPLAY_AFFINITY.WDA_EXCLUDEFROMCAPTURE);
-                }
+                // Must call SetForegroundWindow or focus will not move to the new window on activation.
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+                global::Windows.Win32.PInvoke.SetForegroundWindow(new(hwnd));
+                global::Windows.Win32.PInvoke.SetWindowDisplayAffinity(new(hwnd), global::Windows.Win32.UI.WindowsAndMessaging.WINDOW_DISPLAY_AFFINITY.WDA_EXCLUDEFROMCAPTURE);
             }
-            catch
-            {
-            }
-        });
+        }
+        catch
+        {
+        }
+    }
+
+    private void OnPrimaryClosed(object sender, WindowEventArgs args)
+    {
+        Activated -= OnPrimaryActivated;
+        Closed -= OnPrimaryClosed;
     }
 }

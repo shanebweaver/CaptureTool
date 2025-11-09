@@ -80,6 +80,10 @@ internal sealed partial class SelectionOverlayHost : IDisposable
                 _primaryWindow = window;
                 _primaryWindow.Activated += OnPrimaryWindowActivated;
             }
+            else
+            {
+                window.Activate();
+            }
         }
 
         _primaryWindow?.Activate();

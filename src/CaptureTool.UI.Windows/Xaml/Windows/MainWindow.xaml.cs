@@ -124,9 +124,6 @@ public sealed partial class MainWindow : Window
         {
             Activated -= OnActivated;
             RestoreAppWindowSizeAndPosition();
-
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-            global::Windows.Win32.PInvoke.SetWindowDisplayAffinity(new(hwnd), global::Windows.Win32.UI.WindowsAndMessaging.WINDOW_DISPLAY_AFFINITY.WDA_EXCLUDEFROMCAPTURE);
         }
     }
 
