@@ -30,7 +30,6 @@ jobs:
       with:
         vcpkgDirectory: '${{ runner.temp }}/vcpkg'
         vcpkgJsonGlob: '**/vcpkg.json'
-        vcpkgGitCommitId: 'latest'
         runVcpkgInstall: true
 
     # Restore .NET dependencies
