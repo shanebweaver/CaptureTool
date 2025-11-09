@@ -19,10 +19,13 @@ jobs:
       with:
         dotnet-version: '9.0.306' # match your project
 
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build entire solution (including C++ projects)
+    - name: Build solution
       run: msbuild CaptureTool.sln /p:Configuration=Release /m
 
     - name: Run C# tests
