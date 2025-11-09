@@ -662,4 +662,8 @@ SOFTWARE.
     <value>Stop</value>
     <comment>The label for the button that stops video capture.</comment>
   </data>
+  <data name="ImageEdit_ShareButton.Label" xml:space="preserve">
+    <value>Share</value>
+    <comment>The label for the share button on the image edit page.</comment>
+  </data>
 </root>

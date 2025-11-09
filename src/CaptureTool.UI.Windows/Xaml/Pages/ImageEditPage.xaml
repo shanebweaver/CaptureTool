@@ -97,8 +97,12 @@
                     <KeyboardAccelerator Key="P" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
+            <!--  Share  -->
+            <AppBarButton
+                x:Uid="ImageEdit_ShareButton"
+                Command="{x:Bind ViewModel.ShareCommand}"
+                Icon="Share" />
         </CommandBar>
-
 
         <!--  Chroma key options  -->
         <Grid

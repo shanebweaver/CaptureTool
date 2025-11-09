@@ -8,6 +8,7 @@ using CaptureTool.Edit.Drawable;
 using CaptureTool.Edit.Operations;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Share;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Store;
 using CaptureTool.Services.Telemetry;
@@ -36,6 +37,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
         public static readonly string FlipHorizontal = "ImageEditPageViewModel_FlipHorizontal";
         public static readonly string FlipVertical = "ImageEditPageViewModel_FlipVertical";
         public static readonly string Print = "ImageEditPageViewModel_Print";
+        public static readonly string Share = "ImageEditPageViewModel_Share";
     }
 
     private readonly IStoreService _storeService;
@@ -47,6 +49,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
     private readonly IChromaKeyService _chromaKeyService;
     private readonly IFilePickerService _filePickerService;
     private readonly IFeatureManager _featureManager;
+    private readonly IShareService _shareService;
 
     private ImageDrawable? _imageDrawable;
     private readonly Stack<CanvasOperation> _operationsUndoStack;
@@ -64,6 +67,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
     public RelayCommand FlipHorizontalCommand => new(() => Flip(FlipDirection.Horizontal));
     public RelayCommand FlipVerticalCommand => new(() => Flip(FlipDirection.Vertical));
     public RelayCommand PrintCommand => new(Print);
+    public RelayCommand ShareCommand => new(Share);
     public RelayCommand<Color> UpdateChromaKeyColorCommand => new(UpdateChromaKeyColor, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
 
     // Private commands to handle undo/redo operations.
@@ -214,7 +218,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
         IImageCanvasExporter imageCanvasExporter,
         IFilePickerService filePickerService,
         IChromaKeyService chromaKeyService,
-        IFeatureManager featureManager)
+        IFeatureManager featureManager,
+        IShareService shareService)
     {
         _storeService = storeService;
         _appController = appController;
@@ -224,6 +229,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
         _chromaKeyService = chromaKeyService;
         _filePickerService = filePickerService;
         _featureManager = featureManager;
+        _shareService = shareService;
 
         _drawables = [];
         _imageSize = new();
@@ -525,6 +531,33 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
         {
             nint hwnd = _appController.GetMainWindowHandle();
             await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
+
+            _telemetryService.ActivityCompleted(activityId);
+        }
+        catch (Exception e)
+        {
+            _telemetryService.ActivityError(activityId, e);
+        }
+    }
+
+    private async void Share()
+    {
+        string activityId = ActivityIds.Share;
+        _telemetryService.ActivityInitiated(activityId);
+        try
+        {
+            if (_imageFile == null)
+            {
+                return;
+            }
+
+            nint hwnd = _appController.GetMainWindowHandle();
+            await _shareService.ShareAsync(_imageFile.Path, hwnd);
+
+            _telemetryService.ActivityCompleted(activityId);
+
+            //nint hwnd = _appController.GetMainWindowHandle();
+            //await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
         }
         catch (Exception e)
         {

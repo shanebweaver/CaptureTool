@@ -13,6 +13,7 @@ using CaptureTool.Services.Localization;
 using CaptureTool.Services.Logging;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
+using CaptureTool.Services.Share;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Store;
 using CaptureTool.Services.TaskEnvironment;
@@ -20,6 +21,7 @@ using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
 using CaptureTool.Services.Windows.Clipboard;
 using CaptureTool.Services.Windows.Localization;
+using CaptureTool.Services.Windows.Share;
 using CaptureTool.Services.Windows.Storage;
 using CaptureTool.Services.Windows.Store;
 using CaptureTool.Services.Windows.TaskEnvironment;
@@ -57,6 +59,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IThemeService, WindowsThemeService>();
         collection.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
         collection.AddSingleton<ILocalizationService, WindowsLocalizationService>();
+        collection.AddSingleton<IShareService, WindowsShareService>();
         collection.AddSingleton<ITaskEnvironment, WinUITaskEnvironment>(CreateWinUITaskEnvironment);
 
         // ViewModels

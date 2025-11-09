@@ -540,4 +540,7 @@ SOFTWARE.
   <data name="StopVideoCaptureButtonTextBlock.Text" xml:space="preserve">
     <value>Arrêter</value>
   </data>
+  <data name="ImageEdit_ShareButton.Label" xml:space="preserve">
+    <value>Partager</value>
+  </data>
 </root>
