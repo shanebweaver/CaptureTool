@@ -10,35 +10,34 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # 1️⃣ Checkout your repo
+    # Checkout your repo
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2️⃣ Setup .NET
+    # Setup .NET
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.306' # match your project SDK version
 
-    # 3️⃣ Setup MSBuild (for .vcxproj)
+    # Setup MSBuild (for .vcxproj)
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    # 4️⃣ Setup vcpkg (manifest mode + caching)
+    # Setup vcpkg (manifest mode + caching)
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgDirectory: '${{ runner.temp }}/vcpkg'
         vcpkgJsonGlob: '**/vcpkg.json'
         vcpkgGitCommitId: 'latest'
-        cachePackages: true
         runVcpkgInstall: true
 
-    # 5️⃣ Restore .NET dependencies
+    # Restore .NET dependencies
     - name: Restore .NET dependencies
       run: dotnet restore
 
-    # 6️⃣ Build the full solution (C# + C++)
+    # Build the full solution (C# + C++)
     - name: Build solution
       run: |
         msbuild CaptureTool.sln `
@@ -49,6 +48,6 @@ jobs:
           /p:VcpkgRoot="${{ runner.temp }}/vcpkg" `
           /m
 
-    # 7️⃣ Run all .NET tests (excluding non-test projects)
+    # Run all .NET tests (excluding non-test projects)
     - name: Run .NET tests
       run: dotnet test --no-build --verbosity normal
