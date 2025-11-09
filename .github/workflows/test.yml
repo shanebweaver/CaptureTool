@@ -22,8 +22,8 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build solution
-      run: dotnet build --no-restore --configuration Release
+    - name: Build entire solution (including C++ projects)
+      run: msbuild CaptureTool.sln /p:Configuration=Release /m
 
-    - name: Run tests
-      run: dotnet test --no-build --verbosity normal
+    - name: Run C# tests
+      run: dotnet test "src/**/*.csproj" --no-build --verbosity normal
