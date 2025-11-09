@@ -7,8 +7,7 @@ on:
   pull_request:
 
 jobs:
-  # Setup
-  setup:
+  test:
     runs-on: windows-latest
 
     steps:
@@ -32,23 +31,11 @@ jobs:
         .\vcpkg\bootstrap-vcpkg.bat
         .\vcpkg\vcpkg install wil
 
-  # Build
-  build:
-    needs: setup
-    runs-on: windows-latest
-
-    steps:
     - name: Restore dependencies
       run: dotnet restore
 
     - name: Build solution
       run: msbuild CaptureTool.sln /p:Configuration=Release /p:WindowsTargetPlatformVersion=10.0.19041.0 /p:VcpkgEnableManifest=false /p:VcpkgRoot="vcpkg"
 
-  # Test
-  test:
-    needs: build
-    runs-on: windows-latest
-
-    steps:
     - name: Run C# tests
       run: dotnet test "src/**/*.csproj" --no-build --verbosity normal
