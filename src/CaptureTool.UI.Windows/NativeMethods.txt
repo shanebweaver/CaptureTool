@@ -1,4 +1,5 @@
-﻿SetForegroundWindow
+﻿SetActiveWindow
+SetForegroundWindow
 SetEvent
 CreateEvent
 CoWaitForMultipleObjects

@@ -126,6 +126,7 @@ internal partial class CaptureToolAppController : IAppController
                 throw new InvalidOperationException("Image capture cannot be started without options.");
             }
 
+
             switch (_activeHost)
             {
                 case UXHost.MainWindow:
@@ -142,7 +143,8 @@ internal partial class CaptureToolAppController : IAppController
                     break;
             }
 
-            _selectionOverlayHost.Show(options);
+            _selectionOverlayHost.Initialize(options);
+            _selectionOverlayHost.Activate();
             _activeHost = UXHost.SelectionOverlay;
         }
         else if (request.Route == CaptureToolNavigationRoutes.VideoCapture)
@@ -168,7 +170,8 @@ internal partial class CaptureToolAppController : IAppController
                     return;
             }
 
-            _captureOverlayHost.Show(args);
+            _captureOverlayHost.Initialize(args);
+            _captureOverlayHost.Activate();
             _activeHost = UXHost.CaptureOverlay;
         }
         else
@@ -393,7 +396,7 @@ internal partial class CaptureToolAppController : IAppController
         return global::Windows.Storage.KnownFolders.SavedPictures.Path;
     }
 
-    private void GoHome()
+    public void GoHome()
     {
         _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
     }

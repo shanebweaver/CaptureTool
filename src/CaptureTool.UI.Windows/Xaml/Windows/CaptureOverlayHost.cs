@@ -32,13 +32,8 @@ internal sealed partial class CaptureOverlayHost : IDisposable
     private HWND? _hwnd;
     private HWND? _borderHwnd;
 
-    private void ShowCaptureOverlayWindow(MonitorCaptureResult monitor, Rectangle area)
+    private static HWND CreateCaptureOverlayWindow(MonitorCaptureResult monitor, Rectangle area)
     {
-        if (_hwnd != null)
-        {
-            return;
-        }
-
         unsafe
         {
             const string className = "CaptureOverlayWindow";
@@ -64,7 +59,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             PInvoke.RegisterClassEx(in wndClass);
 
             HWND hwnd = PInvoke.CreateWindowEx(
-                WINDOW_EX_STYLE.WS_EX_LAYERED | WINDOW_EX_STYLE.WS_EX_TOPMOST,
+                WINDOW_EX_STYLE.WS_EX_LAYERED | WINDOW_EX_STYLE.WS_EX_TOPMOST | WINDOW_EX_STYLE.WS_EX_TOOLWINDOW,
                 className,
                 null,
                 WINDOW_STYLE.WS_VISIBLE | WINDOW_STYLE.WS_POPUP,
@@ -84,19 +79,14 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             xamlSource.Initialize(windowId);
             xamlSource.Content = new CaptureOverlayView(monitor, area);
 
-            _hwnd = hwnd;
-
             WindowExtensions.HorizontalCenterOnScreen(hwnd);
+
+            return hwnd;
         }
     }
 
-    private void ShowCaptureOverlayBorderWindow(MonitorCaptureResult monitor, Rectangle area)
+    private static HWND CreateCaptureOverlayBorderWindow(MonitorCaptureResult monitor, Rectangle area)
     {
-        if (_borderHwnd != null)
-        {
-            return;
-        }
-
         unsafe
         {
             const string borderClassName = "CaptureOverlayWindowBorder";
@@ -128,7 +118,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             int scaledHeight = (int)(area.Height * scaling);
 
             HWND borderHwnd = PInvoke.CreateWindowEx(
-                WINDOW_EX_STYLE.WS_EX_LAYERED | WINDOW_EX_STYLE.WS_EX_TRANSPARENT | WINDOW_EX_STYLE.WS_EX_TOPMOST,
+                WINDOW_EX_STYLE.WS_EX_LAYERED | WINDOW_EX_STYLE.WS_EX_TOPMOST | WINDOW_EX_STYLE.WS_EX_TOOLWINDOW | WINDOW_EX_STYLE.WS_EX_TRANSPARENT,
                 borderClassName,
                 null,
                 WINDOW_STYLE.WS_VISIBLE | WINDOW_STYLE.WS_POPUP,
@@ -148,16 +138,31 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             xamlSource.Initialize(windowId);
             xamlSource.Content = new CaptureOverlayBorder();
 
-            _borderHwnd = borderHwnd;
+            return borderHwnd;
         }
     }
 
-    public void Show(NewCaptureArgs args)
+    public void Initialize(NewCaptureArgs args)
     {
+        if (_hwnd != null && _borderHwnd != null)
+        {
+            return;
+        }
+
         var monitor = args.Monitor;
         var area = args.Area;
-        ShowCaptureOverlayWindow(monitor, area);
-        ShowCaptureOverlayBorderWindow(monitor, area);
+        _hwnd = CreateCaptureOverlayWindow(monitor, area);
+        _borderHwnd = CreateCaptureOverlayBorderWindow(monitor, area);
+    }
+
+    public void Activate()
+    {
+        if (_hwnd != null && _borderHwnd != null)
+        {
+            PInvoke.SetActiveWindow(_borderHwnd.Value);
+            PInvoke.SetActiveWindow(_hwnd.Value);
+            PInvoke.SetForegroundWindow(_hwnd.Value);
+        }
     }
 
     public void Close()

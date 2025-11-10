@@ -31,7 +31,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         return [.. _monitors];
     }
 
-    public void Show(CaptureOptions options)
+    public void Initialize(CaptureOptions options)
     {
         if (_viewModel != null)
         {
@@ -80,10 +80,19 @@ internal sealed partial class SelectionOverlayHost : IDisposable
                 _primaryWindow = window;
                 _primaryWindow.Activated += OnPrimaryWindowActivated;
             }
-            else
-            {
-                window.Activate();
-            }
+        }
+    }
+
+    public void Activate()
+    {
+        if (_viewModel == null)
+        {
+            return;
+        }
+
+        foreach (var window in _windows)
+        {
+            window.Activate();
         }
 
         _primaryWindow?.Activate();
@@ -91,11 +100,6 @@ internal sealed partial class SelectionOverlayHost : IDisposable
 
     public void Close()
     {
-        if (_viewModel == null)
-        {
-            return;
-        }
-
         StopForegroundMonitor();
         _windowHandles.Clear();
         _monitors.Clear();

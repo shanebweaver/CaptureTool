@@ -200,7 +200,18 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void CloseOverlay()
     {
-        _navigationService.GoBackWhile(r => r.Route == CaptureToolNavigationRoutes.ImageCapture || r.Route == CaptureToolNavigationRoutes.VideoCapture);
+        if (_navigationService.CanGoBack)
+        {
+            bool success = _navigationService.TryGoBackWhile(r => r.Route == CaptureToolNavigationRoutes.ImageCapture || r.Route == CaptureToolNavigationRoutes.VideoCapture);
+            if (!success)
+            {
+                _appController.GoHome();
+            }
+        }
+        else
+        {
+            _appController.Shutdown();
+        }
     }
 
     private void UpdateSupportedCaptureTypes()

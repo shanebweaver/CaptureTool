@@ -1,9 +1,4 @@
-﻿using CaptureTool.Capture;
-using CaptureTool.Common.Storage;
-using CaptureTool.Common.Sync;
-using CaptureTool.Core;
-using CaptureTool.Core.AppController;
-using CaptureTool.Services.Navigation;
+﻿using CaptureTool.Common.Sync;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -12,17 +7,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 {
-    private readonly INavigationService _navigationService;
-    private readonly IAppController _appController;
     private readonly List<SelectionOverlayWindowViewModel> _windowViewModels = [];
-
-    public SelectionOverlayHostViewModel(
-        INavigationService navigationService,
-        IAppController appController)
-    {
-        _navigationService = navigationService;
-        _appController = appController;
-    }
 
     public void AddWindowViewModel(SelectionOverlayWindowViewModel newVM)
     {

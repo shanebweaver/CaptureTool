@@ -41,7 +41,7 @@ public class NavigationService : INavigationService
         }
     }
 
-    public void GoBackWhile(Func<NavigationRequest, bool> assesRequest)
+    public bool TryGoBackWhile(Func<NavigationRequest, bool> assesRequest)
     {
         lock (_navigationLock)
         {
@@ -54,18 +54,24 @@ public class NavigationService : INavigationService
             NavigationRequest backRequest;
             do
             {
+                if (_navigationStack.Count == 0)
+                {
+                    return false;
+                }
+
                 _navigationStack.Pop();
                 backRequest = _navigationStack.Peek();
             }
-            while (assesRequest(backRequest) && _navigationStack.Count > 0);
+            while (assesRequest(backRequest));
 
             bool requestsMatch = CompareRequests(currentRequest, backRequest);
             if (requestsMatch)
             {
-                return;
+                return false;
             }
 
             RequestNavigation(new NavigationRequest(backRequest.Route, backRequest.Parameter, true));
+            return true;
         }
     }
 
