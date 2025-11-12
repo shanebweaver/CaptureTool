@@ -24,8 +24,6 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private DispatcherTimer? _foregroundTimer;
     private Window? _primaryWindow;
 
-    public event EventHandler? LostFocus;
-
     public MonitorCaptureResult[] GetMonitors()
     {
         return [.. _monitors];
@@ -156,7 +154,6 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             if (!_windowHandles.Contains(foregroundHwnd))
             {
                 Close();
-                LostFocus?.Invoke(this, EventArgs.Empty);
             }
         };
 
