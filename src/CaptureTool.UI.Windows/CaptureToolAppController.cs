@@ -66,11 +66,6 @@ internal partial class CaptureToolAppController : IAppController
         _featureManager = featureManager;
 
         _navigationService.SetNavigationHandler(this);
-
-        _selectionOverlayHost.LostFocus += (s, e) =>
-        {
-            GoHome();
-        };
     }
 
     private async Task InitializeAsync()
