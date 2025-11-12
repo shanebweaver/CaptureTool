@@ -29,7 +29,8 @@ public sealed class ImageEditPageViewModelTests
             new MockImageCanvasExporter(),
             new MockFilePickerService(),
             new MockChromaKeyService(),
-            new MockFeatureManager()
+            new MockFeatureManager(),
+            new MockShareService()
             );
     }
 

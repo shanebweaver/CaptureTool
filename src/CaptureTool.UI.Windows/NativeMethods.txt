@@ -15,3 +15,6 @@ CreateWindowEx
 SetLayeredWindowAttributes
 DefWindowProc
 DestroyWindow
+GetWindowLong
+SetWindowLong
+ShowWindow

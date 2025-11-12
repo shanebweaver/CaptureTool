@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Capture;
+using CaptureTool.UI.Windows.Utils;
 using CaptureTool.UI.Windows.Xaml.Controls;
-using CaptureTool.UI.Windows.Xaml.Extensions;
 using CaptureTool.UI.Windows.Xaml.Views;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Hosting;
@@ -19,7 +19,8 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 {
     internal sealed partial class DestroyIconSafeHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
-        public DestroyIconSafeHandle(HINSTANCE hINSTANCE) : base(true) {
+        public DestroyIconSafeHandle(HINSTANCE hINSTANCE) : base(true) 
+        {
             handle = hINSTANCE;
         }
 
@@ -79,7 +80,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             xamlSource.Initialize(windowId);
             xamlSource.Content = new CaptureOverlayView(monitor, area);
 
-            WindowExtensions.HorizontalCenterOnScreen(hwnd);
+            Win32WindowHelpers.HorizontalCenterOnScreen(hwnd);
 
             return hwnd;
         }
@@ -159,9 +160,9 @@ internal sealed partial class CaptureOverlayHost : IDisposable
     {
         if (_hwnd != null && _borderHwnd != null)
         {
-            PInvoke.SetActiveWindow(_borderHwnd.Value);
-            PInvoke.SetActiveWindow(_hwnd.Value);
-            PInvoke.SetForegroundWindow(_hwnd.Value);
+            Win32WindowHelpers.SetActiveWindow(_borderHwnd.Value);
+            Win32WindowHelpers.SetActiveWindow(_hwnd.Value);
+            Win32WindowHelpers.SetForegroundWindow(_hwnd.Value);
         }
     }
 

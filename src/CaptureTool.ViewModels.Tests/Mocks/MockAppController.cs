@@ -23,6 +23,10 @@ internal sealed partial class MockAppController : IAppController
         return 0;
     }
 
+    public void GoHome()
+    {
+    }
+
     public Task HandleLaunchActivationAsync()
     {
         return Task.CompletedTask;

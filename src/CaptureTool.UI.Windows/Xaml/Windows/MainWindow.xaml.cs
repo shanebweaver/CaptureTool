@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
-using CaptureTool.UI.Windows.Xaml.Extensions;
+using CaptureTool.UI.Windows.Utils;
 using CaptureTool.UI.Windows.Xaml.Pages;
 using CaptureTool.ViewModels;
 using Microsoft.UI;

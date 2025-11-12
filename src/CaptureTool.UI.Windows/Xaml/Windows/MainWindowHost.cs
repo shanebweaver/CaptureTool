@@ -1,8 +1,6 @@
 ﻿using CaptureTool.Services.Navigation;
-using CaptureTool.UI.Windows.Xaml.Extensions;
+using CaptureTool.UI.Windows.Utils;
 using System;
-using Windows.Win32;
-using WinRT.Interop;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
@@ -10,9 +8,7 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 {
     private MainWindow? _mainWindow;
 
-    public nint Handle => _mainWindow is not null
-        ? WindowNative.GetWindowHandle(_mainWindow)
-        : IntPtr.Zero;
+    public nint Handle => _mainWindow?.GetWindowHandle() ?? IntPtr.Zero;
 
     private void EnsureCreated()
     {
@@ -26,13 +22,13 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 
     public void ExcludeWindowFromCapture(bool exclude)
     {
-        if (_mainWindow != null)
+        if (exclude)
         {
-            var hwnd = WindowNative.GetWindowHandle(_mainWindow);
-            var displayAffinity = exclude 
-                ? global::Windows.Win32.UI.WindowsAndMessaging.WINDOW_DISPLAY_AFFINITY.WDA_EXCLUDEFROMCAPTURE 
-                : global::Windows.Win32.UI.WindowsAndMessaging.WINDOW_DISPLAY_AFFINITY.WDA_NONE;
-            PInvoke.SetWindowDisplayAffinity(new(hwnd), displayAffinity);
+            _mainWindow?.ExcludeFromScreenCapture();
+        }
+        else
+        {
+            _mainWindow?.IncludeInScreenCapture();
         }
     }
 
@@ -49,9 +45,7 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 
             _mainWindow.Restore();
             _mainWindow.Activate();
-
-            var hwnd = WindowNative.GetWindowHandle(_mainWindow);
-            PInvoke.SetForegroundWindow(new(hwnd));
+            _mainWindow.SetForegroundWindow();
         });
     }
 
@@ -70,8 +64,7 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 
             if (activate)
             {
-                var hwnd = WindowNative.GetWindowHandle(_mainWindow);
-                PInvoke.SetForegroundWindow(new(hwnd));
+                _mainWindow.SetForegroundWindow();
             }
         });
     }
