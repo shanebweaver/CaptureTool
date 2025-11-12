@@ -121,7 +121,6 @@ internal partial class CaptureToolAppController : IAppController
                 throw new InvalidOperationException("Image capture cannot be started without options.");
             }
 
-
             switch (_activeHost)
             {
                 case UXHost.MainWindow:
