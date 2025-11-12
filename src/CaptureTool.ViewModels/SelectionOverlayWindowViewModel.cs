@@ -50,11 +50,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         get => _selectedCaptureTypeIndex;
         set
         {
-            if (Set(ref _selectedCaptureTypeIndex, value))
-            {
-                RaisePropertyChanged(nameof(SelectedCaptureType));
-                OnSelectedCaptureTypeIndexChanged();
-            }
+            Set(ref _selectedCaptureTypeIndex, value);
+            RaisePropertyChanged(nameof(SelectedCaptureType));
         }
     }
 
@@ -73,11 +70,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         get => _selectedCaptureModeIndex;
         set
         {
-            if (Set(ref _selectedCaptureModeIndex, value))
-            {
-                RaisePropertyChanged(nameof(SelectedCaptureMode));
-                UpdateSupportedCaptureTypes();
-            }
+            Set(ref _selectedCaptureModeIndex, value);
+            RaisePropertyChanged(nameof(SelectedCaptureMode));
+            UpdateSupportedCaptureTypes();
         }
     }
 
@@ -167,6 +162,10 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public override void Load(object? parameter)
     {
+        // TODO: We need to ensure the load happens during construction, not as a separate step, because the data is out of sync in between and we aren't doing anything fancy in the Load function.
+        // Convert this parameter into a new type, SelectionOverlayViewModelOptions
+        // Create a factory that consumes the options type to produce a new instance. 
+        // Update callers to use the new factory to create these.
         if (parameter is (MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows, CaptureOptions options))
         {
             Monitor = monitor;
@@ -253,22 +252,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             {
                 NewCaptureArgs args = new(Monitor.Value, CaptureArea);
                 _navigationService.Navigate(CaptureToolNavigationRoutes.VideoCapture, args);
-            }
-        }
-    }
-
-    private void OnSelectedCaptureTypeIndexChanged()
-    {
-        if (SelectedCaptureTypeIndex > -1 && SelectedCaptureType.CaptureType == CaptureType.AllScreens)
-        {
-            if (SelectedCaptureMode.CaptureMode == CaptureMode.Image)
-            {
-                ImageFile image = _appController.PerformAllScreensCapture();
-                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, image);
-            }
-            else if (SelectedCaptureMode.CaptureMode == CaptureMode.Video)
-            {
-                //
             }
         }
     }

@@ -1,4 +1,9 @@
-﻿using CaptureTool.Common.Sync;
+﻿using CaptureTool.Capture;
+using CaptureTool.Common.Storage;
+using CaptureTool.Common.Sync;
+using CaptureTool.Core;
+using CaptureTool.Core.AppController;
+using CaptureTool.Services.Navigation;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -9,9 +14,20 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 {
     private readonly List<SelectionOverlayWindowViewModel> _windowViewModels = [];
 
-    public void AddWindowViewModel(SelectionOverlayWindowViewModel newVM)
+    private readonly IAppController _appController;
+    private readonly INavigationService _navigationService;
+
+    public SelectionOverlayHostViewModel(
+        IAppController appController,
+        INavigationService navigationService)
     {
-        if (newVM.IsPrimary)
+        _appController = appController;
+        _navigationService = navigationService;
+    }
+
+    public void AddWindowViewModel(SelectionOverlayWindowViewModel newVM, bool isPrimary = false)
+    {
+        if (isPrimary)
         {
             newVM.PropertyChanged += OnPrimaryWindowViewModelPropertyChanged;
         }
@@ -100,5 +116,17 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
     private void OnSelectedCaptureTypeIndexChanged(SelectionOverlayWindowViewModel windowVM)
     {
         SyncHelper.SyncProperty(windowVM, _windowViewModels, vm => vm.SelectedCaptureTypeIndex);
+
+        if (windowVM.SelectedCaptureType.CaptureType == CaptureType.AllScreens)
+        {
+            if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Image)
+            {
+                ImageFile image = _appController.PerformAllScreensCapture();
+                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, image);
+            }
+            else if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Video)
+            {
+            }
+        }
     }
 }

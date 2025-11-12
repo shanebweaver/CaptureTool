@@ -29,10 +29,7 @@ public sealed partial class SelectionOverlayWindow : Window
         EnsureMaximized();
         InitializeComponent();
 
-        DispatcherQueue.TryEnqueue(() =>
-        {
-            ViewModel.Load((monitor, monitorWindows, options));
-        });
+        ViewModel.Load((monitor, monitorWindows, options));
     }
 
     private void EnsureMaximized()
