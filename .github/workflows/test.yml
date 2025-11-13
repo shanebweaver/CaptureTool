@@ -25,7 +25,7 @@ jobs:
       run: |
         git clone https://github.com/microsoft/vcpkg.git
         .\vcpkg\bootstrap-vcpkg.sh
-        .\vcpkg\vcpkg.exe install --triplet x64-windows
+        .\vcpkg\vcpkg.exe install wil:x64-windows
 
     - name: Install Windows 10 SDK (10.0.19041.0)
       run: choco install windows-sdk-10-version-2004-all -y --no-progress
@@ -34,7 +34,7 @@ jobs:
       run: dotnet restore
 
     - name: Build solution
-      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=x64 /m
+      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=x64
 
     - name: Run .NET tests
       run: dotnet test --no-build --verbosity normal
