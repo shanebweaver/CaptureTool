@@ -18,7 +18,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.0.306' # match your project SDK version
+        dotnet-version: '9.0.306'
 
     # Setup MSBuild (for .vcxproj)
     - name: Setup MSBuild
@@ -28,9 +28,7 @@ jobs:
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgDirectory: '${{ runner.temp }}/vcpkg'
-        vcpkgJsonGlob: '**/vcpkg.json'
-        runVcpkgInstall: true
+        vcpkgDirectory: '${{ github.workspace }}/extern/vcpkg'
 
     # Restore .NET dependencies
     - name: Restore .NET dependencies
@@ -44,7 +42,7 @@ jobs:
           /p:Platform=x64 `
           /p:WindowsTargetPlatformVersion=10.0.19041.0 `
           /p:VcpkgEnableManifest=true `
-          /p:VcpkgRoot="${{ runner.temp }}/vcpkg" `
+          /p:VcpkgRoot="${{ github.workspace }}/vcpkg" `
           /m
 
     # Run all .NET tests (excluding non-test projects)
