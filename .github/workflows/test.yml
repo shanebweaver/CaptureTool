@@ -24,9 +24,8 @@ jobs:
     - name: Setup vcpkg
       run: |
         git clone https://github.com/microsoft/vcpkg.git
-        cd vcpkg
-        bootstrap-vcpkg.sh
-        vcpkg install --triplet x64-windows --recurse
+        vcpkg\bootstrap-vcpkg.sh
+        vcpkg\vcpkg.exe install --triplet x64-windows --recurse
 
     - name: Install Windows 10 SDK (10.0.19041.0)
       run: choco install windows-sdk-10-version-2004-all -y --no-progress
