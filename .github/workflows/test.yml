@@ -32,8 +32,11 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgDirectory: '${{ github.workspace }}/extern/vcpkg'
-        vcpkgJsonGlob: 'src/CaptureInterop/vcpkg.json'
+        vcpkgJsonGlob: '**/vcpkg.json'
         runVcpkgInstall: true
+
+    - name: Integrate vcpkg with MSBuild
+      run: extern\vcpkg\vcpkg.exe integrate project
 
     # Install Windows SDK
     - name: Install Windows 10 SDK (10.0.19041.0)
