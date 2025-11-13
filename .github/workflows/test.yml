@@ -38,7 +38,7 @@ jobs:
       run: dotnet restore
 
     - name: Build solution
-      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=x64 /m
+      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=x64 /p:VcpkgRoot=extern\vcpkg /p:VcpkgTriplet=x64-windows /p:VcpkgManifestMode=true /m
 
     - name: Run .NET tests
       run: dotnet test --no-build --verbosity normal
