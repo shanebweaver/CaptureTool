@@ -1,5 +1,8 @@
 {
+  "name": "CaptureInterop",
+  "version-string": "1.0.0",
   "dependencies": [
     "wil"
-  ]
+  ],
+  "builtin-baseline": "2d6a6cf3ac9a7cc93942c3d289a2f9c661a6f4a7"
 }

@@ -1,4 +1,4 @@
-name: .NET & C++ Build and Test
+name: Build and Test
 
 on:
   push:
@@ -20,21 +20,23 @@ jobs:
       with:
         dotnet-version: '9.0.306'
 
-    # Setup MSBuild (for .vcxproj)
+    # Setup MSBuild
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    # Setup vcpkg (manifest mode + caching)
+    # Setup vcpkg
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgDirectory: '${{ github.workspace }}/extern/vcpkg'
+        runVcpkgInstall: true
+        vcpkgJsonGlob: '**/vcpkg.json'
 
     # Restore .NET dependencies
     - name: Restore .NET dependencies
       run: dotnet restore
 
-    # Build the full solution (C# + C++)
+    # Build the full solution
     - name: Build solution
       run: |
         msbuild CaptureTool.sln `
@@ -42,9 +44,9 @@ jobs:
           /p:Platform=x64 `
           /p:WindowsTargetPlatformVersion=10.0.19041.0 `
           /p:VcpkgEnableManifest=true `
-          /p:VcpkgRoot="${{ github.workspace }}/vcpkg" `
+          /p:VcpkgRoot="${{ github.workspace }}/extern/vcpkg" `
           /m
 
-    # Run all .NET tests (excluding non-test projects)
+    # Run all .NET tests
     - name: Run .NET tests
       run: dotnet test --no-build --verbosity normal
