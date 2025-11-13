@@ -45,7 +45,7 @@ internal partial class CaptureToolAppController : IAppController
 
     private readonly SemaphoreSlim _semaphoreInit = new(1, 1);
     private readonly SemaphoreSlim _semaphoreActivation = new(1, 1);
-    private readonly Lock _navigationLock = new();
+    private readonly SemaphoreSlim _semaphoreNavigation = new(1, 1);
     private bool _isInitialized;
     private string? _tempVideoPath;
     private readonly SelectionOverlayHost _selectionOverlayHost = new();
@@ -93,9 +93,11 @@ internal partial class CaptureToolAppController : IAppController
     }
 
     #region INavigationHandler
-    public void HandleNavigationRequest(NavigationRequest request)
+    public async void HandleNavigationRequest(NavigationRequest request)
     {
-        lock (_navigationLock)
+        await _semaphoreNavigation.WaitAsync();
+
+        try
         {
             if (CaptureToolNavigationRoutes.IsMainWindowRoute(request.Route))
             {
@@ -131,7 +133,7 @@ internal partial class CaptureToolAppController : IAppController
                     case UXHost.MainWindow:
                         _mainWindowHost.ExcludeWindowFromCapture(true);
                         _mainWindowHost.Hide();
-                        Thread.Sleep(200);
+                        await Task.Delay(200);
                         break;
 
                     case UXHost.SelectionOverlay:
@@ -158,7 +160,7 @@ internal partial class CaptureToolAppController : IAppController
                     case UXHost.MainWindow:
                         _mainWindowHost.ExcludeWindowFromCapture(true);
                         _mainWindowHost.Hide();
-                        Thread.Sleep(200);
+                        await Task.Delay(200);
                         break;
 
                     case UXHost.SelectionOverlay:
@@ -177,6 +179,10 @@ internal partial class CaptureToolAppController : IAppController
             {
                 throw new ArgumentOutOfRangeException(nameof(request), $"No handler found for route: {request.Route.Id}");
             }
+        }
+        finally
+        {
+            _semaphoreNavigation.Release();
         }
     }
     #endregion
