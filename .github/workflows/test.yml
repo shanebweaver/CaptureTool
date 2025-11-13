@@ -29,7 +29,7 @@ jobs:
 
     # Setup vcpkg
     - name: Bootstrap vcpkg
-      run: extern\vcpkg\bootstrap-vcpkg.bat
+      run: extern/vcpkg/bootstrap-vcpkg.bat
 
     # Install Windows SDK
     - name: Install Windows 10 SDK (10.0.19041.0)
