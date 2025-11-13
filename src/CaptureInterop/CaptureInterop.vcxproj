@@ -29,23 +29,13 @@
     <VcpkgRoot>..\..\extern\vcpkg</VcpkgRoot>
     <VcpkgTriplet Condition="'$(Platform)' == 'x64'">x64-windows</VcpkgTriplet>
     <VcpkgTriplet Condition="'$(Platform)' == 'ARM64'">arm64-windows</VcpkgTriplet>
-    <VcpkgManifestMode>true</VcpkgManifestMode>
+	<VcpkgInstalledDir Condition="'$(Platform)'=='x64'">.\vcpkg_installed\x64-windows\x64-windows\include\x64-windows\include</VcpkgInstalledDir>
+	<VcpkgInstalledDir Condition="'$(Platform)'=='ARM64'">.\vcpkg_installed\arm64-windows\arm64-windows\include\arm64-windows\include</VcpkgInstalledDir>
+	<VcpkgManifestMode>true</VcpkgManifestMode>
     <VcpkgManifestRoot>$(ProjectDir)</VcpkgManifestRoot>
     <VcpkgEnabled>true</VcpkgEnabled>
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
     <VcpkgManifestInstall>true</VcpkgManifestInstall>
-  </PropertyGroup>
-  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|AR64'">
-    <VcpkgInstalledDir>.\vcpkg_installed\arm64-windows\arm64-windows\include</VcpkgInstalledDir>
-  </PropertyGroup>
-  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <VcpkgInstalledDir>.\vcpkg_installed\arm64-windows\arm64-windows\include</VcpkgInstalledDir>
-  </PropertyGroup>
-  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <VcpkgInstalledDir>.\vcpkg_installed\x64-windows\x64-windows\include</VcpkgInstalledDir>
-  </PropertyGroup>
-  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <VcpkgInstalledDir>.\vcpkg_installed\x64-windows\x64-windows\include</VcpkgInstalledDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
