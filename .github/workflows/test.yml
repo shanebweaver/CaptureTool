@@ -21,12 +21,6 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    - name: Checkout vcpkg
-      uses: actions/checkout@v4
-      with:
-        repository: "https://github.com/Microsoft/vcpkg"
-        path: "vcpkg"
-
     - name: Setup vcpkg
       run: |
         git clone https://github.com/microsoft/vcpkg.git
