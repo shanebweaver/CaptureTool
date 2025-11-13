@@ -1,8 +1,6 @@
-using CaptureTool.Capture;
 using CaptureTool.UI.Windows.Utils;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;
-using System.Collections.Generic;
 using System.Drawing;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
@@ -14,22 +12,22 @@ public sealed partial class SelectionOverlayWindow : Window
     public Rectangle MonitorBounds { get; private set; }
     public bool IsClosed { get; private set; }
 
-    public SelectionOverlayWindow(MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows, CaptureOptions options)
+    public SelectionOverlayWindow(SelectionOverlayWindowOptions overlayOptions)
     {
         Activated += OnActivated;
         Closed += OnClosed;
-        if (monitor.IsPrimary)
+        if (overlayOptions.Monitor.IsPrimary)
         {
             Activated += OnPrimaryActivated;
             Closed += OnPrimaryClosed;
         }
 
-        MonitorBounds = monitor.MonitorBounds;
+        MonitorBounds = overlayOptions.Monitor.MonitorBounds;
         
         EnsureMaximized();
         InitializeComponent();
 
-        ViewModel.Load((monitor, monitorWindows, options));
+        ViewModel.Load(overlayOptions);
     }
 
     private void EnsureMaximized()
@@ -39,10 +37,7 @@ public sealed partial class SelectionOverlayWindow : Window
             this.MoveAndResize(MonitorBounds);
             this.MakeBorderlessOverlay();
         }
-        catch
-        {
-            // Ignore failures (window might not be fully initialized yet)
-        }
+        catch { }
     }
 
     private void OnActivated(object sender, WindowActivatedEventArgs args)

@@ -32,7 +32,7 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
         }
     }
 
-    public void Restore()
+    public void Show()
     {
         EnsureCreated();
 
@@ -49,10 +49,8 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
         });
     }
 
-    public void Show(bool activate = true)
+    public void Hide()
     {
-        EnsureCreated();
-
         App.Current.DispatcherQueue.TryEnqueue(() =>
         {
             if (_mainWindow == null)
@@ -60,23 +58,8 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
                 return;
             }
 
-            _mainWindow.AppWindow.Show(activate);
-
-            if (activate)
-            {
-                _mainWindow.SetForegroundWindow();
-            }
+            _mainWindow.AppWindow.Hide();
         });
-    }
-
-    public void Hide()
-    {
-        if (_mainWindow == null)
-        {
-            return;
-        }
-
-        _mainWindow.AppWindow.Hide();
     }
 
     public void Dispose()
@@ -86,7 +69,6 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 
     public void HandleNavigationRequest(NavigationRequest request)
     {
-        Show();
         _mainWindow?.ViewModel.HandleNavigationRequest(request);
     }
 }

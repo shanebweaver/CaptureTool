@@ -162,21 +162,17 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public override void Load(object? parameter)
     {
-        // TODO: We need to ensure the load happens during construction, not as a separate step, because the data is out of sync in between and we aren't doing anything fancy in the Load function.
-        // Convert this parameter into a new type, SelectionOverlayViewModelOptions
-        // Create a factory that consumes the options type to produce a new instance. 
-        // Update callers to use the new factory to create these.
-        if (parameter is (MonitorCaptureResult monitor, IEnumerable<Rectangle> monitorWindows, CaptureOptions options))
+        if (parameter is SelectionOverlayWindowOptions options)
         {
-            Monitor = monitor;
-            MonitorWindows = [.. monitorWindows];
+            Monitor = options.Monitor;
+            MonitorWindows = [.. options.MonitorWindows];
 
-            var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureMode);
+            var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
             SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(targetMode);
 
             UpdateSupportedCaptureTypes();
 
-            var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureType);
+            var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureOptions.CaptureType);
             SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(targetType);
         }
 

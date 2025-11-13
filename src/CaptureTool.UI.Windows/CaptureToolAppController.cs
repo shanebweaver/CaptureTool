@@ -43,7 +43,9 @@ internal partial class CaptureToolAppController : IAppController
     private readonly ISettingsService _settingsService;
     private readonly IFeatureManager _featureManager;
 
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private readonly SemaphoreSlim _semaphoreInit = new(1, 1);
+    private readonly SemaphoreSlim _semaphoreActivation = new(1, 1);
+    private readonly Lock _navigationLock = new();
     private bool _isInitialized;
     private string? _tempVideoPath;
     private readonly SelectionOverlayHost _selectionOverlayHost = new();
@@ -70,7 +72,7 @@ internal partial class CaptureToolAppController : IAppController
 
     private async Task InitializeAsync()
     {
-        await _semaphore.WaitAsync();
+        await _semaphoreInit.WaitAsync();
 
         try
         {
@@ -86,91 +88,95 @@ internal partial class CaptureToolAppController : IAppController
         }
         finally
         {
-            _semaphore.Release();
+            _semaphoreInit.Release();
         }
     }
 
     #region INavigationHandler
     public void HandleNavigationRequest(NavigationRequest request)
     {
-        if (CaptureToolNavigationRoutes.IsMainWindowRoute(request.Route))
+        lock (_navigationLock)
         {
-            switch (_activeHost)
+            if (CaptureToolNavigationRoutes.IsMainWindowRoute(request.Route))
             {
-                case UXHost.MainWindow:
-                    break;
+                switch (_activeHost)
+                {
+                    case UXHost.MainWindow:
+                        break;
 
-                case UXHost.SelectionOverlay:
-                    _mainWindowHost.ExcludeWindowFromCapture(false);
-                    _selectionOverlayHost.Close();
-                    break;
+                    case UXHost.SelectionOverlay:
+                        _mainWindowHost.ExcludeWindowFromCapture(false);
+                        _selectionOverlayHost.Close();
+                        break;
 
-                case UXHost.CaptureOverlay:
-                    _mainWindowHost.ExcludeWindowFromCapture(false);
-                    _captureOverlayHost.Close();
-                    break;
+                    case UXHost.CaptureOverlay:
+                        _mainWindowHost.ExcludeWindowFromCapture(false);
+                        _captureOverlayHost.Close();
+                        break;
+                }
+
+                _mainWindowHost.Show();
+                _mainWindowHost.HandleNavigationRequest(request);
+                _activeHost = UXHost.MainWindow;
             }
-
-            _mainWindowHost.HandleNavigationRequest(request);
-            _activeHost = UXHost.MainWindow;
-        }
-        else if (request.Route == CaptureToolNavigationRoutes.ImageCapture)
-        {
-            if (request.Parameter is not CaptureOptions options)
+            else if (request.Route == CaptureToolNavigationRoutes.ImageCapture)
             {
-                throw new InvalidOperationException("Image capture cannot be started without options.");
-            }
+                if (request.Parameter is not CaptureOptions options)
+                {
+                    throw new InvalidOperationException("Image capture cannot be started without options.");
+                }
 
-            switch (_activeHost)
+                switch (_activeHost)
+                {
+                    case UXHost.MainWindow:
+                        _mainWindowHost.ExcludeWindowFromCapture(true);
+                        _mainWindowHost.Hide();
+                        Thread.Sleep(200);
+                        break;
+
+                    case UXHost.SelectionOverlay:
+                        return;
+
+                    case UXHost.CaptureOverlay:
+                        _captureOverlayHost.Close();
+                        break;
+                }
+
+                _selectionOverlayHost.Initialize(options);
+                _selectionOverlayHost.Activate();
+                _activeHost = UXHost.SelectionOverlay;
+            }
+            else if (request.Route == CaptureToolNavigationRoutes.VideoCapture)
             {
-                case UXHost.MainWindow:
-                    _mainWindowHost.ExcludeWindowFromCapture(true);
-                    _mainWindowHost.Hide();
-                    Thread.Sleep(200);
-                    break;
+                if (request.Parameter is not NewCaptureArgs args)
+                {
+                    throw new InvalidOperationException("Video capture cannot be started without arguments.");
+                }
 
-                case UXHost.SelectionOverlay:
-                    return;
+                switch (_activeHost)
+                {
+                    case UXHost.MainWindow:
+                        _mainWindowHost.ExcludeWindowFromCapture(true);
+                        _mainWindowHost.Hide();
+                        Thread.Sleep(200);
+                        break;
 
-                case UXHost.CaptureOverlay:
-                    _captureOverlayHost.Close();
-                    break;
+                    case UXHost.SelectionOverlay:
+                        _selectionOverlayHost.Close();
+                        break;
+
+                    case UXHost.CaptureOverlay:
+                        return;
+                }
+
+                _captureOverlayHost.Initialize(args);
+                _captureOverlayHost.Activate();
+                _activeHost = UXHost.CaptureOverlay;
             }
-
-            _selectionOverlayHost.Initialize(options);
-            _selectionOverlayHost.Activate();
-            _activeHost = UXHost.SelectionOverlay;
-        }
-        else if (request.Route == CaptureToolNavigationRoutes.VideoCapture)
-        {
-            if (request.Parameter is not NewCaptureArgs args)
+            else
             {
-                throw new InvalidOperationException("Video capture cannot be started without arguments.");
+                throw new ArgumentOutOfRangeException(nameof(request), $"No handler found for route: {request.Route.Id}");
             }
-
-            switch (_activeHost)
-            {
-                case UXHost.MainWindow:
-                    _mainWindowHost.ExcludeWindowFromCapture(true);
-                    _mainWindowHost.Hide();
-                    Thread.Sleep(200);
-                    break;
-
-                case UXHost.SelectionOverlay:
-                    _selectionOverlayHost.Close();
-                    break;
-
-                case UXHost.CaptureOverlay:
-                    return;
-            }
-
-            _captureOverlayHost.Initialize(args);
-            _captureOverlayHost.Activate();
-            _activeHost = UXHost.CaptureOverlay;
-        }
-        else
-        {
-            throw new ArgumentOutOfRangeException(nameof(request), $"No handler found for route: {request.Route.Id}");
         }
     }
     #endregion
@@ -178,14 +184,30 @@ internal partial class CaptureToolAppController : IAppController
     #region IActivationHandler
     public async Task HandleLaunchActivationAsync()
     {
-        await InitializeAsync();
-        GoHome();
+        await _semaphoreActivation.WaitAsync();
+
+        try
+        {
+            await InitializeAsync();
+            GoHome();
+        }
+        finally
+        {
+            _semaphoreActivation.Release();
+        }
     }
 
     public async Task HandleProtocolActivationAsync(Uri protocolUri)
     {
-        if (protocolUri.Scheme.Equals("ms-screenclip", StringComparison.InvariantCultureIgnoreCase))
+        await _semaphoreActivation.WaitAsync();
+
+        try 
         {
+            if (!protocolUri.Scheme.Equals("ms-screenclip", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return;
+            }
+
             await InitializeAsync();
 
             NameValueCollection queryParams = HttpUtility.ParseQueryString(protocolUri.Query) ?? [];
@@ -215,6 +237,14 @@ internal partial class CaptureToolAppController : IAppController
             {
                 GoHome();
             }
+        }
+        catch(Exception e)
+        {
+            System.Diagnostics.Debug.WriteLine(e);
+        }
+        finally
+        {
+            _semaphoreActivation.Release();
         }
     }
     #endregion

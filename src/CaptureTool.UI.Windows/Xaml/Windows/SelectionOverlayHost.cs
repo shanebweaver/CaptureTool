@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Capture.Windows;
+using CaptureTool.UI.Windows.Utils;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;
 using System;
@@ -7,14 +8,13 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Windows.Win32;
-using WinRT.Interop;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
 internal sealed partial class SelectionOverlayHost : IDisposable
 {
 #if DEBUG
-    private static readonly bool SingleMonitorNoWindowWatcher = false;
+    private static readonly bool SingleMonitorNoWindowWatcher = true;
 #endif
 
     private readonly HashSet<MonitorCaptureResult> _monitors = [];
@@ -52,9 +52,9 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             _monitors.Add(monitor);
 
             // Scale window dimensions per monitor.
-            var monitorBounds = monitor.MonitorBounds;
-            var scale = monitor.Scale;
-            var monitorWindows = allWindows
+            Rectangle monitorBounds = monitor.MonitorBounds;
+            float scale = monitor.Scale;
+            IEnumerable<Rectangle> monitorWindows = allWindows
                 .Select(w => w.Position)
                 .Where(p =>
                     monitorBounds.IntersectsWith(p) ||
@@ -65,10 +65,11 @@ internal sealed partial class SelectionOverlayHost : IDisposable
                     (int)(r.Width / scale),
                     (int)(r.Height / scale)));
 
-            var window = new SelectionOverlayWindow(monitor, [.. monitorWindows], options);
+            SelectionOverlayWindowOptions overlayOptions = new(monitor, [.. monitorWindows], options);
+            SelectionOverlayWindow window = new(overlayOptions);
             _windows.Add(window);
 
-            var hwnd = WindowNative.GetWindowHandle(window);
+            nint hwnd = window.GetWindowHandle();
             _windowHandles.Add(hwnd);
 
             _viewModel.AddWindowViewModel(window.ViewModel, monitor.IsPrimary);

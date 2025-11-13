@@ -82,18 +82,18 @@ public class NavigationService : INavigationService
             NavigationRequest? currentRequest = _navigationStack.Count == 0 ? null : _navigationStack.Peek();
             NavigationRequest newRequest = new(route, parameter, false, clearHistory);
 
+            bool requestsMatch = CompareRequests(currentRequest, newRequest);
+            if (requestsMatch)
+            {
+                return;
+            }
+
             if (clearHistory)
             {
                 _navigationStack.Clear();
             }
             
             _navigationStack.Push(newRequest);
-
-            bool requestsMatch = CompareRequests(currentRequest, newRequest);
-            if (requestsMatch)
-            {
-                return;
-            }
 
             RequestNavigation(newRequest);
         }

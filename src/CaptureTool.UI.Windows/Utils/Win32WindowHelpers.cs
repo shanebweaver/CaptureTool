@@ -2,11 +2,11 @@
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Threading;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.WindowsAndMessaging;
+using WinRT.Interop;
 
 namespace CaptureTool.UI.Windows.Utils;
 
@@ -19,7 +19,7 @@ public static partial class Win32WindowHelpers
 
     public static nint GetWindowHandle(Window window)
     {
-        return WinRT.Interop.WindowNative.GetWindowHandle(window);
+        return WindowNative.GetWindowHandle(window);
     }
 
     public static void SetForegroundWindow(nint windowHandle)
