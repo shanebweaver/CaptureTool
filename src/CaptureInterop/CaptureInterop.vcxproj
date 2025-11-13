@@ -26,11 +26,11 @@
     <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
-    <VcpkgRoot>..\..\extern\vcpkg</VcpkgRoot>
+    <VcpkgRoot>..\extern\vcpkg</VcpkgRoot>
     <VcpkgTriplet Condition="'$(Platform)' == 'x64'">x64-windows</VcpkgTriplet>
     <VcpkgTriplet Condition="'$(Platform)' == 'ARM64'">arm64-windows</VcpkgTriplet>
 	<VcpkgManifestMode>true</VcpkgManifestMode>
-    <VcpkgManifestRoot>$(ProjectDir)</VcpkgManifestRoot>
+    <VcpkgManifestRoot>$(SolutionDir)</VcpkgManifestRoot>
     <VcpkgEnabled>true</VcpkgEnabled>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

@@ -1,5 +1,5 @@
 {
-  "name": "captureinterop",
+  "name": "capture-tool",
   "version-string": "1.0.0",
   "dependencies": [
     "wil"
