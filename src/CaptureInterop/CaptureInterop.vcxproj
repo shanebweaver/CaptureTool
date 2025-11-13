@@ -31,7 +31,8 @@
 	<VcpkgManifestRoot>$(SolutionDir)</VcpkgManifestRoot>
 	<VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows</VcpkgTriplet>
 	<VcpkgTriplet Condition="'$(Platform)'=='ARM64'">arm64-windows</VcpkgTriplet>
-	<VcpkgInstalledDir>$(VCPKG_ROOT)\installed</VcpkgInstalledDir>
+	<VcpkgRoot>$(SolutionDir)\vcpkg</VcpkgRoot>
+	<VcpkgInstalledDir>$(VcpkgRoot)\installed</VcpkgInstalledDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
@@ -79,16 +80,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <IncludePath>$(VCPKG_ROOT)\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(VcpkgRoot)\installed\x64-windows\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <IncludePath>$(VCPKG_ROOT)\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(VcpkgRoot)\installed\x64-windows\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VCPKG_ROOT)\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(VcpkgRoot)\installed\x64-windows\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(VCPKG_ROOT)\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(VcpkgRoot)\installed\x64-windows\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
