@@ -17,32 +17,28 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    # Setup .NET
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.306'
 
-    # Setup MSBuild
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    # Setup vcpkg
     - name: Bootstrap vcpkg
       run: extern/vcpkg/bootstrap-vcpkg.bat
 
-    # Install Windows SDK
+    - name: Enable vcpkg MSBuild integration
+      run: extern/vcpkg/vcpkg integrate install
+
     - name: Install Windows 10 SDK (10.0.19041.0)
       run: choco install windows-sdk-10-version-2004-all -y --no-progress
 
-    # Restore .NET dependencies
     - name: Restore .NET dependencies
       run: dotnet restore
 
-    # Build the full solution
     - name: Build solution
       run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=x64 /m
 
-    # Run all .NET tests
     - name: Run .NET tests
       run: dotnet test --no-build --verbosity normal
