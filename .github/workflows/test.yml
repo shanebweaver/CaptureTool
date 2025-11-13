@@ -41,14 +41,7 @@ jobs:
 
     # Build the full solution
     - name: Build solution
-      shell: pwsh
-      run: msbuild CaptureTool.sln `
-        /p:Configuration=Release `
-        /p:Platform=x64 `
-        /p:WindowsTargetPlatformVersion=10.0.19041.0 `
-        /p:VcpkgEnableManifest=true `
-        /p:VcpkgRoot="extern/vcpkg" `
-        /m
+      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=x64 /m
 
     # Run all .NET tests
     - name: Run .NET tests
