@@ -28,15 +28,8 @@ jobs:
       uses: microsoft/setup-msbuild@v2
 
     # Setup vcpkg
-    - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgDirectory: 'extern/vcpkg'
-        vcpkgJsonGlob: '**/vcpkg.json'
-        runVcpkgInstall: true
-
-    - name: Integrate vcpkg with MSBuild
-      run: extern\vcpkg\vcpkg.exe integrate project
+    - name: Bootstrap vcpkg
+      run: extern\vcpkg\bootstrap-vcpkg.bat
 
     # Install Windows SDK
     - name: Install Windows 10 SDK (10.0.19041.0)
