@@ -37,4 +37,7 @@ jobs:
       run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=x64
 
     - name: Run .NET tests
-      run: dotnet test --no-build --verbosity normal
+      run: |
+        dotnet test src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj -p:Platform=x64
+        dotnet test src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj -p:Platform=x64
+        dotnet test src\CaptureTool.Edit.Windows.Tests\CaptureTool.Edit.Windows.Tests.csproj -p:Platform=x64
