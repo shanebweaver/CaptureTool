@@ -105,15 +105,15 @@ public sealed class ImageEditPageViewModelTests
         _vm.SaveCommand.Execute();
     }
 
-    //[TestMethod]
-    //public void UndoRedoCommands()
-    //{
-    //    Assert.IsTrue(_vm.UndoCommand.CanExecute());
-    //    _vm.UndoCommand.Execute();
+    [TestMethod]
+    public void UndoRedoCommands()
+    {
+        Assert.IsTrue(_vm.UndoCommand.CanExecute());
+        _vm.UndoCommand.Execute();
 
-    //    Assert.IsTrue(_vm.RedoCommand.CanExecute());
-    //    _vm.RedoCommand.Execute();
-    //}
+        Assert.IsTrue(_vm.RedoCommand.CanExecute());
+        _vm.RedoCommand.Execute();
+    }
 
     [TestMethod]
     public void RotateTest()

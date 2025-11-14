@@ -14,7 +14,7 @@ namespace CaptureTool.UI.Windows.Xaml.Windows;
 internal sealed partial class SelectionOverlayHost : IDisposable
 {
 #if DEBUG
-    private static readonly bool SingleMonitorNoWindowWatcher = true;
+    private static readonly bool SingleMonitorNoWindowWatcher = false;
 #endif
 
     private readonly HashSet<MonitorCaptureResult> _monitors = [];
@@ -23,6 +23,8 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private SelectionOverlayHostViewModel? _viewModel;
     private DispatcherTimer? _foregroundTimer;
     private Window? _primaryWindow;
+
+    public event EventHandler? LostFocus;
 
     public MonitorCaptureResult[] GetMonitors()
     {
@@ -154,6 +156,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             var foregroundHwnd = PInvoke.GetForegroundWindow();
             if (!_windowHandles.Contains(foregroundHwnd))
             {
+                LostFocus?.Invoke(this, EventArgs.Empty);
                 Close();
             }
         };

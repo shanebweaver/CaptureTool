@@ -92,6 +92,22 @@ internal partial class CaptureToolAppController : IAppController
         }
     }
 
+    private void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
+    {
+        if (_navigationService.CanGoBack)
+        {
+            bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
+            if (!success)
+            {
+                GoHome();
+            }
+        }
+        else
+        {
+            Shutdown();
+        }
+    }
+
     #region INavigationHandler
     public async void HandleNavigationRequest(NavigationRequest request)
     {
@@ -107,6 +123,7 @@ internal partial class CaptureToolAppController : IAppController
                         break;
 
                     case UXHost.SelectionOverlay:
+                        _selectionOverlayHost.LostFocus -= OnSelectionOverlayHostLostFocus;
                         _mainWindowHost.ExcludeWindowFromCapture(false);
                         _selectionOverlayHost.Close();
                         break;
@@ -144,6 +161,7 @@ internal partial class CaptureToolAppController : IAppController
                         break;
                 }
 
+                _selectionOverlayHost.LostFocus += OnSelectionOverlayHostLostFocus;
                 _selectionOverlayHost.Initialize(options);
                 _selectionOverlayHost.Activate();
                 _activeHost = UXHost.SelectionOverlay;
@@ -164,6 +182,7 @@ internal partial class CaptureToolAppController : IAppController
                         break;
 
                     case UXHost.SelectionOverlay:
+                        _selectionOverlayHost.LostFocus -= OnSelectionOverlayHostLostFocus;
                         _selectionOverlayHost.Close();
                         break;
 
