@@ -9,6 +9,6 @@ public interface INavigationService
     bool CanGoBack { get; }
     void SetNavigationHandler(INavigationHandler handler);
     void Navigate(NavigationRoute route, object? parameter = null, bool clearHistory = false);
-    void GoBack();
-    bool TryGoBackWhile(Func<NavigationRequest, bool> assessRequest);
+    bool TryGoBack();
+    bool TryGoBackTo(Func<NavigationRequest, bool> assessRequest);
 }

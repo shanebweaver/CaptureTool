@@ -20,57 +20,67 @@ public class NavigationService : INavigationService
         _navigationHandler = navigationHandler;
     }
 
-    public void GoBack()
+    public bool TryGoBack()
     {
         lock (_navigationLock)
         {
             if (_navigationStack.Count <= 1)
-            {
-                throw new InvalidOperationException("Cannot go back. No previous navigation entry exists.");
-            }
-
-            NavigationRequest currentRequest = _navigationStack.Pop();
-            NavigationRequest backRequest = _navigationStack.Peek();
-            bool requestsMatch = CompareRequests(currentRequest, backRequest);
-            if (requestsMatch)
-            {
-                return;
-            }
-
-            RequestNavigation(new NavigationRequest(backRequest.Route, backRequest.Parameter, true, false));
-        }
-    }
-
-    public bool TryGoBackWhile(Func<NavigationRequest, bool> assesRequest)
-    {
-        lock (_navigationLock)
-        {
-            if (_navigationStack.Count <= 1)
-            {
-                throw new InvalidOperationException("Cannot go back. No previous navigation entry exists.");
-            }
-
-            NavigationRequest? currentRequest = _navigationStack.Count == 0 ? null : _navigationStack.Peek();
-            NavigationRequest backRequest;
-            do
-            {
-                if (_navigationStack.Count == 0)
-                {
-                    return false;
-                }
-
-                _navigationStack.Pop();
-                backRequest = _navigationStack.Peek();
-            }
-            while (assesRequest(backRequest));
-
-            bool requestsMatch = CompareRequests(currentRequest, backRequest);
-            if (requestsMatch)
             {
                 return false;
             }
 
-            RequestNavigation(new NavigationRequest(backRequest.Route, backRequest.Parameter, true));
+            NavigationRequest currentRequest = _navigationStack.Pop();
+            NavigationRequest backRequest = _navigationStack.Peek();
+
+            bool requestsMatch = CompareRequests(currentRequest, backRequest);
+            if (!requestsMatch)
+            {
+                RequestNavigation(new NavigationRequest(backRequest.Route, backRequest.Parameter, true, false));
+            }
+
+            return true;
+        }
+    }
+
+    public bool TryGoBackTo(Func<NavigationRequest, bool> assesRequest)
+    {
+        lock (_navigationLock)
+        {
+            if (_navigationStack.Count <= 1)
+            {
+                return false;
+            }
+
+            var entries = _navigationStack.ToArray();
+            int targetIndex = -1;
+            for (int i = 1; i < entries.Length; i++)
+            {
+                if (assesRequest(entries[i]))
+                {
+                    targetIndex = i;
+                    break;
+                }
+            }
+
+            if (targetIndex == -1)
+            {
+                return false;
+            }
+
+            var currentRequest = _navigationStack.Peek();
+            var targetRequest = entries[targetIndex];
+            if (CompareRequests(currentRequest, targetRequest))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < targetIndex; i++)
+            {
+                _navigationStack.Pop();
+            }
+
+            NavigationRequest actualTop = _navigationStack.Peek();
+            RequestNavigation(new NavigationRequest(actualTop.Route, actualTop.Parameter, isBackNavigation: true));
             return true;
         }
     }

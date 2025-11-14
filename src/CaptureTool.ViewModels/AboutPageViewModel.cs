@@ -63,11 +63,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
 
     private void GoBack()
     {
-        if (_navigationService.CanGoBack)
-        {
-            _navigationService.GoBack();
-        }
-        else
+        if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
         {
             _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
         }

@@ -1,4 +1,6 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Capture;
+using CaptureTool.Common.Commands;
+using CaptureTool.Core;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;
 using System;
@@ -32,7 +34,10 @@ public sealed partial class LoadingPageViewModel : ViewModelBase
 
         try
         {
-            _navigationService.GoBack();
+            if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
+            {
+                _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
+            }
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

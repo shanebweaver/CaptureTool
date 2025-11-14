@@ -7,7 +7,6 @@ using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
@@ -197,7 +196,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     {
         if (_navigationService.CanGoBack)
         {
-            bool success = _navigationService.TryGoBackWhile(r => r.Route == CaptureToolNavigationRoutes.ImageCapture || r.Route == CaptureToolNavigationRoutes.VideoCapture);
+            bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
             if (!success)
             {
                 _appController.GoHome();
