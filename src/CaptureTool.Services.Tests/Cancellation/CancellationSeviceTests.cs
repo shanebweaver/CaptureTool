@@ -28,7 +28,6 @@ public sealed class CancellationSeviceTests
 
         using var linked = service.GetLinkedCancellationTokenSource(externalCts.Token);
 
-        // Cancel the external token; linked should cancel
         externalCts.Cancel();
 
         Assert.IsTrue(linked.Token.IsCancellationRequested);
@@ -63,10 +62,8 @@ public sealed class CancellationSeviceTests
     {
         var service = new CancellationService();
 
-        // Cancel the service to trigger reset logic
         service.CancelAll();
 
-        // Act: Get a linked CTS, which should cause Reset() internally
         using var linked = service.GetLinkedCancellationTokenSource();
 
         Assert.IsFalse(linked.IsCancellationRequested);
@@ -77,15 +74,12 @@ public sealed class CancellationSeviceTests
     {
         var service = new CancellationService();
 
-        // Cancel everything to force a reset condition
         service.CancelAll();
 
-        // Force internal Reset
         using var first = service.GetLinkedCancellationTokenSource();
 
         Assert.IsFalse(first.IsCancellationRequested);
 
-        // Cancel again to see if root works
         service.CancelAll();
 
         Assert.IsTrue(first.IsCancellationRequested);
@@ -98,7 +92,7 @@ public sealed class CancellationSeviceTests
 
         using var linked = service.GetLinkedCancellationTokenSource();
 
-        service.Reset(); // Should reinitialize only if TryReset fails
+        service.Reset();
 
         Assert.IsFalse(linked.IsCancellationRequested);
     }
@@ -110,7 +104,6 @@ public sealed class CancellationSeviceTests
 
         service.Dispose();
 
-        // Getting a linked token should now throw
         Assert.ThrowsException<ObjectDisposedException>(() =>
         {
             service.GetLinkedCancellationTokenSource();
@@ -125,7 +118,6 @@ public sealed class CancellationSeviceTests
 
         using var linked = service.GetLinkedCancellationTokenSource(externalCts.Token);
 
-        // Cancel root
         service.CancelAll();
 
         Assert.IsTrue(linked.IsCancellationRequested);

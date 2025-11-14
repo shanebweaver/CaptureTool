@@ -7,7 +7,6 @@ using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
