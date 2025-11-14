@@ -197,7 +197,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     {
         if (_navigationService.CanGoBack)
         {
-            bool success = _navigationService.TryGoBackWhile(r => r.Route == CaptureToolNavigationRoutes.ImageCapture || r.Route == CaptureToolNavigationRoutes.VideoCapture);
+            bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
             if (!success)
             {
                 _appController.GoHome();

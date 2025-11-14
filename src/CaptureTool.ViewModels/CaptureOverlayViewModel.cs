@@ -106,7 +106,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
 
         if (_navigationService.CanGoBack)
         {
-            bool success = _navigationService.TryGoBackWhile(r => r.Route == CaptureToolNavigationRoutes.ImageCapture || r.Route == CaptureToolNavigationRoutes.VideoCapture);
+            bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
             if (!success)
             {
                 _appController.GoHome();
@@ -125,13 +125,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
             _appController.CancelVideoCapture();
         }
 
-        if (_navigationService.CanGoBack)
+        if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
         {
-            _navigationService.GoBack();
-        }
-        else
-        {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
+            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.VideoDefault, true);
         }
     }
 

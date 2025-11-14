@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Common.Commands;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
@@ -109,6 +110,9 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 
     private void GoBack()
     {
-        _navigationService.GoBack();
+        if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
+        {
+            _appController.GoHome();
+        }
     }
 }

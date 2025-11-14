@@ -368,11 +368,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private void GoBack()
     {
         ExecuteActivity(ActivityIds.GoBack, () => {
-            if (_navigationService.CanGoBack)
-            {
-                _navigationService.GoBack();
-            }
-            else
+            if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
             {
                 _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
             }
