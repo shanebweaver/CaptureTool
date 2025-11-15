@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using System;
@@ -100,7 +100,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
             if (!success)
             {
-                _appController.GoHome();
+                _navigationService.GoHome();
             }
         }
         else
@@ -118,7 +118,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
         if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
         {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.VideoDefault, true);
+            _navigationService.GoToImageCapture(CaptureOptions.VideoDefault, true);
         }
     }
 

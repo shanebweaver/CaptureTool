@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using CaptureTool.Core;
+using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Navigation;
 
 namespace CaptureTool.UI.Windows.Xaml.Pages;

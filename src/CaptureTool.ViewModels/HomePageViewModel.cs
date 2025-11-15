@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core;
+using CaptureTool.Core.Navigation;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;
@@ -42,7 +42,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
         try
         {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.ImageDefault);
+            _navigationService.GoToImageCapture(CaptureOptions.ImageDefault);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -58,7 +58,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
         try
         {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.VideoDefault);
+            _navigationService.GoToImageCapture(CaptureOptions.VideoDefault);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

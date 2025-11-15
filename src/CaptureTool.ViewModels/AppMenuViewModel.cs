@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Navigation;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Storage;
@@ -61,7 +61,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
         try
         {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.ImageDefault);
+            _navigationService.GoToImageCapture(CaptureOptions.ImageDefault);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -85,7 +85,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
                 return;
             }
 
-            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, imageFile, true);
+            _navigationService.GoToImageEdit(imageFile);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -101,7 +101,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
         try
         {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.Settings);
+            _navigationService.GoToSettings();
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -117,7 +117,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
         try
         {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.About);
+            _navigationService.GoToAbout();
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -133,7 +133,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
         try
         {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.AddOns);
+            _navigationService.GoToAddOns();
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

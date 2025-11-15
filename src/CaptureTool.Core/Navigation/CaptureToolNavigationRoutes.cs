@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Services.Navigation;
 
-namespace CaptureTool.Core;
+namespace CaptureTool.Core.Navigation;
 
 public static partial class CaptureToolNavigationRoutes
 {

@@ -1,8 +1,8 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Storage;
 using CaptureTool.Common.Sync;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Navigation;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -122,7 +122,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
             if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Image)
             {
                 ImageFile image = _appController.PerformAllScreensCapture();
-                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, image);
+                _navigationService.GoToImageEdit(image);
             }
             else if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Video)
             {

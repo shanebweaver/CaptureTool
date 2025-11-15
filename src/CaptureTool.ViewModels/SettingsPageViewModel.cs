@@ -1,6 +1,7 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Navigation;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
@@ -370,7 +371,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         ExecuteActivity(ActivityIds.GoBack, () => {
             if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
             {
-                _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
+                _navigationService.GoHome();
             }
         });
     }

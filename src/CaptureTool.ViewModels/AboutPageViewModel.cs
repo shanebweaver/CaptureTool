@@ -1,5 +1,5 @@
 ﻿using CaptureTool.Common.Commands;
-using CaptureTool.Core;
+using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;
@@ -65,7 +65,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
     {
         if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
         {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
+            _navigationService.GoHome();
         }
     }
 }

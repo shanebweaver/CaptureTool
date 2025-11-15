@@ -1,8 +1,8 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Navigation;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
 using CaptureTool.Services.Navigation;
@@ -196,7 +196,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
             if (!success)
             {
-                _appController.GoHome();
+                _navigationService.GoHome();
             }
         }
         else
@@ -237,13 +237,13 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             {
                 NewCaptureArgs args = new(Monitor.Value, CaptureArea);
                 ImageFile image = _appController.PerformImageCapture(args);
-                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, image, true);
+                _navigationService.GoToImageEdit(image);
 
             }
             else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
             {
                 NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-                _navigationService.Navigate(CaptureToolNavigationRoutes.VideoCapture, args);
+                _navigationService.GoToVideoCapture(args);
             }
         }
     }
