@@ -264,9 +264,9 @@ internal partial class CaptureToolAppController : IAppController
                 _navigationService.GoHome();
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            //TODO: System.Diagnostics.Debug.WriteLine(e);
+            _logService.LogException(ex, "Failed to handle protocol activation.");
         }
         finally
         {
