@@ -1,4 +1,5 @@
-﻿using CaptureTool.Common.Storage;
+﻿using CaptureTool.Common.Loading;
+using CaptureTool.Common.Storage;
 using CaptureTool.Edit;
 using CaptureTool.Edit.Drawable;
 using CaptureTool.ViewModels.Tests.Mocks;
@@ -42,8 +43,7 @@ public sealed class ImageEditPageViewModelTests
 
         // Load
         string testImageFilePath = Guid.NewGuid().ToString();
-        object parameter = new ImageFile(testImageFilePath);
-        await _vm.LoadAsync(parameter, CancellationToken.None);
+        await _vm.LoadAsync(new ImageFile(testImageFilePath), CancellationToken.None);
         Assert.IsTrue(_vm.IsLoaded);
         Assert.IsFalse(_vm.IsLoading);
         Assert.IsNotNull(_vm.ImageFile);
@@ -69,6 +69,7 @@ public sealed class ImageEditPageViewModelTests
         _vm.Dispose();
         Assert.IsFalse(_vm.IsLoaded);
         Assert.IsFalse(_vm.IsLoading);
+        Assert.AreEqual(LoadState.Disposed, _vm.LoadState);
         Assert.AreEqual(Rectangle.Empty, _vm.CropRect);
         Assert.AreEqual(Size.Empty, _vm.ImageSize);
         Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, _vm.Orientation);

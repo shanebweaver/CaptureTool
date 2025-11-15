@@ -40,7 +40,7 @@
                 Spacing="12">
 
                 <StackPanel Spacing="4">
-                    <TextBlock TextWrapping="WrapWholeWords">
+                    <TextBlock DoubleTapped="AppNameAndVersionTextBlock_DoubleTapped" TextWrapping="WrapWholeWords">
                         <Run Text="{x:Bind AppName}" />
                         <Run Text="{x:Bind AppVersion}" />
                     </TextBlock>

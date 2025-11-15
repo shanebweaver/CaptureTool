@@ -62,7 +62,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         _chromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
     }
 
-    public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    public override async Task LoadAsync(CancellationToken cancellationToken)
     {
         StoreAddOn? addOn = await _storeService.GetAddonProductInfoAsync(AddOns.ChromaKeyBackgroundRemoval);
         if (addOn != null)
@@ -81,7 +81,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
             ChromaKeyAddOnLogoImage = null;
         }
 
-        await base.LoadAsync(parameter, cancellationToken);
+        await base.LoadAsync(cancellationToken);
     }
 
     public override void Dispose()

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase
+public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase<VideoFile>
 {
     private readonly struct ActivityIds
     {
@@ -48,14 +48,11 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase
         _telemetryService = telemetryService;
     }
 
-    public override Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    public override Task LoadAsync(VideoFile video, CancellationToken cancellationToken)
     {
-        if (parameter is VideoFile video)
-        {
-            VideoPath = video.Path;
-        }
+        VideoPath = video.Path;
 
-        return base.LoadAsync(parameter, cancellationToken);
+        return base.LoadAsync(video, cancellationToken);
     }
 
     public override void Dispose()

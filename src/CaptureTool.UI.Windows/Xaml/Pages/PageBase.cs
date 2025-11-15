@@ -25,13 +25,23 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
 
         try
         {
-            if (ViewModel is IAsyncLoadable asyncLoadable)
+            switch(ViewModel)
             {
-                await asyncLoadable.LoadAsync(e.Parameter, _loadCts.Token);
-            }
-            else if (ViewModel is ILoadable loadable)
-            {
-                loadable.Load(e.Parameter);
+                case ILoadable loadable:
+                    loadable.Load();
+                    break;
+
+                case IAsyncLoadable asyncLoadable:
+                    await asyncLoadable.LoadAsync(_loadCts.Token);
+                    break;
+
+                case ILoadableWithParam loadableWithParam:
+                    loadableWithParam.Load(e.Parameter);
+                    break;
+
+                case IAsyncLoadableWithParam asyncLoadableWithParam:
+                    await asyncLoadableWithParam.LoadAsync(e.Parameter, _loadCts.Token);
+                    break;
             }
         }
         catch (OperationCanceledException ex)

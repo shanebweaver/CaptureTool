@@ -1,7 +1,6 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core;
-using CaptureTool.Core.AppController;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;

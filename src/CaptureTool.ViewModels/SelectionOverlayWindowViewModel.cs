@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase
+public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>
 {
     private readonly INavigationService _navigationService;
     private readonly IAppController _appController;
@@ -159,23 +159,20 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _isDesktopAudioEnabled = true;
     }
 
-    public override void Load(object? parameter)
+    public override void Load(SelectionOverlayWindowOptions options)
     {
-        if (parameter is SelectionOverlayWindowOptions options)
-        {
-            Monitor = options.Monitor;
-            MonitorWindows = [.. options.MonitorWindows];
+        Monitor = options.Monitor;
+        MonitorWindows = [.. options.MonitorWindows];
 
-            var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
-            SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(targetMode);
+        var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
+        SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(targetMode);
 
-            UpdateSupportedCaptureTypes();
+        UpdateSupportedCaptureTypes();
 
-            var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureOptions.CaptureType);
-            SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(targetType);
-        }
+        var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureOptions.CaptureType);
+        SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(targetType);
 
-        base.Load(parameter);
+        base.Load(options);
     }
 
     public override void Dispose()

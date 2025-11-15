@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
+public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
 {
     private readonly struct ActivityIds
     {
@@ -57,7 +57,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
 
     public event EventHandler? InvalidateCanvasRequested;
 
-    // Public commands for use by the View.
     public RelayCommand CopyCommand => new(Copy);
     public RelayCommand ToggleCropModeCommand => new(ToggleCropMode);
     public RelayCommand SaveCommand => new(Save);
@@ -244,7 +243,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
         _operationsRedoStack = [];
     }
 
-    public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    public override async Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
     {
         string activityId = ActivityIds.Load;
         _telemetryService.ActivityInitiated(activityId);
@@ -252,31 +251,28 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
         try
         {
             Vector2 topLeft = Vector2.Zero;
-            if (parameter is ImageFile imageFile)
+            ImageFile = imageFile;
+            ImageSize = _filePickerService.GetImageSize(imageFile);
+            CropRect = new(Point.Empty, ImageSize);
+
+            _imageDrawable = new(topLeft, imageFile, ImageSize);
+            Drawables.Add(_imageDrawable);
+
+            if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
             {
-                ImageFile = imageFile;
-                ImageSize = _filePickerService.GetImageSize(imageFile);
-                CropRect = new(Point.Empty, ImageSize);
-
-                _imageDrawable = new(topLeft, imageFile, ImageSize);
-                Drawables.Add(_imageDrawable);
-
-                if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
+                bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval);
+                IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
+                if (isChromaKeyAddOnOwned)
                 {
-                    bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval);
-                    IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
-                    if (isChromaKeyAddOnOwned)
-                    {
-                        // Empty option disables the effect.
-                        ChromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
+                    // Empty option disables the effect.
+                    ChromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
 
-                        // Add top detected colors
-                        var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 5, 4);
-                        foreach (var topColor in topColors)
-                        {
-                            ChromaKeyColorOption colorOption = new(topColor);
-                            ChromaKeyColorOptions.Add(colorOption);
-                        }
+                    // Add top detected colors
+                    var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 5, 4);
+                    foreach (var topColor in topColors)
+                    {
+                        ChromaKeyColorOption colorOption = new(topColor);
+                        ChromaKeyColorOptions.Add(colorOption);
                     }
                 }
             }
@@ -298,7 +294,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase
             cts.Dispose();
         }
 
-        await base.LoadAsync(parameter, cancellationToken);
+        await base.LoadAsync(imageFile, cancellationToken);
     }
 
     public override void Dispose()

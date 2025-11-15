@@ -165,7 +165,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _screenshotsFolderPath = string.Empty;
     }
 
-    public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    public override async Task LoadAsync(CancellationToken cancellationToken)
     {
         ExecuteActivity(ActivityIds.Load, () =>
         {
@@ -224,7 +224,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             }
         });
 
-        await base.LoadAsync(parameter, cancellationToken);
+        await base.LoadAsync(cancellationToken);
     }
 
     public override void Dispose()
