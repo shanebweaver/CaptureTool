@@ -14,12 +14,15 @@ public partial class App : Application
     internal CaptureToolServiceProvider ServiceProvider { get; }
     internal DispatcherQueue DispatcherQueue { get; }
 
+    private readonly KeepAlive _keepAlive;
+
     public App()
     {
         ServiceProvider = new();
         DispatcherQueue = DispatcherQueue.GetForCurrentThread();
         InitializeComponent();
         RestoreAppTheme();
+        _keepAlive = new KeepAlive();
     }
 
     private void RestoreAppTheme()
