@@ -29,7 +29,7 @@ jobs:
       run: |
         git clone https://github.com/microsoft/vcpkg.git
         vcpkg\bootstrap-vcpkg.bat
-        vcpkg\vcpkg.exe install wil:${{ matrix.platform }}-windows
+        vcpkg\vcpkg.exe install wil:x64-windows
 
     - name: Restore .NET dependencies
       run: dotnet restore
