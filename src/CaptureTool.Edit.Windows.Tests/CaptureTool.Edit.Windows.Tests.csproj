@@ -2,7 +2,7 @@
 
   <!-- Project properties -->
   <PropertyGroup>
-    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <Platforms>x64;ARM64</Platforms>
     <UseVSTest>true</UseVSTest>
   </PropertyGroup>
