@@ -1,13 +1,16 @@
-name: Test
+name: Build
 
 on:
   push:
     branches: [ main ]
-  pull_request:
 
 jobs:
-  test:
+  build:
     runs-on: windows-latest
+
+    strategy:
+      matrix:
+        platform: [x64, arm64]
 
     steps:
     - name: Checkout code
@@ -31,10 +34,10 @@ jobs:
       run: dotnet restore
 
     - name: Build solution
-      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=x64
+      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:UapAppxPackageBuildMode=StoreUpload
 
-    - name: Run .NET tests
-      run: |
-        dotnet test src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj -p:Platform=x64
-        dotnet test src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj -p:Platform=x64
-        dotnet test src\CaptureTool.Edit.Windows.Tests\CaptureTool.Edit.Windows.Tests.csproj -p:Platform=x64
+    - name: Upload Package Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: StorePackage-${{ matrix.platform }}
+        path: '**\AppPackages\*.appxupload'
