@@ -8,7 +8,7 @@ public interface INavigationService
     NavigationRequest? CurrentRequest { get; }
     bool CanGoBack { get; }
     void SetNavigationHandler(INavigationHandler handler);
-    void Navigate(NavigationRoute route, object? parameter = null, bool clearHistory = false);
+    void Navigate(object route, object? parameter = null, bool clearHistory = false);
     bool TryGoBack();
     bool TryGoBackTo(Func<NavigationRequest, bool> assessRequest);
 }

@@ -7,24 +7,24 @@ namespace CaptureTool.UI.Windows.Xaml.Pages;
 
 internal static partial class PageLocator
 {
-    private static readonly Dictionary<string, Type> _routeMappings = new() {
-        { CaptureToolNavigationRoutes.Home.Id, typeof(HomePage) },
-        { CaptureToolNavigationRoutes.AddOns.Id, typeof(AddOnsPage) },
-        { CaptureToolNavigationRoutes.About.Id, typeof(AboutPage) },
-        { CaptureToolNavigationRoutes.Error.Id, typeof(ErrorPage) },
-        { CaptureToolNavigationRoutes.Settings.Id, typeof(SettingsPage) },
-        { CaptureToolNavigationRoutes.Loading.Id, typeof(LoadingPage) },
-        { CaptureToolNavigationRoutes.ImageEdit.Id, typeof(ImageEditPage) },
-        { CaptureToolNavigationRoutes.VideoEdit.Id, typeof(VideoEditPage) },
+    private static readonly Dictionary<object, Type> _routeMappings = new() {
+        { NavigationRoute.Home, typeof(HomePage) },
+        { NavigationRoute.AddOns, typeof(AddOnsPage) },
+        { NavigationRoute.About, typeof(AboutPage) },
+        { NavigationRoute.Error, typeof(ErrorPage) },
+        { NavigationRoute.Settings, typeof(SettingsPage) },
+        { NavigationRoute.Loading, typeof(LoadingPage) },
+        { NavigationRoute.ImageEdit, typeof(ImageEditPage) },
+        { NavigationRoute.VideoEdit, typeof(VideoEditPage) },
     };
 
-    public static Type GetPageType(NavigationRoute route)
+    public static Type GetPageType(object route)
     {
-        if (_routeMappings.TryGetValue(route.Id, out var pageType))
+        if (_routeMappings.TryGetValue(route, out var pageType))
         {
             return pageType;
         }
 
-        throw new ArgumentOutOfRangeException(route.Id);
+        throw new ArgumentOutOfRangeException(nameof(route));
     }
 }
