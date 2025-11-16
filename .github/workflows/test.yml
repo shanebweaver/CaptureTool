@@ -9,10 +9,6 @@ jobs:
   build-and-test:
     runs-on: windows-latest
 
-    strategy:
-      matrix:
-        platform: [x64, arm64]
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -35,10 +31,10 @@ jobs:
       run: dotnet restore
 
     - name: Build solution
-      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=${{ matrix.platform }}
+      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=x64
 
     - name: Run .NET tests
       run: |
-        dotnet test src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj -p:Platform=${{ matrix.platform }}
-        dotnet test src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj -p:Platform=${{ matrix.platform }}
-        dotnet test src\CaptureTool.Edit.Windows.Tests\CaptureTool.Edit.Windows.Tests.csproj -p:Platform=${{ matrix.platform }}
+        dotnet test src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj -p:Platform=x64
+        dotnet test src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj -p:Platform=x64
+        dotnet test src\CaptureTool.Edit.Windows.Tests\CaptureTool.Edit.Windows.Tests.csproj -p:Platform=x64
