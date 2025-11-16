@@ -38,7 +38,7 @@ jobs:
       run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:UapAppxPackageBuildMode=StoreUpload
 
     - name: Upload Package Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: StorePackage-${{ matrix.platform }}
         path: '**\AppPackages\*.appxupload'
