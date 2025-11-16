@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CaptureTool.Core.Navigation;
+﻿namespace CaptureTool.Core.Navigation;
 
 public static partial class CaptureToolNavigationRoutes
 {
