@@ -9,6 +9,10 @@ jobs:
   build-and-test:
     runs-on: windows-latest
 
+    strategy:
+      matrix:
+        platform: [x64, arm64]
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -25,19 +29,16 @@ jobs:
       run: |
         git clone https://github.com/microsoft/vcpkg.git
         vcpkg\bootstrap-vcpkg.bat
-        vcpkg\vcpkg.exe install wil:x64-windows
-
-    - name: Install Windows 10 SDK (10.0.19041.0)
-      run: choco install windows-sdk-10-version-2004-all -y --no-progress
+        vcpkg\vcpkg.exe install wil:${{ matrix.platform }}-windows
 
     - name: Restore .NET dependencies
       run: dotnet restore
 
     - name: Build solution
-      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=x64
+      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=${{ matrix.platform }}
 
     - name: Run .NET tests
       run: |
-        dotnet test src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj -p:Platform=x64
-        dotnet test src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj -p:Platform=x64
-        dotnet test src\CaptureTool.Edit.Windows.Tests\CaptureTool.Edit.Windows.Tests.csproj -p:Platform=x64
+        dotnet test src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj -p:Platform=${{ matrix.platform }}
+        dotnet test src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj -p:Platform=${{ matrix.platform }}
+        dotnet test src\CaptureTool.Edit.Windows.Tests\CaptureTool.Edit.Windows.Tests.csproj -p:Platform=${{ matrix.platform }}
