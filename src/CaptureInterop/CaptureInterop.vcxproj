@@ -23,16 +23,16 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{e576bd23-e4b5-4a1e-a385-87cb932e6d32}</ProjectGuid>
     <RootNamespace>CaptureInterop</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
-	<VcpkgManifestMode>true</VcpkgManifestMode>
-	<VcpkgManifestRoot>$(SolutionDir)</VcpkgManifestRoot>
-	<VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows</VcpkgTriplet>
-	<VcpkgTriplet Condition="'$(Platform)'=='ARM64'">arm64-windows</VcpkgTriplet>
-	<VcpkgRoot>$(SolutionDir)\vcpkg</VcpkgRoot>
-	<VcpkgInstalledDir>$(VcpkgRoot)\installed</VcpkgInstalledDir>
+    <VcpkgManifestMode>true</VcpkgManifestMode>
+    <VcpkgManifestRoot>$(SolutionDir)</VcpkgManifestRoot>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='ARM64'">arm64-windows</VcpkgTriplet>
+    <VcpkgRoot>$(SolutionDir)\vcpkg</VcpkgRoot>
+    <VcpkgInstalledDir>$(VcpkgRoot)\installed</VcpkgInstalledDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
@@ -99,8 +99,8 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -119,8 +119,8 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -137,8 +137,8 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,8 +157,8 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -197,7 +197,7 @@
     </PropertyGroup>
     <!-- Output folder for managed project -->
     <PropertyGroup>
-      <ManagedOutDir>$(MSBuildProjectDirectory)\$(ManagedProjectPath)bin\$(Platform)\$(Configuration)\net9.0-windows10.0.19041.0\win-$(Platform)\AppX\</ManagedOutDir>
+      <ManagedOutDir>$(MSBuildProjectDirectory)\$(ManagedProjectPath)bin\$(Platform)\$(Configuration)\net10.0-windows10.0.26100.0\win-$(Platform)\AppX\</ManagedOutDir>
     </PropertyGroup>
     <Message Text="Copying native DLL to $(ManagedOutDir)" Importance="high" />
     <!-- Ensure the directory exists -->
