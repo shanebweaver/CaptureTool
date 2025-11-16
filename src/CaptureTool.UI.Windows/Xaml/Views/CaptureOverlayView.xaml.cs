@@ -39,7 +39,7 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        ViewModel.Load(new CaptureOverlayViewModel.Options(_monitor, _area));
+        ViewModel.Load(new CaptureOverlayViewModelOptions(_monitor, _area));
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)

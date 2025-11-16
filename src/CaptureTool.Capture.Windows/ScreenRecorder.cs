@@ -7,9 +7,7 @@ public static partial class ScreenRecorder
 {
     public static bool StartRecording(IntPtr hMonitor, string outputPath)
     {
-        bool success = CaptureInterop.TryStartRecording(hMonitor, outputPath);
-        Debug.WriteLine(success);
-        return success;
+        return CaptureInterop.TryStartRecording(hMonitor, outputPath);
     }
 
     public static void PauseRecording() => CaptureInterop.TryPauseRecording();

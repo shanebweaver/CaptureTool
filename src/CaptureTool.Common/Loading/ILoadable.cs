@@ -1,10 +1,6 @@
 ﻿namespace CaptureTool.Common.Loading;
 
-public interface ILoadable
+public interface ILoadable : IHasLoadState
 {
-    LoadState LoadState { get; }
-
-    bool IsLoaded => LoadState == LoadState.Loaded;
-
-    void Load(object? parameter);
+    void Load();
 }

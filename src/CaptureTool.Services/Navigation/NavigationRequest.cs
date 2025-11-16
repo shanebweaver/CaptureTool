@@ -2,13 +2,13 @@
 
 public readonly struct NavigationRequest
 {
-    public NavigationRoute Route { get; }
+    public object Route { get; }
     public object? Parameter { get; }
     public bool IsBackNavigation { get; }
     public bool ClearHistory { get; }
 
     public NavigationRequest(
-        NavigationRoute route, 
+        object route, 
         object? parameter = null, 
         bool isBackNavigation = false, 
         bool clearHistroy = false)

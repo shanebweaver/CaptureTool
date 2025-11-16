@@ -6,7 +6,6 @@ namespace CaptureTool.Core.AppController;
 
 public partial interface IAppController : INavigationHandler, IActivationHandler, IImageCaptureHandler, IVideoCaptureHandler
 {
-    void GoHome();
     void Shutdown(); 
     bool TryRestart();
 

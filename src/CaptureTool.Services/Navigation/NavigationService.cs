@@ -85,7 +85,7 @@ public class NavigationService : INavigationService
         }
     }
 
-    public void Navigate(NavigationRoute route, object? parameter = null, bool clearHistory = false)
+    public void Navigate(object route, object? parameter = null, bool clearHistory = false)
     {
         lock (_navigationLock)
         {
@@ -122,6 +122,6 @@ public class NavigationService : INavigationService
 
     private static bool CompareRequests(NavigationRequest? requestA, NavigationRequest? requestB)
     {
-        return requestA?.Route == requestB?.Route && requestA?.Parameter == requestB?.Parameter;
+        return Equals(requestA?.Route, requestB?.Route) && Equals(requestA?.Parameter, requestB?.Parameter);
     }
 }

@@ -3,6 +3,7 @@ using CaptureTool.Capture.Windows;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Navigation;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Logging;
@@ -99,7 +100,7 @@ internal partial class CaptureToolAppController : IAppController
             bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
             if (!success)
             {
-                GoHome();
+                _navigationService.GoHome();
             }
         }
         else
@@ -138,7 +139,7 @@ internal partial class CaptureToolAppController : IAppController
                 _mainWindowHost.HandleNavigationRequest(request);
                 _activeHost = UXHost.MainWindow;
             }
-            else if (request.Route == CaptureToolNavigationRoutes.ImageCapture)
+            else if (request.Route is NavigationRoute imageRoute && imageRoute == NavigationRoute.ImageCapture)
             {
                 if (request.Parameter is not CaptureOptions options)
                 {
@@ -166,7 +167,7 @@ internal partial class CaptureToolAppController : IAppController
                 _selectionOverlayHost.Activate();
                 _activeHost = UXHost.SelectionOverlay;
             }
-            else if (request.Route == CaptureToolNavigationRoutes.VideoCapture)
+            else if (request.Route is NavigationRoute videoRoute && videoRoute == NavigationRoute.VideoCapture)
             {
                 if (request.Parameter is not NewCaptureArgs args)
                 {
@@ -196,7 +197,7 @@ internal partial class CaptureToolAppController : IAppController
             }
             else
             {
-                throw new ArgumentOutOfRangeException(nameof(request), $"No handler found for route: {request.Route.Id}");
+                throw new ArgumentOutOfRangeException(nameof(request), $"No handler found for route: {request.Route}");
             }
         }
         finally
@@ -214,7 +215,7 @@ internal partial class CaptureToolAppController : IAppController
         try
         {
             await InitializeAsync();
-            GoHome();
+            _navigationService.GoHome();
         }
         finally
         {
@@ -241,31 +242,31 @@ internal partial class CaptureToolAppController : IAppController
             string source = queryParams.Get("source") ?? string.Empty;
             if (source.Equals("PrintScreen", StringComparison.InvariantCultureIgnoreCase))
             {
-                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.ImageDefault);
+                _navigationService.GoToImageCapture(CaptureOptions.ImageDefault);
             }
             else if (source.Equals("ScreenRecorderHotKey", StringComparison.InvariantCultureIgnoreCase) || isRecordingType)
             {
                 if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
                 {
-                    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.VideoDefault);
+                    _navigationService.GoToImageCapture(CaptureOptions.VideoDefault);
                 }
                 else
                 {
-                    _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.ImageDefault);
+                    _navigationService.GoToImageCapture(CaptureOptions.ImageDefault);
                 }
             }
             else if (source.Equals("HotKey", StringComparison.InvariantCultureIgnoreCase))
             {
-                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.ImageDefault);
+                _navigationService.GoToImageCapture(CaptureOptions.ImageDefault);
             }
             else
             {
-                GoHome();
+                _navigationService.GoHome();
             }
         }
-        catch(Exception e)
+        catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine(e);
+            _logService.LogException(ex, "Failed to handle protocol activation.");
         }
         finally
         {
@@ -358,7 +359,7 @@ internal partial class CaptureToolAppController : IAppController
     #region IVideoCaptureHandler
     public void StartVideoCapture(NewCaptureArgs args)
     {
-        _navigationService.Navigate(CaptureToolNavigationRoutes.VideoCapture, args);
+        _navigationService.GoToVideoCapture(args);
         _captureOverlayHost?.HideBorder();
 
         _tempVideoPath = Path.Combine(
@@ -379,7 +380,7 @@ internal partial class CaptureToolAppController : IAppController
         ScreenRecorder.StopRecording();
 
         VideoFile videoFile = new(_tempVideoPath);
-        _navigationService.Navigate(CaptureToolNavigationRoutes.VideoEdit, videoFile);
+        _navigationService.GoToVideoEdit(videoFile);
         _tempVideoPath = null;
 
         return videoFile;
@@ -443,11 +444,6 @@ internal partial class CaptureToolAppController : IAppController
     public string GetDefaultScreenshotsFolderPath()
     {
         return global::Windows.Storage.KnownFolders.SavedPictures.Path;
-    }
-
-    public void GoHome()
-    {
-        _navigationService.Navigate(CaptureToolNavigationRoutes.Home, clearHistory: true);
     }
 
     private async Task InitializeSettingsServiceAsync(CancellationToken cancellationToken)

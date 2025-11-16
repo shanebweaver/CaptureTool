@@ -1,8 +1,8 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Navigation;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
 using CaptureTool.Services.Navigation;
@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase
+public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>
 {
     private readonly INavigationService _navigationService;
     private readonly IAppController _appController;
@@ -159,23 +159,20 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _isDesktopAudioEnabled = true;
     }
 
-    public override void Load(object? parameter)
+    public override void Load(SelectionOverlayWindowOptions options)
     {
-        if (parameter is SelectionOverlayWindowOptions options)
-        {
-            Monitor = options.Monitor;
-            MonitorWindows = [.. options.MonitorWindows];
+        Monitor = options.Monitor;
+        MonitorWindows = [.. options.MonitorWindows];
 
-            var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
-            SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(targetMode);
+        var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
+        SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(targetMode);
 
-            UpdateSupportedCaptureTypes();
+        UpdateSupportedCaptureTypes();
 
-            var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureOptions.CaptureType);
-            SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(targetType);
-        }
+        var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureOptions.CaptureType);
+        SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(targetType);
 
-        base.Load(parameter);
+        base.Load(options);
     }
 
     public override void Dispose()
@@ -199,7 +196,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
             if (!success)
             {
-                _appController.GoHome();
+                _navigationService.GoHome();
             }
         }
         else
@@ -240,13 +237,13 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             {
                 NewCaptureArgs args = new(Monitor.Value, CaptureArea);
                 ImageFile image = _appController.PerformImageCapture(args);
-                _navigationService.Navigate(CaptureToolNavigationRoutes.ImageEdit, image, true);
+                _navigationService.GoToImageEdit(image);
 
             }
             else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
             {
                 NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-                _navigationService.Navigate(CaptureToolNavigationRoutes.VideoCapture, args);
+                _navigationService.GoToVideoCapture(args);
             }
         }
     }

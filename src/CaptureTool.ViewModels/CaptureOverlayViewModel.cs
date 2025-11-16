@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using System;
@@ -10,14 +10,8 @@ using System.Timers;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
+public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>
 {
-    public readonly partial struct Options(MonitorCaptureResult monitor, Rectangle area)
-    {
-        public MonitorCaptureResult Monitor { get; } = monitor;
-        public Rectangle Area { get; } = area;
-    }
-
     private readonly INavigationService _navigationService;
     private readonly IAppController _appController;
     private MonitorCaptureResult? _monitorCaptureResult;
@@ -80,15 +74,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
         CurrentAppTheme = themeService.CurrentTheme;
     }
 
-    public override void Load(object? parameter)
+    public override void Load(CaptureOverlayViewModelOptions options)
     {
-        if (parameter is Options options)
-        {
-            _monitorCaptureResult = options.Monitor;
-            _captureArea = options.Area;
-        }
+        _monitorCaptureResult = options.Monitor;
+        _captureArea = options.Area;
 
-        base.Load(parameter);
+        base.Load(options);
     }
 
     public override void Dispose()
@@ -109,7 +100,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
             bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
             if (!success)
             {
-                _appController.GoHome();
+                _navigationService.GoHome();
             }
         }
         else
@@ -127,7 +118,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase
 
         if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
         {
-            _navigationService.Navigate(CaptureToolNavigationRoutes.ImageCapture, CaptureOptions.VideoDefault, true);
+            _navigationService.GoToImageCapture(CaptureOptions.VideoDefault, true);
         }
     }
 

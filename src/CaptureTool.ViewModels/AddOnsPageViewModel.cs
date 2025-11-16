@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Common.Commands;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Store;
@@ -62,7 +62,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         _chromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
     }
 
-    public override async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    public override async Task LoadAsync(CancellationToken cancellationToken)
     {
         StoreAddOn? addOn = await _storeService.GetAddonProductInfoAsync(AddOns.ChromaKeyBackgroundRemoval);
         if (addOn != null)
@@ -81,7 +81,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
             ChromaKeyAddOnLogoImage = null;
         }
 
-        await base.LoadAsync(parameter, cancellationToken);
+        await base.LoadAsync(cancellationToken);
     }
 
     public override void Dispose()
@@ -112,7 +112,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     {
         if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
         {
-            _appController.GoHome();
+            _navigationService.GoHome();
         }
     }
 }

@@ -77,6 +77,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<VideoEditPageViewModel>();
         // Views
         collection.AddTransient<AppMenuViewModel>();
+        collection.AddTransient<DiagnosticsViewModel>();
         collection.AddTransient<SelectionOverlayHostViewModel>();
         collection.AddTransient<CaptureOverlayViewModel>();
         // Factories
