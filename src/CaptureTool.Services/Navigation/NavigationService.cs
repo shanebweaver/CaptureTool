@@ -85,7 +85,7 @@ public class NavigationService : INavigationService
         }
     }
 
-    public void Navigate(NavigationRoute route, object? parameter = null, bool clearHistory = false)
+    public void Navigate(object route, object? parameter = null, bool clearHistory = false)
     {
         lock (_navigationLock)
         {
