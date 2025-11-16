@@ -40,10 +40,6 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
                 case IAsyncLoadable asyncLoadable:
                     await asyncLoadable.LoadAsync(_loadCts.Token);
                     break;
-
-                case ILoadableWithParam loadableWithParam:
-                case IAsyncLoadableWithParam asyncLoadableWithParam:
-                    throw new InvalidOperationException("ViewModel requires a parameter for loading, but no parameter was provided.");
             }
         }
         catch (OperationCanceledException ex)
