@@ -10,18 +10,19 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '10.0.100'
+        dotnet-version: '10.0.x'
 
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
     - name: Setup vcpkg
       run: |
-        git clone https://github.com/microsoft/vcpkg.git
         vcpkg\bootstrap-vcpkg.bat
         vcpkg\vcpkg.exe install wil:x64-windows
 
