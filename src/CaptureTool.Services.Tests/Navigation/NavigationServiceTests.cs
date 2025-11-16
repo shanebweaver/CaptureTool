@@ -7,11 +7,11 @@ namespace CaptureTool.Services.Tests.Navigation;
 [TestClass]
 public class NavigationServiceTests
 {
-    private enum TestRoute
+    static class TestRoute
     {
-        Home,
-        Settings,
-        About,
+        public static readonly NavigationRoute Home = new("Home");
+        public static readonly NavigationRoute Settings = new("Settings");
+        public static readonly NavigationRoute About = new("About");
     }
 
     [TestMethod]
@@ -116,7 +116,7 @@ public class NavigationServiceTests
         service.Navigate(TestRoute.About);
 
         bool result = service.TryGoBackTo(
-            request => request.Route is TestRoute testRoute && testRoute == TestRoute.Home);
+            request => request.Route == TestRoute.Home);
 
         Assert.IsTrue(result);
         Assert.AreEqual(TestRoute.Home, service.CurrentRequest?.Route);

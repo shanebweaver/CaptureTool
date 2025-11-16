@@ -139,7 +139,7 @@ internal partial class CaptureToolAppController : IAppController
                 _mainWindowHost.HandleNavigationRequest(request);
                 _activeHost = UXHost.MainWindow;
             }
-            else if (request.Route is NavigationRoute imageRoute && imageRoute == NavigationRoute.ImageCapture)
+            else if (request.Route == CaptureToolNavigationRoutes.ImageCapture)
             {
                 if (request.Parameter is not CaptureOptions options)
                 {
@@ -167,7 +167,7 @@ internal partial class CaptureToolAppController : IAppController
                 _selectionOverlayHost.Activate();
                 _activeHost = UXHost.SelectionOverlay;
             }
-            else if (request.Route is NavigationRoute videoRoute && videoRoute == NavigationRoute.VideoCapture)
+            else if (request.Route == CaptureToolNavigationRoutes.VideoCapture)
             {
                 if (request.Parameter is not NewCaptureArgs args)
                 {
@@ -197,7 +197,7 @@ internal partial class CaptureToolAppController : IAppController
             }
             else
             {
-                throw new ArgumentOutOfRangeException(nameof(request), $"No handler found for route: {request.Route}");
+                throw new ArgumentOutOfRangeException(nameof(request), $"No handler found for route: {request.Route.Id}");
             }
         }
         finally
