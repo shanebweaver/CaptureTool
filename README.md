@@ -2,6 +2,7 @@
 
 ![Branch Badge](https://github.com/shanebweaver/CaptureTool/actions/workflows/test.yml/badge.svg?branch=main)
 
+[![C++20](https://img.shields.io/badge/C++-20-blue)](https://en.cppreference.com/w/cpp/20.html)
 [![C# 14](https://img.shields.io/badge/C%23-14-239120?logo=csharp&logoColor=white)](https://dotnet.microsoft.com/en-us/languages/csharp)
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Windows App SDK](https://img.shields.io/badge/Windows%20App%20SDK-1.8-0078D4?logo=windows&logoColor=white)](https://github.com/microsoft/WindowsAppSDK)
