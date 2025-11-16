@@ -1,6 +1,6 @@
 # Capture Tool
 
-[![Test](https://github.com/shanebweaver/CaptureTool/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/shanebweaver/CaptureTool/actions/workflows/test.yml)
+[![Tests](https://github.com/shanebweaver/CaptureTool/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/shanebweaver/CaptureTool/actions/workflows/test.yml)
 [![Build](https://github.com/shanebweaver/CaptureTool/actions/workflows/build.yml/badge.svg)](https://github.com/shanebweaver/CaptureTool/actions/workflows/build.yml)
 
 [![C++20](https://img.shields.io/badge/C++-20-blue)](https://en.cppreference.com/w/cpp/20.html)

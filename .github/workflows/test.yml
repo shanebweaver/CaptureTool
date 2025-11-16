@@ -24,7 +24,7 @@ jobs:
     - name: Setup vcpkg
       run: |
         vcpkg\bootstrap-vcpkg.bat
-        vcpkg\vcpkg.exe install wil:x64-windows
+        vcpkg\vcpkg.exe install
 
     - name: Restore .NET dependencies
       run: dotnet restore
