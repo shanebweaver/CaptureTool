@@ -2,7 +2,6 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
-using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using System;
 using System.Drawing;
@@ -12,7 +11,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>
 {
-    private readonly INavigationService _navigationService;
+    private readonly AppNavigation _appNavigation;
     private readonly IAppController _appController;
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
@@ -63,11 +62,11 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public RelayCommand ToggleDesktopAudioCommand => new(ToggleDesktopAudio);
     
     public CaptureOverlayViewModel(
-        INavigationService navigationService,
+        AppNavigation appNavigation,
         IThemeService themeService,
         IAppController appController) 
     {
-        _navigationService = navigationService;
+        _appNavigation = appNavigation;
         _appController = appController;
 
         DefaultAppTheme = themeService.DefaultTheme;
@@ -95,13 +94,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             _appController.CancelVideoCapture();
         }
 
-        if (_navigationService.CanGoBack)
+        if (_appNavigation.CanGoBack)
         {
-            bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
-            if (!success)
-            {
-                _navigationService.GoHome();
-            }
+            _appNavigation.GoBackToMainWindow();
         }
         else
         {
@@ -116,9 +111,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             _appController.CancelVideoCapture();
         }
 
-        if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
+        if (!_appNavigation.TryGoBack())
         {
-            _navigationService.GoToImageCapture(CaptureOptions.VideoDefault, true);
+            _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault, true);
         }
     }
 

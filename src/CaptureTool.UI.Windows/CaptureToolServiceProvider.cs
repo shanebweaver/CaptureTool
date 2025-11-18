@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Navigation;
 using CaptureTool.Edit;
 using CaptureTool.Edit.ChromaKey;
 using CaptureTool.Edit.Windows;
@@ -87,6 +88,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IFactoryService<CaptureTypeViewModel, CaptureType>, CaptureTypeViewModelFactory>();
 
         // App controller and feature manager
+        collection.AddSingleton<AppNavigation>();
         collection.AddSingleton<IAppController, CaptureToolAppController>();
         collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
 

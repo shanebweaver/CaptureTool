@@ -38,6 +38,7 @@ internal partial class CaptureToolAppController : IAppController
         CaptureOverlay
     }
 
+    private readonly AppNavigation _appNavigation;
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
     private readonly ICancellationService _cancellationService;
@@ -56,12 +57,14 @@ internal partial class CaptureToolAppController : IAppController
     private UXHost _activeHost;
 
     public CaptureToolAppController(
+        AppNavigation appNavigation,
         ILogService logService,
         INavigationService navigationService,
         ICancellationService cancellationService,
         ISettingsService settingsService,
         IFeatureManager featureManager) 
     {
+        _appNavigation = appNavigation;
         _logService = logService;
         _navigationService = navigationService;
         _cancellationService = cancellationService;
@@ -95,13 +98,9 @@ internal partial class CaptureToolAppController : IAppController
 
     private void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
     {
-        if (_navigationService.CanGoBack)
+        if (_appNavigation.CanGoBack)
         {
-            bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
-            if (!success)
-            {
-                _navigationService.GoHome();
-            }
+            _appNavigation.GoBackToMainWindow();
         }
         else
         {
@@ -215,7 +214,7 @@ internal partial class CaptureToolAppController : IAppController
         try
         {
             await InitializeAsync();
-            _navigationService.GoHome();
+            _appNavigation.GoHome();
         }
         finally
         {
@@ -242,26 +241,26 @@ internal partial class CaptureToolAppController : IAppController
             string source = queryParams.Get("source") ?? string.Empty;
             if (source.Equals("PrintScreen", StringComparison.InvariantCultureIgnoreCase))
             {
-                _navigationService.GoToImageCapture(CaptureOptions.ImageDefault);
+                _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
             }
             else if (source.Equals("ScreenRecorderHotKey", StringComparison.InvariantCultureIgnoreCase) || isRecordingType)
             {
                 if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
                 {
-                    _navigationService.GoToImageCapture(CaptureOptions.VideoDefault);
+                    _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault);
                 }
                 else
                 {
-                    _navigationService.GoToImageCapture(CaptureOptions.ImageDefault);
+                    _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
                 }
             }
             else if (source.Equals("HotKey", StringComparison.InvariantCultureIgnoreCase))
             {
-                _navigationService.GoToImageCapture(CaptureOptions.ImageDefault);
+                _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
             }
             else
             {
-                _navigationService.GoHome();
+                _appNavigation.GoHome();
             }
         }
         catch (Exception ex)
@@ -359,7 +358,7 @@ internal partial class CaptureToolAppController : IAppController
     #region IVideoCaptureHandler
     public void StartVideoCapture(NewCaptureArgs args)
     {
-        _navigationService.GoToVideoCapture(args);
+        _appNavigation.GoToVideoCapture(args);
         _captureOverlayHost?.HideBorder();
 
         _tempVideoPath = Path.Combine(
@@ -380,7 +379,7 @@ internal partial class CaptureToolAppController : IAppController
         ScreenRecorder.StopRecording();
 
         VideoFile videoFile = new(_tempVideoPath);
-        _navigationService.GoToVideoEdit(videoFile);
+        _appNavigation.GoToVideoEdit(videoFile);
         _tempVideoPath = null;
 
         return videoFile;
