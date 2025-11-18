@@ -30,27 +30,6 @@ public class AboutPageViewModelTests
     }
 
     // ---------------------------------------------------------
-    // Helper for capturing ShowDialogRequested
-    // ---------------------------------------------------------
-    private static Task<(string title, string content)> CaptureDialogAsync(AboutPageViewModel vm, Action execute)
-    {
-        TaskCompletionSource<(string, string)> tcs = new();
-        string? capturedTitle = null;
-        string? capturedContent = null;
-
-        vm.ShowDialogRequested += (_, args) =>
-        {
-            capturedTitle = args.title;
-            capturedContent = args.content;
-            tcs.SetResult((capturedTitle, capturedContent));
-        };
-
-        execute();
-
-        return tcs.Task;
-    }
-
-    // ---------------------------------------------------------
     // Generic dialog test method
     // ---------------------------------------------------------
     private async Task TestDialogCommandAsync(
