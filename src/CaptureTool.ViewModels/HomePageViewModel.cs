@@ -16,7 +16,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
         public static readonly string NewVideoCapture = "HomePageViewModel_NewVideoCapture";
     }
 
-    private readonly AppNavigation _appNavigation;
+    private readonly IAppNavigation _appNavigation;
     private readonly ITelemetryService _telemetryService;
 
     public RelayCommand NewImageCaptureCommand => new(NewImageCapture);
@@ -25,7 +25,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
     public bool IsVideoCaptureEnabled { get; }
 
     public HomePageViewModel(
-        AppNavigation appNavigation,
+        IAppNavigation appNavigation,
         IFeatureManager featureManager,
         ITelemetryService telemetryService)
     {

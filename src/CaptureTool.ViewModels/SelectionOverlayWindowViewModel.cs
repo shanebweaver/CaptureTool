@@ -15,7 +15,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>
 {
-    private readonly AppNavigation _appNavigation;
+    private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
     private readonly IFactoryService<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
@@ -128,7 +128,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private bool IsVideoCaptureFeatureEnabled { get; }
 
     public SelectionOverlayWindowViewModel(
-        AppNavigation appNavigation,
+        IAppNavigation appNavigation,
         IFeatureManager featureManager,
         IThemeService themeService,
         IAppController appController,

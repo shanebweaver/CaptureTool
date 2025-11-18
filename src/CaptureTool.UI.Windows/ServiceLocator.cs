@@ -9,7 +9,7 @@ internal class ServiceLocator
 {
     public static IAppController AppController => GetService<IAppController>();
     public static ILogService Logging => GetService<ILogService>();
-    public static AppNavigation Navigation => GetService<AppNavigation>();
+    public static IAppNavigation Navigation => GetService<IAppNavigation>();
     public static IFeatureManager FeatureManager => GetService<IFeatureManager>();
     private static T GetService<T>() where T : notnull => App.Current.ServiceProvider.GetService<T>();
 }

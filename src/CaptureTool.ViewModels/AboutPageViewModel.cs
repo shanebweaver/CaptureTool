@@ -16,30 +16,32 @@ public sealed partial class AboutPageViewModel : ViewModelBase
         public static readonly string ShowTermsOfUse = "AboutPageViewModel_ShowTermsOfUse";
     }
 
-    private readonly AppNavigation _appNavigation;
+    private readonly IAppNavigation _appNavigation;
     private readonly ILocalizationService _localizationService;
     private readonly ITelemetryService _telemetryService;
 
     public event EventHandler<(string title, string content)>? ShowDialogRequested;
 
-    public RelayCommand ShowThirdPartyCommand =>
-        new(() => ShowDialog("About_ThirdParty_DialogTitle", "About_ThirdParty_DialogContent", ActivityIds.ShowThirdParty));
-    public RelayCommand ShowPrivacyPolicyCommand => 
-        new(() => ShowDialog("About_PrivacyPolicy_DialogTitle", "About_PrivacyPolicy_DialogContent", ActivityIds.ShowPrivacyPolicy));
-    public RelayCommand ShowTermsOfUseCommand => 
-        new(() => ShowDialog("About_TermsOfUse_DialogTitle", "About_TermsOfUse_DialogContent", ActivityIds.ShowTermsOfUse));
-    public RelayCommand ShowDisclaimerOfLiabilityCommand => 
-        new(() => ShowDialog("About_DisclaimerOfLiability_DialogTitle", "About_DisclaimerOfLiability_DialogContent", ActivityIds.ShowDisclaimerOfLiability));
-    public RelayCommand GoBackCommand => new(GoBack);
+    public RelayCommand ShowThirdPartyCommand { get; }
+    public RelayCommand ShowPrivacyPolicyCommand { get; }
+    public RelayCommand ShowTermsOfUseCommand { get; }
+    public RelayCommand ShowDisclaimerOfLiabilityCommand { get; }
+    public RelayCommand GoBackCommand { get; }
 
     public AboutPageViewModel(
-        AppNavigation appNavigation,
+        IAppNavigation appNavigation,
         ILocalizationService localizationService,
         ITelemetryService telemetryService)
     {
         _appNavigation = appNavigation;
         _localizationService = localizationService;
         _telemetryService = telemetryService;
+
+        ShowThirdPartyCommand = new(() => ShowDialog("About_ThirdParty_DialogTitle", "About_ThirdParty_DialogContent", ActivityIds.ShowThirdParty));
+        ShowPrivacyPolicyCommand = new(() => ShowDialog("About_PrivacyPolicy_DialogTitle", "About_PrivacyPolicy_DialogContent", ActivityIds.ShowPrivacyPolicy));
+        ShowTermsOfUseCommand = new(() => ShowDialog("About_TermsOfUse_DialogTitle", "About_TermsOfUse_DialogContent", ActivityIds.ShowTermsOfUse));
+        ShowDisclaimerOfLiabilityCommand = new(() => ShowDialog("About_DisclaimerOfLiability_DialogTitle", "About_DisclaimerOfLiability_DialogContent", ActivityIds.ShowDisclaimerOfLiability));
+        GoBackCommand = new(GoBack);
     }
 
     private void ShowDialog(string titleResourceKey, string contentResourceKey, string activityId)
@@ -57,7 +59,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
             _telemetryService.ActivityError(activityId, ex);
         }
 
-        _telemetryService.ActivityInitiated(activityId);
+        _telemetryService.ActivityCompleted(activityId);
     }
 
     private void GoBack()

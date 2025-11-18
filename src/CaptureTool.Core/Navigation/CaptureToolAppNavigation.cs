@@ -5,10 +5,10 @@ using System;
 
 namespace CaptureTool.Core.Navigation;
 
-public sealed partial class AppNavigation
+public sealed partial class CaptureToolAppNavigation : IAppNavigation
 {
     private readonly INavigationService _navigationService;
-    public AppNavigation(INavigationService navigationService)
+    public CaptureToolAppNavigation(INavigationService navigationService)
     {
         _navigationService = navigationService;
     }
@@ -34,7 +34,7 @@ public sealed partial class AppNavigation
         }
     }
 
-    public void GoHome() 
+    public void GoHome()
         => _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
 
     public void GoToLoading()

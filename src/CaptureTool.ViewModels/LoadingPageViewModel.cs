@@ -12,13 +12,13 @@ public sealed partial class LoadingPageViewModel : ViewModelBase
         public static readonly string GoBack = "LoadingPageViewModel_GoBack";
     }
 
-    private readonly AppNavigation _appNavigation;
+    private readonly IAppNavigation _appNavigation;
     private readonly ITelemetryService _telemetryService;
 
     public RelayCommand GoBackCommand => new(GoBack);
 
     public LoadingPageViewModel(
-        AppNavigation appNavigation,
+        IAppNavigation appNavigation,
         ITelemetryService telemetryService)
     {
         _appNavigation = appNavigation;

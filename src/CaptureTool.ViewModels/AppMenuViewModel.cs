@@ -24,7 +24,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         public static readonly string SendFeedback = "AppMenuViewModel_SendFeedback";
     }
 
-    private readonly AppNavigation _appNavigation;
+    private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
     private readonly ITelemetryService _telemetryService;
     private readonly IFilePickerService _filePickerService;
@@ -39,7 +39,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     public bool ShowAddOnsOption { get; }
 
     public AppMenuViewModel(
-        AppNavigation appNavigation,
+        IAppNavigation appNavigation,
         ITelemetryService telemetryService,
         IAppController appController,
         IFilePickerService filePickerService,
