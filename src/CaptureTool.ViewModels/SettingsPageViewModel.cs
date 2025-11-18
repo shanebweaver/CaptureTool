@@ -5,7 +5,6 @@ using CaptureTool.Core.Navigation;
 using CaptureTool.Services;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
-using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Settings;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
@@ -54,10 +53,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         AppTheme.SystemDefault,
     ];
 
-    public RelayCommand ChangeScreenshotsFolderCommand => new(ChangeScreenshotsFolder);
-    public RelayCommand OpenScreenshotsFolderCommand => new(OpenScreenshotsFolder);
-    public RelayCommand RestartAppCommand => new(RestartApp);
-    public RelayCommand GoBackCommand => new(GoBack);
+    public RelayCommand ChangeScreenshotsFolderCommand { get; }
+    public RelayCommand OpenScreenshotsFolderCommand { get; }
+    public RelayCommand RestartAppCommand { get; }
+    public RelayCommand GoBackCommand { get; }
 
     private ObservableCollection<AppLanguageViewModel> _appLanguages;
     public ObservableCollection<AppLanguageViewModel> AppLanguages
@@ -164,6 +163,11 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _appThemes = [];
         _appLanguages = [];
         _screenshotsFolderPath = string.Empty;
+
+        ChangeScreenshotsFolderCommand = new(ChangeScreenshotsFolder);
+        OpenScreenshotsFolderCommand = new(OpenScreenshotsFolder);
+        RestartAppCommand = new(RestartApp);
+        GoBackCommand = new(GoBack);
     }
 
     public override async Task LoadAsync(CancellationToken cancellationToken)

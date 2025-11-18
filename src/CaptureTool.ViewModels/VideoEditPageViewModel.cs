@@ -21,8 +21,8 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase<
         public static readonly string Copy = $"{nameof(VideoEditPageViewModel)}_Copy";
     }
 
-    public RelayCommand SaveCommand => new(Save);
-    public RelayCommand CopyCommand => new(Copy);
+    public RelayCommand SaveCommand { get; }
+    public RelayCommand CopyCommand { get; }
 
     private string? _videoPath;
     public string? VideoPath
@@ -46,6 +46,9 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase<
         _filePickerService = filePickerService;
         _appController = appController;
         _telemetryService = telemetryService;
+
+        SaveCommand = new(Save);
+        CopyCommand = new(Copy);
     }
 
     public override Task LoadAsync(VideoFile video, CancellationToken cancellationToken)

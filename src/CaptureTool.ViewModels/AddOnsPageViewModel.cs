@@ -17,8 +17,8 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     private readonly IStoreService _storeService;
     private readonly ILocalizationService _localizationService;
 
-    public RelayCommand GetChromaKeyAddOnCommand => new(GetChromaKeyAddOn, () => IsChromaKeyAddOnAvailable);
-    public RelayCommand GoBackCommand => new(GoBack, () => _appNavigation.CanGoBack);
+    public RelayCommand GetChromaKeyAddOnCommand { get; }
+    public RelayCommand GoBackCommand { get; }
 
     private bool _isChromaKeyAddOnOwned;
     public bool IsChromaKeyAddOnOwned
@@ -59,6 +59,9 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         _storeService = storeService;
         _localizationService = localizationService;
         _chromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
+
+        GetChromaKeyAddOnCommand = new(GetChromaKeyAddOn, () => IsChromaKeyAddOnAvailable);
+        GoBackCommand = new(GoBack, () => _appNavigation.CanGoBack);
     }
 
     public override async Task LoadAsync(CancellationToken cancellationToken)

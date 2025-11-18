@@ -30,8 +30,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         CaptureType.FullScreen,
     ];
 
-    public RelayCommand RequestCaptureCommand => new(RequestCapture);
-    public RelayCommand CloseOverlayCommand => new(CloseOverlay);
+    public RelayCommand RequestCaptureCommand { get; }
+    public RelayCommand CloseOverlayCommand { get; }
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
@@ -143,6 +143,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
+
+        RequestCaptureCommand = new(RequestCapture);
+        CloseOverlayCommand = new(CloseOverlay);
 
         IsVideoCaptureFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
 

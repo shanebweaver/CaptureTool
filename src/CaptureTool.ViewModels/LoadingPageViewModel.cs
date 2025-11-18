@@ -15,7 +15,7 @@ public sealed partial class LoadingPageViewModel : ViewModelBase
     private readonly IAppNavigation _appNavigation;
     private readonly ITelemetryService _telemetryService;
 
-    public RelayCommand GoBackCommand => new(GoBack);
+    public RelayCommand GoBackCommand { get; }
 
     public LoadingPageViewModel(
         IAppNavigation appNavigation,
@@ -23,6 +23,8 @@ public sealed partial class LoadingPageViewModel : ViewModelBase
     {
         _appNavigation = appNavigation;
         _telemetryService = telemetryService;
+
+        GoBackCommand = new(GoBack);
     }
 
     private void GoBack()

@@ -57,21 +57,22 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public event EventHandler? InvalidateCanvasRequested;
 
-    public RelayCommand CopyCommand => new(Copy);
-    public RelayCommand ToggleCropModeCommand => new(ToggleCropMode);
-    public RelayCommand SaveCommand => new(Save);
-    public RelayCommand UndoCommand => new(Undo);
-    public RelayCommand RedoCommand => new(Redo);
-    public RelayCommand RotateCommand => new(Rotate);
-    public RelayCommand FlipHorizontalCommand => new(() => Flip(FlipDirection.Horizontal));
-    public RelayCommand FlipVerticalCommand => new(() => Flip(FlipDirection.Vertical));
-    public RelayCommand PrintCommand => new(Print);
-    public RelayCommand ShareCommand => new(Share);
-    public RelayCommand<Color> UpdateChromaKeyColorCommand => new(UpdateChromaKeyColor, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
+    public RelayCommand CopyCommand { get; }
+    public RelayCommand ToggleCropModeCommand { get; }
+    public RelayCommand SaveCommand { get; }
+    public RelayCommand UndoCommand { get; }
+    public RelayCommand RedoCommand { get; }
+    public RelayCommand RotateCommand { get; }
+    public RelayCommand FlipHorizontalCommand { get; }
+    public RelayCommand FlipVerticalCommand { get; }
+    public RelayCommand PrintCommand { get; }
+    public RelayCommand ShareCommand { get; }
+    public RelayCommand<Color> UpdateChromaKeyColorCommand { get; }
 
     // Private commands to handle undo/redo operations.
-    private RelayCommand<ImageOrientation> UpdateOrientationCommand => new(UpdateOrientation);
-    private RelayCommand<Rectangle> UpdateCropRectCommand => new(UpdateCropRect);
+    private RelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
+    private RelayCommand<Rectangle> UpdateCropRectCommand { get; }
+
 
     private bool _hasUndoStack;
     public bool HasUndoStack
@@ -241,6 +242,20 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _chromaKeyColorOptions = [];
         _operationsUndoStack = [];
         _operationsRedoStack = [];
+
+        CopyCommand = new RelayCommand(Copy);
+        ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
+        SaveCommand = new RelayCommand(Save);
+        UndoCommand = new RelayCommand(Undo);
+        RedoCommand = new RelayCommand(Redo);
+        RotateCommand = new RelayCommand(Rotate);
+        FlipHorizontalCommand = new RelayCommand(() => Flip(FlipDirection.Horizontal));
+        FlipVerticalCommand = new RelayCommand(() => Flip(FlipDirection.Vertical));
+        PrintCommand = new RelayCommand(Print);
+        ShareCommand = new RelayCommand(Share);
+        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
+        UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
+        UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
     }
 
     public override async Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)

@@ -7,12 +7,14 @@ public sealed partial class ErrorPageViewModel : LoadableViewModelBase
 {
     private readonly IAppController _appController;
 
-    public RelayCommand RestartAppCommand => new(RestartApp);
+    public RelayCommand RestartAppCommand { get; }
 
     public ErrorPageViewModel(
         IAppController appController)
     {
         _appController = appController;
+
+        RestartAppCommand = new(RestartApp);
     }
 
     private void RestartApp()

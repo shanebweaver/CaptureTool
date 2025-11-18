@@ -29,12 +29,12 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     private readonly ITelemetryService _telemetryService;
     private readonly IFilePickerService _filePickerService;
 
-    public RelayCommand NewImageCaptureCommand => new(NewImageCapture);
-    public RelayCommand OpenFileCommand => new(OpenFile);
-    public RelayCommand NavigateToSettingsCommand => new(NavigateToSettings);
-    public RelayCommand ShowAboutAppCommand => new(ShowAboutApp); 
-    public RelayCommand ShowAddOnsCommand => new(ShowAddOns); 
-    public RelayCommand ExitApplicationCommand => new(ExitApplication);
+    public RelayCommand NewImageCaptureCommand { get; }
+    public RelayCommand OpenFileCommand { get; }
+    public RelayCommand NavigateToSettingsCommand { get; }
+    public RelayCommand ShowAboutAppCommand { get; }
+    public RelayCommand ShowAddOnsCommand { get; }
+    public RelayCommand ExitApplicationCommand { get; }
 
     public bool ShowAddOnsOption { get; }
 
@@ -49,6 +49,13 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         _telemetryService = telemetryService;
         _appController = appController;
         _filePickerService = filePickerService;
+
+        NewImageCaptureCommand = new RelayCommand(NewImageCapture);
+        OpenFileCommand = new RelayCommand(OpenFile);
+        NavigateToSettingsCommand = new RelayCommand(NavigateToSettings);
+        ShowAboutAppCommand = new RelayCommand(ShowAboutApp);
+        ShowAddOnsCommand = new RelayCommand(ShowAddOns);
+        ExitApplicationCommand = new RelayCommand(ExitApplication);
 
         ShowAddOnsOption = featureManager.IsEnabled(CaptureToolFeatures.Feature_AddOns_Store);
     }

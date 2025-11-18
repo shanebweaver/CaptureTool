@@ -19,8 +19,8 @@ public sealed partial class HomePageViewModel : ViewModelBase
     private readonly IAppNavigation _appNavigation;
     private readonly ITelemetryService _telemetryService;
 
-    public RelayCommand NewImageCaptureCommand => new(NewImageCapture);
-    public RelayCommand NewVideoCaptureCommand => new(NewVideoCapture, () => IsVideoCaptureEnabled);
+    public RelayCommand NewImageCaptureCommand { get; }
+    public RelayCommand NewVideoCaptureCommand { get; }
 
     public bool IsVideoCaptureEnabled { get; }
 
@@ -31,6 +31,9 @@ public sealed partial class HomePageViewModel : ViewModelBase
     {
         _appNavigation = appNavigation;
         _telemetryService = telemetryService;
+
+        NewImageCaptureCommand = new(NewImageCapture);
+        NewVideoCaptureCommand = new(NewVideoCapture, () => IsVideoCaptureEnabled);
 
         IsVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
     }
