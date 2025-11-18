@@ -37,7 +37,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         public static readonly string UpdateShowAppLanguageRestartMessage = "SettingsPageViewModel_UpdateShowAppLanguageRestartMessage";
     }
 
-    private readonly AppNavigation _appNavigation;
+    private readonly IAppNavigation _appNavigation;
     private readonly ITelemetryService _telemetryService;
     private readonly IAppController _appController;
     private readonly ILocalizationService _localizationService;
@@ -139,7 +139,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public SettingsPageViewModel(
-        AppNavigation appNavigation,
+        IAppNavigation appNavigation,
         ITelemetryService telemetryService,
         IAppController appController,
         ILocalizationService localizationService,

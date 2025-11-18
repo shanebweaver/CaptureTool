@@ -38,7 +38,7 @@ internal partial class CaptureToolAppController : IAppController
         CaptureOverlay
     }
 
-    private readonly AppNavigation _appNavigation;
+    private readonly IAppNavigation _appNavigation;
     private readonly ILogService _logService;
     private readonly INavigationService _navigationService;
     private readonly ICancellationService _cancellationService;
@@ -57,7 +57,7 @@ internal partial class CaptureToolAppController : IAppController
     private UXHost _activeHost;
 
     public CaptureToolAppController(
-        AppNavigation appNavigation,
+        IAppNavigation appNavigation,
         ILogService logService,
         INavigationService navigationService,
         ICancellationService cancellationService,

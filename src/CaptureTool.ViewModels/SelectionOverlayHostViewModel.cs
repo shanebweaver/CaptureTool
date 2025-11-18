@@ -13,11 +13,11 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 {
     private readonly List<SelectionOverlayWindowViewModel> _windowViewModels = [];
 
-    private readonly AppNavigation _appNavigation;
+    private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
 
     public SelectionOverlayHostViewModel(
-        AppNavigation appNavigation,
+        IAppNavigation appNavigation,
         IAppController appController)
     {
         _appNavigation = appNavigation;

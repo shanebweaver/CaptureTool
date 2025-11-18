@@ -12,7 +12,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 {
-    private readonly AppNavigation _appNavigation;
+    private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
     private readonly IStoreService _storeService;
     private readonly ILocalizationService _localizationService;
@@ -49,7 +49,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public AddOnsPageViewModel(
-        AppNavigation appNavigation,
+        IAppNavigation appNavigation,
         IAppController appController,
         ILocalizationService localizationService,
         IStoreService storeService)

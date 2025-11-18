@@ -11,7 +11,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>
 {
-    private readonly AppNavigation _appNavigation;
+    private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
@@ -62,7 +62,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public RelayCommand ToggleDesktopAudioCommand => new(ToggleDesktopAudio);
     
     public CaptureOverlayViewModel(
-        AppNavigation appNavigation,
+        IAppNavigation appNavigation,
         IThemeService themeService,
         IAppController appController) 
     {
