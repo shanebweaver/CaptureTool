@@ -88,6 +88,7 @@ public class AboutPageViewModelTests
         string capturedContent = result.content;
 
         telemetryService.Verify(t => t.ActivityInitiated(expectedActivityId), Times.Exactly(1));
+        telemetryService.Verify(t => t.ActivityCompleted(expectedActivityId), Times.Exactly(1));
         telemetryService.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
 
         // Assert localization calls
