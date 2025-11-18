@@ -3,7 +3,6 @@ using CaptureTool.Common.Storage;
 using CaptureTool.Common.Sync;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
-using CaptureTool.Services.Navigation;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -14,15 +13,15 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 {
     private readonly List<SelectionOverlayWindowViewModel> _windowViewModels = [];
 
+    private readonly AppNavigation _appNavigation;
     private readonly IAppController _appController;
-    private readonly INavigationService _navigationService;
 
     public SelectionOverlayHostViewModel(
-        IAppController appController,
-        INavigationService navigationService)
+        AppNavigation appNavigation,
+        IAppController appController)
     {
+        _appNavigation = appNavigation;
         _appController = appController;
-        _navigationService = navigationService;
     }
 
     public void AddWindowViewModel(SelectionOverlayWindowViewModel newVM, bool isPrimary = false)
@@ -122,7 +121,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
             if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Image)
             {
                 ImageFile image = _appController.PerformAllScreensCapture();
-                _navigationService.GoToImageEdit(image);
+                _appNavigation.GoToImageEdit(image);
             }
             else if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Video)
             {

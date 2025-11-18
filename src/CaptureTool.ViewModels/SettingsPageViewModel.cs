@@ -37,7 +37,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         public static readonly string UpdateShowAppLanguageRestartMessage = "SettingsPageViewModel_UpdateShowAppLanguageRestartMessage";
     }
 
-    private readonly INavigationService _navigationService;
+    private readonly AppNavigation _appNavigation;
     private readonly ITelemetryService _telemetryService;
     private readonly IAppController _appController;
     private readonly ILocalizationService _localizationService;
@@ -139,7 +139,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public SettingsPageViewModel(
-        INavigationService navigationService,
+        AppNavigation appNavigation,
         ITelemetryService telemetryService,
         IAppController appController,
         ILocalizationService localizationService,
@@ -150,7 +150,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IFactoryService<AppLanguageViewModel, AppLanguage?> appLanguageViewModelFactory,
         IFactoryService<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
-        _navigationService = navigationService;
+        _appNavigation = appNavigation;
         _telemetryService = telemetryService;
         _appController = appController;
         _localizationService = localizationService;
@@ -369,10 +369,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private void GoBack()
     {
         ExecuteActivity(ActivityIds.GoBack, () => {
-            if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
-            {
-                _navigationService.GoHome();
-            }
+            _appNavigation.GoBackOrGoHome();
         });
     }
 

@@ -3,7 +3,6 @@ using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
 using System;
@@ -25,9 +24,9 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         public static readonly string SendFeedback = "AppMenuViewModel_SendFeedback";
     }
 
-    private readonly ITelemetryService _telemetryService;
-    private readonly INavigationService _navigationService;
+    private readonly AppNavigation _appNavigation;
     private readonly IAppController _appController;
+    private readonly ITelemetryService _telemetryService;
     private readonly IFilePickerService _filePickerService;
 
     public RelayCommand NewImageCaptureCommand => new(NewImageCapture);
@@ -40,15 +39,15 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     public bool ShowAddOnsOption { get; }
 
     public AppMenuViewModel(
+        AppNavigation appNavigation,
         ITelemetryService telemetryService,
         IAppController appController,
-        INavigationService navigationService,
         IFilePickerService filePickerService,
         IFeatureManager featureManager)
     {
+        _appNavigation = appNavigation;
         _telemetryService = telemetryService;
         _appController = appController;
-        _navigationService = navigationService;
         _filePickerService = filePickerService;
 
         ShowAddOnsOption = featureManager.IsEnabled(CaptureToolFeatures.Feature_AddOns_Store);
@@ -61,7 +60,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
         try
         {
-            _navigationService.GoToImageCapture(CaptureOptions.ImageDefault);
+            _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -85,7 +84,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
                 return;
             }
 
-            _navigationService.GoToImageEdit(imageFile);
+            _appNavigation.GoToImageEdit(imageFile);
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -101,7 +100,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
         try
         {
-            _navigationService.GoToSettings();
+            _appNavigation.GoToSettings();
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -117,7 +116,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
         try
         {
-            _navigationService.GoToAbout();
+            _appNavigation.GoToAbout();
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)
@@ -133,7 +132,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
         try
         {
-            _navigationService.GoToAddOns();
+            _appNavigation.GoToAddOns();
             _telemetryService.ActivityCompleted(activityId);
         }
         catch (Exception e)

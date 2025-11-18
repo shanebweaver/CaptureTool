@@ -5,7 +5,6 @@ using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
-using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -16,7 +15,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>
 {
-    private readonly INavigationService _navigationService;
+    private readonly AppNavigation _appNavigation;
     private readonly IAppController _appController;
     private readonly IFactoryService<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
@@ -129,14 +128,14 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private bool IsVideoCaptureFeatureEnabled { get; }
 
     public SelectionOverlayWindowViewModel(
-        INavigationService navigationService,
+        AppNavigation appNavigation,
         IFeatureManager featureManager,
         IThemeService themeService,
         IAppController appController,
         IFactoryService<CaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
         IFactoryService<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
     {
-        _navigationService = navigationService;
+        _appNavigation = appNavigation;
         _appController = appController;
         _captureTypeViewModelFactory = captureTypeViewModelFactory;
         _captureArea = Rectangle.Empty;
@@ -191,13 +190,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void CloseOverlay()
     {
-        if (_navigationService.CanGoBack)
+        if (_appNavigation.CanGoBack)
         {
-            bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
-            if (!success)
-            {
-                _navigationService.GoHome();
-            }
+            _appNavigation.GoBackToMainWindow();
         }
         else
         {
@@ -237,13 +232,13 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             {
                 NewCaptureArgs args = new(Monitor.Value, CaptureArea);
                 ImageFile image = _appController.PerformImageCapture(args);
-                _navigationService.GoToImageEdit(image);
+                _appNavigation.GoToImageEdit(image);
 
             }
             else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
             {
                 NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-                _navigationService.GoToVideoCapture(args);
+                _appNavigation.GoToVideoCapture(args);
             }
         }
     }

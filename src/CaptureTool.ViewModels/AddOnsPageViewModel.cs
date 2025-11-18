@@ -2,7 +2,6 @@
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Localization;
-using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Store;
 using System;
 using System.Threading;
@@ -13,13 +12,13 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 {
+    private readonly AppNavigation _appNavigation;
     private readonly IAppController _appController;
     private readonly IStoreService _storeService;
-    private readonly INavigationService _navigationService;
     private readonly ILocalizationService _localizationService;
 
     public RelayCommand GetChromaKeyAddOnCommand => new(GetChromaKeyAddOn, () => IsChromaKeyAddOnAvailable);
-    public RelayCommand GoBackCommand => new(GoBack, () => _navigationService.CanGoBack);
+    public RelayCommand GoBackCommand => new(GoBack, () => _appNavigation.CanGoBack);
 
     private bool _isChromaKeyAddOnOwned;
     public bool IsChromaKeyAddOnOwned
@@ -50,14 +49,14 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public AddOnsPageViewModel(
+        AppNavigation appNavigation,
         IAppController appController,
         ILocalizationService localizationService,
-        IStoreService storeService,
-        INavigationService navigationService)
+        IStoreService storeService)
     {
+        _appNavigation = appNavigation;
         _appController = appController;
         _storeService = storeService;
-        _navigationService = navigationService;
         _localizationService = localizationService;
         _chromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
     }
@@ -110,9 +109,6 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 
     private void GoBack()
     {
-        if (!_navigationService.CanGoBack || !_navigationService.TryGoBack())
-        {
-            _navigationService.GoHome();
-        }
+        _appNavigation.GoBackOrGoHome();
     }
 }
