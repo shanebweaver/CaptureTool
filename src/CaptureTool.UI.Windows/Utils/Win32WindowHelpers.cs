@@ -82,7 +82,6 @@ public static partial class Win32WindowHelpers
             SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
     }
 
-
     public static void CenterOnScreen(IntPtr hwndPtr, double? width = null, double? height = null)
     {
         HWND hwnd = new(hwndPtr);
