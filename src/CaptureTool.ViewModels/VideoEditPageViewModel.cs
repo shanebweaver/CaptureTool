@@ -6,8 +6,6 @@ using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
 using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
