@@ -1,7 +1,6 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Telemetry;
-using System;
 
 namespace CaptureTool.ViewModels;
 

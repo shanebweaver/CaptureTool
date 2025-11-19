@@ -4,7 +4,7 @@ using CaptureTool.Services.Telemetry;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class ErrorPageViewModel : LoadableViewModelBase
+public sealed partial class ErrorPageViewModel : ViewModelBase
 {
     private readonly struct ActivityIds
     {

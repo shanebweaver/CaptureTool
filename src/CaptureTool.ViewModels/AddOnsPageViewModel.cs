@@ -1,6 +1,7 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
+using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Store;
 using CaptureTool.Services.Telemetry;
@@ -25,6 +26,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     private readonly IStoreService _storeService;
     private readonly ILocalizationService _localizationService;
     private readonly ITelemetryService _telemetryService;
+    private readonly ICancellationService _cancellationService;
 
     public RelayCommand GetChromaKeyAddOnCommand { get; }
     public RelayCommand GoBackCommand { get; }
@@ -62,13 +64,15 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         IAppController appController,
         ILocalizationService localizationService,
         IStoreService storeService,
-        ITelemetryService telemetryService)
+        ITelemetryService telemetryService,
+        ICancellationService cancellationService)
     {
         _appNavigation = appNavigation;
         _appController = appController;
         _localizationService = localizationService;
         _storeService = storeService;
         _telemetryService = telemetryService;
+        _cancellationService = cancellationService;
 
         _chromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
 
@@ -80,24 +84,32 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     {
         return _telemetryService.ExecuteActivityAsync(ActivityIds.Load, async () =>
         {
-            StoreAddOn? addOn = await _storeService.GetAddonProductInfoAsync(AddOns.ChromaKeyBackgroundRemoval);
-            if (addOn != null)
+            var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
+            try
             {
-                bool isOwned = addOn.IsOwned;
-                IsChromaKeyAddOnAvailable = !isOwned;
-                IsChromaKeyAddOnOwned = isOwned;
-                ChromaKeyAddOnPrice = isOwned ? _localizationService.GetString("AddOns_ItemOwned") : addOn.Price;
-                ChromaKeyAddOnLogoImage = addOn.LogoImage;
-            }
-            else
-            {
-                IsChromaKeyAddOnAvailable = false;
-                IsChromaKeyAddOnOwned = false;
-                ChromaKeyAddOnPrice = _localizationService.GetString("AddOns_ItemNotAvailable");
-                ChromaKeyAddOnLogoImage = null;
-            }
+                StoreAddOn? addOn = await _storeService.GetAddonProductInfoAsync(AddOns.ChromaKeyBackgroundRemoval);
+                if (addOn != null)
+                {
+                    bool isOwned = addOn.IsOwned;
+                    IsChromaKeyAddOnAvailable = !isOwned;
+                    IsChromaKeyAddOnOwned = isOwned;
+                    ChromaKeyAddOnPrice = isOwned ? _localizationService.GetString("AddOns_ItemOwned") : addOn.Price;
+                    ChromaKeyAddOnLogoImage = addOn.LogoImage;
+                }
+                else
+                {
+                    IsChromaKeyAddOnAvailable = false;
+                    IsChromaKeyAddOnOwned = false;
+                    ChromaKeyAddOnPrice = _localizationService.GetString("AddOns_ItemNotAvailable");
+                    ChromaKeyAddOnLogoImage = null;
+                }
 
-            await base.LoadAsync(cancellationToken);
+                await base.LoadAsync(cancellationToken);
+            }
+            finally
+            {
+                cts.Dispose();
+            }
         });
     }
 

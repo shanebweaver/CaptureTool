@@ -14,11 +14,10 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
+public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
@@ -170,65 +169,57 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         GoBackCommand = new(GoBack);
     }
 
-    public override Task LoadAsync(CancellationToken cancellationToken)
+    public override void Load()
     {
-        return _telemetryService.ExecuteActivityAsync(ActivityIds.Load, async () =>
+        _telemetryService.ExecuteActivity(ActivityIds.Load, () =>
         {
-            var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
-            try
+            // Languages
+            AppLanguage[] languages = _localizationService.SupportedLanguages;
+            for (var i = 0; i < languages.Length; i++)
             {
-                // Languages
-                AppLanguage[] languages = _localizationService.SupportedLanguages;
-                for (var i = 0; i < languages.Length; i++)
+                AppLanguage language = languages[i];
+                AppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
+                AppLanguages.Add(vm);
+
+                if (language.Value == _localizationService.LanguageOverride?.Value)
                 {
-                    AppLanguage language = languages[i];
-                    AppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
-                    AppLanguages.Add(vm);
-
-                    if (language.Value == _localizationService.LanguageOverride?.Value)
-                    {
-                        SelectedAppLanguageIndex = i;
-                    }
+                    SelectedAppLanguageIndex = i;
                 }
-                AppLanguages.Add(_appLanguageViewModelFactory.Create(null)); // Null for system default
-                if (SelectedAppLanguageIndex == -1)
-                {
-                    SelectedAppLanguageIndex = AppLanguages.Count - 1;
-                }
-                UpdateShowAppLanguageRestartMessage();
-
-                // Themes
-                AppTheme currentTheme = _themeService.CurrentTheme;
-                for (var i = 0; i < SupportedAppThemes.Length; i++)
-                {
-                    AppTheme supportedTheme = SupportedAppThemes[i];
-                    AppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
-                    AppThemes.Add(vm);
-
-                    if (supportedTheme == currentTheme)
-                    {
-                        SelectedAppThemeIndex = i;
-                    }
-                }
-                UpdateShowAppThemeRestartMessage();
-
-                ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
-                ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
-
-                var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
-                if (string.IsNullOrWhiteSpace(screenshotsFolder))
-                {
-                    screenshotsFolder = _appController.GetDefaultScreenshotsFolderPath();
-                }
-
-                ScreenshotsFolderPath = screenshotsFolder;
             }
-            finally
+            AppLanguages.Add(_appLanguageViewModelFactory.Create(null)); // Null for system default
+            if (SelectedAppLanguageIndex == -1)
             {
-                cts.Dispose();
+                SelectedAppLanguageIndex = AppLanguages.Count - 1;
+            }
+            UpdateShowAppLanguageRestartMessage();
+
+            // Themes
+            AppTheme currentTheme = _themeService.CurrentTheme;
+            for (var i = 0; i < SupportedAppThemes.Length; i++)
+            {
+                AppTheme supportedTheme = SupportedAppThemes[i];
+                AppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
+                AppThemes.Add(vm);
+
+                if (supportedTheme == currentTheme)
+                {
+                    SelectedAppThemeIndex = i;
+                }
+            }
+            UpdateShowAppThemeRestartMessage();
+
+            ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
+            ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
+
+            var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
+            if (string.IsNullOrWhiteSpace(screenshotsFolder))
+            {
+                screenshotsFolder = _appController.GetDefaultScreenshotsFolderPath();
             }
 
-            await base.LoadAsync(cancellationToken);
+            ScreenshotsFolderPath = screenshotsFolder;
+
+            base.Load();
         });
     }
 
