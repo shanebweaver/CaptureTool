@@ -1,5 +1,5 @@
 ﻿using CaptureTool.Capture;
-using CaptureTool.Core;
+using CaptureTool.Common;
 using CaptureTool.Services.Localization;
 using System;
 

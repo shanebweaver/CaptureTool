@@ -1,4 +1,5 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Common;
+using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
@@ -171,7 +172,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     public override void Load()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
         {
             // Languages
             AppLanguage[] languages = _localizationService.SupportedLanguages;
@@ -241,7 +242,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     private void UpdateAppLanguage()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.UpdateAppLanguage, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateAppLanguage, () =>
         {
             if (SelectedAppLanguageIndex != -1)
             {
@@ -257,7 +258,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     private void UpdateShowAppLanguageRestartMessage()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.UpdateShowAppLanguageRestartMessage, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateShowAppLanguageRestartMessage, () =>
         {
             ShowAppLanguageRestartMessage = 
                 _localizationService.RequestedLanguage != _localizationService.StartupLanguage || 
@@ -267,7 +268,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     private void UpdateAppTheme()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.UpdateAppTheme, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateAppTheme, () =>
         {
             if (SelectedAppThemeIndex != -1)
             {
@@ -283,7 +284,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     private void UpdateShowAppThemeRestartMessage()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.UpdateShowAppThemeRestartMessage, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateShowAppThemeRestartMessage, () =>
         {
             var defaultTheme = _themeService.DefaultTheme;
             var startupTheme = _themeService.StartupTheme;
@@ -307,7 +308,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     private void UpdateImageCaptureAutoSave()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.UpdateImageCaptureAutoSave, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateImageCaptureAutoSave, async () =>
         {
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, ImageCaptureAutoSave);
             await _settingsService.TrySaveAsync(CancellationToken.None);
@@ -316,7 +317,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     private void UpdateImageCaptureAutoCopy()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
         {
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, ImageCaptureAutoCopy);
             await _settingsService.TrySaveAsync(CancellationToken.None);
@@ -325,7 +326,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     private void ChangeScreenshotsFolder()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
         {
             var hwnd = _appController.GetMainWindowHandle();
             string? folderPath = await _filePickerService.PickFolderAsync(hwnd);
@@ -344,7 +345,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     private void OpenScreenshotsFolder()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.OpenScreenshotsFolder, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenScreenshotsFolder, () =>
         {
             if (Directory.Exists(ScreenshotsFolderPath))
             {
@@ -359,12 +360,12 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
     private void RestartApp()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, () => _appController.TryRestart());
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, () => _appController.TryRestart());
     }
 
     private void GoBack()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () => 
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () => 
         {
             _appNavigation.GoBackOrGoHome();
         });

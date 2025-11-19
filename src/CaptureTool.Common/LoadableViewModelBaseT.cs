@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Common.Loading;
 using System;
 
-namespace CaptureTool.Core;
+namespace CaptureTool.Common;
 
 public abstract partial class LoadableViewModelBase<T> : ViewModelBase, ILoadable<T>
 {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace CaptureTool.Core;
+namespace CaptureTool.Common;
 
 public abstract partial class ViewModelBase : HasLoadStateBase, INotifyPropertyChanged, IDisposable
 {

@@ -1,4 +1,5 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Common;
+using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Telemetry;
@@ -29,7 +30,7 @@ public sealed partial class LoadingPageViewModel : ViewModelBase
 
     private void GoBack()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.GoBack, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, async () =>
         {
             _appNavigation.GoBackOrGoHome();
         });

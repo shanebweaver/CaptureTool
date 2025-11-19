@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Capture;
+using CaptureTool.Common;
 using CaptureTool.Common.Storage;
 using CaptureTool.Common.Sync;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using System.Collections.Generic;

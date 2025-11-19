@@ -1,4 +1,5 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Common;
+using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
@@ -260,7 +261,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public override Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
     {
-        return TelemetryHelpers.ExecuteActivityAsync(_telemetryService, ActivityIds.Load, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Load, async () =>
         {
             var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
             try
@@ -314,7 +315,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void Copy()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Copy, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Copy, async () =>
         {
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
@@ -323,7 +324,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void ToggleCropMode()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.ToggleCropMode, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleCropMode, async () =>
         {
             IsInCropMode = !IsInCropMode;
         });
@@ -361,7 +362,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void Save()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Save, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Save, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             var file = await _filePickerService.SaveImageFileAsync(hwnd);
@@ -380,7 +381,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void Undo()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Undo, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Undo, async () =>
         {
             if (_operationsUndoStack.Count == 0)
             {
@@ -397,7 +398,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void Redo()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Redo, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Redo, async () =>
         {
             if (_operationsRedoStack.Count == 0)
             {
@@ -414,7 +415,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void Rotate()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Rotate, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Rotate, async () =>
         {
             ImageOrientation oldOrientation = Orientation;
             ImageOrientation newOrientation = ImageOrientationHelper.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
@@ -444,7 +445,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             _ => throw new InvalidOperationException("Unexpected FlipDirection value.")
         };
 
-        TelemetryHelpers.ExecuteActivity(_telemetryService, activityId, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, activityId, async () =>
         {
             ImageOrientation oldOrientation = Orientation;
             ImageOrientation newOrientation = ImageOrientationHelper.GetFlippedOrientation(Orientation, flipDirection);
@@ -462,7 +463,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async void Print()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Print, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Print, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
@@ -471,7 +472,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async void Share()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Share, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Share, async () =>
         {
             if (_imageFile == null)
             {

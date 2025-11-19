@@ -1,4 +1,5 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Common;
+using CaptureTool.Common.Commands;
 using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Services.Telemetry;
@@ -29,7 +30,7 @@ public sealed partial class ErrorPageViewModel : ViewModelBase
 
     private void RestartApp()
     {
-        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, async () =>
         {
             _appController.TryRestart();
         });

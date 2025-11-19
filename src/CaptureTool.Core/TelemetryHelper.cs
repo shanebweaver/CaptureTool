@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace CaptureTool.Core;
 
-public static class TelemetryHelpers
+public static class TelemetryHelper
 {
     public static void ExecuteActivity(ITelemetryService telemetryService, string activityId, Action activityAction)
     {

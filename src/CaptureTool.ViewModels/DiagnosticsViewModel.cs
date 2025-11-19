@@ -1,4 +1,4 @@
-﻿using CaptureTool.Core;
+﻿using CaptureTool.Common;
 
 namespace CaptureTool.ViewModels;
 

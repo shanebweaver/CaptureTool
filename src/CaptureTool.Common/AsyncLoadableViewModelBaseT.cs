@@ -3,7 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CaptureTool.Core;
+namespace CaptureTool.Common;
 
 public abstract partial class AsyncLoadableViewModelBase<T> : ViewModelBase, IAsyncLoadable<T>
 {

@@ -1,4 +1,4 @@
-﻿using CaptureTool.Core;
+﻿using CaptureTool.Common;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Themes;
 using System;
