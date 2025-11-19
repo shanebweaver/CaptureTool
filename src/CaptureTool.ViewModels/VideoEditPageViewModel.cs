@@ -67,9 +67,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         base.Dispose();
     }
 
-    private void Save()
+    private async void Save()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Save, async () =>
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             VideoFile? file = await _filePickerService.SaveVideoFileAsync(hwnd);
@@ -84,9 +84,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         });
     }
 
-    private void Copy()
+    private async void Copy()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Copy, async () =>
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Copy, async () =>
         {
             if (string.IsNullOrEmpty(_videoPath))
             {

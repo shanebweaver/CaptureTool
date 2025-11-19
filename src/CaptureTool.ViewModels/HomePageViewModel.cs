@@ -40,7 +40,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     private void NewImageCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewImageCapture, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewImageCapture, () =>
         {
             _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
         });
@@ -48,7 +48,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     private void NewVideoCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewVideoCapture, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewVideoCapture, () =>
         {
             _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault);
         });

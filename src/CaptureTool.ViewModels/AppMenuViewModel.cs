@@ -64,7 +64,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     private void NewImageCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewImageCapture, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewImageCapture, () =>
         {
             _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
         });
@@ -72,7 +72,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     private async void OpenFile()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenFile, async () =>
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.OpenFile, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             var imageFile = await _filePickerService.OpenImageFileAsync(hwnd) ?? throw new OperationCanceledException();
@@ -82,7 +82,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     private void NavigateToSettings()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NavigateToSettings, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NavigateToSettings, () =>
         {
             _appNavigation.GoToSettings();
         });
@@ -90,7 +90,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     private void ShowAboutApp()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ShowAboutApp, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ShowAboutApp, () =>
         {
             _appNavigation.GoToAbout();
         });
@@ -98,7 +98,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     private void ShowAddOns()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ShowAddOns, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ShowAddOns, () =>
         {
             _appNavigation.GoToAddOns();
         });
@@ -106,7 +106,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     private void ExitApplication()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ExitApplication, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ExitApplication, () =>
         {
             _appController.Shutdown();
         });

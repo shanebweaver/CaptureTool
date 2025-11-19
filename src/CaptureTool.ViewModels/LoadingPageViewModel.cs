@@ -30,7 +30,7 @@ public sealed partial class LoadingPageViewModel : ViewModelBase
 
     private void GoBack()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
         {
             _appNavigation.GoBackOrGoHome();
         });
