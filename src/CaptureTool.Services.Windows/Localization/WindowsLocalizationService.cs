@@ -1,4 +1,4 @@
-﻿using CaptureTool.Core;
+﻿using CaptureTool.Core.Settings;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Settings;

@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core;
 using CaptureTool.Core.Navigation;
+using CaptureTool.Core.Telemetry;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Telemetry;
 using System;

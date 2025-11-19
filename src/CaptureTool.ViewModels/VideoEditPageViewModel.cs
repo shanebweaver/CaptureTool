@@ -1,8 +1,8 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Telemetry;
 using CaptureTool.Services.Clipboard;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;

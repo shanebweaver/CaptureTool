@@ -1,9 +1,9 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Capture.Windows;
 using CaptureTool.Common.Storage;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
+using CaptureTool.Core.Settings;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Logging;

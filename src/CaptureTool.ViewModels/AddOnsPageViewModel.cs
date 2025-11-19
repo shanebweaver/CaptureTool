@@ -1,8 +1,8 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
+using CaptureTool.Core.Telemetry;
 using CaptureTool.Services.Cancellation;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Store;
@@ -10,7 +10,7 @@ using CaptureTool.Services.Telemetry;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using static CaptureTool.Core.CaptureToolStoreProducts;
+using static CaptureTool.Core.Store.CaptureToolStoreProducts;
 
 namespace CaptureTool.ViewModels;
 

@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Core;
+﻿namespace CaptureTool.Core.Store;
 
 public static class CaptureToolStoreProducts
 {

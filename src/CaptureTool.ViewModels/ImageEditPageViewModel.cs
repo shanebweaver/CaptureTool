@@ -1,8 +1,9 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Store;
+using CaptureTool.Core.Telemetry;
 using CaptureTool.Edit;
 using CaptureTool.Edit.ChromaKey;
 using CaptureTool.Edit.Drawable;
