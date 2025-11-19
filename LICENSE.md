@@ -1,4 +1,4 @@
-PolyForm Noncommercial License 1.0.0 – Modified
+# PolyForm Noncommercial License 1.0.0 – Modified
 
 Copyright (c) Shane Weaver, 2025
 
