@@ -30,7 +30,7 @@ public sealed partial class ErrorPageViewModel : ViewModelBase
 
     private void RestartApp()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, () =>
         {
             _appController.TryRestart();
         });

@@ -126,7 +126,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 
     private async void GetChromaKeyAddOn()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GetChromaKeyAddOn, async () =>
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.GetChromaKeyAddOn, async () =>
         {
             if (!IsChromaKeyAddOnOwned)
             {

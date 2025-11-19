@@ -307,27 +307,27 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         });
     }
 
-    private void UpdateImageCaptureAutoSave()
+    private async void UpdateImageCaptureAutoSave()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateImageCaptureAutoSave, async () =>
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoSave, async () =>
         {
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, ImageCaptureAutoSave);
             await _settingsService.TrySaveAsync(CancellationToken.None);
         });
     }
 
-    private void UpdateImageCaptureAutoCopy()
+    private async void UpdateImageCaptureAutoCopy()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
         {
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, ImageCaptureAutoCopy);
             await _settingsService.TrySaveAsync(CancellationToken.None);
         });
     }
 
-    private void ChangeScreenshotsFolder()
+    private async void ChangeScreenshotsFolder()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
         {
             var hwnd = _appController.GetMainWindowHandle();
             string? folderPath = await _filePickerService.PickFolderAsync(hwnd);
