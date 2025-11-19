@@ -1,6 +1,7 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.FeatureManagement;
@@ -174,7 +175,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public override void Load(SelectionOverlayWindowOptions options)
     {
-        _telemetryService.ExecuteActivity(ActivityIds.Load, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
         {
             Monitor = options.Monitor;
             MonitorWindows = [.. options.MonitorWindows];
@@ -207,7 +208,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void CloseOverlay()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.CloseOverlay, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.CloseOverlay, () =>
         {
             if (_appNavigation.CanGoBack)
             {
@@ -246,7 +247,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void RequestCapture()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.RequestCapture, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.RequestCapture, () =>
         {
             if (Monitor != null && CaptureArea != Rectangle.Empty)
             {

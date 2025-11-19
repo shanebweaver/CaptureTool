@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Services.Clipboard;
 using CaptureTool.Services.Storage;
@@ -51,7 +52,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     public override void Load(VideoFile video)
     {
-        _telemetryService.ExecuteActivity(ActivityIds.Load, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
         {
             VideoPath = video.Path;
 
@@ -67,7 +68,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     private void Save()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.Save, async () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Save, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             VideoFile? file = await _filePickerService.SaveVideoFileAsync(hwnd);
@@ -84,7 +85,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     private void Copy()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.Copy, async () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Copy, async () =>
         {
             if (string.IsNullOrEmpty(_videoPath))
             {

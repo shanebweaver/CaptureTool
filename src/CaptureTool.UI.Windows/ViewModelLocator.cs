@@ -1,4 +1,5 @@
-﻿using CaptureTool.ViewModels;
+﻿using CaptureTool.Core;
+using CaptureTool.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.UI.Windows;

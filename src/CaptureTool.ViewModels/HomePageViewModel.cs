@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core;
 using CaptureTool.Core.Navigation;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Telemetry;
@@ -38,7 +39,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     private void NewImageCapture()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.NewImageCapture, async () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.NewImageCapture, async () =>
         {
             _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
         });
@@ -46,7 +47,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     private void NewVideoCapture()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.NewVideoCapture, async () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.NewVideoCapture, async () =>
         {
             _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault);
         });

@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Common.Commands;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Cancellation;
@@ -82,7 +83,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 
     public override Task LoadAsync(CancellationToken cancellationToken)
     {
-        return _telemetryService.ExecuteActivityAsync(ActivityIds.Load, async () =>
+        return TelemetryHelpers.ExecuteActivityAsync(_telemetryService, ActivityIds.Load, async () =>
         {
             var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
             try
@@ -124,7 +125,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 
     private async void GetChromaKeyAddOn()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.GetChromaKeyAddOn, async () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.GetChromaKeyAddOn, async () =>
         {
             if (!IsChromaKeyAddOnOwned)
             {
@@ -142,7 +143,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 
     private void GoBack()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.GoBack, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
         {
             _appNavigation.GoBackOrGoHome();
         });

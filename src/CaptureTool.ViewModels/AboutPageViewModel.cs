@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Common.Commands;
+using CaptureTool.Core;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Telemetry;
@@ -47,7 +48,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
 
     private void ShowDialog(string titleResourceKey, string contentResourceKey, string activityId)
     {
-        _telemetryService.ExecuteActivity(activityId, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, activityId, () =>
         {
             string title = _localizationService.GetString(titleResourceKey);
             string content = _localizationService.GetString(contentResourceKey);
@@ -57,7 +58,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
 
     private void GoBack()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.GoBack, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
         {
             _appNavigation.GoBackOrGoHome();
         });

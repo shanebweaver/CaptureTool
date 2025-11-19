@@ -1,4 +1,5 @@
-﻿using CaptureTool.Services.Navigation;
+﻿using CaptureTool.Core;
+using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Themes;
 using System;
 

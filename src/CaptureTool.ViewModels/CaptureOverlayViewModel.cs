@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Services.Telemetry;
@@ -90,7 +91,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     public override void Load(CaptureOverlayViewModelOptions options)
     {
-        _telemetryService.ExecuteActivity(ActivityIds.Load, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
         {
             _monitorCaptureResult = options.Monitor;
             _captureArea = options.Area;
@@ -107,7 +108,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void CloseOverlay()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.CloseOverlay, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.CloseOverlay, () =>
         {
             if (IsRecording)
             {
@@ -127,7 +128,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void GoBack()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.GoBack, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
         {
             if (IsRecording)
             {
@@ -143,7 +144,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void StartVideoCapture()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.StartVideoCapture, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.StartVideoCapture, () =>
         {
             if (!IsRecording && _monitorCaptureResult != null && _captureArea != null)
             {
@@ -162,7 +163,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void StopVideoCapture()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.StopVideoCapture, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.StopVideoCapture, () =>
         {
             if (IsRecording)
             {
@@ -179,7 +180,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void ToggleDesktopAudio()
     {
-        _telemetryService.ExecuteActivity(ActivityIds.ToggleDesktopAudio, () =>
+        TelemetryHelpers.ExecuteActivity(_telemetryService, ActivityIds.ToggleDesktopAudio, () =>
         {
             IsDesktopAudioEnabled = !IsDesktopAudioEnabled;
         });

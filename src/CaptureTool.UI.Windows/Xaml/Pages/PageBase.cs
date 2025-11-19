@@ -1,6 +1,5 @@
 using CaptureTool.Common.Loading;
-using CaptureTool.Core.Navigation;
-using CaptureTool.ViewModels;
+using CaptureTool.Core;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using System;

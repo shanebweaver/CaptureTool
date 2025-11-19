@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CaptureTool.ViewModels;
+namespace CaptureTool.Core;
 
 public abstract partial class AsyncLoadableViewModelBase : ViewModelBase, IAsyncLoadable
 {
