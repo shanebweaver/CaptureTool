@@ -1,7 +1,10 @@
 ﻿using CaptureTool.Capture;
+using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
+using CaptureTool.Core.Telemetry;
+using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
 using System;
 using System.Drawing;
@@ -11,8 +14,20 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>
 {
+    private readonly struct ActivityIds
+    {
+        public static readonly string Load = "CaptureOverlayViewModel_Load";
+        public static readonly string CloseOverlay = "CaptureOverlayViewModel_CloseOverlay";
+        public static readonly string GoBack = "CaptureOverlayViewModel_GoBack";
+        public static readonly string StartVideoCapture = "CaptureOverlayViewModel_StartVideoCapture";
+        public static readonly string StopVideoCapture = "CaptureOverlayViewModel_StopVideoCapture";
+        public static readonly string ToggleDesktopAudio = "CaptureOverlayViewModel_ToggleDesktopAudio";
+    }
+
     private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
+    private readonly ITelemetryService _telemetryService;
+
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
 
@@ -64,10 +79,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public CaptureOverlayViewModel(
         IAppNavigation appNavigation,
         IThemeService themeService,
-        IAppController appController) 
+        IAppController appController,
+        ITelemetryService telemetryService) 
     {
         _appNavigation = appNavigation;
         _appController = appController;
+        _telemetryService = telemetryService;
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
@@ -75,10 +92,13 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     public override void Load(CaptureOverlayViewModelOptions options)
     {
-        _monitorCaptureResult = options.Monitor;
-        _captureArea = options.Area;
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
+        {
+            _monitorCaptureResult = options.Monitor;
+            _captureArea = options.Area;
 
-        base.Load(options);
+            base.Load(options);
+        });
     }
 
     public override void Dispose()
@@ -89,59 +109,82 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void CloseOverlay()
     {
-        if (IsRecording)
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.CloseOverlay, () =>
         {
-            _appController.CancelVideoCapture();
-        }
+            if (IsRecording)
+            {
+                _appController.CancelVideoCapture();
+            }
 
-        if (_appNavigation.CanGoBack)
-        {
-            _appNavigation.GoBackToMainWindow();
-        }
-        else
-        {
-            _appController.Shutdown();
-        }
+            if (_appNavigation.CanGoBack)
+            {
+                _appNavigation.GoBackToMainWindow();
+            }
+            else
+            {
+                _appController.Shutdown();
+            }
+        });
     }
 
     private void GoBack()
     {
-        if (IsRecording)
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
         {
-            _appController.CancelVideoCapture();
-        }
+            if (IsRecording)
+            {
+                _appController.CancelVideoCapture();
+            }
 
-        if (!_appNavigation.TryGoBack())
-        {
-            _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault, true);
-        }
+            if (!_appNavigation.TryGoBack())
+            {
+                _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault, true);
+            }
+        });
     }
 
     private void StartVideoCapture()
     {
-        if (!IsRecording && _monitorCaptureResult != null && _captureArea != null)
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.StartVideoCapture, () =>
         {
-            IsRecording = true;
-            CaptureTime = TimeSpan.Zero;
-            _captureStartTime = DateTime.UtcNow;
-            StartTimer();
-            _appController.StartVideoCapture(new(_monitorCaptureResult.Value, _captureArea.Value));
-        }
+            if (!IsRecording && _monitorCaptureResult != null && _captureArea != null)
+            {
+                IsRecording = true;
+                CaptureTime = TimeSpan.Zero;
+                _captureStartTime = DateTime.UtcNow;
+                StartTimer();
+                _appController.StartVideoCapture(new(_monitorCaptureResult.Value, _captureArea.Value));
+            }
+            else
+            {
+                throw new InvalidOperationException("Cannot start video capture. Monitor or capture area is not set.");
+            }
+        });
     }
 
     private void StopVideoCapture()
     {
-        if (IsRecording)
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.StopVideoCapture, () =>
         {
-            IsRecording = false;
-            StopTimer();
-            _appController.StopVideoCapture();
-        }
+            if (IsRecording)
+            {
+                IsRecording = false;
+                StopTimer();
+                _appController.StopVideoCapture();
+            }
+            else
+            {
+                throw new InvalidOperationException("Cannot stop video capture. No recording is in progress.");
+            }
+        });
     }
 
     private void ToggleDesktopAudio()
     {
-        IsDesktopAudioEnabled = !IsDesktopAudioEnabled;
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleDesktopAudio, () =>
+        {
+            IsDesktopAudioEnabled = !IsDesktopAudioEnabled;
+        });
     }
 
     private void StartTimer()

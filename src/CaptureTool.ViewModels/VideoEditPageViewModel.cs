@@ -1,17 +1,17 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Common;
+using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Telemetry;
 using CaptureTool.Services.Clipboard;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
 using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase<VideoFile>
+public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<VideoFile>
 {
     private readonly struct ActivityIds
     {
@@ -21,8 +21,8 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase<
         public static readonly string Copy = $"{nameof(VideoEditPageViewModel)}_Copy";
     }
 
-    public RelayCommand SaveCommand => new(Save);
-    public RelayCommand CopyCommand => new(Copy);
+    public RelayCommand SaveCommand { get; }
+    public RelayCommand CopyCommand { get; }
 
     private string? _videoPath;
     public string? VideoPath
@@ -46,13 +46,19 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase<
         _filePickerService = filePickerService;
         _appController = appController;
         _telemetryService = telemetryService;
+
+        SaveCommand = new(Save);
+        CopyCommand = new(Copy);
     }
 
-    public override Task LoadAsync(VideoFile video, CancellationToken cancellationToken)
+    public override void Load(VideoFile video)
     {
-        VideoPath = video.Path;
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
+        {
+            VideoPath = video.Path;
 
-        return base.LoadAsync(video, cancellationToken);
+            base.Load(video);
+        });
     }
 
     public override void Dispose()
@@ -61,35 +67,26 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase<
         base.Dispose();
     }
 
-    private async void Save()
+    private void Save()
     {
-        string activityId = ActivityIds.Save;
-        _telemetryService.ActivityInitiated(activityId);
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Save, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             VideoFile? file = await _filePickerService.SaveVideoFileAsync(hwnd);
             if (file is not null && !string.IsNullOrEmpty(_videoPath))
             {
                 File.Copy(_videoPath, file.Path, true);
-                _telemetryService.ActivityCompleted(activityId);
             }
             else
             {
-                _telemetryService.ActivityCompleted(activityId, "User canceled");
+                throw new OperationCanceledException();
             }
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
-    private async void Copy()
+    private void Copy()
     {
-        string activityId = ActivityIds.Copy;
-        _telemetryService.ActivityInitiated(activityId);
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Copy, async () =>
         {
             if (string.IsNullOrEmpty(_videoPath))
             {
@@ -98,11 +95,6 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase<
 
             ClipboardFileWrapper clipboardVideo = new(_videoPath);
             await _clipboardService.CopyFileAsync(clipboardVideo);
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 }

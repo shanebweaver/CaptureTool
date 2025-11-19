@@ -1,10 +1,10 @@
 ﻿using CaptureTool.Capture;
+using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Navigation;
+using CaptureTool.Core.Telemetry;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Services.Navigation;
 using CaptureTool.Services.Telemetry;
-using System;
 
 namespace CaptureTool.ViewModels;
 
@@ -19,8 +19,8 @@ public sealed partial class HomePageViewModel : ViewModelBase
     private readonly IAppNavigation _appNavigation;
     private readonly ITelemetryService _telemetryService;
 
-    public RelayCommand NewImageCaptureCommand => new(NewImageCapture);
-    public RelayCommand NewVideoCaptureCommand => new(NewVideoCapture, () => IsVideoCaptureEnabled);
+    public RelayCommand NewImageCaptureCommand { get; }
+    public RelayCommand NewVideoCaptureCommand { get; }
 
     public bool IsVideoCaptureEnabled { get; }
 
@@ -32,38 +32,25 @@ public sealed partial class HomePageViewModel : ViewModelBase
         _appNavigation = appNavigation;
         _telemetryService = telemetryService;
 
+        NewImageCaptureCommand = new(NewImageCapture);
+        NewVideoCaptureCommand = new(NewVideoCapture, () => IsVideoCaptureEnabled);
+
         IsVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
     }
 
     private void NewImageCapture()
     {
-        string activityId = ActivityIds.NewImageCapture;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewImageCapture, async () =>
         {
             _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void NewVideoCapture()
     {
-        string activityId = ActivityIds.NewVideoCapture;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewVideoCapture, async () =>
         {
             _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault);
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 }

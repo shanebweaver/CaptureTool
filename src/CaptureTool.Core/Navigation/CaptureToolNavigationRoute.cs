@@ -1,6 +1,6 @@
 ﻿namespace CaptureTool.Core.Navigation;
 
-public enum NavigationRoute
+public enum CaptureToolNavigationRoute
 {
     Loading,
     Error,

@@ -1,21 +1,19 @@
 ﻿using CaptureTool.Common.Loading;
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace CaptureTool.ViewModels;
+namespace CaptureTool.Common;
 
-public abstract partial class AsyncLoadableViewModelBase<T> : ViewModelBase, IAsyncLoadable<T>
+public abstract partial class LoadableViewModelBase<T> : ViewModelBase, ILoadable<T>
 {
     public Type ParameterType => typeof(T);
 
-    public async Task LoadAsync(object? parameter, CancellationToken cancellationToken)
+    public void Load(object? parameter)
     {
         if (parameter is null)
         {
             if (default(T) is null)
             {
-                await LoadAsync(parameter, cancellationToken);
+                Load(default!);
                 return;
             }
 
@@ -24,16 +22,12 @@ public abstract partial class AsyncLoadableViewModelBase<T> : ViewModelBase, IAs
 
         if (parameter is T t)
         {
-            await LoadAsync(t, cancellationToken);
+            Load(t);
             return;
         }
 
         throw new InvalidOperationException($"Parameter is not of expected type {ParameterType?.FullName}.");
     }
 
-    public virtual Task LoadAsync(T parameter, CancellationToken cancellationToken)
-    {
-        LoadingComplete();
-        return Task.CompletedTask;
-    }
+    public virtual void Load(T parameter) => LoadingComplete();
 }

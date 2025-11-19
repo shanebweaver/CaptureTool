@@ -1,10 +1,13 @@
 ﻿using CaptureTool.Capture;
+using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
+using CaptureTool.Core.Telemetry;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services;
+using CaptureTool.Services.Telemetry;
 using CaptureTool.Services.Themes;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,6 +18,14 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>
 {
+    private readonly struct ActivityIds
+    {
+        public static readonly string Load = "SelectionOverlayWindowViewModel_Load";
+        public static readonly string RequestCapture = "SelectionOverlayWindowViewModel_RequestCapture";
+        public static readonly string CloseOverlay = "SelectionOverlayWindowViewModel_CloseOverlay";
+    }
+
+    private readonly ITelemetryService _telemetryService;
     private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
     private readonly IFactoryService<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
@@ -30,8 +41,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         CaptureType.FullScreen,
     ];
 
-    public RelayCommand RequestCaptureCommand => new(RequestCapture);
-    public RelayCommand CloseOverlayCommand => new(CloseOverlay);
+    public RelayCommand RequestCaptureCommand { get; }
+    public RelayCommand CloseOverlayCommand { get; }
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
@@ -128,6 +139,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private bool IsVideoCaptureFeatureEnabled { get; }
 
     public SelectionOverlayWindowViewModel(
+        ITelemetryService telemetryService,
         IAppNavigation appNavigation,
         IFeatureManager featureManager,
         IThemeService themeService,
@@ -135,6 +147,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         IFactoryService<CaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
         IFactoryService<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
     {
+        _telemetryService = telemetryService;
         _appNavigation = appNavigation;
         _appController = appController;
         _captureTypeViewModelFactory = captureTypeViewModelFactory;
@@ -143,6 +156,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
+
+        RequestCaptureCommand = new(RequestCapture);
+        CloseOverlayCommand = new(CloseOverlay);
 
         IsVideoCaptureFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
 
@@ -160,18 +176,21 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public override void Load(SelectionOverlayWindowOptions options)
     {
-        Monitor = options.Monitor;
-        MonitorWindows = [.. options.MonitorWindows];
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
+        {
+            Monitor = options.Monitor;
+            MonitorWindows = [.. options.MonitorWindows];
 
-        var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
-        SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(targetMode);
+            var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
+            SelectedCaptureModeIndex = SupportedCaptureModes.IndexOf(targetMode);
 
-        UpdateSupportedCaptureTypes();
+            UpdateSupportedCaptureTypes();
 
-        var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureOptions.CaptureType);
-        SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(targetType);
+            var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureOptions.CaptureType);
+            SelectedCaptureTypeIndex = SupportedCaptureTypes.IndexOf(targetType);
 
-        base.Load(options);
+            base.Load(options);
+        });
     }
 
     public override void Dispose()
@@ -190,14 +209,17 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void CloseOverlay()
     {
-        if (_appNavigation.CanGoBack)
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.CloseOverlay, () =>
         {
-            _appNavigation.GoBackToMainWindow();
-        }
-        else
-        {
-            _appController.Shutdown();
-        }
+            if (_appNavigation.CanGoBack)
+            {
+                _appNavigation.GoBackToMainWindow();
+            }
+            else
+            {
+                _appController.Shutdown();
+            }
+        });
     }
 
     private void UpdateSupportedCaptureTypes()
@@ -226,20 +248,23 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void RequestCapture()
     {
-        if (Monitor != null && CaptureArea != Rectangle.Empty)
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RequestCapture, () =>
         {
-            if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
+            if (Monitor != null && CaptureArea != Rectangle.Empty)
             {
-                NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-                ImageFile image = _appController.PerformImageCapture(args);
-                _appNavigation.GoToImageEdit(image);
+                if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
+                {
+                    NewCaptureArgs args = new(Monitor.Value, CaptureArea);
+                    ImageFile image = _appController.PerformImageCapture(args);
+                    _appNavigation.GoToImageEdit(image);
 
+                }
+                else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
+                {
+                    NewCaptureArgs args = new(Monitor.Value, CaptureArea);
+                    _appNavigation.GoToVideoCapture(args);
+                }
             }
-            else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
-            {
-                NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-                _appNavigation.GoToVideoCapture(args);
-            }
-        }
+        });
     }
 }

@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CaptureTool.Common;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class DiagnosticsViewModel : LoadableViewModelBase
+public sealed partial class DiagnosticsViewModel : ViewModelBase
 {
     public DiagnosticsViewModel()
     {
     }
-
 }

@@ -19,7 +19,7 @@ public sealed partial class CaptureToolAppNavigation : IAppNavigation
 
     public void GoBackToMainWindow()
     {
-        bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRoutes.IsMainWindowRoute(r.Route));
+        bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRouteHelper.IsMainWindowRoute(r.Route));
         if (!success)
         {
             GoHome();
@@ -35,32 +35,32 @@ public sealed partial class CaptureToolAppNavigation : IAppNavigation
     }
 
     public void GoHome()
-        => _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
+        => _navigationService.Navigate(CaptureToolNavigationRoute.Home, clearHistory: true);
 
     public void GoToLoading()
-        => _navigationService.Navigate(NavigationRoute.Loading, clearHistory: true);
+        => _navigationService.Navigate(CaptureToolNavigationRoute.Loading, clearHistory: true);
 
     public void GoToError(Exception exception)
-        => _navigationService.Navigate(NavigationRoute.Error, exception, true);
+        => _navigationService.Navigate(CaptureToolNavigationRoute.Error, exception, true);
 
     public void GoToSettings()
-        => _navigationService.Navigate(NavigationRoute.Settings);
+        => _navigationService.Navigate(CaptureToolNavigationRoute.Settings);
 
     public void GoToAbout()
-        => _navigationService.Navigate(NavigationRoute.About);
+        => _navigationService.Navigate(CaptureToolNavigationRoute.About);
 
     public void GoToAddOns()
-        => _navigationService.Navigate(NavigationRoute.AddOns);
+        => _navigationService.Navigate(CaptureToolNavigationRoute.AddOns);
 
     public void GoToImageCapture(CaptureOptions captureOptions, bool clearHistory = false)
-        => _navigationService.Navigate(NavigationRoute.ImageCapture, captureOptions, clearHistory);
+        => _navigationService.Navigate(CaptureToolNavigationRoute.ImageCapture, captureOptions, clearHistory);
 
     public void GoToVideoCapture(NewCaptureArgs captureargs)
-        => _navigationService.Navigate(NavigationRoute.VideoCapture, captureargs);
+        => _navigationService.Navigate(CaptureToolNavigationRoute.VideoCapture, captureargs);
 
     public void GoToImageEdit(ImageFile imageFile)
-        => _navigationService.Navigate(NavigationRoute.ImageEdit, imageFile, true);
+        => _navigationService.Navigate(CaptureToolNavigationRoute.ImageEdit, imageFile, true);
 
     public void GoToVideoEdit(VideoFile videoFile)
-        => _navigationService.Navigate(NavigationRoute.VideoEdit, videoFile, true);
+        => _navigationService.Navigate(CaptureToolNavigationRoute.VideoEdit, videoFile, true);
 }

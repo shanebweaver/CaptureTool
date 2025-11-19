@@ -1,5 +1,7 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Common;
+using CaptureTool.Common.Commands;
 using CaptureTool.Core.Navigation;
+using CaptureTool.Core.Telemetry;
 using CaptureTool.Services.Localization;
 using CaptureTool.Services.Telemetry;
 using System;
@@ -14,6 +16,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
         public static readonly string ShowPrivacyPolicy = "AboutPageViewModel_ShowPrivacyPolicy";
         public static readonly string ShowDisclaimerOfLiability = "AboutPageViewModel_ShowDisclaimerOfLiability";
         public static readonly string ShowTermsOfUse = "AboutPageViewModel_ShowTermsOfUse";
+        public static readonly string GoBack = "AboutPageViewModel_GoBack";
     }
 
     private readonly IAppNavigation _appNavigation;
@@ -46,24 +49,19 @@ public sealed partial class AboutPageViewModel : ViewModelBase
 
     private void ShowDialog(string titleResourceKey, string contentResourceKey, string activityId)
     {
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, activityId, () =>
         {
             string title = _localizationService.GetString(titleResourceKey);
             string content = _localizationService.GetString(contentResourceKey);
             ShowDialogRequested?.Invoke(this, (title, content));
-        }
-        catch (Exception ex)
-        {
-            _telemetryService.ActivityError(activityId, ex);
-        }
-
-        _telemetryService.ActivityCompleted(activityId);
+        });
     }
 
     private void GoBack()
     {
-        _appNavigation.GoBackOrGoHome();
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
+        {
+            _appNavigation.GoBackOrGoHome();
+        });
     }
 }

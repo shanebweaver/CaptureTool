@@ -1,7 +1,9 @@
 ﻿using CaptureTool.Capture;
+using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
+using CaptureTool.Core.Telemetry;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Storage;
 using CaptureTool.Services.Telemetry;
@@ -29,12 +31,12 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     private readonly ITelemetryService _telemetryService;
     private readonly IFilePickerService _filePickerService;
 
-    public RelayCommand NewImageCaptureCommand => new(NewImageCapture);
-    public RelayCommand OpenFileCommand => new(OpenFile);
-    public RelayCommand NavigateToSettingsCommand => new(NavigateToSettings);
-    public RelayCommand ShowAboutAppCommand => new(ShowAboutApp); 
-    public RelayCommand ShowAddOnsCommand => new(ShowAddOns); 
-    public RelayCommand ExitApplicationCommand => new(ExitApplication);
+    public RelayCommand NewImageCaptureCommand { get; }
+    public RelayCommand OpenFileCommand { get; }
+    public RelayCommand NavigateToSettingsCommand { get; }
+    public RelayCommand ShowAboutAppCommand { get; }
+    public RelayCommand ShowAddOnsCommand { get; }
+    public RelayCommand ExitApplicationCommand { get; }
 
     public bool ShowAddOnsOption { get; }
 
@@ -50,110 +52,63 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         _appController = appController;
         _filePickerService = filePickerService;
 
+        NewImageCaptureCommand = new RelayCommand(NewImageCapture);
+        OpenFileCommand = new RelayCommand(OpenFile);
+        NavigateToSettingsCommand = new RelayCommand(NavigateToSettings);
+        ShowAboutAppCommand = new RelayCommand(ShowAboutApp);
+        ShowAddOnsCommand = new RelayCommand(ShowAddOns);
+        ExitApplicationCommand = new RelayCommand(ExitApplication);
+
         ShowAddOnsOption = featureManager.IsEnabled(CaptureToolFeatures.Feature_AddOns_Store);
     }
 
     private void NewImageCapture()
     {
-        string activityId = ActivityIds.NewImageCapture;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewImageCapture, async () =>
         {
             _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private async void OpenFile()
     {
-        string activityId = ActivityIds.OpenFile;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenFile, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            var imageFile = await _filePickerService.OpenImageFileAsync(hwnd);
-            if (imageFile == null)
-            {
-                _telemetryService.ActivityCanceled(activityId);
-                return;
-            }
-
+            var imageFile = await _filePickerService.OpenImageFileAsync(hwnd) ?? throw new OperationCanceledException();
             _appNavigation.GoToImageEdit(imageFile);
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void NavigateToSettings()
     {
-        string activityId = ActivityIds.NavigateToSettings;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NavigateToSettings, async () =>
         {
             _appNavigation.GoToSettings();
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void ShowAboutApp()
     {
-        string activityId = ActivityIds.ShowAboutApp;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ShowAboutApp, async () =>
         {
             _appNavigation.GoToAbout();
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void ShowAddOns()
     {
-        string activityId = ActivityIds.ShowAddOns;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ShowAddOns, async () =>
         {
             _appNavigation.GoToAddOns();
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void ExitApplication()
     {
-        string activityId = ActivityIds.ExitApplication;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ExitApplication, async () =>
         {
             _appController.Shutdown();
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 }

@@ -1,7 +1,9 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Common;
+using CaptureTool.Common.Commands;
 using CaptureTool.Common.Storage;
-using CaptureTool.Core;
 using CaptureTool.Core.AppController;
+using CaptureTool.Core.Store;
+using CaptureTool.Core.Telemetry;
 using CaptureTool.Edit;
 using CaptureTool.Edit.ChromaKey;
 using CaptureTool.Edit.Drawable;
@@ -57,21 +59,22 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public event EventHandler? InvalidateCanvasRequested;
 
-    public RelayCommand CopyCommand => new(Copy);
-    public RelayCommand ToggleCropModeCommand => new(ToggleCropMode);
-    public RelayCommand SaveCommand => new(Save);
-    public RelayCommand UndoCommand => new(Undo);
-    public RelayCommand RedoCommand => new(Redo);
-    public RelayCommand RotateCommand => new(Rotate);
-    public RelayCommand FlipHorizontalCommand => new(() => Flip(FlipDirection.Horizontal));
-    public RelayCommand FlipVerticalCommand => new(() => Flip(FlipDirection.Vertical));
-    public RelayCommand PrintCommand => new(Print);
-    public RelayCommand ShareCommand => new(Share);
-    public RelayCommand<Color> UpdateChromaKeyColorCommand => new(UpdateChromaKeyColor, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
+    public RelayCommand CopyCommand { get; }
+    public RelayCommand ToggleCropModeCommand { get; }
+    public RelayCommand SaveCommand { get; }
+    public RelayCommand UndoCommand { get; }
+    public RelayCommand RedoCommand { get; }
+    public RelayCommand RotateCommand { get; }
+    public RelayCommand FlipHorizontalCommand { get; }
+    public RelayCommand FlipVerticalCommand { get; }
+    public RelayCommand PrintCommand { get; }
+    public RelayCommand ShareCommand { get; }
+    public RelayCommand<Color> UpdateChromaKeyColorCommand { get; }
 
     // Private commands to handle undo/redo operations.
-    private RelayCommand<ImageOrientation> UpdateOrientationCommand => new(UpdateOrientation);
-    private RelayCommand<Rectangle> UpdateCropRectCommand => new(UpdateCropRect);
+    private RelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
+    private RelayCommand<Rectangle> UpdateCropRectCommand { get; }
+
 
     private bool _hasUndoStack;
     public bool HasUndoStack
@@ -197,7 +200,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         set
         {
             Set(ref _selectedChromaKeyColorOptionIndex, value);
-            UpdateChromaKeyColor(_chromaKeyColorOptions[value].Color);
+            UpdateChromaKeyColor(value);
         }
     }
 
@@ -241,113 +244,91 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _chromaKeyColorOptions = [];
         _operationsUndoStack = [];
         _operationsRedoStack = [];
+
+        CopyCommand = new RelayCommand(Copy);
+        ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
+        SaveCommand = new RelayCommand(Save);
+        UndoCommand = new RelayCommand(Undo);
+        RedoCommand = new RelayCommand(Redo);
+        RotateCommand = new RelayCommand(Rotate);
+        FlipHorizontalCommand = new RelayCommand(() => Flip(FlipDirection.Horizontal));
+        FlipVerticalCommand = new RelayCommand(() => Flip(FlipDirection.Vertical));
+        PrintCommand = new RelayCommand(Print);
+        ShareCommand = new RelayCommand(Share);
+        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
+        UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
+        UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
     }
 
-    public override async Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
+    public override Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
     {
-        string activityId = ActivityIds.Load;
-        _telemetryService.ActivityInitiated(activityId);
-        var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
-        try
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Load, async () =>
         {
-            Vector2 topLeft = Vector2.Zero;
-            ImageFile = imageFile;
-            ImageSize = _filePickerService.GetImageSize(imageFile);
-            CropRect = new(Point.Empty, ImageSize);
-
-            _imageDrawable = new(topLeft, imageFile, ImageSize);
-            Drawables.Add(_imageDrawable);
-
-            if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
+            var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
+            try
             {
-                bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval);
-                IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
-                if (isChromaKeyAddOnOwned)
-                {
-                    // Empty option disables the effect.
-                    ChromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
+                Vector2 topLeft = Vector2.Zero;
+                ImageFile = imageFile;
+                ImageSize = _filePickerService.GetImageSize(imageFile);
+                CropRect = new(Point.Empty, ImageSize);
 
-                    // Add top detected colors
-                    var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 5, 4);
-                    foreach (var topColor in topColors)
+                _imageDrawable = new(topLeft, imageFile, ImageSize);
+                Drawables.Add(_imageDrawable);
+
+                if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
+                {
+                    bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval);
+                    IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
+                    if (isChromaKeyAddOnOwned)
                     {
-                        ChromaKeyColorOption colorOption = new(topColor);
-                        ChromaKeyColorOptions.Add(colorOption);
+                        // Empty option disables the effect.
+                        ChromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
+
+                        // Add top detected colors
+                        var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 5, 4);
+                        foreach (var topColor in topColors)
+                        {
+                            ChromaKeyColorOption colorOption = new(topColor);
+                            ChromaKeyColorOptions.Add(colorOption);
+                        }
                     }
                 }
+
+            }
+            finally
+            {
+                cts.Dispose();
             }
 
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (OperationCanceledException)
-        {
-            _telemetryService.ActivityCanceled(activityId);
-            throw;
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-            throw;
-        }
-        finally
-        {
-            cts.Dispose();
-        }
-
-        await base.LoadAsync(imageFile, cancellationToken);
+            await base.LoadAsync(imageFile, cancellationToken);
+        });
     }
 
     public override void Dispose()
     {
-        string activityId = ActivityIds.Dispose;
-        _telemetryService.ActivityInitiated(activityId);
-        try
-        {
-            _imageDrawable = null;
-            CropRect = Rectangle.Empty;
-            ImageSize = Size.Empty;
-            Orientation = ImageOrientation.RotateNoneFlipNone;
-            Drawables.Clear();
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
-
+        _imageDrawable = null;
+        CropRect = Rectangle.Empty;
+        ImageSize = Size.Empty;
+        Orientation = ImageOrientation.RotateNoneFlipNone;
+        Drawables.Clear();
         base.Dispose();
     }
 
     private async void Copy()
     {
-        string activityId = ActivityIds.Copy;
-        _telemetryService.ActivityInitiated(activityId);
-        try
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Copy, async () =>
         {
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void ToggleCropMode()
     {
-        string activityId = ActivityIds.ToggleCropMode;
-        _telemetryService.ActivityInitiated(activityId);
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleCropMode, () =>
         {
             IsInCropMode = !IsInCropMode;
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void UpdateChromaKeyEffectValues()
@@ -370,6 +351,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
+    private void UpdateChromaKeyColor(int colorIndex)
+    {
+        if (colorIndex < 0 || colorIndex >= _chromaKeyColorOptions.Count)
+        {
+            return;
+        }
+     
+        UpdateChromaKeyColor(_chromaKeyColorOptions[colorIndex].Color);
+    }
+
     private void UpdateChromaKeyColor(Color color)
     {
         if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
@@ -382,9 +373,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async void Save()
     {
-        string activityId = ActivityIds.Save;
-        _telemetryService.ActivityInitiated(activityId);
-        try
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             var file = await _filePickerService.SaveImageFileAsync(hwnd);
@@ -392,17 +381,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             {
                 ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
                 await _imageCanvasExporter.SaveImageAsync(file.Path, [.. Drawables], options);
-                _telemetryService.ActivityCompleted(activityId);
             }
-            else
-            {
-                _telemetryService.ActivityCompleted(activityId, "User canceled");
-            }
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     public ImageCanvasRenderOptions GetImageCanvasRenderOptions()
@@ -412,55 +392,41 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void Undo()
     {
-        if (_operationsUndoStack.Count == 0)
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Undo, () =>
         {
-            return;
-        }
+            if (_operationsUndoStack.Count == 0)
+            {
+                throw new InvalidOperationException("Cannot undo, the stack is empty.");
+            }
 
-        string activityId = ActivityIds.Undo;
-        _telemetryService.ActivityInitiated(activityId);
-        try
-        {
             var operation = _operationsUndoStack.Pop();
             _operationsRedoStack.Push(operation);
             UpdateUndoRedoStackProperties();
 
             operation.Undo();
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void Redo()
     {
-        if (_operationsRedoStack.Count == 0)
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Redo, () =>
         {
-            return;
-        }
+            if (_operationsRedoStack.Count == 0)
+            {
+                throw new InvalidOperationException("Cannot undo, the stack is empty.");
+            }
 
-        string activityId = ActivityIds.Redo;
-        _telemetryService.ActivityInitiated(activityId);
-        try
-        {
             var operation = _operationsRedoStack.Pop();
             _operationsUndoStack.Push(operation);
             UpdateUndoRedoStackProperties();
 
             operation.Redo();
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void Rotate()
     {
-        string activityId = ActivityIds.Rotate;
-        _telemetryService.ActivityInitiated(activityId);
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Rotate, () =>
         {
             ImageOrientation oldOrientation = Orientation;
             ImageOrientation newOrientation = ImageOrientationHelper.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
@@ -472,13 +438,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             _operationsRedoStack.Clear();
             _operationsUndoStack.Push(new OrientationOperation(UpdateOrientationCommand, oldOrientation, newOrientation));
             UpdateUndoRedoStackProperties();
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void UpdateUndoRedoStackProperties()
@@ -495,9 +455,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             FlipDirection.Vertical => ActivityIds.FlipVertical,
             _ => throw new InvalidOperationException("Unexpected FlipDirection value.")
         };
-        _telemetryService.ActivityInitiated(activityId);
 
-        try
+        TelemetryHelper.ExecuteActivity(_telemetryService, activityId, () =>
         {
             ImageOrientation oldOrientation = Orientation;
             ImageOrientation newOrientation = ImageOrientationHelper.GetFlippedOrientation(Orientation, flipDirection);
@@ -510,55 +469,30 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             _operationsRedoStack.Clear();
             _operationsUndoStack.Push(new OrientationOperation(UpdateOrientationCommand, oldOrientation, newOrientation));
             UpdateUndoRedoStackProperties();
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private async void Print()
     {
-        string activityId = ActivityIds.Print;
-        _telemetryService.ActivityInitiated(activityId);
-        try
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Print, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
-
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private async void Share()
     {
-        string activityId = ActivityIds.Share;
-        _telemetryService.ActivityInitiated(activityId);
-        try
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Share, async () =>
         {
             if (_imageFile == null)
             {
-                return;
+                throw new InvalidOperationException("No image to share");
             }
 
             nint hwnd = _appController.GetMainWindowHandle();
             await _shareService.ShareAsync(_imageFile.Path, hwnd);
-
-            _telemetryService.ActivityCompleted(activityId);
-
-            //nint hwnd = _appController.GetMainWindowHandle();
-            //await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     public void OnCropInteractionComplete(Rectangle oldCropRect)

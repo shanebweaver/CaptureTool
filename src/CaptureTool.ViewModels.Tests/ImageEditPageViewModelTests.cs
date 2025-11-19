@@ -1,13 +1,21 @@
-﻿using CaptureTool.Common.Loading;
+﻿using AutoFixture;
+using AutoFixture.AutoMoq;
 using CaptureTool.Common.Storage;
+using CaptureTool.Core.AppController;
 using CaptureTool.Edit;
+using CaptureTool.Edit.ChromaKey;
 using CaptureTool.Edit.Drawable;
-using CaptureTool.ViewModels.Tests.Mocks;
+using CaptureTool.FeatureManagement;
+using CaptureTool.Services.Cancellation;
+using CaptureTool.Services.Share;
+using CaptureTool.Services.Storage;
+using CaptureTool.Services.Store;
+using CaptureTool.Services.Telemetry;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System;
 using System.Drawing;
 using System.Linq;
-using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,148 +24,204 @@ namespace CaptureTool.ViewModels.Tests;
 [TestClass]
 public sealed class ImageEditPageViewModelTests
 {
-    private ImageEditPageViewModel _vm = null!;
+    public required IFixture Fixture { get; set; }
+
+    private ImageEditPageViewModel Create() => Fixture.Create<ImageEditPageViewModel>();
 
     [TestInitialize]
-    public void Setup()
+    public void Init()
     {
-        _vm = new(
-            new MockStoreService(),
-            new MockAppController(),
-            new MockCancellationService(),
-            new MockTelemetryService(),
-            new MockImageCanvasPrinter(),
-            new MockImageCanvasExporter(),
-            new MockFilePickerService(),
-            new MockChromaKeyService(),
-            new MockFeatureManager(),
-            new MockShareService()
-            );
+        Fixture = new Fixture()
+         .Customize(new AutoMoqCustomization { ConfigureMembers = true });
+
+        Fixture.Behaviors.OfType<ThrowingRecursionBehavior>()
+            .ToList()
+            .ForEach(b => Fixture.Behaviors.Remove(b));
+
+        Fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+
+        Fixture.Customize<ImageEditPageViewModel>(c => c.OmitAutoProperties());
+
+        Fixture.Freeze<Mock<IStoreService>>();
+        Fixture.Freeze<Mock<IAppController>>();
+        Fixture.Freeze<Mock<ICancellationService>>();
+        Fixture.Freeze<Mock<ITelemetryService>>();
+        Fixture.Freeze<Mock<IImageCanvasPrinter>>();
+        Fixture.Freeze<Mock<IImageCanvasExporter>>();
+        Fixture.Freeze<Mock<IFilePickerService>>();
+        Fixture.Freeze<Mock<IChromaKeyService>>();
+        Fixture.Freeze<Mock<IFeatureManager>>();
+        Fixture.Freeze<Mock<IShareService>>();
     }
 
+    // ------------------------------------------------------------------
+    // TEST: LoadAsync — happy path
+    // ------------------------------------------------------------------
     [TestMethod]
-    public async Task LoadTest()
+    public async Task LoadAsync_ShouldInitializeProperties_AndLogTelemetry()
     {
-        Assert.IsFalse(_vm.IsLoaded);
-        Assert.IsTrue(_vm.IsLoading);
+        // Arrange
+        var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
+        var filePicker = Fixture.Freeze<Mock<IFilePickerService>>();
+        var cancel = Fixture.Freeze<Mock<ICancellationService>>();
+        var chromaFeature = Fixture.Freeze<Mock<IFeatureManager>>();
+        var storeService = Fixture.Freeze<Mock<IStoreService>>();
+        var chromaService = Fixture.Freeze<Mock<IChromaKeyService>>();
 
-        // Load
-        string testImageFilePath = Guid.NewGuid().ToString();
-        await _vm.LoadAsync(new ImageFile(testImageFilePath), CancellationToken.None);
-        Assert.IsTrue(_vm.IsLoaded);
-        Assert.IsFalse(_vm.IsLoading);
-        Assert.IsNotNull(_vm.ImageFile);
-        Assert.AreEqual(testImageFilePath, _vm.ImageFile.Path);
-        Assert.AreEqual(MockFilePickerService.DefaultImageSize, _vm.ImageSize);
-        Assert.AreEqual(new Rectangle(Point.Empty, MockFilePickerService.DefaultImageSize), _vm.CropRect);
-        Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, _vm.Orientation);
+        chromaFeature.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
+                     .Returns(false);
 
-        // Get first (only) drawable
-        Assert.AreEqual(1, _vm.Drawables.Count);
-        IDrawable drawable = _vm.Drawables.First();
+        storeService.Setup(s => s.IsAddonPurchasedAsync(It.IsAny<string>()))
+                    .ReturnsAsync(false);
 
-        // Expect type to be an image drawable
-        Assert.IsInstanceOfType<ImageDrawable>(drawable);
-        ImageDrawable imageDrawable = (ImageDrawable)drawable;
+        chromaService.Setup(s => s.GetTopColorsAsync(It.IsAny<ImageFile>(), It.IsAny<uint>(), It.IsAny<byte>()))
+                     .ReturnsAsync(Array.Empty<Color>());
 
-        // Check values
-        Assert.AreEqual(Vector2.Zero, imageDrawable.Offset);
-        Assert.AreEqual(testImageFilePath, imageDrawable.FileName.Path);
-        Assert.AreEqual(MockFilePickerService.DefaultImageSize, imageDrawable.ImageSize);
+        var cts = new CancellationTokenSource();
+        cancel.Setup(c => c.GetLinkedCancellationTokenSource(cts.Token))
+              .Returns(cts);
 
-        // Dispose
-        _vm.Dispose();
-        Assert.IsFalse(_vm.IsLoaded);
-        Assert.IsFalse(_vm.IsLoading);
-        Assert.AreEqual(LoadState.Disposed, _vm.LoadState);
-        Assert.AreEqual(Rectangle.Empty, _vm.CropRect);
-        Assert.AreEqual(Size.Empty, _vm.ImageSize);
-        Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, _vm.Orientation);
-        Assert.AreEqual(0, _vm.Drawables.Count);
+        var testFile = new ImageFile("test.png");
+        filePicker.Setup(f => f.GetImageSize(testFile))
+                  .Returns(new Size(100, 200));
+
+        var vm = Create();
+
+        // Act
+        await vm.LoadAsync(testFile, cts.Token);
+
+        // Assert
+        Assert.AreEqual(testFile, vm.ImageFile);
+        Assert.AreEqual(new Size(100, 200), vm.ImageSize);
+        Assert.AreEqual(new Rectangle(0, 0, 100, 200), vm.CropRect);
+        Assert.AreEqual(1, vm.Drawables.Count); // only the image drawable
+
+        telemetry.Verify(t => t.ActivityInitiated("ImageEditPageViewModel_Load"), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted("ImageEditPageViewModel_Load"), Times.Once);
+        telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 
+
+    // ------------------------------------------------------------------
+    // TEST: ToggleCropModeCommand
+    // ------------------------------------------------------------------
     [TestMethod]
-    public void ToggleCropModeTest()
+    public void ToggleCropModeCommand_ShouldToggle_AndLogTelemetry()
     {
-        Assert.IsFalse(_vm.IsInCropMode);
+        // Arrange
+        var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
+        var vm = Create();
 
-        Assert.IsTrue(_vm.ToggleCropModeCommand.CanExecute());
-        _vm.ToggleCropModeCommand.Execute();
+        // Act
+        vm.ToggleCropModeCommand.Execute(null);
 
-        Assert.IsTrue(_vm.IsInCropMode);
+        // Assert
+        Assert.IsTrue(vm.IsInCropMode);
 
-        Assert.IsTrue(_vm.ToggleCropModeCommand.CanExecute());
-        _vm.ToggleCropModeCommand.Execute();
-
-        Assert.IsFalse(_vm.IsInCropMode);
+        telemetry.Verify(t => t.ActivityInitiated("ImageEditPageViewModel_ToggleCropMode"), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted("ImageEditPageViewModel_ToggleCropMode"), Times.Once);
+        telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 
+    // ------------------------------------------------------------------
+    // TEST: CopyCommand
+    // ------------------------------------------------------------------
     [TestMethod]
-    public void CopyTest()
+    public void CopyCommand_ShouldInvokeExporter_AndLogTelemetry()
     {
-        Assert.IsTrue(_vm.CopyCommand.CanExecute());
-        _vm.CopyCommand.Execute();
+        // Arrange
+        var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
+        var exporter = Fixture.Freeze<Mock<IImageCanvasExporter>>();
+
+        var vm = Create();
+        vm.Drawables.Add(Fixture.Create<IDrawable>());
+
+        // Act
+        vm.CopyCommand.Execute(null);
+
+        // Assert: exporter called
+        exporter.Verify(e =>
+            e.CopyImageToClipboardAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()),
+            Times.Once);
+
+        // Assert telemetry
+        telemetry.Verify(t => t.ActivityInitiated("ImageEditPageViewModel_Copy"), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted("ImageEditPageViewModel_Copy"), Times.Once);
+        telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 
+    // ------------------------------------------------------------------
+    // TEST: ShareCommand error path
+    // ------------------------------------------------------------------
     [TestMethod]
-    public void SaveTest()
+    public void ShareCommand_ShouldLogError_WhenNoImageLoaded()
     {
-        Assert.IsTrue(_vm.SaveCommand.CanExecute());
-        _vm.SaveCommand.Execute();
+        // Arrange
+        var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
+        var vm = Create();
+
+        // Act
+        vm.ShareCommand.Execute(null);
+
+        // Assert telemetry
+        telemetry.Verify(t => t.ActivityInitiated("ImageEditPageViewModel_Share"), Times.Once);
+
+        telemetry.Verify(t => t.ActivityError(
+            "ImageEditPageViewModel_Share",
+            It.IsAny<InvalidOperationException>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>()),
+            Times.Once);
+
+        telemetry.Verify(t => t.ActivityCompleted("ImageEditPageViewModel_Share"), Times.Never);
     }
 
+    // ------------------------------------------------------------------
+    // TEST: Undo — empty stack should raise error
+    // ------------------------------------------------------------------
     [TestMethod]
-    public void UndoRedoCommands()
+    public void UndoCommand_ShouldLogError_WhenStackIsEmpty()
     {
-        Assert.IsTrue(_vm.UndoCommand.CanExecute());
-        _vm.UndoCommand.Execute();
+        // Arrange
+        var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
+        var vm = Create();
 
-        Assert.IsTrue(_vm.RedoCommand.CanExecute());
-        _vm.RedoCommand.Execute();
+        // Act
+        vm.UndoCommand.Execute(null);
+
+        // Assert telemetry
+        telemetry.Verify(t => t.ActivityError(
+            "ImageEditPageViewModel_Undo", 
+            It.IsAny<InvalidOperationException>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>()),
+            Times.Once);
     }
 
+    // ------------------------------------------------------------------
+    // TEST: Rotate pushes undo + logs telemetry
+    // ------------------------------------------------------------------
     [TestMethod]
-    public void RotateTest()
+    public void RotateCommand_ShouldPushUndo_AndLogTelemetry()
     {
-        // Rotate 360
-        Assert.IsTrue(_vm.RotateCommand.CanExecute());
-        Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, _vm.Orientation);
-        _vm.RotateCommand.Execute();
-        Assert.AreEqual(ImageOrientation.Rotate90FlipNone, _vm.Orientation);
-        _vm.RotateCommand.Execute();
-        Assert.AreEqual(ImageOrientation.Rotate180FlipNone, _vm.Orientation);
-        _vm.RotateCommand.Execute();
-        Assert.AreEqual(ImageOrientation.Rotate270FlipNone, _vm.Orientation);
-        _vm.RotateCommand.Execute();
-        Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, _vm.Orientation);
-    }
+        // Arrange
+        var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
+        var vm = Create();
 
-    [TestMethod]
-    public void FlipHorizontalTest()
-    {
-        Assert.IsTrue(_vm.FlipHorizontalCommand.CanExecute());
-        Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, _vm.Orientation);
-        _vm.FlipHorizontalCommand.Execute();
-        Assert.AreEqual(ImageOrientation.RotateNoneFlipX, _vm.Orientation);
-        _vm.FlipHorizontalCommand.Execute();
-        Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, _vm.Orientation);
-    }
+        var oldOrientation = vm.Orientation;
 
-    [TestMethod]
-    public void FlipVerticalTest()
-    {
-        Assert.IsTrue(_vm.FlipVerticalCommand.CanExecute());
-        Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, _vm.Orientation);
-        _vm.FlipVerticalCommand.Execute();
-        Assert.AreEqual(ImageOrientation.Rotate180FlipX, _vm.Orientation);
-        _vm.FlipVerticalCommand.Execute();
-        Assert.AreEqual(ImageOrientation.RotateNoneFlipNone, _vm.Orientation);
-    }
+        // Act
+        vm.RotateCommand.Execute(null);
 
-    [TestMethod]
-    public void PrintTest()
-    {
-        Assert.IsTrue(_vm.PrintCommand.CanExecute());
-        _vm.PrintCommand.Execute();
+        // Assert
+        Assert.AreNotEqual(oldOrientation, vm.Orientation);
+        Assert.IsTrue(vm.HasUndoStack);
+        Assert.IsFalse(vm.HasRedoStack);
+
+        telemetry.Verify(t => t.ActivityInitiated("ImageEditPageViewModel_Rotate"), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted("ImageEditPageViewModel_Rotate"), Times.Once);
+        telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 }

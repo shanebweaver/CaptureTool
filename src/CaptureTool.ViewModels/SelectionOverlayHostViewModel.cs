@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Capture;
+using CaptureTool.Common;
 using CaptureTool.Common.Storage;
 using CaptureTool.Common.Sync;
 using CaptureTool.Core.AppController;
