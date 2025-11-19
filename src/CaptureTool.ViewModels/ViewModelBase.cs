@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Common.Loading;
+using CaptureTool.Services.Telemetry;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

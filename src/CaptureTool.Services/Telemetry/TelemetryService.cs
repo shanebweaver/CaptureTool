@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CaptureTool.Services.Telemetry;
 
@@ -55,6 +56,49 @@ public sealed partial class TelemetryService : ITelemetryService
 
         Debug.WriteLine(stringBuilder.ToString());
     }
+
+    public void ExecuteActivity(string activityId, Action activityAction)
+    {
+        ActivityInitiated(activityId);
+
+        try
+        {
+            activityAction();
+            ActivityCompleted(activityId);
+        }
+        catch (OperationCanceledException)
+        {
+            ActivityCanceled(activityId);
+            throw;
+        }
+        catch (Exception e)
+        {
+            ActivityError(activityId, e);
+            throw;
+        }
+    }
+
+    public async Task ExecuteActivityAsync(string activityId, Func<Task> action)
+    {
+        ActivityInitiated(activityId);
+
+        try
+        {
+            await action();
+            ActivityCompleted(activityId);
+        }
+        catch (OperationCanceledException)
+        {
+            ActivityCanceled(activityId);
+            throw;
+        }
+        catch (Exception e)
+        {
+            ActivityError(activityId, e);
+            throw;
+        }
+    }
+
 
     public void ButtonInvoked(string buttonId, string? message)
     {

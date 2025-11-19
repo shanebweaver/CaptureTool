@@ -62,105 +62,51 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 
     private void NewImageCapture()
     {
-        string activityId = ActivityIds.NewImageCapture;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        _telemetryService.ExecuteActivity(ActivityIds.NewImageCapture, async () =>
         {
             _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private async void OpenFile()
     {
-        string activityId = ActivityIds.OpenFile;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        _telemetryService.ExecuteActivity(ActivityIds.OpenFile, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            var imageFile = await _filePickerService.OpenImageFileAsync(hwnd);
-            if (imageFile == null)
-            {
-                _telemetryService.ActivityCanceled(activityId);
-                return;
-            }
-
+            var imageFile = await _filePickerService.OpenImageFileAsync(hwnd) ?? throw new OperationCanceledException();
             _appNavigation.GoToImageEdit(imageFile);
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void NavigateToSettings()
     {
-        string activityId = ActivityIds.NavigateToSettings;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        _telemetryService.ExecuteActivity(ActivityIds.NavigateToSettings, async () =>
         {
             _appNavigation.GoToSettings();
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void ShowAboutApp()
     {
-        string activityId = ActivityIds.ShowAboutApp;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        _telemetryService.ExecuteActivity(ActivityIds.ShowAboutApp, async () =>
         {
             _appNavigation.GoToAbout();
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void ShowAddOns()
     {
-        string activityId = ActivityIds.ShowAddOns;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        _telemetryService.ExecuteActivity(ActivityIds.ShowAddOns, async () =>
         {
             _appNavigation.GoToAddOns();
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
     private void ExitApplication()
     {
-        string activityId = ActivityIds.ExitApplication;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        _telemetryService.ExecuteActivity(ActivityIds.ExitApplication, async () =>
         {
             _appController.Shutdown();
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 }

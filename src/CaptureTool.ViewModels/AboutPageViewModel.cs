@@ -14,6 +14,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
         public static readonly string ShowPrivacyPolicy = "AboutPageViewModel_ShowPrivacyPolicy";
         public static readonly string ShowDisclaimerOfLiability = "AboutPageViewModel_ShowDisclaimerOfLiability";
         public static readonly string ShowTermsOfUse = "AboutPageViewModel_ShowTermsOfUse";
+        public static readonly string GoBack = "AboutPageViewModel_GoBack";
     }
 
     private readonly IAppNavigation _appNavigation;
@@ -46,24 +47,19 @@ public sealed partial class AboutPageViewModel : ViewModelBase
 
     private void ShowDialog(string titleResourceKey, string contentResourceKey, string activityId)
     {
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        _telemetryService.ExecuteActivity(activityId, () =>
         {
             string title = _localizationService.GetString(titleResourceKey);
             string content = _localizationService.GetString(contentResourceKey);
             ShowDialogRequested?.Invoke(this, (title, content));
-        }
-        catch (Exception ex)
-        {
-            _telemetryService.ActivityError(activityId, ex);
-        }
-
-        _telemetryService.ActivityCompleted(activityId);
+        });
     }
 
     private void GoBack()
     {
-        _appNavigation.GoBackOrGoHome();
+        _telemetryService.ExecuteActivity(ActivityIds.GoBack, () =>
+        {
+            _appNavigation.GoBackOrGoHome();
+        });
     }
 }

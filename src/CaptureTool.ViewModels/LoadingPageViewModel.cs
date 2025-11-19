@@ -29,17 +29,9 @@ public sealed partial class LoadingPageViewModel : ViewModelBase
 
     private void GoBack()
     {
-        string activityId = ActivityIds.GoBack;
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
+        _telemetryService.ExecuteActivity(ActivityIds.GoBack, async () =>
         {
             _appNavigation.GoBackOrGoHome();
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 }

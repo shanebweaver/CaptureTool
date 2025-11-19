@@ -53,9 +53,12 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase<
 
     public override Task LoadAsync(VideoFile video, CancellationToken cancellationToken)
     {
-        VideoPath = video.Path;
+        return _telemetryService.ExecuteActivityAsync(ActivityIds.Load, async () =>
+        {
+            VideoPath = video.Path;
 
-        return base.LoadAsync(video, cancellationToken);
+            await base.LoadAsync(video, cancellationToken);
+        });
     }
 
     public override void Dispose()
@@ -64,35 +67,26 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase<
         base.Dispose();
     }
 
-    private async void Save()
+    private void Save()
     {
-        string activityId = ActivityIds.Save;
-        _telemetryService.ActivityInitiated(activityId);
-        try
+        _telemetryService.ExecuteActivity(ActivityIds.Save, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             VideoFile? file = await _filePickerService.SaveVideoFileAsync(hwnd);
             if (file is not null && !string.IsNullOrEmpty(_videoPath))
             {
                 File.Copy(_videoPath, file.Path, true);
-                _telemetryService.ActivityCompleted(activityId);
             }
             else
             {
-                _telemetryService.ActivityCompleted(activityId, "User canceled");
+                throw new OperationCanceledException();
             }
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 
-    private async void Copy()
+    private void Copy()
     {
-        string activityId = ActivityIds.Copy;
-        _telemetryService.ActivityInitiated(activityId);
-        try
+        _telemetryService.ExecuteActivity(ActivityIds.Copy, async () =>
         {
             if (string.IsNullOrEmpty(_videoPath))
             {
@@ -101,11 +95,6 @@ public sealed partial class VideoEditPageViewModel : AsyncLoadableViewModelBase<
 
             ClipboardFileWrapper clipboardVideo = new(_videoPath);
             await _clipboardService.CopyFileAsync(clipboardVideo);
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-        }
+        });
     }
 }

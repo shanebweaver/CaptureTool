@@ -170,9 +170,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         GoBackCommand = new(GoBack);
     }
 
-    public override async Task LoadAsync(CancellationToken cancellationToken)
+    public override Task LoadAsync(CancellationToken cancellationToken)
     {
-        ExecuteActivity(ActivityIds.Load, () =>
+        return _telemetryService.ExecuteActivityAsync(ActivityIds.Load, async () =>
         {
             var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
             try
@@ -227,33 +227,30 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             {
                 cts.Dispose();
             }
-        });
 
-        await base.LoadAsync(cancellationToken);
+            await base.LoadAsync(cancellationToken);
+        });
     }
 
     public override void Dispose()
     {
-        ExecuteActivity(ActivityIds.Dispose, () =>
-        {
-            _showAppLanguageRestartMessage = false;
-            _selectedAppLanguageIndex = -1;
-            _appLanguages.Clear();
+        _showAppLanguageRestartMessage = false;
+        _selectedAppLanguageIndex = -1;
+        _appLanguages.Clear();
 
-            _showAppThemeRestartMessage = false;
-            _selectedAppThemeIndex = -1;
-            _appThemes.Clear();
+        _showAppThemeRestartMessage = false;
+        _selectedAppThemeIndex = -1;
+        _appThemes.Clear();
 
-            _imageCaptureAutoSave = false;
-            _imageCaptureAutoCopy = false;
-        });
+        _imageCaptureAutoSave = false;
+        _imageCaptureAutoCopy = false;
 
         base.Dispose();
     }
 
     private void UpdateAppLanguage()
     {
-        ExecuteActivity(ActivityIds.UpdateAppLanguage, () =>
+        _telemetryService.ExecuteActivity(ActivityIds.UpdateAppLanguage, () =>
         {
             if (SelectedAppLanguageIndex != -1)
             {
@@ -269,7 +266,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void UpdateShowAppLanguageRestartMessage()
     {
-        ExecuteActivity(ActivityIds.UpdateShowAppLanguageRestartMessage, () =>
+        _telemetryService.ExecuteActivity(ActivityIds.UpdateShowAppLanguageRestartMessage, () =>
         {
             ShowAppLanguageRestartMessage = 
                 _localizationService.RequestedLanguage != _localizationService.StartupLanguage || 
@@ -279,7 +276,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void UpdateAppTheme()
     {
-        ExecuteActivity(ActivityIds.UpdateAppTheme, () =>
+        _telemetryService.ExecuteActivity(ActivityIds.UpdateAppTheme, () =>
         {
             if (SelectedAppThemeIndex != -1)
             {
@@ -295,7 +292,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void UpdateShowAppThemeRestartMessage()
     {
-        ExecuteActivity(ActivityIds.UpdateShowAppThemeRestartMessage, () =>
+        _telemetryService.ExecuteActivity(ActivityIds.UpdateShowAppThemeRestartMessage, () =>
         {
             var defaultTheme = _themeService.DefaultTheme;
             var startupTheme = _themeService.StartupTheme;
@@ -319,7 +316,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void UpdateImageCaptureAutoSave()
     {
-        ExecuteActivity(ActivityIds.UpdateImageCaptureAutoSave, async () =>
+        _telemetryService.ExecuteActivity(ActivityIds.UpdateImageCaptureAutoSave, async () =>
         {
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, ImageCaptureAutoSave);
             await _settingsService.TrySaveAsync(CancellationToken.None);
@@ -328,7 +325,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void UpdateImageCaptureAutoCopy()
     {
-        ExecuteActivity(ActivityIds.UpdateImageCaptureAutoCopy, async () =>
+        _telemetryService.ExecuteActivity(ActivityIds.UpdateImageCaptureAutoCopy, async () =>
         {
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, ImageCaptureAutoCopy);
             await _settingsService.TrySaveAsync(CancellationToken.None);
@@ -337,14 +334,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void ChangeScreenshotsFolder()
     {
-        ExecuteActivity(ActivityIds.ChangeScreenshotsFolder, async () =>
+        _telemetryService.ExecuteActivity(ActivityIds.ChangeScreenshotsFolder, async () =>
         {
             var hwnd = _appController.GetMainWindowHandle();
             string? folderPath = await _filePickerService.PickFolderAsync(hwnd);
 
             if (string.IsNullOrWhiteSpace(folderPath)) 
             {
-                return;
+                throw new InvalidOperationException("No folder was selected.");
             }
 
             ScreenshotsFolderPath = folderPath;
@@ -356,45 +353,29 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void OpenScreenshotsFolder()
     {
-        ExecuteActivity(ActivityIds.OpenScreenshotsFolder, () =>
+        _telemetryService.ExecuteActivity(ActivityIds.OpenScreenshotsFolder, () =>
         {
             if (Directory.Exists(ScreenshotsFolderPath))
             {
                 Process.Start("explorer.exe", $"/open, {ScreenshotsFolderPath}");
+            }
+            else
+            {
+                throw new DirectoryNotFoundException($"The screenshots folder path '{ScreenshotsFolderPath}' does not exist.");
             }
         });
     }
 
     private void RestartApp()
     {
-        ExecuteActivity(ActivityIds.RestartApp, () => _appController.TryRestart());
+        _telemetryService.ExecuteActivity(ActivityIds.RestartApp, () => _appController.TryRestart());
     }
 
     private void GoBack()
     {
-        ExecuteActivity(ActivityIds.GoBack, () => {
+        _telemetryService.ExecuteActivity(ActivityIds.GoBack, () => 
+        {
             _appNavigation.GoBackOrGoHome();
         });
-    }
-
-    private void ExecuteActivity(string activityId, Action activityAction)
-    {
-        _telemetryService.ActivityInitiated(activityId);
-
-        try
-        {
-            activityAction();
-            _telemetryService.ActivityCompleted(activityId);
-        }
-        catch (OperationCanceledException)
-        {
-            _telemetryService.ActivityCanceled(activityId);
-            throw;
-        }
-        catch (Exception e)
-        {
-            _telemetryService.ActivityError(activityId, e);
-            throw;
-        }
     }
 }
