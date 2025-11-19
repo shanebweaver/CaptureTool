@@ -200,7 +200,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         set
         {
             Set(ref _selectedChromaKeyColorOptionIndex, value);
-            UpdateChromaKeyColor(_chromaKeyColorOptions[value].Color);
+            UpdateChromaKeyColor(value);
         }
     }
 
@@ -314,9 +314,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         base.Dispose();
     }
 
-    private void Copy()
+    private async void Copy()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Copy, async () =>
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Copy, async () =>
         {
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
@@ -325,7 +325,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void ToggleCropMode()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleCropMode, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleCropMode, () =>
         {
             IsInCropMode = !IsInCropMode;
         });
@@ -351,6 +351,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
+    private void UpdateChromaKeyColor(int colorIndex)
+    {
+        if (colorIndex < 0 || colorIndex >= _chromaKeyColorOptions.Count)
+        {
+            return;
+        }
+     
+        UpdateChromaKeyColor(_chromaKeyColorOptions[colorIndex].Color);
+    }
+
     private void UpdateChromaKeyColor(Color color)
     {
         if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
@@ -361,9 +371,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyColor = color;
     }
 
-    private void Save()
+    private async void Save()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Save, async () =>
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             var file = await _filePickerService.SaveImageFileAsync(hwnd);
@@ -382,7 +392,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void Undo()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Undo, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Undo, () =>
         {
             if (_operationsUndoStack.Count == 0)
             {
@@ -399,7 +409,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void Redo()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Redo, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Redo, () =>
         {
             if (_operationsRedoStack.Count == 0)
             {
@@ -416,7 +426,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void Rotate()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Rotate, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Rotate, () =>
         {
             ImageOrientation oldOrientation = Orientation;
             ImageOrientation newOrientation = ImageOrientationHelper.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
@@ -446,7 +456,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             _ => throw new InvalidOperationException("Unexpected FlipDirection value.")
         };
 
-        TelemetryHelper.ExecuteActivity(_telemetryService, activityId, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, activityId, () =>
         {
             ImageOrientation oldOrientation = Orientation;
             ImageOrientation newOrientation = ImageOrientationHelper.GetFlippedOrientation(Orientation, flipDirection);
@@ -464,7 +474,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async void Print()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Print, async () =>
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Print, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
@@ -473,7 +483,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async void Share()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Share, async () =>
+        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Share, async () =>
         {
             if (_imageFile == null)
             {
