@@ -1,0 +1,19 @@
+﻿using CaptureTool.Services.Interfaces.Store;
+
+namespace CaptureTool.Services.Implementations.Store;
+
+public sealed partial class StoreAddOn : IStoreAddOn
+{
+    public string Id { get; }
+    public bool IsOwned { get; }
+    public string Price { get; }
+    public Uri? LogoImage { get; }
+
+    public StoreAddOn(string id, bool isOwned, string price, Uri? logoImage)
+    {
+        Id = id;
+        IsOwned = isOwned;
+        Price = price;
+        LogoImage = logoImage;
+    }
+}
