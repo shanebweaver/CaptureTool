@@ -1,13 +1,12 @@
-﻿using CaptureTool.Services.Navigation;
-using System.Collections.Generic;
+﻿using CaptureTool.Services.Interfaces.Navigation;
 
 namespace CaptureTool.Services.Tests.Navigation;
 
 public class MockNavigationHandler : INavigationHandler
 {
-    public List<NavigationRequest> HandledRequests { get; } = new();
+    public List<INavigationRequest> HandledRequests { get; } = new();
 
-    public void HandleNavigationRequest(NavigationRequest request)
+    public void HandleNavigationRequest(INavigationRequest request)
     {
         HandledRequests.Add(request);
     }

@@ -1,6 +1,4 @@
-﻿using CaptureTool.Common.Storage;
-
-namespace CaptureTool.Capture;
+﻿namespace CaptureTool.Capture;
 
 public partial interface IVideoCaptureHandler
 {

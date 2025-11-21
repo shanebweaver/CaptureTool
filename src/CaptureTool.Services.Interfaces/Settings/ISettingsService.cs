@@ -1,4 +1,4 @@
-﻿using CaptureTool.Services.Interfaces.Settings.Definitions;
+﻿using CaptureTool.Common.Settings;
 
 namespace CaptureTool.Services.Interfaces.Settings;
 

@@ -1,5 +1,4 @@
 ﻿using CaptureTool.Capture;
-using CaptureTool.Common.Storage;
 using System;
 
 namespace CaptureTool.Core.Navigation;

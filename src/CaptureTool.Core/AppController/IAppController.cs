@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Capture;
-using CaptureTool.Services.Activation;
-using CaptureTool.Services.Navigation;
+using CaptureTool.Services.Interfaces.Activation;
+using CaptureTool.Services.Interfaces.Navigation;
 
 namespace CaptureTool.Core.AppController;
 

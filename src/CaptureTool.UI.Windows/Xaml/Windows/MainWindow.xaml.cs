@@ -1,5 +1,5 @@
-﻿using CaptureTool.Services.Navigation;
-using CaptureTool.Services.Themes;
+﻿using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Services.Interfaces.Themes;
 using CaptureTool.UI.Windows.Utils;
 using CaptureTool.UI.Windows.Xaml.Pages;
 using CaptureTool.ViewModels;
@@ -7,8 +7,6 @@ using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
-using System;
-using System.Threading;
 using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.Graphics;
@@ -141,7 +139,7 @@ public sealed partial class MainWindow : Window
         ServiceLocator.AppController.Shutdown();
     }
 
-    private void OnViewModelNavigationRequested(object? sender, NavigationRequest navigationRequest)
+    private void OnViewModelNavigationRequested(object? sender, INavigationRequest navigationRequest)
     {
         DispatcherQueue.TryEnqueue(() =>
         {

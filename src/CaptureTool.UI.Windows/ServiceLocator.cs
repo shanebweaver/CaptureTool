@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Services.Logging;
+using CaptureTool.Services.Interfaces.Logging;
 
 namespace CaptureTool.UI.Windows;
 

@@ -4,11 +4,11 @@ using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
-using CaptureTool.Services.Telemetry;
-using CaptureTool.Services.Themes;
-using System;
+using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Services.Interfaces.Themes;
 using System.Drawing;
 using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace CaptureTool.ViewModels;
 

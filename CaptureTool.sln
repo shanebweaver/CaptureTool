@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Common", "src\C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.FeatureManagement", "src\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj", "{33752AAD-81FA-4575-825B-1D87DDCA7B09}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Windows", "src\CaptureTool.Services.Windows\CaptureTool.Services.Windows.csproj", "{D332328F-8703-468A-8A54-48D376DDC2B7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Implementations.Windows", "src\CaptureTool.Services.Implementations.Windows\CaptureTool.Services.Implementations.Windows.csproj", "{D332328F-8703-468A-8A54-48D376DDC2B7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Core", "src\CaptureTool.Core\CaptureTool.Core.csproj", "{E2B8000C-0354-430A-82DD-265A57839277}"
 EndProject

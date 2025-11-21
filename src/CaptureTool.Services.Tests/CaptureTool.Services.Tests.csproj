@@ -6,7 +6,7 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Implementations\CaptureTool.Services.Implementations.csproj" />
   </ItemGroup>
 
   <!-- Package references -->

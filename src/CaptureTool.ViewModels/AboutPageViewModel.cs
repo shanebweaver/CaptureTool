@@ -2,9 +2,8 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
-using CaptureTool.Services.Localization;
-using CaptureTool.Services.Telemetry;
-using System;
+using CaptureTool.Services.Interfaces.Localization;
+using CaptureTool.Services.Interfaces.Telemetry;
 
 namespace CaptureTool.ViewModels;
 

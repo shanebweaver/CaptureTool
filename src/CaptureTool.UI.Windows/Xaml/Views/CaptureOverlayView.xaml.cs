@@ -1,5 +1,5 @@
 using CaptureTool.Capture;
-using CaptureTool.Services.Themes;
+using CaptureTool.Services.Interfaces.Themes;
 using CaptureTool.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Composition;

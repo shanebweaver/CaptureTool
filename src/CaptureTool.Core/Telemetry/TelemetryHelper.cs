@@ -1,6 +1,4 @@
-﻿using CaptureTool.Services.Telemetry;
-using System;
-using System.Threading.Tasks;
+﻿using CaptureTool.Services.Interfaces.Telemetry;
 
 namespace CaptureTool.Core.Telemetry;
 

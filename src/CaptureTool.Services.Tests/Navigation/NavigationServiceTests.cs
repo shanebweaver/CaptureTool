@@ -1,6 +1,5 @@
-﻿using CaptureTool.Services.Navigation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using CaptureTool.Services.Implementations.Navigation;
+using CaptureTool.Services.Interfaces.Navigation;
 
 namespace CaptureTool.Services.Tests.Navigation;
 
@@ -160,7 +159,7 @@ public class NavigationServiceTests
         var handler = new MockNavigationHandler();
         service.SetNavigationHandler(handler);
 
-        NavigationRequest? receivedRequest = null;
+        INavigationRequest? receivedRequest = null;
 
         service.Navigated += (sender, args) =>
         {

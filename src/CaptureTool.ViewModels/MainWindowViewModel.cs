@@ -1,7 +1,6 @@
 ﻿using CaptureTool.Common;
-using CaptureTool.Services.Navigation;
-using CaptureTool.Services.Themes;
-using System;
+using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Services.Interfaces.Themes;
 
 namespace CaptureTool.ViewModels;
 
@@ -9,7 +8,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
 {
     private readonly IThemeService _themeService;
 
-    public event EventHandler<NavigationRequest>? NavigationRequested;
+    public event EventHandler<INavigationRequest>? NavigationRequested;
 
     private AppTheme _currentAppTheme;
     public AppTheme CurrentAppTheme
@@ -25,7 +24,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
         set => Set(ref _defaultAppTheme, value);
     }
 
-    private NavigationRequest? _currentRequest;
+    private INavigationRequest? _currentRequest;
 
     public MainWindowViewModel(
         IThemeService themeService)
@@ -47,7 +46,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
         CurrentAppTheme = newTheme;
     }
 
-    public void HandleNavigationRequest(NavigationRequest request)
+    public void HandleNavigationRequest(INavigationRequest request)
     {
         if (_currentRequest?.Route == request.Route && _currentRequest?.Parameter == request.Parameter)
         {

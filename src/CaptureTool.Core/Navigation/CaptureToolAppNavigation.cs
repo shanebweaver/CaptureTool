@@ -1,7 +1,5 @@
 ﻿using CaptureTool.Capture;
-using CaptureTool.Common.Storage;
-using CaptureTool.Services.Navigation;
-using System;
+using CaptureTool.Services.Interfaces.Navigation;
 
 namespace CaptureTool.Core.Navigation;
 

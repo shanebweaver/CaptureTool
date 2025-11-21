@@ -109,7 +109,7 @@ public static partial class Win2DImageCanvasRenderer
 
     public static async Task PrepareAsync(ImageDrawable imageDrawable, ICanvasResourceCreator resourceCreator)
     {
-        ICanvasImage prepared = await CanvasBitmap.LoadAsync(resourceCreator, imageDrawable.FileName.Path);
+        ICanvasImage prepared = await CanvasBitmap.LoadAsync(resourceCreator, imageDrawable.File.FilePath);
         imageDrawable.SetPreparedImage(prepared);
     }
 }

@@ -1,14 +1,12 @@
-﻿using CaptureTool.Common.Storage;
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace CaptureTool.Services.Interfaces.Storage;
 
 public partial interface IFilePickerService
 {
-    Task<string?> PickFolderAsync(nint hwnd);
-    Task<ImageFile?> OpenImageFileAsync(nint hwnd);
-    Task<ImageFile?> SaveImageFileAsync(nint hwnd);
-    Task<VideoFile?> SaveVideoFileAsync(nint hwnd);
+    Task<IFolder?> PickFolderAsync(nint hwnd, UserFolder defaultFolder);
+    Task<IFile?> PickFileAsync(nint hwnd, FileType fileType, UserFolder defaultFolder);
+    Task<IFile?> PickSaveFileAsync(nint hwnd, FileType fileType, UserFolder defaultFolder);
 
-    Size GetImageSize(ImageFile imageFile);
+    Size GetImageFileSize(IImageFile imageFile);
 }

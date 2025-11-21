@@ -1,10 +1,10 @@
-﻿using CaptureTool.Services;
-using CaptureTool.Services.Localization;
-using CaptureTool.Services.Themes;
+﻿using CaptureTool.Services.Interfaces;
+using CaptureTool.Services.Interfaces.Localization;
+using CaptureTool.Services.Interfaces.Themes;
 
 namespace CaptureTool.ViewModels.Factories;
 
-public sealed partial class AppThemeViewModelFactory : IFactoryService<AppThemeViewModel, AppTheme>
+public sealed partial class AppThemeViewModelFactory : IFactoryServiceWithArgs<AppThemeViewModel, AppTheme>
 {
     private readonly ILocalizationService _localizationService;
 

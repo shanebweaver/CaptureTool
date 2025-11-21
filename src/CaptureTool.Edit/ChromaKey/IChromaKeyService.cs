@@ -1,10 +1,9 @@
-﻿using CaptureTool.Common.Storage;
+﻿using CaptureTool.Services.Interfaces.Storage;
 using System.Drawing;
-using System.Threading.Tasks;
 
 namespace CaptureTool.Edit.ChromaKey;
 
 public partial interface IChromaKeyService
 {
-    Task<Color[]> GetTopColorsAsync(ImageFile image, uint count = 3, byte quantizeStep = 8);
+    Task<Color[]> GetTopColorsAsync(IFile image, uint count = 3, byte quantizeStep = 8);
 }

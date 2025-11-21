@@ -1,8 +1,4 @@
-﻿using CaptureTool.Services.Cancellation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using CaptureTool.Services.Implementations.Cancellation;
 
 namespace CaptureTool.Services.Tests.Cancellation;
 

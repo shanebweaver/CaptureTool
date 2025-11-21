@@ -1,18 +1,15 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Common.Storage;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Services;
-using CaptureTool.Services.Telemetry;
-using CaptureTool.Services.Themes;
-using System.Collections.Generic;
+using CaptureTool.Services.Interfaces;
+using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Services.Interfaces.Themes;
 using System.Collections.ObjectModel;
 using System.Drawing;
-using System.Linq;
 
 namespace CaptureTool.ViewModels;
 
@@ -28,7 +25,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly ITelemetryService _telemetryService;
     private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
-    private readonly IFactoryService<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
+    private readonly IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
     private static readonly CaptureType[] _imageCaptureTypes = [
         CaptureType.Rectangle,
@@ -144,8 +141,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         IFeatureManager featureManager,
         IThemeService themeService,
         IAppController appController,
-        IFactoryService<CaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
-        IFactoryService<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
+        IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
+        IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
     {
         _telemetryService = telemetryService;
         _appNavigation = appNavigation;

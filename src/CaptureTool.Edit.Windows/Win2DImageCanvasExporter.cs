@@ -1,9 +1,6 @@
 ﻿using CaptureTool.Edit.Drawable;
-using CaptureTool.Services.Clipboard;
+using CaptureTool.Services.Interfaces.Clipboard;
 using Microsoft.Graphics.Canvas;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Provider;
 using Windows.Storage.Streams;

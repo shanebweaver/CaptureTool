@@ -1,26 +1,22 @@
 ﻿using CaptureTool.Capture;
 using CaptureTool.Capture.Windows;
-using CaptureTool.Common.Storage;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Settings;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Services.Cancellation;
-using CaptureTool.Services.Logging;
-using CaptureTool.Services.Navigation;
-using CaptureTool.Services.Settings;
+using CaptureTool.Services.Interfaces.Cancellation;
+using CaptureTool.Services.Interfaces.Localization;
+using CaptureTool.Services.Interfaces.Logging;
+using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Services.Interfaces.Settings;
 using CaptureTool.UI.Windows.Xaml.Windows;
 using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.Storage;
-using System;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Web;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics.Imaging;
@@ -40,6 +36,7 @@ internal partial class CaptureToolAppController : IAppController
 
     private readonly IAppNavigation _appNavigation;
     private readonly ILogService _logService;
+    ILocalizationService _localizationService;
     private readonly INavigationService _navigationService;
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
@@ -59,6 +56,7 @@ internal partial class CaptureToolAppController : IAppController
     public CaptureToolAppController(
         IAppNavigation appNavigation,
         ILogService logService,
+        ILocalizationService localizationService,
         INavigationService navigationService,
         ICancellationService cancellationService,
         ISettingsService settingsService,
@@ -66,6 +64,7 @@ internal partial class CaptureToolAppController : IAppController
     {
         _appNavigation = appNavigation;
         _logService = logService;
+        _localizationService = localizationService;
         _navigationService = navigationService;
         _cancellationService = cancellationService;
         _settingsService = settingsService;
@@ -88,6 +87,8 @@ internal partial class CaptureToolAppController : IAppController
             CancellationTokenSource cancellationTokenSource = _cancellationService.GetLinkedCancellationTokenSource();
             await InitializeSettingsServiceAsync(cancellationTokenSource.Token);
 
+            _localizationService.Initialize(CaptureToolSettings.Settings_LanguageOverride);
+
             _isInitialized = true;
         }
         finally
@@ -109,7 +110,7 @@ internal partial class CaptureToolAppController : IAppController
     }
 
     #region INavigationHandler
-    public async void HandleNavigationRequest(NavigationRequest request)
+    public async void HandleNavigationRequest(INavigationRequest request)
     {
         await _semaphoreNavigation.WaitAsync();
 
@@ -472,7 +473,7 @@ internal partial class CaptureToolAppController : IAppController
             }
 
             // Load the file
-            global::Windows.Storage.StorageFile file = await global::Windows.Storage.StorageFile.GetFileFromPathAsync(imageFile.Path);
+            global::Windows.Storage.StorageFile file = await global::Windows.Storage.StorageFile.GetFileFromPathAsync(imageFile.FilePath);
 
             // Open the file as a stream
             using IRandomAccessStream stream = await file.OpenAsync(global::Windows.Storage.FileAccessMode.Read);
@@ -524,7 +525,7 @@ internal partial class CaptureToolAppController : IAppController
                 screenshotsFolder = GetDefaultScreenshotsFolderPath();
             }
 
-            string tempFilePath = imageFile.Path;
+            string tempFilePath = imageFile.FilePath;
             string fileName = Path.GetFileName(tempFilePath);
             string newFilePath = Path.Combine(screenshotsFolder, fileName);
 

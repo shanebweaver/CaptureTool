@@ -2,8 +2,8 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
     <ProjectReference Include="..\CaptureTool.Capture\CaptureTool.Capture.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>

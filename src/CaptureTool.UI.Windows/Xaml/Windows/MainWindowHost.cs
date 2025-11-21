@@ -1,6 +1,5 @@
-﻿using CaptureTool.Services.Navigation;
+﻿using CaptureTool.Services.Interfaces.Navigation;
 using CaptureTool.UI.Windows.Utils;
-using System;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
 
@@ -67,7 +66,7 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
         _mainWindow = null;
     }
 
-    public void HandleNavigationRequest(NavigationRequest request)
+    public void HandleNavigationRequest(INavigationRequest request)
     {
         _mainWindow?.ViewModel.HandleNavigationRequest(request);
     }

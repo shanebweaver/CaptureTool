@@ -16,7 +16,6 @@
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Edit\CaptureTool.Edit.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
   </ItemGroup>
 
 </Project>

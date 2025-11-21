@@ -3,13 +3,10 @@ using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
-using CaptureTool.Services.Cancellation;
-using CaptureTool.Services.Localization;
-using CaptureTool.Services.Store;
-using CaptureTool.Services.Telemetry;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using CaptureTool.Services.Interfaces.Cancellation;
+using CaptureTool.Services.Interfaces.Localization;
+using CaptureTool.Services.Interfaces.Store;
+using CaptureTool.Services.Interfaces.Telemetry;
 using static CaptureTool.Core.Store.CaptureToolStoreProducts;
 
 namespace CaptureTool.ViewModels;
@@ -89,7 +86,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
             var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
             try
             {
-                StoreAddOn? addOn = await _storeService.GetAddonProductInfoAsync(AddOns.ChromaKeyBackgroundRemoval);
+                IStoreAddOn? addOn = await _storeService.GetAddonProductInfoAsync(AddOns.ChromaKeyBackgroundRemoval);
                 if (addOn != null)
                 {
                     bool isOwned = addOn.IsOwned;

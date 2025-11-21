@@ -1,20 +1,25 @@
-﻿using CaptureTool.Services.Implementations.Settings.Definitions;
+﻿using CaptureTool.Common.Settings;
+using CaptureTool.Services.Implementations.Settings.Definitions;
 using CaptureTool.Services.Interfaces.Logging;
 using CaptureTool.Services.Interfaces.Settings;
-using CaptureTool.Services.Interfaces.Settings.Definitions;
 using CaptureTool.Services.Interfaces.Storage;
 
 namespace CaptureTool.Services.Implementations.Settings;
 
 public partial class LocalSettingsService : ISettingsService, IDisposable
 {
+    private class SettingsFile(string filePath) : IFile
+    {
+        public string FilePath { get; } = filePath;
+    }
+
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly Lock _accessLock = new();
     private readonly ILogService _logService;
     private readonly IJsonStorageService _jsonStorageService;
 
     private Dictionary<string, SettingDefinition> _settings;
-    private string? _filePath;
+    private SettingsFile? _settingsFile;
     private bool _isInitialized;
     private bool _disposed;
 
@@ -82,10 +87,12 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
                 return;
             }
 
+            SettingsFile? settingsFile = null;
             List<SettingDefinition>? settingsList = null;
             try
             {
-                settingsList = await _jsonStorageService.ReadAsync(filePath, SettingDefinitionContext.Default.ListSettingDefinition);
+                settingsFile = new(filePath);
+                settingsList = await _jsonStorageService.ReadAsync(settingsFile, SettingDefinitionContext.Default.ListSettingDefinition);
             }
             catch (FileNotFoundException)
             {
@@ -109,7 +116,7 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
             }
 
             Interlocked.Exchange(ref _settings, settings);
-            Interlocked.Exchange(ref _filePath, filePath);
+            Interlocked.Exchange(ref _settingsFile, settingsFile);
 
             FireSettingsChangedEvent([.. _settings.Values]);
 
@@ -173,7 +180,7 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
             try
             {
                 List<SettingDefinition> settingsList = [.. _settings.Values];
-                await _jsonStorageService.WriteAsync(GetFilePath(), settingsList, SettingDefinitionContext.Default.ListSettingDefinition);
+                await _jsonStorageService.WriteAsync(GetSettingsFile(), settingsList, SettingDefinitionContext.Default.ListSettingDefinition);
                 return true;
             }
             catch (Exception e)
@@ -211,16 +218,16 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
         }
     }
 
-    private string GetFilePath()
+    private SettingsFile GetSettingsFile()
     {
         ThrowIfNotInitialized();
 
-        if (_filePath == null)
+        if (_settingsFile == null)
         {
             throw new InvalidOperationException("SettingsService has not been initialized with a file path.");
         }
 
-        return _filePath;
+        return _settingsFile;
     }
 
     private void ThrowIfNotInitialized()

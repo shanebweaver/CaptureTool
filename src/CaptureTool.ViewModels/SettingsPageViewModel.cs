@@ -4,18 +4,15 @@ using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Settings;
 using CaptureTool.Core.Telemetry;
-using CaptureTool.Services;
-using CaptureTool.Services.Cancellation;
-using CaptureTool.Services.Localization;
-using CaptureTool.Services.Settings;
-using CaptureTool.Services.Storage;
-using CaptureTool.Services.Telemetry;
-using CaptureTool.Services.Themes;
-using System;
+using CaptureTool.Services.Interfaces;
+using CaptureTool.Services.Interfaces.Cancellation;
+using CaptureTool.Services.Interfaces.Localization;
+using CaptureTool.Services.Interfaces.Settings;
+using CaptureTool.Services.Interfaces.Storage;
+using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Services.Interfaces.Themes;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
-using System.Threading;
 
 namespace CaptureTool.ViewModels;
 
@@ -45,8 +42,8 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
     private readonly IThemeService _themeService;
     private readonly IFilePickerService _filePickerService;
     private readonly ICancellationService _cancellationService;
-    private readonly IFactoryService<AppLanguageViewModel, AppLanguage?> _appLanguageViewModelFactory;
-    private readonly IFactoryService<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
+    private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
+    private readonly IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
     private readonly AppTheme[] SupportedAppThemes = [
         AppTheme.Light,
@@ -147,8 +144,8 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         IFilePickerService filePickerService,
         ISettingsService settingsService,
         ICancellationService cancellationService,
-        IFactoryService<AppLanguageViewModel, AppLanguage?> appLanguageViewModelFactory,
-        IFactoryService<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
+        IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
+        IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
         _appNavigation = appNavigation;
         _telemetryService = telemetryService;
@@ -176,10 +173,10 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
         {
             // Languages
-            AppLanguage[] languages = _localizationService.SupportedLanguages;
+            IAppLanguage[] languages = _localizationService.SupportedLanguages;
             for (var i = 0; i < languages.Length; i++)
             {
-                AppLanguage language = languages[i];
+                IAppLanguage language = languages[i];
                 AppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
                 AppLanguages.Add(vm);
 
@@ -330,16 +327,12 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
         {
             var hwnd = _appController.GetMainWindowHandle();
-            string? folderPath = await _filePickerService.PickFolderAsync(hwnd);
+            IFolder? folder = await _filePickerService.PickFolderAsync(hwnd, UserFolder.Pictures)
+                ?? throw new InvalidOperationException("No folder was selected.");
 
-            if (string.IsNullOrWhiteSpace(folderPath)) 
-            {
-                throw new InvalidOperationException("No folder was selected.");
-            }
+            ScreenshotsFolderPath = folder.FolderPath;
 
-            ScreenshotsFolderPath = folderPath;
-
-            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder, folderPath);
+            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder, folder.FolderPath);
             await _settingsService.TrySaveAsync(CancellationToken.None);
         });
     }
