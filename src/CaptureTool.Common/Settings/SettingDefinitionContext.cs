@@ -1,7 +1,6 @@
-﻿using CaptureTool.Common.Settings;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace CaptureTool.Services.Implementations.Settings.Definitions;
+namespace CaptureTool.Common.Settings;
 
 [JsonSerializable(typeof(SettingDefinition))]
 [JsonSerializable(typeof(List<SettingDefinition>))]

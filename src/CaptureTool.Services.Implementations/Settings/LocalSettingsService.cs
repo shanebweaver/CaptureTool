@@ -1,5 +1,4 @@
 ﻿using CaptureTool.Common.Settings;
-using CaptureTool.Services.Implementations.Settings.Definitions;
 using CaptureTool.Services.Interfaces.Logging;
 using CaptureTool.Services.Interfaces.Settings;
 using CaptureTool.Services.Interfaces.Storage;

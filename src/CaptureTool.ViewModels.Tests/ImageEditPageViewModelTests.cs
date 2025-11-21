@@ -1,10 +1,10 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Capture;
 using CaptureTool.Core.AppController;
-using CaptureTool.Edit;
-using CaptureTool.Edit.ChromaKey;
-using CaptureTool.Edit.Drawable;
+using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domains.Edit.Interfaces;
+using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
+using CaptureTool.Domains.Edit.Interfaces.Drawable;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Share;
@@ -70,7 +70,7 @@ public sealed class ImageEditPageViewModelTests
                     .ReturnsAsync(false);
 
         chromaService.Setup(s => s.GetTopColorsAsync(It.IsAny<ImageFile>(), It.IsAny<uint>(), It.IsAny<byte>()))
-                     .ReturnsAsync(Array.Empty<Color>());
+                     .ReturnsAsync([]);
 
         var cts = new CancellationTokenSource();
         cancel.Setup(c => c.GetLinkedCancellationTokenSource(cts.Token))

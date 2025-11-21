@@ -1,4 +1,4 @@
-﻿using CaptureTool.Capture;
+﻿using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Navigation;
 
 namespace CaptureTool.Core.Navigation;

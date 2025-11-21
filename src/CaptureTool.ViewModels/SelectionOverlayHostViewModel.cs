@@ -1,9 +1,8 @@
-﻿using CaptureTool.Capture;
-using CaptureTool.Common;
+﻿using CaptureTool.Common;
 using CaptureTool.Common.Sync;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
-using System.Collections.Generic;
+using CaptureTool.Domains.Capture.Interfaces;
 using System.ComponentModel;
 using System.Drawing;
 

@@ -1,11 +1,10 @@
-﻿using CaptureTool.Capture;
+﻿using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.UI.Windows.Utils;
 using CaptureTool.UI.Windows.Xaml.Controls;
 using CaptureTool.UI.Windows.Xaml.Views;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.Win32.SafeHandles;
-using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using Windows.Win32;

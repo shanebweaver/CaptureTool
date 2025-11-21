@@ -1,6 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
-  </ItemGroup>
-</Project>

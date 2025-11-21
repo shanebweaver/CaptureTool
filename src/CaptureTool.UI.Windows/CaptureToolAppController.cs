@@ -1,8 +1,8 @@
-﻿using CaptureTool.Capture;
-using CaptureTool.Capture.Windows;
-using CaptureTool.Core.AppController;
+﻿using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Settings;
+using CaptureTool.Domains.Capture.Implementations.Windows;
+using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Localization;

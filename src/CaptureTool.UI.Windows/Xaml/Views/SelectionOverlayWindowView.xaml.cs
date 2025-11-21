@@ -1,4 +1,4 @@
-using CaptureTool.Capture;
+using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Themes;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;

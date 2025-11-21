@@ -1,10 +1,10 @@
-﻿using CaptureTool.Capture;
-using CaptureTool.Core.AppController;
+﻿using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
-using CaptureTool.Edit;
-using CaptureTool.Edit.ChromaKey;
-using CaptureTool.Edit.Windows;
-using CaptureTool.Edit.Windows.ChromaKey;
+using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domains.Edit.Implementations.Windows;
+using CaptureTool.Domains.Edit.Implementations.Windows.ChromaKey;
+using CaptureTool.Domains.Edit.Interfaces;
+using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Implementations.Cancellation;
 using CaptureTool.Services.Implementations.Globalization;

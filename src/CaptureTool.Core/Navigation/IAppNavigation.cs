@@ -1,5 +1,4 @@
-﻿using CaptureTool.Capture;
-using System;
+﻿using CaptureTool.Domains.Capture.Interfaces;
 
 namespace CaptureTool.Core.Navigation;
 
