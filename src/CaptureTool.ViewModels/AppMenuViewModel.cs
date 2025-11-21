@@ -74,7 +74,8 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.OpenFile, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            var imageFile = await _filePickerService.PickFileAsync(hwnd, FileType.Image, UserFolder.Pictures) ?? throw new OperationCanceledException();
+            IFile imageFile = await _filePickerService.PickFileAsync(hwnd, FileType.Image, UserFolder.Pictures) 
+                ?? throw new OperationCanceledException("No file was selected.");
             _appNavigation.GoToImageEdit(new(imageFile.FilePath));
         });
     }

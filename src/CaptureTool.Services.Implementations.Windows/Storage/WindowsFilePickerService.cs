@@ -21,6 +21,11 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
         StorageFolder folder = await picker.PickSingleFolderAsync();
+        if (folder is null)
+        {
+            return null;
+        }
+
         return new WindowsFolder(folder.Path);
     }
 
@@ -60,6 +65,11 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
 
         StorageFile file = await filePicker.PickSingleFileAsync();
+        if (file is null)
+        {
+            return null;
+        }
+
         return new WindowsFile(file.Path);
     }
 
@@ -99,6 +109,11 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
 
         StorageFile file = await filePicker.PickSaveFileAsync();
+        if (file is null)
+        {
+           return null;
+        }
+
         return new WindowsFile(file.Path);
     }
 

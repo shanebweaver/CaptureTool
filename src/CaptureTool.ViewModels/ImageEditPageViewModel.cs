@@ -372,12 +372,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            var file = await _filePickerService.PickSaveFileAsync(hwnd, FileType.Image, UserFolder.Pictures);
-            if (file != null)
-            {
-                ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
-                await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
-            }
+            IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FileType.Image, UserFolder.Pictures) 
+                ?? throw new OperationCanceledException("User cancelled the save file picker.");
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+            await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
         });
     }
 

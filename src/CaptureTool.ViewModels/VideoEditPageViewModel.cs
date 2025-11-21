@@ -80,14 +80,16 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            IFile? file = await _filePickerService.PickSaveFileAsync(hwnd, FileType.Video, UserFolder.Videos);
-            if (file is not null && !string.IsNullOrEmpty(_videoPath))
+            IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FileType.Video, UserFolder.Videos)
+                ?? throw new OperationCanceledException("No file was selected.");
+            
+            if (!string.IsNullOrEmpty(_videoPath))
             {
                 File.Copy(_videoPath, file.FilePath, true);
             }
             else
             {
-                throw new OperationCanceledException();
+                throw new InvalidOperationException("The video has no file path.");
             }
         });
     }

@@ -327,8 +327,8 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
         {
             var hwnd = _appController.GetMainWindowHandle();
-            IFolder? folder = await _filePickerService.PickFolderAsync(hwnd, UserFolder.Pictures)
-                ?? throw new InvalidOperationException("No folder was selected.");
+            IFolder folder = await _filePickerService.PickFolderAsync(hwnd, UserFolder.Pictures)
+                ?? throw new OperationCanceledException("No folder was selected.");
 
             ScreenshotsFolderPath = folder.FolderPath;
 
