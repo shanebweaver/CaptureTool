@@ -28,8 +28,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         public static readonly string Copy = $"Copy";
     }
 
-    public RelayCommand SaveCommand { get; }
-    public RelayCommand CopyCommand { get; }
+    public AsyncRelayCommand SaveCommand { get; }
+    public AsyncRelayCommand CopyCommand { get; }
 
     private string? _videoPath;
     public string? VideoPath
@@ -54,8 +54,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         _appController = appController;
         _telemetryService = telemetryService;
 
-        SaveCommand = new(Save);
-        CopyCommand = new(Copy);
+        SaveCommand = new(SaveAsync);
+        CopyCommand = new(CopyAsync);
     }
 
     public override void Load(VideoFile video)
@@ -74,9 +74,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         base.Dispose();
     }
 
-    private async void Save()
+    private Task SaveAsync()
     {
-        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
             if (string.IsNullOrEmpty(_videoPath))
             {
@@ -91,9 +91,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         });
     }
 
-    private async void Copy()
+    private Task CopyAsync()
     {
-        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Copy, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Copy, async () =>
         {
             if (string.IsNullOrEmpty(_videoPath))
             {

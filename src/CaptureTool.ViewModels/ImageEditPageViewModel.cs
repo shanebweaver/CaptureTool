@@ -308,9 +308,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         base.Dispose();
     }
 
-    private async Task CopyAsync()
+    private Task CopyAsync()
     {
-        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Copy, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Copy, async () =>
         {
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
@@ -365,9 +365,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyColor = color;
     }
 
-    private async Task SaveAsync()
+    private Task SaveAsync()
     {
-        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FileType.Image, UserFolder.Pictures) 
@@ -464,18 +464,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         });
     }
 
-    private async Task PrintAsync()
+    private Task PrintAsync()
     {
-        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Print, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Print, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
         });
     }
 
-    private async Task ShareAsync()
+    private Task ShareAsync()
     {
-        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Share, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Share, async () =>
         {
             if (_imageFile == null)
             {

@@ -50,7 +50,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         AppTheme.SystemDefault,
     ];
 
-    public RelayCommand ChangeScreenshotsFolderCommand { get; }
+    public AsyncRelayCommand ChangeScreenshotsFolderCommand { get; }
     public RelayCommand OpenScreenshotsFolderCommand { get; }
     public RelayCommand RestartAppCommand { get; }
     public RelayCommand GoBackCommand { get; }
@@ -112,7 +112,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         set
         {
             Set(ref _imageCaptureAutoCopy, value);
-            UpdateImageCaptureAutoCopy();
+            _ = UpdateImageCaptureAutoCopyAsync();
         }
     }
 
@@ -123,7 +123,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         set
         {
             Set(ref _imageCaptureAutoSave, value);
-            UpdateImageCaptureAutoSave();
+            _ = UpdateImageCaptureAutoSaveAsync();
         }
     }
 
@@ -161,7 +161,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         _appLanguages = [];
         _screenshotsFolderPath = string.Empty;
 
-        ChangeScreenshotsFolderCommand = new(ChangeScreenshotsFolder);
+        ChangeScreenshotsFolderCommand = new(ChangeScreenshotsFolderAsync);
         OpenScreenshotsFolderCommand = new(OpenScreenshotsFolder);
         RestartAppCommand = new(RestartApp);
         GoBackCommand = new(GoBack);
@@ -303,27 +303,27 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         });
     }
 
-    private async void UpdateImageCaptureAutoSave()
+    private Task UpdateImageCaptureAutoSaveAsync()
     {
-        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoSave, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoSave, async () =>
         {
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, ImageCaptureAutoSave);
             await _settingsService.TrySaveAsync(CancellationToken.None);
         });
     }
 
-    private async void UpdateImageCaptureAutoCopy()
+    private Task UpdateImageCaptureAutoCopyAsync()
     {
-        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
         {
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, ImageCaptureAutoCopy);
             await _settingsService.TrySaveAsync(CancellationToken.None);
         });
     }
 
-    private async void ChangeScreenshotsFolder()
+    private Task ChangeScreenshotsFolderAsync()
     {
-        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
         {
             var hwnd = _appController.GetMainWindowHandle();
             IFolder folder = await _filePickerService.PickFolderAsync(hwnd, UserFolder.Pictures)

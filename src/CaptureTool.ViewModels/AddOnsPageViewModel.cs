@@ -27,7 +27,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     private readonly ITelemetryService _telemetryService;
     private readonly ICancellationService _cancellationService;
 
-    public RelayCommand GetChromaKeyAddOnCommand { get; }
+    public AsyncRelayCommand GetChromaKeyAddOnCommand { get; }
     public RelayCommand GoBackCommand { get; }
 
     private bool _isChromaKeyAddOnOwned;
@@ -75,7 +75,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 
         _chromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
 
-        GetChromaKeyAddOnCommand = new(GetChromaKeyAddOn, () => IsChromaKeyAddOnAvailable);
+        GetChromaKeyAddOnCommand = new(GetChromaKeyAddOnAsync, () => IsChromaKeyAddOnAvailable);
         GoBackCommand = new(GoBack, () => _appNavigation.CanGoBack);
     }
 
@@ -121,9 +121,9 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         base.Dispose();
     }
 
-    private async void GetChromaKeyAddOn()
+    private Task GetChromaKeyAddOnAsync()
     {
-        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.GetChromaKeyAddOn, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.GetChromaKeyAddOn, async () =>
         {
             if (!IsChromaKeyAddOnOwned)
             {

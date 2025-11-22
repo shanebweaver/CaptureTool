@@ -53,7 +53,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         Logs += e.ToString() + Environment.NewLine;
     }
 
-    private async void OnIsLoggingEnabledChanged()
+    private void OnIsLoggingEnabledChanged()
     {
         if (IsLoggingEnabled)
         {
@@ -65,7 +65,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         }
 
         _settingsService.Set(CaptureToolSettings.VerboseLogging, IsLoggingEnabled);
-        await _settingsService.TrySaveAsync(CancellationToken.None);
+        _ = _settingsService.TrySaveAsync(CancellationToken.None);
     }
 
     private void ClearLogs()
