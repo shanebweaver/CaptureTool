@@ -20,18 +20,17 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "SettingsPageViewModel_Load";
-        public static readonly string Dispose = "SettingsPageViewModel_Dispose";
-        public static readonly string RestartApp = "SettingsPageViewModel_RestartApp";
-        public static readonly string GoBack = "SettingsPageViewModel_GoBack";
-        public static readonly string UpdateImageCaptureAutoCopy = "SettingsPageViewModel_UpdateImageCaptureAutoCopy";
-        public static readonly string UpdateImageCaptureAutoSave = "SettingsPageViewModel_UpdateImageCaptureAutoSave";
-        public static readonly string ChangeScreenshotsFolder = "SettingsPageViewModel_ChangeScreenshotsFolder";
-        public static readonly string OpenScreenshotsFolder = "SettingsPageViewModel_OpenScreenshotsFolder";
-        public static readonly string UpdateAppLanguage = "SettingsPageViewModel_UpdateAppLanguage";
-        public static readonly string UpdateAppTheme = "SettingsPageViewModel_UpdateAppTheme";
-        public static readonly string UpdateShowAppThemeRestartMessage = "SettingsPageViewModel_UpdateShowAppThemeRestartMessage";
-        public static readonly string UpdateShowAppLanguageRestartMessage = "SettingsPageViewModel_UpdateShowAppLanguageRestartMessage";
+        public static readonly string Load = "LoadSettingsPage";
+        public static readonly string RestartApp = "RestartApp";
+        public static readonly string GoBack = "GoBack";
+        public static readonly string UpdateImageCaptureAutoCopy = "UpdateImageCaptureAutoCopy";
+        public static readonly string UpdateImageCaptureAutoSave = "UpdateImageCaptureAutoSave";
+        public static readonly string ChangeScreenshotsFolder = "ChangeScreenshotsFolder";
+        public static readonly string OpenScreenshotsFolder = "OpenScreenshotsFolder";
+        public static readonly string UpdateAppLanguage = "UpdateAppLanguage";
+        public static readonly string UpdateAppTheme = "UpdateAppTheme";
+        public static readonly string UpdateShowAppThemeRestartMessage = "UpdateShowAppThemeRestartMessage";
+        public static readonly string UpdateShowAppLanguageRestartMessage = "UpdateShowAppLanguageRestartMessage";
     }
 
     private readonly IAppNavigation _appNavigation;

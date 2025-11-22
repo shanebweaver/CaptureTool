@@ -1,5 +1,5 @@
-﻿using CaptureTool.Services.Interfaces.Telemetry;
-using System.Diagnostics;
+﻿using CaptureTool.Services.Interfaces.Logging;
+using CaptureTool.Services.Interfaces.Telemetry;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -7,63 +7,86 @@ namespace CaptureTool.Services.Implementations.Telemetry;
 
 public sealed partial class TelemetryService : ITelemetryService
 {
+    private readonly ILogService _logService;
+
+    public TelemetryService(ILogService logService)
+    {
+        _logService = logService;
+    }
+
     public void ActivityInitiated(string activityId, string? message = null)
     {
-        StringBuilder stringBuilder = new($"Activity initiated: {activityId}");
+        StringBuilder stringBuilder = new($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Activity initiated: {activityId}");
         if (message != null)
         {
-            stringBuilder.Append(message);
+            stringBuilder.Append($" - Message: {message}");
         }
 
-        Debug.WriteLine(stringBuilder.ToString());
+        _logService.LogInformation(stringBuilder.ToString());
     }
 
     public void ActivityCanceled(string activityId, string? message = null)
     {
-        StringBuilder stringBuilder = new($"Activity canceled: {activityId}");
+        StringBuilder stringBuilder = new($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Activity canceled: {activityId}");
         if (message != null)
         {
-            stringBuilder.Append(message);
+            stringBuilder.Append($" - Message: {message}");
         }
 
-        Debug.WriteLine(stringBuilder.ToString());
+        _logService.LogInformation(stringBuilder.ToString());
     }
 
     public void ActivityCompleted(string activityId, string? message = null)
     {
-        StringBuilder stringBuilder = new($"Activity completed: {activityId}");
+        StringBuilder stringBuilder = new($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Activity completed: {activityId}");
         if (message != null)
         {
-            stringBuilder.Append(message);
+            stringBuilder.Append($" - Message: {message}");
         }
 
-        Debug.WriteLine(stringBuilder.ToString());
+        _logService.LogInformation(stringBuilder.ToString());
     }
 
-    public void ActivityError(string activityId, Exception exception, string? message = null, [CallerMemberName] string? callerName = null)
+    public void ActivityError(
+        string activityId, 
+        Exception exception, 
+        string? message = null,
+        [CallerMemberName] string? caller = null,
+        [CallerFilePath] string? file = null, 
+        [CallerLineNumber] int line = 0,
+        [CallerArgumentExpression(nameof(exception))] string? exceptionExpr = null)
     {
-        StringBuilder stringBuilder = new($"Activity error: {activityId}");
-        if (callerName != null)
+        var sb = new StringBuilder($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Activity error: {activityId}");
+
+        sb.Append($" - Caller: {caller}");
+        sb.Append($" - Line: {line}");
+
+        if (file != null)
         {
-            stringBuilder.Append($"- Caller: {callerName}");
+            sb.Append($" - File: {Path.GetFileName(file)}");
         }
+
+        if (exceptionExpr != null)
+        {
+            sb.Append($" - Exception Expr: {exceptionExpr}");
+        }
+
         if (message != null)
         {
-            stringBuilder.Append($"- Message: {message}");
+            sb.Append($" - Message: {message}");
         }
-        stringBuilder.Append($"- Exception: {exception.Message}");
 
-        Debug.WriteLine(stringBuilder.ToString());
+        _logService.LogException(exception, sb.ToString());
     }
 
     public void ButtonInvoked(string buttonId, string? message)
     {
-        StringBuilder stringBuilder = new($"Button invoked: {buttonId}");
+        StringBuilder stringBuilder = new($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Button invoked: {buttonId}");
         if (message != null)
         {
             stringBuilder.Append(message);
         }
 
-        Debug.WriteLine(stringBuilder.ToString());
+        _logService.LogInformation(stringBuilder.ToString());
     }
 }

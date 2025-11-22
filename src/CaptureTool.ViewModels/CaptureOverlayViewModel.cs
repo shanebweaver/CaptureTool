@@ -16,12 +16,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "CaptureOverlayViewModel_Load";
-        public static readonly string CloseOverlay = "CaptureOverlayViewModel_CloseOverlay";
-        public static readonly string GoBack = "CaptureOverlayViewModel_GoBack";
-        public static readonly string StartVideoCapture = "CaptureOverlayViewModel_StartVideoCapture";
-        public static readonly string StopVideoCapture = "CaptureOverlayViewModel_StopVideoCapture";
-        public static readonly string ToggleDesktopAudio = "CaptureOverlayViewModel_ToggleDesktopAudio";
+        public static readonly string Load = "LoadCaptureOverlay";
+        public static readonly string CloseOverlay = "CloseOverlay";
+        public static readonly string GoBack = "GoBack";
+        public static readonly string StartVideoCapture = "StartVideoCapture";
+        public static readonly string StopVideoCapture = "StopVideoCapture";
+        public static readonly string ToggleDesktopAudio = "ToggleDesktopAudio";
     }
 
     private readonly IAppNavigation _appNavigation;

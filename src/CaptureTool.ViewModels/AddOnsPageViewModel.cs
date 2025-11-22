@@ -15,9 +15,9 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "AddOnsPageViewModel_Load";
-        public static readonly string GetChromaKeyAddOn = "AddOnsPageViewModel_GetChromaKeyAddOn";
-        public static readonly string GoBack = "AddOnsPageViewModel_GoBack";
+        public static readonly string Load = "LoadAddOnsPage";
+        public static readonly string GetChromaKeyAddOn = "GetChromaKeyAddOn";
+        public static readonly string GoBack = "GoBack";
     }
 
     private readonly IAppNavigation _appNavigation;

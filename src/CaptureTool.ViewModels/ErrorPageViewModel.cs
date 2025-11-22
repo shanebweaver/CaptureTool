@@ -10,7 +10,7 @@ public sealed partial class ErrorPageViewModel : ViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string RestartApp = "ErrorPageViewModel_RestartApp";
+        public static readonly string RestartApp = "RestartApp";
     }
 
     private readonly IAppController _appController;
