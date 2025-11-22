@@ -12,7 +12,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class AppMenuViewModel : ViewModelBase
 {
-    private readonly struct ActivityIds
+    public readonly struct ActivityIds
     {
         public static readonly string Load = "LoadAppMenu";
         public static readonly string NewImageCapture = "NewImageCapture";
@@ -30,7 +30,7 @@ public sealed partial class AppMenuViewModel : ViewModelBase
     private readonly IFilePickerService _filePickerService;
 
     public RelayCommand NewImageCaptureCommand { get; }
-    public RelayCommand OpenFileCommand { get; }
+    public AsyncRelayCommand OpenFileCommand { get; }
     public RelayCommand NavigateToSettingsCommand { get; }
     public RelayCommand ShowAboutAppCommand { get; }
     public RelayCommand ShowAddOnsCommand { get; }
@@ -50,12 +50,12 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         _appController = appController;
         _filePickerService = filePickerService;
 
-        NewImageCaptureCommand = new RelayCommand(NewImageCapture);
-        OpenFileCommand = new RelayCommand(OpenFile);
-        NavigateToSettingsCommand = new RelayCommand(NavigateToSettings);
-        ShowAboutAppCommand = new RelayCommand(ShowAboutApp);
-        ShowAddOnsCommand = new RelayCommand(ShowAddOns);
-        ExitApplicationCommand = new RelayCommand(ExitApplication);
+        NewImageCaptureCommand = new(NewImageCapture);
+        OpenFileCommand = new(OpenFileAsync);
+        NavigateToSettingsCommand = new(NavigateToSettings);
+        ShowAboutAppCommand = new(ShowAboutApp);
+        ShowAddOnsCommand = new(ShowAddOns);
+        ExitApplicationCommand = new(ExitApplication);
 
         ShowAddOnsOption = featureManager.IsEnabled(CaptureToolFeatures.Feature_AddOns_Store);
     }
@@ -68,9 +68,9 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         });
     }
 
-    private async void OpenFile()
+    private Task OpenFileAsync()
     {
-        await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.OpenFile, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.OpenFile, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
             IFile imageFile = await _filePickerService.PickFileAsync(hwnd, FileType.Image, UserFolder.Pictures) 

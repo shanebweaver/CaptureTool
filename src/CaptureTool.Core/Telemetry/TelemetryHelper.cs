@@ -33,10 +33,11 @@ public static class TelemetryHelper
             telemetryService.ActivityError(
                 activityId, 
                 e,
-                $"Expr: {actionExpr} | Thrown in: {frame.method} ({frame.file}:{frame.line})", 
+                $"Thrown in: {frame.method} ({frame.file}:{frame.line})", 
                 caller, 
                 file, 
-                line);
+                line,
+                actionExpr);
         }
     }
 
@@ -67,10 +68,11 @@ public static class TelemetryHelper
             telemetryService.ActivityError(
                 activityId,
                 e,
-                $"Expr: {actionExpr} | Thrown in: {frame.method} ({frame.file}:{frame.line})",
+                $"Thrown in: {frame.method} ({frame.file}:{frame.line})",
                 caller,
                 file,
-                line);
+                line,
+                actionExpr);
         }
     }
 

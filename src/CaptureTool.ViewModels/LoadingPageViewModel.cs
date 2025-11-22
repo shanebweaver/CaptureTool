@@ -8,7 +8,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class LoadingPageViewModel : ViewModelBase
 {
-    private readonly struct ActivityIds
+    public readonly struct ActivityIds
     {
         public static readonly string GoBack = "GoBack";
     }

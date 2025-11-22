@@ -10,7 +10,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class HomePageViewModel : ViewModelBase
 {
-    private readonly struct ActivityIds
+    public readonly struct ActivityIds
     {
         public static readonly string NewImageCapture = "NewImageCapture";
         public static readonly string NewVideoCapture = "NewVideoCapture";

@@ -25,7 +25,7 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
         Unloaded -= OnUnloaded;
     }
 
-    private async void OnLoaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _loadCts ??= new();
 
@@ -38,7 +38,7 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
                     break;
 
                 case IAsyncLoadable asyncLoadable:
-                    await asyncLoadable.LoadAsync(_loadCts.Token);
+                    _ = asyncLoadable.LoadAsync(_loadCts.Token);
                     break;
             }
         }

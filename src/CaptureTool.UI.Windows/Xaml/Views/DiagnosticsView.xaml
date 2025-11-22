@@ -11,15 +11,23 @@
     mc:Ignorable="d">
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
         <StackPanel>
-            <ToggleSwitch Header="Logging" IsOn="False" />
-            <TextBlock Text="Log output folder:" />
-            <HyperlinkButton>
-                <TextBlock Text="c:\logs" />
-            </HyperlinkButton>
-            <Button>
+            <ToggleSwitch Header="Logging" IsOn="{x:Bind ViewModel.IsLoggingEnabled, Mode=TwoWay}" />
+            <Button Command="{x:Bind ViewModel.ClearLogsCommand}">
                 <TextBlock Text="Clear logs" />
             </Button>
         </StackPanel>
+
+        <ScrollView Grid.Row="1">
+            <TextBlock
+                IsTextSelectionEnabled="True"
+                Text="{x:Bind ViewModel.Logs, Mode=OneWay}"
+                TextWrapping="WrapWholeWords" />
+        </ScrollView>
     </Grid>
 </local:DiagnosticsViewBase>

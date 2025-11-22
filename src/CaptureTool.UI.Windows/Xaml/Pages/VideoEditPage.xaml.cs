@@ -41,14 +41,14 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     {
         if (!string.IsNullOrEmpty(ViewModel.VideoPath))
         {
-            InitializeVideoAsync(ViewModel.VideoPath);
+            _ = InitializeVideoAsync(ViewModel.VideoPath);
             return true;
         }
 
         return false;
     }
 
-    private async void InitializeVideoAsync(string filePath)
+    private async Task InitializeVideoAsync(string filePath)
     {
         StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
         var mediaSource = MediaSource.CreateFromStorageFile(file);

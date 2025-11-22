@@ -9,7 +9,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class AboutPageViewModel : ViewModelBase
 {
-    private readonly struct ActivityIds
+    public readonly struct ActivityIds
     {
         public static readonly string ShowThirdParty = "ShowThirdParty";
         public static readonly string ShowPrivacyPolicy = "ShowPrivacyPolicy";

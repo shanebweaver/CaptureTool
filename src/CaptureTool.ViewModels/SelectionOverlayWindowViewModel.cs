@@ -15,7 +15,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>
 {
-    private readonly struct ActivityIds
+    public readonly struct ActivityIds
     {
         public static readonly string Load = "LoadSelectionOverlayWindow";
         public static readonly string RequestCapture = "RequestCapture";

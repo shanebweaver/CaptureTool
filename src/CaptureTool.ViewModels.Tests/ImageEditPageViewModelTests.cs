@@ -91,8 +91,8 @@ public sealed class ImageEditPageViewModelTests
         Assert.AreEqual(new Rectangle(0, 0, 100, 200), vm.CropRect);
         Assert.AreEqual(1, vm.Drawables.Count); // only the image drawable
 
-        telemetry.Verify(t => t.ActivityInitiated("ImageEditPageViewModel_Load"), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted("ImageEditPageViewModel_Load"), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Load), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Load), Times.Once);
         telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 
@@ -113,8 +113,8 @@ public sealed class ImageEditPageViewModelTests
         // Assert
         Assert.IsTrue(vm.IsInCropMode);
 
-        telemetry.Verify(t => t.ActivityInitiated("ImageEditPageViewModel_ToggleCropMode"), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted("ImageEditPageViewModel_ToggleCropMode"), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.ToggleCropMode), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.ToggleCropMode), Times.Once);
         telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 
@@ -122,7 +122,7 @@ public sealed class ImageEditPageViewModelTests
     // TEST: CopyCommand
     // ------------------------------------------------------------------
     [TestMethod]
-    public void CopyCommand_ShouldInvokeExporter_AndLogTelemetry()
+    public async Task CopyCommand_ShouldInvokeExporter_AndLogTelemetry()
     {
         // Arrange
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
@@ -132,7 +132,7 @@ public sealed class ImageEditPageViewModelTests
         vm.Drawables.Add(Fixture.Create<IDrawable>());
 
         // Act
-        vm.CopyCommand.Execute(null);
+        await vm.CopyCommand.ExecuteAsync(null);
 
         // Assert: exporter called
         exporter.Verify(e =>
@@ -142,8 +142,8 @@ public sealed class ImageEditPageViewModelTests
             Times.Once);
 
         // Assert telemetry
-        telemetry.Verify(t => t.ActivityInitiated("ImageEditPageViewModel_Copy"), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted("ImageEditPageViewModel_Copy"), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Copy), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Copy), Times.Once);
         telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 
@@ -151,26 +151,30 @@ public sealed class ImageEditPageViewModelTests
     // TEST: ShareCommand error path
     // ------------------------------------------------------------------
     [TestMethod]
-    public void ShareCommand_ShouldLogError_WhenNoImageLoaded()
+    public async Task ShareCommand_ShouldLogError_WhenNoImageLoaded()
     {
         // Arrange
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
         var vm = Create();
 
         // Act
-        vm.ShareCommand.Execute(null);
+        await vm.ShareCommand.ExecuteAsync(null);
 
         // Assert telemetry
-        telemetry.Verify(t => t.ActivityInitiated("ImageEditPageViewModel_Share"), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Share), Times.Once);
 
-        telemetry.Verify(t => t.ActivityError(
-            "ImageEditPageViewModel_Share",
-            It.IsAny<InvalidOperationException>(),
-            It.IsAny<string?>(),
-            It.IsAny<string?>()),
+        telemetry.Verify(
+            t => t.ActivityError(
+                ImageEditPageViewModel.ActivityIds.Share,
+                It.IsAny<InvalidOperationException>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<int>(),
+                It.IsAny<string?>()),
             Times.Once);
 
-        telemetry.Verify(t => t.ActivityCompleted("ImageEditPageViewModel_Share"), Times.Never);
+        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Share), Times.Never);
     }
 
     // ------------------------------------------------------------------
@@ -187,11 +191,15 @@ public sealed class ImageEditPageViewModelTests
         vm.UndoCommand.Execute(null);
 
         // Assert telemetry
-        telemetry.Verify(t => t.ActivityError(
-            "ImageEditPageViewModel_Undo", 
-            It.IsAny<InvalidOperationException>(),
-            It.IsAny<string?>(),
-            It.IsAny<string?>()),
+        telemetry.Verify(
+            t => t.ActivityError(
+                ImageEditPageViewModel.ActivityIds.Undo, 
+                It.IsAny<InvalidOperationException>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<int>(),
+                It.IsAny<string?>()),
             Times.Once);
     }
 
@@ -215,8 +223,8 @@ public sealed class ImageEditPageViewModelTests
         Assert.IsTrue(vm.HasUndoStack);
         Assert.IsFalse(vm.HasRedoStack);
 
-        telemetry.Verify(t => t.ActivityInitiated("ImageEditPageViewModel_Rotate"), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted("ImageEditPageViewModel_Rotate"), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Rotate), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Rotate), Times.Once);
         telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 }
