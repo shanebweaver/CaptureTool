@@ -36,4 +36,4 @@ jobs:
       run: |
         dotnet test src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj -p:Platform=x64
         dotnet test src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj -p:Platform=x64
-        dotnet test src\CaptureTool.Edit.Windows.Tests\CaptureTool.Edit.Windows.Tests.csproj -p:Platform=x64
+        dotnet test src\CaptureTool.Domains.Edit.Tests\CaptureTool.Domains.Edit.Tests.csproj -p:Platform=x64
