@@ -18,7 +18,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 {
-    private readonly struct ActivityIds
+    public readonly struct ActivityIds
     {
         public static readonly string Load = "LoadSettingsPage";
         public static readonly string RestartApp = "RestartApp";

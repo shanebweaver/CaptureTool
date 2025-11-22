@@ -12,7 +12,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class AppMenuViewModel : ViewModelBase
 {
-    private readonly struct ActivityIds
+    public readonly struct ActivityIds
     {
         public static readonly string Load = "LoadAppMenu";
         public static readonly string NewImageCapture = "NewImageCapture";

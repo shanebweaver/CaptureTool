@@ -13,7 +13,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 {
-    private readonly struct ActivityIds
+    public readonly struct ActivityIds
     {
         public static readonly string Load = "LoadAddOnsPage";
         public static readonly string GetChromaKeyAddOn = "GetChromaKeyAddOn";

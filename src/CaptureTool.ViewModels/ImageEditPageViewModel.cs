@@ -22,7 +22,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
 {
-    private readonly struct ActivityIds
+    public readonly struct ActivityIds
     {
         public static readonly string Load = "LoadImageEditPage";
         public static readonly string Copy = "Copy";
@@ -54,16 +54,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public event EventHandler? InvalidateCanvasRequested;
 
-    public RelayCommand CopyCommand { get; }
+    public AsyncRelayCommand CopyCommand { get; }
     public RelayCommand ToggleCropModeCommand { get; }
-    public RelayCommand SaveCommand { get; }
+    public AsyncRelayCommand SaveCommand { get; }
     public RelayCommand UndoCommand { get; }
     public RelayCommand RedoCommand { get; }
     public RelayCommand RotateCommand { get; }
     public RelayCommand FlipHorizontalCommand { get; }
     public RelayCommand FlipVerticalCommand { get; }
-    public RelayCommand PrintCommand { get; }
-    public RelayCommand ShareCommand { get; }
+    public AsyncRelayCommand PrintCommand { get; }
+    public AsyncRelayCommand ShareCommand { get; }
     public RelayCommand<Color> UpdateChromaKeyColorCommand { get; }
 
     // Private commands to handle undo/redo operations.
@@ -239,19 +239,19 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _operationsUndoStack = [];
         _operationsRedoStack = [];
 
-        CopyCommand = new RelayCommand(Copy);
-        ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
-        SaveCommand = new RelayCommand(Save);
-        UndoCommand = new RelayCommand(Undo);
-        RedoCommand = new RelayCommand(Redo);
-        RotateCommand = new RelayCommand(Rotate);
-        FlipHorizontalCommand = new RelayCommand(() => Flip(FlipDirection.Horizontal));
-        FlipVerticalCommand = new RelayCommand(() => Flip(FlipDirection.Vertical));
-        PrintCommand = new RelayCommand(Print);
-        ShareCommand = new RelayCommand(Share);
-        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
-        UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
-        UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
+        CopyCommand = new(CopyAsync);
+        ToggleCropModeCommand = new(ToggleCropMode);
+        SaveCommand = new(SaveAsync);
+        UndoCommand = new(Undo);
+        RedoCommand = new(Redo);
+        RotateCommand = new(Rotate);
+        FlipHorizontalCommand = new(() => Flip(FlipDirection.Horizontal));
+        FlipVerticalCommand = new(() => Flip(FlipDirection.Vertical));
+        PrintCommand = new(PrintAsync);
+        ShareCommand = new(ShareAsync);
+        UpdateChromaKeyColorCommand = new(UpdateChromaKeyColor, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
+        UpdateOrientationCommand = new(UpdateOrientation);
+        UpdateCropRectCommand = new(UpdateCropRect);
     }
 
     public override Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
@@ -308,7 +308,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         base.Dispose();
     }
 
-    private async void Copy()
+    private async Task CopyAsync()
     {
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Copy, async () =>
         {
@@ -365,7 +365,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyColor = color;
     }
 
-    private async void Save()
+    private async Task SaveAsync()
     {
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
@@ -464,7 +464,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         });
     }
 
-    private async void Print()
+    private async Task PrintAsync()
     {
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Print, async () =>
         {
@@ -473,7 +473,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         });
     }
 
-    private async void Share()
+    private async Task ShareAsync()
     {
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Share, async () =>
         {

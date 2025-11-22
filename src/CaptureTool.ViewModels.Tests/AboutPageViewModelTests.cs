@@ -85,7 +85,7 @@ public class AboutPageViewModelTests
     {
         await TestDialogCommandAsync(
             (vm) => vm.ShowThirdPartyCommand,
-            "AboutPageViewModel_ShowThirdParty",
+            AboutPageViewModel.ActivityIds.ShowThirdParty,
             "About_ThirdParty_DialogTitle",
             "About_ThirdParty_DialogContent");
     }
@@ -95,7 +95,7 @@ public class AboutPageViewModelTests
     {
         await TestDialogCommandAsync(
             (vm) => vm.ShowPrivacyPolicyCommand,
-            "AboutPageViewModel_ShowPrivacyPolicy",
+            AboutPageViewModel.ActivityIds.ShowPrivacyPolicy,
             "About_PrivacyPolicy_DialogTitle",
             "About_PrivacyPolicy_DialogContent");
     }
@@ -105,7 +105,7 @@ public class AboutPageViewModelTests
     {
         await TestDialogCommandAsync(
             (vm) => vm.ShowTermsOfUseCommand,
-            "AboutPageViewModel_ShowTermsOfUse",
+            AboutPageViewModel.ActivityIds.ShowTermsOfUse,
             "About_TermsOfUse_DialogTitle",
             "About_TermsOfUse_DialogContent");
     }
@@ -115,7 +115,7 @@ public class AboutPageViewModelTests
     {
         await TestDialogCommandAsync(
             (vm) => vm.ShowDisclaimerOfLiabilityCommand,
-            "AboutPageViewModel_ShowDisclaimerOfLiability",
+            AboutPageViewModel.ActivityIds.ShowDisclaimerOfLiability,
             "About_DisclaimerOfLiability_DialogTitle",
             "About_DisclaimerOfLiability_DialogContent");
     }
@@ -144,10 +144,14 @@ public class AboutPageViewModelTests
 
         // Assert
         telemetryService.Verify(
-            t => t.ActivityError("AboutPageViewModel_ShowThirdParty",
-            It.IsAny<Exception>(),
-            It.IsAny<string?>(),
-            It.IsAny<string?>()),
+            t => t.ActivityError(
+                AboutPageViewModel.ActivityIds.ShowThirdParty,
+                It.IsAny<Exception>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<int>(),
+                It.IsAny<string?>()),
             Times.Once);
     }
 

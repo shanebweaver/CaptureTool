@@ -14,7 +14,7 @@ namespace CaptureTool.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>
 {
-    private readonly struct ActivityIds
+    public readonly struct ActivityIds
     {
         public static readonly string Load = "LoadCaptureOverlay";
         public static readonly string CloseOverlay = "CloseOverlay";

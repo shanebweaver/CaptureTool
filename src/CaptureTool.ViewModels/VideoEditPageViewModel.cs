@@ -21,7 +21,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         }
     }
 
-    private readonly struct ActivityIds
+    public readonly struct ActivityIds
     {
         public static readonly string Load = $"LoadVideoEditPage";
         public static readonly string Save = $"Save";
