@@ -11,11 +11,11 @@ public sealed partial class AboutPageViewModel : ViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string ShowThirdParty = "AboutPageViewModel_ShowThirdParty";
-        public static readonly string ShowPrivacyPolicy = "AboutPageViewModel_ShowPrivacyPolicy";
-        public static readonly string ShowDisclaimerOfLiability = "AboutPageViewModel_ShowDisclaimerOfLiability";
-        public static readonly string ShowTermsOfUse = "AboutPageViewModel_ShowTermsOfUse";
-        public static readonly string GoBack = "AboutPageViewModel_GoBack";
+        public static readonly string ShowThirdParty = "ShowThirdParty";
+        public static readonly string ShowPrivacyPolicy = "ShowPrivacyPolicy";
+        public static readonly string ShowDisclaimerOfLiability = "ShowDisclaimerOfLiability";
+        public static readonly string ShowTermsOfUse = "ShowTermsOfUse";
+        public static readonly string GoBack = "GoBack";
     }
 
     private readonly IAppNavigation _appNavigation;

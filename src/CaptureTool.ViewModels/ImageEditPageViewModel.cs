@@ -24,18 +24,17 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "ImageEditPageViewModel_Load";
-        public static readonly string Dispose = "ImageEditPageViewModel_Dispose";
-        public static readonly string Copy = "ImageEditPageViewModel_Copy";
-        public static readonly string ToggleCropMode = "ImageEditPageViewModel_ToggleCropMode";
-        public static readonly string Save = "ImageEditPageViewModel_Save";
-        public static readonly string Undo = "ImageEditPageViewModel_Undo";
-        public static readonly string Redo = "ImageEditPageViewModel_Redo";
-        public static readonly string Rotate = "ImageEditPageViewModel_Rotate";
-        public static readonly string FlipHorizontal = "ImageEditPageViewModel_FlipHorizontal";
-        public static readonly string FlipVertical = "ImageEditPageViewModel_FlipVertical";
-        public static readonly string Print = "ImageEditPageViewModel_Print";
-        public static readonly string Share = "ImageEditPageViewModel_Share";
+        public static readonly string Load = "LoadImageEditPage";
+        public static readonly string Copy = "Copy";
+        public static readonly string ToggleCropMode = "ToggleCropMode";
+        public static readonly string Save = "Save";
+        public static readonly string Undo = "Undo";
+        public static readonly string Redo = "Redo";
+        public static readonly string Rotate = "Rotate";
+        public static readonly string FlipHorizontal = "FlipHorizontal";
+        public static readonly string FlipVertical = "FlipVertical";
+        public static readonly string Print = "Print";
+        public static readonly string Share = "Share";
     }
 
     private readonly IStoreService _storeService;
@@ -70,7 +69,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     // Private commands to handle undo/redo operations.
     private RelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
     private RelayCommand<Rectangle> UpdateCropRectCommand { get; }
-
 
     private bool _hasUndoStack;
     public bool HasUndoStack

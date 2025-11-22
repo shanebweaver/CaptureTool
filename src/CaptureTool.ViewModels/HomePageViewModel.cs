@@ -12,8 +12,8 @@ public sealed partial class HomePageViewModel : ViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string NewImageCapture = "HomePageViewModel_NewImageCapture";
-        public static readonly string NewVideoCapture = "HomePageViewModel_NewVideoCapture";
+        public static readonly string NewImageCapture = "NewImageCapture";
+        public static readonly string NewVideoCapture = "NewVideoCapture";
     }
 
     private readonly IAppNavigation _appNavigation;

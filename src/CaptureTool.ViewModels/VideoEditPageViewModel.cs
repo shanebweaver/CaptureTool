@@ -23,10 +23,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     private readonly struct ActivityIds
     {
-        public static readonly string Load = $"{nameof(VideoEditPageViewModel)}_Load";
-        public static readonly string Dispose = $"{nameof(VideoEditPageViewModel)}_Dispose";
-        public static readonly string Save = $"{nameof(VideoEditPageViewModel)}_Save";
-        public static readonly string Copy = $"{nameof(VideoEditPageViewModel)}_Copy";
+        public static readonly string Load = $"LoadVideoEditPage";
+        public static readonly string Save = $"Save";
+        public static readonly string Copy = $"Copy";
     }
 
     public RelayCommand SaveCommand { get; }

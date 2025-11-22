@@ -10,7 +10,7 @@ public sealed partial class LoadingPageViewModel : ViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string GoBack = "LoadingPageViewModel_GoBack";
+        public static readonly string GoBack = "GoBack";
     }
 
     private readonly IAppNavigation _appNavigation;

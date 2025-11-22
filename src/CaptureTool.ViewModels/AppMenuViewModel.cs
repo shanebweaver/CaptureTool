@@ -14,15 +14,14 @@ public sealed partial class AppMenuViewModel : ViewModelBase
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "AppMenuViewModel_Load";
-        public static readonly string Dispose = "AppMenuViewModel_Dispose";
-        public static readonly string NewImageCapture = "AppMenuViewModel_NewImageCapture";
-        public static readonly string OpenFile = "AppMenuViewModel_OpenFile";
-        public static readonly string NavigateToSettings = "AppMenuViewModel_NavigateToSettings";
-        public static readonly string ShowAboutApp = "AppMenuViewModel_ShowAboutApp";
-        public static readonly string ShowAddOns = "AppMenuViewModel_ShowAddOns";
-        public static readonly string ExitApplication = "AppMenuViewModel_ExitApplication";
-        public static readonly string SendFeedback = "AppMenuViewModel_SendFeedback";
+        public static readonly string Load = "LoadAppMenu";
+        public static readonly string NewImageCapture = "NewImageCapture";
+        public static readonly string OpenFile = "OpenFile";
+        public static readonly string NavigateToSettings = "NavigateToSettings";
+        public static readonly string ShowAboutApp = "ShowAboutApp";
+        public static readonly string ShowAddOns = "ShowAddOns";
+        public static readonly string ExitApplication = "ExitApplication";
+        public static readonly string SendFeedback = "SendFeedback";
     }
 
     private readonly IAppNavigation _appNavigation;

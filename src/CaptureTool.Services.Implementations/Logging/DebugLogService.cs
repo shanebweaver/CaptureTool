@@ -1,5 +1,8 @@
 ﻿using CaptureTool.Services.Interfaces.Logging;
+
+#if DEBUG
 using System.Diagnostics;
+#endif
 
 namespace CaptureTool.Services.Implementations.Logging;
 
@@ -7,6 +10,7 @@ public class DebugLogService : ILogService
 {
     public void LogException(Exception e, string? message = null)
     {
+#if DEBUG
         Debug.Write("ERROR: ");
         if (message != null)
         {
@@ -18,17 +22,22 @@ public class DebugLogService : ILogService
         {
             Debug.WriteLine(e.StackTrace);
         }
+#endif
     }
 
     public void LogInformation(string info)
     {
+#if DEBUG
         Debug.Write("INFO: ");
         Debug.WriteLine(info);
+#endif
     }
 
     public void LogWarning(string warning)
     {
+#if DEBUG
         Debug.Write("WARNING: ");
         Debug.WriteLine(warning);
+#endif
     }
 }

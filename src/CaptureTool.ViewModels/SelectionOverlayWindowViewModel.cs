@@ -17,9 +17,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 {
     private readonly struct ActivityIds
     {
-        public static readonly string Load = "SelectionOverlayWindowViewModel_Load";
-        public static readonly string RequestCapture = "SelectionOverlayWindowViewModel_RequestCapture";
-        public static readonly string CloseOverlay = "SelectionOverlayWindowViewModel_CloseOverlay";
+        public static readonly string Load = "LoadSelectionOverlayWindow";
+        public static readonly string RequestCapture = "RequestCapture";
+        public static readonly string CloseOverlay = "CloseOverlay";
     }
 
     private readonly ITelemetryService _telemetryService;
