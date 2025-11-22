@@ -50,10 +50,14 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         // Services
         collection.AddSingleton<ICancellationService, CancellationService>();
         collection.AddSingleton<IGlobalizationService, GlobalizationService>();
-        collection.AddSingleton<ILogService, DebugLogService>();
         collection.AddSingleton<INavigationService, NavigationService>();
         collection.AddSingleton<ISettingsService, LocalSettingsService>();
         collection.AddSingleton<ITelemetryService, TelemetryService>();
+#if DEBUG
+        collection.AddSingleton<ILogService, DebugLogService>();
+#else
+        collection.AddSingleton<ILogService, ShortTermMemoryLogService>();
+#endif
 
         // Windows Services
         collection.AddSingleton<IClipboardService, WindowsClipboardService>();

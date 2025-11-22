@@ -36,7 +36,7 @@ internal partial class CaptureToolAppController : IAppController
 
     private readonly IAppNavigation _appNavigation;
     private readonly ILogService _logService;
-    ILocalizationService _localizationService;
+    private readonly ILocalizationService _localizationService;
     private readonly INavigationService _navigationService;
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
@@ -86,6 +86,12 @@ internal partial class CaptureToolAppController : IAppController
 
             CancellationTokenSource cancellationTokenSource = _cancellationService.GetLinkedCancellationTokenSource();
             await InitializeSettingsServiceAsync(cancellationTokenSource.Token);
+
+            bool isLoggingEnabled = _settingsService.Get(CaptureToolSettings.VerboseLogging);
+            if (isLoggingEnabled)
+            {
+                _logService.Enable();
+            }
 
             _localizationService.Initialize(CaptureToolSettings.Settings_LanguageOverride);
 

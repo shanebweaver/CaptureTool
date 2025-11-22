@@ -1,43 +1,10 @@
-﻿using CaptureTool.Services.Interfaces.Logging;
+﻿namespace CaptureTool.Services.Implementations.Logging;
 
-#if DEBUG
-using System.Diagnostics;
-#endif
-
-namespace CaptureTool.Services.Implementations.Logging;
-
-public class DebugLogService : ILogService
+public sealed partial class DebugLogService : LogServiceBase
 {
-    public void LogException(Exception e, string? message = null)
+    protected override void AddLogEntry(string message)
     {
-#if DEBUG
-        Debug.Write("ERROR: ");
-        if (message != null)
-        {
-            Debug.WriteLine(message);
-        }
-
-        Debug.WriteLine(e.Message);
-        if (!string.IsNullOrEmpty(e.StackTrace))
-        {
-            Debug.WriteLine(e.StackTrace);
-        }
-#endif
-    }
-
-    public void LogInformation(string info)
-    {
-#if DEBUG
-        Debug.Write("INFO: ");
-        Debug.WriteLine(info);
-#endif
-    }
-
-    public void LogWarning(string warning)
-    {
-#if DEBUG
-        Debug.Write("WARNING: ");
-        Debug.WriteLine(warning);
-#endif
+        base.AddLogEntry(message);
+        System.Diagnostics.Debug.WriteLine(message);
     }
 }
