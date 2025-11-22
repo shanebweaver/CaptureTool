@@ -1,10 +1,6 @@
 ﻿using CaptureTool.Services.Interfaces.Logging;
 using System.Text;
 
-#if DEBUG
-using System.Diagnostics;
-#endif
-
 namespace CaptureTool.Services.Implementations.Logging;
 
 public abstract class LogServiceBase : ILogService
