@@ -1,8 +1,5 @@
-using CaptureTool.Edit.ChromaKey;
+using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
 using Microsoft.UI.Xaml;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;
 

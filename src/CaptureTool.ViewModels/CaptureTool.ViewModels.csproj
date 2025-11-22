@@ -7,12 +7,12 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Capture\CaptureTool.Capture.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domains.Capture.Interfaces\CaptureTool.Domains.Capture.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
     <ProjectReference Include="..\CaptureTool.Core\CaptureTool.Core.csproj" />
-    <ProjectReference Include="..\CaptureTool.Edit\CaptureTool.Edit.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domains.Edit.Interfaces\CaptureTool.Domains.Edit.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services\CaptureTool.Services.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>

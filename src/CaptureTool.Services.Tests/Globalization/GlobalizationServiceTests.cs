@@ -1,6 +1,5 @@
-﻿using System.Globalization;
-using CaptureTool.Services.Globalization;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using CaptureTool.Services.Implementations.Globalization;
+using System.Globalization;
 
 namespace CaptureTool.Services.Tests.Globalization;
 

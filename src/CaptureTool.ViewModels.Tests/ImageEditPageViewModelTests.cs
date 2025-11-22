@@ -1,23 +1,18 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Common.Storage;
 using CaptureTool.Core.AppController;
-using CaptureTool.Edit;
-using CaptureTool.Edit.ChromaKey;
-using CaptureTool.Edit.Drawable;
+using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domains.Edit.Interfaces;
+using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
+using CaptureTool.Domains.Edit.Interfaces.Drawable;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Services.Cancellation;
-using CaptureTool.Services.Share;
-using CaptureTool.Services.Storage;
-using CaptureTool.Services.Store;
-using CaptureTool.Services.Telemetry;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using CaptureTool.Services.Interfaces.Cancellation;
+using CaptureTool.Services.Interfaces.Share;
+using CaptureTool.Services.Interfaces.Storage;
+using CaptureTool.Services.Interfaces.Store;
+using CaptureTool.Services.Interfaces.Telemetry;
 using Moq;
-using System;
 using System.Drawing;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels.Tests;
 
@@ -75,14 +70,14 @@ public sealed class ImageEditPageViewModelTests
                     .ReturnsAsync(false);
 
         chromaService.Setup(s => s.GetTopColorsAsync(It.IsAny<ImageFile>(), It.IsAny<uint>(), It.IsAny<byte>()))
-                     .ReturnsAsync(Array.Empty<Color>());
+                     .ReturnsAsync([]);
 
         var cts = new CancellationTokenSource();
         cancel.Setup(c => c.GetLinkedCancellationTokenSource(cts.Token))
               .Returns(cts);
 
         var testFile = new ImageFile("test.png");
-        filePicker.Setup(f => f.GetImageSize(testFile))
+        filePicker.Setup(f => f.GetImageFileSize(testFile))
                   .Returns(new Size(100, 200));
 
         var vm = Create();

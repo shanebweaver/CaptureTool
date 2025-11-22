@@ -1,16 +1,12 @@
-using CaptureTool.Edit;
-using CaptureTool.Edit.Drawable;
-using CaptureTool.Edit.Windows;
+using CaptureTool.Domains.Edit.Implementations.Windows;
+using CaptureTool.Domains.Edit.Interfaces;
+using CaptureTool.Domains.Edit.Interfaces.Drawable;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Threading.Tasks;
-
 using Point = Windows.Foundation.Point;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;

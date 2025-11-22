@@ -1,7 +1,6 @@
 ﻿using CaptureTool.Common;
-using CaptureTool.Services.Localization;
-using CaptureTool.Services.Themes;
-using System;
+using CaptureTool.Services.Interfaces.Localization;
+using CaptureTool.Services.Interfaces.Themes;
 
 namespace CaptureTool.ViewModels;
 

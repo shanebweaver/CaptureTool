@@ -1,5 +1,4 @@
-﻿using CaptureTool.Capture;
-using System.Collections.Generic;
+﻿using CaptureTool.Domains.Capture.Interfaces;
 using System.Drawing;
 
 namespace CaptureTool.ViewModels;

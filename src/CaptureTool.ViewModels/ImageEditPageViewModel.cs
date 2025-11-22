@@ -1,26 +1,22 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Common.Storage;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Store;
 using CaptureTool.Core.Telemetry;
-using CaptureTool.Edit;
-using CaptureTool.Edit.ChromaKey;
-using CaptureTool.Edit.Drawable;
-using CaptureTool.Edit.Operations;
+using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domains.Edit.Interfaces;
+using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
+using CaptureTool.Domains.Edit.Interfaces.Drawable;
+using CaptureTool.Domains.Edit.Interfaces.Operations;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Services.Cancellation;
-using CaptureTool.Services.Share;
-using CaptureTool.Services.Storage;
-using CaptureTool.Services.Store;
-using CaptureTool.Services.Telemetry;
-using System;
-using System.Collections.Generic;
+using CaptureTool.Services.Interfaces.Cancellation;
+using CaptureTool.Services.Interfaces.Share;
+using CaptureTool.Services.Interfaces.Storage;
+using CaptureTool.Services.Interfaces.Store;
+using CaptureTool.Services.Interfaces.Telemetry;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CaptureTool.ViewModels;
 
@@ -269,7 +265,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             {
                 Vector2 topLeft = Vector2.Zero;
                 ImageFile = imageFile;
-                ImageSize = _filePickerService.GetImageSize(imageFile);
+                ImageSize = _filePickerService.GetImageFileSize(imageFile);
                 CropRect = new(Point.Empty, ImageSize);
 
                 _imageDrawable = new(topLeft, imageFile, ImageSize);
@@ -376,12 +372,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            var file = await _filePickerService.SaveImageFileAsync(hwnd);
-            if (file != null)
-            {
-                ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
-                await _imageCanvasExporter.SaveImageAsync(file.Path, [.. Drawables], options);
-            }
+            IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FileType.Image, UserFolder.Pictures) 
+                ?? throw new OperationCanceledException("User cancelled the save file picker.");
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+            await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
         });
     }
 
@@ -491,7 +485,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             }
 
             nint hwnd = _appController.GetMainWindowHandle();
-            await _shareService.ShareAsync(_imageFile.Path, hwnd);
+            await _shareService.ShareAsync(_imageFile.FilePath, hwnd);
         });
     }
 

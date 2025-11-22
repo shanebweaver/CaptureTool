@@ -1,12 +1,9 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Core.Navigation;
-using CaptureTool.Services.Localization;
-using CaptureTool.Services.Telemetry;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using CaptureTool.Services.Interfaces.Localization;
+using CaptureTool.Services.Interfaces.Telemetry;
 using Moq;
-using System;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace CaptureTool.ViewModels.Tests;

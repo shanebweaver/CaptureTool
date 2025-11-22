@@ -2,7 +2,7 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Telemetry;
-using CaptureTool.Services.Telemetry;
+using CaptureTool.Services.Interfaces.Telemetry;
 
 namespace CaptureTool.ViewModels;
 

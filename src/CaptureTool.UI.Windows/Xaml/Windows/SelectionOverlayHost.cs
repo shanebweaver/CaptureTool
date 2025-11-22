@@ -1,12 +1,9 @@
-﻿using CaptureTool.Capture;
-using CaptureTool.Capture.Windows;
+﻿using CaptureTool.Domains.Capture.Implementations.Windows;
+using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.UI.Windows.Utils;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using Windows.Win32;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;

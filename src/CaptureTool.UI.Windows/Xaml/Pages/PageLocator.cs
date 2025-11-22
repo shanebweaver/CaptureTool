@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using CaptureTool.Core.Navigation;
-using CaptureTool.Services.Navigation;
+﻿using CaptureTool.Core.Navigation;
 
 namespace CaptureTool.UI.Windows.Xaml.Pages;
 

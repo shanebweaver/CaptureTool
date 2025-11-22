@@ -1,18 +1,26 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Common.Storage;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Telemetry;
-using CaptureTool.Services.Clipboard;
-using CaptureTool.Services.Storage;
-using CaptureTool.Services.Telemetry;
-using System;
-using System.IO;
+using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Services.Interfaces.Clipboard;
+using CaptureTool.Services.Interfaces.Storage;
+using CaptureTool.Services.Interfaces.Telemetry;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<VideoFile>
 {
+    public class ClipboardFileWrapper : IClipboardFile
+    {
+        public string FilePath { get; }
+
+        public ClipboardFileWrapper(string filePath)
+        {
+            FilePath = filePath;
+        }
+    }
+
     private readonly struct ActivityIds
     {
         public static readonly string Load = $"{nameof(VideoEditPageViewModel)}_Load";
@@ -55,7 +63,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
         {
-            VideoPath = video.Path;
+            VideoPath = video.FilePath;
 
             base.Load(video);
         });
@@ -71,16 +79,16 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     {
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
+            if (string.IsNullOrEmpty(_videoPath))
+            {
+                throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
+            }
+
             nint hwnd = _appController.GetMainWindowHandle();
-            VideoFile? file = await _filePickerService.SaveVideoFileAsync(hwnd);
-            if (file is not null && !string.IsNullOrEmpty(_videoPath))
-            {
-                File.Copy(_videoPath, file.Path, true);
-            }
-            else
-            {
-                throw new OperationCanceledException();
-            }
+            IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FileType.Video, UserFolder.Videos)
+                ?? throw new OperationCanceledException("No file was selected.");
+        
+            File.Copy(_videoPath, file.FilePath, true);
         });
     }
 

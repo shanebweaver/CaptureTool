@@ -1,13 +1,12 @@
-﻿using CaptureTool.Capture;
-using CaptureTool.Common;
+﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
+using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Services.Storage;
-using CaptureTool.Services.Telemetry;
-using System;
+using CaptureTool.Services.Interfaces.Storage;
+using CaptureTool.Services.Interfaces.Telemetry;
 
 namespace CaptureTool.ViewModels;
 
@@ -75,8 +74,9 @@ public sealed partial class AppMenuViewModel : ViewModelBase
         await TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.OpenFile, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            var imageFile = await _filePickerService.OpenImageFileAsync(hwnd) ?? throw new OperationCanceledException();
-            _appNavigation.GoToImageEdit(imageFile);
+            IFile imageFile = await _filePickerService.PickFileAsync(hwnd, FileType.Image, UserFolder.Pictures) 
+                ?? throw new OperationCanceledException("No file was selected.");
+            _appNavigation.GoToImageEdit(new(imageFile.FilePath));
         });
     }
 

@@ -1,8 +1,6 @@
-using CaptureTool.Capture;
+using CaptureTool.Domains.Capture.Interfaces;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
-using System;
-using System.Collections.Generic;
 using Point = Windows.Foundation.Point;
 using Rectangle = System.Drawing.Rectangle;
 

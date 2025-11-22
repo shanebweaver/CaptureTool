@@ -1,17 +1,17 @@
 ﻿using CaptureTool.Common;
-using CaptureTool.Services.Localization;
+using CaptureTool.Services.Interfaces.Localization;
 using System.Globalization;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class AppLanguageViewModel : ViewModelBase
 {
-    public AppLanguage? Language { get; }
+    public IAppLanguage? Language { get; }
     public string DisplayName { get; }
     public string AutomationName { get; }
 
     public AppLanguageViewModel(
-        AppLanguage? language,
+        IAppLanguage? language,
         ILocalizationService localizationService)
     {
         Language = language;
@@ -24,7 +24,7 @@ public sealed partial class AppLanguageViewModel : ViewModelBase
         }
         else
         {
-            CultureInfo langInfo = new(language.Value.Value);
+            CultureInfo langInfo = new(language.Value);
             DisplayName = langInfo.NativeName;
             AutomationName = langInfo.NativeName;
         }
