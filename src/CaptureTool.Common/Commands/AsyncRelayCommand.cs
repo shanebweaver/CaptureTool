@@ -24,7 +24,12 @@ public sealed class AsyncRelayCommand : ICommand
         return !_isExecuting && (_canExecute?.Invoke() ?? true);
     }
 
-    public async void Execute(object? parameter)
+    public void Execute(object? parameter)
+    {
+        _ = ExecuteAsync(parameter);
+    }
+
+    public async Task ExecuteAsync(object? parameter)
     {
         if (!CanExecute(parameter))
             return;

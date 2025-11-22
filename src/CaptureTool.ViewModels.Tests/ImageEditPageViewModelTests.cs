@@ -122,7 +122,7 @@ public sealed class ImageEditPageViewModelTests
     // TEST: CopyCommand
     // ------------------------------------------------------------------
     [TestMethod]
-    public void CopyCommand_ShouldInvokeExporter_AndLogTelemetry()
+    public async Task CopyCommand_ShouldInvokeExporter_AndLogTelemetry()
     {
         // Arrange
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
@@ -132,7 +132,7 @@ public sealed class ImageEditPageViewModelTests
         vm.Drawables.Add(Fixture.Create<IDrawable>());
 
         // Act
-        vm.CopyCommand.Execute(null);
+        await vm.CopyCommand.ExecuteAsync(null);
 
         // Assert: exporter called
         exporter.Verify(e =>
@@ -151,14 +151,14 @@ public sealed class ImageEditPageViewModelTests
     // TEST: ShareCommand error path
     // ------------------------------------------------------------------
     [TestMethod]
-    public void ShareCommand_ShouldLogError_WhenNoImageLoaded()
+    public async Task ShareCommand_ShouldLogError_WhenNoImageLoaded()
     {
         // Arrange
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
         var vm = Create();
 
         // Act
-        vm.ShareCommand.Execute(null);
+        await vm.ShareCommand.ExecuteAsync(null);
 
         // Assert telemetry
         telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Share), Times.Once);
