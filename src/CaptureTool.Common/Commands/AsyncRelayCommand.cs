@@ -43,6 +43,11 @@ public sealed class AsyncRelayCommand : ICommand
     {
         try
         {
+            if (!CanExecute(parameter))
+            {
+                return;
+            }
+
             _isExecuting = true;
             RaiseCanExecuteChanged();
             await _executeAsync();

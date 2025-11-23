@@ -15,7 +15,7 @@ public sealed partial class RelayCommand<T>(Action<T?> commandAction, Func<T, bo
 
         if (parameter is not T typedParameter)
         {
-            throw new InvalidOperationException("Invalid command parameter type.");
+            return false;
         }
 
         return CanExecute(typedParameter);
@@ -35,7 +35,7 @@ public sealed partial class RelayCommand<T>(Action<T?> commandAction, Func<T, bo
     {
         if (parameter is not T typedParameter)
         {
-            throw new InvalidOperationException("Invalid command parameter type.");
+            return;
         }
 
         Execute(typedParameter);
@@ -43,6 +43,11 @@ public sealed partial class RelayCommand<T>(Action<T?> commandAction, Func<T, bo
 
     public void Execute(T parameter)
     {
+        if (!CanExecute(parameter))
+        {
+            return;
+        }
+
         commandAction.Invoke(parameter);
     }
 

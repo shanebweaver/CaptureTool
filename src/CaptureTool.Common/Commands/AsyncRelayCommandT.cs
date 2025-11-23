@@ -38,13 +38,28 @@ public sealed class AsyncRelayCommand<T>(Func<T, Task> executeAsync, Func<T, boo
 
     public void Execute(object? parameter)
     {
-        throw new InvalidOperationException("Synchronous execution is not supported. Use ExecuteAsync instead.");
+        _ = ExecuteAsync(parameter);
+    }
+
+    public async Task ExecuteAsync(object? parameter)
+    {
+        if (parameter is not T typedParameter)
+        {
+            return;
+        }
+
+        await ExecuteAsync(typedParameter);
     }
 
     public async Task ExecuteAsync(T parameter)
     {
         try
         {
+            if (!CanExecute(parameter))
+            {
+                return;
+            }
+
             isExecuting = true;
             RaiseCanExecuteChanged();
             await executeAsync(parameter);
