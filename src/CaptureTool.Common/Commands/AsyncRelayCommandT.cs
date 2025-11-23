@@ -2,15 +2,20 @@
 
 namespace CaptureTool.Common.Commands;
 
-public sealed partial class RelayCommand<T>(Action<T?> commandAction, Func<T, bool>? canExecuteFunc = null) : ICommand
+public sealed class AsyncRelayCommand<T>(Func<T, Task> executeAsync, Func<T, bool>? canExecuteFunc = null, bool isExecuting = false) : ICommand
 {
     public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute(object? parameter)
     {
-        if (canExecuteFunc is null)
+        if (canExecuteFunc == null)
         {
-            return true;
+            return !isExecuting;
+        }
+
+        if (isExecuting)
+        {
+            return false;
         }
 
         if (parameter is not T typedParameter)
@@ -33,17 +38,22 @@ public sealed partial class RelayCommand<T>(Action<T?> commandAction, Func<T, bo
 
     public void Execute(object? parameter)
     {
-        if (parameter is not T typedParameter)
-        {
-            throw new InvalidOperationException("Invalid command parameter type.");
-        }
-
-        Execute(typedParameter);
+        throw new InvalidOperationException("Synchronous execution is not supported. Use ExecuteAsync instead.");
     }
 
-    public void Execute(T parameter)
+    public async Task ExecuteAsync(T parameter)
     {
-        commandAction.Invoke(parameter);
+        try
+        {
+            isExecuting = true;
+            RaiseCanExecuteChanged();
+            await executeAsync(parameter);
+        }
+        finally
+        {
+            isExecuting = false;
+            RaiseCanExecuteChanged();
+        }
     }
 
     public void RaiseCanExecuteChanged()

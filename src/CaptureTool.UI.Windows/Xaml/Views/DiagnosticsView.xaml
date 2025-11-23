@@ -17,7 +17,10 @@
         </Grid.RowDefinitions>
 
         <StackPanel>
-            <ToggleSwitch Header="Logging" IsOn="{x:Bind ViewModel.IsLoggingEnabled, Mode=TwoWay}" />
+            <ToggleSwitch
+                Header="Logging"
+                IsOn="{x:Bind ViewModel.IsLoggingEnabled, Mode=OneWay}"
+                Toggled="ToggleSwitch_Toggled" />
             <Button Command="{x:Bind ViewModel.ClearLogsCommand}">
                 <TextBlock Text="Clear logs" />
             </Button>

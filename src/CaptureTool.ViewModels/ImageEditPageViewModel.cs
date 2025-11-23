@@ -249,7 +249,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         FlipVerticalCommand = new(() => Flip(FlipDirection.Vertical));
         PrintCommand = new(PrintAsync);
         ShareCommand = new(ShareAsync);
-        UpdateChromaKeyColorCommand = new(UpdateChromaKeyColor, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
+        UpdateChromaKeyColorCommand = new(UpdateChromaKeyColor, (c) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
         UpdateOrientationCommand = new(UpdateOrientation);
         UpdateCropRectCommand = new(UpdateCropRect);
     }
