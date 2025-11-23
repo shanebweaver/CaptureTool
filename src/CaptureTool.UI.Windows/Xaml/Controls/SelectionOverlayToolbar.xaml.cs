@@ -1,7 +1,6 @@
 using CaptureTool.FeatureManagement;
 using CaptureTool.ViewModels;
 using Microsoft.UI.Xaml;
-using System.Collections.Generic;
 using System.Windows.Input;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;
@@ -38,6 +37,9 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
         typeof(SelectionOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
+    public event EventHandler<int>? CaptureTypeSelectionChanged;
+    public event EventHandler<int>? CaptureModeSelectionChanged;
+
     public IEnumerable<CaptureTypeViewModel> SupportedCaptureTypes
     {
         get => Get<IEnumerable<CaptureTypeViewModel>>(SupportedCaptureTypesProperty);
@@ -47,7 +49,11 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
     public int SelectedCaptureTypeIndex
     {
         get => Get<int>(SelectedCaptureTypeIndexProperty);
-        set => Set(SelectedCaptureTypeIndexProperty, value);
+        set
+        {
+            Set(SelectedCaptureTypeIndexProperty, value);
+            CaptureTypeSelectionChanged?.Invoke(this, value);
+        }
     }
 
     public IEnumerable<CaptureModeViewModel> SupportedCaptureModes
@@ -59,7 +65,11 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
     public int SelectedCaptureModeIndex
     {
         get => Get<int>(SelectedCaptureModeIndexProperty);
-        set => Set(SelectedCaptureModeIndexProperty, value);
+        set
+        {
+            Set(SelectedCaptureModeIndexProperty, value);
+            CaptureModeSelectionChanged?.Invoke(this, value);
+        }
     }
 
     public ICommand CloseCommand

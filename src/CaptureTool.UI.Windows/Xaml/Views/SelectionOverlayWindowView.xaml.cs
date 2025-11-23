@@ -103,7 +103,7 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
             _ => DependencyProperty.UnsetValue
         };
 
-        RootPanel.SetValue(FrameworkElement.RequestedThemeProperty, theme);
+        RootPanel.SetValue(RequestedThemeProperty, theme);
     }
 
     private static ElementTheme ConvertToElementTheme(AppTheme appTheme)
@@ -117,13 +117,23 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         };
     }
 
-    private void SelectionOverlay_SelectionComplete(object? sender, Rectangle captureArea)
+    private void SelectionOverlay_SelectionComplete(object? _, Rectangle captureArea)
     {
-        ViewModel.CaptureArea = captureArea;
+        ViewModel.UpdateCaptureAreaCommand.Execute(captureArea);
 
         if (captureArea.Height >= 40 && captureArea.Width >= 40)
         {
             ViewModel.RequestCaptureCommand.Execute(null);
         }
+    }
+
+    private void SelectionToolbar_CaptureModeSelectionChanged(object _, int e)
+    {
+        ViewModel.UpdateSelectedCaptureModeCommand.Execute(e);
+    }
+
+    private void SelectionToolbar_CaptureTypeSelectionChanged(object _, int e)
+    {
+        ViewModel.UpdateSelectedCaptureTypeCommand.Execute(e);
     }
 }
