@@ -1,7 +1,8 @@
 using CaptureTool.FeatureManagement;
 using CaptureTool.ViewModels;
+using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
-using System.Collections.Generic;
+using Microsoft.UI.Xaml.Controls;
 using System.Windows.Input;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;
@@ -38,6 +39,9 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
         typeof(SelectionOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
+    public event EventHandler<int>? CaptureTypeSelectionChanged;
+    public event EventHandler<int>? CaptureModeSelectionChanged;
+
     public IEnumerable<CaptureTypeViewModel> SupportedCaptureTypes
     {
         get => Get<IEnumerable<CaptureTypeViewModel>>(SupportedCaptureTypesProperty);
@@ -47,7 +51,11 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
     public int SelectedCaptureTypeIndex
     {
         get => Get<int>(SelectedCaptureTypeIndexProperty);
-        set => Set(SelectedCaptureTypeIndexProperty, value);
+        set
+        {
+            Set(SelectedCaptureTypeIndexProperty, value);
+            CaptureTypeSelectionChanged?.Invoke(this, value);
+        }
     }
 
     public IEnumerable<CaptureModeViewModel> SupportedCaptureModes
@@ -59,7 +67,11 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
     public int SelectedCaptureModeIndex
     {
         get => Get<int>(SelectedCaptureModeIndexProperty);
-        set => Set(SelectedCaptureModeIndexProperty, value);
+        set
+        {
+            Set(SelectedCaptureModeIndexProperty, value);
+            CaptureModeSelectionChanged?.Invoke(this, value);
+        }
     }
 
     public ICommand CloseCommand
@@ -75,6 +87,22 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
         if (ServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
         {
             CaptureModeSegmentedControl.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void CaptureModeSegmentedControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is Segmented segmentedControl)
+        {
+            SelectedCaptureModeIndex = segmentedControl.SelectedIndex;
+        }
+    }
+
+    private void CaptureTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox comboBox)
+        {
+            SelectedCaptureTypeIndex = comboBox.SelectedIndex;
         }
     }
 }

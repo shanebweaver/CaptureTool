@@ -115,7 +115,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
     {
         SyncHelper.SyncProperty(windowVM, _windowViewModels, vm => vm.SelectedCaptureTypeIndex);
 
-        if (windowVM.SelectedCaptureType.CaptureType == CaptureType.AllScreens)
+        if (windowVM.GetSelectedCaptureType() == CaptureType.AllScreens)
         {
             if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Image)
             {

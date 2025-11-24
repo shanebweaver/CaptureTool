@@ -20,9 +20,11 @@
         <Grid Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}">
             <controls:SelectionOverlayToolbar
                 x:Name="SelectionToolbar"
+                CaptureModeSelectionChanged="SelectionToolbar_CaptureModeSelectionChanged"
+                CaptureTypeSelectionChanged="SelectionToolbar_CaptureTypeSelectionChanged"
                 CloseCommand="{x:Bind ViewModel.CloseOverlayCommand, Mode=OneWay}"
-                SelectedCaptureModeIndex="{x:Bind ViewModel.SelectedCaptureModeIndex, Mode=TwoWay}"
-                SelectedCaptureTypeIndex="{x:Bind ViewModel.SelectedCaptureTypeIndex, Mode=TwoWay}"
+                SelectedCaptureModeIndex="{x:Bind ViewModel.SelectedCaptureModeIndex, Mode=OneWay}"
+                SelectedCaptureTypeIndex="{x:Bind ViewModel.SelectedCaptureTypeIndex, Mode=OneWay}"
                 SupportedCaptureModes="{x:Bind ViewModel.SupportedCaptureModes, Mode=OneWay}"
                 SupportedCaptureTypes="{x:Bind ViewModel.SupportedCaptureTypes, Mode=OneWay}" />
         </Grid>

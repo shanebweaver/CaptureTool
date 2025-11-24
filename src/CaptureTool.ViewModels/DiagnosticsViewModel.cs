@@ -12,6 +12,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     private readonly ISettingsService _settingsService;
 
     public RelayCommand ClearLogsCommand { get; }
+    public AsyncRelayCommand<bool> UpdateLoggingEnablementCommand { get; }
 
     public string Logs
     {
@@ -22,11 +23,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     public bool IsLoggingEnabled
     {
         get => field;
-        set
-        {
-            Set(ref field, value);
-            OnIsLoggingEnabledChanged();
-        }
+        private set => Set(ref field, value);
     }
 
     public DiagnosticsViewModel(
@@ -39,6 +36,8 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         _logService.LogAdded += OnLogAdded;
 
         ClearLogsCommand = new(ClearLogs); 
+        UpdateLoggingEnablementCommand = new(UpdateLoggingEnablementAsync);
+
         IsLoggingEnabled = _logService.IsEnabled;
         Logs = string.Join(Environment.NewLine, _logService.GetLogs().Select(log => log.ToString()));
     }
@@ -53,8 +52,10 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         Logs += e.ToString() + Environment.NewLine;
     }
 
-    private void OnIsLoggingEnabledChanged()
+    private async Task UpdateLoggingEnablementAsync(bool newValue)
     {
+        IsLoggingEnabled = newValue;
+
         if (IsLoggingEnabled)
         {
             _logService.Enable();
@@ -65,7 +66,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         }
 
         _settingsService.Set(CaptureToolSettings.VerboseLogging, IsLoggingEnabled);
-        _ = _settingsService.TrySaveAsync(CancellationToken.None);
+        await _settingsService.TrySaveAsync(CancellationToken.None);
     }
 
     private void ClearLogs()

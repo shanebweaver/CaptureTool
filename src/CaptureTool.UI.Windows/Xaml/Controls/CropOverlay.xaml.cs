@@ -2,8 +2,6 @@ using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using System;
-using System.Collections.Generic;
 using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Core;
@@ -155,6 +153,7 @@ public sealed partial class CropOverlay : UserControlBase
     }
 
     public event EventHandler<Rectangle>? InteractionComplete;
+    public event EventHandler<Rectangle>? SelectionAreaChanged;
 
     private readonly Dictionary<FrameworkElement, Action<double, double>> _anchorDragHandlers = [];
     private readonly Dictionary<FrameworkElement, CoreCursorType> _anchorCursors = [];
@@ -190,6 +189,12 @@ public sealed partial class CropOverlay : UserControlBase
         {
             overlay.UpdateBoundary();
         }
+    }
+
+    private void UpdateSelectionArea(Rectangle value)
+    {
+        SelectionArea = value;
+        SelectionAreaChanged?.Invoke(this, SelectionArea);
     }
 
     private void UpdateBoundary()
@@ -438,11 +443,11 @@ public sealed partial class CropOverlay : UserControlBase
         double newX = Math.Clamp(r.Left + dx, 0, maxX);
         double newY = Math.Clamp(r.Top + dy, 0, maxY);
 
-        SelectionArea = new Rectangle(
+        UpdateSelectionArea(new Rectangle(
             (int)Math.Round(newX),
             (int)Math.Round(newY),
             r.Width,
-            r.Height);
+            r.Height));
     }
 
     private void ResizeFromCorner(double dx, double dy, bool adjustLeft, bool adjustTop)
@@ -479,11 +484,11 @@ public sealed partial class CropOverlay : UserControlBase
             bottom = newBottom;
         }
 
-        SelectionArea = new Rectangle(
+        UpdateSelectionArea(new Rectangle(
             (int)Math.Round(left),
             (int)Math.Round(top),
             (int)Math.Round(right - left),
-            (int)Math.Round(bottom - top));
+            (int)Math.Round(bottom - top)));
     }
 
     private void ResizeEdge(bool vertical, bool positive, double delta)
@@ -521,11 +526,11 @@ public sealed partial class CropOverlay : UserControlBase
             }
         }
 
-        SelectionArea = new Rectangle(
+        UpdateSelectionArea(new Rectangle(
             (int)Math.Round(left),
             (int)Math.Round(top),
             (int)Math.Round(right - left),
-            (int)Math.Round(bottom - top));
+            (int)Math.Round(bottom - top)));
     }
 
     private bool IsInSelectionArea(Point pos)

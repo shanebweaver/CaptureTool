@@ -2,27 +2,52 @@
 
 namespace CaptureTool.Common.Commands;
 
-public sealed partial class RelayCommand<T>(Action<T?> commandAction, Func<bool>? canExecute = null) : ICommand
+public sealed partial class RelayCommand<T>(Action<T?> commandAction, Func<T, bool>? canExecuteFunc = null) : ICommand
 {
     public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute(object? parameter)
     {
-        return canExecute?.Invoke() ?? true;
+        if (canExecuteFunc is null)
+        {
+            return true;
+        }
+
+        if (parameter is not T typedParameter)
+        {
+            return false;
+        }
+
+        return CanExecute(typedParameter);
     }
 
-    public bool CanExecute()
+    public bool CanExecute(T parameter)
     {
-        return canExecute?.Invoke() ?? true;
+        if (canExecuteFunc is null)
+        {
+            return true;
+        }
+
+        return canExecuteFunc.Invoke(parameter);
     }
 
     public void Execute(object? parameter)
     {
-        commandAction.Invoke((T?)parameter);
+        if (parameter is not T typedParameter)
+        {
+            return;
+        }
+
+        Execute(typedParameter);
     }
 
-    public void Execute(T? parameter)
+    public void Execute(T parameter)
     {
+        if (!CanExecute(parameter))
+        {
+            return;
+        }
+
         commandAction.Invoke(parameter);
     }
 

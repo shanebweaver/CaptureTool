@@ -13,11 +13,21 @@ public sealed partial class RelayCommand(Action commandAction, Func<bool>? canEx
 
     public bool CanExecute()
     {
-        return canExecute?.Invoke() ?? true;
+        if (canExecute is null)
+        {
+            return true;
+        }
+
+        return canExecute.Invoke();
     }
 
     public void Execute(object? parameter)
     {
+        if (!CanExecute())
+        {
+            return;
+        }
+
         Execute();
     }
 

@@ -23,7 +23,9 @@
             <!--  Chroma Key  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_ChromaKeyButton"
-                IsChecked="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=TwoWay}"
+                Checked="ChromaKeyAppBarToggleButton_IsCheckedChanged"
+                IsChecked="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}"
+                Unchecked="ChromaKeyAppBarToggleButton_IsCheckedChanged"
                 Visibility="{x:Bind ViewModel.IsChromaKeyAddOnOwned, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="{StaticResource Color}" />
@@ -113,9 +115,12 @@
             <controls:ChromaKeyToolbar
                 HorizontalAlignment="Stretch"
                 ColorOptions="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
-                Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=TwoWay}"
-                SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=TwoWay}"
-                Tolerance="{x:Bind ViewModel.ChromaKeyTolerance, Mode=TwoWay}" />
+                Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=OneWay}"
+                DesaturationChanged="ChromaKeyToolbar_DesaturationChanged"
+                SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=OneWay}"
+                SelectedColorOptionIndexChanged="ChromaKeyToolbar_SelectedColorOptionIndexChanged"
+                Tolerance="{x:Bind ViewModel.ChromaKeyTolerance, Mode=OneWay}"
+                ToleranceChanged="ChromaKeyToolbar_ToleranceChanged" />
         </Grid>
 
         <!--  Canvas  -->
@@ -129,7 +134,8 @@
             <controls:ImageCanvas
                 x:Name="ImageCanvas"
                 CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"
-                CropRect="{x:Bind ViewModel.CropRect, Mode=TwoWay}"
+                CropRect="{x:Bind ViewModel.CropRect, Mode=OneWay}"
+                CropRectChanged="ImageCanvas_CropRectChanged"
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"
                 InteractionComplete="ImageCanvas_InteractionComplete"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"

@@ -8,21 +8,46 @@ public sealed partial class RelayCommand<T, P>(Action<T?> commandAction, Func<P?
 
     public bool CanExecute(object? parameter)
     {
-        return canExecute?.Invoke((P?)parameter) ?? true;
+        if (canExecute is null)
+        {
+            return true;
+        }
+
+        if (parameter is not P typedParameter)
+        {
+            return false;
+        }
+
+        return CanExecute(typedParameter);
     }
 
-    public bool CanExecute(P? parameter)
+    public bool CanExecute(P parameter)
     {
-        return canExecute?.Invoke(parameter) ?? true;
+        if (canExecute is null)
+        {
+            return true;
+        }
+
+        return canExecute.Invoke(parameter);
     }
 
     public void Execute(object? parameter)
     {
-        commandAction.Invoke((T?)parameter);
+        if (parameter is not T typedParameter)
+        {
+            return;
+        }
+
+        commandAction.Invoke(typedParameter);
     }
 
-    public void Execute(T? parameter)
+    public void Execute(T parameter)
     {
+        if (!CanExecute(parameter))
+        {
+            return;
+        }
+
         commandAction.Invoke(parameter);
     }
 

@@ -66,143 +66,101 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public AsyncRelayCommand ShareCommand { get; }
     public RelayCommand<Color> UpdateChromaKeyColorCommand { get; }
 
-    // Private commands to handle undo/redo operations.
-    private RelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
-    private RelayCommand<Rectangle> UpdateCropRectCommand { get; }
+    public RelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
+    public RelayCommand<Rectangle> UpdateCropRectCommand { get; }
+    public RelayCommand<bool> UpdateShowChromaKeyOptionsCommand { get; }
+    public RelayCommand<int> UpdateDesaturationCommand { get; }
+    public RelayCommand<int> UpdateToleranceCommand { get; }
+    public RelayCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
 
-    private bool _hasUndoStack;
     public bool HasUndoStack
     {
-        get => _hasUndoStack;
-        set => Set(ref _hasUndoStack, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private bool _hasRedoStack;
     public bool HasRedoStack
     {
-        get => _hasRedoStack;
-        set => Set(ref _hasRedoStack, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private ObservableCollection<IDrawable> _drawables;
     public ObservableCollection<IDrawable> Drawables
     {
-        get => _drawables;
-        set => Set(ref _drawables, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private ImageFile? _imageFile;
     public ImageFile? ImageFile
     {
-        get => _imageFile;
-        set => Set(ref _imageFile, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private Size _imageSize;
     public Size ImageSize
     {
-        get => _imageSize;
-        set => Set(ref _imageSize, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private ImageOrientation _orientation;
     public ImageOrientation Orientation
     {
-        get => _orientation;
-        set => Set(ref _orientation, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private bool _isInCropMode;
     public bool IsInCropMode
     {
-        get => _isInCropMode;
-        set
-        {
-            Set(ref _isInCropMode, value);
-            if (value && _showChromaKeyOptions)
-            {
-                ShowChromaKeyOptions = false;
-            }
-        }
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private Rectangle _cropRect;
     public Rectangle CropRect
     {
-        get => _cropRect;
-        set => Set(ref _cropRect, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private bool _showChromaKeyOptions;
     public bool ShowChromaKeyOptions
     {
-        get => _showChromaKeyOptions;
-        set
-        {
-            Set(ref _showChromaKeyOptions, value);
-            if (value && _isInCropMode)
-            {
-                IsInCropMode = false;
-            }
-        }
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private int _chromaKeyTolerance;
     public int ChromaKeyTolerance
     {
-        get => _chromaKeyTolerance;
-        set
-        {
-            Set(ref _chromaKeyTolerance, value);
-            UpdateChromaKeyEffectValues();
-        }
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private int _chromaKeyDesaturation;
     public int ChromaKeyDesaturation
     {
-        get => _chromaKeyDesaturation;
-        set
-        {
-            Set(ref _chromaKeyDesaturation, value);
-            UpdateChromaKeyEffectValues();
-        }
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private Color _chromaKeyColor;
     public Color ChromaKeyColor
     {
-        get => _chromaKeyColor;
-        set
-        {
-            Set(ref _chromaKeyColor, value);
-            UpdateChromaKeyEffectValues();
-        }
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private ObservableCollection<ChromaKeyColorOption> _chromaKeyColorOptions;
     public ObservableCollection<ChromaKeyColorOption> ChromaKeyColorOptions
     {
-        get => _chromaKeyColorOptions;
-        set => Set(ref _chromaKeyColorOptions, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private int _selectedChromaKeyColorOptionIndex;
     public int SelectedChromaKeyColorOption
     {
-        get => _selectedChromaKeyColorOptionIndex;
-        set
-        {
-            Set(ref _selectedChromaKeyColorOptionIndex, value);
-            UpdateChromaKeyColor(value);
-        }
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    public bool _isChromaKeyAddOnOwned;
     public bool IsChromaKeyAddOnOwned
     {
-        get => _isChromaKeyAddOnOwned;
-        set => Set(ref _isChromaKeyAddOnOwned, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
     public ImageEditPageViewModel(
@@ -227,15 +185,15 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _featureManager = featureManager;
         _shareService = shareService;
 
-        _drawables = [];
-        _imageSize = new();
-        _orientation = ImageOrientation.RotateNoneFlipNone;
-        _cropRect = Rectangle.Empty;
+        Drawables = [];
+        ImageSize = new();
+        Orientation = ImageOrientation.RotateNoneFlipNone;
+        CropRect = Rectangle.Empty;
         _imageCanvasExporter = imageCanvasExporter;
-        _chromaKeyTolerance = 30;
-        _chromaKeyColor = Color.Empty;
-        _selectedChromaKeyColorOptionIndex = 0;
-        _chromaKeyColorOptions = [];
+        SelectedChromaKeyColorOption = 0;
+        ChromaKeyTolerance = 30;
+        ChromaKeyColor = Color.Empty;
+        ChromaKeyColorOptions = [];
         _operationsUndoStack = [];
         _operationsRedoStack = [];
 
@@ -249,9 +207,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         FlipVerticalCommand = new(() => Flip(FlipDirection.Vertical));
         PrintCommand = new(PrintAsync);
         ShareCommand = new(ShareAsync);
-        UpdateChromaKeyColorCommand = new(UpdateChromaKeyColor, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
+        UpdateChromaKeyColorCommand = new(UpdateChromaKeyColor, (c) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
         UpdateOrientationCommand = new(UpdateOrientation);
         UpdateCropRectCommand = new(UpdateCropRect);
+        UpdateShowChromaKeyOptionsCommand = new(UpdateShowChromaKeyOptions);
+        UpdateDesaturationCommand = new(UpdateDesaturation);
+        UpdateToleranceCommand = new(UpdateTolerance);
+        UpdateSelectedColorOptionIndexCommand = new(UpdateSelectedColorOptionIndex);
     }
 
     public override Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
@@ -308,6 +270,42 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         base.Dispose();
     }
 
+    private void UpdateDesaturation(int value)
+    {
+        ChromaKeyDesaturation = value;
+        UpdateChromaKeyEffectValues();
+    }
+
+    private void UpdateTolerance(int value)
+    {
+        ChromaKeyTolerance = value;
+        UpdateChromaKeyEffectValues();
+    }
+
+    private void UpdateSelectedColorOptionIndex(int value)
+    {
+        SelectedChromaKeyColorOption = value;
+        UpdateChromaKeyColor(value);
+    }
+
+    private void UpdateShowChromaKeyOptions(bool value)
+    {
+        ShowChromaKeyOptions = value;
+        if (value && IsInCropMode)
+        {
+            IsInCropMode = false;
+        }
+    }
+
+    private void UpdateIsInCropMode(bool value)
+    {
+        IsInCropMode = value;
+        if (value && ShowChromaKeyOptions)
+        {
+            ShowChromaKeyOptions = false;
+        }
+    }
+
     private Task CopyAsync()
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Copy, async () =>
@@ -321,7 +319,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleCropMode, () =>
         {
-            IsInCropMode = !IsInCropMode;
+            UpdateIsInCropMode(!IsInCropMode);
         });
     }
 
@@ -331,7 +329,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             _imageDrawable.ImageEffect = new ImageChromaKeyEffect(ChromaKeyColor, ChromaKeyTolerance / 100f, ChromaKeyDesaturation / 100f)
             {
-                IsEnabled = !_chromaKeyColor.IsEmpty
+                IsEnabled = !ChromaKeyColor.IsEmpty
             };
         }
         else if (_imageDrawable?.ImageEffect is ImageChromaKeyEffect chromaKeyEffect)
@@ -339,7 +337,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             chromaKeyEffect.Tolerance = ChromaKeyTolerance / 100f;
             chromaKeyEffect.Desaturation = ChromaKeyDesaturation / 100f;
             chromaKeyEffect.Color = ChromaKeyColor;
-            chromaKeyEffect.IsEnabled = !_chromaKeyColor.IsEmpty;
+            chromaKeyEffect.IsEnabled = !ChromaKeyColor.IsEmpty;
         }
 
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
@@ -347,12 +345,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateChromaKeyColor(int colorIndex)
     {
-        if (colorIndex < 0 || colorIndex >= _chromaKeyColorOptions.Count)
+        if (colorIndex < 0 || colorIndex >= ChromaKeyColorOptions.Count)
         {
             return;
         }
      
-        UpdateChromaKeyColor(_chromaKeyColorOptions[colorIndex].Color);
+        UpdateChromaKeyColor(ChromaKeyColorOptions[colorIndex].Color);
     }
 
     private void UpdateChromaKeyColor(Color color)
@@ -363,6 +361,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
 
         ChromaKeyColor = color;
+        UpdateChromaKeyEffectValues();
     }
 
     private Task SaveAsync()
@@ -477,13 +476,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Share, async () =>
         {
-            if (_imageFile == null)
+            if (ImageFile == null)
             {
                 throw new InvalidOperationException("No image to share");
             }
 
             nint hwnd = _appController.GetMainWindowHandle();
-            await _shareService.ShareAsync(_imageFile.FilePath, hwnd);
+            await _shareService.ShareAsync(ImageFile.FilePath, hwnd);
         });
     }
 

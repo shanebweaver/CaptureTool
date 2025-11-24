@@ -35,39 +35,34 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private Timer? _timer;
     private DateTime _captureStartTime;
 
-    private bool _isRecording;
     public bool IsRecording
     {
-        get => _isRecording;
-        private set => Set(ref _isRecording, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private TimeSpan _captureTime;
     public TimeSpan CaptureTime
     {
-        get => _captureTime;
-        private set => Set(ref _captureTime, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private AppTheme _currentAppTheme;
     public AppTheme CurrentAppTheme
     {
-        get => _currentAppTheme;
-        private set => Set(ref _currentAppTheme, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private AppTheme _defaultAppTheme;
     public AppTheme DefaultAppTheme
     {
-        get => _defaultAppTheme;
-        private set => Set(ref _defaultAppTheme, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private bool _isDesktopAudioEnabled;
     public bool IsDesktopAudioEnabled
     {
-        get => _isDesktopAudioEnabled;
-        set => Set(ref _isDesktopAudioEnabled, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
@@ -170,7 +165,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             {
                 IsRecording = false;
                 StopTimer();
-                _appController.StopVideoCapture();
+                VideoFile video = _appController.StopVideoCapture();
+                _appNavigation.GoToVideoEdit(video);
             }
             else
             {

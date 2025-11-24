@@ -1,6 +1,4 @@
-﻿using CaptureTool.Common.Settings;
-
-namespace CaptureTool.Services.Interfaces.Localization;
+﻿namespace CaptureTool.Services.Interfaces.Localization;
 
 public interface ILocalizationService
 {
@@ -10,7 +8,7 @@ public interface ILocalizationService
     IAppLanguage? DefaultLanguage { get; }
     IAppLanguage[] SupportedLanguages { get; }
 
-    void Initialize(IStringSettingDefinition languageOverrideSetting);
+    void Initialize(string languageOverride);
 
     string GetString(string resourceKey);
     void OverrideLanguage(IAppLanguage? language);

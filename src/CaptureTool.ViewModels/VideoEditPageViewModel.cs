@@ -31,11 +31,10 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     public AsyncRelayCommand SaveCommand { get; }
     public AsyncRelayCommand CopyCommand { get; }
 
-    private string? _videoPath;
     public string? VideoPath
     {
-        get => _videoPath;
-        set => Set(ref _videoPath, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
     private readonly IClipboardService _clipboardService;
@@ -68,17 +67,11 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         });
     }
 
-    public override void Dispose()
-    {
-        _videoPath = null;
-        base.Dispose();
-    }
-
     private Task SaveAsync()
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
-            if (string.IsNullOrEmpty(_videoPath))
+            if (string.IsNullOrEmpty(VideoPath))
             {
                 throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
             }
@@ -87,7 +80,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FileType.Video, UserFolder.Videos)
                 ?? throw new OperationCanceledException("No file was selected.");
         
-            File.Copy(_videoPath, file.FilePath, true);
+            File.Copy(VideoPath, file.FilePath, true);
         });
     }
 
@@ -95,12 +88,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Copy, async () =>
         {
-            if (string.IsNullOrEmpty(_videoPath))
+            if (string.IsNullOrEmpty(VideoPath))
             {
                 throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
             }
 
-            ClipboardFileWrapper clipboardVideo = new(_videoPath);
+            ClipboardFileWrapper clipboardVideo = new(VideoPath);
             await _clipboardService.CopyFileAsync(clipboardVideo);
         });
     }
