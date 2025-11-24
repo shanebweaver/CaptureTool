@@ -82,7 +82,8 @@
                         MinHeight="66"
                         ItemTemplateSelector="{StaticResource ChromaKeyColorOptionTemplateSelector}"
                         ItemsSource="{x:Bind ColorOptions, Mode=OneWay}"
-                        SelectedIndex="{x:Bind SelectedColorOptionIndex, Mode=TwoWay}" />
+                        SelectedIndex="{x:Bind SelectedColorOptionIndex, Mode=OneWay}"
+                        SelectionChanged="KeyColorComboBox_SelectionChanged" />
                 </Grid>
             </AppBarElementContainer>
 
@@ -99,7 +100,8 @@
                             Maximum="99"
                             Minimum="1"
                             SmallChange="1"
-                            Value="{x:Bind Tolerance, Mode=TwoWay}" />
+                            ValueChanged="ToleranceNumberBox_ValueChanged"
+                            Value="{x:Bind Tolerance, Mode=OneWay}" />
 
                         <DropDownButton.Flyout>
                             <Flyout>
@@ -123,7 +125,8 @@
                             Maximum="99"
                             Minimum="1"
                             SmallChange="1"
-                            Value="{x:Bind Desaturation, Mode=TwoWay}" />
+                            ValueChanged="DesaturationNumberBox_ValueChanged"
+                            Value="{x:Bind Desaturation, Mode=OneWay}" />
 
                         <DropDownButton.Flyout>
                             <Flyout>

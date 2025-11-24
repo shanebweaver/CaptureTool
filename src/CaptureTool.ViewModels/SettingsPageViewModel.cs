@@ -57,67 +57,58 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public AsyncRelayCommand<int> UpdateAppLanguageCommand { get; }
     public RelayCommand<int> UpdateAppThemeCommand { get; }
 
-    private ObservableCollection<AppLanguageViewModel> _appLanguages;
     public ObservableCollection<AppLanguageViewModel> AppLanguages
     {
-        get => _appLanguages;
-        private set => Set(ref _appLanguages, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private int _selectedAppLanguageIndex;
     public int SelectedAppLanguageIndex
     {
-        get => _selectedAppLanguageIndex;
-        private set => Set(ref _selectedAppLanguageIndex, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private bool _showAppLanguageRestartMessage;
     public bool ShowAppLanguageRestartMessage
     {
-        get => _showAppLanguageRestartMessage;
-        private set => Set(ref _showAppLanguageRestartMessage, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private ObservableCollection<AppThemeViewModel> _appThemes;
     public ObservableCollection<AppThemeViewModel> AppThemes
     {
-        get => _appThemes;
-        private set => Set(ref _appThemes, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private int _selectedAppThemeIndex;
     public int SelectedAppThemeIndex
     {
-        get => _selectedAppThemeIndex;
-        private set => Set(ref _selectedAppThemeIndex, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private bool _showAppThemeRestartMessage;
     public bool ShowAppThemeRestartMessage
     {
-        get => _showAppThemeRestartMessage;
-        private set => Set(ref _showAppThemeRestartMessage, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private bool _imageCaptureAutoCopy;
     public bool ImageCaptureAutoCopy
     {
-        get => _imageCaptureAutoCopy;
-        private set => Set(ref _imageCaptureAutoCopy, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private bool _imageCaptureAutoSave;
     public bool ImageCaptureAutoSave
     {
-        get => _imageCaptureAutoSave;
-        private set => Set(ref _imageCaptureAutoSave, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private string _screenshotsFolderPath;
     public string ScreenshotsFolderPath
     {
-        get => _screenshotsFolderPath;
-        private set => Set(ref _screenshotsFolderPath, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
     public SettingsPageViewModel(
@@ -141,9 +132,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
 
-        _appThemes = [];
-        _appLanguages = [];
-        _screenshotsFolderPath = string.Empty;
+        AppThemes = [];
+        AppLanguages = [];
+        ScreenshotsFolderPath = string.Empty;
 
         ChangeScreenshotsFolderCommand = new(ChangeScreenshotsFolderAsync);
         OpenScreenshotsFolderCommand = new(OpenScreenshotsFolder);
@@ -222,23 +213,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             await base.LoadAsync(cancellationToken);
         });
     }
-
-    public override void Dispose()
-    {
-        _showAppLanguageRestartMessage = false;
-        _selectedAppLanguageIndex = -1;
-        _appLanguages.Clear();
-
-        _showAppThemeRestartMessage = false;
-        _selectedAppThemeIndex = -1;
-        _appThemes.Clear();
-
-        _imageCaptureAutoSave = false;
-        _imageCaptureAutoCopy = false;
-
-        base.Dispose();
-    }
-
 
     private Task UpdateAppLanguageAsync(int index)
     {

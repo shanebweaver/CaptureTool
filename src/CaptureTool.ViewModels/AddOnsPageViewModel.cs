@@ -30,32 +30,28 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     public AsyncRelayCommand GetChromaKeyAddOnCommand { get; }
     public RelayCommand GoBackCommand { get; }
 
-    private bool _isChromaKeyAddOnOwned;
     public bool IsChromaKeyAddOnOwned
     {
-        get => _isChromaKeyAddOnOwned;
-        private set => Set(ref _isChromaKeyAddOnOwned, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private string _chromaKeyAddOnPrice = string.Empty;
     public string ChromaKeyAddOnPrice
     {
-        get => _chromaKeyAddOnPrice;
-        private set => Set(ref _chromaKeyAddOnPrice, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private Uri? _chromaKeyAddOnLogoImage;
     public Uri? ChromaKeyAddOnLogoImage
     {
-        get => _chromaKeyAddOnLogoImage;
-        private set => Set(ref _chromaKeyAddOnLogoImage, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
-    private bool _isChromaKeyAddOnAvailable;
     public bool IsChromaKeyAddOnAvailable
     {
-        get => _isChromaKeyAddOnAvailable;
-        private set => Set(ref _isChromaKeyAddOnAvailable, value);
+        get => field;
+        private set => Set(ref field, value);
     }
 
     public AddOnsPageViewModel(
@@ -73,7 +69,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         _telemetryService = telemetryService;
         _cancellationService = cancellationService;
 
-        _chromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
+        ChromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
 
         GetChromaKeyAddOnCommand = new(GetChromaKeyAddOnAsync, () => IsChromaKeyAddOnAvailable);
         GoBackCommand = new(GoBack, () => _appNavigation.CanGoBack);
@@ -110,15 +106,6 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
                 cts.Dispose();
             }
         });
-    }
-
-    public override void Dispose()
-    {
-        _isChromaKeyAddOnAvailable = false;
-        _isChromaKeyAddOnOwned = false;
-        _chromaKeyAddOnPrice = string.Empty;
-        _chromaKeyAddOnLogoImage = null;
-        base.Dispose();
     }
 
     private Task GetChromaKeyAddOnAsync()

@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using System.Drawing;
 
 namespace CaptureTool.UI.Windows.Xaml.Pages;
@@ -35,5 +36,28 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ImageCanvas_CropRectChanged(object _, Rectangle e)
     {
         ViewModel.UpdateCropRectCommand.Execute(e);
+    }
+
+    private void ChromaKeyAppBarToggleButton_IsCheckedChanged(object sender, RoutedEventArgs _)
+    {
+        if (sender is AppBarToggleButton toggleButton)
+        {
+            ViewModel.UpdateShowChromaKeyOptionsCommand.Execute(toggleButton.IsChecked);
+        }
+    }
+
+    private void ChromaKeyToolbar_DesaturationChanged(object _, int e)
+    {
+        ViewModel.UpdateDesaturationCommand.Execute(e);
+    }
+
+    private void ChromaKeyToolbar_ToleranceChanged(object _, int e)
+    {
+        ViewModel.UpdateToleranceCommand.Execute(e);
+    }
+
+    private void ChromaKeyToolbar_SelectedColorOptionIndexChanged(object _, int e)
+    {
+        ViewModel.UpdateSelectedColorOptionIndexCommand.Execute(e);
     }
 }

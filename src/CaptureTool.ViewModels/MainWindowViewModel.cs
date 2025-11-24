@@ -10,18 +10,16 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
 
     public event EventHandler<INavigationRequest>? NavigationRequested;
 
-    private AppTheme _currentAppTheme;
     public AppTheme CurrentAppTheme
     {
-        get => _currentAppTheme;
-        set => Set(ref _currentAppTheme, value);
+        get => field;
+        set => Set(ref field, value);
     }
 
-    private AppTheme _defaultAppTheme;
     public AppTheme DefaultAppTheme
     {
-        get => _defaultAppTheme;
-        set => Set(ref _defaultAppTheme, value);
+        get => field;
+        set => Set(ref field, value);
     }
 
     private INavigationRequest? _currentRequest;

@@ -1,6 +1,8 @@
 using CaptureTool.FeatureManagement;
 using CaptureTool.ViewModels;
+using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using System.Windows.Input;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;
@@ -85,6 +87,22 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
         if (ServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
         {
             CaptureModeSegmentedControl.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void CaptureModeSegmentedControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is Segmented segmentedControl)
+        {
+            SelectedCaptureModeIndex = segmentedControl.SelectedIndex;
+        }
+    }
+
+    private void CaptureTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox comboBox)
+        {
+            SelectedCaptureTypeIndex = comboBox.SelectedIndex;
         }
     }
 }

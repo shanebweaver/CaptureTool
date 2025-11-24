@@ -27,7 +27,8 @@
         <toolkit:Segmented
             x:Name="CaptureModeSegmentedControl"
             ItemsSource="{x:Bind SupportedCaptureModes, Mode=OneWay}"
-            SelectedIndex="{x:Bind SelectedCaptureModeIndex, Mode=TwoWay}"
+            SelectedIndex="{x:Bind SelectedCaptureModeIndex, Mode=OneWay}"
+            SelectionChanged="CaptureModeSegmentedControl_SelectionChanged"
             SelectionMode="Single"
             SingleSelectionFollowsFocus="True"
             Visibility="Collapsed">
@@ -44,7 +45,8 @@
             Background="Transparent"
             BorderThickness="0"
             ItemsSource="{x:Bind SupportedCaptureTypes, Mode=OneWay}"
-            SelectedIndex="{x:Bind SelectedCaptureTypeIndex, Mode=TwoWay}">
+            SelectedIndex="{x:Bind SelectedCaptureTypeIndex, Mode=OneWay}"
+            SelectionChanged="CaptureTypeComboBox_SelectionChanged">
             <ComboBox.ItemTemplate>
                 <DataTemplate x:DataType="viewmodels:CaptureTypeViewModel">
                     <StackPanel
