@@ -387,7 +387,6 @@ internal partial class CaptureToolAppController : IAppController
         ScreenRecorder.StopRecording();
 
         VideoFile videoFile = new(_tempVideoPath);
-        _appNavigation.GoToVideoEdit(videoFile);
         _tempVideoPath = null;
 
         return videoFile;

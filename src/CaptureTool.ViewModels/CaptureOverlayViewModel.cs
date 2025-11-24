@@ -165,7 +165,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             {
                 IsRecording = false;
                 StopTimer();
-                _appController.StopVideoCapture();
+                VideoFile video = _appController.StopVideoCapture();
+                _appNavigation.GoToVideoEdit(video);
             }
             else
             {
