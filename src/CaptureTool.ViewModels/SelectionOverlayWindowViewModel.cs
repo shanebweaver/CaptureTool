@@ -58,7 +58,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         private set => Set(ref field, value);
     }
 
-    public CaptureTypeViewModel SelectedCaptureType => SupportedCaptureTypes[SelectedCaptureTypeIndex];
+    public CaptureType? GetSelectedCaptureType()
+        => SelectedCaptureTypeIndex != -1 ? SupportedCaptureTypes[SelectedCaptureTypeIndex].CaptureType : null;
 
     public ObservableCollection<CaptureModeViewModel> SupportedCaptureModes
     {
@@ -207,7 +208,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private void UpdateSelectedCaptureType(int index)
     {
         SelectedCaptureTypeIndex = index;
-        RaisePropertyChanged(nameof(SelectedCaptureType));
     }
 
     private void UpdateSupportedCaptureTypes()
