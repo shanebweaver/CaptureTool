@@ -34,7 +34,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     public string? VideoPath
     {
         get => field;
-        set => Set(ref field, value);
+        private set => Set(ref field, value);
     }
 
     private readonly IClipboardService _clipboardService;

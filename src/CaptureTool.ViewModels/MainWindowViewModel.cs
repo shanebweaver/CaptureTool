@@ -13,13 +13,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
     public AppTheme CurrentAppTheme
     {
         get => field;
-        set => Set(ref field, value);
+        private set => Set(ref field, value);
     }
 
     public AppTheme DefaultAppTheme
     {
         get => field;
-        set => Set(ref field, value);
+        private set => Set(ref field, value);
     }
 
     private INavigationRequest? _currentRequest;

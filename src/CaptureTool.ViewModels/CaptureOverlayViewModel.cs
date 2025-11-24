@@ -62,7 +62,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public bool IsDesktopAudioEnabled
     {
         get => field;
-        set => Set(ref field, value);
+        private set => Set(ref field, value);
     }
 
     public RelayCommand CloseOverlayCommand => new(CloseOverlay);
