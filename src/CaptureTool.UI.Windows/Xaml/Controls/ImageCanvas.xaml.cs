@@ -127,6 +127,7 @@ public sealed partial class ImageCanvas : UserControlBase
     }
 
     public event EventHandler<Rectangle>? InteractionComplete;
+    public event EventHandler<Rectangle>? CropRectChanged;
 
     private bool _isPointerDown;
     private Point _lastPointerPosition;
@@ -334,11 +335,22 @@ public sealed partial class ImageCanvas : UserControlBase
     }
     #endregion
 
+    private void UpdateCropRect(Rectangle value)
+    {
+        CropRect = value;
+        CropRectChanged?.Invoke(this, value);
+    }
+
     private void CropOverlay_InteractionComplete(object sender, Rectangle e)
     {
         DispatcherQueue.TryEnqueue(() =>
         {
             InteractionComplete?.Invoke(this, e);
         });
+    }
+
+    private void CropOverlay_SelectionAreaChanged(object sender, Rectangle e)
+    {
+        UpdateCropRect(e);
     }
 }

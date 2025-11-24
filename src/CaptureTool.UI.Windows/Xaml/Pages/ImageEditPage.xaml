@@ -129,7 +129,8 @@
             <controls:ImageCanvas
                 x:Name="ImageCanvas"
                 CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"
-                CropRect="{x:Bind ViewModel.CropRect, Mode=TwoWay}"
+                CropRect="{x:Bind ViewModel.CropRect, Mode=OneWay}"
+                CropRectChanged="ImageCanvas_CropRectChanged"
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"
                 InteractionComplete="ImageCanvas_InteractionComplete"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"

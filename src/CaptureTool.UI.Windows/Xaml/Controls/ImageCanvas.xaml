@@ -53,7 +53,8 @@
                     AnchorTopLeft="{StaticResource CropAnchor_TopLeft}"
                     AnchorTopRight="{StaticResource CropAnchor_TopRight}"
                     InteractionComplete="CropOverlay_InteractionComplete"
-                    SelectionArea="{x:Bind CropRect, Mode=TwoWay}"
+                    SelectionArea="{x:Bind CropRect, Mode=OneWay}"
+                    SelectionAreaChanged="CropOverlay_SelectionAreaChanged"
                     Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
             </Grid>
         </ScrollView>

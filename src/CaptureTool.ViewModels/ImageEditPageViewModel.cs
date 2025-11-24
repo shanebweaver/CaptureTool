@@ -66,9 +66,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public AsyncRelayCommand ShareCommand { get; }
     public RelayCommand<Color> UpdateChromaKeyColorCommand { get; }
 
-    // Private commands to handle undo/redo operations.
-    private RelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
-    private RelayCommand<Rectangle> UpdateCropRectCommand { get; }
+    public RelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
+    public RelayCommand<Rectangle> UpdateCropRectCommand { get; }
 
     private bool _hasUndoStack;
     public bool HasUndoStack
