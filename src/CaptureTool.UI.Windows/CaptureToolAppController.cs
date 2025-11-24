@@ -93,7 +93,8 @@ internal partial class CaptureToolAppController : IAppController
                 _logService.Enable();
             }
 
-            _localizationService.Initialize(CaptureToolSettings.Settings_LanguageOverride);
+            string languageOverride = _settingsService.Get(CaptureToolSettings.Settings_LanguageOverride);
+            _localizationService.Initialize(languageOverride);
 
             _isInitialized = true;
         }

@@ -81,7 +81,8 @@
                             Grid.Column="2"
                             MinWidth="0"
                             HorizontalAlignment="Right"
-                            IsOn="{x:Bind ViewModel.ImageCaptureAutoCopy, Mode=TwoWay}" />
+                            IsOn="{x:Bind ViewModel.ImageCaptureAutoCopy, Mode=OneWay}"
+                            Toggled="ImageAutoCopyToggleSwitch_Toggled" />
                     </Grid>
 
                     <!--  Auto save  -->
@@ -122,7 +123,8 @@
                                     Grid.Column="2"
                                     MinWidth="0"
                                     HorizontalAlignment="Right"
-                                    IsOn="{x:Bind ViewModel.ImageCaptureAutoSave, Mode=TwoWay}" />
+                                    IsOn="{x:Bind ViewModel.ImageCaptureAutoSave, Mode=OneWay}"
+                                    Toggled="ImageAutoSaveToggleSwitch_Toggled" />
                             </Grid>
                         </Expander.Header>
                         <Grid Margin="4,0">
@@ -197,7 +199,10 @@
                                 <RowDefinition />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <RadioButtons ItemsSource="{x:Bind ViewModel.AppThemes, Mode=OneWay}" SelectedIndex="{x:Bind ViewModel.SelectedAppThemeIndex, Mode=TwoWay}">
+                            <RadioButtons
+                                ItemsSource="{x:Bind ViewModel.AppThemes, Mode=OneWay}"
+                                SelectedIndex="{x:Bind ViewModel.SelectedAppThemeIndex, Mode=OneWay}"
+                                SelectionChanged="AppThemeRadioButtons_SelectionChanged">
                                 <RadioButtons.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:AppThemeViewModel">
                                         <RadioButton AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">
@@ -288,7 +293,10 @@
                                 <RowDefinition />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <RadioButtons ItemsSource="{x:Bind ViewModel.AppLanguages, Mode=OneWay}" SelectedIndex="{x:Bind ViewModel.SelectedAppLanguageIndex, Mode=TwoWay}">
+                            <RadioButtons
+                                ItemsSource="{x:Bind ViewModel.AppLanguages, Mode=OneWay}"
+                                SelectedIndex="{x:Bind ViewModel.SelectedAppLanguageIndex, Mode=OneWay}"
+                                SelectionChanged="AppLanguageRadioButtons_SelectionChanged">
                                 <RadioButtons.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:AppLanguageViewModel">
                                         <RadioButton AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">

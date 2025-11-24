@@ -5,7 +5,6 @@ using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Settings;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Services.Interfaces;
-using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Settings;
 using CaptureTool.Services.Interfaces.Storage;
@@ -16,7 +15,7 @@ using System.Diagnostics;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class SettingsPageViewModel : LoadableViewModelBase
+public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 {
     public readonly struct ActivityIds
     {
@@ -40,7 +39,6 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
     private readonly IFilePickerService _filePickerService;
-    private readonly ICancellationService _cancellationService;
     private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
     private readonly IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
@@ -54,84 +52,72 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
     public RelayCommand OpenScreenshotsFolderCommand { get; }
     public RelayCommand RestartAppCommand { get; }
     public RelayCommand GoBackCommand { get; }
+    public AsyncRelayCommand<bool> UpdateImageCaptureAutoCopyCommand { get; }
+    public AsyncRelayCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
+    public AsyncRelayCommand<int> UpdateAppLanguageCommand { get; }
+    public RelayCommand<int> UpdateAppThemeCommand { get; }
 
     private ObservableCollection<AppLanguageViewModel> _appLanguages;
     public ObservableCollection<AppLanguageViewModel> AppLanguages
     {
         get => _appLanguages;
-        set => Set(ref _appLanguages, value);
+        private set => Set(ref _appLanguages, value);
     }
 
     private int _selectedAppLanguageIndex;
     public int SelectedAppLanguageIndex
     {
         get => _selectedAppLanguageIndex;
-        set
-        {
-            Set(ref _selectedAppLanguageIndex, value);
-            UpdateAppLanguage();
-        }
+        private set => Set(ref _selectedAppLanguageIndex, value);
     }
 
     private bool _showAppLanguageRestartMessage;
     public bool ShowAppLanguageRestartMessage
     {
         get => _showAppLanguageRestartMessage;
-        set => Set(ref _showAppLanguageRestartMessage, value);
+        private set => Set(ref _showAppLanguageRestartMessage, value);
     }
 
     private ObservableCollection<AppThemeViewModel> _appThemes;
     public ObservableCollection<AppThemeViewModel> AppThemes
     {
         get => _appThemes;
-        set => Set(ref _appThemes, value);
+        private set => Set(ref _appThemes, value);
     }
 
     private int _selectedAppThemeIndex;
     public int SelectedAppThemeIndex
     {
         get => _selectedAppThemeIndex;
-        set
-        {
-            Set(ref _selectedAppThemeIndex, value);
-            UpdateAppTheme();
-        }
+        private set => Set(ref _selectedAppThemeIndex, value);
     }
 
     private bool _showAppThemeRestartMessage;
     public bool ShowAppThemeRestartMessage
     {
         get => _showAppThemeRestartMessage;
-        set => Set(ref _showAppThemeRestartMessage, value);
+        private set => Set(ref _showAppThemeRestartMessage, value);
     }
 
     private bool _imageCaptureAutoCopy;
     public bool ImageCaptureAutoCopy
     {
         get => _imageCaptureAutoCopy;
-        set
-        {
-            Set(ref _imageCaptureAutoCopy, value);
-            _ = UpdateImageCaptureAutoCopyAsync();
-        }
+        private set => Set(ref _imageCaptureAutoCopy, value);
     }
 
     private bool _imageCaptureAutoSave;
     public bool ImageCaptureAutoSave
     {
         get => _imageCaptureAutoSave;
-        set
-        {
-            Set(ref _imageCaptureAutoSave, value);
-            _ = UpdateImageCaptureAutoSaveAsync();
-        }
+        private set => Set(ref _imageCaptureAutoSave, value);
     }
 
     private string _screenshotsFolderPath;
     public string ScreenshotsFolderPath
     {
         get => _screenshotsFolderPath;
-        set => Set(ref _screenshotsFolderPath, value);
+        private set => Set(ref _screenshotsFolderPath, value);
     }
 
     public SettingsPageViewModel(
@@ -142,7 +128,6 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         IThemeService themeService,
         IFilePickerService filePickerService,
         ISettingsService settingsService,
-        ICancellationService cancellationService,
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
         IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
@@ -153,7 +138,6 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         _settingsService = settingsService;
         _themeService = themeService;
         _filePickerService = filePickerService;
-        _cancellationService = cancellationService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
 
@@ -165,14 +149,19 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         OpenScreenshotsFolderCommand = new(OpenScreenshotsFolder);
         RestartAppCommand = new(RestartApp);
         GoBackCommand = new(GoBack);
+        UpdateImageCaptureAutoCopyCommand = new(UpdateImageCaptureAutoCopyAsync);
+        UpdateImageCaptureAutoSaveCommand = new(UpdateImageCaptureAutoSaveAsync);
+        UpdateAppLanguageCommand = new(UpdateAppLanguageAsync);
+        UpdateAppThemeCommand = new(UpdateAppTheme);
     }
 
-    public override void Load()
+    public override Task LoadAsync(CancellationToken cancellationToken)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Load, async () =>
         {
             // Languages
             IAppLanguage[] languages = _localizationService.SupportedLanguages;
+            int appLanguageIndex = -1;
             for (var i = 0; i < languages.Length; i++)
             {
                 IAppLanguage language = languages[i];
@@ -181,18 +170,23 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
                 if (language.Value == _localizationService.LanguageOverride?.Value)
                 {
-                    SelectedAppLanguageIndex = i;
+                    appLanguageIndex = i;
                 }
             }
             AppLanguages.Add(_appLanguageViewModelFactory.Create(null)); // Null for system default
-            if (SelectedAppLanguageIndex == -1)
+            if (appLanguageIndex != -1)
             {
-                SelectedAppLanguageIndex = AppLanguages.Count - 1;
+                await UpdateAppLanguageAsync(appLanguageIndex);
+            }
+            else
+            {
+                await UpdateAppLanguageAsync(AppLanguages.Count - 1);
             }
             UpdateShowAppLanguageRestartMessage();
 
             // Themes
             AppTheme currentTheme = _themeService.CurrentTheme;
+            int appThemeIndex = -1;
             for (var i = 0; i < SupportedAppThemes.Length; i++)
             {
                 AppTheme supportedTheme = SupportedAppThemes[i];
@@ -201,13 +195,21 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
                 if (supportedTheme == currentTheme)
                 {
-                    SelectedAppThemeIndex = i;
+                    appThemeIndex = i;
                 }
+            }
+            if (appThemeIndex != -1)
+            {
+                UpdateAppTheme(appThemeIndex);
+            }
+            else
+            {
+                UpdateAppTheme(SupportedAppThemes.IndexOf(AppTheme.SystemDefault));
             }
             UpdateShowAppThemeRestartMessage();
 
-            ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
-            ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
+            await UpdateImageCaptureAutoCopyAsync(_settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy));
+            await UpdateImageCaptureAutoSaveAsync(_settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave));
 
             var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
             if (string.IsNullOrWhiteSpace(screenshotsFolder))
@@ -217,7 +219,7 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
 
             ScreenshotsFolderPath = screenshotsFolder;
 
-            base.Load();
+            await base.LoadAsync(cancellationToken);
         });
     }
 
@@ -237,19 +239,41 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         base.Dispose();
     }
 
-    private void UpdateAppLanguage()
+
+    private Task UpdateAppLanguageAsync(int index)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateAppLanguage, () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateAppLanguage, async () =>
         {
-            if (SelectedAppLanguageIndex != -1)
+            SelectedAppLanguageIndex = index;
+            if (SelectedAppLanguageIndex == -1)
             {
-                AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
-                if (vm.Language != _localizationService.LanguageOverride)
-                {
-                    _localizationService.OverrideLanguage(vm.Language);
-                    UpdateShowAppLanguageRestartMessage();
-                }
+                return;
             }
+
+            if (IsLoading)
+            {
+                return;
+            }
+
+            AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
+            if (vm.Language == _localizationService.LanguageOverride)
+            {
+                return;
+            }
+
+            _localizationService.OverrideLanguage(vm.Language);
+
+            if (vm.Language?.Value is string language)
+            {
+                _settingsService.Set(CaptureToolSettings.Settings_LanguageOverride, vm.Language.Value);
+            }
+            else
+            {
+                _settingsService.Unset(CaptureToolSettings.Settings_LanguageOverride);
+            }
+
+            await _settingsService.TrySaveAsync(CancellationToken.None);
+            UpdateShowAppLanguageRestartMessage();
         });
     }
 
@@ -263,19 +287,29 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         });
     }
 
-    private void UpdateAppTheme()
+    private void UpdateAppTheme(int index)
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateAppTheme, () =>
         {
-            if (SelectedAppThemeIndex != -1)
+            SelectedAppThemeIndex = index;
+            if (SelectedAppThemeIndex == -1)
             {
-                AppThemeViewModel vm = AppThemes[SelectedAppThemeIndex];
-                if (vm.AppTheme != _themeService.CurrentTheme)
-                {
-                    _themeService.UpdateCurrentTheme(vm.AppTheme);
-                    UpdateShowAppThemeRestartMessage();
-                }
+                return;
             }
+        
+            if (IsLoading)
+            {
+                return;
+            }
+
+            AppThemeViewModel vm = AppThemes[SelectedAppThemeIndex];
+            if (vm.AppTheme == _themeService.CurrentTheme)
+            {
+                return;
+            }
+
+            _themeService.UpdateCurrentTheme(vm.AppTheme);
+            UpdateShowAppThemeRestartMessage();
         });
     }
 
@@ -303,19 +337,33 @@ public sealed partial class SettingsPageViewModel : LoadableViewModelBase
         });
     }
 
-    private Task UpdateImageCaptureAutoSaveAsync()
+    private Task UpdateImageCaptureAutoSaveAsync(bool value)
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoSave, async () =>
         {
+            ImageCaptureAutoSave = value;
+
+            if (IsLoading)
+            {
+                return;
+            }
+           
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, ImageCaptureAutoSave);
             await _settingsService.TrySaveAsync(CancellationToken.None);
         });
     }
 
-    private Task UpdateImageCaptureAutoCopyAsync()
+    private Task UpdateImageCaptureAutoCopyAsync(bool value)
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
         {
+            ImageCaptureAutoCopy = value;
+
+            if (IsLoading)
+            {
+
+            }
+           
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, ImageCaptureAutoCopy);
             await _settingsService.TrySaveAsync(CancellationToken.None);
         });
