@@ -1,6 +1,4 @@
-﻿using CaptureTool.Core.AppController;
-using CaptureTool.Core.Settings;
-using CaptureTool.Services.Interfaces.Localization;
+﻿using CaptureTool.Services.Interfaces.Activation;
 using CaptureTool.Services.Interfaces.Themes;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -44,28 +42,34 @@ public partial class App : Application
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            IAppController appController = ServiceProvider.GetService<IAppController>();
+            IActivationHandler activationHandler = ServiceProvider.GetService<IActivationHandler>();
             try
             {
                 switch (args.Kind)
                 {
                     case ExtendedActivationKind.Launch:
-                        appController.HandleLaunchActivationAsync();
+                        activationHandler.HandleLaunchActivationAsync();
                         break;
+
                     case ExtendedActivationKind.Protocol:
                         if (args.Data is global::Windows.ApplicationModel.Activation.IProtocolActivatedEventArgs protocolArgs)
                         {
-                            appController.HandleProtocolActivationAsync(protocolArgs.Uri);
+                            activationHandler.HandleProtocolActivationAsync(protocolArgs.Uri);
+                        }
+                        else
+                        {
+                            ServiceLocator.Logging.LogWarning("Protocol activation data is not of expected type.");
                         }
                         break;
+
                     default:
-                        throw new InvalidOperationException("Unexpected activation kind");
+                        ServiceLocator.Logging.LogWarning("Unexpected activation kind.");
+                        break;
                 }
             }
             catch (Exception e)
             {
                 ServiceLocator.Logging.LogException(e, "Activation failed.");
-                appController.Shutdown();
             }
         });
     }

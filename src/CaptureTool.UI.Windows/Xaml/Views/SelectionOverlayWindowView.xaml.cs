@@ -40,9 +40,10 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
             SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
             SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
 
-            if (ViewModel.GetSelectedCaptureType() is CaptureType type)
+            CaptureType? selectedCaptureType = ViewModel.GetSelectedCaptureType();
+            if (selectedCaptureType != null)
             {
-                SelectionOverlay.CaptureType = type;
+                SelectionOverlay.CaptureType = selectedCaptureType.Value;
             }
 
             LoadBackgroundImage();
@@ -60,9 +61,10 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         switch (e.PropertyName)
         {
             case nameof(SelectionOverlayWindowViewModel.SelectedCaptureTypeIndex):
-                if (ViewModel.GetSelectedCaptureType() is CaptureType type)
+                var selectedCaptureType = ViewModel.GetSelectedCaptureType();
+                if (selectedCaptureType != null)
                 {
-                    SelectionOverlay.CaptureType = type;
+                    SelectionOverlay.CaptureType = selectedCaptureType.Value;
                 }
                 break;
             case nameof(SelectionOverlayWindowViewModel.CaptureArea):

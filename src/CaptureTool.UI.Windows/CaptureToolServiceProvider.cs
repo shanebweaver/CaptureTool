@@ -20,6 +20,7 @@ using CaptureTool.Services.Implementations.Windows.Store;
 using CaptureTool.Services.Implementations.Windows.TaskEnvironment;
 using CaptureTool.Services.Implementations.Windows.Themes;
 using CaptureTool.Services.Interfaces;
+using CaptureTool.Services.Interfaces.Activation;
 using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Clipboard;
 using CaptureTool.Services.Interfaces.Globalization;
@@ -97,9 +98,12 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType>, CaptureTypeViewModelFactory>();
 
         // App controller and feature manager
+        collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
         collection.AddSingleton<IAppNavigation, CaptureToolAppNavigation>();
         collection.AddSingleton<IAppController, CaptureToolAppController>();
-        collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
+        collection.AddSingleton<IImageCaptureHandler, CaptureToolImageCaptureHandler>();
+        collection.AddSingleton<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
+        collection.AddSingleton<IActivationHandler, CaptureToolActivationHandler>();
 
         _serviceProvider = collection.BuildServiceProvider();
     }
