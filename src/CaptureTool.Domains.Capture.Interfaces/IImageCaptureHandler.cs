@@ -3,5 +3,6 @@
 public partial interface IImageCaptureHandler
 {
     ImageFile PerformImageCapture(NewCaptureArgs args);
+    ImageFile PerformMultiMonitorImageCapture(MonitorCaptureResult[] monitors);
     ImageFile PerformAllScreensCapture();
 }

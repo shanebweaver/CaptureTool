@@ -14,13 +14,18 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 
     private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
+    private readonly IImageCaptureHandler _imageCaptureHandler;
+
+    public event EventHandler? AllScreensCaptureRequested;
 
     public SelectionOverlayHostViewModel(
         IAppNavigation appNavigation,
-        IAppController appController)
+        IAppController appController,
+        IImageCaptureHandler imageCaptureHandler)
     {
         _appNavigation = appNavigation;
         _appController = appController;
+        _imageCaptureHandler = imageCaptureHandler;
     }
 
     public void AddWindowViewModel(SelectionOverlayWindowViewModel newVM, bool isPrimary = false)
@@ -119,8 +124,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
         {
             if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Image)
             {
-                ImageFile image = _appController.PerformAllScreensCapture();
-                _appNavigation.GoToImageEdit(image);
+                AllScreensCaptureRequested?.Invoke(this, EventArgs.Empty);
             }
             else if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Video)
             {

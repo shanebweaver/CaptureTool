@@ -35,6 +35,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             return;
         }
         _viewModel = ViewModelLocator.GetViewModel<SelectionOverlayHostViewModel>();
+        _viewModel.AllScreensCaptureRequested += OnAllScreensCaptureRequested;
 
         var allWindows = WindowInfoHelper.GetAllWindows();
         var monitors = MonitorCaptureHelper.CaptureAllMonitors();
@@ -80,6 +81,12 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         }
     }
 
+    private void OnAllScreensCaptureRequested(object? sender, EventArgs e)
+    {
+        ImageFile image = ServiceLocator.ImageCapture.PerformMultiMonitorImageCapture([.. _monitors]);
+        ServiceLocator.Navigation.GoToImageEdit(image);
+    }
+
     public void Activate()
     {
         if (_viewModel == null)
@@ -101,6 +108,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         _windowHandles.Clear();
         _monitors.Clear();
 
+        _viewModel?.AllScreensCaptureRequested -= OnAllScreensCaptureRequested;
         _viewModel?.Dispose();
         _viewModel = null;
 

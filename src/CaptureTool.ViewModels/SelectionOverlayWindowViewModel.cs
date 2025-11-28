@@ -25,6 +25,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly ITelemetryService _telemetryService;
     private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
+    private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
     private static readonly CaptureType[] _imageCaptureTypes = [
@@ -125,12 +126,14 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         IFeatureManager featureManager,
         IThemeService themeService,
         IAppController appController,
+        IImageCaptureHandler imageCaptureHandler,
         IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
         IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
     {
         _telemetryService = telemetryService;
         _appNavigation = appNavigation;
         _appController = appController;
+        _imageCaptureHandler = imageCaptureHandler;
         _captureTypeViewModelFactory = captureTypeViewModelFactory;
         
         CaptureArea = Rectangle.Empty;
@@ -243,7 +246,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
                 if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
                 {
                     NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-                    ImageFile image = _appController.PerformImageCapture(args);
+                    ImageFile image = _imageCaptureHandler.PerformImageCapture(args);
                     _appNavigation.GoToImageEdit(image);
 
                 }
