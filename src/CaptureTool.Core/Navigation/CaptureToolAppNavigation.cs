@@ -53,8 +53,8 @@ public sealed partial class CaptureToolAppNavigation : IAppNavigation
     public void GoToImageCapture(CaptureOptions captureOptions, bool clearHistory = false)
         => _navigationService.Navigate(CaptureToolNavigationRoute.ImageCapture, captureOptions, clearHistory);
 
-    public void GoToVideoCapture(NewCaptureArgs captureargs)
-        => _navigationService.Navigate(CaptureToolNavigationRoute.VideoCapture, captureargs);
+    public void GoToVideoCapture(NewCaptureArgs captureArgs)
+        => _navigationService.Navigate(CaptureToolNavigationRoute.VideoCapture, captureArgs);
 
     public void GoToImageEdit(ImageFile imageFile)
         => _navigationService.Navigate(CaptureToolNavigationRoute.ImageEdit, imageFile, true);

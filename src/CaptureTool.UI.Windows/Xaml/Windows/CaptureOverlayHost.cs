@@ -209,15 +209,6 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
     public void Dispose()
     {
-        if (_hwnd != null)
-        {
-            PInvoke.DestroyWindow(_hwnd.Value);
-            _hwnd = null;
-        }
-        if (_borderHwnd != null)
-        {
-            PInvoke.DestroyWindow(_borderHwnd.Value);
-            _borderHwnd = null;
-        }
+        Close();
     }
 }

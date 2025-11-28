@@ -1,10 +1,8 @@
-﻿using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Activation;
-using CaptureTool.Services.Interfaces.Navigation;
+﻿using CaptureTool.Services.Interfaces.Navigation;
 
 namespace CaptureTool.Core.AppController;
 
-public partial interface IAppController : INavigationHandler, IActivationHandler, IImageCaptureHandler, IVideoCaptureHandler
+public partial interface IAppController : INavigationHandler
 {
     void Shutdown(); 
     bool TryRestart();

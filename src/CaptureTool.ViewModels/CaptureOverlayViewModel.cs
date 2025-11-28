@@ -26,6 +26,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
+    private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ITelemetryService _telemetryService;
 
     private MonitorCaptureResult? _monitorCaptureResult;
@@ -80,10 +81,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IAppNavigation appNavigation,
         IThemeService themeService,
         IAppController appController,
+        IVideoCaptureHandler videoCaptureHandler,
         ITelemetryService telemetryService) 
     {
         _appNavigation = appNavigation;
         _appController = appController;
+        _videoCaptureHandler = videoCaptureHandler;
         _telemetryService = telemetryService;
 
         DefaultAppTheme = themeService.DefaultTheme;
@@ -113,7 +116,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         {
             if (IsRecording)
             {
-                _appController.CancelVideoCapture();
+                _videoCaptureHandler.CancelVideoCapture();
             }
 
             if (_appNavigation.CanGoBack)
@@ -133,7 +136,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         {
             if (IsRecording)
             {
-                _appController.CancelVideoCapture();
+                _videoCaptureHandler.CancelVideoCapture();
             }
 
             if (!_appNavigation.TryGoBack())
@@ -153,7 +156,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
                 CaptureTime = TimeSpan.Zero;
                 _captureStartTime = DateTime.UtcNow;
                 StartTimer();
-                _appController.StartVideoCapture(new(_monitorCaptureResult.Value, _captureArea.Value));
+                _videoCaptureHandler.StartVideoCapture(new(_monitorCaptureResult.Value, _captureArea.Value));
             }
             else
             {
@@ -170,7 +173,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             {
                 IsRecording = false;
                 StopTimer();
-                _appController.StopVideoCapture();
+                _videoCaptureHandler.StopVideoCapture();
             }
             else
             {
