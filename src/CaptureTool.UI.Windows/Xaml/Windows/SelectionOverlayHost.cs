@@ -28,6 +28,11 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         return [.. _monitors];
     }
 
+    public void UpdateOptions(CaptureOptions options)
+    {
+        _viewModel?.UpdateOptions(options);
+    }
+
     public void Initialize(CaptureOptions options)
     {
         if (_viewModel != null)

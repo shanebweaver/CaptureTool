@@ -32,6 +32,7 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        ViewModel.CaptureOptionsUpdated += ViewModel_CaptureOptionsUpdated;
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete += SelectionOverlay_SelectionComplete;
 
@@ -47,6 +48,16 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
             }
 
             LoadBackgroundImage();
+        }
+    }
+
+    private void ViewModel_CaptureOptionsUpdated(object? sender, CaptureOptions e)
+    {
+        var selectedCaptureType = ViewModel.GetSelectedCaptureType();
+        if (selectedCaptureType != null)
+        {
+            SelectionOverlay.CaptureType = selectedCaptureType.Value;
+            SelectionOverlay.SelectionRect = Rectangle.Empty;
         }
     }
 
