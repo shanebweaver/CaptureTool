@@ -722,4 +722,8 @@ SOFTWARE.
     <value>Restore default settings</value>
     <comment>The label for the button that resets all app settings</comment>
   </data>
+  <data name="AppMenu_RecentCapturesItem.Text" xml:space="preserve">
+    <value>Recent</value>
+    <comment>The label for the menu item that shows recently captured items.</comment>
+  </data>
 </root>

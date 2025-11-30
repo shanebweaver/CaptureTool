@@ -585,4 +585,7 @@ SOFTWARE.
   <data name="Settings_RestoreDefaults_Button.Text" xml:space="preserve">
     <value>Restaurer les paramètres par défaut</value>
   </data>
+  <data name="AppMenu_RecentCapturesItem.Text" xml:space="preserve">
+    <value>Récents</value>
+  </data>
 </root>

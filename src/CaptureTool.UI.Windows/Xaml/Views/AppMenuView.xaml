@@ -34,6 +34,12 @@
                 </MenuFlyoutItem.KeyboardAccelerators>
             </MenuFlyoutItem>
 
+            <!--  Recent captures  -->
+            <MenuFlyoutSubItem
+                x:Name="RecentCapturesSubMenu"
+                x:Uid="AppMenu_RecentCapturesItem"
+                Icon="Clock" />
+
             <MenuFlyoutSeparator />
 
             <!--  Add-ons  -->

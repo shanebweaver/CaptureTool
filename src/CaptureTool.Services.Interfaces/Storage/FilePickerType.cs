@@ -1,6 +1,6 @@
 ﻿namespace CaptureTool.Services.Interfaces.Storage;
 
-public enum FileType
+public enum FilePickerType
 {
     Image,
     Audio,

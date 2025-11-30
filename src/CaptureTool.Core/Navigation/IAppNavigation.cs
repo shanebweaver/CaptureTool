@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Services.Interfaces.Storage;
 
 namespace CaptureTool.Core.Navigation;
 
@@ -13,10 +14,10 @@ public interface IAppNavigation
     void GoToAddOns();
     void GoToError(Exception exception);
     void GoToImageCapture(CaptureOptions captureOptions, bool clearHistory = false);
-    void GoToImageEdit(ImageFile imageFile);
+    void GoToImageEdit(IImageFile imageFile);
     void GoToLoading();
     void GoToSettings();
     void GoToVideoCapture(NewCaptureArgs captureargs);
-    void GoToVideoEdit(VideoFile videoFile);
+    void GoToVideoEdit(IVideoFile videoFile);
     bool TryGoBack();
 }

@@ -17,6 +17,8 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
     private readonly IStorageService _storageService;
     private readonly ISettingsService _settingsService;
 
+    public event EventHandler<IImageFile>? NewImageCaptured;
+
     public CaptureToolImageCaptureHandler(
         IStorageService storageService,
         ISettingsService settingsService)
@@ -36,16 +38,20 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         Bitmap combined = MonitorCaptureHelper.CombineMonitors(monitors);
         try
         {
-            var tempPath = Path.Combine(
-            _storageService.GetApplicationTemporaryFolderPath(),
-            _storageService.GetTemporaryFileName()
+            DateTime timestamp = DateTime.Now;
+            string fileName = $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.png";
+            string tempPath = Path.Combine(
+                _storageService.GetApplicationTemporaryFolderPath(),
+                fileName
             );
+
             combined.Save(tempPath, ImageFormat.Png);
 
             ImageFile imageFile = new(tempPath);
             TryAutoSaveImage(imageFile);
             _ = TryAutoCopyImageAsync(imageFile);
 
+            NewImageCaptured?.Invoke(this, imageFile);
             return imageFile;
         }
         finally
@@ -77,9 +83,11 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
             fullBmp.UnlockBits(bmpData);
         }
 
-        var tempPath = Path.Combine(
+        DateTime timestamp = DateTime.Now;
+        string fileName = $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.png";
+        string tempPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
-            _storageService.GetTemporaryFileName()
+            fileName
         );
 
         // Crop to the selected area
@@ -102,6 +110,7 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         TryAutoSaveImage(imageFile);
         _ = TryAutoCopyImageAsync(imageFile);
 
+        NewImageCaptured?.Invoke(this, imageFile);
         return imageFile;
     }
 

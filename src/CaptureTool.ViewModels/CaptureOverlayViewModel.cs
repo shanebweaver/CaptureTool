@@ -4,6 +4,7 @@ using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Themes;
 using System.Drawing;
@@ -174,7 +175,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             {
                 IsRecording = false;
                 StopTimer();
-                VideoFile video = _videoCaptureHandler.StopVideoCapture();
+                IVideoFile video = _videoCaptureHandler.StopVideoCapture();
                 _appNavigation.GoToVideoEdit(video);
             }
             else

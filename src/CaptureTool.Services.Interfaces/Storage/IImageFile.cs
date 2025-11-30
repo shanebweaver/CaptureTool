@@ -2,5 +2,5 @@
 
 public partial interface IImageFile : IFile
 {
-    public FileType FileType => FileType.Image;
+    FilePickerType FilePickerType => FilePickerType.Image;
 }

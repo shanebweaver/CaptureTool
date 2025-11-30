@@ -29,7 +29,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         return new WindowsFolder(folder.Path);
     }
 
-    public async Task<IFile?> PickFileAsync(nint hwnd, FileType fileType, UserFolder userFolder)
+    public async Task<IFile?> PickFileAsync(nint hwnd, FilePickerType fileType, UserFolder userFolder)
     {
         PickerLocationId locationId = GetPickerLocationIdForUserFolder(userFolder);
 
@@ -41,23 +41,26 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
 
         switch (fileType)
         {
-            case FileType.Image:
+            case FilePickerType.Image:
                 filePicker.FileTypeFilter.Add(".png");
                 filePicker.FileTypeFilter.Add(".jpg");
                 filePicker.FileTypeFilter.Add(".jpeg");
                 filePicker.FileTypeFilter.Add(".bmp");
                 //filePicker.FileTypeFilter.Add(".gif");
                 break;
-            case FileType.Audio:
+
+            case FilePickerType.Audio:
                 //filePicker.FileTypeFilter.Add(".mp3");
                 //filePicker.FileTypeFilter.Add(".wav");
                 //filePicker.FileTypeFilter.Add(".flac");
-                //break;
-            case FileType.Video:
-                //filePicker.FileTypeFilter.Add(".mp4");
-                //filePicker.FileTypeFilter.Add(".avi");
-                //filePicker.FileTypeFilter.Add(".mov");
-                //break;
+                break;
+
+            case FilePickerType.Video:
+                filePicker.FileTypeFilter.Add(".mp4");
+                filePicker.FileTypeFilter.Add(".avi");
+                filePicker.FileTypeFilter.Add(".mov");
+                break;
+
             default:
                 throw new InvalidOperationException("Unexpected file type value.");
         }
@@ -73,7 +76,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         return new WindowsFile(file.Path);
     }
 
-    public async Task<IFile?> PickSaveFileAsync(nint hwnd, FileType fileType, UserFolder userFolder)
+    public async Task<IFile?> PickSaveFileAsync(nint hwnd, FilePickerType fileType, UserFolder userFolder)
     {
         var filePicker = new FileSavePicker
         {
@@ -82,7 +85,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
 
         switch (fileType)
         {
-            case FileType.Image:
+            case FilePickerType.Image:
                 unsafe
                 {
 #pragma warning disable IDE0028 // Simplify collection initialization
@@ -92,7 +95,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
                 }
                 break;
 
-            case FileType.Video:
+            case FilePickerType.Video:
                 unsafe
                 {
 #pragma warning disable IDE0028 // Simplify collection initialization
@@ -101,7 +104,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
                 }
                 break;
 
-            case FileType.Audio:
+            case FilePickerType.Audio:
             default:
                 throw new InvalidOperationException("Unexpected file type value.");
         }
