@@ -34,13 +34,11 @@
                 </MenuFlyoutItem.KeyboardAccelerators>
             </MenuFlyoutItem>
 
-            <!--  Recent  -->
-            <!--  Show a list ViewModel.RecentCaptures in a new drop down  -->
+            <!--  Recent captures  -->
             <MenuFlyoutSubItem
                 x:Name="RecentCapturesSubMenu"
                 x:Uid="AppMenu_RecentCapturesItem"
-                Icon="Clock"
-                Text="Recent captures" />
+                Icon="Clock" />
 
             <MenuFlyoutSeparator />
 

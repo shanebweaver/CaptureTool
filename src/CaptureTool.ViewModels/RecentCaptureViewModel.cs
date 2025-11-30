@@ -1,12 +1,7 @@
 ﻿using CaptureTool.Common;
+using CaptureTool.Domains.Capture.Interfaces;
 
 namespace CaptureTool.ViewModels;
-public enum CaptureFileType
-{
-    Image,
-    Video,
-    Unknown
-}
 
 public sealed partial class RecentCaptureViewModel : ViewModelBase
 {
