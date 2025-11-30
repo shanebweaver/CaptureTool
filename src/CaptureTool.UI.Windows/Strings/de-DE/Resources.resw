@@ -414,7 +414,7 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="Settings_AutoSave_OpenButton.Content" xml:space="preserve">
     <value>Öffnen</value>
   </data>
-  <data name="Settings_AutoSave_ChangeButton.Content" xml:space="preserve">
+  <data name="Settings_AutoSave_ChangeButton.Text" xml:space="preserve">
     <value>Ordner ändern</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">

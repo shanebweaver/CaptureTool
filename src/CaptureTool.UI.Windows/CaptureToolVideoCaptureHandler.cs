@@ -1,13 +1,20 @@
 ﻿using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
-using Microsoft.Windows.Storage;
+using CaptureTool.Services.Interfaces.Storage;
 
 namespace CaptureTool.UI.Windows;
 
 internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 {
+    private readonly IStorageService _storageService;
+    
     private string? _tempVideoPath;
     private bool isRecording;
+
+    public CaptureToolVideoCaptureHandler(IStorageService storageService)
+    {
+        _storageService = storageService;
+    }
 
     public void StartVideoCapture(NewCaptureArgs args)
     {
@@ -19,8 +26,8 @@ internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         isRecording = true;
 
         _tempVideoPath = Path.Combine(
-            ApplicationData.GetDefault().TemporaryPath,
-            $"capture_{Guid.NewGuid()}.mp4"
+            _storageService.GetApplicationTemporaryFolderPath(),
+            _storageService.GetTemporaryFileName()
         );
 
         ScreenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath);

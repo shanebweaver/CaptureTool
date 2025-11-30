@@ -513,7 +513,7 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Open</value>
     <comment>The label for the button that allows the user to open the screenshots folder from the settings page.</comment>
   </data>
-  <data name="Settings_AutoSave_ChangeButton.Content" xml:space="preserve">
+  <data name="Settings_AutoSave_ChangeButton.Text" xml:space="preserve">
     <value>Change folder</value>
     <comment>The label for the button that allows the user to change the screenshots folder from the settings page.</comment>
   </data>
@@ -697,5 +697,21 @@ SOFTWARE.
   <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
     <value>Rotated 270° and Flipped Horizontally</value>
     <comment>The display name for the RotateNoneFlipNone image orientation.</comment>
+  </data>
+  <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
+    <value>Clear files</value>
+    <comment>The label for the button that deletes all files in the application temp folder.</comment>
+  </data>
+  <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
+    <value>Temporary files folder:</value>
+    <comment>The label for the button that opens the app temporary folder.</comment>
+  </data>
+  <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
+    <value>Used for normal app operation. You can clear these files at any time.</value>
+    <comment>The subtitle value for the section on the settings page that helps the user access the app temporary folder.</comment>
+  </data>
+  <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
+    <value>Temporary files</value>
+    <comment>The header for the settings section that helps the user access the app temporary folder.</comment>
   </data>
 </root>

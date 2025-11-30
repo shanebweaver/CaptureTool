@@ -30,6 +30,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         public static readonly string UpdateAppTheme = "UpdateAppTheme";
         public static readonly string UpdateShowAppThemeRestartMessage = "UpdateShowAppThemeRestartMessage";
         public static readonly string UpdateShowAppLanguageRestartMessage = "UpdateShowAppLanguageRestartMessage";
+        public static readonly string ClearTemporaryFiles = "ClearTemporaryFiles";
+        public static readonly string OpenTemporaryFilesFolder = "OpenTemporaryFilesFolder";
     }
 
     private readonly IAppNavigation _appNavigation;
@@ -39,6 +41,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
     private readonly IFilePickerService _filePickerService;
+    private readonly IStorageService _storageService;
     private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
     private readonly IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
@@ -56,6 +59,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public AsyncRelayCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
     public AsyncRelayCommand<int> UpdateAppLanguageCommand { get; }
     public RelayCommand<int> UpdateAppThemeCommand { get; }
+    public AsyncRelayCommand OpenTemporaryFilesFolderCommand { get; }
+    public RelayCommand ClearTemporaryFilesCommand { get; }
 
     public ObservableCollection<AppLanguageViewModel> AppLanguages
     {
@@ -111,6 +116,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
+    public string TemporaryFilesFolderPath
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public SettingsPageViewModel(
         IAppNavigation appNavigation,
         ITelemetryService telemetryService,
@@ -119,6 +130,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IThemeService themeService,
         IFilePickerService filePickerService,
         ISettingsService settingsService,
+        IStorageService storageService,
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
         IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
@@ -129,12 +141,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _settingsService = settingsService;
         _themeService = themeService;
         _filePickerService = filePickerService;
+        _storageService = storageService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
 
         AppThemes = [];
         AppLanguages = [];
         ScreenshotsFolderPath = string.Empty;
+        TemporaryFilesFolderPath = string.Empty;
 
         ChangeScreenshotsFolderCommand = new(ChangeScreenshotsFolderAsync);
         OpenScreenshotsFolderCommand = new(OpenScreenshotsFolder);
@@ -144,6 +158,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         UpdateImageCaptureAutoSaveCommand = new(UpdateImageCaptureAutoSaveAsync);
         UpdateAppLanguageCommand = new(UpdateAppLanguageAsync);
         UpdateAppThemeCommand = new(UpdateAppTheme);
+        OpenTemporaryFilesFolderCommand = new(OpenTemporaryFilesFolderAsync);
+        ClearTemporaryFilesCommand = new(ClearTemporaryFiles);
     }
 
     public override Task LoadAsync(CancellationToken cancellationToken)
@@ -209,6 +225,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             }
 
             ScreenshotsFolderPath = screenshotsFolder;
+            TemporaryFilesFolderPath = _storageService.GetApplicationTemporaryFolderPath();
 
             await base.LoadAsync(cancellationToken);
         });
@@ -383,6 +400,46 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () => 
         {
             _appNavigation.GoBackOrGoHome();
+        });
+    }
+
+    private void ClearTemporaryFiles()
+    {
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ClearTemporaryFiles, () =>
+        {
+            foreach (var entry in Directory.EnumerateFileSystemEntries(TemporaryFilesFolderPath))
+            {
+                try
+                {
+                    if (Directory.Exists(entry))
+                    {
+                        Directory.Delete(entry, true);
+                    }
+                    else
+                    {
+                        File.Delete(entry);
+                    }
+                }
+                catch
+                {
+                    // Ignore errors
+                }
+            }
+        });
+    }
+
+    private async Task OpenTemporaryFilesFolderAsync()
+    {
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenTemporaryFilesFolder, () =>
+        {
+            if (Directory.Exists(TemporaryFilesFolderPath))
+            {
+                Process.Start("explorer.exe", $"/open, {TemporaryFilesFolderPath}");
+            }
+            else
+            {
+                throw new DirectoryNotFoundException($"The temporary folder path '{TemporaryFilesFolderPath}' does not exist.");
+            }
         });
     }
 }
