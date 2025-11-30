@@ -20,7 +20,10 @@
         </Grid.RowDefinitions>
 
         <!--  Toolbar  -->
-        <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+        <CommandBar
+            HorizontalAlignment="Center"
+            DefaultLabelPosition="Right"
+            IsOpen="False">
             <!--  Chroma Key  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_ChromaKeyButton"
@@ -147,14 +150,24 @@
             Height="38"
             Padding="8"
             Row="3">
-            <TextBlock
-                VerticalAlignment="Center"
-                FontSize="12"
-                FontWeight="SemiLight">
-                <Run Text="{x:Bind ViewModel.CropRect.Width, Mode=OneWay}" />
-                <Run Text="×" />
-                <Run Text="{x:Bind ViewModel.CropRect.Height, Mode=OneWay}" /><Run Text="px" />
-            </TextBlock>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    FontWeight="SemiLight">
+                    <Run Text="{x:Bind ViewModel.CropRect.Width, Mode=OneWay}" />
+                    <Run Text="×" />
+                    <Run Text="{x:Bind ViewModel.CropRect.Height, Mode=OneWay}" /><Run Text="px" />
+                </TextBlock>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    FontWeight="SemiLight">
+                    <Run Text="{x:Bind ViewModel.CropRect.Left, Mode=OneWay}" /><Run Text="x" />
+                    <Run Text="×" />
+                    <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text="y" />
+                </TextBlock>
+            </StackPanel>
         </Grid>
     </Grid>
 </local:ImageEditPageBase>
