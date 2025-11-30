@@ -567,4 +567,16 @@ SOFTWARE.
   <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
     <value>Um 270° gedreht und horizontal gespiegelt</value>
   </data>
+  <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
+    <value>Dateien löschen</value>
+  </data>
+  <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
+    <value>Ordner für temporäre Dateien:</value>
+  </data>
+  <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
+    <value>Wird für den normalen App-Betrieb verwendet. Sie können diese Dateien jederzeit löschen.</value>
+  </data>
+  <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
+    <value>Temporäre Dateien</value>
+  </data>
 </root>

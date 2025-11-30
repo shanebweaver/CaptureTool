@@ -567,4 +567,16 @@ SOFTWARE.
   <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
     <value>Повернуто на 270° и отражено по горизонтали</value>
   </data>
+  <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
+    <value>Удалить файлы</value>
+  </data>
+  <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
+    <value>Папка временных файлов:</value>
+  </data>
+  <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
+    <value>Используется для нормальной работы приложения. Вы можете удалить эти файлы в любое время.</value>
+  </data>
+  <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
+    <value>Временные файлы</value>
+  </data>
 </root>
