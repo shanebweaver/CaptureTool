@@ -9,23 +9,27 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     public ImageEditPage()
     {
         InitializeComponent();
+        ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
-        SizeChanged += ImageEditPage_SizeChanged;
     }
 
-    private void ImageEditPage_SizeChanged(object _, SizeChangedEventArgs __)
+    ~ImageEditPage()
     {
-        InvalidateCanvas();
+        ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
+        ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
+    }
+
+    private void ViewModel_LoadStateChanged(object? sender, Common.Loading.LoadState e)
+    {
+        if (ViewModel.IsLoaded)
+        {
+            ImageCanvas.ForceCanvasRedrawWithResources();
+        }
     }
 
     private void ViewModel_InvalidateCanvasRequested(object? _, EventArgs __)
     {
-        InvalidateCanvas();
-    }
-
-    private void InvalidateCanvas()
-    {
-        DispatcherQueue.TryEnqueue(ImageCanvas.InvalidateCanvas);
+        ImageCanvas.InvalidateCanvas();
     }
 
     private void ImageCanvas_InteractionComplete(object _, Rectangle e)

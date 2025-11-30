@@ -231,6 +231,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Load, async () =>
         {
+            ThrowIfNotReadyToLoad();
+            StartLoading();
+
             var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
             try
             {
@@ -261,6 +264,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                     }
                 }
 
+                InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
             }
             finally
             {

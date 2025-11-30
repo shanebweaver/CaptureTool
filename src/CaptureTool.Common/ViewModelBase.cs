@@ -1,6 +1,4 @@
 ﻿using CaptureTool.Common.Loading;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -9,16 +7,27 @@ namespace CaptureTool.Common;
 public abstract partial class ViewModelBase : HasLoadStateBase, INotifyPropertyChanged, IDisposable
 {
     public event PropertyChangedEventHandler? PropertyChanged;
+    public event EventHandler<LoadState>? LoadStateChanged;
 
-    private LoadState _loadState = LoadState.Loading;
     public override LoadState LoadState
     {
-        get => _loadState;
+        get => field;
         protected set
         {
-            Set(ref _loadState, value);
+            Set(ref field, value);
             RaisePropertyChanged(nameof(IsLoaded));
             RaisePropertyChanged(nameof(IsLoading));
+            LoadStateChanged?.Invoke(this, value);
+        }
+    }
+
+    public bool IsReadyToLoad => LoadState == LoadState.Initial;
+
+    protected void ThrowIfNotReadyToLoad()
+    {
+        if (!IsReadyToLoad)
+        {
+            throw new InvalidOperationException("Cannot load when not in the initial state.");
         }
     }
 
@@ -44,7 +53,7 @@ public abstract partial class ViewModelBase : HasLoadStateBase, INotifyPropertyC
 
     public virtual void Dispose()
     {
-        _loadState = LoadState.Disposed;
+        LoadState = LoadState.Disposed;
         GC.SuppressFinalize(this);
     }
 }

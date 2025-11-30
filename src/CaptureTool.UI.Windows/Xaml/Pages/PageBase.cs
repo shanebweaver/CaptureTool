@@ -2,8 +2,6 @@ using CaptureTool.Common;
 using CaptureTool.Common.Loading;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Threading;
 
 namespace CaptureTool.UI.Windows.Xaml.Pages;
 
@@ -24,23 +22,26 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
 
         try
         {
-            switch(ViewModel)
+            if (ViewModel.IsReadyToLoad)
             {
-                case ILoadable loadable:
-                    loadable.Load();
-                    break;
+                switch (ViewModel)
+                {
+                    case ILoadable loadable:
+                        loadable.Load();
+                        break;
 
-                case IAsyncLoadable asyncLoadable:
-                    await asyncLoadable.LoadAsync(_loadCts.Token);
-                    break;
+                    case IAsyncLoadable asyncLoadable:
+                        await asyncLoadable.LoadAsync(_loadCts.Token);
+                        break;
 
-                case ILoadableWithParam loadableWithParam:
-                    loadableWithParam.Load(e.Parameter);
-                    break;
+                    case ILoadableWithParam loadableWithParam:
+                        loadableWithParam.Load(e.Parameter);
+                        break;
 
-                case IAsyncLoadableWithParam asyncLoadableWithParam:
-                    await asyncLoadableWithParam.LoadAsync(e.Parameter, _loadCts.Token);
-                    break;
+                    case IAsyncLoadableWithParam asyncLoadableWithParam:
+                        await asyncLoadableWithParam.LoadAsync(e.Parameter, _loadCts.Token);
+                        break;
+                }
             }
         }
         catch (OperationCanceledException ex)

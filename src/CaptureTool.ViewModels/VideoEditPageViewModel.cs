@@ -50,6 +50,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
         {
+            ThrowIfNotReadyToLoad();
+            StartLoading();
+
             VideoPath = video.FilePath;
 
             base.Load(video);

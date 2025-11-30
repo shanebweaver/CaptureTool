@@ -79,6 +79,9 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Load, async () =>
         {
+            ThrowIfNotReadyToLoad();
+            StartLoading();
+
             var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
             try
             {

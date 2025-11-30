@@ -29,6 +29,7 @@
                 x:Uid="ImageEdit_ChromaKeyButton"
                 Checked="ChromaKeyAppBarToggleButton_IsCheckedChanged"
                 IsChecked="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
                 Unchecked="ChromaKeyAppBarToggleButton_IsCheckedChanged"
                 Visibility="{x:Bind ViewModel.IsChromaKeyAddOnOwned, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
@@ -41,12 +42,17 @@
                 x:Uid="ImageEdit_CropButton"
                 Command="{x:Bind ViewModel.ToggleCropModeCommand}"
                 Icon="Crop"
-                IsChecked="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}" />
+                IsChecked="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
             <AppBarButton
                 x:Uid="ImageEdit_RotateButton"
                 Command="{x:Bind ViewModel.RotateCommand}"
-                Icon="Rotate" />
-            <AppBarButton x:Uid="ImageEdit_FlipXButton" Command="{x:Bind ViewModel.FlipHorizontalCommand}">
+                Icon="Rotate"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
+            <AppBarButton
+                x:Uid="ImageEdit_FlipXButton"
+                Command="{x:Bind ViewModel.FlipHorizontalCommand}"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.Icon>
                     <FontIcon
                         FontFamily="{StaticResource FluentSystemIcons}"
@@ -54,7 +60,10 @@
                         Glyph="{StaticResource FlipHorizontal32Regular}" />
                 </AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="ImageEdit_FlipYButton" Command="{x:Bind ViewModel.FlipVerticalCommand}">
+            <AppBarButton
+                x:Uid="ImageEdit_FlipYButton"
+                Command="{x:Bind ViewModel.FlipVerticalCommand}"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.Icon>
                     <FontIcon
                         FontFamily="{StaticResource FluentSystemIcons}"
@@ -80,7 +89,8 @@
             <AppBarButton
                 x:Uid="ImageEdit_CopyButton"
                 Command="{x:Bind ViewModel.CopyCommand}"
-                Icon="Copy">
+                Icon="Copy"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="C" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
@@ -89,7 +99,8 @@
             <AppBarButton
                 x:Uid="ImageEdit_SaveButton"
                 Command="{x:Bind ViewModel.SaveCommand}"
-                Icon="Save">
+                Icon="Save"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
@@ -98,7 +109,8 @@
             <AppBarButton
                 x:Uid="ImageEdit_PrintButton"
                 Command="{x:Bind ViewModel.PrintCommand}"
-                Icon="Print">
+                Icon="Print"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="P" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
@@ -107,7 +119,8 @@
             <AppBarButton
                 x:Uid="ImageEdit_ShareButton"
                 Command="{x:Bind ViewModel.ShareCommand}"
-                Icon="Share" />
+                Icon="Share"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
         </CommandBar>
 
         <!--  Chroma key options  -->
@@ -145,6 +158,15 @@
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}" />
         </Grid>
+
+        <ProgressRing
+            Grid.Row="2"
+            Width="48"
+            Height="48"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsActive="True"
+            Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
 
         <Grid
             MinHeight="38"

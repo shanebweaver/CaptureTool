@@ -2,6 +2,7 @@
 
 public enum LoadState
 {
+    Initial,
     Loading,
     Loaded,
     Error,

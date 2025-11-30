@@ -60,7 +60,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public AsyncRelayCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
     public AsyncRelayCommand<int> UpdateAppLanguageCommand { get; }
     public RelayCommand<int> UpdateAppThemeCommand { get; }
-    public AsyncRelayCommand OpenTemporaryFilesFolderCommand { get; }
+    public RelayCommand OpenTemporaryFilesFolderCommand { get; }
     public RelayCommand ClearTemporaryFilesCommand { get; }
     public AsyncRelayCommand RestoreDefaultSettingsCommand { get; }
 
@@ -152,23 +152,24 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         ScreenshotsFolderPath = string.Empty;
         TemporaryFilesFolderPath = string.Empty;
 
-        ChangeScreenshotsFolderCommand = new(ChangeScreenshotsFolderAsync, () => !IsLoading);
-        OpenScreenshotsFolderCommand = new(OpenScreenshotsFolder, () => !IsLoading);
-        RestartAppCommand = new(RestartApp, () => !IsLoading);
-        GoBackCommand = new(GoBack, () => !IsLoading);
-        UpdateImageCaptureAutoCopyCommand = new(UpdateImageCaptureAutoCopyAsync, (b) => !IsLoading);
-        UpdateImageCaptureAutoSaveCommand = new(UpdateImageCaptureAutoSaveAsync, (b) => !IsLoading);
-        UpdateAppLanguageCommand = new(UpdateAppLanguageAsync, (i) => !IsLoading);
-        UpdateAppThemeCommand = new(UpdateAppTheme, (i) => !IsLoading);
-        OpenTemporaryFilesFolderCommand = new(OpenTemporaryFilesFolderAsync, () => !IsLoading);
-        ClearTemporaryFilesCommand = new(ClearTemporaryFiles, () => !IsLoading);
-        RestoreDefaultSettingsCommand = new(RestoreDefaultSettingsAsync, () => !IsLoading);
+        ChangeScreenshotsFolderCommand = new(ChangeScreenshotsFolderAsync);
+        OpenScreenshotsFolderCommand = new(OpenScreenshotsFolder);
+        RestartAppCommand = new(RestartApp);
+        GoBackCommand = new(GoBack);
+        UpdateImageCaptureAutoCopyCommand = new(UpdateImageCaptureAutoCopyAsync);
+        UpdateImageCaptureAutoSaveCommand = new(UpdateImageCaptureAutoSaveAsync);
+        UpdateAppLanguageCommand = new(UpdateAppLanguageAsync);
+        UpdateAppThemeCommand = new(UpdateAppTheme);
+        OpenTemporaryFilesFolderCommand = new(OpenTemporaryFilesFolder);
+        ClearTemporaryFilesCommand = new(ClearTemporaryFiles);
+        RestoreDefaultSettingsCommand = new(RestoreDefaultSettingsAsync);
     }
 
     public override Task LoadAsync(CancellationToken cancellationToken)
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Load, async () =>
         {
+            ThrowIfNotReadyToLoad();
             StartLoading();
 
             // Languages
@@ -407,7 +408,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         });
     }
 
-    private async Task OpenTemporaryFilesFolderAsync()
+    private void OpenTemporaryFilesFolder()
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenTemporaryFilesFolder, () =>
         {

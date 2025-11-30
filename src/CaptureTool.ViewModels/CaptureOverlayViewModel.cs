@@ -92,6 +92,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
         {
+            ThrowIfNotReadyToLoad();
+            StartLoading();
+
             _monitorCaptureResult = options.Monitor;
             _captureArea = options.Area;
 
