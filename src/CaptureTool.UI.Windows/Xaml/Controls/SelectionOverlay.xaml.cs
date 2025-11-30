@@ -1,5 +1,6 @@
 using CaptureTool.Domains.Capture.Interfaces;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Point = Windows.Foundation.Point;
 using Rectangle = System.Drawing.Rectangle;
@@ -95,6 +96,24 @@ public sealed partial class SelectionOverlay : UserControlBase
     {
         SelectionRect = rect;
         UpdateSelectionBoundary();
+    }
+
+    private void UpdateToolTip()
+    {
+        if (CaptureType == CaptureType.Rectangle && IsValidSelection(SelectionRect))
+        {
+            double scale = XamlRoot.RasterizationScale;
+            SelectionToolTip.Content = $"{SelectionRect.Width * scale} × {SelectionRect.Height * scale}";
+            SelectionToolTip.Visibility = Visibility.Visible;
+            double left = Math.Clamp(SelectionRect.Left + (SelectionRect.Width / 2) - (SelectionToolTip.ActualWidth / 2), 0, SelectionCanvas.Width - SelectionToolTip.ActualWidth);
+            double top = Math.Clamp(SelectionRect.Top - SelectionToolTip.ActualHeight, 0, SelectionCanvas.Height - SelectionToolTip.ActualHeight);
+            Canvas.SetLeft(SelectionToolTip, left);
+            Canvas.SetTop(SelectionToolTip, top);
+        }
+        else
+        {
+            SelectionToolTip.Visibility = Visibility.Collapsed;
+        }
     }
 
     private void SelectionCanvas_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -219,6 +238,8 @@ public sealed partial class SelectionOverlay : UserControlBase
             UpdateSelectionRect(new(0,0, (int)SelectionCanvas.Width, (int)SelectionCanvas.Height));
             e.Handled = true;
         }
+
+        UpdateToolTip();
     }
 
     private void SelectionCanvas_PointerReleased(object sender, PointerRoutedEventArgs e)
