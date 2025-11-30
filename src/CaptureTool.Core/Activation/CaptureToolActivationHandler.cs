@@ -12,9 +12,9 @@ using CaptureTool.Services.Interfaces.Settings;
 using System.Collections.Specialized;
 using System.Web;
 
-namespace CaptureTool.UI.Windows;
+namespace CaptureTool.Core.Activation;
 
-internal partial class CaptureToolActivationHandler : IActivationHandler
+public sealed partial class CaptureToolActivationHandler : IActivationHandler
 {
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;

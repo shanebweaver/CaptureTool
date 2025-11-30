@@ -220,6 +220,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureType);
         UpdateSelectedCaptureType(SupportedCaptureTypes.IndexOf(targetType));
 
+        UpdateCaptureArea(Rectangle.Empty);
+
         CaptureOptionsUpdated?.Invoke(this, options);
     }
 

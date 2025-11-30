@@ -16,11 +16,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
     {
         foreach (var windowVM in _windowViewModels)
         {
-            if (options.CaptureMode != windowVM.GetSelectedCaptureMode() || 
-                options.CaptureType != windowVM.GetSelectedCaptureType())
-            {
-                windowVM.UpdateCaptureOptionsCommand.Execute(options);
-            }
+            windowVM.UpdateCaptureOptionsCommand.Execute(options);
         }
     }
 

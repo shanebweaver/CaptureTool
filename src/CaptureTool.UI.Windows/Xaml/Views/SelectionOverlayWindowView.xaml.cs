@@ -57,12 +57,14 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         if (selectedCaptureType != null)
         {
             SelectionOverlay.CaptureType = selectedCaptureType.Value;
-            SelectionOverlay.SelectionRect = Rectangle.Empty;
         }
+
+        SelectionOverlay.UpdateSelectionRect(Rectangle.Empty);
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        ViewModel.CaptureOptionsUpdated -= ViewModel_CaptureOptionsUpdated;
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;
     }

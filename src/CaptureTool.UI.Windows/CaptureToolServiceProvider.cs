@@ -1,4 +1,5 @@
-﻿using CaptureTool.Core.AppController;
+﻿using CaptureTool.Core.Activation;
+using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Implementations.Windows;

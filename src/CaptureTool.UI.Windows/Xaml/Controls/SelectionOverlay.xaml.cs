@@ -20,7 +20,7 @@ public sealed partial class SelectionOverlay : UserControlBase
             if (_selectionRect != value)
             {
                 _selectionRect = value;
-                UpdateSelectionBoundary();
+                RaisePropertyChanged();
             }
         }
     }
@@ -34,6 +34,7 @@ public sealed partial class SelectionOverlay : UserControlBase
             if (_captureType != value)
             {
                 _captureType = value;
+                RaisePropertyChanged();
             }
         }
     }
@@ -47,6 +48,7 @@ public sealed partial class SelectionOverlay : UserControlBase
             if (_windowRects != value)
             {
                 _windowRects = value;
+                RaisePropertyChanged();
             }
         }
     }
@@ -89,6 +91,12 @@ public sealed partial class SelectionOverlay : UserControlBase
         SelectionBoundary.BorderThickness = new Thickness(left, top, SelectionCanvas.Width - right, SelectionCanvas.Height - bottom);
     }
 
+    public void UpdateSelectionRect(Rectangle rect)
+    {
+        SelectionRect = rect;
+        UpdateSelectionBoundary();
+    }
+
     private void SelectionCanvas_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
         if (CaptureType == CaptureType.Rectangle)
@@ -100,12 +108,12 @@ public sealed partial class SelectionOverlay : UserControlBase
                 _newSelectionAnchor = pointerPos;
 
                 // Start with a 1x1 rectangle at the pointer position
-                SelectionRect = new Rectangle(
+                UpdateSelectionRect(new Rectangle(
                     (int)Math.Clamp(pointerPos.X, 0, SelectionCanvas.Width - 1),
                     (int)Math.Clamp(pointerPos.Y, 0, SelectionCanvas.Height - 1),
                     1,
                     1
-                );
+                ));
 
                 SelectionCanvas.CapturePointer(e.Pointer);
                 e.Handled = true;
@@ -156,7 +164,7 @@ public sealed partial class SelectionOverlay : UserControlBase
                 int width = Math.Max(1, (int)Math.Round(right - left));
                 int height = Math.Max(1, (int)Math.Round(bottom - top));
 
-                SelectionRect = new Rectangle(intLeft, intTop, width, height);
+                UpdateSelectionRect(new Rectangle(intLeft, intTop, width, height));
 
                 if (SelectionRect.Height >= 40 && SelectionRect.Width >= 40)
                 {
@@ -192,7 +200,7 @@ public sealed partial class SelectionOverlay : UserControlBase
                         windowRect.Width + Math.Min(windowRect.X, 0),
                         windowRect.Height + Math.Min(windowRect.Y, 0));
 
-                    SelectionRect = adjusted;
+                    UpdateSelectionRect(adjusted);
                     windowFound = true;
                     break;
                 }
@@ -201,14 +209,14 @@ public sealed partial class SelectionOverlay : UserControlBase
             // If no window is found, clear the selection area.
             if (!windowFound)
             {
-                SelectionRect = Rectangle.Empty;
+                UpdateSelectionRect(Rectangle.Empty);
             }
 
             e.Handled = true;
         }
         else if (CaptureType == CaptureType.FullScreen)
         {
-            SelectionRect = new(0,0, (int)SelectionCanvas.Width, (int)SelectionCanvas.Height);
+            UpdateSelectionRect(new(0,0, (int)SelectionCanvas.Width, (int)SelectionCanvas.Height));
             e.Handled = true;
         }
     }
@@ -221,7 +229,7 @@ public sealed partial class SelectionOverlay : UserControlBase
         {
             if (!IsValidSelection(SelectionRect))
             {
-                SelectionRect = Rectangle.Empty; // Reset selection if too small
+                UpdateSelectionRect(Rectangle.Empty); // Reset selection if too small
             }
             else
             {
@@ -242,12 +250,12 @@ public sealed partial class SelectionOverlay : UserControlBase
             e.Handled = true;
         }
 
-        SelectionRect = Rectangle.Empty;
+        UpdateSelectionRect(Rectangle.Empty);
     }
 
     private void SelectionCanvas_PointerExited(object sender, PointerRoutedEventArgs e)
     {
-            SelectionRect = Rectangle.Empty;
+        UpdateSelectionRect(Rectangle.Empty);
     }
 
     private bool IsPointerOverSelectionArea(Point pos)
