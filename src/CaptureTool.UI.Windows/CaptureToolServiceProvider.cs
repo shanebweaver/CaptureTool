@@ -69,6 +69,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
         collection.AddSingleton<IFilePickerService, WindowsFilePickerService>();
         collection.AddSingleton<IThemeService, WindowsThemeService>();
+        collection.AddSingleton<IStorageService, WindowsStorageService>();
         collection.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
         collection.AddSingleton<ILocalizationService, WindowsLocalizationService>();
         collection.AddSingleton<IShareService, WindowsShareService>();
