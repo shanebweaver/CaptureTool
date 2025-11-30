@@ -543,4 +543,28 @@ SOFTWARE.
   <data name="ImageEdit_ShareButton.Label" xml:space="preserve">
     <value>Compartir</value>
   </data>
+  <data name="ImageOrientation_RotateNoneFlipNone" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="ImageOrientation_Rotate90FlipNone" xml:space="preserve">
+    <value>Girado 90°</value>
+  </data>
+  <data name="ImageOrientation_Rotate180FlipNone" xml:space="preserve">
+    <value>Girado 180°</value>
+  </data>
+  <data name="ImageOrientation_Rotate270FlipNone" xml:space="preserve">
+    <value>Girado 270°</value>
+  </data>
+  <data name="ImageOrientation_RotateNoneFlipX" xml:space="preserve">
+    <value>Volteado horizontalmente</value>
+  </data>
+  <data name="ImageOrientation_Rotate90FlipX" xml:space="preserve">
+    <value>Girado 90° y volteado horizontalmente</value>
+  </data>
+  <data name="ImageOrientation_Rotate180FlipX" xml:space="preserve">
+    <value>Girado 180° y volteado horizontalmente</value>
+  </data>
+  <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
+    <value>Girado 270° y volteado horizontalmente</value>
+  </data>
 </root>

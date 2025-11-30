@@ -543,4 +543,28 @@ SOFTWARE.
   <data name="ImageEdit_ShareButton.Label" xml:space="preserve">
     <value>Поделиться</value>
   </data>
+  <data name="ImageOrientation_RotateNoneFlipNone" xml:space="preserve">
+    <value>Нормально</value>
+  </data>
+  <data name="ImageOrientation_Rotate90FlipNone" xml:space="preserve">
+    <value>Повернуто на 90°</value>
+  </data>
+  <data name="ImageOrientation_Rotate180FlipNone" xml:space="preserve">
+    <value>Повернуто на 180°</value>
+  </data>
+  <data name="ImageOrientation_Rotate270FlipNone" xml:space="preserve">
+    <value>Повернуто на 270°</value>
+  </data>
+  <data name="ImageOrientation_RotateNoneFlipX" xml:space="preserve">
+    <value>Отражено по горизонтали</value>
+  </data>
+  <data name="ImageOrientation_Rotate90FlipX" xml:space="preserve">
+    <value>Повернуто на 90° и отражено по горизонтали</value>
+  </data>
+  <data name="ImageOrientation_Rotate180FlipX" xml:space="preserve">
+    <value>Повернуто на 180° и отражено по горизонтали</value>
+  </data>
+  <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
+    <value>Повернуто на 270° и отражено по горизонтали</value>
+  </data>
 </root>

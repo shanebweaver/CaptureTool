@@ -543,4 +543,28 @@ SOFTWARE.
   <data name="ImageEdit_ShareButton.Label" xml:space="preserve">
     <value>共享</value>
   </data>
+  <data name="ImageOrientation_RotateNoneFlipNone" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="ImageOrientation_Rotate90FlipNone" xml:space="preserve">
+    <value>旋转 90°</value>
+  </data>
+  <data name="ImageOrientation_Rotate180FlipNone" xml:space="preserve">
+    <value>旋转 180°</value>
+  </data>
+  <data name="ImageOrientation_Rotate270FlipNone" xml:space="preserve">
+    <value>旋转 270°</value>
+  </data>
+  <data name="ImageOrientation_RotateNoneFlipX" xml:space="preserve">
+    <value>水平翻转</value>
+  </data>
+  <data name="ImageOrientation_Rotate90FlipX" xml:space="preserve">
+    <value>旋转 90° 并水平翻转</value>
+  </data>
+  <data name="ImageOrientation_Rotate180FlipX" xml:space="preserve">
+    <value>旋转 180° 并水平翻转</value>
+  </data>
+  <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
+    <value>旋转 270° 并水平翻转</value>
+  </data>
 </root>
