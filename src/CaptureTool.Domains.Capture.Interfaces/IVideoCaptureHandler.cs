@@ -1,8 +1,12 @@
-﻿namespace CaptureTool.Domains.Capture.Interfaces;
+﻿using CaptureTool.Services.Interfaces.Storage;
+
+namespace CaptureTool.Domains.Capture.Interfaces;
 
 public partial interface IVideoCaptureHandler
 {
+    event EventHandler<IVideoFile>? NewVideoCaptured;
+
     void StartVideoCapture(NewCaptureArgs args);
-    VideoFile StopVideoCapture();
+    IVideoFile StopVideoCapture();
     void CancelVideoCapture();
 }

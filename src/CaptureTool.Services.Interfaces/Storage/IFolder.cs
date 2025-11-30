@@ -2,5 +2,5 @@
 
 public partial interface IFolder
 {
-    public string FolderPath { get; }
+    string FolderPath { get; }
 }

@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Services.Interfaces.Storage;
 
 namespace CaptureTool.Core.Navigation;
 
@@ -56,9 +57,9 @@ public sealed partial class CaptureToolAppNavigation : IAppNavigation
     public void GoToVideoCapture(NewCaptureArgs captureArgs)
         => _navigationService.Navigate(CaptureToolNavigationRoute.VideoCapture, captureArgs);
 
-    public void GoToImageEdit(ImageFile imageFile)
+    public void GoToImageEdit(IImageFile imageFile)
         => _navigationService.Navigate(CaptureToolNavigationRoute.ImageEdit, imageFile, true);
 
-    public void GoToVideoEdit(VideoFile videoFile)
+    public void GoToVideoEdit(IVideoFile videoFile)
         => _navigationService.Navigate(CaptureToolNavigationRoute.VideoEdit, videoFile, true);
 }

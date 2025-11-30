@@ -69,7 +69,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
             }
 
             nint hwnd = _appController.GetMainWindowHandle();
-            IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FileType.Video, UserFolder.Videos)
+            IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Video, UserFolder.Videos)
                 ?? throw new OperationCanceledException("No file was selected.");
         
             File.Copy(VideoPath, file.FilePath, true);

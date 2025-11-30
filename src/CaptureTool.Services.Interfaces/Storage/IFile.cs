@@ -2,5 +2,6 @@
 
 public partial interface IFile
 {
-    public string FilePath { get; }
+    string FilePath { get; }
+
 }

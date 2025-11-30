@@ -2,5 +2,5 @@
 
 public partial interface IVideoFile : IFile
 {
-    public FileType FileType => FileType.Video;
+    FilePickerType FilePickerType => FilePickerType.Video;
 }

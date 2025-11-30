@@ -11,6 +11,8 @@ internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private string? _tempVideoPath;
     private bool isRecording;
 
+    public event EventHandler<IVideoFile>? NewVideoCaptured;
+
     public CaptureToolVideoCaptureHandler(IStorageService storageService)
     {
         _storageService = storageService;
@@ -34,7 +36,7 @@ internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         ScreenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath);
     }
 
-    public VideoFile StopVideoCapture()
+    public IVideoFile StopVideoCapture()
     {
         if (!isRecording || string.IsNullOrEmpty(_tempVideoPath))
         {
@@ -46,6 +48,7 @@ internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         VideoFile videoFile = new(_tempVideoPath);
         _tempVideoPath = null;
 
+        NewVideoCaptured?.Invoke(this, videoFile);
         return videoFile;
     }
 

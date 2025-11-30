@@ -33,6 +33,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private readonly IFilePickerService _filePickerService;
     private readonly IStorageService _storageService;
     private readonly IImageCaptureHandler _imageCaptureHandler;
+    private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
 
     public event EventHandler? RecentCapturesUpdated;
@@ -62,6 +63,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IFeatureManager featureManager,
         IStorageService storageService,
         IImageCaptureHandler imageCaptureHandler,
+        IVideoCaptureHandler videoCaptureHandler,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory)
     {
         _appNavigation = appNavigation;
@@ -70,6 +72,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _filePickerService = filePickerService;
         _storageService = storageService;
         _imageCaptureHandler = imageCaptureHandler;
+        _videoCaptureHandler = videoCaptureHandler;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
 
         NewImageCaptureCommand = new(NewImageCapture);
@@ -92,6 +95,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
         RefreshRecentCaptures();
         _imageCaptureHandler.NewImageCaptured += OnNewImageCaptured;
+        _videoCaptureHandler.NewVideoCaptured += OnNewVideoCaptured;
 
         base.Load();
     }
@@ -99,10 +103,16 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     public override void Dispose()
     {
         _imageCaptureHandler.NewImageCaptured -= OnNewImageCaptured;
+        _videoCaptureHandler.NewVideoCaptured -= OnNewVideoCaptured;
         base.Dispose();
     }
 
     private void OnNewImageCaptured(object? sender, IImageFile e)
+    {
+        RefreshRecentCaptures();
+    }
+
+    private void OnNewVideoCaptured(object? sender, IVideoFile e)
     {
         RefreshRecentCaptures();
     }
@@ -120,9 +130,9 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.OpenFile, async () =>
         {
             nint hwnd = _appController.GetMainWindowHandle();
-            IFile imageFile = await _filePickerService.PickFileAsync(hwnd, FileType.Image, UserFolder.Pictures) 
+            IFile file = await _filePickerService.PickFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures) 
                 ?? throw new OperationCanceledException("No file was selected.");
-            _appNavigation.GoToImageEdit(new(imageFile.FilePath));
+            _appNavigation.GoToImageEdit(new ImageFile(file.FilePath));
         });
     }
 
