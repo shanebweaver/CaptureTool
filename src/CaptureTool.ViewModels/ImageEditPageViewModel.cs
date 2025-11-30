@@ -109,6 +109,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public string OrientationDisplayName
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public bool IsInCropMode
     {
         get => field;
@@ -188,6 +194,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         Drawables = [];
         ImageSize = new();
         Orientation = ImageOrientation.RotateNoneFlipNone;
+        OrientationDisplayName = GetOrientationDisplayName(Orientation);
         CropRect = Rectangle.Empty;
         _imageCanvasExporter = imageCanvasExporter;
         SelectedChromaKeyColorOption = 0;
@@ -266,6 +273,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CropRect = Rectangle.Empty;
         ImageSize = Size.Empty;
         Orientation = ImageOrientation.RotateNoneFlipNone;
+        OrientationDisplayName = string.Empty;
         Drawables.Clear();
         base.Dispose();
     }
@@ -425,6 +433,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             CropRect = newCropRect;
             Orientation = newOrientation;
+            OrientationDisplayName = GetOrientationDisplayName(newOrientation);
 
             _operationsRedoStack.Clear();
             _operationsUndoStack.Push(new OrientationOperation(UpdateOrientationCommand, oldOrientation, newOrientation));
@@ -456,6 +465,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             CropRect = newCropRect;
             Orientation = newOrientation;
+            OrientationDisplayName = GetOrientationDisplayName(newOrientation);
 
             _operationsRedoStack.Clear();
             _operationsUndoStack.Push(new OrientationOperation(UpdateOrientationCommand, oldOrientation, newOrientation));
@@ -503,6 +513,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         Rectangle newCropRect = ImageOrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
         CropRect = newCropRect;
         Orientation = newOrientation;
+        OrientationDisplayName = GetOrientationDisplayName(newOrientation);
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
@@ -510,5 +521,21 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         CropRect = newCropRect;
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private static string GetOrientationDisplayName(ImageOrientation orientation)
+    {
+        return orientation switch
+        {
+            ImageOrientation.RotateNoneFlipNone => "Normal",
+            ImageOrientation.Rotate90FlipNone => "Rotated 90°",
+            ImageOrientation.Rotate180FlipNone => "Rotated 180°",
+            ImageOrientation.Rotate270FlipNone => "Rotated 270°",
+            ImageOrientation.RotateNoneFlipX => "Flipped Horizontally",
+            ImageOrientation.Rotate90FlipX => "Rotated 90° and Flipped Horizontally",
+            ImageOrientation.Rotate180FlipX => "Rotated 180° and Flipped Horizontally",
+            ImageOrientation.Rotate270FlipX => "Rotated 270° and Flipped Horizontally",
+            _ => string.Empty,
+        };
     }
 }
