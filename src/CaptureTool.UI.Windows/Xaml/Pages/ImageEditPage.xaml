@@ -147,22 +147,19 @@
         </Grid>
 
         <Grid
-            Height="38"
+            MinHeight="38"
             Padding="8"
             Row="3">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontSize="12"
-                    FontWeight="SemiLight">
+            <StackPanel
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="12">
+                <TextBlock FontSize="12" FontWeight="SemiLight">
                     <Run Text="{x:Bind ViewModel.CropRect.Width, Mode=OneWay}" />
                     <Run Text="×" />
                     <Run Text="{x:Bind ViewModel.CropRect.Height, Mode=OneWay}" /><Run Text="px" />
                 </TextBlock>
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontSize="12"
-                    FontWeight="SemiLight">
+                <TextBlock FontSize="12" FontWeight="SemiLight">
                     <Run Text="{x:Bind ViewModel.CropRect.Left, Mode=OneWay}" /><Run Text="x" />
                     <Run Text="×" />
                     <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text="y" />
