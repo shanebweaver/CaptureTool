@@ -65,10 +65,9 @@ public sealed partial class ImageCanvas : UserControlBase
                 {
                     control.DimmedBackgroundRectangle.Visibility = Visibility.Collapsed;
                 }
-
-                control.UpdateDrawingCanvasSize();
-                control.ZoomAndCenter();
             });
+
+            control.InvalidateCanvas();
         }
     }
 
@@ -76,11 +75,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (d is ImageCanvas control)
         {
-            control.DispatcherQueue.TryEnqueue(() =>
-            {
-                control.UpdateDrawingCanvasSize();
-                control.ZoomAndCenter();
-            });
+            control.InvalidateCanvas();
         }
     }
 
@@ -88,11 +83,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (d is ImageCanvas control)
         {
-            control.DispatcherQueue.TryEnqueue(() =>
-            {
-                control.UpdateDrawingCanvasSize();
-                control.ZoomAndCenter();
-            });
+            control.InvalidateCanvas();
         }
     }
 
@@ -140,11 +131,7 @@ public sealed partial class ImageCanvas : UserControlBase
     #region Zoom, Center, and Size
     private void RootContainer_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        DispatcherQueue.TryEnqueue(() =>
-        {
-            UpdateDrawingCanvasSize();
-            ZoomAndCenter();
-        });
+        InvalidateCanvas();
     }
 
     private bool IsTurned()
@@ -251,6 +238,12 @@ public sealed partial class ImageCanvas : UserControlBase
         ZoomAndCenter();
     }
 
+    public void ForceCanvasRedrawWithResources()
+    {
+        RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? 1.0001f : 1f;
+        InvalidateCanvas();
+    }
+
     private void CanvasControl_Draw(CanvasControl sender, CanvasDrawEventArgs args)
     {
         lock (this)
@@ -261,11 +254,16 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
+    private bool CanCreateResources() => Drawables.Any();
+
     private void CanvasControl_CreateResources(CanvasControl sender, CanvasCreateResourcesEventArgs args)
     {
-        // Create any resources needed by the Draw event handler.
-        // Asynchronous work can be tracked with TrackAsyncAction:
-        args.TrackAsyncAction(CreateResourcesAsync(sender).AsAsyncAction());
+        if (CanCreateResources())
+        {
+            // Create any resources needed by the Draw event handler.
+            // Asynchronous work can be tracked with TrackAsyncAction:
+            args.TrackAsyncAction(CreateResourcesAsync(sender).AsAsyncAction());
+        }
     }
 
     private async Task CreateResourcesAsync(CanvasControl sender)

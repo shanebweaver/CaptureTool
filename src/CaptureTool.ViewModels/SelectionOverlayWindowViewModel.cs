@@ -175,6 +175,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
         {
+            ThrowIfNotReadyToLoad();
+            StartLoading();
+
             Monitor = options.Monitor;
             MonitorWindows = [.. options.MonitorWindows];
 

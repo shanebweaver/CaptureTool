@@ -2,8 +2,6 @@
 using CaptureTool.Common.Loading;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System;
-using System.Threading;
 
 namespace CaptureTool.UI.Windows.Xaml.Views;
 
@@ -31,6 +29,8 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
 
         try
         {
+            if (ViewModel.IsReadyToLoad)
+            {
             switch (ViewModel)
             {
                 case ILoadable loadable:
@@ -41,6 +41,7 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
                     _ = asyncLoadable.LoadAsync(_loadCts.Token);
                     break;
             }
+        }
         }
         catch (OperationCanceledException ex)
         {

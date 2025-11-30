@@ -1,5 +1,4 @@
 ﻿using CaptureTool.Common.Loading;
-using System;
 
 namespace CaptureTool.Common;
 
