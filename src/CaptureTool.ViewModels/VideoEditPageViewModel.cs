@@ -8,19 +8,8 @@ using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
 
 namespace CaptureTool.ViewModels;
-
 public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<VideoFile>
 {
-    public class ClipboardFileWrapper : IClipboardFile
-    {
-        public string FilePath { get; }
-
-        public ClipboardFileWrapper(string filePath)
-        {
-            FilePath = filePath;
-        }
-    }
-
     public readonly struct ActivityIds
     {
         public static readonly string Load = $"LoadVideoEditPage";
@@ -93,7 +82,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
                 throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
             }
 
-            ClipboardFileWrapper clipboardVideo = new(VideoPath);
+            ClipboardFile clipboardVideo = new(VideoPath);
             await _clipboardService.CopyFileAsync(clipboardVideo);
         });
     }

@@ -44,6 +44,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     public RelayCommand<int> UpdateSelectedCaptureModeCommand { get; }
     public RelayCommand<int> UpdateSelectedCaptureTypeCommand { get; }
     public RelayCommand<Rectangle> UpdateCaptureAreaCommand { get; }
+    public RelayCommand<CaptureOptions> UpdateCaptureOptionsCommand { get; }
+
+    public event EventHandler<CaptureOptions>? CaptureOptionsUpdated;
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
@@ -60,7 +63,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     }
 
     public CaptureType? GetSelectedCaptureType()
-        => SelectedCaptureTypeIndex != -1 ? SupportedCaptureTypes[SelectedCaptureTypeIndex].CaptureType : null;
+        => SelectedCaptureTypeIndex != -1 && SelectedCaptureTypeIndex < SupportedCaptureTypes.Count 
+            ? SupportedCaptureTypes[SelectedCaptureTypeIndex].CaptureType 
+            : null;
 
     public ObservableCollection<CaptureModeViewModel> SupportedCaptureModes
     {
@@ -74,7 +79,10 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         private set => Set(ref field, value);
     }
 
-    public CaptureModeViewModel SelectedCaptureMode => SupportedCaptureModes[SelectedCaptureModeIndex];
+    public CaptureMode? GetSelectedCaptureMode()
+        => SelectedCaptureModeIndex != -1 && SelectedCaptureModeIndex < SupportedCaptureModes.Count
+            ? SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode 
+            : null;
 
     public Rectangle CaptureArea
     {
@@ -147,6 +155,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         UpdateSelectedCaptureModeCommand = new(UpdateSelectedCaptureMode);
         UpdateSelectedCaptureTypeCommand = new(UpdateSelectedCaptureType);
         UpdateCaptureAreaCommand = new(UpdateCaptureArea);
+        UpdateCaptureOptionsCommand = new(UpdateCaptureOptions);
 
         IsVideoCaptureFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
 
@@ -201,10 +210,24 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         CaptureArea = area;
     }
 
+    private void UpdateCaptureOptions(CaptureOptions options)
+    {
+        var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureMode);
+        UpdateSelectedCaptureMode(SupportedCaptureModes.IndexOf(targetMode));
+
+        UpdateSupportedCaptureTypes();
+
+        var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureType);
+        UpdateSelectedCaptureType(SupportedCaptureTypes.IndexOf(targetType));
+
+        UpdateCaptureArea(Rectangle.Empty);
+
+        CaptureOptionsUpdated?.Invoke(this, options);
+    }
+
     private void UpdateSelectedCaptureMode(int index)
     {
         SelectedCaptureModeIndex = index;
-        RaisePropertyChanged(nameof(SelectedCaptureMode));
         UpdateSupportedCaptureTypes();
     }
 
@@ -222,7 +245,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             return;
         }
 
-        var supportedCaptureTypes = SelectedCaptureMode.CaptureMode switch
+        var supportedCaptureTypes = GetSelectedCaptureMode() switch
         {
             CaptureMode.Image => _imageCaptureTypes,
             CaptureMode.Video => _videoCaptureTypes,

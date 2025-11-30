@@ -99,6 +99,7 @@ internal partial class CaptureToolAppController : IAppController
                         break;
 
                     case UXHost.SelectionOverlay:
+                        _selectionOverlayHost.UpdateOptions(options);
                         return;
 
                     case UXHost.CaptureOverlay:

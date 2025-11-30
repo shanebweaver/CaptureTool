@@ -1,7 +1,5 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Sync;
-using CaptureTool.Core.AppController;
-using CaptureTool.Core.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using System.ComponentModel;
 using System.Drawing;
@@ -12,20 +10,14 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 {
     private readonly List<SelectionOverlayWindowViewModel> _windowViewModels = [];
 
-    private readonly IAppNavigation _appNavigation;
-    private readonly IAppController _appController;
-    private readonly IImageCaptureHandler _imageCaptureHandler;
-
     public event EventHandler? AllScreensCaptureRequested;
 
-    public SelectionOverlayHostViewModel(
-        IAppNavigation appNavigation,
-        IAppController appController,
-        IImageCaptureHandler imageCaptureHandler)
+    public void UpdateOptions(CaptureOptions options)
     {
-        _appNavigation = appNavigation;
-        _appController = appController;
-        _imageCaptureHandler = imageCaptureHandler;
+        foreach (var windowVM in _windowViewModels)
+        {
+            windowVM.UpdateCaptureOptionsCommand.Execute(options);
+        }
     }
 
     public void AddWindowViewModel(SelectionOverlayWindowViewModel newVM, bool isPrimary = false)
@@ -122,12 +114,14 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 
         if (windowVM.GetSelectedCaptureType() == CaptureType.AllScreens)
         {
-            if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Image)
+            switch (windowVM.GetSelectedCaptureMode())
             {
-                AllScreensCaptureRequested?.Invoke(this, EventArgs.Empty);
-            }
-            else if (windowVM.SelectedCaptureMode.CaptureMode == CaptureMode.Video)
-            {
+                case CaptureMode.Image:
+                    AllScreensCaptureRequested?.Invoke(this, EventArgs.Empty);
+                    break;
+
+                case CaptureMode.Video:
+                    break;
             }
         }
     }
