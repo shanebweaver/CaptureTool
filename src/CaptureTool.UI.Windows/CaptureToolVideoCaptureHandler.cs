@@ -27,11 +27,12 @@ internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
         isRecording = true;
 
-        var tempPath = Path.Combine(
+        DateTime timestamp = DateTime.Now;
+        string fileName = $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.mp4";
+        _tempVideoPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
-            _storageService.GetTemporaryFileName()
+            fileName
         );
-        _tempVideoPath = Path.ChangeExtension(tempPath, "mp4");
 
         ScreenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath);
     }

@@ -38,11 +38,12 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         Bitmap combined = MonitorCaptureHelper.CombineMonitors(monitors);
         try
         {
-            var tempPath = Path.Combine(
+            DateTime timestamp = DateTime.Now;
+            string fileName = $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.png";
+            string tempPath = Path.Combine(
                 _storageService.GetApplicationTemporaryFolderPath(),
-                _storageService.GetTemporaryFileName()
+                fileName
             );
-            tempPath = Path.ChangeExtension(tempPath, "png");
 
             combined.Save(tempPath, ImageFormat.Png);
 
@@ -82,11 +83,12 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
             fullBmp.UnlockBits(bmpData);
         }
 
-        var tempPath = Path.Combine(
+        DateTime timestamp = DateTime.Now;
+        string fileName = $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.png";
+        string tempPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
-            _storageService.GetTemporaryFileName()
+            fileName
         );
-        tempPath = Path.ChangeExtension(tempPath, "png");
 
         // Crop to the selected area
         float scale = monitor.Scale; int cropX = (int)Math.Round((area.Left) * scale);
