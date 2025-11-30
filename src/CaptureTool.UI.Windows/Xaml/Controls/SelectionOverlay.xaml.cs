@@ -102,7 +102,8 @@ public sealed partial class SelectionOverlay : UserControlBase
     {
         if (CaptureType == CaptureType.Rectangle && IsValidSelection(SelectionRect))
         {
-            SelectionToolTip.Content = $"{SelectionRect.Width} × {SelectionRect.Height}";
+            double scale = XamlRoot.RasterizationScale;
+            SelectionToolTip.Content = $"{SelectionRect.Width * scale} × {SelectionRect.Height * scale}";
             SelectionToolTip.Visibility = Visibility.Visible;
             double left = Math.Clamp(SelectionRect.Left + (SelectionRect.Width / 2) - (SelectionToolTip.ActualWidth / 2), 0, SelectionCanvas.Width - SelectionToolTip.ActualWidth);
             double top = Math.Clamp(SelectionRect.Top - SelectionToolTip.ActualHeight, 0, SelectionCanvas.Height - SelectionToolTip.ActualHeight);
