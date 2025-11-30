@@ -180,8 +180,19 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
                 }
                 else
                 {
-                    ImageFile imageFile = new(model.FilePath);
-                    _appNavigation.GoToImageEdit(imageFile);
+                    switch (model.CaptureFileType)
+                    {
+                        case CaptureFileType.Image:
+                            ImageFile imageFile = new(model.FilePath);
+                            _appNavigation.GoToImageEdit(imageFile);
+                            break;
+
+                        case CaptureFileType.Video:
+                            VideoFile videoFile = new(model.FilePath);
+                            _appNavigation.GoToVideoEdit(videoFile);
+                            break;
+                    }
+
                 }
             }
         });

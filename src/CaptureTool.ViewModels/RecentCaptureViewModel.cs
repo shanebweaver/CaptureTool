@@ -82,7 +82,6 @@ public sealed partial class RecentCaptureViewModel : ViewModelBase
         return $"{timestamp:MMM d, yyyy} @ {timestamp:h:mm tt}";
     }
 
-
     private static CaptureFileType DetectFileType(string filePath)
     {
         return Path.GetExtension(filePath) switch
