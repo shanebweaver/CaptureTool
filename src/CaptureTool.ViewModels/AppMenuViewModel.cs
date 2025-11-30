@@ -164,8 +164,15 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         {
             if (model != null)
             {
-                ImageFile imageFile = new(model.FilePath);
-                _appNavigation.GoToImageEdit(imageFile);
+                if (!File.Exists(model.FilePath))
+                {
+                    RefreshRecentCaptures();
+                }
+                else
+                {
+                    ImageFile imageFile = new(model.FilePath);
+                    _appNavigation.GoToImageEdit(imageFile);
+                }
             }
         });
     }
@@ -181,7 +188,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         RecentCaptures.Clear();
         foreach (var filePath in recentCaptureFiles)
         {
-            if (string.IsNullOrEmpty(filePath))
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             {
                 continue;
             }

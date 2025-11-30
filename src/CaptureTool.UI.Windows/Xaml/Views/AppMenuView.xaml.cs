@@ -36,6 +36,16 @@ public sealed partial class AppMenuView : AppMenuViewBase
             {
                 RecentCapturesSubMenu.Items.Clear();
 
+                if (!ViewModel.RecentCaptures.Any())
+                {
+                    RecentCapturesSubMenu.Items.Add(new MenuFlyoutItem()
+                    {
+                        Text = "None",
+                        IsEnabled = false
+                    });
+                    return;
+                }
+
                 foreach (var recentCapture in ViewModel.RecentCaptures)
                 {
                     string iconGlyph = recentCapture.CaptureFileType switch
