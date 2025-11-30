@@ -579,4 +579,10 @@ SOFTWARE.
   <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
     <value>Временные файлы</value>
   </data>
+  <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
+    <value>Прочее</value>
+  </data>
+  <data name="Settings_RestoreDefaults_Button.Text" xml:space="preserve">
+    <value>Восстановить настройки по умолчанию</value>
+  </data>
 </root>

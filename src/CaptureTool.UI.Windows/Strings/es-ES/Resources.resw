@@ -579,4 +579,10 @@ SOFTWARE.
   <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
     <value>Archivos temporales</value>
   </data>
+  <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
+    <value>Otros</value>
+  </data>
+  <data name="Settings_RestoreDefaults_Button.Text" xml:space="preserve">
+    <value>Restablecer la configuración predeterminada</value>
+  </data>
 </root>

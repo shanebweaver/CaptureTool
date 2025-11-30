@@ -350,10 +350,11 @@
                     </Expander>
                 </StackPanel>
 
-                <!--  Temporary folder section  -->
+                <!--  Other section  -->
                 <StackPanel Spacing="4">
-                    <TextBlock x:Uid="Settings_TemporaryFolderHeaderLabel" Margin="0,4" />
+                    <TextBlock x:Uid="Settings_OtherHeaderLabel" Margin="0,4" />
 
+                    <!--  Temporary files  -->
                     <Expander
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
@@ -424,6 +425,17 @@
                         </Grid>
                     </Expander>
                 </StackPanel>
+
+                <!--  Restore defaults  -->
+                <Button Command="{x:Bind ViewModel.RestoreDefaultSettingsCommand}">
+                    <TextBlock x:Uid="Settings_RestoreDefaults_Button" />
+                    <ToolTipService.ToolTip>
+                        <ToolTip>
+                            <TextBlock x:Uid="Settings_RestoreDefaults_ToolTip" />
+                        </ToolTip>
+                    </ToolTipService.ToolTip>
+                </Button>
+
             </StackPanel>
         </StackPanel>
 
@@ -439,7 +451,7 @@
                         <AdaptiveTrigger MinWindowWidth="908" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="ContentPanel.HorizontalAlignment" Value="Left" />
+                        <Setter Target="ContentPanel.HorizontalAlignment" Value="Center" />
                         <Setter Target="ContentPanel.MinWidth" Value="800" />
                     </VisualState.Setters>
                 </VisualState>

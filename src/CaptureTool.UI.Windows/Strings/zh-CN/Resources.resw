@@ -579,4 +579,10 @@ SOFTWARE.
   <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
     <value>临时文件</value>
   </data>
+  <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
+    <value>其他</value>
+  </data>
+  <data name="Settings_RestoreDefaults_Button.Text" xml:space="preserve">
+    <value>恢复默认设置</value>
+  </data>
 </root>

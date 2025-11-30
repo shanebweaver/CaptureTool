@@ -81,7 +81,6 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
             _storageService.GetApplicationTemporaryFolderPath(),
             _storageService.GetTemporaryFileName()
         );
-        System.Diagnostics.Debug.WriteLine(tempPath);
 
         // Crop to the selected area
         float scale = monitor.Scale; int cropX = (int)Math.Round((area.Left) * scale);
