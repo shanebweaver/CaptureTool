@@ -16,10 +16,14 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--  Toolbar  -->
-        <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+        <CommandBar
+            HorizontalAlignment="Center"
+            DefaultLabelPosition="Right"
+            IsOpen="False">
             <!--  Chroma Key  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_ChromaKeyButton"
@@ -140,6 +144,41 @@
                 InteractionComplete="ImageCanvas_InteractionComplete"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}" />
+        </Grid>
+
+        <Grid
+            MinHeight="38"
+            Padding="8"
+            Row="3">
+            <StackPanel
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="12">
+                <TextBlock FontSize="12" FontWeight="SemiLight">
+                    <ToolTipService.ToolTip>
+                        <ToolTip>
+                            <TextBlock Text="Dimensions" />
+                        </ToolTip>
+                    </ToolTipService.ToolTip>
+                    <Run Text="{x:Bind ViewModel.CropRect.Width, Mode=OneWay}" />
+                    <Run Text="×" />
+                    <Run Text="{x:Bind ViewModel.CropRect.Height, Mode=OneWay}" /><Run Text="px" />
+                </TextBlock>
+                <TextBlock FontSize="12" FontWeight="SemiLight">
+                    <ToolTipService.ToolTip>
+                        <ToolTip>
+                            <TextBlock Text="Offset" />
+                        </ToolTip>
+                    </ToolTipService.ToolTip>
+                    <Run Text="{x:Bind ViewModel.CropRect.Left, Mode=OneWay}" /><Run Text="x" />
+                    <Run Text="×" />
+                    <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text="y" />
+                </TextBlock>
+                <TextBlock
+                    FontSize="12"
+                    FontWeight="SemiLight"
+                    Text="{x:Bind ViewModel.OrientationDisplayName, Mode=OneWay}" />
+            </StackPanel>
         </Grid>
     </Grid>
 </local:ImageEditPageBase>

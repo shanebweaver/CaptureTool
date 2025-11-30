@@ -22,6 +22,7 @@ internal partial class CaptureToolAppController : IAppController
 
     private readonly IAppNavigation _appNavigation;
     private readonly ILogService _logService;
+    private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ICancellationService _cancellationService;
 
     private readonly SemaphoreSlim _semaphoreNavigation = new(1, 1);
@@ -34,10 +35,12 @@ internal partial class CaptureToolAppController : IAppController
     public CaptureToolAppController(
         IAppNavigation appNavigation,
         ILogService logService,
+        IVideoCaptureHandler videoCaptureHandler,
         ICancellationService cancellationService) 
     {
         _appNavigation = appNavigation;
         _logService = logService;
+        _videoCaptureHandler = videoCaptureHandler;
         _cancellationService = cancellationService;
     }
 
@@ -74,6 +77,7 @@ internal partial class CaptureToolAppController : IAppController
                         break;
 
                     case UXHost.CaptureOverlay:
+                        _videoCaptureHandler.CancelVideoCapture();
                         _mainWindowHost.ExcludeWindowFromCapture(false);
                         _captureOverlayHost.Close();
                         break;
@@ -103,6 +107,7 @@ internal partial class CaptureToolAppController : IAppController
                         return;
 
                     case UXHost.CaptureOverlay:
+                        _videoCaptureHandler.CancelVideoCapture();
                         _captureOverlayHost.Close();
                         break;
                 }

@@ -17,11 +17,17 @@ public partial class App : Application
 
     public App()
     {
+        UnhandledException += App_UnhandledException;
         ServiceProvider = new();
         DispatcherQueue = DispatcherQueue.GetForCurrentThread();
         InitializeComponent();
         RestoreAppTheme();
         _keepAlive = new KeepAlive();
+    }
+
+    private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+    {
+        ServiceLocator.Logging.LogException(e.Exception, "Unhandled exception occurred.");
     }
 
     private void RestoreAppTheme()

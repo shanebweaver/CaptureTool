@@ -2,10 +2,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.Win32.SafeHandles;
 using Microsoft.Windows.AppLifecycle;
-using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Windows.Win32.Foundation;
 
 namespace CaptureTool.UI.Windows;
