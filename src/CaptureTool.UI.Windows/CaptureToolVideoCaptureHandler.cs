@@ -45,11 +45,17 @@ internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     {
         try
         {
+            if (!isRecording)
+            {
+                return;
+            }
+
             ScreenRecorder.StopRecording();
         }
         finally
         {
            _tempVideoPath = null;
+            isRecording = false;
         }
     }
 }
