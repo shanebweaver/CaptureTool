@@ -3,6 +3,6 @@
 public partial interface IStorageService
 {
     string GetSystemDefaultScreenshotsFolderPath();
-
     string GetApplicationTemporaryFolderPath();
+    string GetTemporaryFileName();
 }

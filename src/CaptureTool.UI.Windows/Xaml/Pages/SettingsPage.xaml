@@ -152,7 +152,14 @@
                                 Grid.Column="1"
                                 Orientation="Horizontal"
                                 Spacing="4">
-                                <Button x:Uid="Settings_AutoSave_ChangeButton" Command="{x:Bind ViewModel.ChangeScreenshotsFolderCommand}" />
+                                <Button Command="{x:Bind ViewModel.ChangeScreenshotsFolderCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Viewbox Height="16">
+                                            <SymbolIcon Symbol="Folder" />
+                                        </Viewbox>
+                                        <TextBlock x:Uid="Settings_AutoSave_ChangeButton" />
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
                         </Grid>
                     </Expander>
@@ -342,6 +349,93 @@
                         </Grid>
                     </Expander>
                 </StackPanel>
+
+                <!--  Other section  -->
+                <StackPanel Spacing="4">
+                    <TextBlock x:Uid="Settings_OtherHeaderLabel" Margin="0,4" />
+
+                    <!--  Temporary files  -->
+                    <Expander
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        IsExpanded="True">
+                        <Expander.Header>
+                            <Grid
+                                Padding="0,12"
+                                ColumnSpacing="16"
+                                CornerRadius="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <SymbolIcon Symbol="Folder" />
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock
+                                        x:Uid="Settings_TemporaryFolder_HeaderLabel"
+                                        MaxLines="2"
+                                        TextTrimming="WordEllipsis"
+                                        TextWrapping="WrapWholeWords" />
+                                    <TextBlock
+                                        x:Uid="Settings_TemporaryFolder_SubtitleLabel"
+                                        FontSize="12"
+                                        MaxLines="2"
+                                        Opacity=".75"
+                                        TextTrimming="WordEllipsis"
+                                        TextWrapping="WrapWholeWords" />
+                                </StackPanel>
+                            </Grid>
+                        </Expander.Header>
+                        <Grid Margin="4,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock
+                                    x:Uid="Settings_TemporaryFolder_ScreenshotsFolderLabel"
+                                    MaxLines="2"
+                                    TextTrimming="WordEllipsis"
+                                    TextWrapping="NoWrap" />
+                                <HyperlinkButton Command="{x:Bind ViewModel.OpenTemporaryFilesFolderCommand}">
+                                    <TextBlock
+                                        MaxLines="2"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        Text="{x:Bind ViewModel.TemporaryFilesFolderPath, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="Wrap" />
+                                </HyperlinkButton>
+                            </StackPanel>
+
+                            <StackPanel
+                                Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="4">
+                                <Button Command="{x:Bind ViewModel.ClearTemporaryFilesCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Viewbox Height="16">
+                                            <SymbolIcon Symbol="Delete" />
+                                        </Viewbox>
+                                        <TextBlock x:Uid="Settings_TemporaryFolder_ClearButton" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Expander>
+                </StackPanel>
+
+                <!--  Restore defaults  -->
+                <Button Command="{x:Bind ViewModel.RestoreDefaultSettingsCommand}">
+                    <TextBlock x:Uid="Settings_RestoreDefaults_Button" />
+                    <ToolTipService.ToolTip>
+                        <ToolTip>
+                            <TextBlock x:Uid="Settings_RestoreDefaults_ToolTip" />
+                        </ToolTip>
+                    </ToolTipService.ToolTip>
+                </Button>
+
             </StackPanel>
         </StackPanel>
 
@@ -357,7 +451,7 @@
                         <AdaptiveTrigger MinWindowWidth="908" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="ContentPanel.HorizontalAlignment" Value="Left" />
+                        <Setter Target="ContentPanel.HorizontalAlignment" Value="Center" />
                         <Setter Target="ContentPanel.MinWidth" Value="800" />
                     </VisualState.Setters>
                 </VisualState>

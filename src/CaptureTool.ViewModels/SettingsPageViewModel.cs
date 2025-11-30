@@ -30,6 +30,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         public static readonly string UpdateAppTheme = "UpdateAppTheme";
         public static readonly string UpdateShowAppThemeRestartMessage = "UpdateShowAppThemeRestartMessage";
         public static readonly string UpdateShowAppLanguageRestartMessage = "UpdateShowAppLanguageRestartMessage";
+        public static readonly string ClearTemporaryFiles = "ClearTemporaryFiles";
+        public static readonly string OpenTemporaryFilesFolder = "OpenTemporaryFilesFolder";
+        public static readonly string RestoreDefaultSettings = "RestoreDefaultSettings";
     }
 
     private readonly IAppNavigation _appNavigation;
@@ -39,6 +42,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
     private readonly IFilePickerService _filePickerService;
+    private readonly IStorageService _storageService;
     private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
     private readonly IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
@@ -56,6 +60,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public AsyncRelayCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
     public AsyncRelayCommand<int> UpdateAppLanguageCommand { get; }
     public RelayCommand<int> UpdateAppThemeCommand { get; }
+    public AsyncRelayCommand OpenTemporaryFilesFolderCommand { get; }
+    public RelayCommand ClearTemporaryFilesCommand { get; }
+    public AsyncRelayCommand RestoreDefaultSettingsCommand { get; }
 
     public ObservableCollection<AppLanguageViewModel> AppLanguages
     {
@@ -111,6 +118,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
+    public string TemporaryFilesFolderPath
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public SettingsPageViewModel(
         IAppNavigation appNavigation,
         ITelemetryService telemetryService,
@@ -119,6 +132,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IThemeService themeService,
         IFilePickerService filePickerService,
         ISettingsService settingsService,
+        IStorageService storageService,
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
         IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
@@ -129,27 +143,34 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _settingsService = settingsService;
         _themeService = themeService;
         _filePickerService = filePickerService;
+        _storageService = storageService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
 
         AppThemes = [];
         AppLanguages = [];
         ScreenshotsFolderPath = string.Empty;
+        TemporaryFilesFolderPath = string.Empty;
 
-        ChangeScreenshotsFolderCommand = new(ChangeScreenshotsFolderAsync);
-        OpenScreenshotsFolderCommand = new(OpenScreenshotsFolder);
-        RestartAppCommand = new(RestartApp);
-        GoBackCommand = new(GoBack);
-        UpdateImageCaptureAutoCopyCommand = new(UpdateImageCaptureAutoCopyAsync);
-        UpdateImageCaptureAutoSaveCommand = new(UpdateImageCaptureAutoSaveAsync);
-        UpdateAppLanguageCommand = new(UpdateAppLanguageAsync);
-        UpdateAppThemeCommand = new(UpdateAppTheme);
+        ChangeScreenshotsFolderCommand = new(ChangeScreenshotsFolderAsync, () => !IsLoading);
+        OpenScreenshotsFolderCommand = new(OpenScreenshotsFolder, () => !IsLoading);
+        RestartAppCommand = new(RestartApp, () => !IsLoading);
+        GoBackCommand = new(GoBack, () => !IsLoading);
+        UpdateImageCaptureAutoCopyCommand = new(UpdateImageCaptureAutoCopyAsync, (b) => !IsLoading);
+        UpdateImageCaptureAutoSaveCommand = new(UpdateImageCaptureAutoSaveAsync, (b) => !IsLoading);
+        UpdateAppLanguageCommand = new(UpdateAppLanguageAsync, (i) => !IsLoading);
+        UpdateAppThemeCommand = new(UpdateAppTheme, (i) => !IsLoading);
+        OpenTemporaryFilesFolderCommand = new(OpenTemporaryFilesFolderAsync, () => !IsLoading);
+        ClearTemporaryFilesCommand = new(ClearTemporaryFiles, () => !IsLoading);
+        RestoreDefaultSettingsCommand = new(RestoreDefaultSettingsAsync, () => !IsLoading);
     }
 
     public override Task LoadAsync(CancellationToken cancellationToken)
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Load, async () =>
         {
+            StartLoading();
+
             // Languages
             IAppLanguage[] languages = _localizationService.SupportedLanguages;
             int appLanguageIndex = -1;
@@ -167,17 +188,18 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             AppLanguages.Add(_appLanguageViewModelFactory.Create(null)); // Null for system default
             if (appLanguageIndex != -1)
             {
-                await UpdateAppLanguageAsync(appLanguageIndex);
+                SelectedAppLanguageIndex = appLanguageIndex;
             }
             else
             {
-                await UpdateAppLanguageAsync(AppLanguages.Count - 1);
+                SelectedAppLanguageIndex = AppLanguages.Count - 1;
             }
             UpdateShowAppLanguageRestartMessage();
 
             // Themes
             AppTheme currentTheme = _themeService.CurrentTheme;
             int appThemeIndex = -1;
+            AppThemes.Clear();
             for (var i = 0; i < SupportedAppThemes.Length; i++)
             {
                 AppTheme supportedTheme = SupportedAppThemes[i];
@@ -191,16 +213,16 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             }
             if (appThemeIndex != -1)
             {
-                UpdateAppTheme(appThemeIndex);
+                SelectedAppThemeIndex = appThemeIndex;
             }
             else
             {
-                UpdateAppTheme(SupportedAppThemes.IndexOf(AppTheme.SystemDefault));
+                SelectedAppThemeIndex = SupportedAppThemes.IndexOf(AppTheme.SystemDefault);
             }
             UpdateShowAppThemeRestartMessage();
 
-            await UpdateImageCaptureAutoCopyAsync(_settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy));
-            await UpdateImageCaptureAutoSaveAsync(_settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave));
+            ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
+            ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
 
             var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
             if (string.IsNullOrWhiteSpace(screenshotsFolder))
@@ -209,6 +231,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             }
 
             ScreenshotsFolderPath = screenshotsFolder;
+            TemporaryFilesFolderPath = _storageService.GetApplicationTemporaryFolderPath();
 
             await base.LoadAsync(cancellationToken);
         });
@@ -220,11 +243,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         {
             SelectedAppLanguageIndex = index;
             if (SelectedAppLanguageIndex == -1)
-            {
-                return;
-            }
-
-            if (IsLoading)
             {
                 return;
             }
@@ -270,18 +288,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             {
                 return;
             }
-        
-            if (IsLoading)
-            {
-                return;
-            }
 
             AppThemeViewModel vm = AppThemes[SelectedAppThemeIndex];
-            if (vm.AppTheme == _themeService.CurrentTheme)
-            {
-                return;
-            }
-
             _themeService.UpdateCurrentTheme(vm.AppTheme);
             UpdateShowAppThemeRestartMessage();
         });
@@ -315,13 +323,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoSave, async () =>
         {
-            ImageCaptureAutoSave = value;
-
-            if (IsLoading)
-            {
-                return;
-            }
-           
+            ImageCaptureAutoSave = value;           
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, ImageCaptureAutoSave);
             await _settingsService.TrySaveAsync(CancellationToken.None);
         });
@@ -332,12 +334,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
         {
             ImageCaptureAutoCopy = value;
-
-            if (IsLoading)
-            {
-
-            }
-           
             _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, ImageCaptureAutoCopy);
             await _settingsService.TrySaveAsync(CancellationToken.None);
         });
@@ -383,6 +379,64 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () => 
         {
             _appNavigation.GoBackOrGoHome();
+        });
+    }
+
+    private void ClearTemporaryFiles()
+    {
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ClearTemporaryFiles, () =>
+        {
+            foreach (var entry in Directory.EnumerateFileSystemEntries(TemporaryFilesFolderPath))
+            {
+                try
+                {
+                    if (Directory.Exists(entry))
+                    {
+                        Directory.Delete(entry, true);
+                    }
+                    else
+                    {
+                        File.Delete(entry);
+                    }
+                }
+                catch
+                {
+                    // Ignore errors
+                }
+            }
+        });
+    }
+
+    private async Task OpenTemporaryFilesFolderAsync()
+    {
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenTemporaryFilesFolder, () =>
+        {
+            if (Directory.Exists(TemporaryFilesFolderPath))
+            {
+                Process.Start("explorer.exe", $"/open, {TemporaryFilesFolderPath}");
+            }
+            else
+            {
+                throw new DirectoryNotFoundException($"The temporary folder path '{TemporaryFilesFolderPath}' does not exist.");
+            }
+        });
+    }
+
+    private Task RestoreDefaultSettingsAsync()
+    {
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.RestoreDefaultSettings, async () =>
+        {
+            _settingsService.ClearAllSettings();
+            await _settingsService.TrySaveAsync(CancellationToken.None);
+
+            ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
+            ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
+
+            var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
+            ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _appController.GetDefaultScreenshotsFolderPath();
+
+            SelectedAppLanguageIndex = AppLanguages.Count - 1;
+            SelectedAppThemeIndex = AppThemes.Count - 1;
         });
     }
 }

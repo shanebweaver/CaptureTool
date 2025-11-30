@@ -414,7 +414,7 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="Settings_AutoSave_OpenButton.Content" xml:space="preserve">
     <value>Öffnen</value>
   </data>
-  <data name="Settings_AutoSave_ChangeButton.Content" xml:space="preserve">
+  <data name="Settings_AutoSave_ChangeButton.Text" xml:space="preserve">
     <value>Ordner ändern</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
@@ -566,5 +566,23 @@ SOFTWARE.
   </data>
   <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
     <value>Um 270° gedreht und horizontal gespiegelt</value>
+  </data>
+  <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
+    <value>Dateien löschen</value>
+  </data>
+  <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
+    <value>Ordner für temporäre Dateien:</value>
+  </data>
+  <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
+    <value>Wird für den normalen App-Betrieb verwendet. Sie können diese Dateien jederzeit löschen.</value>
+  </data>
+  <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
+    <value>Temporäre Dateien</value>
+  </data>
+  <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
+    <value>Andere</value>
+  </data>
+  <data name="Settings_RestoreDefaults_Button.Text" xml:space="preserve">
+    <value>Standardeinstellungen wiederherstellen</value>
   </data>
 </root>

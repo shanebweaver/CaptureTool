@@ -414,7 +414,7 @@
   <data name="Settings_AutoSave_OpenButton.Content" xml:space="preserve">
     <value>打开</value>
   </data>
-  <data name="Settings_AutoSave_ChangeButton.Content" xml:space="preserve">
+  <data name="Settings_AutoSave_ChangeButton.Text" xml:space="preserve">
     <value>更改文件夹</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
@@ -566,5 +566,23 @@ SOFTWARE.
   </data>
   <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
     <value>旋转 270° 并水平翻转</value>
+  </data>
+  <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
+    <value>清除文件</value>
+  </data>
+  <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
+    <value>临时文件夹：</value>
+  </data>
+  <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
+    <value>用于应用的正常运行。您可以随时清除这些文件。</value>
+  </data>
+  <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
+    <value>临时文件</value>
+  </data>
+  <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
+    <value>其他</value>
+  </data>
+  <data name="Settings_RestoreDefaults_Button.Text" xml:space="preserve">
+    <value>恢复默认设置</value>
   </data>
 </root>

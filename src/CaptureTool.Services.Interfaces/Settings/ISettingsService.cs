@@ -17,4 +17,6 @@ public interface ISettingsService
 
     Task InitializeAsync(string filePath, CancellationToken cancellationToken);
     Task<bool> TrySaveAsync(CancellationToken cancellationToken);
+
+    void ClearAllSettings();
 }

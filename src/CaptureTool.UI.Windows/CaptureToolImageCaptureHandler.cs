@@ -2,7 +2,7 @@
 using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Settings;
-using Microsoft.Windows.Storage;
+using CaptureTool.Services.Interfaces.Storage;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -14,10 +14,14 @@ namespace CaptureTool.UI.Windows;
 
 internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
 {
+    private readonly IStorageService _storageService;
     private readonly ISettingsService _settingsService;
 
-    public CaptureToolImageCaptureHandler(ISettingsService settingsService)
+    public CaptureToolImageCaptureHandler(
+        IStorageService storageService,
+        ISettingsService settingsService)
     {
+        _storageService = storageService;
         _settingsService = settingsService;
     }
     
@@ -33,8 +37,8 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         try
         {
             var tempPath = Path.Combine(
-                ApplicationData.GetDefault().TemporaryPath,
-                $"capture_{Guid.NewGuid()}.png"
+            _storageService.GetApplicationTemporaryFolderPath(),
+            _storageService.GetTemporaryFileName()
             );
             combined.Save(tempPath, ImageFormat.Png);
 
@@ -74,8 +78,8 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         }
 
         var tempPath = Path.Combine(
-            ApplicationData.GetDefault().TemporaryPath,
-            $"capture_{Guid.NewGuid()}.png"
+            _storageService.GetApplicationTemporaryFolderPath(),
+            _storageService.GetTemporaryFileName()
         );
 
         // Crop to the selected area
@@ -162,12 +166,12 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
             string screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
             if (string.IsNullOrWhiteSpace(screenshotsFolder))
             {
-                screenshotsFolder = GetDefaultScreenshotsFolderPath();
+                screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
             }
 
             string tempFilePath = imageFile.FilePath;
             string fileName = Path.GetFileName(tempFilePath);
-            string newFilePath = Path.Combine(screenshotsFolder, fileName);
+            string newFilePath = Path.Combine(screenshotsFolder, $"capture_{Guid.NewGuid()}.png");
 
             File.Copy(tempFilePath, newFilePath, true);
             return true;
@@ -176,10 +180,5 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         {
             return false;
         }
-    }
-
-    public string GetDefaultScreenshotsFolderPath()
-    {
-        return global::Windows.Storage.KnownFolders.SavedPictures.Path;
     }
 }

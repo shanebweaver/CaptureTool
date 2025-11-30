@@ -261,4 +261,9 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+
+    public void ClearAllSettings()
+    {
+        _settings.Clear();
+    }
 }

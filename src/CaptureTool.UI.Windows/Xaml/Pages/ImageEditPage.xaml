@@ -170,9 +170,8 @@
                             <TextBlock Text="Offset" />
                         </ToolTip>
                     </ToolTipService.ToolTip>
-                    <Run Text="{x:Bind ViewModel.CropRect.Left, Mode=OneWay}" /><Run Text="x" />
-                    <Run Text="×" />
-                    <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text="y" />
+                    <Run Text="(" /><Run Text="{x:Bind ViewModel.CropRect.Left, Mode=OneWay}" /><Run Text="," />
+                    <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text=")" />
                 </TextBlock>
                 <TextBlock
                     FontSize="12"

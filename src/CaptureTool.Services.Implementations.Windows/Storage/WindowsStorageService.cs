@@ -14,4 +14,9 @@ public sealed partial class WindowsStorageService : IStorageService
     {
         return global::Windows.Storage.KnownFolders.SavedPictures.Path;
     }
+
+    public string GetTemporaryFileName()
+    {
+        return $"{Guid.NewGuid()}.tmp";
+    }
 }

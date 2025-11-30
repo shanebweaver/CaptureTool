@@ -414,7 +414,7 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="Settings_AutoSave_OpenButton.Content" xml:space="preserve">
     <value>Ouvrir</value>
   </data>
-  <data name="Settings_AutoSave_ChangeButton.Content" xml:space="preserve">
+  <data name="Settings_AutoSave_ChangeButton.Text" xml:space="preserve">
     <value>Changer de dossier</value>
   </data>
   <data name="Settings_AutoSave_ScreenshotsFolderLabel.Text" xml:space="preserve">
@@ -566,5 +566,23 @@ SOFTWARE.
   </data>
   <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
     <value>Pivoté de 270° et retourné horizontalement</value>
+  </data>
+  <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
+    <value>Effacer les fichiers</value>
+  </data>
+  <data name="Settings_TemporaryFolder_ScreenshotsFolderLabel.Text" xml:space="preserve">
+    <value>Dossier des fichiers temporaires :</value>
+  </data>
+  <data name="Settings_TemporaryFolder_SubtitleLabel.Text" xml:space="preserve">
+    <value>Utilisé pour le fonctionnement normal de l'application. Vous pouvez effacer ces fichiers à tout moment.</value>
+  </data>
+  <data name="Settings_TemporaryFolder_HeaderLabel.Text" xml:space="preserve">
+    <value>Fichiers temporaires</value>
+  </data>
+  <data name="Settings_OtherHeaderLabel.Text" xml:space="preserve">
+    <value>Autres</value>
+  </data>
+  <data name="Settings_RestoreDefaults_Button.Text" xml:space="preserve">
+    <value>Restaurer les paramètres par défaut</value>
   </data>
 </root>
