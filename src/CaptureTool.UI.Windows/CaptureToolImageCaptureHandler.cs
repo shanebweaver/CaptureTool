@@ -17,6 +17,8 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
     private readonly IStorageService _storageService;
     private readonly ISettingsService _settingsService;
 
+    public event EventHandler<IImageFile>? NewImageCaptured;
+
     public CaptureToolImageCaptureHandler(
         IStorageService storageService,
         ISettingsService settingsService)
@@ -37,15 +39,18 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         try
         {
             var tempPath = Path.Combine(
-            _storageService.GetApplicationTemporaryFolderPath(),
-            _storageService.GetTemporaryFileName()
+                _storageService.GetApplicationTemporaryFolderPath(),
+                _storageService.GetTemporaryFileName()
             );
+            tempPath = Path.ChangeExtension(tempPath, "png");
+
             combined.Save(tempPath, ImageFormat.Png);
 
             ImageFile imageFile = new(tempPath);
             TryAutoSaveImage(imageFile);
             _ = TryAutoCopyImageAsync(imageFile);
 
+            NewImageCaptured?.Invoke(this, imageFile);
             return imageFile;
         }
         finally
@@ -81,6 +86,7 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
             _storageService.GetApplicationTemporaryFolderPath(),
             _storageService.GetTemporaryFileName()
         );
+        tempPath = Path.ChangeExtension(tempPath, "png");
 
         // Crop to the selected area
         float scale = monitor.Scale; int cropX = (int)Math.Round((area.Left) * scale);
@@ -102,6 +108,7 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         TryAutoSaveImage(imageFile);
         _ = TryAutoCopyImageAsync(imageFile);
 
+        NewImageCaptured?.Invoke(this, imageFile);
         return imageFile;
     }
 

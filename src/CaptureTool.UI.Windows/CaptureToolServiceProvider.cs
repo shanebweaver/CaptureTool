@@ -98,6 +98,7 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IFactoryServiceWithArgs<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
         collection.AddSingleton<IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode>, CaptureModeViewModelFactory>();
         collection.AddSingleton<IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType>, CaptureTypeViewModelFactory>();
+        collection.AddSingleton<IFactoryServiceWithArgs<RecentCaptureViewModel, string>, RecentCaptureViewModelFactory>();
 
         // App controller and feature manager
         collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
