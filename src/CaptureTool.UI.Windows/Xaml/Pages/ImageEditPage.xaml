@@ -16,6 +16,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--  Toolbar  -->
@@ -140,6 +141,20 @@
                 InteractionComplete="ImageCanvas_InteractionComplete"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}" />
+        </Grid>
+
+        <Grid
+            Height="38"
+            Padding="8"
+            Row="3">
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="12"
+                FontWeight="SemiLight">
+                <Run Text="{x:Bind ViewModel.CropRect.Width, Mode=OneWay}" />
+                <Run Text="×" />
+                <Run Text="{x:Bind ViewModel.CropRect.Height, Mode=OneWay}" /><Run Text="px" />
+            </TextBlock>
         </Grid>
     </Grid>
 </local:ImageEditPageBase>
