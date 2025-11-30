@@ -666,4 +666,36 @@ SOFTWARE.
     <value>Share</value>
     <comment>The label for the share button on the image edit page.</comment>
   </data>
+  <data name="ImageOrientation_RotateNoneFlipNone" xml:space="preserve">
+    <value>Normal</value>
+    <comment>The display name for the RotateNoneFlipNone image orientation.</comment>
+  </data>
+  <data name="ImageOrientation_Rotate90FlipNone" xml:space="preserve">
+    <value>Rotated 90°</value>
+    <comment>The display name for the Rotate90FlipNone image orientation.</comment>
+  </data>
+  <data name="ImageOrientation_Rotate180FlipNone" xml:space="preserve">
+    <value>Rotated 180°</value>
+    <comment>The display name for the Rotate180FlipNone image orientation.</comment>
+  </data>
+  <data name="ImageOrientation_Rotate270FlipNone" xml:space="preserve">
+    <value>Rotated 270°</value>
+    <comment>The display name for the Rotate270FlipNone image orientation.</comment>
+  </data>
+  <data name="ImageOrientation_RotateNoneFlipX" xml:space="preserve">
+    <value>Flipped Horizontally</value>
+    <comment>The display name for the RotateNoneFlipNone image orientation.</comment>
+  </data>
+  <data name="ImageOrientation_Rotate90FlipX" xml:space="preserve">
+    <value>Rotated 90° and Flipped Horizontally</value>
+    <comment>The display name for the Rotate90FlipX image orientation.</comment>
+  </data>
+  <data name="ImageOrientation_Rotate180FlipX" xml:space="preserve">
+    <value>Rotated 180° and Flipped Horizontally</value>
+    <comment>The display name for the Rotate180FlipX image orientation.</comment>
+  </data>
+  <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
+    <value>Rotated 270° and Flipped Horizontally</value>
+    <comment>The display name for the RotateNoneFlipNone image orientation.</comment>
+  </data>
 </root>

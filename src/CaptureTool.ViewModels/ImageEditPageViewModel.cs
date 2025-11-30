@@ -10,6 +10,7 @@ using CaptureTool.Domains.Edit.Interfaces.Drawable;
 using CaptureTool.Domains.Edit.Interfaces.Operations;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Interfaces.Cancellation;
+using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Share;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Store;
@@ -37,6 +38,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         public static readonly string Share = "Share";
     }
 
+    private readonly ILocalizationService _localizationService;
     private readonly IStoreService _storeService;
     private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
@@ -170,6 +172,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     }
 
     public ImageEditPageViewModel(
+        ILocalizationService localizationService,
         IStoreService storeService,
         IAppController appController,
         ICancellationService cancellationService,
@@ -181,6 +184,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IFeatureManager featureManager,
         IShareService shareService)
     {
+        _localizationService = localizationService;
         _storeService = storeService;
         _appController = appController;
         _cancellationService = cancellationService;
@@ -523,19 +527,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    private static string GetOrientationDisplayName(ImageOrientation orientation)
+    private string GetOrientationDisplayName(ImageOrientation orientation)
     {
-        return orientation switch
-        {
-            ImageOrientation.RotateNoneFlipNone => "Normal",
-            ImageOrientation.Rotate90FlipNone => "Rotated 90°",
-            ImageOrientation.Rotate180FlipNone => "Rotated 180°",
-            ImageOrientation.Rotate270FlipNone => "Rotated 270°",
-            ImageOrientation.RotateNoneFlipX => "Flipped Horizontally",
-            ImageOrientation.Rotate90FlipX => "Rotated 90° and Flipped Horizontally",
-            ImageOrientation.Rotate180FlipX => "Rotated 180° and Flipped Horizontally",
-            ImageOrientation.Rotate270FlipX => "Rotated 270° and Flipped Horizontally",
-            _ => string.Empty,
-        };
+        return _localizationService.GetString($"{nameof(ImageOrientation)}_{Enum.GetName(orientation)}");
     }
 }
