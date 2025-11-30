@@ -13,11 +13,11 @@
     mc:Ignorable="d">
 
     <Grid x:Name="RootPanel">
-        <Grid>
+        <Grid PointerMoved="SelectionOverlayContainer_PointerMoved">
             <controls:SelectionOverlay x:Name="SelectionOverlay" />
         </Grid>
 
-        <Grid Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}">
+        <Grid PointerMoved="ToolbarContainer_PointerMoved" Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}">
             <controls:SelectionOverlayToolbar
                 x:Name="SelectionToolbar"
                 CaptureModeSelectionChanged="SelectionToolbar_CaptureModeSelectionChanged"

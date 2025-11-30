@@ -1,11 +1,14 @@
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Themes;
 using CaptureTool.ViewModels;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.UI.Core;
 
 namespace CaptureTool.UI.Windows.Xaml.Views;
 
@@ -154,5 +157,15 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
     private void SelectionToolbar_CaptureTypeSelectionChanged(object _, int e)
     {
         ViewModel.UpdateSelectedCaptureTypeCommand.Execute(e);
+    }
+
+    private void SelectionOverlayContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Cross, 1));
+    }
+
+    private void ToolbarContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(0, 1));
     }
 }
