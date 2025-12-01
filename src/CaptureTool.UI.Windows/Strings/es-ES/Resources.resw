@@ -543,29 +543,8 @@ SOFTWARE.
   <data name="ImageEdit_ShareButton.Label" xml:space="preserve">
     <value>Compartir</value>
   </data>
-  <data name="ImageOrientation_RotateNoneFlipNone" xml:space="preserve">
+  <data name="ImageOrientation_Mirrored" xml:space="preserve">
     <value>Normal</value>
-  </data>
-  <data name="ImageOrientation_Rotate90FlipNone" xml:space="preserve">
-    <value>Girado 90°</value>
-  </data>
-  <data name="ImageOrientation_Rotate180FlipNone" xml:space="preserve">
-    <value>Girado 180°</value>
-  </data>
-  <data name="ImageOrientation_Rotate270FlipNone" xml:space="preserve">
-    <value>Girado 270°</value>
-  </data>
-  <data name="ImageOrientation_RotateNoneFlipX" xml:space="preserve">
-    <value>Volteado horizontalmente</value>
-  </data>
-  <data name="ImageOrientation_Rotate90FlipX" xml:space="preserve">
-    <value>Girado 90° y volteado horizontalmente</value>
-  </data>
-  <data name="ImageOrientation_Rotate180FlipX" xml:space="preserve">
-    <value>Girado 180° y volteado horizontalmente</value>
-  </data>
-  <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
-    <value>Girado 270° y volteado horizontalmente</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
     <value>Borrar archivos</value>
@@ -587,5 +566,20 @@ SOFTWARE.
   </data>
   <data name="AppMenu_RecentCapturesItem.Text" xml:space="preserve">
     <value>Recientes</value>
+  </data>
+  <data name="ImageOrientation_Normal" xml:space="preserve">
+    <value>Reflejado</value>
+  </data>
+  <data name="ImageEdit_Info_Dimensions.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Dimensiones</value>
+  </data>
+  <data name="ImageEdit_Info_Offset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Desplazamiento</value>
+  </data>
+  <data name="ImageEdit_Info_Rotation.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Rotación</value>
+  </data>
+  <data name="ImageEdit_Info_Mirrored.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Reflejado</value>
   </data>
 </root>

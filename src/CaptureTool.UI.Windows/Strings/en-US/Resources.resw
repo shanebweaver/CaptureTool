@@ -666,37 +666,9 @@ SOFTWARE.
     <value>Share</value>
     <comment>The label for the share button on the image edit page.</comment>
   </data>
-  <data name="ImageOrientation_RotateNoneFlipNone" xml:space="preserve">
-    <value>Normal</value>
-    <comment>The display name for the RotateNoneFlipNone image orientation.</comment>
-  </data>
-  <data name="ImageOrientation_Rotate90FlipNone" xml:space="preserve">
-    <value>Rotated 90°</value>
-    <comment>The display name for the Rotate90FlipNone image orientation.</comment>
-  </data>
-  <data name="ImageOrientation_Rotate180FlipNone" xml:space="preserve">
-    <value>Rotated 180°</value>
-    <comment>The display name for the Rotate180FlipNone image orientation.</comment>
-  </data>
-  <data name="ImageOrientation_Rotate270FlipNone" xml:space="preserve">
-    <value>Rotated 270°</value>
-    <comment>The display name for the Rotate270FlipNone image orientation.</comment>
-  </data>
-  <data name="ImageOrientation_RotateNoneFlipX" xml:space="preserve">
-    <value>Flipped Horizontally</value>
-    <comment>The display name for the RotateNoneFlipNone image orientation.</comment>
-  </data>
-  <data name="ImageOrientation_Rotate90FlipX" xml:space="preserve">
-    <value>Rotated 90° and Flipped Horizontally</value>
-    <comment>The display name for the Rotate90FlipX image orientation.</comment>
-  </data>
-  <data name="ImageOrientation_Rotate180FlipX" xml:space="preserve">
-    <value>Rotated 180° and Flipped Horizontally</value>
-    <comment>The display name for the Rotate180FlipX image orientation.</comment>
-  </data>
-  <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
-    <value>Rotated 270° and Flipped Horizontally</value>
-    <comment>The display name for the RotateNoneFlipNone image orientation.</comment>
+  <data name="ImageOrientation_Mirrored" xml:space="preserve">
+    <value>Mirrored</value>
+    <comment>The display name for the mirrored image orientation.</comment>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
     <value>Clear files</value>
@@ -725,5 +697,25 @@ SOFTWARE.
   <data name="AppMenu_RecentCapturesItem.Text" xml:space="preserve">
     <value>Recent</value>
     <comment>The label for the menu item that shows recently captured items.</comment>
+  </data>
+  <data name="ImageOrientation_Normal" xml:space="preserve">
+    <value>Normal</value>
+    <comment>The display name for a normal, un-mirrored image orientation.</comment>
+  </data>
+  <data name="ImageEdit_Info_Dimensions.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Dimensions</value>
+    <comment>The tooltip for the dimensions info.</comment>
+  </data>
+  <data name="ImageEdit_Info_Offset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Offset</value>
+    <comment>The tooltip for the offset info.</comment>
+  </data>
+  <data name="ImageEdit_Info_Rotation.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Rotation</value>
+    <comment>The tooltip for the rotation info.</comment>
+  </data>
+  <data name="ImageEdit_Info_Mirrored.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Mirrored</value>
+    <comment>The tooltip for the mirrored info.</comment>
   </data>
 </root>

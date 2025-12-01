@@ -176,29 +176,31 @@
                 VerticalAlignment="Center"
                 Orientation="Horizontal"
                 Spacing="12">
-                <TextBlock FontSize="12" FontWeight="SemiLight">
-                    <ToolTipService.ToolTip>
-                        <ToolTip>
-                            <TextBlock Text="Dimensions" />
-                        </ToolTip>
-                    </ToolTipService.ToolTip>
+                <TextBlock
+                    x:Uid="ImageEdit_Info_Dimensions"
+                    FontSize="12"
+                    FontWeight="SemiLight">
                     <Run Text="{x:Bind ViewModel.CropRect.Width, Mode=OneWay}" />
                     <Run Text="×" />
                     <Run Text="{x:Bind ViewModel.CropRect.Height, Mode=OneWay}" /><Run Text="px" />
                 </TextBlock>
-                <TextBlock FontSize="12" FontWeight="SemiLight">
-                    <ToolTipService.ToolTip>
-                        <ToolTip>
-                            <TextBlock Text="Offset" />
-                        </ToolTip>
-                    </ToolTipService.ToolTip>
+                <TextBlock
+                    x:Uid="ImageEdit_Info_Offset"
+                    FontSize="12"
+                    FontWeight="SemiLight">
                     <Run Text="(" /><Run Text="{x:Bind ViewModel.CropRect.Left, Mode=OneWay}" /><Run Text="," />
                     <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text=")" />
                 </TextBlock>
                 <TextBlock
+                    x:Uid="ImageEdit_Info_Rotation"
                     FontSize="12"
                     FontWeight="SemiLight"
-                    Text="{x:Bind ViewModel.OrientationDisplayName, Mode=OneWay}" />
+                    Text="{x:Bind ViewModel.RotationDisplayName, Mode=OneWay}" />
+                <TextBlock
+                    x:Uid="ImageEdit_Info_Mirrored"
+                    FontSize="12"
+                    FontWeight="SemiLight"
+                    Text="{x:Bind ViewModel.MirroredDisplayName, Mode=OneWay}" />
             </StackPanel>
         </Grid>
     </Grid>
