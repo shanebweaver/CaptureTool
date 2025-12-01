@@ -543,29 +543,8 @@ SOFTWARE.
   <data name="ImageEdit_ShareButton.Label" xml:space="preserve">
     <value>Поделиться</value>
   </data>
-  <data name="ImageOrientation_RotateNoneFlipNone" xml:space="preserve">
+  <data name="ImageOrientation_Mirrored" xml:space="preserve">
     <value>Нормально</value>
-  </data>
-  <data name="ImageOrientation_Rotate90FlipNone" xml:space="preserve">
-    <value>Повернуто на 90°</value>
-  </data>
-  <data name="ImageOrientation_Rotate180FlipNone" xml:space="preserve">
-    <value>Повернуто на 180°</value>
-  </data>
-  <data name="ImageOrientation_Rotate270FlipNone" xml:space="preserve">
-    <value>Повернуто на 270°</value>
-  </data>
-  <data name="ImageOrientation_RotateNoneFlipX" xml:space="preserve">
-    <value>Отражено по горизонтали</value>
-  </data>
-  <data name="ImageOrientation_Rotate90FlipX" xml:space="preserve">
-    <value>Повернуто на 90° и отражено по горизонтали</value>
-  </data>
-  <data name="ImageOrientation_Rotate180FlipX" xml:space="preserve">
-    <value>Повернуто на 180° и отражено по горизонтали</value>
-  </data>
-  <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
-    <value>Повернуто на 270° и отражено по горизонтали</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
     <value>Удалить файлы</value>
@@ -587,5 +566,20 @@ SOFTWARE.
   </data>
   <data name="AppMenu_RecentCapturesItem.Text" xml:space="preserve">
     <value>Недавние</value>
+  </data>
+  <data name="ImageOrientation_Normal" xml:space="preserve">
+    <value>Отражено</value>
+  </data>
+  <data name="ImageEdit_Info_Dimensions.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Размеры</value>
+  </data>
+  <data name="ImageEdit_Info_Offset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Смещение</value>
+  </data>
+  <data name="ImageEdit_Info_Rotation.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Поворот</value>
+  </data>
+  <data name="ImageEdit_Info_Mirrored.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Отражено</value>
   </data>
 </root>

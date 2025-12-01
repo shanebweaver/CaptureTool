@@ -543,29 +543,8 @@ SOFTWARE.
   <data name="ImageEdit_ShareButton.Label" xml:space="preserve">
     <value>Partager</value>
   </data>
-  <data name="ImageOrientation_RotateNoneFlipNone" xml:space="preserve">
+  <data name="ImageOrientation_Mirrored" xml:space="preserve">
     <value>Normal</value>
-  </data>
-  <data name="ImageOrientation_Rotate90FlipNone" xml:space="preserve">
-    <value>Pivoté de 90°</value>
-  </data>
-  <data name="ImageOrientation_Rotate180FlipNone" xml:space="preserve">
-    <value>Pivoté de 180°</value>
-  </data>
-  <data name="ImageOrientation_Rotate270FlipNone" xml:space="preserve">
-    <value>Pivoté de 270°</value>
-  </data>
-  <data name="ImageOrientation_RotateNoneFlipX" xml:space="preserve">
-    <value>Retourné horizontalement</value>
-  </data>
-  <data name="ImageOrientation_Rotate90FlipX" xml:space="preserve">
-    <value>Pivoté de 90° et retourné horizontalement</value>
-  </data>
-  <data name="ImageOrientation_Rotate180FlipX" xml:space="preserve">
-    <value>Pivoté de 180° et retourné horizontalement</value>
-  </data>
-  <data name="ImageOrientation_Rotate270FlipX" xml:space="preserve">
-    <value>Pivoté de 270° et retourné horizontalement</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
     <value>Effacer les fichiers</value>
@@ -587,5 +566,20 @@ SOFTWARE.
   </data>
   <data name="AppMenu_RecentCapturesItem.Text" xml:space="preserve">
     <value>Récents</value>
+  </data>
+  <data name="ImageOrientation_Normal" xml:space="preserve">
+    <value>Miroir</value>
+  </data>
+  <data name="ImageEdit_Info_Dimensions.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Dimensions</value>
+  </data>
+  <data name="ImageEdit_Info_Offset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Décalage</value>
+  </data>
+  <data name="ImageEdit_Info_Rotation.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Rotation</value>
+  </data>
+  <data name="ImageEdit_Info_Mirrored.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Miroir</value>
   </data>
 </root>

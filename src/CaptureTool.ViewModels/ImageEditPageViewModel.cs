@@ -111,7 +111,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
-    public string OrientationDisplayName
+    public string MirroredDisplayName
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public string RotationDisplayName
     {
         get => field;
         private set => Set(ref field, value);
@@ -198,7 +204,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         Drawables = [];
         ImageSize = new();
         Orientation = ImageOrientation.RotateNoneFlipNone;
-        OrientationDisplayName = GetOrientationDisplayName(Orientation);
+        MirroredDisplayName = GetMirroredDisplayName(Orientation);
+        RotationDisplayName = GetRotationDisplayName(Orientation);
         CropRect = Rectangle.Empty;
         _imageCanvasExporter = imageCanvasExporter;
         SelectedChromaKeyColorOption = 0;
@@ -281,7 +288,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CropRect = Rectangle.Empty;
         ImageSize = Size.Empty;
         Orientation = ImageOrientation.RotateNoneFlipNone;
-        OrientationDisplayName = string.Empty;
+        MirroredDisplayName = string.Empty;
         Drawables.Clear();
         base.Dispose();
     }
@@ -441,7 +448,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             CropRect = newCropRect;
             Orientation = newOrientation;
-            OrientationDisplayName = GetOrientationDisplayName(newOrientation);
+            MirroredDisplayName = GetMirroredDisplayName(Orientation);
+            RotationDisplayName = GetRotationDisplayName(Orientation);
 
             _operationsRedoStack.Clear();
             _operationsUndoStack.Push(new OrientationOperation(UpdateOrientationCommand, oldOrientation, newOrientation));
@@ -473,7 +481,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             CropRect = newCropRect;
             Orientation = newOrientation;
-            OrientationDisplayName = GetOrientationDisplayName(newOrientation);
+            MirroredDisplayName = GetMirroredDisplayName(newOrientation);
+            RotationDisplayName = GetRotationDisplayName(Orientation);
 
             _operationsRedoStack.Clear();
             _operationsUndoStack.Push(new OrientationOperation(UpdateOrientationCommand, oldOrientation, newOrientation));
@@ -521,7 +530,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         Rectangle newCropRect = ImageOrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
         CropRect = newCropRect;
         Orientation = newOrientation;
-        OrientationDisplayName = GetOrientationDisplayName(newOrientation);
+        MirroredDisplayName = GetMirroredDisplayName(newOrientation);
+        RotationDisplayName = GetRotationDisplayName(Orientation);
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
@@ -531,8 +541,39 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    private string GetOrientationDisplayName(ImageOrientation orientation)
+    private string GetMirroredDisplayName(ImageOrientation orientation)
     {
-        return _localizationService.GetString($"{nameof(ImageOrientation)}_{Enum.GetName(orientation)}");
+        if (IsMirrored(orientation))
+        {
+            return _localizationService.GetString($"{nameof(ImageOrientation)}_Mirrored");
+        }
+        else
+        {
+            return _localizationService.GetString($"{nameof(ImageOrientation)}_Normal");
+        }
+    }
+
+    private static string GetRotationDisplayName(ImageOrientation orientation)
+    {
+        return orientation switch
+        {
+            ImageOrientation.RotateNoneFlipNone or ImageOrientation.RotateNoneFlipX => "0°",
+            ImageOrientation.Rotate90FlipNone or ImageOrientation.Rotate90FlipX => "90°",
+            ImageOrientation.Rotate180FlipNone or ImageOrientation.Rotate180FlipX => "180°",
+            ImageOrientation.Rotate270FlipNone or ImageOrientation.Rotate270FlipX => "270°",
+            _ => string.Empty,
+        };
+    }
+
+    private static bool IsMirrored(ImageOrientation orientation)
+    {
+        return orientation switch
+        {
+            ImageOrientation.RotateNoneFlipX or
+            ImageOrientation.Rotate90FlipX or
+            ImageOrientation.Rotate180FlipX or
+            ImageOrientation.Rotate270FlipX => true,
+            _ => false,
+        };
     }
 }
