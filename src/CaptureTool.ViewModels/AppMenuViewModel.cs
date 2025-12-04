@@ -1,13 +1,14 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Interfaces;
+using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Services.Interfaces.Windowing;
 using System.Collections.ObjectModel;
 
 namespace CaptureTool.ViewModels;
@@ -27,8 +28,9 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         public static readonly string OpenRecentCapture = "OpenRecentCapture";
     }
 
-    private readonly IAppNavigation _appNavigation;
     private readonly IAppController _appController;
+    private readonly IAppNavigation _appNavigation;
+    private readonly IWindowHandleProvider _windowingService;
     private readonly ITelemetryService _telemetryService;
     private readonly IFilePickerService _filePickerService;
     private readonly IStorageService _storageService;
@@ -56,9 +58,10 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     }
 
     public AppMenuViewModel(
+        IAppController appController,
         IAppNavigation appNavigation,
         ITelemetryService telemetryService,
-        IAppController appController,
+        IWindowHandleProvider windowingService,
         IFilePickerService filePickerService,
         IFeatureManager featureManager,
         IStorageService storageService,
@@ -66,9 +69,10 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IVideoCaptureHandler videoCaptureHandler,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory)
     {
+        _appController = appController;
         _appNavigation = appNavigation;
         _telemetryService = telemetryService;
-        _appController = appController;
+        _windowingService = windowingService;
         _filePickerService = filePickerService;
         _storageService = storageService;
         _imageCaptureHandler = imageCaptureHandler;
@@ -129,7 +133,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.OpenFile, async () =>
         {
-            nint hwnd = _appController.GetMainWindowHandle();
+            nint hwnd = _windowingService.GetMainWindowHandle();
             IFile file = await _filePickerService.PickFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures) 
                 ?? throw new OperationCanceledException("No file was selected.");
             _appNavigation.GoToImageEdit(new ImageFile(file.FilePath));

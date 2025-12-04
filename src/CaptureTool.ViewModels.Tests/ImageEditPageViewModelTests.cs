@@ -1,11 +1,11 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Core.AppController;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domains.Edit.Interfaces.Drawable;
 using CaptureTool.FeatureManagement;
+using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Share;
 using CaptureTool.Services.Interfaces.Storage;

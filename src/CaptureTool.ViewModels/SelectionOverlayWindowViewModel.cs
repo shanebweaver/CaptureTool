@@ -1,11 +1,11 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Interfaces;
+using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Themes;
 using System.Collections.ObjectModel;

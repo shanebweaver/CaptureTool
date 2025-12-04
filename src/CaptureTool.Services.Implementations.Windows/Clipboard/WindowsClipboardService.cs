@@ -45,9 +45,9 @@ public partial class WindowsClipboardService : IClipboardService
         global::Windows.ApplicationModel.DataTransfer.Clipboard.Flush();
     }
 
-    public Task CopyStreamAsync(IClipboardStream clipboardStream)
+    public Task CopyStreamAsync(IClipboardStreamSource streamSource)
     {
-        using var stream = clipboardStream.GetStream();
+        using var stream = streamSource.GetStream();
         var randomAccessStream = stream.AsRandomAccessStream();
 
         var bitmap = RandomAccessStreamReference.CreateFromStream(randomAccessStream);

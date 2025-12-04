@@ -1,12 +1,13 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
+using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Store;
 using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Services.Interfaces.Windowing;
 using static CaptureTool.Core.Store.CaptureToolStoreProducts;
 
 namespace CaptureTool.ViewModels;
@@ -21,7 +22,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     }
 
     private readonly IAppNavigation _appNavigation;
-    private readonly IAppController _appController;
+    private readonly IWindowHandleProvider _windowingService;
     private readonly IStoreService _storeService;
     private readonly ILocalizationService _localizationService;
     private readonly ITelemetryService _telemetryService;
@@ -56,14 +57,14 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 
     public AddOnsPageViewModel(
         IAppNavigation appNavigation,
-        IAppController appController,
+        IWindowHandleProvider windowingService,
         ILocalizationService localizationService,
         IStoreService storeService,
         ITelemetryService telemetryService,
         ICancellationService cancellationService)
     {
         _appNavigation = appNavigation;
-        _appController = appController;
+        _windowingService = windowingService;
         _localizationService = localizationService;
         _storeService = storeService;
         _telemetryService = telemetryService;
@@ -117,7 +118,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         {
             if (!IsChromaKeyAddOnOwned)
             {
-                var hwnd = _appController.GetMainWindowHandle();
+                var hwnd = _windowingService.GetMainWindowHandle();
                 bool success = await _storeService.PurchaseAddonAsync(AddOns.ChromaKeyBackgroundRemoval, hwnd);
                 IsChromaKeyAddOnAvailable = !success;
                 IsChromaKeyAddOnOwned = success;

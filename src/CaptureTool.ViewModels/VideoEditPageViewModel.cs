@@ -1,11 +1,12 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.AppController;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Clipboard;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Services.Interfaces.Windowing;
 
 namespace CaptureTool.ViewModels;
 public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<VideoFile>
@@ -28,18 +29,18 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     private readonly IClipboardService _clipboardService;
     private readonly IFilePickerService _filePickerService;
-    private readonly IAppController _appController;
+    private readonly IWindowHandleProvider _windowingService;
     private readonly ITelemetryService _telemetryService;
 
     public VideoEditPageViewModel(
         IClipboardService clipboardService,
         IFilePickerService filePickerService,
-        IAppController appController,
+        IWindowHandleProvider windowingService,
         ITelemetryService telemetryService)
     {
         _clipboardService = clipboardService;
         _filePickerService = filePickerService;
-        _appController = appController;
+        _windowingService = windowingService;
         _telemetryService = telemetryService;
 
         SaveCommand = new(SaveAsync);
@@ -68,7 +69,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
                 throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
             }
 
-            nint hwnd = _appController.GetMainWindowHandle();
+            nint hwnd = _windowingService.GetMainWindowHandle();
             IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Video, UserFolder.Videos)
                 ?? throw new OperationCanceledException("No file was selected.");
         

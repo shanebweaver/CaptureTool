@@ -40,7 +40,7 @@
         </CommandBar>
 
         <!--  Content  -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" Padding="8,0,8,8">
             <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" />
         </Grid>
     </Grid>

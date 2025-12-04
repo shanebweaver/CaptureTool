@@ -1,12 +1,12 @@
 ﻿using CaptureTool.Core.Settings;
 using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Services.Interfaces.Clipboard;
 using CaptureTool.Services.Interfaces.Settings;
 using CaptureTool.Services.Interfaces.Storage;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
 
@@ -14,15 +14,18 @@ namespace CaptureTool.UI.Windows;
 
 internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
 {
+    private readonly IClipboardService _clipboardService;
     private readonly IStorageService _storageService;
     private readonly ISettingsService _settingsService;
 
     public event EventHandler<IImageFile>? NewImageCaptured;
 
     public CaptureToolImageCaptureHandler(
+        IClipboardService clipboardService,
         IStorageService storageService,
         ISettingsService settingsService)
     {
+        _clipboardService = clipboardService;
         _storageService = storageService;
         _settingsService = settingsService;
     }
@@ -149,10 +152,8 @@ internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
             await encoder.FlushAsync();
 
             // Prepare clipboard content
-            DataPackage dataPackage = new();
-            dataPackage.SetBitmap(RandomAccessStreamReference.CreateFromStream(inMemoryStream));
-            Clipboard.SetContent(dataPackage);
-            Clipboard.Flush();
+            SimpleClipboardStreamSource clipboardStream = new(inMemoryStream.AsStream());
+            await _clipboardService.CopyStreamAsync(clipboardStream);
 
             return true;
         }

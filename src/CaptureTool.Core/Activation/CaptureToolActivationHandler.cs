@@ -1,9 +1,9 @@
-﻿using CaptureTool.Core.AppController;
-using CaptureTool.Core.Navigation;
+﻿using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Settings;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Interfaces.Activation;
+using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Logging;
@@ -16,12 +16,12 @@ namespace CaptureTool.Core.Activation;
 
 public sealed partial class CaptureToolActivationHandler : IActivationHandler
 {
-    private readonly IAppController _appController;
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
     private readonly ILogService _logService;
     private readonly ILocalizationService _localizationService;
     private readonly IAppNavigation _appNavigation;
+    private readonly INavigationHandler _navigationHandler;
     private readonly INavigationService _navigationService;
     private readonly IFeatureManager _featureManager;
 
@@ -31,21 +31,21 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
     private bool _isInitialized;
 
     public CaptureToolActivationHandler(
-        IAppController appController,
         ICancellationService cancellationService,
         ISettingsService settingsService,
         ILogService logService,
         ILocalizationService localizationService,
         IAppNavigation appNavigation,
+        INavigationHandler navigationHandler,
         INavigationService navigationService,
         IFeatureManager featureManager)
     {
-        _appController = appController;
         _cancellationService = cancellationService;
         _settingsService = settingsService;
         _logService = logService;
         _localizationService = localizationService;
         _appNavigation = appNavigation;
+        _navigationHandler = navigationHandler;
         _navigationService = navigationService;
         _featureManager = featureManager;
     }
@@ -73,7 +73,7 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
             string languageOverride = _settingsService.Get(CaptureToolSettings.Settings_LanguageOverride);
             _localizationService.Initialize(languageOverride);
 
-            _navigationService.SetNavigationHandler(_appController);
+            _navigationService.SetNavigationHandler(_navigationHandler);
 
             _isInitialized = true;
         }
