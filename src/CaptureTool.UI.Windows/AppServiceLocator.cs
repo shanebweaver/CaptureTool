@@ -1,14 +1,14 @@
 ﻿using CaptureTool.Core.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.FeatureManagement;
-using CaptureTool.Services.Interfaces.AppController;
+using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Logging;
+using CaptureTool.Services.Interfaces.Shutdown;
 
 namespace CaptureTool.UI.Windows;
 
-internal class ServiceLocator
+internal class AppServiceLocator
 {
-    public static IAppController AppController => GetService<IAppController>();
+    public static IShutdownHandler ShutdownHandler => GetService<IShutdownHandler>();
     public static ILogService Logging => GetService<ILogService>();
     public static IAppNavigation Navigation => GetService<IAppNavigation>();
     public static IFeatureManager FeatureManager => GetService<IFeatureManager>();

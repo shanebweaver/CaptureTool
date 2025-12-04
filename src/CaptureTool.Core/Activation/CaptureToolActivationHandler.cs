@@ -1,10 +1,10 @@
-﻿using CaptureTool.Core.Navigation;
+﻿using CaptureTool.Core.FeatureManagement;
+using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Settings;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Interfaces.Activation;
-using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Cancellation;
+using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Logging;
 using CaptureTool.Services.Interfaces.Navigation;

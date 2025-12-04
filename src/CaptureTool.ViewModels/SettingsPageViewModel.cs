@@ -4,9 +4,9 @@ using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Settings;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Services.Interfaces;
-using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Settings;
+using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Themes;
@@ -38,7 +38,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private readonly IAppNavigation _appNavigation;
     private readonly ITelemetryService _telemetryService;
-    private readonly IAppController _appController;
+    private readonly IShutdownHandler _shutdownHandler;
     private readonly IWindowHandleProvider _windowingService;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
@@ -129,7 +129,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public SettingsPageViewModel(
         IAppNavigation appNavigation,
         ITelemetryService telemetryService,
-        IAppController appController,
+        IShutdownHandler shutdownHandler,
         IWindowHandleProvider windowingService,
         ILocalizationService localizationService,
         IThemeService themeService,
@@ -141,7 +141,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         _appNavigation = appNavigation;
         _telemetryService = telemetryService;
-        _appController = appController;
+        _shutdownHandler = shutdownHandler;
         _windowingService = windowingService;
         _localizationService = localizationService;
         _settingsService = settingsService;
@@ -376,7 +376,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void RestartApp()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, () => _appController.TryRestart());
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, () => _shutdownHandler.TryRestart());
     }
 
     private void GoBack()

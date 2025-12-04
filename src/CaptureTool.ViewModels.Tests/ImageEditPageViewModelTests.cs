@@ -1,13 +1,14 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoMoq;
+using CaptureTool.Core.FeatureManagement;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domains.Edit.Interfaces.Drawable;
-using CaptureTool.FeatureManagement;
-using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Cancellation;
+using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Share;
+using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Store;
 using CaptureTool.Services.Interfaces.Telemetry;
@@ -38,7 +39,7 @@ public sealed class ImageEditPageViewModelTests
         Fixture.Customize<ImageEditPageViewModel>(c => c.OmitAutoProperties());
 
         Fixture.Freeze<Mock<IStoreService>>();
-        Fixture.Freeze<Mock<IAppController>>();
+        Fixture.Freeze<Mock<IShutdownHandler>>();
         Fixture.Freeze<Mock<ICancellationService>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
         Fixture.Freeze<Mock<IImageCanvasPrinter>>();

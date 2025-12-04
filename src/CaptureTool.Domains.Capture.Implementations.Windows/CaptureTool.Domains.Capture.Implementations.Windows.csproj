@@ -11,7 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj" />
     <ProjectReference Include="..\CaptureTool.Domains.Capture.Interfaces\CaptureTool.Domains.Capture.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
   </ItemGroup>
 
   <!-- Package references -->

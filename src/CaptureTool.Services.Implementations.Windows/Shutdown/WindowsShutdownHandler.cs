@@ -1,17 +1,17 @@
-﻿using CaptureTool.Services.Interfaces.AppController;
-using CaptureTool.Services.Interfaces.Cancellation;
+﻿using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Logging;
+using CaptureTool.Services.Interfaces.Shutdown;
 using Microsoft.Windows.AppLifecycle;
 using System.Diagnostics;
 
-namespace CaptureTool.UI.Windows;
+namespace CaptureTool.Services.Implementations.Windows.Shutdown;
 
-internal partial class CaptureToolAppController : IAppController
+public sealed partial class WindowsShutdownHandler : IShutdownHandler
 {
     private readonly ICancellationService _cancellationService;
     private readonly ILogService _logService;
 
-    public CaptureToolAppController(
+    public WindowsShutdownHandler(
         ILogService logService,
         ICancellationService cancellationService) 
     {

@@ -45,11 +45,11 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
         }
         catch (OperationCanceledException ex)
         {
-            ServiceLocator.Logging.LogException(ex, "View load canceled.");
+            AppServiceLocator.Logging.LogException(ex, "View load canceled.");
         }
         catch (Exception ex)
         {
-            ServiceLocator.Logging.LogException(ex, "Failed to load view.");
+            AppServiceLocator.Logging.LogException(ex, "Failed to load view.");
         }
     }
 

@@ -1,8 +1,8 @@
-﻿namespace CaptureTool.FeatureManagement;
+﻿namespace CaptureTool.Services.Interfaces.FeatureManagement;
 
 public sealed partial class FeatureFlag
 {
-    internal FeatureFlag(string id)
+    public FeatureFlag(string id)
     {
         Id = id;
     }

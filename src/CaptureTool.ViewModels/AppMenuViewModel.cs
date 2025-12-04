@@ -1,11 +1,12 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core.FeatureManagement;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Interfaces;
-using CaptureTool.Services.Interfaces.AppController;
+using CaptureTool.Services.Interfaces.FeatureManagement;
+using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Windowing;
@@ -28,7 +29,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         public static readonly string OpenRecentCapture = "OpenRecentCapture";
     }
 
-    private readonly IAppController _appController;
+    private readonly IShutdownHandler _shutdownHandler;
     private readonly IAppNavigation _appNavigation;
     private readonly IWindowHandleProvider _windowingService;
     private readonly ITelemetryService _telemetryService;
@@ -58,7 +59,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     }
 
     public AppMenuViewModel(
-        IAppController appController,
+        IShutdownHandler shutdownHandler,
         IAppNavigation appNavigation,
         ITelemetryService telemetryService,
         IWindowHandleProvider windowingService,
@@ -69,7 +70,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IVideoCaptureHandler videoCaptureHandler,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory)
     {
-        _appController = appController;
+        _shutdownHandler = shutdownHandler;
         _appNavigation = appNavigation;
         _telemetryService = telemetryService;
         _windowingService = windowingService;
@@ -168,7 +169,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ExitApplication, () =>
         {
-            _appController.Shutdown();
+            _shutdownHandler.Shutdown();
         });
     }
 

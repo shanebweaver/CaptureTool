@@ -1,12 +1,14 @@
 ﻿using CaptureTool.Core.Activation;
+using CaptureTool.Core.Capture;
 using CaptureTool.Core.Navigation;
+using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Implementations.Windows;
 using CaptureTool.Domains.Edit.Implementations.Windows.ChromaKey;
 using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
-using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Implementations.Cancellation;
+using CaptureTool.Services.Implementations.FeatureManagement;
 using CaptureTool.Services.Implementations.Globalization;
 using CaptureTool.Services.Implementations.Logging;
 using CaptureTool.Services.Implementations.Navigation;
@@ -15,21 +17,23 @@ using CaptureTool.Services.Implementations.Telemetry;
 using CaptureTool.Services.Implementations.Windows.Clipboard;
 using CaptureTool.Services.Implementations.Windows.Localization;
 using CaptureTool.Services.Implementations.Windows.Share;
+using CaptureTool.Services.Implementations.Windows.Shutdown;
 using CaptureTool.Services.Implementations.Windows.Storage;
 using CaptureTool.Services.Implementations.Windows.Store;
 using CaptureTool.Services.Implementations.Windows.TaskEnvironment;
 using CaptureTool.Services.Implementations.Windows.Themes;
 using CaptureTool.Services.Interfaces;
 using CaptureTool.Services.Interfaces.Activation;
-using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Clipboard;
+using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Globalization;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Logging;
 using CaptureTool.Services.Interfaces.Navigation;
 using CaptureTool.Services.Interfaces.Settings;
 using CaptureTool.Services.Interfaces.Share;
+using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Store;
 using CaptureTool.Services.Interfaces.TaskEnvironment;
@@ -42,16 +46,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.UI.Windows;
 
-public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
+public partial class AppServiceProvider : IServiceProvider, IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
 
-    public CaptureToolServiceProvider()
+    public AppServiceProvider()
     {
         ServiceCollection collection = new();
 
-        // Feature flags
-        collection.AddSingleton<IFeatureManager, CaptureToolFeatureManager>();
+        // Feature management
+        collection.AddSingleton<IFeatureManager, MicrosoftFeatureManager>();
 
         // Generic services
         collection.AddSingleton<ICancellationService, CancellationService>();
@@ -78,22 +82,21 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<ILocalizationService, WindowsLocalizationService>();
         collection.AddSingleton<IShareService, WindowsShareService>();
         collection.AddSingleton<ITaskEnvironment, WinUITaskEnvironment>(CreateWinUITaskEnvironment);
+        collection.AddSingleton<IShutdownHandler, WindowsShutdownHandler>();
 
-        // App specific
-        collection.AddSingleton<IAppNavigation, CaptureToolAppNavigation>();
-        collection.AddSingleton<IAppController, CaptureToolAppController>();
+        // Windows domains
+        collection.AddSingleton<IScreenCapture, WindowsScreenCapture>();
+        collection.AddSingleton<IScreenRecorder, WindowsScreenRecorder>();
+
+        // Core services
+        collection.AddSingleton<IActivationHandler, CaptureToolActivationHandler>();
         collection.AddSingleton<IImageCaptureHandler, CaptureToolImageCaptureHandler>();
         collection.AddSingleton<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
-        collection.AddSingleton<IActivationHandler, CaptureToolActivationHandler>();
-        collection.AddSingleton<CaptureToolNavigationHandler>();
-        collection.AddSingleton<INavigationHandler>(sp => sp.GetRequiredService<CaptureToolNavigationHandler>());
-        collection.AddSingleton<IWindowHandleProvider>(sp => sp.GetRequiredService<CaptureToolNavigationHandler>());
+        collection.AddSingleton<IAppNavigation, CaptureToolAppNavigation>();
 
         // ViewModels
-        // Windows
         collection.AddTransient<MainWindowViewModel>();
         collection.AddTransient<SelectionOverlayWindowViewModel>();
-        // Pages
         collection.AddTransient<ErrorPageViewModel>();
         collection.AddTransient<AboutPageViewModel>();
         collection.AddTransient<AddOnsPageViewModel>();
@@ -102,17 +105,22 @@ public partial class CaptureToolServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<LoadingPageViewModel>();
         collection.AddTransient<ImageEditPageViewModel>();
         collection.AddTransient<VideoEditPageViewModel>();
-        // Views
         collection.AddTransient<AppMenuViewModel>();
         collection.AddTransient<DiagnosticsViewModel>();
         collection.AddTransient<SelectionOverlayHostViewModel>();
         collection.AddTransient<CaptureOverlayViewModel>();
-        // Factories
+
+        // ViewModel factories
         collection.AddSingleton<IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?>, AppLanguageViewModelFactory>();
         collection.AddSingleton<IFactoryServiceWithArgs<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
         collection.AddSingleton<IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode>, CaptureModeViewModelFactory>();
         collection.AddSingleton<IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType>, CaptureTypeViewModelFactory>();
         collection.AddSingleton<IFactoryServiceWithArgs<RecentCaptureViewModel, string>, RecentCaptureViewModelFactory>();
+
+        // App specific handlers
+        collection.AddSingleton<AppNavigationHandler>();
+        collection.AddSingleton<INavigationHandler>(sp => sp.GetRequiredService<AppNavigationHandler>());
+        collection.AddSingleton<IWindowHandleProvider>(sp => sp.GetRequiredService<AppNavigationHandler>());
 
         _serviceProvider = collection.BuildServiceProvider();
     }

@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Telemetry;
-using CaptureTool.Services.Interfaces.AppController;
+using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Telemetry;
 
 namespace CaptureTool.ViewModels;
@@ -13,16 +13,16 @@ public sealed partial class ErrorPageViewModel : ViewModelBase
         public static readonly string RestartApp = "RestartApp";
     }
 
-    private readonly IAppController _appController;
+    private readonly IShutdownHandler _shutdownHandler;
     private readonly ITelemetryService _telemetryService;
 
     public RelayCommand RestartAppCommand { get; }
 
     public ErrorPageViewModel(
-        IAppController appController,
+        IShutdownHandler shutdownHandler,
         ITelemetryService telemetryService)
     {
-        _appController = appController;
+        _shutdownHandler = shutdownHandler;
         _telemetryService = telemetryService;
 
         RestartAppCommand = new(RestartApp);
@@ -32,7 +32,7 @@ public sealed partial class ErrorPageViewModel : ViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, () =>
         {
-            _appController.TryRestart();
+            _shutdownHandler.TryRestart();
         });
     }
 }

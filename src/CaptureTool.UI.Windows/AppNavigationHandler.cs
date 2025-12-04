@@ -1,13 +1,13 @@
 ﻿using CaptureTool.Core.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Windowing;
 using CaptureTool.UI.Windows.Xaml.Windows;
 
 namespace CaptureTool.UI.Windows;
 
-internal partial class CaptureToolNavigationHandler : INavigationHandler, IWindowHandleProvider
+internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleProvider
 {
     private enum UXHost
     {
@@ -17,7 +17,7 @@ internal partial class CaptureToolNavigationHandler : INavigationHandler, IWindo
         CaptureOverlay
     }
 
-    private readonly IAppController _appController;
+    private readonly IShutdownHandler _shutdownHandler;
     private readonly IAppNavigation _appNavigation;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
 
@@ -28,12 +28,12 @@ internal partial class CaptureToolNavigationHandler : INavigationHandler, IWindo
 
     private UXHost _activeHost;
 
-    public CaptureToolNavigationHandler(
-        IAppController appController,
+    public AppNavigationHandler(
+        IShutdownHandler shutdownHandler,
         IAppNavigation appNavigation,
         IVideoCaptureHandler videoCaptureHandler)
     {
-        _appController = appController;
+        _shutdownHandler = shutdownHandler;
         _appNavigation = appNavigation;
         _videoCaptureHandler = videoCaptureHandler;
     }
@@ -145,7 +145,7 @@ internal partial class CaptureToolNavigationHandler : INavigationHandler, IWindo
         }
         else
         {
-            _appController.Shutdown();
+            _shutdownHandler.Shutdown();
         }
     }
 

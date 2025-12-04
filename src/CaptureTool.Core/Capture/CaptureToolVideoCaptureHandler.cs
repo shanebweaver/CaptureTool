@@ -1,11 +1,11 @@
-﻿using CaptureTool.Domains.Capture.Implementations.Windows;
-using CaptureTool.Domains.Capture.Interfaces;
+﻿using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Storage;
 
-namespace CaptureTool.UI.Windows;
+namespace CaptureTool.Core.Capture;
 
-internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
+public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 {
+    private readonly IScreenRecorder _screenRecorder;
     private readonly IStorageService _storageService;
     
     private string? _tempVideoPath;
@@ -13,8 +13,11 @@ internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public event EventHandler<IVideoFile>? NewVideoCaptured;
 
-    public CaptureToolVideoCaptureHandler(IStorageService storageService)
+    public CaptureToolVideoCaptureHandler(
+        IScreenRecorder screenRecorder,
+        IStorageService storageService)
     {
+        _screenRecorder = screenRecorder;
         _storageService = storageService;
     }
 
@@ -34,7 +37,7 @@ internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             fileName
         );
 
-        ScreenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath);
+        _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath);
     }
 
     public IVideoFile StopVideoCapture()
@@ -44,7 +47,7 @@ internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             throw new InvalidOperationException("Cannot stop, no video is recording.");
         }
 
-        ScreenRecorder.StopRecording();
+        _screenRecorder.StopRecording();
 
         VideoFile videoFile = new(_tempVideoPath);
         _tempVideoPath = null;
@@ -62,7 +65,7 @@ internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
                 return;
             }
 
-            ScreenRecorder.StopRecording();
+            _screenRecorder.StopRecording();
         }
         finally
         {

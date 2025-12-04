@@ -2,7 +2,6 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
-using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Store;

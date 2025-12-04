@@ -2,7 +2,6 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.AppController;
 using CaptureTool.Services.Interfaces.Clipboard;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;

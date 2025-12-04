@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core.FeatureManagement;
 using CaptureTool.Core.Store;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
@@ -7,8 +8,8 @@ using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domains.Edit.Interfaces.Drawable;
 using CaptureTool.Domains.Edit.Interfaces.Operations;
-using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Interfaces.Cancellation;
+using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Share;
 using CaptureTool.Services.Interfaces.Storage;

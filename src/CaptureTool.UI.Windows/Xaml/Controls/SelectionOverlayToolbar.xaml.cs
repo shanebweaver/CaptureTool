@@ -1,4 +1,4 @@
-using CaptureTool.FeatureManagement;
+using CaptureTool.Core.FeatureManagement;
 using CaptureTool.ViewModels;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
@@ -84,7 +84,7 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
     {
         InitializeComponent();
 
-        if (ServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
+        if (AppServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
         {
             CaptureModeSegmentedControl.Visibility = Visibility.Visible;
         }
