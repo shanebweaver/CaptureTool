@@ -2,7 +2,7 @@
 
 public partial interface IClipboardService
 {
-    Task CopyStreamAsync(IClipboardStream stream);
+    Task CopyStreamAsync(IClipboardStreamSource stream);
     Task CopyFileAsync(ClipboardFile file);
     Task CopyBitmapAsync(ClipboardFile bitmapFile);
 }

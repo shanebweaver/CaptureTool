@@ -88,8 +88,8 @@ internal sealed partial class SelectionOverlayHost : IDisposable
 
     private void OnAllScreensCaptureRequested(object? sender, EventArgs e)
     {
-        ImageFile image = ServiceLocator.ImageCapture.PerformMultiMonitorImageCapture([.. _monitors]);
-        ServiceLocator.Navigation.GoToImageEdit(image);
+        ImageFile image = AppServiceLocator.ImageCapture.PerformMultiMonitorImageCapture([.. _monitors]);
+        AppServiceLocator.Navigation.GoToImageEdit(image);
     }
 
     public void Activate()

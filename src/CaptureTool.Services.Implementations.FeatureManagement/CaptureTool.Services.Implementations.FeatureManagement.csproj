@@ -13,4 +13,9 @@
     </Content>
   </ItemGroup>
 
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -46,12 +46,12 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
         }
         catch (OperationCanceledException ex)
         {
-            ServiceLocator.Logging.LogException(ex, "Page load canceled.");
+            AppServiceLocator.Logging.LogException(ex, "Page load canceled.");
         }
         catch (Exception ex)
         {
-            ServiceLocator.Logging.LogException(ex, "Failed to load page.");
-            ServiceLocator.Navigation.GoToError(ex);
+            AppServiceLocator.Logging.LogException(ex, "Failed to load page.");
+            AppServiceLocator.Navigation.GoToError(ex);
         }
 
         base.OnNavigatedTo(e);

@@ -1,11 +1,12 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.AppController;
+using CaptureTool.Core.FeatureManagement;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Interfaces;
+using CaptureTool.Services.Interfaces.FeatureManagement;
+using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Themes;
 using System.Collections.ObjectModel;
@@ -24,7 +25,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private readonly ITelemetryService _telemetryService;
     private readonly IAppNavigation _appNavigation;
-    private readonly IAppController _appController;
+    private readonly IShutdownHandler _shutdownHandler;
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
@@ -133,14 +134,14 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         IAppNavigation appNavigation,
         IFeatureManager featureManager,
         IThemeService themeService,
-        IAppController appController,
+        IShutdownHandler shutdownHandler,
         IImageCaptureHandler imageCaptureHandler,
         IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
         IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
     {
         _telemetryService = telemetryService;
         _appNavigation = appNavigation;
-        _appController = appController;
+        _shutdownHandler = shutdownHandler;
         _imageCaptureHandler = imageCaptureHandler;
         _captureTypeViewModelFactory = captureTypeViewModelFactory;
         
@@ -203,7 +204,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             }
             else
             {
-                _appController.Shutdown();
+                _shutdownHandler.Shutdown();
             }
         });
     }

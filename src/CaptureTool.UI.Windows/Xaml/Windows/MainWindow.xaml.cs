@@ -136,7 +136,7 @@ public sealed partial class MainWindow : Window
         _activationCts.Dispose();
 
         // IMPORTANT: Closing the main window will crash the app unless we forcefully exit immediately.
-        ServiceLocator.AppController.Shutdown();
+        AppServiceLocator.ShutdownHandler.Shutdown();
     }
 
     private void OnViewModelNavigationRequested(object? sender, INavigationRequest navigationRequest)

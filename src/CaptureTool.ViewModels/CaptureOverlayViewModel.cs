@@ -1,9 +1,9 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Themes;
@@ -26,7 +26,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     }
 
     private readonly IAppNavigation _appNavigation;
-    private readonly IAppController _appController;
+    private readonly IShutdownHandler _shutdownHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ITelemetryService _telemetryService;
 
@@ -76,12 +76,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public CaptureOverlayViewModel(
         IAppNavigation appNavigation,
         IThemeService themeService,
-        IAppController appController,
+        IShutdownHandler shutdownHandler,
         IVideoCaptureHandler videoCaptureHandler,
         ITelemetryService telemetryService) 
     {
         _appNavigation = appNavigation;
-        _appController = appController;
+        _shutdownHandler = shutdownHandler;
         _videoCaptureHandler = videoCaptureHandler;
         _telemetryService = telemetryService;
 
@@ -124,7 +124,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             }
             else
             {
-                _appController.Shutdown();
+                _shutdownHandler.Shutdown();
             }
         });
     }

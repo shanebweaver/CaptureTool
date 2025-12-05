@@ -1,16 +1,13 @@
-﻿using CaptureTool.Core.AppController;
-using CaptureTool.Core.Navigation;
+﻿using CaptureTool.Core.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Cancellation;
-using CaptureTool.Services.Interfaces.Logging;
 using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Services.Interfaces.Shutdown;
+using CaptureTool.Services.Interfaces.Windowing;
 using CaptureTool.UI.Windows.Xaml.Windows;
-using Microsoft.Windows.AppLifecycle;
-using System.Diagnostics;
 
 namespace CaptureTool.UI.Windows;
 
-internal partial class CaptureToolAppController : IAppController
+internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleProvider
 {
     private enum UXHost
     {
@@ -20,10 +17,9 @@ internal partial class CaptureToolAppController : IAppController
         CaptureOverlay
     }
 
+    private readonly IShutdownHandler _shutdownHandler;
     private readonly IAppNavigation _appNavigation;
-    private readonly ILogService _logService;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly ICancellationService _cancellationService;
 
     private readonly SemaphoreSlim _semaphoreNavigation = new(1, 1);
     private readonly SelectionOverlayHost _selectionOverlayHost = new();
@@ -32,31 +28,16 @@ internal partial class CaptureToolAppController : IAppController
 
     private UXHost _activeHost;
 
-    public CaptureToolAppController(
+    public AppNavigationHandler(
+        IShutdownHandler shutdownHandler,
         IAppNavigation appNavigation,
-        ILogService logService,
-        IVideoCaptureHandler videoCaptureHandler,
-        ICancellationService cancellationService) 
+        IVideoCaptureHandler videoCaptureHandler)
     {
+        _shutdownHandler = shutdownHandler;
         _appNavigation = appNavigation;
-        _logService = logService;
         _videoCaptureHandler = videoCaptureHandler;
-        _cancellationService = cancellationService;
     }
 
-    private void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
-    {
-        if (_appNavigation.CanGoBack)
-        {
-            _appNavigation.GoBackToMainWindow();
-        }
-        else
-        {
-            Shutdown();
-        }
-    }
-
-    #region INavigationHandler
     public async void HandleNavigationRequest(INavigationRequest request)
     {
         await _semaphoreNavigation.WaitAsync();
@@ -155,58 +136,21 @@ internal partial class CaptureToolAppController : IAppController
             _semaphoreNavigation.Release();
         }
     }
-    #endregion
 
-    public bool TryRestart()
+    private void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
     {
-        global::Windows.ApplicationModel.Core.AppRestartFailureReason restartError = AppInstance.Restart(string.Empty);
-
-        switch (restartError)
+        if (_appNavigation.CanGoBack)
         {
-            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.NotInForeground:
-                _logService.LogWarning("The app is not in the foreground.");
-                break;
-            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.RestartPending:
-                _logService.LogWarning("Another restart is currently pending.");
-                break;
-            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.InvalidUser:
-                _logService.LogWarning("Current user is not signed in or not a valid user.");
-                break;
-            case global::Windows.ApplicationModel.Core.AppRestartFailureReason.Other:
-                _logService.LogWarning("Failure restarting.");
-                break;
+            _appNavigation.GoBackToMainWindow();
         }
-
-        return false;
-    }
-
-    public void Shutdown()
-    {
-        lock (this)
+        else
         {
-            try
-            {
-                _captureOverlayHost.Dispose();
-                _selectionOverlayHost.Dispose();
-                _mainWindowHost.Dispose();
-                _cancellationService.CancelAll();
-            }
-            catch (Exception e)
-            {
-                Debug.Fail($"Error during shutdown: {e.Message}");
-            }
-
-            Environment.Exit(0);
+            _shutdownHandler.Shutdown();
         }
     }
 
     public nint GetMainWindowHandle()
     {
         return _mainWindowHost.Handle;
-    }
-
-    public string GetDefaultScreenshotsFolderPath()
-    {
-        return global::Windows.Storage.KnownFolders.SavedPictures.Path;
     }
 }

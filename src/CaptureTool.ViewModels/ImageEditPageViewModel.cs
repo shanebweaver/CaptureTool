@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.AppController;
+using CaptureTool.Core.FeatureManagement;
 using CaptureTool.Core.Store;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
@@ -8,13 +8,14 @@ using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domains.Edit.Interfaces.Drawable;
 using CaptureTool.Domains.Edit.Interfaces.Operations;
-using CaptureTool.FeatureManagement;
 using CaptureTool.Services.Interfaces.Cancellation;
+using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Share;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Store;
 using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Services.Interfaces.Windowing;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Numerics;
@@ -40,7 +41,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private readonly ILocalizationService _localizationService;
     private readonly IStoreService _storeService;
-    private readonly IAppController _appController;
+    private readonly IWindowHandleProvider _windowingService;
     private readonly ICancellationService _cancellationService;
     private readonly ITelemetryService _telemetryService;
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
@@ -180,7 +181,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public ImageEditPageViewModel(
         ILocalizationService localizationService,
         IStoreService storeService,
-        IAppController appController,
+        IWindowHandleProvider windowingService,
         ICancellationService cancellationService,
         ITelemetryService telemetryService,
         IImageCanvasPrinter imageCanvasPrinter,
@@ -192,7 +193,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         _localizationService = localizationService;
         _storeService = storeService;
-        _appController = appController;
+        _windowingService = windowingService;
         _cancellationService = cancellationService;
         _telemetryService = telemetryService;
         _imageCanvasPrinter = imageCanvasPrinter;
@@ -391,7 +392,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
         {
-            nint hwnd = _appController.GetMainWindowHandle();
+            nint hwnd = _windowingService.GetMainWindowHandle();
             IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures) 
                 ?? throw new OperationCanceledException("User cancelled the save file picker.");
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
@@ -494,7 +495,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Print, async () =>
         {
-            nint hwnd = _appController.GetMainWindowHandle();
+            nint hwnd = _windowingService.GetMainWindowHandle();
             await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
         });
     }
@@ -508,7 +509,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 throw new InvalidOperationException("No image to share");
             }
 
-            nint hwnd = _appController.GetMainWindowHandle();
+            nint hwnd = _windowingService.GetMainWindowHandle();
             await _shareService.ShareAsync(ImageFile.FilePath, hwnd);
         });
     }

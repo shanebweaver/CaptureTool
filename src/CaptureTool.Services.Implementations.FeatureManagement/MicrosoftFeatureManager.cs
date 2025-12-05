@@ -1,13 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
+﻿using CaptureTool.Services.Interfaces.FeatureManagement;
+using Microsoft.Extensions.Configuration;
 
-namespace CaptureTool.FeatureManagement;
+namespace CaptureTool.Services.Implementations.FeatureManagement;
 
-public sealed partial class CaptureToolFeatureManager : IFeatureManager
+public sealed partial class MicrosoftFeatureManager : IFeatureManager
 {
     private readonly Dictionary<string, bool> _featureState = [];
 
-    public CaptureToolFeatureManager()
+    public MicrosoftFeatureManager()
     {
         IConfiguration configuration = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json")
@@ -24,7 +24,7 @@ public sealed partial class CaptureToolFeatureManager : IFeatureManager
 
             if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(enabled))
             {
-                throw new System.InvalidOperationException("Failed to parse appsettings.json");
+                throw new InvalidOperationException("Failed to parse appsettings.json");
             }
 
             _featureState.Add(id, bool.Parse(enabled));

@@ -10,7 +10,7 @@ public partial class App : Application
 {
     internal new static App Current => (App)Application.Current;
 
-    internal CaptureToolServiceProvider ServiceProvider { get; }
+    internal AppServiceProvider ServiceProvider { get; }
     internal DispatcherQueue DispatcherQueue { get; }
 
     private readonly KeepAlive _keepAlive;
@@ -27,7 +27,7 @@ public partial class App : Application
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        ServiceLocator.Logging.LogException(e.Exception, "Unhandled exception occurred.");
+        AppServiceLocator.Logging.LogException(e.Exception, "Unhandled exception occurred.");
     }
 
     private void RestoreAppTheme()
@@ -64,18 +64,18 @@ public partial class App : Application
                         }
                         else
                         {
-                            ServiceLocator.Logging.LogWarning("Protocol activation data is not of expected type.");
+                            AppServiceLocator.Logging.LogWarning("Protocol activation data is not of expected type.");
                         }
                         break;
 
                     default:
-                        ServiceLocator.Logging.LogWarning("Unexpected activation kind.");
+                        AppServiceLocator.Logging.LogWarning("Unexpected activation kind.");
                         break;
                 }
             }
             catch (Exception e)
             {
-                ServiceLocator.Logging.LogException(e, "Activation failed.");
+                AppServiceLocator.Logging.LogException(e, "Activation failed.");
             }
         });
     }

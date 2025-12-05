@@ -1,15 +1,16 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.AppController;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Settings;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Services.Interfaces;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Settings;
+using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Themes;
+using CaptureTool.Services.Interfaces.Windowing;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
@@ -37,7 +38,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private readonly IAppNavigation _appNavigation;
     private readonly ITelemetryService _telemetryService;
-    private readonly IAppController _appController;
+    private readonly IShutdownHandler _shutdownHandler;
+    private readonly IWindowHandleProvider _windowingService;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
@@ -127,7 +129,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public SettingsPageViewModel(
         IAppNavigation appNavigation,
         ITelemetryService telemetryService,
-        IAppController appController,
+        IShutdownHandler shutdownHandler,
+        IWindowHandleProvider windowingService,
         ILocalizationService localizationService,
         IThemeService themeService,
         IFilePickerService filePickerService,
@@ -138,7 +141,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         _appNavigation = appNavigation;
         _telemetryService = telemetryService;
-        _appController = appController;
+        _shutdownHandler = shutdownHandler;
+        _windowingService = windowingService;
         _localizationService = localizationService;
         _settingsService = settingsService;
         _themeService = themeService;
@@ -228,7 +232,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
             if (string.IsNullOrWhiteSpace(screenshotsFolder))
             {
-                screenshotsFolder = _appController.GetDefaultScreenshotsFolderPath();
+                screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
             }
 
             ScreenshotsFolderPath = screenshotsFolder;
@@ -344,7 +348,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
         {
-            var hwnd = _appController.GetMainWindowHandle();
+            var hwnd = _windowingService.GetMainWindowHandle();
             IFolder folder = await _filePickerService.PickFolderAsync(hwnd, UserFolder.Pictures)
                 ?? throw new OperationCanceledException("No folder was selected.");
 
@@ -372,7 +376,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void RestartApp()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, () => _appController.TryRestart());
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, () => _shutdownHandler.TryRestart());
     }
 
     private void GoBack()
@@ -434,7 +438,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
 
             var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
-            ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _appController.GetDefaultScreenshotsFolderPath();
+            ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _storageService.GetSystemDefaultScreenshotsFolderPath();
 
             SelectedAppLanguageIndex = AppLanguages.Count - 1;
             SelectedAppThemeIndex = AppThemes.Count - 1;
