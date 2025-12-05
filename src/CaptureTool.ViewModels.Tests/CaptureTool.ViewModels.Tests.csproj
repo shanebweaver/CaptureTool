@@ -13,6 +13,7 @@
   <!-- Package references -->
   <ItemGroup>
     <PackageReference Include="AutoFixture.AutoMoq" />
+    <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Moq" />
     <PackageReference Update="MSTest.Analyzers">
       <PrivateAssets>all</PrivateAssets>
