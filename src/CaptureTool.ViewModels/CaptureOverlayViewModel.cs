@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core.Actions.CaptureOverlay;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
@@ -19,7 +20,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         public static readonly string Load = "LoadCaptureOverlay";
         public static readonly string CloseOverlay = "CloseOverlay";
-        public static readonly string GoBack = "GoBack";
         public static readonly string StartVideoCapture = "StartVideoCapture";
         public static readonly string StopVideoCapture = "StopVideoCapture";
         public static readonly string ToggleDesktopAudio = "ToggleDesktopAudio";
@@ -29,6 +29,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ITelemetryService _telemetryService;
+    private readonly CaptureOverlayActions _captureOverlayActionHandler;
 
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
@@ -67,26 +68,34 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
-    public RelayCommand CloseOverlayCommand => new(CloseOverlay);
-    public RelayCommand GoBackCommand => new(GoBack);
-    public RelayCommand StartVideoCaptureCommand => new(StartVideoCapture);
-    public RelayCommand StopVideoCaptureCommand => new(StopVideoCapture);
-    public RelayCommand ToggleDesktopAudioCommand => new(ToggleDesktopAudio);
-    
+    public RelayCommand CloseOverlayCommand { get; }
+    public RelayCommand GoBackCommand { get; }
+    public RelayCommand StartVideoCaptureCommand { get; }
+    public RelayCommand StopVideoCaptureCommand { get; }
+    public RelayCommand ToggleDesktopAudioCommand { get; }
+
     public CaptureOverlayViewModel(
         IAppNavigation appNavigation,
         IThemeService themeService,
         IShutdownHandler shutdownHandler,
         IVideoCaptureHandler videoCaptureHandler,
-        ITelemetryService telemetryService) 
+        ITelemetryService telemetryService,
+        CaptureOverlayActions captureOverlayActionHandler) 
     {
         _appNavigation = appNavigation;
         _shutdownHandler = shutdownHandler;
         _videoCaptureHandler = videoCaptureHandler;
         _telemetryService = telemetryService;
+        _captureOverlayActionHandler = captureOverlayActionHandler;
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
+
+        CloseOverlayCommand = new(CloseOverlay);
+        GoBackCommand = new(GoBack);
+        StartVideoCaptureCommand = new(StartVideoCapture);
+        StopVideoCaptureCommand = new(StopVideoCapture);
+        ToggleDesktopAudioCommand = new(ToggleDesktopAudio);
     }
 
     public override void Load(CaptureOverlayViewModelOptions options)
@@ -131,17 +140,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void GoBack()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, "GoBack", () =>
         {
-            if (IsRecording)
-            {
-                _videoCaptureHandler.CancelVideoCapture();
-            }
-
-            if (!_appNavigation.TryGoBack())
-            {
-                _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault, true);
-            }
+            _captureOverlayActionHandler.GoBack();
         });
     }
 
