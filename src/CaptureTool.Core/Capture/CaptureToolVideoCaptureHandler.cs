@@ -11,7 +11,10 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private string? _tempVideoPath;
     private bool isRecording;
 
+    public bool IsDesktopAudioEnabled { get; private set; }
+
     public event EventHandler<IVideoFile>? NewVideoCaptured;
+    public event EventHandler<bool>? DesktopAudioStateChanged;
 
     public CaptureToolVideoCaptureHandler(
         IScreenRecorder screenRecorder,
@@ -72,5 +75,11 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
            _tempVideoPath = null;
             isRecording = false;
         }
+    }
+
+    public void SetIsDesktopAudioEnabled(bool value)
+    {
+        IsDesktopAudioEnabled = value;
+        DesktopAudioStateChanged?.Invoke(this, value);
     }
 }

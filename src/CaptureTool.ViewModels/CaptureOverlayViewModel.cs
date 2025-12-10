@@ -4,8 +4,8 @@ using CaptureTool.Core.Actions.CaptureOverlay;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Core.Telemetry;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Storage;
+using CaptureTool.Services.Interfaces.TaskEnvironment;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Themes;
 using System.Drawing;
@@ -20,15 +20,16 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         public static readonly string Load = "LoadCaptureOverlay";
         public static readonly string CloseOverlay = "CloseOverlay";
+        public static readonly string GoBack = "GoBack";
         public static readonly string StartVideoCapture = "StartVideoCapture";
         public static readonly string StopVideoCapture = "StopVideoCapture";
         public static readonly string ToggleDesktopAudio = "ToggleDesktopAudio";
     }
 
     private readonly IAppNavigation _appNavigation;
-    private readonly IShutdownHandler _shutdownHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ITelemetryService _telemetryService;
+    private readonly ITaskEnvironment _taskEnvironment;
     private readonly CaptureOverlayActions _captureOverlayActionHandler;
 
     private MonitorCaptureResult? _monitorCaptureResult;
@@ -77,15 +78,15 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public CaptureOverlayViewModel(
         IAppNavigation appNavigation,
         IThemeService themeService,
-        IShutdownHandler shutdownHandler,
         IVideoCaptureHandler videoCaptureHandler,
         ITelemetryService telemetryService,
+        ITaskEnvironment taskEnvironment,
         CaptureOverlayActions captureOverlayActionHandler) 
     {
         _appNavigation = appNavigation;
-        _shutdownHandler = shutdownHandler;
         _videoCaptureHandler = videoCaptureHandler;
         _telemetryService = telemetryService;
+        _taskEnvironment = taskEnvironment;
         _captureOverlayActionHandler = captureOverlayActionHandler;
 
         DefaultAppTheme = themeService.DefaultTheme;
@@ -105,10 +106,21 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             ThrowIfNotReadyToLoad();
             StartLoading();
 
+            IsDesktopAudioEnabled = _videoCaptureHandler.IsDesktopAudioEnabled;
+            _videoCaptureHandler.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
+
             _monitorCaptureResult = options.Monitor;
             _captureArea = options.Area;
 
             base.Load(options);
+        });
+    }
+
+    private void OnDesktopAudioStateChanged(object? sender, bool value)
+    {
+        _taskEnvironment.TryExecute(() =>
+        {
+            IsDesktopAudioEnabled = value;
         });
     }
 
@@ -122,25 +134,13 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.CloseOverlay, () =>
         {
-            if (IsRecording)
-            {
-                _videoCaptureHandler.CancelVideoCapture();
-            }
-
-            if (_appNavigation.CanGoBack)
-            {
-                _appNavigation.GoBackToMainWindow();
-            }
-            else
-            {
-                _shutdownHandler.Shutdown();
-            }
+            _captureOverlayActionHandler.Close();
         });
     }
 
     private void GoBack()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, "GoBack", () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
         {
             _captureOverlayActionHandler.GoBack();
         });
@@ -190,7 +190,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleDesktopAudio, () =>
         {
-            IsDesktopAudioEnabled = !IsDesktopAudioEnabled;
+            _captureOverlayActionHandler.ToggleDesktopAudio();
         });
     }
 

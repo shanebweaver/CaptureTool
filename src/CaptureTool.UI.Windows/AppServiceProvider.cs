@@ -96,7 +96,9 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IAppNavigation, CaptureToolAppNavigation>();
 
         // Action handlers
+        collection.AddSingleton<CaptureOverlayCloseAction>();
         collection.AddSingleton<CaptureOverlayGoBackAction>();
+        collection.AddSingleton<CaptureOverlayToggleDesktopAudioAction>();
         collection.AddSingleton<CaptureOverlayActions>();
 
         // ViewModels
