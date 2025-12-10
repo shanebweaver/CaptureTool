@@ -19,4 +19,16 @@ public static partial class CaptureToolNavigationRouteHelper
 
         return false;
     }
+
+    public static bool IsOverlayRoute(object route)
+    {
+        if (route is CaptureToolNavigationRoute navigationRoute)
+        {
+            return
+                navigationRoute == CaptureToolNavigationRoute.ImageCapture ||
+                navigationRoute == CaptureToolNavigationRoute.VideoCapture;
+        }
+
+        return false;
+    }
 }

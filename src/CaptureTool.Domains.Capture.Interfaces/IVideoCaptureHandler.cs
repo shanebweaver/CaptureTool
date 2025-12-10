@@ -5,6 +5,10 @@ namespace CaptureTool.Domains.Capture.Interfaces;
 public partial interface IVideoCaptureHandler
 {
     event EventHandler<IVideoFile>? NewVideoCaptured;
+    event EventHandler<bool>? DesktopAudioStateChanged;
+
+    bool IsDesktopAudioEnabled { get; }
+    void SetIsDesktopAudioEnabled(bool value);
 
     void StartVideoCapture(NewCaptureArgs args);
     IVideoFile StopVideoCapture();
