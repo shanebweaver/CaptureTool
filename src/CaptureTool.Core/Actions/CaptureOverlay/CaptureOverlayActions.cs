@@ -8,11 +8,11 @@ public sealed partial class CaptureOverlayActions
 
     public CaptureOverlayActions(
         CaptureOverlayCloseAction closeAction,
-        CaptureOverlayGoBackAction goBackCommand,
+        CaptureOverlayGoBackAction goBackAction,
         CaptureOverlayToggleDesktopAudioAction toggleDesktopAudioAction)
     {
         _closeAction = closeAction;
-        _goBackAction = goBackCommand;
+        _goBackAction = goBackAction;
         _toggleDesktopAudioAction = toggleDesktopAudioAction;
     }
 
