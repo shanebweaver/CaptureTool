@@ -12,6 +12,7 @@ using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Store;
 using CaptureTool.Services.Interfaces.Telemetry;
+using FluentAssertions;
 using Moq;
 using System.Drawing;
 
@@ -87,16 +88,16 @@ public sealed class ImageEditPageViewModelTests
         await vm.LoadAsync(testFile, cts.Token);
 
         // Assert
-        Assert.AreEqual(testFile, vm.ImageFile);
-        Assert.AreEqual(new Size(100, 200), vm.ImageSize);
-        Assert.AreEqual(new Rectangle(0, 0, 100, 200), vm.CropRect);
-        Assert.AreEqual(1, vm.Drawables.Count); // only the image drawable
+        vm.ImageFile.Should().Be(testFile);
+        vm.ImageSize.Should().Be(new Size(100, 200));
+        vm.CropRect.Should().Be(new Rectangle(0, 0, 100, 200));
+        vm.Drawables.Should()
+            .ContainSingle("only the image drawable should be present after load");
 
         telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Load), Times.Once);
         telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Load), Times.Once);
         telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
-
 
     // ------------------------------------------------------------------
     // TEST: ToggleCropModeCommand
@@ -112,7 +113,7 @@ public sealed class ImageEditPageViewModelTests
         vm.ToggleCropModeCommand.Execute(null);
 
         // Assert
-        Assert.IsTrue(vm.IsInCropMode);
+        vm.IsInCropMode.Should().BeTrue("Crop mode should be enabled after first toggle");
 
         telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.ToggleCropMode), Times.Once);
         telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.ToggleCropMode), Times.Once);
@@ -220,9 +221,9 @@ public sealed class ImageEditPageViewModelTests
         vm.RotateCommand.Execute(null);
 
         // Assert
-        Assert.AreNotEqual(oldOrientation, vm.Orientation);
-        Assert.IsTrue(vm.HasUndoStack);
-        Assert.IsFalse(vm.HasRedoStack);
+        vm.Orientation.Should().NotBe(oldOrientation, "Oriention should change after rotation");
+        vm.HasUndoStack.Should().BeTrue("Undo stack should have an entry after rotation");
+        vm.HasRedoStack.Should().BeFalse("Redo stack should be empty after new action");
 
         telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Rotate), Times.Once);
         telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Rotate), Times.Once);

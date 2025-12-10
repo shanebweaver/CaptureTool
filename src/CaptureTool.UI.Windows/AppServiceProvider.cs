@@ -1,4 +1,5 @@
-﻿using CaptureTool.Core.Activation;
+﻿using CaptureTool.Core.Actions.CaptureOverlay;
+using CaptureTool.Core.Activation;
 using CaptureTool.Core.Capture;
 using CaptureTool.Core.Navigation;
 using CaptureTool.Domains.Capture.Implementations.Windows;
@@ -93,6 +94,10 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IImageCaptureHandler, CaptureToolImageCaptureHandler>();
         collection.AddSingleton<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
         collection.AddSingleton<IAppNavigation, CaptureToolAppNavigation>();
+
+        // Action handlers
+        collection.AddSingleton<CaptureOverlayGoBackAction>();
+        collection.AddSingleton<CaptureOverlayActions>();
 
         // ViewModels
         collection.AddTransient<MainWindowViewModel>();

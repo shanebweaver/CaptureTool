@@ -19,7 +19,7 @@ public sealed class AsyncRelayCommand : ICommand
 
     public event EventHandler? CanExecuteChanged;
 
-    public bool CanExecute(object? parameter)
+    public bool CanExecute(object? parameter = null)
     {
         if (_canExecute is null)
         {
@@ -34,12 +34,12 @@ public sealed class AsyncRelayCommand : ICommand
         return _canExecute.Invoke();
     }
 
-    public void Execute(object? parameter)
+    public void Execute(object? parameter = null)
     {
         _ = ExecuteAsync(parameter);
     }
 
-    public async Task ExecuteAsync(object? parameter)
+    public async Task ExecuteAsync(object? parameter = null)
     {
         try
         {
