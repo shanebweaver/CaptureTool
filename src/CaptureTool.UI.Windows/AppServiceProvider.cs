@@ -96,10 +96,10 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IAppNavigation, CaptureToolAppNavigation>();
 
         // Action handlers
-        collection.AddSingleton<CaptureOverlayCloseAction>();
-        collection.AddSingleton<CaptureOverlayGoBackAction>();
-        collection.AddSingleton<CaptureOverlayToggleDesktopAudioAction>();
-        collection.AddSingleton<CaptureOverlayActions>();
+        collection.AddTransient<CaptureOverlayCloseAction>();
+        collection.AddTransient<CaptureOverlayGoBackAction>();
+        collection.AddTransient<CaptureOverlayToggleDesktopAudioAction>();
+        collection.AddTransient<CaptureOverlayActions>();
 
         // ViewModels
         collection.AddTransient<MainWindowViewModel>();
@@ -118,11 +118,11 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<CaptureOverlayViewModel>();
 
         // ViewModel factories
-        collection.AddSingleton<IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?>, AppLanguageViewModelFactory>();
-        collection.AddSingleton<IFactoryServiceWithArgs<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
-        collection.AddSingleton<IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode>, CaptureModeViewModelFactory>();
-        collection.AddSingleton<IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType>, CaptureTypeViewModelFactory>();
-        collection.AddSingleton<IFactoryServiceWithArgs<RecentCaptureViewModel, string>, RecentCaptureViewModelFactory>();
+        collection.AddTransient<IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?>, AppLanguageViewModelFactory>();
+        collection.AddTransient<IFactoryServiceWithArgs<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
+        collection.AddTransient<IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode>, CaptureModeViewModelFactory>();
+        collection.AddTransient<IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType>, CaptureTypeViewModelFactory>();
+        collection.AddTransient<IFactoryServiceWithArgs<RecentCaptureViewModel, string>, RecentCaptureViewModelFactory>();
 
         // App specific handlers
         collection.AddSingleton<AppNavigationHandler>();
