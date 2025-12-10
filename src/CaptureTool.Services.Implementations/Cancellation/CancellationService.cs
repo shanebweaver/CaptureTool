@@ -6,6 +6,8 @@ public sealed partial class CancellationService : ICancellationService, IDisposa
 {
     private CancellationTokenSource _rootTokenSource;
 
+    public event EventHandler? CancelAllRequested;
+
     public CancellationService()
     {
         _rootTokenSource = new();
@@ -38,11 +40,13 @@ public sealed partial class CancellationService : ICancellationService, IDisposa
     public void CancelAll()
     {
         _rootTokenSource.Cancel();
+        CancelAllRequested?.Invoke(this, EventArgs.Empty);
     }
 
     public async Task CancelAllAsync()
     {
         await _rootTokenSource.CancelAsync();
+        CancelAllRequested?.Invoke(this, EventArgs.Empty);
     }
 
     public void Dispose()
