@@ -46,6 +46,8 @@ using CaptureTool.Services.Interfaces.Windowing;
 using CaptureTool.ViewModels;
 using CaptureTool.ViewModels.Factories;
 using Microsoft.Extensions.DependencyInjection;
+using CaptureTool.Core.Interfaces.Actions.Settings;
+using CaptureTool.Core.Implementations.Actions.Settings;
 
 namespace CaptureTool.UI.Windows;
 
@@ -104,6 +106,17 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<ICaptureOverlayStartVideoCaptureAction, CaptureOverlayStartVideoCaptureAction>();
         collection.AddTransient<ICaptureOverlayStopVideoCaptureAction, CaptureOverlayStopVideoCaptureAction>();
         collection.AddTransient<ICaptureOverlayActions, CaptureOverlayActions>();
+
+        // Settings actions
+        collection.AddTransient<ISettingsGoBackAction, SettingsGoBackAction>();
+        collection.AddTransient<ISettingsRestartAppAction, SettingsRestartAppAction>();
+        collection.AddTransient<ISettingsUpdateImageAutoCopyAction, SettingsUpdateImageAutoCopyAction>();
+        collection.AddTransient<ISettingsUpdateImageAutoSaveAction, SettingsUpdateImageAutoSaveAction>();
+        collection.AddTransient<ISettingsUpdateAppLanguageAction, SettingsUpdateAppLanguageAction>();
+        collection.AddTransient<ISettingsUpdateAppThemeAction, SettingsUpdateAppThemeAction>();
+        collection.AddTransient<ISettingsChangeScreenshotsFolderAction, SettingsChangeScreenshotsFolderAction>();
+        // For actions requiring context values, consider factory pattern or service-based resolution; leaving open folder actions out of DI for now.
+        collection.AddTransient<ISettingsActions, SettingsActions>();
 
         // ViewModels
         collection.AddTransient<MainWindowViewModel>();
