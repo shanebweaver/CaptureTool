@@ -39,9 +39,26 @@ public class CaptureOverlayStartVideoCaptureActionTests
         var nav = Fixture.Freeze<Mock<INavigationService>>();
         nav.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.VideoCapture));
 
+        var video = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
+        video.SetupGet(v => v.IsCapturing).Returns(false);
+
         var action = Fixture.Create<CaptureOverlayStartVideoCaptureAction>();
         bool can = action.CanExecute(new NewCaptureArgs(default, new Rectangle(1,1,2,2)));
         Assert.IsTrue(can);
+    }
+
+    [TestMethod]
+    public void CanExecute_ShouldBeFalse_WhenAlreadyCapturing()
+    {
+        var nav = Fixture.Freeze<Mock<INavigationService>>();
+        nav.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.VideoCapture));
+
+        var video = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
+        video.SetupGet(v => v.IsCapturing).Returns(true);
+
+        var action = Fixture.Create<CaptureOverlayStartVideoCaptureAction>();
+        bool can = action.CanExecute(new NewCaptureArgs(default, new Rectangle(1,1,2,2)));
+        Assert.IsFalse(can);
     }
 
     [TestMethod]
