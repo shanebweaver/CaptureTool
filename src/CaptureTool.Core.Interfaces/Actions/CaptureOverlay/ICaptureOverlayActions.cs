@@ -1,4 +1,6 @@
-﻿namespace CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
+﻿using CaptureTool.Domains.Capture.Interfaces;
+
+namespace CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
 
 public interface ICaptureOverlayActions
 {
@@ -6,8 +8,8 @@ public interface ICaptureOverlayActions
     bool CanGoBack();
     bool CanToggleDesktopAudio();
     // Start video capture
-    bool CanStartVideoCapture(CaptureTool.Domains.Capture.Interfaces.NewCaptureArgs args);
-    void StartVideoCapture(CaptureTool.Domains.Capture.Interfaces.NewCaptureArgs args);
+    bool CanStartVideoCapture(NewCaptureArgs args);
+    void StartVideoCapture(NewCaptureArgs args);
     // Stop video capture
     bool CanStopVideoCapture();
     void StopVideoCapture();
