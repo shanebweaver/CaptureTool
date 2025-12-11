@@ -1,6 +1,6 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Core.Navigation;
+using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Telemetry;
 using Moq;

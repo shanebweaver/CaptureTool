@@ -7,7 +7,7 @@ using CaptureTool.Services.Interfaces.Store;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Windowing;
 using CaptureTool.ViewModels.Helpers;
-using static CaptureTool.Core.Implementations.Store.CaptureToolStoreProducts;
+using static CaptureTool.Core.Interfaces.Store.CaptureToolStoreProducts;
 
 namespace CaptureTool.ViewModels;
 

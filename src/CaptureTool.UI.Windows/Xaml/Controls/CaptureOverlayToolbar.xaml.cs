@@ -1,4 +1,4 @@
-using CaptureTool.Core.Implementations.FeatureManagement;
+using CaptureTool.Core.Interfaces.FeatureManagement;
 using Microsoft.UI.Xaml;
 using System.Windows.Input;
 

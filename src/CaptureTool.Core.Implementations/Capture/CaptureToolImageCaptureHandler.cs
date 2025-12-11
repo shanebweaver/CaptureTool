@@ -1,4 +1,4 @@
-﻿using CaptureTool.Core.Implementations.Settings;
+﻿using CaptureTool.Core.Interfaces.Settings;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Clipboard;
 using CaptureTool.Services.Interfaces.Settings;

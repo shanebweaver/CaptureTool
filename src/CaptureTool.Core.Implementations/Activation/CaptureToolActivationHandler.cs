@@ -1,6 +1,6 @@
-﻿using CaptureTool.Core.Implementations.FeatureManagement;
-using CaptureTool.Core.Implementations.Settings;
+﻿using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Core.Interfaces.Settings;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Activation;
 using CaptureTool.Services.Interfaces.Cancellation;

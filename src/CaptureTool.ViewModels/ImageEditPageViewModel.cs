@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Implementations.FeatureManagement;
-using CaptureTool.Core.Implementations.Store;
+using CaptureTool.Core.Interfaces.FeatureManagement;
+using CaptureTool.Core.Interfaces.Store;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
