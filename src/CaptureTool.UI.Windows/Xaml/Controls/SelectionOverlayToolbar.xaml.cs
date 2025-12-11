@@ -1,4 +1,4 @@
-using CaptureTool.Core.FeatureManagement;
+using CaptureTool.Core.Implementations.FeatureManagement;
 using CaptureTool.ViewModels;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;

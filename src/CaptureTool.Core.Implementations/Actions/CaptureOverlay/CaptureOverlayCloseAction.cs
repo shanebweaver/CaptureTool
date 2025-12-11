@@ -1,31 +1,36 @@
 ﻿using CaptureTool.Common.Commands;
-using CaptureTool.Core.Navigation;
+using CaptureTool.Core.Implementations.Navigation;
+using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Services.Interfaces.Shutdown;
 
-namespace CaptureTool.Core.Actions.CaptureOverlay;
+namespace CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 
-public sealed partial class CaptureOverlayGoBackAction : ActionCommand
+public sealed partial class CaptureOverlayCloseAction : ActionCommand
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly INavigationService _navigationService;
     private readonly IAppNavigation _appNavigation;
+    private readonly INavigationService _navigationService;
+    private readonly IShutdownHandler _shutdownHandler;
 
-    public CaptureOverlayGoBackAction(
+    public CaptureOverlayCloseAction(
         IVideoCaptureHandler videoCaptureHandler,
+        IAppNavigation appNavigation,
         INavigationService navigationService,
-        IAppNavigation appNavigation)
+        IShutdownHandler shutdownHandler)
     {
         _videoCaptureHandler = videoCaptureHandler;
-        _navigationService = navigationService;
         _appNavigation = appNavigation;
+        _navigationService = navigationService;
+        _shutdownHandler = shutdownHandler;
     }
 
     public override bool CanExecute()
     {
         if (!_navigationService.CanGoBack)
         {
-            return false; 
+            return false;
         }
 
         if (_navigationService.CurrentRequest?.Route is not CaptureToolNavigationRoute route 
@@ -45,9 +50,13 @@ public sealed partial class CaptureOverlayGoBackAction : ActionCommand
         }
         catch { }
 
-        if (!_appNavigation.TryGoBack())
+        if (_appNavigation.CanGoBack)
         {
-            _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault, true);
+            _appNavigation.GoBackToMainWindow();
+        }
+        else
+        {
+            _shutdownHandler.Shutdown();
         }
     }
 }

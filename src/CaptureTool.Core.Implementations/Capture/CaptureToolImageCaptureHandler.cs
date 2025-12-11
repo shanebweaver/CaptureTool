@@ -1,11 +1,11 @@
-﻿using CaptureTool.Core.Settings;
+﻿using CaptureTool.Core.Implementations.Settings;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Clipboard;
 using CaptureTool.Services.Interfaces.Settings;
 using CaptureTool.Services.Interfaces.Storage;
 using System.Drawing;
 
-namespace CaptureTool.Core.Capture;
+namespace CaptureTool.Core.Implementations.Capture;
 
 public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
 {

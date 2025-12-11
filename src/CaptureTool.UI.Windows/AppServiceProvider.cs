@@ -1,7 +1,8 @@
-﻿using CaptureTool.Core.Actions.CaptureOverlay;
-using CaptureTool.Core.Activation;
-using CaptureTool.Core.Capture;
-using CaptureTool.Core.Navigation;
+﻿using CaptureTool.Core.Implementations.Actions.CaptureOverlay;
+using CaptureTool.Core.Implementations.Activation;
+using CaptureTool.Core.Implementations.Capture;
+using CaptureTool.Core.Implementations.Navigation;
+using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Implementations.Windows;

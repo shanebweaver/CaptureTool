@@ -1,11 +1,11 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.FeatureManagement;
-using CaptureTool.Core.Navigation;
-using CaptureTool.Core.Telemetry;
+using CaptureTool.Core.Implementations.FeatureManagement;
+using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.ViewModels.Helpers;
 
 namespace CaptureTool.ViewModels;
 

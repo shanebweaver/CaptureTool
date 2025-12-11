@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Storage;
 
-namespace CaptureTool.Core.Capture;
+namespace CaptureTool.Core.Implementations.Capture;
 
 public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 {

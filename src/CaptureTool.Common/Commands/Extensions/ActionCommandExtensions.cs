@@ -1,8 +1,6 @@
-﻿using CaptureTool.Common.Commands;
+﻿namespace CaptureTool.Common.Commands.Extensions;
 
-namespace CaptureTool.Core.Actions;
-
-internal static partial class ActionCommandExtensions
+public static partial class ActionCommandExtensions
 {
     public static void ExecuteCommand(this ActionCommand command)
     {

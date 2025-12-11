@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Core.Navigation;
+﻿namespace CaptureTool.Core.Implementations.Navigation;
 
 public static partial class CaptureToolNavigationRouteHelper
 {

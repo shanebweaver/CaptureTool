@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Storage;
 
-namespace CaptureTool.Core.Navigation;
+namespace CaptureTool.Core.Interfaces.Navigation;
 
 public interface IAppNavigation
 {

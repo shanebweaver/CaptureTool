@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Domains.Capture.Interfaces;
 
-namespace CaptureTool.Core.Actions.CaptureOverlay;
+namespace CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 
 public sealed partial class CaptureOverlayToggleDesktopAudioAction : ActionCommand
 {

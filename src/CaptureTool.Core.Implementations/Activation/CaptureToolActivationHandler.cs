@@ -1,6 +1,6 @@
-﻿using CaptureTool.Core.FeatureManagement;
-using CaptureTool.Core.Navigation;
-using CaptureTool.Core.Settings;
+﻿using CaptureTool.Core.Implementations.FeatureManagement;
+using CaptureTool.Core.Implementations.Settings;
+using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Activation;
 using CaptureTool.Services.Interfaces.Cancellation;
@@ -12,7 +12,7 @@ using CaptureTool.Services.Interfaces.Settings;
 using System.Collections.Specialized;
 using System.Web;
 
-namespace CaptureTool.Core.Activation;
+namespace CaptureTool.Core.Implementations.Activation;
 
 public sealed partial class CaptureToolActivationHandler : IActivationHandler
 {

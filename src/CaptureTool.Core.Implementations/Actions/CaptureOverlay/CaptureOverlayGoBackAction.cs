@@ -1,35 +1,32 @@
 ﻿using CaptureTool.Common.Commands;
-using CaptureTool.Core.Navigation;
+using CaptureTool.Core.Implementations.Navigation;
+using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Navigation;
-using CaptureTool.Services.Interfaces.Shutdown;
 
-namespace CaptureTool.Core.Actions.CaptureOverlay;
+namespace CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 
-public sealed partial class CaptureOverlayCloseAction : ActionCommand
+public sealed partial class CaptureOverlayGoBackAction : ActionCommand
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly IAppNavigation _appNavigation;
     private readonly INavigationService _navigationService;
-    private readonly IShutdownHandler _shutdownHandler;
+    private readonly IAppNavigation _appNavigation;
 
-    public CaptureOverlayCloseAction(
+    public CaptureOverlayGoBackAction(
         IVideoCaptureHandler videoCaptureHandler,
-        IAppNavigation appNavigation,
         INavigationService navigationService,
-        IShutdownHandler shutdownHandler)
+        IAppNavigation appNavigation)
     {
         _videoCaptureHandler = videoCaptureHandler;
-        _appNavigation = appNavigation;
         _navigationService = navigationService;
-        _shutdownHandler = shutdownHandler;
+        _appNavigation = appNavigation;
     }
 
     public override bool CanExecute()
     {
         if (!_navigationService.CanGoBack)
         {
-            return false;
+            return false; 
         }
 
         if (_navigationService.CurrentRequest?.Route is not CaptureToolNavigationRoute route 
@@ -49,13 +46,9 @@ public sealed partial class CaptureOverlayCloseAction : ActionCommand
         }
         catch { }
 
-        if (_appNavigation.CanGoBack)
+        if (!_appNavigation.TryGoBack())
         {
-            _appNavigation.GoBackToMainWindow();
-        }
-        else
-        {
-            _shutdownHandler.Shutdown();
+            _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault, true);
         }
     }
 }

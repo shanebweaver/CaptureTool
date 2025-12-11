@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Core.Interfaces\CaptureTool.Core.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domains.Capture.Interfaces\CaptureTool.Domains.Capture.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
+  </ItemGroup>
+
+</Project>

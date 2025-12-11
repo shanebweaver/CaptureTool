@@ -1,4 +1,6 @@
-﻿namespace CaptureTool.Core.Actions.CaptureOverlay;
+﻿using CaptureTool.Common.Commands.Extensions;
+
+namespace CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 
 public sealed partial class CaptureOverlayActions
 {

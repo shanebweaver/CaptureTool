@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace CaptureTool.Core.Telemetry;
+namespace CaptureTool.ViewModels.Helpers;
 
 public static class TelemetryHelper
 {

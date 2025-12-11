@@ -1,8 +1,9 @@
-﻿using CaptureTool.Domains.Capture.Interfaces;
+﻿using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Navigation;
 using CaptureTool.Services.Interfaces.Storage;
 
-namespace CaptureTool.Core.Navigation;
+namespace CaptureTool.Core.Implementations.Navigation;
 
 public sealed partial class CaptureToolAppNavigation : IAppNavigation
 {
