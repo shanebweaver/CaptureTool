@@ -2,7 +2,6 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Core.Interfaces.Actions.Loading;
 using CaptureTool.Services.Interfaces.Telemetry;
-using CaptureTool.ViewModels;
 using Moq;
 
 namespace CaptureTool.ViewModels.Tests;
