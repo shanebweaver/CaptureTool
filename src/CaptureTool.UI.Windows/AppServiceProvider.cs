@@ -4,6 +4,8 @@ using CaptureTool.Core.Implementations.Activation;
 using CaptureTool.Core.Implementations.Capture;
 using CaptureTool.Core.Implementations.Navigation;
 using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Core.Implementations.Actions.Loading;
+using CaptureTool.Core.Interfaces.Actions.Loading;
 using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Implementations.Windows;
@@ -104,6 +106,10 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<ICaptureOverlayStartVideoCaptureAction, CaptureOverlayStartVideoCaptureAction>();
         collection.AddTransient<ICaptureOverlayStopVideoCaptureAction, CaptureOverlayStopVideoCaptureAction>();
         collection.AddTransient<ICaptureOverlayActions, CaptureOverlayActions>();
+
+        // Loading actions
+        collection.AddTransient<ILoadingGoBackAction, LoadingGoBackAction>();
+        collection.AddTransient<ILoadingActions, LoadingActions>();
 
         // ViewModels
         collection.AddTransient<MainWindowViewModel>();
