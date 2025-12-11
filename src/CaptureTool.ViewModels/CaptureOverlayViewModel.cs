@@ -1,13 +1,13 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Actions.CaptureOverlay;
-using CaptureTool.Core.Navigation;
-using CaptureTool.Core.Telemetry;
+using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
+using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.TaskEnvironment;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Themes;
+using CaptureTool.ViewModels.Helpers;
 using System.Drawing;
 using System.Timers;
 using Timer = System.Timers.Timer;
@@ -30,7 +30,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ITelemetryService _telemetryService;
     private readonly ITaskEnvironment _taskEnvironment;
-    private readonly CaptureOverlayActions _captureOverlayActionHandler;
+    private readonly ICaptureOverlayActions _captureOverlayActions;
 
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
@@ -81,13 +81,13 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IVideoCaptureHandler videoCaptureHandler,
         ITelemetryService telemetryService,
         ITaskEnvironment taskEnvironment,
-        CaptureOverlayActions captureOverlayActionHandler) 
+        ICaptureOverlayActions captureOverlayActions) 
     {
         _appNavigation = appNavigation;
         _videoCaptureHandler = videoCaptureHandler;
         _telemetryService = telemetryService;
         _taskEnvironment = taskEnvironment;
-        _captureOverlayActionHandler = captureOverlayActionHandler;
+        _captureOverlayActions = captureOverlayActions;
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
@@ -134,7 +134,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.CloseOverlay, () =>
         {
-            _captureOverlayActionHandler.Close();
+            _captureOverlayActions.Close();
         });
     }
 
@@ -142,7 +142,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
         {
-            _captureOverlayActionHandler.GoBack();
+            _captureOverlayActions.GoBack();
         });
     }
 
@@ -190,7 +190,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleDesktopAudio, () =>
         {
-            _captureOverlayActionHandler.ToggleDesktopAudio();
+            _captureOverlayActions.ToggleDesktopAudio();
         });
     }
 

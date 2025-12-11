@@ -1,8 +1,8 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Telemetry;
 using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.ViewModels.Helpers;
 
 namespace CaptureTool.ViewModels;
 

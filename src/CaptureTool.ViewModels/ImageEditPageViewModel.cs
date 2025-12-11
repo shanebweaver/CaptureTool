@@ -1,8 +1,7 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.FeatureManagement;
-using CaptureTool.Core.Store;
-using CaptureTool.Core.Telemetry;
+using CaptureTool.Core.Interfaces.FeatureManagement;
+using CaptureTool.Core.Interfaces.Store;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
@@ -16,6 +15,7 @@ using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Store;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Windowing;
+using CaptureTool.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Numerics;

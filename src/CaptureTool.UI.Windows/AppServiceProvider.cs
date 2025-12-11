@@ -1,7 +1,9 @@
-﻿using CaptureTool.Core.Actions.CaptureOverlay;
-using CaptureTool.Core.Activation;
-using CaptureTool.Core.Capture;
-using CaptureTool.Core.Navigation;
+﻿using CaptureTool.Core.Implementations.Actions.CaptureOverlay;
+using CaptureTool.Core.Implementations.Activation;
+using CaptureTool.Core.Implementations.Capture;
+using CaptureTool.Core.Implementations.Navigation;
+using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
+using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Implementations.Windows;
@@ -96,10 +98,10 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IAppNavigation, CaptureToolAppNavigation>();
 
         // Action handlers
-        collection.AddTransient<CaptureOverlayCloseAction>();
-        collection.AddTransient<CaptureOverlayGoBackAction>();
-        collection.AddTransient<CaptureOverlayToggleDesktopAudioAction>();
-        collection.AddTransient<CaptureOverlayActions>();
+        collection.AddTransient<ICaptureOverlayCloseAction, CaptureOverlayCloseAction>();
+        collection.AddTransient<ICaptureOverlayGoBackAction, CaptureOverlayGoBackAction>();
+        collection.AddTransient<ICaptureOverlayToggleDesktopAudioAction, CaptureOverlayToggleDesktopAudioAction>();
+        collection.AddTransient<ICaptureOverlayActions, CaptureOverlayActions>();
 
         // ViewModels
         collection.AddTransient<MainWindowViewModel>();

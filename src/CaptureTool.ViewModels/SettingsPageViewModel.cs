@@ -1,8 +1,7 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Navigation;
-using CaptureTool.Core.Settings;
-using CaptureTool.Core.Telemetry;
+using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Core.Interfaces.Settings;
 using CaptureTool.Services.Interfaces;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Settings;
@@ -11,6 +10,7 @@ using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Themes;
 using CaptureTool.Services.Interfaces.Windowing;
+using CaptureTool.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 

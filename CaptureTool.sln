@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Implem
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Services.Implementations.Windows", "src\CaptureTool.Services.Implementations.Windows\CaptureTool.Services.Implementations.Windows.csproj", "{D332328F-8703-468A-8A54-48D376DDC2B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Core", "src\CaptureTool.Core\CaptureTool.Core.csproj", "{E2B8000C-0354-430A-82DD-265A57839277}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Core.Implementations", "src\CaptureTool.Core.Implementations\CaptureTool.Core.Implementations.csproj", "{E2B8000C-0354-430A-82DD-265A57839277}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Domains.Capture.Implementations.Windows", "src\CaptureTool.Domains.Capture.Implementations.Windows\CaptureTool.Domains.Capture.Implementations.Windows.csproj", "{2AF975AE-7D0B-4FFD-AC10-768B667EAEF6}"
 EndProject
@@ -49,6 +49,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{49E306FC
 		src\Directory.Packages.props = src\Directory.Packages.props
 		src\Directory.Version.props = src\Directory.Version.props
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Core.Interfaces", "src\CaptureTool.Core.Interfaces\CaptureTool.Core.Interfaces.csproj", "{E9CD8E3C-28B7-4136-BAD6-E25480B51741}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -190,6 +192,14 @@ Global
 		{C347AADA-ABD5-4ECE-9937-D4C32586B0E4}.Release|ARM64.Build.0 = Release|Any CPU
 		{C347AADA-ABD5-4ECE-9937-D4C32586B0E4}.Release|x64.ActiveCfg = Release|Any CPU
 		{C347AADA-ABD5-4ECE-9937-D4C32586B0E4}.Release|x64.Build.0 = Release|Any CPU
+		{E9CD8E3C-28B7-4136-BAD6-E25480B51741}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{E9CD8E3C-28B7-4136-BAD6-E25480B51741}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{E9CD8E3C-28B7-4136-BAD6-E25480B51741}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E9CD8E3C-28B7-4136-BAD6-E25480B51741}.Debug|x64.Build.0 = Debug|Any CPU
+		{E9CD8E3C-28B7-4136-BAD6-E25480B51741}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{E9CD8E3C-28B7-4136-BAD6-E25480B51741}.Release|ARM64.Build.0 = Release|Any CPU
+		{E9CD8E3C-28B7-4136-BAD6-E25480B51741}.Release|x64.ActiveCfg = Release|Any CPU
+		{E9CD8E3C-28B7-4136-BAD6-E25480B51741}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

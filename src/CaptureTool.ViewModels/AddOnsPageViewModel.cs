@@ -1,13 +1,13 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Navigation;
-using CaptureTool.Core.Telemetry;
+using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Store;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Windowing;
-using static CaptureTool.Core.Store.CaptureToolStoreProducts;
+using CaptureTool.ViewModels.Helpers;
+using static CaptureTool.Core.Interfaces.Store.CaptureToolStoreProducts;
 
 namespace CaptureTool.ViewModels;
 
