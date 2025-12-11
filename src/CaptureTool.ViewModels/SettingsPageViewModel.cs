@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Core.Interfaces.Actions.Settings;
 using CaptureTool.Core.Interfaces.Settings;
 using CaptureTool.Services.Interfaces;
 using CaptureTool.Services.Interfaces.Localization;
@@ -36,9 +36,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         public static readonly string RestoreDefaultSettings = "RestoreDefaultSettings";
     }
 
-    private readonly IAppNavigation _appNavigation;
+    private readonly ISettingsActions _settingsActions;
     private readonly ITelemetryService _telemetryService;
-    private readonly IShutdownHandler _shutdownHandler;
     private readonly IWindowHandleProvider _windowingService;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
@@ -127,9 +126,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public SettingsPageViewModel(
-        IAppNavigation appNavigation,
+        ISettingsActions settingsActions,
         ITelemetryService telemetryService,
-        IShutdownHandler shutdownHandler,
         IWindowHandleProvider windowingService,
         ILocalizationService localizationService,
         IThemeService themeService,
@@ -139,14 +137,13 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
         IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
-        _appNavigation = appNavigation;
+        _settingsActions = settingsActions;
         _telemetryService = telemetryService;
-        _shutdownHandler = shutdownHandler;
         _windowingService = windowingService;
         _localizationService = localizationService;
-        _settingsService = settingsService;
         _themeService = themeService;
         _filePickerService = filePickerService;
+        _settingsService = settingsService;
         _storageService = storageService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
@@ -376,14 +373,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void RestartApp()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, () => _shutdownHandler.TryRestart());
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, () => _settingsActions.RestartApp());
     }
 
     private void GoBack()
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () => 
         {
-            _appNavigation.GoBackOrGoHome();
+            _settingsActions.GoBack();
         });
     }
 
