@@ -81,7 +81,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IVideoCaptureHandler videoCaptureHandler,
         ITelemetryService telemetryService,
         ITaskEnvironment taskEnvironment,
-        ICaptureOverlayActions captureOverlayActions) 
+        ICaptureOverlayActions captureOverlayActions)
     {
         _appNavigation = appNavigation;
         _videoCaptureHandler = videoCaptureHandler;
@@ -158,8 +158,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
                 StartTimer();
                 NewCaptureArgs args = new(_monitorCaptureResult.Value, _captureArea.Value);
 
-                _appNavigation.GoToVideoCapture(args);
-                _videoCaptureHandler.StartVideoCapture(args);
+                _captureOverlayActions.StartVideoCapture(args);
             }
             else
             {
@@ -176,8 +175,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             {
                 IsRecording = false;
                 StopTimer();
-                IVideoFile video = _videoCaptureHandler.StopVideoCapture();
-                _appNavigation.GoToVideoEdit(video);
+                _captureOverlayActions.StopVideoCapture();
             }
             else
             {
