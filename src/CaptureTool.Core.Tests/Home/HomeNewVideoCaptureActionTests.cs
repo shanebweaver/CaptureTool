@@ -7,7 +7,7 @@ using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.FeatureManagement;
 using Moq;
 
-namespace CaptureTool.Core.Tests.Home;
+namespace CaptureTool.Core.Tests.Actions.Home;
 
 [TestClass]
 public class HomeNewVideoCaptureActionTests

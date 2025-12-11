@@ -4,7 +4,7 @@ using CaptureTool.Core.Implementations.Actions.Home;
 using CaptureTool.Core.Interfaces.Actions.Home;
 using Moq;
 
-namespace CaptureTool.Core.Tests.Home;
+namespace CaptureTool.Core.Tests.Actions.Home;
 
 [TestClass]
 public class HomeActionsTests

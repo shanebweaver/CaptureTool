@@ -5,7 +5,7 @@ using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using Moq;
 
-namespace CaptureTool.Core.Tests.Home;
+namespace CaptureTool.Core.Tests.Actions.Home;
 
 [TestClass]
 public class HomeNewImageCaptureActionTests
