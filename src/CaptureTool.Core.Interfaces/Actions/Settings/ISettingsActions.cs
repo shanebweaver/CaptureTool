@@ -16,7 +16,7 @@ public interface ISettingsActions
 
     // Screenshots folder
     Task ChangeScreenshotsFolderAsync(CancellationToken ct);
-    void OpenScreenshotsFolder();
+    void OpenScreenshotsFolder(string folderPath);
 
     // Temp files
     void OpenTemporaryFilesFolder();

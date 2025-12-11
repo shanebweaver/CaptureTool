@@ -4,24 +4,17 @@ using System.Diagnostics;
 
 namespace CaptureTool.Core.Implementations.Actions.Settings;
 
-public sealed partial class SettingsOpenScreenshotsFolderAction : ActionCommand, ISettingsOpenScreenshotsFolderAction
+public sealed partial class SettingsOpenScreenshotsFolderAction : ActionCommand<string>, ISettingsOpenScreenshotsFolderAction
 {
-    private readonly string _screenshotsFolderPath;
-
-    public SettingsOpenScreenshotsFolderAction(string screenshotsFolderPath)
+    public override void Execute(string screenshotsFolderPath)
     {
-        _screenshotsFolderPath = screenshotsFolderPath;
-    }
-
-    public override void Execute()
-    {
-        if (Directory.Exists(_screenshotsFolderPath))
+        if (Directory.Exists(screenshotsFolderPath))
         {
-            Process.Start("explorer.exe", $"/open, {_screenshotsFolderPath}");
+            Process.Start("explorer.exe", $"/open, {screenshotsFolderPath}");
         }
         else
         {
-            throw new DirectoryNotFoundException($"The screenshots folder path '{_screenshotsFolderPath}' does not exist.");
+            throw new DirectoryNotFoundException($"The screenshots folder path '{screenshotsFolderPath}' does not exist.");
         }
     }
 }

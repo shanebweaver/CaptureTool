@@ -115,7 +115,8 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<ISettingsUpdateAppLanguageAction, SettingsUpdateAppLanguageAction>();
         collection.AddTransient<ISettingsUpdateAppThemeAction, SettingsUpdateAppThemeAction>();
         collection.AddTransient<ISettingsChangeScreenshotsFolderAction, SettingsChangeScreenshotsFolderAction>();
-        // For actions requiring context values, consider factory pattern or service-based resolution; leaving open folder actions out of DI for now.
+        collection.AddTransient<ISettingsOpenScreenshotsFolderAction, SettingsOpenScreenshotsFolderAction>();
+        collection.AddTransient<ISettingsOpenTempFolderAction, SettingsOpenTempFolderAction>();
         collection.AddTransient<ISettingsActions, SettingsActions>();
 
         // ViewModels

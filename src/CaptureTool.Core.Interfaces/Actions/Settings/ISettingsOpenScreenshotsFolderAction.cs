@@ -2,4 +2,4 @@ using CaptureTool.Common.Commands;
 
 namespace CaptureTool.Core.Interfaces.Actions.Settings;
 
-public interface ISettingsOpenScreenshotsFolderAction : IActionCommand { }
+public interface ISettingsOpenScreenshotsFolderAction : IActionCommand<string> { }

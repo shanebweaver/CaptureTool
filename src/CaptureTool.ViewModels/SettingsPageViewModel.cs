@@ -249,24 +249,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
                 return;
             }
 
-            AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
-            if (vm.Language == _localizationService.LanguageOverride)
-            {
-                return;
-            }
-
-            _localizationService.OverrideLanguage(vm.Language);
-
-            if (vm.Language?.Value is string language)
-            {
-                _settingsService.Set(CaptureToolSettings.Settings_LanguageOverride, vm.Language.Value);
-            }
-            else
-            {
-                _settingsService.Unset(CaptureToolSettings.Settings_LanguageOverride);
-            }
-
-            await _settingsService.TrySaveAsync(CancellationToken.None);
+            await _settingsActions.UpdateAppLanguageAsync(index, CancellationToken.None);
             UpdateShowAppLanguageRestartMessage();
         });
     }
@@ -291,8 +274,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
                 return;
             }
 
-            AppThemeViewModel vm = AppThemes[SelectedAppThemeIndex];
-            _themeService.UpdateCurrentTheme(vm.AppTheme);
+            _settingsActions.UpdateAppTheme(index);
             UpdateShowAppThemeRestartMessage();
         });
     }
@@ -325,9 +307,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoSave, async () =>
         {
-            ImageCaptureAutoSave = value;           
-            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, ImageCaptureAutoSave);
-            await _settingsService.TrySaveAsync(CancellationToken.None);
+            ImageCaptureAutoSave = value;
+            await _settingsActions.UpdateImageAutoSaveAsync(value, CancellationToken.None);
         });
     }
 
@@ -336,8 +317,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
         {
             ImageCaptureAutoCopy = value;
-            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, ImageCaptureAutoCopy);
-            await _settingsService.TrySaveAsync(CancellationToken.None);
+            await _settingsActions.UpdateImageAutoCopyAsync(value, CancellationToken.None);
         });
     }
 
@@ -345,14 +325,13 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
         {
-            var hwnd = _windowingService.GetMainWindowHandle();
-            IFolder folder = await _filePickerService.PickFolderAsync(hwnd, UserFolder.Pictures)
-                ?? throw new OperationCanceledException("No folder was selected.");
-
-            ScreenshotsFolderPath = folder.FolderPath;
-
-            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder, folder.FolderPath);
-            await _settingsService.TrySaveAsync(CancellationToken.None);
+            await _settingsActions.ChangeScreenshotsFolderAsync(CancellationToken.None);
+            var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
+            if (string.IsNullOrWhiteSpace(screenshotsFolder))
+            {
+                screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
+            }
+            ScreenshotsFolderPath = screenshotsFolder;
         });
     }
 
@@ -360,14 +339,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenScreenshotsFolder, () =>
         {
-            if (Directory.Exists(ScreenshotsFolderPath))
-            {
-                Process.Start("explorer.exe", $"/open, {ScreenshotsFolderPath}");
-            }
-            else
-            {
-                throw new DirectoryNotFoundException($"The screenshots folder path '{ScreenshotsFolderPath}' does not exist.");
-            }
+            _settingsActions.OpenScreenshotsFolder(ScreenshotsFolderPath);
         });
     }
 
@@ -388,24 +360,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ClearTemporaryFiles, () =>
         {
-            foreach (var entry in Directory.EnumerateFileSystemEntries(TemporaryFilesFolderPath))
-            {
-                try
-                {
-                    if (Directory.Exists(entry))
-                    {
-                        Directory.Delete(entry, true);
-                    }
-                    else
-                    {
-                        File.Delete(entry);
-                    }
-                }
-                catch
-                {
-                    // Ignore errors
-                }
-            }
+            _settingsActions.ClearTemporaryFiles(TemporaryFilesFolderPath);
         });
     }
 
@@ -413,14 +368,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenTemporaryFilesFolder, () =>
         {
-            if (Directory.Exists(TemporaryFilesFolderPath))
-            {
-                Process.Start("explorer.exe", $"/open, {TemporaryFilesFolderPath}");
-            }
-            else
-            {
-                throw new DirectoryNotFoundException($"The temporary folder path '{TemporaryFilesFolderPath}' does not exist.");
-            }
+            _settingsActions.OpenTemporaryFilesFolder();
         });
     }
 
@@ -428,8 +376,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.RestoreDefaultSettings, async () =>
         {
-            _settingsService.ClearAllSettings();
-            await _settingsService.TrySaveAsync(CancellationToken.None);
+            await _settingsActions.RestoreDefaultSettingsAsync(CancellationToken.None);
 
             ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
             ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);

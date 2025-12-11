@@ -54,7 +54,7 @@ public sealed partial class SettingsActions : ISettingsActions
     public void UpdateAppTheme(int index) => _updateTheme.ExecuteCommand(index);
 
     public Task ChangeScreenshotsFolderAsync(CancellationToken ct) => _changeScreenshotsFolder.ExecuteCommandAsync();
-    public void OpenScreenshotsFolder() => _openScreenshotsFolder.ExecuteCommand();
+    public void OpenScreenshotsFolder(string folderPath) => _openScreenshotsFolder.ExecuteCommand(folderPath);
 
     public void OpenTemporaryFilesFolder() => _openTempFolder.ExecuteCommand();
     public void ClearTemporaryFiles(string tempFolderPath) => _clearTempFiles.ExecuteCommand(tempFolderPath);
