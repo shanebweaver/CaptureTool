@@ -55,6 +55,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
         VideoFile videoFile = new(_tempVideoPath);
         _tempVideoPath = null;
+        isRecording = false;
 
         NewVideoCaptured?.Invoke(this, videoFile);
         return videoFile;
