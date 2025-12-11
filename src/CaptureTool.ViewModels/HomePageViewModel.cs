@@ -2,8 +2,6 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.Home;
 using CaptureTool.Core.Interfaces.FeatureManagement;
-using CaptureTool.Core.Interfaces.Navigation;
-using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.ViewModels.Helpers;
