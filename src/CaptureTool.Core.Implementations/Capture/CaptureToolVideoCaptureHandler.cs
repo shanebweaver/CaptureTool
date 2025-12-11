@@ -11,6 +11,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private string? _tempVideoPath;
     private bool isRecording;
 
+    public bool IsCapturing => isRecording;
     public bool IsDesktopAudioEnabled { get; private set; }
 
     public event EventHandler<IVideoFile>? NewVideoCaptured;
