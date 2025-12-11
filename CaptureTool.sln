@@ -52,6 +52,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{49E306FC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Core.Interfaces", "src\CaptureTool.Core.Interfaces\CaptureTool.Core.Interfaces.csproj", "{E9CD8E3C-28B7-4136-BAD6-E25480B51741}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureTool.Core.Tests", "src\CaptureTool.Core.Tests\CaptureTool.Core.Tests.csproj", "{62C3FD30-D653-44AD-ABCC-6454D6AD2FAB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -200,6 +202,14 @@ Global
 		{E9CD8E3C-28B7-4136-BAD6-E25480B51741}.Release|ARM64.Build.0 = Release|Any CPU
 		{E9CD8E3C-28B7-4136-BAD6-E25480B51741}.Release|x64.ActiveCfg = Release|Any CPU
 		{E9CD8E3C-28B7-4136-BAD6-E25480B51741}.Release|x64.Build.0 = Release|Any CPU
+		{62C3FD30-D653-44AD-ABCC-6454D6AD2FAB}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{62C3FD30-D653-44AD-ABCC-6454D6AD2FAB}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{62C3FD30-D653-44AD-ABCC-6454D6AD2FAB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{62C3FD30-D653-44AD-ABCC-6454D6AD2FAB}.Debug|x64.Build.0 = Debug|Any CPU
+		{62C3FD30-D653-44AD-ABCC-6454D6AD2FAB}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{62C3FD30-D653-44AD-ABCC-6454D6AD2FAB}.Release|ARM64.Build.0 = Release|Any CPU
+		{62C3FD30-D653-44AD-ABCC-6454D6AD2FAB}.Release|x64.ActiveCfg = Release|Any CPU
+		{62C3FD30-D653-44AD-ABCC-6454D6AD2FAB}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
