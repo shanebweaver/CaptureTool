@@ -6,13 +6,13 @@ using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Implementations.Navigation;
 using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Services.Interfaces.Storage;
 using Moq;
-using System.Drawing;
 
-namespace CaptureTool.Core.Tests.Actions;
+namespace CaptureTool.Core.Tests.Actions.CaptureOverlay;
 
 [TestClass]
-public class CaptureOverlayStartVideoCaptureActionTests
+public class CaptureOverlayStopVideoCaptureActionTests
 {
     private IFixture Fixture { get; set; } = null!;
 
@@ -28,8 +28,8 @@ public class CaptureOverlayStartVideoCaptureActionTests
         var nav = Fixture.Freeze<Mock<INavigationService>>();
         nav.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.Home));
 
-        var action = Fixture.Create<CaptureOverlayStartVideoCaptureAction>();
-        bool can = action.CanExecute(new NewCaptureArgs(default, default));
+        var action = Fixture.Create<CaptureOverlayStopVideoCaptureAction>();
+        bool can = action.CanExecute();
         Assert.IsFalse(can);
     }
 
@@ -39,24 +39,23 @@ public class CaptureOverlayStartVideoCaptureActionTests
         var nav = Fixture.Freeze<Mock<INavigationService>>();
         nav.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.VideoCapture));
 
-        var action = Fixture.Create<CaptureOverlayStartVideoCaptureAction>();
-        bool can = action.CanExecute(new NewCaptureArgs(default, new Rectangle(1,1,2,2)));
+        var action = Fixture.Create<CaptureOverlayStopVideoCaptureAction>();
+        bool can = action.CanExecute();
         Assert.IsTrue(can);
     }
 
     [TestMethod]
-    public void Execute_ShouldNavigateAndStartRecording()
+    public void Execute_ShouldStopRecording_AndNavigateToEdit()
     {
         var appNav = Fixture.Freeze<Mock<IAppNavigation>>();
         var video = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
+        var file = new Mock<IVideoFile>().Object;
+        video.Setup(v => v.StopVideoCapture()).Returns(file);
 
-        var monitor = new MonitorCaptureResult(IntPtr.Zero, new byte[4], 96, new Rectangle(0,0,10,10), new Rectangle(0,0,10,10), true);
-        var args = new NewCaptureArgs(monitor, new Rectangle(1,1,10,10));
+        var action = Fixture.Create<CaptureOverlayStopVideoCaptureAction>();
+        action.Execute();
 
-        var action = Fixture.Create<CaptureOverlayStartVideoCaptureAction>();
-        action.Execute(args);
-
-        appNav.Verify(a => a.GoToVideoCapture(args), Times.Once);
-        video.Verify(v => v.StartVideoCapture(args), Times.Once);
+        video.Verify(v => v.StopVideoCapture(), Times.Once);
+        appNav.Verify(a => a.GoToVideoEdit(file), Times.Once);
     }
 }

@@ -8,10 +8,10 @@ using CaptureTool.Services.Implementations.Navigation;
 using CaptureTool.Services.Interfaces.Navigation;
 using Moq;
 
-namespace CaptureTool.Core.Tests.Actions;
+namespace CaptureTool.Core.Tests.Actions.CaptureOverlay;
 
 [TestClass]
-public class CaptureOverlayGoBackActionTests
+public class CaptureOverlayCloseActionTests
 {
     private IFixture Fixture { get; set; } = null!;
 
@@ -26,7 +26,7 @@ public class CaptureOverlayGoBackActionTests
     {
         var navService = Fixture.Freeze<Mock<INavigationService>>();
         navService.SetupGet(n => n.CanGoBack).Returns(false);
-        var handler = Fixture.Create<CaptureOverlayGoBackAction>();
+        var handler = Fixture.Create<CaptureOverlayCloseAction>();
 
         bool can = handler.CanExecute();
         Assert.IsFalse(can);
@@ -38,7 +38,7 @@ public class CaptureOverlayGoBackActionTests
         var navService = Fixture.Freeze<Mock<INavigationService>>();
         navService.SetupGet(n => n.CanGoBack).Returns(true);
         navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.Home));
-        var handler = Fixture.Create<CaptureOverlayGoBackAction>();
+        var handler = Fixture.Create<CaptureOverlayCloseAction>();
 
         bool can = handler.CanExecute();
         Assert.IsFalse(can);
@@ -50,43 +50,45 @@ public class CaptureOverlayGoBackActionTests
         var navService = Fixture.Freeze<Mock<INavigationService>>();
         navService.SetupGet(n => n.CanGoBack).Returns(true);
         navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.VideoCapture));
-        var handler = Fixture.Create<CaptureOverlayGoBackAction>();
+        var handler = Fixture.Create<CaptureOverlayCloseAction>();
 
         bool can = handler.CanExecute();
         Assert.IsTrue(can);
     }
 
     [TestMethod]
-    public void Execute_ShouldCancelRecording_AndGoBackOrToImageCapture()
+    public void Execute_ShouldCancelRecording_AndGoBackOrShutdown()
     {
         var video = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
         var appNav = Fixture.Freeze<Mock<IAppNavigation>>();
+        var shutdown = Fixture.Freeze<Mock<Services.Interfaces.Shutdown.IShutdownHandler>>();
 
-        appNav.Setup(a => a.TryGoBack()).Returns(true);
+        appNav.SetupGet(a => a.CanGoBack).Returns(true);
 
-        var handler = Fixture.Create<CaptureOverlayGoBackAction>();
+        var handler = Fixture.Create<CaptureOverlayCloseAction>();
 
         handler.Execute();
 
         video.Verify(v => v.CancelVideoCapture(), Times.Once);
-        appNav.Verify(a => a.TryGoBack(), Times.Once);
-        appNav.Verify(a => a.GoToImageCapture(CaptureOptions.VideoDefault, true), Times.Never);
+        appNav.Verify(a => a.GoBackToMainWindow(), Times.Once);
+        shutdown.Verify(s => s.Shutdown(), Times.Never);
     }
 
     [TestMethod]
-    public void Execute_ShouldNavigateToImageCapture_WhenTryGoBackFails()
+    public void Execute_ShouldShutdown_WhenCannotGoBack()
     {
         var video = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
         var appNav = Fixture.Freeze<Mock<IAppNavigation>>();
+        var shutdown = Fixture.Freeze<Mock<Services.Interfaces.Shutdown.IShutdownHandler>>();
 
-        appNav.Setup(a => a.TryGoBack()).Returns(false);
+        appNav.SetupGet(a => a.CanGoBack).Returns(false);
 
-        var handler = Fixture.Create<CaptureOverlayGoBackAction>();
+        var handler = Fixture.Create<CaptureOverlayCloseAction>();
 
         handler.Execute();
 
         video.Verify(v => v.CancelVideoCapture(), Times.Once);
-        appNav.Verify(a => a.TryGoBack(), Times.Once);
-        appNav.Verify(a => a.GoToImageCapture(CaptureOptions.VideoDefault, true), Times.Once);
+        appNav.Verify(a => a.GoBackToMainWindow(), Times.Never);
+        shutdown.Verify(s => s.Shutdown(), Times.Once);
     }
 }

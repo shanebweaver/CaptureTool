@@ -7,7 +7,7 @@ using CaptureTool.Common.Commands;
 using FluentAssertions;
 using Moq;
 
-namespace CaptureTool.Core.Tests.Actions;
+namespace CaptureTool.Core.Tests.Actions.CaptureOverlay;
 
 [TestClass]
 public class CaptureOverlayActionsTests

@@ -4,7 +4,7 @@ using CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 using CaptureTool.Domains.Capture.Interfaces;
 using Moq;
 
-namespace CaptureTool.Core.Tests.Actions;
+namespace CaptureTool.Core.Tests.Actions.CaptureOverlay;
 
 [TestClass]
 public class CaptureOverlayToggleDesktopAudioActionTests
