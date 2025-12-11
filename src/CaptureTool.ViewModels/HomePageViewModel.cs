@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core.Interfaces.Actions.Home;
 using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
@@ -17,7 +18,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
         public static readonly string NewVideoCapture = "NewVideoCapture";
     }
 
-    private readonly IAppNavigation _appNavigation;
+    private readonly IHomeActions _homeActions;
     private readonly ITelemetryService _telemetryService;
 
     public RelayCommand NewImageCaptureCommand { get; }
@@ -26,11 +27,11 @@ public sealed partial class HomePageViewModel : ViewModelBase
     public bool IsVideoCaptureEnabled { get; }
 
     public HomePageViewModel(
-        IAppNavigation appNavigation,
+        IHomeActions homeActions,
         IFeatureManager featureManager,
         ITelemetryService telemetryService)
     {
-        _appNavigation = appNavigation;
+        _homeActions = homeActions;
         _telemetryService = telemetryService;
 
         NewImageCaptureCommand = new(NewImageCapture);
@@ -43,7 +44,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewImageCapture, () =>
         {
-            _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
+            _homeActions.NewImageCapture();
         });
     }
 
@@ -51,7 +52,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewVideoCapture, () =>
         {
-            _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault);
+            _homeActions.NewVideoCapture();
         });
     }
 }

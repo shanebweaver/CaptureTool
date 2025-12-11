@@ -400,7 +400,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         });
     }
 
-    public ImageCanvasRenderOptions GetImageCanvasRenderOptions()
+    private ImageCanvasRenderOptions GetImageCanvasRenderOptions()
     {
         return new(Orientation, ImageSize, CropRect);
     }
