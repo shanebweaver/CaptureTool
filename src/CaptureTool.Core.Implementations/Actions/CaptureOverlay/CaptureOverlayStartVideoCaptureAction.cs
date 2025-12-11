@@ -32,6 +32,10 @@ public sealed partial class CaptureOverlayStartVideoCaptureAction : ActionComman
         }
 
         // Prevent double-start
+        if (_videoCaptureHandler.IsCapturing)
+        {
+            return false;
+        }
         return true;
     }
 
