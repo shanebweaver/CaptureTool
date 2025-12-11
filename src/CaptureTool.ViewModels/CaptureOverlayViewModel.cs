@@ -158,8 +158,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
                 StartTimer();
                 NewCaptureArgs args = new(_monitorCaptureResult.Value, _captureArea.Value);
 
-                _appNavigation.GoToVideoCapture(args);
-                _videoCaptureHandler.StartVideoCapture(args);
+                _captureOverlayActions.StartVideoCapture(args);
             }
             else
             {

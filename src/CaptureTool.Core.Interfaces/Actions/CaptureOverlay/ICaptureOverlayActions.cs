@@ -8,4 +8,7 @@ public interface ICaptureOverlayActions
     void Close();
     void GoBack();
     void ToggleDesktopAudio();
+    // Start video capture
+    bool CanStartVideoCapture(CaptureTool.Domains.Capture.Interfaces.NewCaptureArgs args);
+    void StartVideoCapture(CaptureTool.Domains.Capture.Interfaces.NewCaptureArgs args);
 }
