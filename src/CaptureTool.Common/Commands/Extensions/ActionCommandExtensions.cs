@@ -2,7 +2,7 @@
 
 public static partial class ActionCommandExtensions
 {
-    public static void ExecuteCommand(this ActionCommand command)
+    public static void ExecuteCommand(this IActionCommand command)
     {
         if (!command.CanExecute())
         {
@@ -12,7 +12,7 @@ public static partial class ActionCommandExtensions
         command.Execute();
     }
 
-    public static async Task ExecuteCommandAsync(this AsyncActionCommand asyncCommand)
+    public static async Task ExecuteCommandAsync(this IAsyncActionCommand asyncCommand)
     {
         if (!asyncCommand.CanExecute())
         {
@@ -22,7 +22,7 @@ public static partial class ActionCommandExtensions
         await asyncCommand.ExecuteAsync();
     }
 
-    public static void ExecuteCommand<T>(this ActionCommand<T> command, T parameter)
+    public static void ExecuteCommand<T>(this IActionCommand<T> command, T parameter)
     {
         if (!command.CanExecute(parameter))
         {
@@ -32,7 +32,7 @@ public static partial class ActionCommandExtensions
         command.Execute(parameter);
     }
 
-    public static async Task ExecuteCommandAsync<T>(this AsyncActionCommand<T> asyncCommand, T parameter)
+    public static async Task ExecuteCommandAsync<T>(this IAsyncActionCommand<T> asyncCommand, T parameter)
     {
         if (!asyncCommand.CanExecute(parameter))
         {

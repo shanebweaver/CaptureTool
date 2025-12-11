@@ -1,17 +1,18 @@
 ﻿using CaptureTool.Common.Commands.Extensions;
+using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
 
 namespace CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 
-public sealed partial class CaptureOverlayActions
+public sealed partial class CaptureOverlayActions : ICaptureOverlayActions
 {
-    private readonly CaptureOverlayCloseAction _closeAction;
-    private readonly CaptureOverlayGoBackAction _goBackAction;
-    private readonly CaptureOverlayToggleDesktopAudioAction _toggleDesktopAudioAction;
+    private readonly ICaptureOverlayCloseAction _closeAction;
+    private readonly ICaptureOverlayGoBackAction _goBackAction;
+    private readonly ICaptureOverlayToggleDesktopAudioAction _toggleDesktopAudioAction;
 
     public CaptureOverlayActions(
-        CaptureOverlayCloseAction closeAction,
-        CaptureOverlayGoBackAction goBackAction,
-        CaptureOverlayToggleDesktopAudioAction toggleDesktopAudioAction)
+        ICaptureOverlayCloseAction closeAction,
+        ICaptureOverlayGoBackAction goBackAction,
+        ICaptureOverlayToggleDesktopAudioAction toggleDesktopAudioAction)
     {
         _closeAction = closeAction;
         _goBackAction = goBackAction;

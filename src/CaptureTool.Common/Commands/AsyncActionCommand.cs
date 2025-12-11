@@ -1,6 +1,6 @@
 ﻿namespace CaptureTool.Common.Commands;
 
-public abstract partial class AsyncActionCommand : ActionCommandBase
+public abstract partial class AsyncActionCommand : ActionCommandBase, IAsyncActionCommand
 {
     public override bool CanExecute(object? _)
     {

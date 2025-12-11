@@ -1,6 +1,6 @@
 ﻿namespace CaptureTool.Common.Commands;
 
-public abstract partial class ActionCommand<T> : ActionCommandBase
+public abstract partial class ActionCommand<T> : ActionCommandBase, IActionCommand<T>
 {
     public override bool CanExecute(object? parameter)
     {

@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core.Implementations.Navigation;
+using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Navigation;
@@ -7,7 +8,7 @@ using CaptureTool.Services.Interfaces.Shutdown;
 
 namespace CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 
-public sealed partial class CaptureOverlayCloseAction : ActionCommand
+public sealed partial class CaptureOverlayCloseAction : ActionCommand, ICaptureOverlayCloseAction
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly IAppNavigation _appNavigation;
@@ -33,7 +34,7 @@ public sealed partial class CaptureOverlayCloseAction : ActionCommand
             return false;
         }
 
-        if (_navigationService.CurrentRequest?.Route is not CaptureToolNavigationRoute route 
+        if (_navigationService.CurrentRequest?.Route is not CaptureToolNavigationRoute route
             || route != CaptureToolNavigationRoute.VideoCapture)
         {
             return false;

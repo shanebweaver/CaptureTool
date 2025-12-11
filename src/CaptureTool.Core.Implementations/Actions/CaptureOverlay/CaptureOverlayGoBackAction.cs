@@ -1,12 +1,13 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Core.Implementations.Navigation;
+using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Navigation;
 
 namespace CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 
-public sealed partial class CaptureOverlayGoBackAction : ActionCommand
+public sealed partial class CaptureOverlayGoBackAction : ActionCommand, ICaptureOverlayGoBackAction
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly INavigationService _navigationService;
@@ -26,10 +27,10 @@ public sealed partial class CaptureOverlayGoBackAction : ActionCommand
     {
         if (!_navigationService.CanGoBack)
         {
-            return false; 
+            return false;
         }
 
-        if (_navigationService.CurrentRequest?.Route is not CaptureToolNavigationRoute route 
+        if (_navigationService.CurrentRequest?.Route is not CaptureToolNavigationRoute route
             || route != CaptureToolNavigationRoute.VideoCapture)
         {
             return false;
