@@ -10,17 +10,20 @@ public sealed partial class CaptureOverlayActions : ICaptureOverlayActions
     private readonly ICaptureOverlayGoBackAction _goBackAction;
     private readonly ICaptureOverlayToggleDesktopAudioAction _toggleDesktopAudioAction;
     private readonly ICaptureOverlayStartVideoCaptureAction _startVideoCaptureAction;
+    private readonly ICaptureOverlayStopVideoCaptureAction _stopVideoCaptureAction;
 
     public CaptureOverlayActions(
         ICaptureOverlayCloseAction closeAction,
         ICaptureOverlayGoBackAction goBackAction,
         ICaptureOverlayToggleDesktopAudioAction toggleDesktopAudioAction,
-        ICaptureOverlayStartVideoCaptureAction startVideoCaptureAction)
+        ICaptureOverlayStartVideoCaptureAction startVideoCaptureAction,
+        ICaptureOverlayStopVideoCaptureAction stopVideoCaptureAction)
     {
         _closeAction = closeAction;
         _goBackAction = goBackAction;
         _toggleDesktopAudioAction = toggleDesktopAudioAction;
         _startVideoCaptureAction = startVideoCaptureAction;
+        _stopVideoCaptureAction = stopVideoCaptureAction;
     }
 
     // Close
@@ -38,4 +41,8 @@ public sealed partial class CaptureOverlayActions : ICaptureOverlayActions
     // Start video capture
     public bool CanStartVideoCapture(NewCaptureArgs args) => _startVideoCaptureAction.CanExecute(args);
     public void StartVideoCapture(NewCaptureArgs args) => _startVideoCaptureAction.ExecuteCommand(args);
+
+    // Stop video capture
+    public bool CanStopVideoCapture() => _stopVideoCaptureAction.CanExecute();
+    public void StopVideoCapture() => _stopVideoCaptureAction.ExecuteCommand();
 }

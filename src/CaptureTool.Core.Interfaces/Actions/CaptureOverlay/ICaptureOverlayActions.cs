@@ -5,10 +5,13 @@ public interface ICaptureOverlayActions
     bool CanClose();
     bool CanGoBack();
     bool CanToggleDesktopAudio();
-    void Close();
-    void GoBack();
-    void ToggleDesktopAudio();
     // Start video capture
     bool CanStartVideoCapture(CaptureTool.Domains.Capture.Interfaces.NewCaptureArgs args);
     void StartVideoCapture(CaptureTool.Domains.Capture.Interfaces.NewCaptureArgs args);
+    // Stop video capture
+    bool CanStopVideoCapture();
+    void StopVideoCapture();
+    void Close();
+    void GoBack();
+    void ToggleDesktopAudio();
 }
