@@ -16,10 +16,10 @@ public interface ISettingsActions
 
     // Screenshots folder
     Task ChangeScreenshotsFolderAsync(CancellationToken ct);
-    void OpenScreenshotsFolder();
+    // Note: OpenScreenshotsFolder requires context (folder path) - use factory pattern in ViewModel
 
     // Temp files
-    void OpenTemporaryFilesFolder();
+    // Note: OpenTemporaryFilesFolder requires context (folder path) - use factory pattern in ViewModel
     void ClearTemporaryFiles(string tempFolderPath);
 
     // Defaults

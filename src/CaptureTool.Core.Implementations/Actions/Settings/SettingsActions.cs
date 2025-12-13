@@ -13,8 +13,6 @@ public sealed partial class SettingsActions : ISettingsActions
     private readonly ISettingsUpdateAppLanguageAction _updateLanguage;
     private readonly ISettingsUpdateAppThemeAction _updateTheme;
     private readonly ISettingsChangeScreenshotsFolderAction _changeScreenshotsFolder;
-    private readonly IFactoryServiceWithArgs<ISettingsOpenScreenshotsFolderAction, string> _openScreenshotsFolderFactory;
-    private readonly IFactoryServiceWithArgs<ISettingsOpenTempFolderAction, string> _openTempFolderFactory;
     private readonly ISettingsClearTempFilesAction _clearTempFiles;
     private readonly ISettingsRestoreDefaultsAction _restoreDefaults;
 
@@ -26,8 +24,6 @@ public sealed partial class SettingsActions : ISettingsActions
         ISettingsUpdateAppLanguageAction updateLanguage,
         ISettingsUpdateAppThemeAction updateTheme,
         ISettingsChangeScreenshotsFolderAction changeScreenshotsFolder,
-        IFactoryServiceWithArgs<ISettingsOpenScreenshotsFolderAction, string> openScreenshotsFolderFactory,
-        IFactoryServiceWithArgs<ISettingsOpenTempFolderAction, string> openTempFolderFactory,
         ISettingsClearTempFilesAction clearTempFiles,
         ISettingsRestoreDefaultsAction restoreDefaults)
     {
@@ -38,8 +34,6 @@ public sealed partial class SettingsActions : ISettingsActions
         _updateLanguage = updateLanguage;
         _updateTheme = updateTheme;
         _changeScreenshotsFolder = changeScreenshotsFolder;
-        _openScreenshotsFolderFactory = openScreenshotsFolderFactory;
-        _openTempFolderFactory = openTempFolderFactory;
         _clearTempFiles = clearTempFiles;
         _restoreDefaults = restoreDefaults;
     }
@@ -55,19 +49,6 @@ public sealed partial class SettingsActions : ISettingsActions
     public void UpdateAppTheme(int index) => _updateTheme.ExecuteCommand(index);
 
     public Task ChangeScreenshotsFolderAsync(CancellationToken ct) => _changeScreenshotsFolder.ExecuteCommandAsync();
-    public void OpenScreenshotsFolder()
-    {
-        // Note: This requires the screenshots folder path which should be passed by the ViewModel
-        // This is a design limitation that will be addressed with the context parameter
-        throw new NotImplementedException("Use the ViewModel method directly with factory pattern");
-    }
-
-    public void OpenTemporaryFilesFolder()
-    {
-        // Note: This requires the temp folder path which should be passed by the ViewModel
-        // This is a design limitation that will be addressed with the context parameter
-        throw new NotImplementedException("Use the ViewModel method directly with factory pattern");
-    }
 
     public void ClearTemporaryFiles(string tempFolderPath) => _clearTempFiles.ExecuteCommand(tempFolderPath);
 
