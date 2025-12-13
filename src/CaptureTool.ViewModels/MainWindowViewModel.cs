@@ -61,6 +61,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
         {
             _themeService.CurrentThemeChanged -= OnCurrentThemeChanged;
             _currentRequest = null;
+            NavigationRequested = null;
         }
         finally
         {
