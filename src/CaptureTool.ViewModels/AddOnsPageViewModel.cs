@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Core.Interfaces.Actions.AddOns;
 using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Store;
@@ -20,7 +20,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         public static readonly string GoBack = "GoBack";
     }
 
-    private readonly IAppNavigation _appNavigation;
+    private readonly IAddOnsActions _addOnsActions;
     private readonly IWindowHandleProvider _windowingService;
     private readonly IStoreService _storeService;
     private readonly ILocalizationService _localizationService;
@@ -55,14 +55,14 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public AddOnsPageViewModel(
-        IAppNavigation appNavigation,
+        IAddOnsActions addOnsActions,
         IWindowHandleProvider windowingService,
         ILocalizationService localizationService,
         IStoreService storeService,
         ITelemetryService telemetryService,
         ICancellationService cancellationService)
     {
-        _appNavigation = appNavigation;
+        _addOnsActions = addOnsActions;
         _windowingService = windowingService;
         _localizationService = localizationService;
         _storeService = storeService;
@@ -72,7 +72,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         ChromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
 
         GetChromaKeyAddOnCommand = new(GetChromaKeyAddOnAsync, () => IsChromaKeyAddOnAvailable);
-        GoBackCommand = new(GoBack, () => _appNavigation.CanGoBack);
+        GoBackCommand = new(GoBack, () => _addOnsActions.CanGoBack());
     }
 
     public override Task LoadAsync(CancellationToken cancellationToken)
@@ -133,7 +133,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
         {
-            _appNavigation.GoBackOrGoHome();
+            _addOnsActions.GoBack();
         });
     }
 }
