@@ -1,10 +1,8 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core.Interfaces.Actions.VideoEdit;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Clipboard;
-using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
-using CaptureTool.Services.Interfaces.Windowing;
 using CaptureTool.ViewModels.Helpers;
 
 namespace CaptureTool.ViewModels;
@@ -26,20 +24,14 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         private set => Set(ref field, value);
     }
 
-    private readonly IClipboardService _clipboardService;
-    private readonly IFilePickerService _filePickerService;
-    private readonly IWindowHandleProvider _windowingService;
+    private readonly IVideoEditActions _videoEditActions;
     private readonly ITelemetryService _telemetryService;
 
     public VideoEditPageViewModel(
-        IClipboardService clipboardService,
-        IFilePickerService filePickerService,
-        IWindowHandleProvider windowingService,
+        IVideoEditActions videoEditActions,
         ITelemetryService telemetryService)
     {
-        _clipboardService = clipboardService;
-        _filePickerService = filePickerService;
-        _windowingService = windowingService;
+        _videoEditActions = videoEditActions;
         _telemetryService = telemetryService;
 
         SaveCommand = new(SaveAsync);
@@ -65,14 +57,10 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         {
             if (string.IsNullOrEmpty(VideoPath))
             {
-                throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
+                throw new InvalidOperationException("Cannot save video without a valid filepath.");
             }
 
-            nint hwnd = _windowingService.GetMainWindowHandle();
-            IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Video, UserFolder.Videos)
-                ?? throw new OperationCanceledException("No file was selected.");
-        
-            File.Copy(VideoPath, file.FilePath, true);
+            await _videoEditActions.SaveAsync(VideoPath, CancellationToken.None);
         });
     }
 
@@ -85,8 +73,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
                 throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
             }
 
-            ClipboardFile clipboardVideo = new(VideoPath);
-            await _clipboardService.CopyFileAsync(clipboardVideo);
+            await _videoEditActions.CopyAsync(VideoPath, CancellationToken.None);
         });
     }
 }

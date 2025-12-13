@@ -1,6 +1,6 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Core.Interfaces.Actions.About;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Telemetry;
 using Moq;
@@ -21,7 +21,7 @@ public class AboutPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<IAppNavigation>>();
+        Fixture.Freeze<Mock<IAboutActions>>();
         Fixture.Freeze<Mock<ILocalizationService>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
@@ -160,16 +160,19 @@ public class AboutPageViewModelTests
     // ---------------------------------------------------------
 
     [TestMethod]
-    public void GoBackCommand_ShouldCallNavigation()
+    public void GoBackCommand_ShouldInvokeAboutActions_AndTrackTelemetry()
     {
         // Arrange
-        var appNavigation = Fixture.Freeze<Mock<IAppNavigation>>();
+        var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
+        var aboutActions = Fixture.Freeze<Mock<IAboutActions>>();
         var vm = Create();
 
         // Act
         vm.GoBackCommand.Execute(null);
 
         // Assert
-        appNavigation.Verify(n => n.GoBackOrGoHome(), Times.Once);
+        aboutActions.Verify(a => a.GoBack(), Times.Once);
+        telemetryService.Verify(t => t.ActivityInitiated(AboutPageViewModel.ActivityIds.GoBack), Times.Once);
+        telemetryService.Verify(t => t.ActivityCompleted(AboutPageViewModel.ActivityIds.GoBack), Times.Once);
     }
 }

@@ -1,5 +1,13 @@
-﻿using CaptureTool.Core.Implementations.Actions.CaptureOverlay;
+﻿using CaptureTool.Core.Implementations.Actions.About;
+using CaptureTool.Core.Implementations.Actions.AddOns;
+using CaptureTool.Core.Implementations.Actions.CaptureOverlay;
+using CaptureTool.Core.Implementations.Actions.Error;
+using CaptureTool.Core.Implementations.Actions.VideoEdit;
+using CaptureTool.Core.Interfaces.Actions.About;
+using CaptureTool.Core.Interfaces.Actions.AddOns;
 using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
+using CaptureTool.Core.Interfaces.Actions.Error;
+using CaptureTool.Core.Interfaces.Actions.VideoEdit;
 using CaptureTool.Core.Implementations.Activation;
 using CaptureTool.Core.Implementations.Capture;
 using CaptureTool.Core.Implementations.Navigation;
@@ -112,6 +120,18 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<ICaptureOverlayStopVideoCaptureAction, CaptureOverlayStopVideoCaptureAction>();
         collection.AddTransient<ICaptureOverlayActions, CaptureOverlayActions>();
 
+        // About actions
+        collection.AddTransient<IAboutGoBackAction, AboutGoBackAction>();
+        collection.AddTransient<IAboutActions, AboutActions>();
+
+        // AddOns actions
+        collection.AddTransient<IAddOnsGoBackAction, AddOnsGoBackAction>();
+        collection.AddTransient<IAddOnsActions, AddOnsActions>();
+
+        // Error actions
+        collection.AddTransient<IErrorRestartAppAction, ErrorRestartAppAction>();
+        collection.AddTransient<IErrorActions, ErrorActions>();
+
         // Loading actions
         collection.AddTransient<ILoadingGoBackAction, LoadingGoBackAction>();
         collection.AddTransient<ILoadingActions, LoadingActions>();
@@ -136,6 +156,11 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<IFactoryServiceWithArgs<ISettingsOpenTempFolderAction, string>, SettingsOpenTempFolderActionFactory>();
         
         collection.AddTransient<ISettingsActions, SettingsActions>();
+
+        // VideoEdit actions
+        collection.AddTransient<IVideoEditSaveAction, VideoEditSaveAction>();
+        collection.AddTransient<IVideoEditCopyAction, VideoEditCopyAction>();
+        collection.AddTransient<IVideoEditActions, VideoEditActions>();
 
         // ViewModels
         collection.AddTransient<MainWindowViewModel>();
