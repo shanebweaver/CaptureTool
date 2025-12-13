@@ -16,6 +16,6 @@ public sealed partial class VideoEditActions : IVideoEditActions
         _copy = copy;
     }
 
-    public Task SaveAsync(string videoPath, CancellationToken ct) => _save.SaveAsync(videoPath, ct);
-    public Task CopyAsync(string videoPath, CancellationToken ct) => _copy.CopyAsync(videoPath, ct);
+    public Task SaveAsync(string videoPath, CancellationToken ct) => _save.ExecuteCommandAsync(videoPath);
+    public Task CopyAsync(string videoPath, CancellationToken ct) => _copy.ExecuteCommandAsync(videoPath);
 }

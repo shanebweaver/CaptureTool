@@ -13,8 +13,6 @@ public sealed partial class ErrorRestartAppAction : ActionCommand, IErrorRestart
         _shutdownHandler = shutdownHandler;
     }
 
-    public void RestartApp() => Execute();
-
     public override void Execute()
     {
         _shutdownHandler.TryRestart();

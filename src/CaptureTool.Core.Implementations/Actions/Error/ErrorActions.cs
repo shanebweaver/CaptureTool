@@ -12,5 +12,5 @@ public sealed partial class ErrorActions : IErrorActions
         _restartApp = restartApp;
     }
 
-    public void RestartApp() => _restartApp.RestartApp();
+    public void RestartApp() => _restartApp.ExecuteCommand();
 }

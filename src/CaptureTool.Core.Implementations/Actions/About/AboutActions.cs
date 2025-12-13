@@ -12,6 +12,6 @@ public sealed partial class AboutActions : IAboutActions
         _goBack = goBack;
     }
 
-    public bool CanGoBack() => _goBack.CanGoBack();
-    public void GoBack() => _goBack.GoBack();
+    public bool CanGoBack() => _goBack.CanExecute();
+    public void GoBack() => _goBack.ExecuteCommand();
 }
