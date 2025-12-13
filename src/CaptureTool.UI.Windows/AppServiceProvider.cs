@@ -1,6 +1,8 @@
 ﻿using CaptureTool.Core.Implementations.Actions.About;
+using CaptureTool.Core.Implementations.Actions.AddOns;
 using CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 using CaptureTool.Core.Interfaces.Actions.About;
+using CaptureTool.Core.Interfaces.Actions.AddOns;
 using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
 using CaptureTool.Core.Implementations.Activation;
 using CaptureTool.Core.Implementations.Capture;
@@ -116,6 +118,10 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         // About actions
         collection.AddTransient<IAboutGoBackAction, AboutGoBackAction>();
         collection.AddTransient<IAboutActions, AboutActions>();
+
+        // AddOns actions
+        collection.AddTransient<IAddOnsGoBackAction, AddOnsGoBackAction>();
+        collection.AddTransient<IAddOnsActions, AddOnsActions>();
 
         // Loading actions
         collection.AddTransient<ILoadingGoBackAction, LoadingGoBackAction>();
