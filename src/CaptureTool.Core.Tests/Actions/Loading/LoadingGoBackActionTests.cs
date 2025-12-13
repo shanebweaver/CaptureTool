@@ -4,7 +4,7 @@ using CaptureTool.Core.Implementations.Actions.Loading;
 using CaptureTool.Core.Interfaces.Navigation;
 using Moq;
 
-namespace CaptureTool.Core.Tests.Actions;
+namespace CaptureTool.Core.Tests.Actions.Loading;
 
 [TestClass]
 public class LoadingGoBackActionTests
