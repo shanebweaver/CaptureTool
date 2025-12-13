@@ -20,3 +20,25 @@ Developed by Shane Weaver
 
 ![Home screen](StoreAssets/home_light.png)
 ![Crop mode](StoreAssets/crop-mode_light.png)
+
+## Documentation
+
+For developers and contributors:
+
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - Complete guide to the application architecture, design patterns, and principles
+- **[Coding Practices](docs/CODING_PRACTICES.md)** - Coding standards, conventions, and best practices
+- **[Error Handling](docs/ERROR_HANDLING.md)** - Best practices for error handling and recovery
+- **[Architecture Review Summary](docs/ARCHITECTURE_REVIEW_SUMMARY.md)** - Summary of recent architectural improvements
+
+## Contributing
+
+Contributions are welcome! Please ensure you:
+1. Follow the coding practices outlined in the documentation
+2. Write unit tests for new functionality
+3. Update documentation as needed
+4. Follow the established architectural patterns
+
+## License
+
+This project is licensed under the PolyForm Noncommercial License. See [LICENSE.md](LICENSE.md) for details.
+
