@@ -43,7 +43,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
         ShowPrivacyPolicyCommand = new(() => ShowDialog("About_PrivacyPolicy_DialogTitle", "About_PrivacyPolicy_DialogContent", ActivityIds.ShowPrivacyPolicy));
         ShowTermsOfUseCommand = new(() => ShowDialog("About_TermsOfUse_DialogTitle", "About_TermsOfUse_DialogContent", ActivityIds.ShowTermsOfUse));
         ShowDisclaimerOfLiabilityCommand = new(() => ShowDialog("About_DisclaimerOfLiability_DialogTitle", "About_DisclaimerOfLiability_DialogContent", ActivityIds.ShowDisclaimerOfLiability));
-        GoBackCommand = new(GoBack);
+        GoBackCommand = new(GoBack, () => _aboutActions.CanGoBack());
     }
 
     private void ShowDialog(string titleResourceKey, string contentResourceKey, string activityId)

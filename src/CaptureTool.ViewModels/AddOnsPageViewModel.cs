@@ -72,7 +72,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         ChromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
 
         GetChromaKeyAddOnCommand = new(GetChromaKeyAddOnAsync, () => IsChromaKeyAddOnAvailable);
-        GoBackCommand = new(GoBack);
+        GoBackCommand = new(GoBack, () => _addOnsActions.CanGoBack());
     }
 
     public override Task LoadAsync(CancellationToken cancellationToken)
