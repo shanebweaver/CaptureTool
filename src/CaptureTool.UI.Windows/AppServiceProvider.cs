@@ -6,6 +6,8 @@ using CaptureTool.Core.Implementations.Navigation;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Core.Implementations.Actions.Loading;
 using CaptureTool.Core.Interfaces.Actions.Loading;
+using CaptureTool.Core.Implementations.Actions.Home;
+using CaptureTool.Core.Interfaces.Actions.Home;
 using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Implementations.Windows;
@@ -112,6 +114,11 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         // Loading actions
         collection.AddTransient<ILoadingGoBackAction, LoadingGoBackAction>();
         collection.AddTransient<ILoadingActions, LoadingActions>();
+
+        // Home actions
+        collection.AddTransient<IHomeNewImageCaptureAction, HomeNewImageCaptureAction>();
+        collection.AddTransient<IHomeNewVideoCaptureAction, HomeNewVideoCaptureAction>();
+        collection.AddTransient<IHomeActions, HomeActions>();
         
         // Settings actions
         collection.AddTransient<ISettingsGoBackAction, SettingsGoBackAction>();
