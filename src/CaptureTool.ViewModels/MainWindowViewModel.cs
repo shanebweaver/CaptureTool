@@ -4,7 +4,7 @@ using CaptureTool.Services.Interfaces.Themes;
 
 namespace CaptureTool.ViewModels;
 
-public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHandler, IDisposable
+public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHandler
 {
     private readonly IThemeService _themeService;
 
@@ -50,7 +50,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
         NavigationRequested?.Invoke(this, request);
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         if (_disposed)
         {
@@ -60,6 +60,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
         _themeService.CurrentThemeChanged -= OnCurrentThemeChanged;
         _currentRequest = null;
         _disposed = true;
-        GC.SuppressFinalize(this);
+        
+        base.Dispose();
     }
 }
