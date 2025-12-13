@@ -11,6 +11,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 {
     private readonly ICancellationService _cancellationService;
     private readonly ILogService _logService;
+    private readonly object _lockObject = new();
 
     public bool IsShuttingDown { get; private set; }
 
@@ -26,7 +27,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 
     public bool TryRestart()
     {
-        lock (this)
+        lock (_lockObject)
         {
             if (IsShuttingDown)
             {
@@ -59,7 +60,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 
     public void Shutdown()
     {
-        lock (this)
+        lock (_lockObject)
         {
             if (IsShuttingDown)
             {
@@ -77,6 +78,32 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
             {
                 Debug.Fail($"Error during shutdown: {e.Message}");
                 Environment.Exit(0);
+            }
+        }
+    }
+
+    public void NotifyMainWindowClosed()
+    {
+        lock (_lockObject)
+        {
+            if (IsShuttingDown)
+            {
+                return;
+            }
+            
+            IsShuttingDown = true;
+
+            // When the main window is closed by the user (e.g., clicking X button),
+            // we just need to clean up but NOT call Application.Exit() or Environment.Exit().
+            // The WinUI framework will handle the application shutdown naturally.
+            // Calling Exit() here causes race conditions and crashes.
+            try
+            {
+                Teardown();
+            }
+            catch (Exception e)
+            {
+                _logService.LogException(e, "Error during main window closure cleanup.");
             }
         }
     }

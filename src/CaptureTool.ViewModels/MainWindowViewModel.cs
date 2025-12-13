@@ -23,6 +23,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
     }
 
     private INavigationRequest? _currentRequest;
+    private bool _disposed;
 
     public MainWindowViewModel(
         IThemeService themeService)
@@ -31,12 +32,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
         _themeService.CurrentThemeChanged += OnCurrentThemeChanged;
         DefaultAppTheme = _themeService.DefaultTheme;
         CurrentAppTheme = _themeService.CurrentTheme;
-    }
-
-    ~MainWindowViewModel()
-    {
-        _themeService.CurrentThemeChanged -= OnCurrentThemeChanged;
-        _currentRequest = null;
     }
 
     private void OnCurrentThemeChanged(object? sender, AppTheme newTheme)
@@ -53,5 +48,25 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
 
         _currentRequest = request;
         NavigationRequested?.Invoke(this, request);
+    }
+
+    public override void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        try
+        {
+            _themeService.CurrentThemeChanged -= OnCurrentThemeChanged;
+            _currentRequest = null;
+            NavigationRequested = null;
+        }
+        finally
+        {
+            _disposed = true;
+            base.Dispose();
+        }
     }
 }
