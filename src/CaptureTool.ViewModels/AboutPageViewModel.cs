@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Core.Interfaces.Actions.About;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.ViewModels.Helpers;
@@ -18,7 +18,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
         public static readonly string GoBack = "GoBack";
     }
 
-    private readonly IAppNavigation _appNavigation;
+    private readonly IAboutActions _aboutActions;
     private readonly ILocalizationService _localizationService;
     private readonly ITelemetryService _telemetryService;
 
@@ -31,11 +31,11 @@ public sealed partial class AboutPageViewModel : ViewModelBase
     public RelayCommand GoBackCommand { get; }
 
     public AboutPageViewModel(
-        IAppNavigation appNavigation,
+        IAboutActions aboutActions,
         ILocalizationService localizationService,
         ITelemetryService telemetryService)
     {
-        _appNavigation = appNavigation;
+        _aboutActions = aboutActions;
         _localizationService = localizationService;
         _telemetryService = telemetryService;
 
@@ -60,7 +60,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
         {
-            _appNavigation.GoBackOrGoHome();
+            _aboutActions.GoBack();
         });
     }
 }
