@@ -81,6 +81,32 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
         }
     }
 
+    public void NotifyMainWindowClosed()
+    {
+        lock (this)
+        {
+            if (IsShuttingDown)
+            {
+                return;
+            }
+            
+            IsShuttingDown = true;
+
+            // When the main window is closed by the user (e.g., clicking X button),
+            // we just need to clean up but NOT call Application.Exit() or Environment.Exit().
+            // The WinUI framework will handle the application shutdown naturally.
+            // Calling Exit() here causes race conditions and crashes.
+            try
+            {
+                Teardown();
+            }
+            catch (Exception e)
+            {
+                _logService.LogException(e, "Error during main window closure cleanup.");
+            }
+        }
+    }
+
     private void Teardown()
     {
         _cancellationService.CancelAll();
