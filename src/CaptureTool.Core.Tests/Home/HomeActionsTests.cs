@@ -2,6 +2,7 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Core.Implementations.Actions.Home;
 using CaptureTool.Core.Interfaces.Actions.Home;
+using FluentAssertions;
 using Moq;
 
 namespace CaptureTool.Core.Tests.Actions.Home;
@@ -32,6 +33,20 @@ public class HomeActionsTests
     }
 
     [TestMethod]
+    public void CanNewImageCapture_ShouldReturnFromUnderlying()
+    {
+        var imageAction = Fixture.Freeze<Mock<IHomeNewImageCaptureAction>>();
+        var videoAction = Fixture.Freeze<Mock<IHomeNewVideoCaptureAction>>();
+        imageAction.Setup(a => a.CanExecute()).Returns(false);
+
+        var actions = new HomeActions(imageAction.Object, videoAction.Object);
+        bool result = actions.CanNewImageCapture();
+
+        result.Should().BeFalse();
+        imageAction.Verify(a => a.CanExecute(), Times.Once);
+    }
+
+    [TestMethod]
     public void NewVideoCapture_ShouldDelegateToAction()
     {
         var imageAction = Fixture.Freeze<Mock<IHomeNewImageCaptureAction>>();
@@ -43,5 +58,19 @@ public class HomeActionsTests
 
         videoAction.Verify(a => a.CanExecute(), Times.Once);
         videoAction.Verify(a => a.Execute(), Times.Once);
+    }
+
+    [TestMethod]
+    public void CanNewVideoCapture_ShouldReturnFromUnderlying()
+    {
+        var imageAction = Fixture.Freeze<Mock<IHomeNewImageCaptureAction>>();
+        var videoAction = Fixture.Freeze<Mock<IHomeNewVideoCaptureAction>>();
+        videoAction.Setup(a => a.CanExecute()).Returns(false);
+
+        var actions = new HomeActions(imageAction.Object, videoAction.Object);
+        bool result = actions.CanNewVideoCapture();
+
+        result.Should().BeFalse();
+        videoAction.Verify(a => a.CanExecute(), Times.Once);
     }
 }
