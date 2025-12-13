@@ -1,4 +1,5 @@
 using CaptureTool.Core.Interfaces.Actions.About;
+using CaptureTool.Common.Commands.Extensions;
 
 namespace CaptureTool.Core.Implementations.Actions.About;
 
