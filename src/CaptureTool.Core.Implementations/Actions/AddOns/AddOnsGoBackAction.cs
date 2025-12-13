@@ -13,10 +13,6 @@ public sealed partial class AddOnsGoBackAction : ActionCommand, IAddOnsGoBackAct
         _appNavigation = appNavigation;
     }
 
-    public bool CanGoBack() => _appNavigation.CanGoBack;
-
-    public void GoBack() => Execute();
-
     public override void Execute()
     {
         _appNavigation.GoBackOrGoHome();
