@@ -1,9 +1,11 @@
 ﻿using CaptureTool.Core.Implementations.Actions.About;
 using CaptureTool.Core.Implementations.Actions.AddOns;
 using CaptureTool.Core.Implementations.Actions.CaptureOverlay;
+using CaptureTool.Core.Implementations.Actions.Error;
 using CaptureTool.Core.Interfaces.Actions.About;
 using CaptureTool.Core.Interfaces.Actions.AddOns;
 using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
+using CaptureTool.Core.Interfaces.Actions.Error;
 using CaptureTool.Core.Implementations.Activation;
 using CaptureTool.Core.Implementations.Capture;
 using CaptureTool.Core.Implementations.Navigation;
@@ -122,6 +124,10 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         // AddOns actions
         collection.AddTransient<IAddOnsGoBackAction, AddOnsGoBackAction>();
         collection.AddTransient<IAddOnsActions, AddOnsActions>();
+
+        // Error actions
+        collection.AddTransient<IErrorRestartAppAction, ErrorRestartAppAction>();
+        collection.AddTransient<IErrorActions, ErrorActions>();
 
         // Loading actions
         collection.AddTransient<ILoadingGoBackAction, LoadingGoBackAction>();
