@@ -2,10 +2,12 @@
 using CaptureTool.Core.Implementations.Actions.AddOns;
 using CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 using CaptureTool.Core.Implementations.Actions.Error;
+using CaptureTool.Core.Implementations.Actions.VideoEdit;
 using CaptureTool.Core.Interfaces.Actions.About;
 using CaptureTool.Core.Interfaces.Actions.AddOns;
 using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
 using CaptureTool.Core.Interfaces.Actions.Error;
+using CaptureTool.Core.Interfaces.Actions.VideoEdit;
 using CaptureTool.Core.Implementations.Activation;
 using CaptureTool.Core.Implementations.Capture;
 using CaptureTool.Core.Implementations.Navigation;
@@ -148,6 +150,11 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<ISettingsChangeScreenshotsFolderAction, SettingsChangeScreenshotsFolderAction>();
         // For actions requiring context values, consider factory pattern or service-based resolution; leaving open folder actions out of DI for now.
         collection.AddTransient<ISettingsActions, SettingsActions>();
+
+        // VideoEdit actions
+        collection.AddTransient<IVideoEditSaveAction, VideoEditSaveAction>();
+        collection.AddTransient<IVideoEditCopyAction, VideoEditCopyAction>();
+        collection.AddTransient<IVideoEditActions, VideoEditActions>();
 
         // ViewModels
         collection.AddTransient<MainWindowViewModel>();
