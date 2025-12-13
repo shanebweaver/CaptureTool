@@ -1,7 +1,5 @@
 namespace CaptureTool.Core.Interfaces.Actions.AddOns;
 
-public interface IAddOnsGoBackAction
+public interface IAddOnsGoBackAction : IActionCommand
 {
-    bool CanGoBack();
-    void GoBack();
 }
