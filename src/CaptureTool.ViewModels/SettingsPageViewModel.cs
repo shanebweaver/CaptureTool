@@ -12,7 +12,6 @@ using CaptureTool.Services.Interfaces.Themes;
 using CaptureTool.Services.Interfaces.Windowing;
 using CaptureTool.ViewModels.Helpers;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 
 namespace CaptureTool.ViewModels;
 
@@ -46,6 +45,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IStorageService _storageService;
     private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
     private readonly IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
+    private readonly IFactoryServiceWithArgs<ISettingsOpenScreenshotsFolderAction, string> _openScreenshotsFolderActionFactory;
+    private readonly IFactoryServiceWithArgs<ISettingsOpenTempFolderAction, string> _openTempFolderActionFactory;
 
     private readonly AppTheme[] SupportedAppThemes = [
         AppTheme.Light,
@@ -135,7 +136,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         ISettingsService settingsService,
         IStorageService storageService,
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
-        IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
+        IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory,
+        IFactoryServiceWithArgs<ISettingsOpenScreenshotsFolderAction, string> openScreenshotsFolderActionFactory,
+        IFactoryServiceWithArgs<ISettingsOpenTempFolderAction, string> openTempFolderActionFactory)
     {
         _settingsActions = settingsActions;
         _telemetryService = telemetryService;
@@ -147,6 +150,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _storageService = storageService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
+        _openScreenshotsFolderActionFactory = openScreenshotsFolderActionFactory;
+        _openTempFolderActionFactory = openTempFolderActionFactory;
 
         AppThemes = [];
         AppLanguages = [];
@@ -360,14 +365,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenScreenshotsFolder, () =>
         {
-            if (Directory.Exists(ScreenshotsFolderPath))
-            {
-                Process.Start("explorer.exe", $"/open, {ScreenshotsFolderPath}");
-            }
-            else
-            {
-                throw new DirectoryNotFoundException($"The screenshots folder path '{ScreenshotsFolderPath}' does not exist.");
-            }
+            var action = _openScreenshotsFolderActionFactory.Create(ScreenshotsFolderPath);
+            action.Execute();
         });
     }
 
@@ -388,24 +387,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ClearTemporaryFiles, () =>
         {
-            foreach (var entry in Directory.EnumerateFileSystemEntries(TemporaryFilesFolderPath))
-            {
-                try
-                {
-                    if (Directory.Exists(entry))
-                    {
-                        Directory.Delete(entry, true);
-                    }
-                    else
-                    {
-                        File.Delete(entry);
-                    }
-                }
-                catch
-                {
-                    // Ignore errors
-                }
-            }
+            _settingsActions.ClearTemporaryFiles(TemporaryFilesFolderPath);
         });
     }
 
@@ -413,14 +395,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenTemporaryFilesFolder, () =>
         {
-            if (Directory.Exists(TemporaryFilesFolderPath))
-            {
-                Process.Start("explorer.exe", $"/open, {TemporaryFilesFolderPath}");
-            }
-            else
-            {
-                throw new DirectoryNotFoundException($"The temporary folder path '{TemporaryFilesFolderPath}' does not exist.");
-            }
+            var action = _openTempFolderActionFactory.Create(TemporaryFilesFolderPath);
+            action.Execute();
         });
     }
 
@@ -428,8 +404,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.RestoreDefaultSettings, async () =>
         {
-            _settingsService.ClearAllSettings();
-            await _settingsService.TrySaveAsync(CancellationToken.None);
+            await _settingsActions.RestoreDefaultSettingsAsync(CancellationToken.None);
 
             ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
             ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);

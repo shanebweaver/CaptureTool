@@ -8,6 +8,7 @@ using CaptureTool.Core.Implementations.Actions.Loading;
 using CaptureTool.Core.Interfaces.Actions.Loading;
 using CaptureTool.Core.Implementations.Actions.Home;
 using CaptureTool.Core.Interfaces.Actions.Home;
+using CaptureTool.Core.Implementations.Factories.Actions;
 using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Implementations.Windows;
@@ -128,7 +129,12 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<ISettingsUpdateAppLanguageAction, SettingsUpdateAppLanguageAction>();
         collection.AddTransient<ISettingsUpdateAppThemeAction, SettingsUpdateAppThemeAction>();
         collection.AddTransient<ISettingsChangeScreenshotsFolderAction, SettingsChangeScreenshotsFolderAction>();
-        // For actions requiring context values, consider factory pattern or service-based resolution; leaving open folder actions out of DI for now.
+        collection.AddTransient<ISettingsRestoreDefaultsAction, SettingsRestoreDefaultsAction>();
+        
+        // Settings action factories for context-dependent actions
+        collection.AddTransient<IFactoryServiceWithArgs<ISettingsOpenScreenshotsFolderAction, string>, SettingsOpenScreenshotsFolderActionFactory>();
+        collection.AddTransient<IFactoryServiceWithArgs<ISettingsOpenTempFolderAction, string>, SettingsOpenTempFolderActionFactory>();
+        
         collection.AddTransient<ISettingsActions, SettingsActions>();
 
         // ViewModels
