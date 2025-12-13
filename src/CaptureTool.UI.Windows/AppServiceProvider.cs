@@ -130,7 +130,7 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<ISettingsUpdateAppThemeAction, SettingsUpdateAppThemeAction>();
         collection.AddTransient<ISettingsChangeScreenshotsFolderAction, SettingsChangeScreenshotsFolderAction>();
         collection.AddTransient<ISettingsRestoreDefaultsAction, SettingsRestoreDefaultsAction>();
-        
+        collection.AddTransient<ISettingsClearTempFilesAction, SettingsClearTempFilesAction>();
         // Settings action factories for context-dependent actions
         collection.AddTransient<IFactoryServiceWithArgs<ISettingsOpenScreenshotsFolderAction, string>, SettingsOpenScreenshotsFolderActionFactory>();
         collection.AddTransient<IFactoryServiceWithArgs<ISettingsOpenTempFolderAction, string>, SettingsOpenTempFolderActionFactory>();
