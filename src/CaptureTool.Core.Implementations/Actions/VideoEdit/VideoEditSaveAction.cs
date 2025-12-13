@@ -19,7 +19,6 @@ public sealed partial class VideoEditSaveAction : AsyncActionCommand<string>, IV
         _windowingService = windowingService;
     }
 
-    public Task SaveAsync(string videoPath, CancellationToken ct) => ExecuteAsync(videoPath);
 
     public override async Task ExecuteAsync(string videoPath)
     {
