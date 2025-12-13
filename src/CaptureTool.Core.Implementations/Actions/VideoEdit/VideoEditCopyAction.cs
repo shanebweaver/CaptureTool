@@ -13,7 +13,6 @@ public sealed partial class VideoEditCopyAction : AsyncActionCommand<string>, IV
         _clipboardService = clipboardService;
     }
 
-    public Task CopyAsync(string videoPath, CancellationToken ct) => ExecuteAsync(videoPath);
 
     public override async Task ExecuteAsync(string videoPath)
     {
