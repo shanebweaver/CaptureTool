@@ -11,6 +11,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 {
     private readonly ICancellationService _cancellationService;
     private readonly ILogService _logService;
+    private readonly object _lockObject = new();
 
     public bool IsShuttingDown { get; private set; }
 
@@ -26,7 +27,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 
     public bool TryRestart()
     {
-        lock (this)
+        lock (_lockObject)
         {
             if (IsShuttingDown)
             {
@@ -59,7 +60,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 
     public void Shutdown()
     {
-        lock (this)
+        lock (_lockObject)
         {
             if (IsShuttingDown)
             {
@@ -83,7 +84,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 
     public void NotifyMainWindowClosed()
     {
-        lock (this)
+        lock (_lockObject)
         {
             if (IsShuttingDown)
             {

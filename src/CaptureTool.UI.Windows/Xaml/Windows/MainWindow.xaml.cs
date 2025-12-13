@@ -21,8 +21,6 @@ public sealed partial class MainWindow : Window
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
 
-    private readonly CancellationTokenSource _activationCts = new();
-
     public MainWindow()
     {
         InitializeComponent();
@@ -134,20 +132,6 @@ public sealed partial class MainWindow : Window
 
         ViewModel.NavigationRequested -= OnViewModelNavigationRequested;
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
-
-        try
-        {
-            _activationCts.Cancel();
-            _activationCts.Dispose();
-        }
-        catch (ObjectDisposedException)
-        {
-            // CancellationTokenSource was already disposed, ignore
-        }
-        catch (AggregateException)
-        {
-            // Cancellation callbacks may have thrown exceptions, ignore during shutdown
-        }
 
         ViewModel.Dispose();
 
