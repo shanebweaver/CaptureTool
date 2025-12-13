@@ -140,9 +140,13 @@ public sealed partial class MainWindow : Window
             _activationCts.Cancel();
             _activationCts.Dispose();
         }
-        catch
+        catch (ObjectDisposedException)
         {
-            // Ignore cancellation errors during shutdown
+            // CancellationTokenSource was already disposed, ignore
+        }
+        catch (AggregateException)
+        {
+            // Cancellation callbacks may have thrown exceptions, ignore during shutdown
         }
 
         ViewModel.Dispose();

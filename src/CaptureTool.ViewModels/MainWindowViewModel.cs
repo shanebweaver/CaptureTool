@@ -60,5 +60,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHand
         _themeService.CurrentThemeChanged -= OnCurrentThemeChanged;
         _currentRequest = null;
         _disposed = true;
+        GC.SuppressFinalize(this);
     }
 }
