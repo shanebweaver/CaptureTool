@@ -129,12 +129,21 @@ public sealed partial class MainWindow : Window
     {
         Activated -= OnActivated;
         Closed -= OnClosed;
+        AppTitleBar.Loaded -= AppTitleBar_Loaded;
+        AppTitleBar.SizeChanged -= AppTitleBar_SizeChanged;
 
         ViewModel.NavigationRequested -= OnViewModelNavigationRequested;
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
 
-        _activationCts.Cancel();
-        _activationCts.Dispose();
+        try
+        {
+            _activationCts.Cancel();
+            _activationCts.Dispose();
+        }
+        catch
+        {
+            // Ignore cancellation errors during shutdown
+        }
 
         ViewModel.Dispose();
 
