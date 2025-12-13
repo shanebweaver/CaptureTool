@@ -1,6 +1,5 @@
 namespace CaptureTool.Core.Interfaces.Actions.Error;
 
-public interface IErrorRestartAppAction
+public interface IErrorRestartAppAction : IActionCommand
 {
-    void RestartApp();
 }
