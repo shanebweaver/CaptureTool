@@ -1,6 +1,5 @@
 namespace CaptureTool.Core.Interfaces.Actions.VideoEdit;
 
-public interface IVideoEditCopyAction
+public interface IVideoEditCopyAction : IAsyncActionCommand<string>
 {
-    Task CopyAsync(string videoPath, CancellationToken ct);
 }
