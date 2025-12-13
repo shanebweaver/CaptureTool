@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Loading;
+using CaptureTool.Services.Interfaces.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -8,11 +9,14 @@ namespace CaptureTool.UI.Windows.Xaml.Views;
 public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBase
 {
     private CancellationTokenSource? _loadCts;
+    private readonly ILogService _logService;
+
     public VM ViewModel { get; } = App.Current.ServiceProvider.GetService<VM>();
 
     public ViewBase()
     {
         DataContext = ViewModel;
+        _logService = App.Current.ServiceProvider.GetService<ILogService>();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
@@ -45,11 +49,11 @@ public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBas
         }
         catch (OperationCanceledException ex)
         {
-            AppServiceLocator.Logging.LogException(ex, "View load canceled.");
+            _logService.LogException(ex, "View load canceled.");
         }
         catch (Exception ex)
         {
-            AppServiceLocator.Logging.LogException(ex, "Failed to load view.");
+            _logService.LogException(ex, "Failed to load view.");
         }
     }
 

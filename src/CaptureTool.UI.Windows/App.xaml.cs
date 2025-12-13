@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Services.Interfaces.Activation;
+using CaptureTool.Services.Interfaces.Logging;
 using CaptureTool.Services.Interfaces.Themes;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -14,12 +15,14 @@ public partial class App : Application
     internal DispatcherQueue DispatcherQueue { get; }
 
     private readonly KeepAlive _keepAlive;
+    private readonly ILogService _logService;
 
     public App()
     {
         UnhandledException += App_UnhandledException;
         ServiceProvider = new();
         DispatcherQueue = DispatcherQueue.GetForCurrentThread();
+        _logService = ServiceProvider.GetService<ILogService>();
         InitializeComponent();
         RestoreAppTheme();
         _keepAlive = new KeepAlive();
@@ -27,7 +30,7 @@ public partial class App : Application
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        AppServiceLocator.Logging.LogException(e.Exception, "Unhandled exception occurred.");
+        _logService.LogException(e.Exception, "Unhandled exception occurred.");
     }
 
     private void RestoreAppTheme()
@@ -64,18 +67,18 @@ public partial class App : Application
                         }
                         else
                         {
-                            AppServiceLocator.Logging.LogWarning("Protocol activation data is not of expected type.");
+                            _logService.LogWarning("Protocol activation data is not of expected type.");
                         }
                         break;
 
                     default:
-                        AppServiceLocator.Logging.LogWarning("Unexpected activation kind.");
+                        _logService.LogWarning("Unexpected activation kind.");
                         break;
                 }
             }
             catch (Exception e)
             {
-                AppServiceLocator.Logging.LogException(e, "Activation failed.");
+                _logService.LogException(e, "Activation failed.");
             }
         });
     }

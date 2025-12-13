@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Themes;
 using CaptureTool.UI.Windows.Utils;
 using CaptureTool.UI.Windows.Xaml.Pages;
@@ -21,11 +22,14 @@ public sealed partial class MainWindow : Window
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
 
+    private readonly IShutdownHandler _shutdownHandler;
     private readonly CancellationTokenSource _activationCts = new();
 
     public MainWindow()
     {
         InitializeComponent();
+
+        _shutdownHandler = App.Current.ServiceProvider.GetService<IShutdownHandler>();
 
         AppTitleBar.Loaded += AppTitleBar_Loaded;
         AppTitleBar.SizeChanged += AppTitleBar_SizeChanged;
@@ -136,7 +140,7 @@ public sealed partial class MainWindow : Window
         _activationCts.Dispose();
 
         // IMPORTANT: Closing the main window will crash the app unless we forcefully exit immediately.
-        AppServiceLocator.ShutdownHandler.Shutdown();
+        _shutdownHandler.Shutdown();
     }
 
     private void OnViewModelNavigationRequested(object? sender, INavigationRequest navigationRequest)

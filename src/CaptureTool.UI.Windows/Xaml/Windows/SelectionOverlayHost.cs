@@ -1,4 +1,5 @@
-﻿using CaptureTool.Domains.Capture.Implementations.Windows;
+﻿using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.UI.Windows.Utils;
 using CaptureTool.ViewModels;
@@ -17,11 +18,19 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private readonly HashSet<MonitorCaptureResult> _monitors = [];
     private readonly HashSet<SelectionOverlayWindow> _windows = [];
     private readonly HashSet<nint> _windowHandles = [];
+    private readonly IImageCaptureHandler _imageCaptureHandler;
+    private readonly IAppNavigation _appNavigation;
     private SelectionOverlayHostViewModel? _viewModel;
     private DispatcherTimer? _foregroundTimer;
     private Window? _primaryWindow;
 
     public event EventHandler? LostFocus;
+
+    public SelectionOverlayHost()
+    {
+        _imageCaptureHandler = App.Current.ServiceProvider.GetService<IImageCaptureHandler>();
+        _appNavigation = App.Current.ServiceProvider.GetService<IAppNavigation>();
+    }
 
     public MonitorCaptureResult[] GetMonitors()
     {
@@ -88,8 +97,8 @@ internal sealed partial class SelectionOverlayHost : IDisposable
 
     private void OnAllScreensCaptureRequested(object? sender, EventArgs e)
     {
-        ImageFile image = AppServiceLocator.ImageCapture.PerformMultiMonitorImageCapture([.. _monitors]);
-        AppServiceLocator.Navigation.GoToImageEdit(image);
+        ImageFile image = _imageCaptureHandler.PerformMultiMonitorImageCapture([.. _monitors]);
+        _appNavigation.GoToImageEdit(image);
     }
 
     public void Activate()

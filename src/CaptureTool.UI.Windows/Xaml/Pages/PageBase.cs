@@ -1,5 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Loading;
+using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Services.Interfaces.Logging;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -8,12 +10,16 @@ namespace CaptureTool.UI.Windows.Xaml.Pages;
 public abstract class PageBase<VM> : Page where VM : ViewModelBase
 {
     private CancellationTokenSource? _loadCts;
+    private readonly ILogService _logService;
+    private readonly IAppNavigation _appNavigation;
 
     public VM ViewModel { get; } = App.Current.ServiceProvider.GetService<VM>();
 
     public PageBase()
     {
         DataContext = ViewModel;
+        _logService = App.Current.ServiceProvider.GetService<ILogService>();
+        _appNavigation = App.Current.ServiceProvider.GetService<IAppNavigation>();
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -46,12 +52,12 @@ public abstract class PageBase<VM> : Page where VM : ViewModelBase
         }
         catch (OperationCanceledException ex)
         {
-            AppServiceLocator.Logging.LogException(ex, "Page load canceled.");
+            _logService.LogException(ex, "Page load canceled.");
         }
         catch (Exception ex)
         {
-            AppServiceLocator.Logging.LogException(ex, "Failed to load page.");
-            AppServiceLocator.Navigation.GoToError(ex);
+            _logService.LogException(ex, "Failed to load page.");
+            _appNavigation.GoToError(ex);
         }
 
         base.OnNavigatedTo(e);
