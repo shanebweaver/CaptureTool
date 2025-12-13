@@ -21,8 +21,6 @@ public sealed partial class MainWindow : Window
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
 
-    private readonly CancellationTokenSource _activationCts = new();
-
     public MainWindow()
     {
         InitializeComponent();
@@ -129,14 +127,17 @@ public sealed partial class MainWindow : Window
     {
         Activated -= OnActivated;
         Closed -= OnClosed;
+        AppTitleBar.Loaded -= AppTitleBar_Loaded;
+        AppTitleBar.SizeChanged -= AppTitleBar_SizeChanged;
 
         ViewModel.NavigationRequested -= OnViewModelNavigationRequested;
+        ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
 
-        _activationCts.Cancel();
-        _activationCts.Dispose();
+        ViewModel.Dispose();
 
-        // IMPORTANT: Closing the main window will crash the app unless we forcefully exit immediately.
-        AppServiceLocator.ShutdownHandler.Shutdown();
+        // Let the shutdown handler know we're closing, but don't force exit here
+        // as that can cause crashes. Let WinUI handle the window closure naturally.
+        AppServiceLocator.ShutdownHandler.NotifyMainWindowClosed();
     }
 
     private void OnViewModelNavigationRequested(object? sender, INavigationRequest navigationRequest)
