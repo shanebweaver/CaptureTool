@@ -12,6 +12,7 @@ static wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool
 static EventRegistrationToken g_frameArrivedEventToken;
 static MP4SinkWriter g_sinkWriter;
 static std::unique_ptr<AudioCaptureManager> g_audioCapture;
+static LONGLONG g_recordingStartQPC = 0; // Shared QPC timestamp for synchronization
 
 // Exported API
 extern "C"
@@ -94,6 +95,11 @@ extern "C"
             return false;
         }
         
+        // Store the recording start time for timestamp synchronization
+        LARGE_INTEGER qpc;
+        QueryPerformanceCounter(&qpc);
+        g_recordingStartQPC = qpc.QuadPart;
+        
         g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter , &hr);
 
         // Start audio capture before video
@@ -148,5 +154,8 @@ extern "C"
         {
             g_framePool.reset();
         }
+        
+        // Reset shared timestamp
+        g_recordingStartQPC = 0;
     }
 }

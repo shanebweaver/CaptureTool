@@ -204,6 +204,9 @@ void AudioCaptureManager::CaptureLoop()
         return;
     }
 
+    // Get shared recording start time for synchronization
+    extern LONGLONG g_recordingStartQPC;
+
     // Pre-allocate silent buffer to maximum expected size to avoid allocations in capture loop
     // Assuming max 48kHz stereo * 32-bit float * 1 second buffer = 384KB
     constexpr size_t MAX_BUFFER_SIZE = 48000 * 4 * 4; // 48kHz * 4 bytes/sample * stereo * safety margin
@@ -286,16 +289,10 @@ void AudioCaptureManager::CaptureLoop()
 
             if (FAILED(hr)) break;
 
-            // Calculate relative timestamp using QPC position for accurate synchronization
-            LONGLONG relativeTimestamp = 0;
-            if (m_firstAudioTimestamp == 0)
-            {
-                m_firstAudioTimestamp = qpcPosition;
-            }
-            
-            // Convert QPC to 100ns units relative to start
-            LONGLONG qpcDelta = qpcPosition - m_firstAudioTimestamp;
-            relativeTimestamp = (qpcDelta * 10000000LL) / qpcFreq.QuadPart;
+            // Calculate relative timestamp using shared recording start time
+            // This ensures audio and video use the same time base
+            LONGLONG qpcDelta = qpcPosition - g_recordingStartQPC;
+            LONGLONG relativeTimestamp = (qpcDelta * 10000000LL) / qpcFreq.QuadPart;
 
             // Prepare sample data
             BYTE* sampleData = data;
