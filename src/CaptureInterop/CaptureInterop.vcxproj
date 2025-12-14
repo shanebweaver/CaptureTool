@@ -82,7 +82,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>
-        mfplat.lib;mfreadwrite.lib;mfuuid.lib;d3d11.lib;dxgi.lib;windowsapp.lib;runtimeobject.lib;%(AdditionalDependencies)
+        mfplat.lib;mfreadwrite.lib;mfuuid.lib;d3d11.lib;dxgi.lib;windowsapp.lib;runtimeobject.lib;ole32.lib;%(AdditionalDependencies)
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -106,6 +106,7 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
+    <ClInclude Include="AudioCaptureManager.h" />
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GraphicsCaptureHelpers.cpp" />
@@ -115,6 +116,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ClCompile Include="AudioCaptureManager.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="FrameArrivedHandler.cpp" />
     <ClCompile Include="MP4SinkWriter.cpp" />

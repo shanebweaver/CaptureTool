@@ -8,7 +8,7 @@ MP4SinkWriter::~MP4SinkWriter()
     Finalize();
 }
 
-bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, UINT32 width, UINT32 height, HRESULT* outHr)
+bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, UINT32 width, UINT32 height, bool enableAudio, WAVEFORMATEX* audioFormat, HRESULT* outHr)
 {
     if (outHr) *outHr = S_OK;
     m_device = device;
@@ -20,6 +20,7 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
     m_width = width;
     m_height = height;
     m_frameIndex = 0;
+    m_hasAudio = enableAudio && audioFormat != nullptr;
 
     HRESULT hr = MFStartup(MF_VERSION);
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
@@ -28,7 +29,7 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
     hr = MFCreateSinkWriterFromURL(outputPath, nullptr, nullptr, sinkWriter.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
-    // Output type: H.264
+    // Output type: H.264 video
     wil::com_ptr<IMFMediaType> mediaTypeOut;
     hr = MFCreateMediaType(mediaTypeOut.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
@@ -41,11 +42,11 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
     MFSetAttributeRatio(mediaTypeOut.get(), MF_MT_FRAME_RATE, 30, 1);
     MFSetAttributeRatio(mediaTypeOut.get(), MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
 
-    DWORD streamIndex = 0;
-    hr = sinkWriter->AddStream(mediaTypeOut.get(), &streamIndex);
+    DWORD videoStreamIndex = 0;
+    hr = sinkWriter->AddStream(mediaTypeOut.get(), &videoStreamIndex);
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
-    // Input type: RGB32
+    // Input type: RGB32 video
     wil::com_ptr<IMFMediaType> mediaTypeIn;
     hr = MFCreateMediaType(mediaTypeIn.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
@@ -59,14 +60,54 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
     LONG defaultStride = static_cast<LONG>(width * 4);
     mediaTypeIn->SetUINT32(MF_MT_DEFAULT_STRIDE, static_cast<UINT32>(defaultStride));
 
-    hr = sinkWriter->SetInputMediaType(streamIndex, mediaTypeIn.get(), nullptr);
+    hr = sinkWriter->SetInputMediaType(videoStreamIndex, mediaTypeIn.get(), nullptr);
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+
+    m_videoStreamIndex = videoStreamIndex;
+
+    // Add audio stream if enabled
+    if (m_hasAudio)
+    {
+        // Output type: AAC audio
+        wil::com_ptr<IMFMediaType> audioTypeOut;
+        hr = MFCreateMediaType(audioTypeOut.put());
+        if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+
+        audioTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+        audioTypeOut->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_AAC);
+        audioTypeOut->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
+        audioTypeOut->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
+        audioTypeOut->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
+        audioTypeOut->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, 24000); // 192 kbps
+        audioTypeOut->SetUINT32(MF_MT_AUDIO_BLOCK_ALIGNMENT, 1);
+
+        DWORD audioStreamIndex = 0;
+        hr = sinkWriter->AddStream(audioTypeOut.get(), &audioStreamIndex);
+        if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+
+        // Input type: PCM audio
+        wil::com_ptr<IMFMediaType> audioTypeIn;
+        hr = MFCreateMediaType(audioTypeIn.put());
+        if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+
+        audioTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+        audioTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+        audioTypeIn->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
+        audioTypeIn->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
+        audioTypeIn->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, audioFormat->wBitsPerSample);
+        audioTypeIn->SetUINT32(MF_MT_AUDIO_BLOCK_ALIGNMENT, audioFormat->nBlockAlign);
+        audioTypeIn->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, audioFormat->nAvgBytesPerSec);
+
+        hr = sinkWriter->SetInputMediaType(audioStreamIndex, audioTypeIn.get(), nullptr);
+        if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+
+        m_audioStreamIndex = audioStreamIndex;
+    }
 
     hr = sinkWriter->BeginWriting();
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     m_sinkWriter = std::move(sinkWriter);
-    m_streamIndex = streamIndex;
 
     return true;
 }
@@ -74,6 +115,8 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
 HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTicks)
 {
     if (!texture || !m_sinkWriter) return E_FAIL;
+
+    std::lock_guard<std::mutex> lock(m_writeMutex);
 
     // Copy to staging for CPU read
     D3D11_TEXTURE2D_DESC desc{};
@@ -126,19 +169,61 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTic
     sample->AddBuffer(buffer.get());
     sample->SetSampleTime(relativeTicks);
 
-    if (m_prevTimestamp == 0)
-        m_prevTimestamp = relativeTicks;
+    if (m_prevVideoTimestamp == 0)
+        m_prevVideoTimestamp = relativeTicks;
 
     const LONGLONG TICKS_PER_SECOND = 10000000LL;
     const LONGLONG frameDuration = TICKS_PER_SECOND / 30; // 30 FPS
 
-    LONGLONG duration = relativeTicks - m_prevTimestamp;
+    LONGLONG duration = relativeTicks - m_prevVideoTimestamp;
     if (duration <= 0) duration = frameDuration; // fallback ~30 fps
     sample->SetSampleDuration(duration);
-    m_prevTimestamp = relativeTicks;
+    m_prevVideoTimestamp = relativeTicks;
 
     m_frameIndex++;
-    return m_sinkWriter->WriteSample(m_streamIndex, sample.get());
+    return m_sinkWriter->WriteSample(m_videoStreamIndex, sample.get());
+}
+
+HRESULT MP4SinkWriter::WriteAudioSample(BYTE* data, UINT32 dataSize, LONGLONG relativeTicks)
+{
+    if (!m_sinkWriter || !m_hasAudio || !data || dataSize == 0) return E_FAIL;
+
+    std::lock_guard<std::mutex> lock(m_writeMutex);
+
+    HRESULT hr;
+    wil::com_ptr<IMFMediaBuffer> buffer;
+    hr = MFCreateMemoryBuffer(dataSize, buffer.put());
+    if (FAILED(hr)) return hr;
+
+    BYTE* pData = nullptr;
+    DWORD maxLen = 0, curLen = 0;
+    hr = buffer->Lock(&pData, &maxLen, &curLen);
+    if (FAILED(hr)) return hr;
+
+    memcpy(pData, data, dataSize);
+    buffer->SetCurrentLength(dataSize);
+    buffer->Unlock();
+
+    wil::com_ptr<IMFSample> sample;
+    hr = MFCreateSample(sample.put());
+    if (FAILED(hr)) return hr;
+
+    sample->AddBuffer(buffer.get());
+    sample->SetSampleTime(relativeTicks);
+
+    // Calculate duration based on sample size and format
+    // This will be properly calculated by Media Foundation based on the format
+    if (m_prevAudioTimestamp > 0)
+    {
+        LONGLONG duration = relativeTicks - m_prevAudioTimestamp;
+        if (duration > 0)
+        {
+            sample->SetSampleDuration(duration);
+        }
+    }
+    m_prevAudioTimestamp = relativeTicks;
+
+    return m_sinkWriter->WriteSample(m_audioStreamIndex, sample.get());
 }
 
 void MP4SinkWriter::Finalize()

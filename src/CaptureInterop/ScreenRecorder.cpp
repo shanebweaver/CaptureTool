@@ -2,6 +2,7 @@
 #include "ScreenRecorder.h"
 #include "MP4SinkWriter.h"
 #include "FrameArrivedHandler.h"
+#include "AudioCaptureManager.h"
 #include "GraphicsCaptureHelpers.cpp"
 
 using namespace GraphicsCaptureHelpers;
@@ -10,11 +11,12 @@ static wil::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession> g_
 static wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool> g_framePool;
 static EventRegistrationToken g_frameArrivedEventToken;
 static MP4SinkWriter g_sinkWriter;
+static std::unique_ptr<AudioCaptureManager> g_audioCapture;
 
 // Exported API
 extern "C"
 {
-    __declspec(dllexport) bool TryStartRecording(HMONITOR hMonitor, const wchar_t* outputPath)
+    __declspec(dllexport) bool TryStartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool enableAudio)
     {
         HRESULT hr = S_OK;
 
@@ -59,16 +61,56 @@ extern "C"
         SizeInt32 size{};
         hr = captureItem->get_Size(&size);
         if (FAILED(hr)) return false;
-        if (!g_sinkWriter.Initialize(outputPath, device.get(), size.Width, size.Height, &hr))
+
+        // Initialize audio capture if enabled
+        WAVEFORMATEX* audioFormat = nullptr;
+        if (enableAudio)
         {
+            g_audioCapture = std::make_unique<AudioCaptureManager>();
+            
+            // Set up callback for audio samples
+            auto audioCallback = [](BYTE* data, UINT32 dataSize, LONGLONG timestamp) {
+                if (data && dataSize > 0)
+                {
+                    g_sinkWriter.WriteAudioSample(data, dataSize, timestamp);
+                }
+            };
+
+            hr = g_audioCapture->Initialize(audioCallback);
+            if (FAILED(hr))
+            {
+                g_audioCapture.reset();
+                enableAudio = false; // Continue without audio
+            }
+            else
+            {
+                audioFormat = g_audioCapture->GetAudioFormat();
+            }
+        }
+
+        if (!g_sinkWriter.Initialize(outputPath, device.get(), size.Width, size.Height, enableAudio, audioFormat, &hr))
+        {
+            if (g_audioCapture) g_audioCapture.reset();
             return false;
         }
         
         g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter , &hr);
 
+        // Start audio capture before video
+        if (g_audioCapture)
+        {
+            hr = g_audioCapture->Start();
+            if (FAILED(hr))
+            {
+                // Continue without audio if start fails
+                g_audioCapture.reset();
+            }
+        }
+
         hr = g_session->StartCapture();
         if (FAILED(hr))
         {
+            if (g_audioCapture) g_audioCapture.reset();
             return false;
         }
 
@@ -82,6 +124,13 @@ extern "C"
 
     __declspec(dllexport) void TryStopRecording()
     {
+        // Stop audio capture first
+        if (g_audioCapture)
+        {
+            g_audioCapture->Stop();
+            g_audioCapture.reset();
+        }
+
         if (g_framePool)
         {
             g_framePool->remove_FrameArrived(g_frameArrivedEventToken);

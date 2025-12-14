@@ -4,9 +4,9 @@ namespace CaptureTool.Domains.Capture.Implementations.Windows;
 
 public partial class WindowsScreenRecorder : IScreenRecorder
 {
-    public bool StartRecording(IntPtr hMonitor, string outputPath)
+    public bool StartRecording(IntPtr hMonitor, string outputPath, bool enableAudio)
     {
-        return CaptureInterop.TryStartRecording(hMonitor, outputPath);
+        return CaptureInterop.TryStartRecording(hMonitor, outputPath, enableAudio);
     }
 
     public void PauseRecording() => CaptureInterop.TryPauseRecording();
