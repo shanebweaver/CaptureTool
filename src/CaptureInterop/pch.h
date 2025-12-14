@@ -37,6 +37,7 @@
 #include <vector>
 #include <mutex>
 #include <queue>
+#include <memory>
 
 // Windows ABI
 #include <windows.foundation.h>
