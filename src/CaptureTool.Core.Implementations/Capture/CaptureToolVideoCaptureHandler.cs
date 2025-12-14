@@ -5,6 +5,8 @@ namespace CaptureTool.Core.Implementations.Capture;
 
 public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 {
+    private const bool IsDesktopAudioEnabledByDefault = true;
+
     private readonly IScreenRecorder _screenRecorder;
     private readonly IStorageService _storageService;
     
@@ -22,6 +24,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     {
         _screenRecorder = screenRecorder;
         _storageService = storageService;
+
+        IsDesktopAudioEnabled = IsDesktopAudioEnabledByDefault;
     }
 
     public void StartVideoCapture(NewCaptureArgs args)
