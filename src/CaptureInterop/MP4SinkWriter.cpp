@@ -171,16 +171,9 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTic
     sample->AddBuffer(buffer.get());
     sample->SetSampleTime(relativeTicks);
 
-    if (m_prevVideoTimestamp == 0)
-        m_prevVideoTimestamp = relativeTicks;
-
-    const LONGLONG TICKS_PER_SECOND = 10000000LL;
-    const LONGLONG frameDuration = TICKS_PER_SECOND / 30; // 30 FPS
-
-    LONGLONG duration = relativeTicks - m_prevVideoTimestamp;
-    if (duration <= 0) duration = frameDuration; // fallback ~30 fps
-    sample->SetSampleDuration(duration);
-    m_prevVideoTimestamp = relativeTicks;
+    // Don't set duration - let Media Foundation calculate it from timestamps
+    // This prevents variable frame timing from affecting playback speed
+    // Media Foundation will use the time delta between samples automatically
 
     m_frameIndex++;
     return m_sinkWriter->WriteSample(m_videoStreamIndex, sample.get());
@@ -221,17 +214,8 @@ HRESULT MP4SinkWriter::WriteAudioSample(BYTE* data, UINT32 dataSize, LONGLONG re
     sample->AddBuffer(buffer.get());
     sample->SetSampleTime(relativeTicks);
 
-    // Calculate duration based on sample size and format
-    // This will be properly calculated by Media Foundation based on the format
-    if (m_prevAudioTimestamp > 0)
-    {
-        LONGLONG duration = relativeTicks - m_prevAudioTimestamp;
-        if (duration > 0)
-        {
-            sample->SetSampleDuration(duration);
-        }
-    }
-    m_prevAudioTimestamp = relativeTicks;
+    // Don't set duration - let Media Foundation calculate it from timestamps
+    // This prevents variable audio timing from affecting playback speed
 
     return m_sinkWriter->WriteSample(m_audioStreamIndex, sample.get());
 }

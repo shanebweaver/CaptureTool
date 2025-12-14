@@ -31,8 +31,6 @@ private:
     UINT32 m_height = 0;
     ID3D11Device* m_device = nullptr;
     ID3D11DeviceContext* m_context = nullptr;
-    LONGLONG m_prevVideoTimestamp = 0;
-    LONGLONG m_prevAudioTimestamp = 0;
     bool m_hasAudio = false;
     std::mutex m_writeMutex;
 };
