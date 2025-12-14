@@ -143,7 +143,8 @@ void AudioCaptureManager::Stop()
 
     if (m_captureThread)
     {
-        WaitForSingleObject(m_captureThread, 5000);
+        constexpr DWORD THREAD_STOP_TIMEOUT_MS = 5000;
+        WaitForSingleObject(m_captureThread, THREAD_STOP_TIMEOUT_MS);
         CloseHandle(m_captureThread);
         m_captureThread = nullptr;
     }
@@ -180,9 +181,11 @@ void AudioCaptureManager::CaptureLoop()
     m_audioClient->GetBufferSize(&bufferFrameCount);
 
     // Calculate sleep time (half the buffer duration)
-    REFERENCE_TIME duration = 0;
-    m_audioClient->GetDevicePeriod(nullptr, &duration);
-    DWORD sleepTime = (DWORD)(duration / 10000 / 2); // Convert to milliseconds
+    REFERENCE_TIME devicePeriod = 0;
+    m_audioClient->GetDevicePeriod(nullptr, &devicePeriod);
+    constexpr REFERENCE_TIME HNSEC_TO_MILLISEC = 10000;
+    constexpr DWORD SLEEP_DIVISOR = 2;
+    DWORD sleepTime = (DWORD)(devicePeriod / HNSEC_TO_MILLISEC / SLEEP_DIVISOR);
 
     while (m_isCapturing)
     {
@@ -232,12 +235,15 @@ void AudioCaptureManager::CaptureLoop()
             // Handle silence flag
             if ((flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0)
             {
-                // Fill with silence if needed
-                data = nullptr;
+                // Skip silent buffers - don't write them to avoid null pointer issues
+                m_captureClient->ReleaseBuffer(numFramesAvailable);
+                hr = m_captureClient->GetNextPacketSize(&packetLength);
+                if (FAILED(hr)) break;
+                continue;
             }
 
             // Call the callback with audio data
-            if (m_onAudioSample && numFramesAvailable > 0)
+            if (m_onAudioSample && numFramesAvailable > 0 && data)
             {
                 UINT32 dataSize = numFramesAvailable * m_audioFormat->nBlockAlign;
                 m_onAudioSample(data, dataSize, relativeTimestamp);

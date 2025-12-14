@@ -73,12 +73,13 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
         hr = MFCreateMediaType(audioTypeOut.put());
         if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
+        constexpr UINT32 AUDIO_BITRATE_BPS = 24000; // 192 kbps for AAC
         audioTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
         audioTypeOut->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_AAC);
         audioTypeOut->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
         audioTypeOut->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
         audioTypeOut->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
-        audioTypeOut->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, 24000); // 192 kbps
+        audioTypeOut->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, AUDIO_BITRATE_BPS);
         audioTypeOut->SetUINT32(MF_MT_AUDIO_BLOCK_ALIGNMENT, 1);
 
         DWORD audioStreamIndex = 0;
