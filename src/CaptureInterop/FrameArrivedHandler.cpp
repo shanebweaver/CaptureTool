@@ -63,14 +63,6 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
-    // Get the frame's capture time (not processing time!)
-    TimeSpan timestamp{};
-    hr = frame->get_SystemRelativeTime(&timestamp);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
     wil::com_ptr<IDirect3DSurface> surface;
     hr = frame->get_Surface(surface.put());
     if (FAILED(hr) || !surface)
@@ -92,18 +84,19 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
-    // Use SystemRelativeTime (actual capture time) for video timestamp
-    // Store first frame time as reference, then calculate relative timestamps
-    extern LONGLONG g_firstVideoSystemTime;
+    // Use QPC for timestamp (same clock domain as audio)
+    // This is the ONLY correct way to ensure audio/video sync
+    extern LONGLONG g_recordingStartQPC;
     
-    if (g_firstVideoSystemTime == 0)
-    {
-        g_firstVideoSystemTime = timestamp.Duration;
-    }
+    LARGE_INTEGER qpc;
+    QueryPerformanceCounter(&qpc);
     
-    // Calculate relative timestamp from first video frame
-    // This gives us the actual time delta between frame captures
-    LONGLONG relativeTimestamp = timestamp.Duration - g_firstVideoSystemTime;
+    LARGE_INTEGER qpcFreq;
+    QueryPerformanceFrequency(&qpcFreq);
+    
+    // Calculate relative timestamp in 100ns units (Media Foundation standard)
+    LONGLONG qpcDelta = qpc.QuadPart - g_recordingStartQPC;
+    LONGLONG relativeTimestamp = (qpcDelta * 10000000LL) / qpcFreq.QuadPart;
 
     return m_sinkWriter->WriteFrame(texture.get(), relativeTimestamp);
 }
