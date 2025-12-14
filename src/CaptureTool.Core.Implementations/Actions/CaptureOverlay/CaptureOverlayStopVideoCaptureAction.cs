@@ -1,4 +1,5 @@
 using CaptureTool.Common.Commands;
+using CaptureTool.Core.Implementations.Services.Navigation;
 using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
@@ -24,8 +25,8 @@ public sealed partial class CaptureOverlayStopVideoCaptureAction : ActionCommand
 
     public override bool CanExecute()
     {
-        if (_navigationService.CurrentRequest?.Route is not Core.Implementations.Navigation.CaptureToolNavigationRoute route
-            || route != Core.Implementations.Navigation.CaptureToolNavigationRoute.VideoCapture)
+        if (_navigationService.CurrentRequest?.Route is not CaptureToolNavigationRoute route
+            || route != CaptureToolNavigationRoute.VideoCapture)
         {
             return false;
         }

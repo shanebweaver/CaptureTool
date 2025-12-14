@@ -3,7 +3,7 @@ using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Navigation;
 using CaptureTool.Services.Interfaces.Storage;
 
-namespace CaptureTool.Core.Implementations.Navigation;
+namespace CaptureTool.Core.Implementations.Services.Navigation;
 
 public sealed partial class CaptureToolAppNavigation : IAppNavigation
 {
