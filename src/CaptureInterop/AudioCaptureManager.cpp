@@ -17,96 +17,18 @@ HRESULT AudioCaptureManager::Initialize(std::function<void(BYTE*, UINT32, LONGLO
 {
     m_onAudioSample = onAudioSample;
 
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
-    {
-        return hr;
-    }
-
-    // Get the default audio loopback device (render endpoint)
-    wil::com_ptr<IMMDeviceEnumerator> enumerator;
-    hr = CoCreateInstance(
-        __uuidof(MMDeviceEnumerator),
-        nullptr,
-        CLSCTX_ALL,
-        IID_PPV_ARGS(enumerator.put())
-    );
-    if (FAILED(hr)) return hr;
-
-    hr = enumerator->GetDefaultAudioEndpoint(
-        eRender,
-        eConsole,
-        m_device.put()
-    );
-    if (FAILED(hr)) return hr;
-
-    // Initialize audio client for loopback capture
-    hr = m_device->Activate(
-        __uuidof(IAudioClient),
-        CLSCTX_ALL,
-        nullptr,
-        m_audioClient.put_void()
-    );
-    if (FAILED(hr)) return hr;
-
-    // Get the audio format
-    WAVEFORMATEX* mixFormat = nullptr;
-    hr = m_audioClient->GetMixFormat(&mixFormat);
-    if (FAILED(hr)) return hr;
-
-    // Store a copy of the format
-    size_t formatSize = sizeof(WAVEFORMATEX) + mixFormat->cbSize;
-    m_audioFormat = (WAVEFORMATEX*)CoTaskMemAlloc(formatSize);
-    if (!m_audioFormat)
-    {
-        CoTaskMemFree(mixFormat);
-        return E_OUTOFMEMORY;
-    }
-    memcpy(m_audioFormat, mixFormat, formatSize);
-
-    // Create event for audio buffer notifications
-    m_audioReadyEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-    if (!m_audioReadyEvent)
-    {
-        CoTaskMemFree(mixFormat);
-        return E_FAIL;
-    }
-
-    // Initialize the audio client in loopback mode with event-driven capture
-    const REFERENCE_TIME requestedDuration = 10000000; // 1 second in 100ns units
-    hr = m_audioClient->Initialize(
-        AUDCLNT_SHAREMODE_SHARED,
-        AUDCLNT_STREAMFLAGS_LOOPBACK | AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
-        requestedDuration,
-        0,
-        mixFormat,
-        nullptr
-    );
-
-    CoTaskMemFree(mixFormat);
-    if (FAILED(hr)) 
-    {
-        CloseHandle(m_audioReadyEvent);
-        m_audioReadyEvent = nullptr;
-        return hr;
-    }
-
-    // Set the event handle for buffer notifications
-    hr = m_audioClient->SetEventHandle(m_audioReadyEvent);
-    if (FAILED(hr))
-    {
-        CloseHandle(m_audioReadyEvent);
-        m_audioReadyEvent = nullptr;
-        return hr;
-    }
-
-    // Get the capture client
-    hr = m_audioClient->GetService(IID_PPV_ARGS(m_captureClient.put()));
-    if (FAILED(hr)) return hr;
-
     // Create stop event
     m_stopEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
     if (!m_stopEvent) return E_FAIL;
+    
+    // Create init complete event for signaling when audio setup is done
+    m_initCompleteEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    if (!m_initCompleteEvent)
+    {
+        CloseHandle(m_stopEvent);
+        m_stopEvent = nullptr;
+        return E_FAIL;
+    }
 
     return S_OK;
 }
@@ -123,15 +45,10 @@ HRESULT AudioCaptureManager::Start()
     QueryPerformanceCounter(&qpc);
     m_audioStartTime = qpc.QuadPart;
 
-    HRESULT hr = m_audioClient->Start();
-    if (FAILED(hr))
-    {
-        m_isCapturing = false;
-        return hr;
-    }
-
-    // Start capture thread
+    // Start capture thread - it will initialize audio device
     ResetEvent(m_stopEvent);
+    ResetEvent(m_initCompleteEvent);
+    
     m_captureThread = CreateThread(
         nullptr,
         0,
@@ -143,7 +60,6 @@ HRESULT AudioCaptureManager::Start()
 
     if (!m_captureThread)
     {
-        m_audioClient->Stop();
         m_isCapturing = false;
         return E_FAIL;
     }
@@ -187,6 +103,12 @@ void AudioCaptureManager::Stop()
         CloseHandle(m_stopEvent);
         m_stopEvent = nullptr;
     }
+    
+    if (m_initCompleteEvent)
+    {
+        CloseHandle(m_initCompleteEvent);
+        m_initCompleteEvent = nullptr;
+    }
 }
 
 DWORD WINAPI AudioCaptureManager::AudioCaptureThread(LPVOID param)
@@ -201,8 +123,136 @@ void AudioCaptureManager::CaptureLoop()
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
     {
+        SetEvent(m_initCompleteEvent); // Signal init complete even on failure
         return;
     }
+
+    // Initialize audio device on the capture thread (not blocking UI thread)
+    // Get the default audio loopback device (render endpoint)
+    wil::com_ptr<IMMDeviceEnumerator> enumerator;
+    hr = CoCreateInstance(
+        __uuidof(MMDeviceEnumerator),
+        nullptr,
+        CLSCTX_ALL,
+        IID_PPV_ARGS(enumerator.put())
+    );
+    if (FAILED(hr))
+    {
+        SetEvent(m_initCompleteEvent);
+        CoUninitialize();
+        return;
+    }
+
+    hr = enumerator->GetDefaultAudioEndpoint(
+        eRender,
+        eConsole,
+        m_device.put()
+    );
+    if (FAILED(hr))
+    {
+        SetEvent(m_initCompleteEvent);
+        CoUninitialize();
+        return;
+    }
+
+    // Initialize audio client for loopback capture
+    hr = m_device->Activate(
+        __uuidof(IAudioClient),
+        CLSCTX_ALL,
+        nullptr,
+        m_audioClient.put_void()
+    );
+    if (FAILED(hr))
+    {
+        SetEvent(m_initCompleteEvent);
+        CoUninitialize();
+        return;
+    }
+
+    // Get the audio format
+    WAVEFORMATEX* mixFormat = nullptr;
+    hr = m_audioClient->GetMixFormat(&mixFormat);
+    if (FAILED(hr))
+    {
+        SetEvent(m_initCompleteEvent);
+        CoUninitialize();
+        return;
+    }
+
+    // Store a copy of the format
+    size_t formatSize = sizeof(WAVEFORMATEX) + mixFormat->cbSize;
+    m_audioFormat = (WAVEFORMATEX*)CoTaskMemAlloc(formatSize);
+    if (!m_audioFormat)
+    {
+        CoTaskMemFree(mixFormat);
+        SetEvent(m_initCompleteEvent);
+        CoUninitialize();
+        return;
+    }
+    memcpy(m_audioFormat, mixFormat, formatSize);
+
+    // Create event for audio buffer notifications
+    m_audioReadyEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    if (!m_audioReadyEvent)
+    {
+        CoTaskMemFree(mixFormat);
+        SetEvent(m_initCompleteEvent);
+        CoUninitialize();
+        return;
+    }
+
+    // Initialize the audio client in loopback mode with event-driven capture
+    const REFERENCE_TIME requestedDuration = 10000000; // 1 second in 100ns units
+    hr = m_audioClient->Initialize(
+        AUDCLNT_SHAREMODE_SHARED,
+        AUDCLNT_STREAMFLAGS_LOOPBACK | AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
+        requestedDuration,
+        0,
+        mixFormat,
+        nullptr
+    );
+
+    CoTaskMemFree(mixFormat);
+    if (FAILED(hr))
+    {
+        CloseHandle(m_audioReadyEvent);
+        m_audioReadyEvent = nullptr;
+        SetEvent(m_initCompleteEvent);
+        CoUninitialize();
+        return;
+    }
+
+    // Set the event handle for buffer notifications
+    hr = m_audioClient->SetEventHandle(m_audioReadyEvent);
+    if (FAILED(hr))
+    {
+        CloseHandle(m_audioReadyEvent);
+        m_audioReadyEvent = nullptr;
+        SetEvent(m_initCompleteEvent);
+        CoUninitialize();
+        return;
+    }
+
+    // Get the capture client
+    hr = m_audioClient->GetService(IID_PPV_ARGS(m_captureClient.put()));
+    if (FAILED(hr))
+    {
+        SetEvent(m_initCompleteEvent);
+        CoUninitialize();
+        return;
+    }
+
+    // Start the audio client
+    hr = m_audioClient->Start();
+    if (FAILED(hr))
+    {
+        SetEvent(m_initCompleteEvent);
+        CoUninitialize();
+        return;
+    }
+
+    // Signal that initialization is complete
+    SetEvent(m_initCompleteEvent);
 
     // Pre-allocate silent buffer to maximum expected size to avoid allocations in capture loop
     // Assuming max 48kHz stereo * 32-bit float * 1 second buffer = 384KB

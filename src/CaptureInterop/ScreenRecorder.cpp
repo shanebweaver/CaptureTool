@@ -63,9 +63,21 @@ extern "C"
         if (FAILED(hr)) return false;
 
         // Initialize audio capture if enabled
+        WAVEFORMATEX defaultAudioFormat = {};
         WAVEFORMATEX* audioFormat = nullptr;
         if (enableAudio)
         {
+            // Set up default audio format (16-bit PCM, 48kHz, stereo)
+            // Audio capture will convert to this format
+            defaultAudioFormat.wFormatTag = WAVE_FORMAT_PCM;
+            defaultAudioFormat.nChannels = 2;
+            defaultAudioFormat.nSamplesPerSec = 48000;
+            defaultAudioFormat.wBitsPerSample = 16;
+            defaultAudioFormat.nBlockAlign = defaultAudioFormat.nChannels * defaultAudioFormat.wBitsPerSample / 8;
+            defaultAudioFormat.nAvgBytesPerSec = defaultAudioFormat.nSamplesPerSec * defaultAudioFormat.nBlockAlign;
+            defaultAudioFormat.cbSize = 0;
+            audioFormat = &defaultAudioFormat;
+            
             g_audioCapture = std::make_unique<AudioCaptureManager>();
             
             // Set up callback for audio samples
@@ -81,10 +93,7 @@ extern "C"
             {
                 g_audioCapture.reset();
                 enableAudio = false; // Continue without audio
-            }
-            else
-            {
-                audioFormat = g_audioCapture->GetAudioFormat();
+                audioFormat = nullptr;
             }
         }
 
