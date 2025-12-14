@@ -204,8 +204,10 @@ void AudioCaptureManager::CaptureLoop()
         return;
     }
 
-    // Buffer for silent audio
-    std::vector<BYTE> silentBuffer;
+    // Pre-allocate silent buffer to maximum expected size to avoid allocations in capture loop
+    // Assuming max 48kHz stereo * 32-bit float * 1 second buffer = 384KB
+    constexpr size_t MAX_BUFFER_SIZE = 48000 * 4 * 4; // 48kHz * 4 bytes/sample * stereo * safety margin
+    std::vector<BYTE> silentBuffer(MAX_BUFFER_SIZE, 0);
     
     // Get QPC frequency once
     LARGE_INTEGER qpcFreq;
@@ -215,23 +217,35 @@ void AudioCaptureManager::CaptureLoop()
     HANDLE waitHandles[2] = { m_stopEvent, m_audioReadyEvent };
     constexpr DWORD STOP_EVENT_INDEX = 0;
     constexpr DWORD AUDIO_READY_INDEX = 1;
+    constexpr DWORD WAIT_TIMEOUT_MS = 5000; // 5 second timeout to prevent indefinite hang
 
     while (m_isCapturing)
     {
-        // Wait for stop event or audio ready event
-        DWORD waitResult = WaitForMultipleObjects(2, waitHandles, FALSE, INFINITE);
+        // Wait for stop event or audio ready event with timeout
+        DWORD waitResult = WaitForMultipleObjects(2, waitHandles, FALSE, WAIT_TIMEOUT_MS);
         
         if (waitResult == WAIT_OBJECT_0 + STOP_EVENT_INDEX)
         {
             break; // Stop event signaled
         }
         
-        if (waitResult != WAIT_OBJECT_0 + AUDIO_READY_INDEX)
+        if (waitResult == WAIT_OBJECT_0 + AUDIO_READY_INDEX)
         {
-            continue; // Unexpected result, continue loop
+            // Audio ready event was signaled - process all available packets
+        }
+        else if (waitResult == WAIT_TIMEOUT)
+        {
+            // Timeout - continue waiting (audio system might be idle)
+            continue;
+        }
+        else
+        {
+            // WAIT_FAILED or WAIT_ABANDONED - unexpected error
+            // Log error but continue trying
+            continue;
         }
 
-        // Audio ready event was signaled - process all available packets
+        // Process all available audio packets
         UINT32 packetLength = 0;
         hr = m_captureClient->GetNextPacketSize(&packetLength);
         if (FAILED(hr)) continue;
@@ -272,12 +286,19 @@ void AudioCaptureManager::CaptureLoop()
             // Handle silence flag - write actual silent audio instead of skipping
             if ((flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0)
             {
-                // Create silent buffer if needed
-                if (silentBuffer.size() < dataSize)
+                // Use pre-allocated silent buffer (no allocation in capture loop)
+                if (dataSize <= silentBuffer.size())
                 {
-                    silentBuffer.resize(dataSize, 0);
+                    sampleData = silentBuffer.data();
                 }
-                sampleData = silentBuffer.data();
+                // If size exceeds buffer, skip this packet (very unlikely)
+                else
+                {
+                    m_captureClient->ReleaseBuffer(numFramesAvailable);
+                    hr = m_captureClient->GetNextPacketSize(&packetLength);
+                    if (FAILED(hr)) break;
+                    continue;
+                }
             }
 
             // Call the callback with audio data (silent or actual)
