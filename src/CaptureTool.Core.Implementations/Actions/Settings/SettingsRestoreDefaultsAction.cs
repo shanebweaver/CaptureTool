@@ -1,0 +1,25 @@
+using CaptureTool.Common.Commands;
+using CaptureTool.Core.Interfaces.Actions.Settings;
+using CaptureTool.Services.Interfaces.Localization;
+using CaptureTool.Services.Interfaces.Settings;
+
+namespace CaptureTool.Core.Implementations.Actions.Settings;
+
+public sealed partial class SettingsRestoreDefaultsAction : AsyncActionCommand, ISettingsRestoreDefaultsAction
+{
+    private readonly ISettingsService _settingsService;
+    private readonly ILocalizationService _localizationService;
+
+    public SettingsRestoreDefaultsAction(ISettingsService settingsService, ILocalizationService localizationService)
+    {
+        _settingsService = settingsService;
+        _localizationService = localizationService;
+    }
+
+    public override async Task ExecuteAsync()
+    {
+        _settingsService.ClearAllSettings();
+        _localizationService.OverrideLanguage(null);
+        await _settingsService.TrySaveAsync(CancellationToken.None);
+    }
+}

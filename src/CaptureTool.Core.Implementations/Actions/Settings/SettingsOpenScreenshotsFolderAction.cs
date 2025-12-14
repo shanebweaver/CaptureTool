@@ -1,27 +1,38 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.Settings;
+using CaptureTool.Core.Interfaces.Settings;
+using CaptureTool.Services.Interfaces.Settings;
+using CaptureTool.Services.Interfaces.Storage;
 using System.Diagnostics;
 
 namespace CaptureTool.Core.Implementations.Actions.Settings;
 
 public sealed partial class SettingsOpenScreenshotsFolderAction : ActionCommand, ISettingsOpenScreenshotsFolderAction
 {
-    private readonly string _screenshotsFolderPath;
+    private readonly ISettingsService _settingsService;
+    private readonly IStorageService _storageService;
 
-    public SettingsOpenScreenshotsFolderAction(string screenshotsFolderPath)
+    public SettingsOpenScreenshotsFolderAction(ISettingsService settingsService, IStorageService storageService)
     {
-        _screenshotsFolderPath = screenshotsFolderPath;
+        _settingsService = settingsService;
+        _storageService = storageService;
     }
 
     public override void Execute()
     {
-        if (Directory.Exists(_screenshotsFolderPath))
+        var path = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
+        if (string.IsNullOrWhiteSpace(path))
         {
-            Process.Start("explorer.exe", $"/open, {_screenshotsFolderPath}");
+            path = _storageService.GetSystemDefaultScreenshotsFolderPath();
+        }
+
+        if (Directory.Exists(path))
+        {
+            Process.Start("explorer.exe", $"/open, {path}");
         }
         else
         {
-            throw new DirectoryNotFoundException($"The screenshots folder path '{_screenshotsFolderPath}' does not exist.");
+            throw new DirectoryNotFoundException($"The screenshots folder path '{path}' does not exist.");
         }
     }
 }
