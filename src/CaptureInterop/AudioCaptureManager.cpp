@@ -64,11 +64,19 @@ HRESULT AudioCaptureManager::Initialize(std::function<void(BYTE*, UINT32, LONGLO
     }
     memcpy(m_audioFormat, mixFormat, formatSize);
 
-    // Initialize the audio client in loopback mode
+    // Create event for audio buffer notifications
+    m_audioReadyEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    if (!m_audioReadyEvent)
+    {
+        CoTaskMemFree(mixFormat);
+        return E_FAIL;
+    }
+
+    // Initialize the audio client in loopback mode with event-driven capture
     const REFERENCE_TIME requestedDuration = 10000000; // 1 second in 100ns units
     hr = m_audioClient->Initialize(
         AUDCLNT_SHAREMODE_SHARED,
-        AUDCLNT_STREAMFLAGS_LOOPBACK,
+        AUDCLNT_STREAMFLAGS_LOOPBACK | AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
         requestedDuration,
         0,
         mixFormat,
@@ -76,7 +84,21 @@ HRESULT AudioCaptureManager::Initialize(std::function<void(BYTE*, UINT32, LONGLO
     );
 
     CoTaskMemFree(mixFormat);
-    if (FAILED(hr)) return hr;
+    if (FAILED(hr)) 
+    {
+        CloseHandle(m_audioReadyEvent);
+        m_audioReadyEvent = nullptr;
+        return hr;
+    }
+
+    // Set the event handle for buffer notifications
+    hr = m_audioClient->SetEventHandle(m_audioReadyEvent);
+    if (FAILED(hr))
+    {
+        CloseHandle(m_audioReadyEvent);
+        m_audioReadyEvent = nullptr;
+        return hr;
+    }
 
     // Get the capture client
     hr = m_audioClient->GetService(IID_PPV_ARGS(m_captureClient.put()));
@@ -154,6 +176,12 @@ void AudioCaptureManager::Stop()
         m_audioClient->Stop();
     }
 
+    if (m_audioReadyEvent)
+    {
+        CloseHandle(m_audioReadyEvent);
+        m_audioReadyEvent = nullptr;
+    }
+
     if (m_stopEvent)
     {
         CloseHandle(m_stopEvent);
@@ -176,27 +204,34 @@ void AudioCaptureManager::CaptureLoop()
         return;
     }
 
-    // Get buffer size for sleep calculation
-    UINT32 bufferFrameCount = 0;
-    m_audioClient->GetBufferSize(&bufferFrameCount);
+    // Buffer for silent audio
+    std::vector<BYTE> silentBuffer;
+    
+    // Get QPC frequency once
+    LARGE_INTEGER qpcFreq;
+    QueryPerformanceFrequency(&qpcFreq);
 
-    // Calculate sleep time (half the buffer duration)
-    REFERENCE_TIME devicePeriod = 0;
-    m_audioClient->GetDevicePeriod(nullptr, &devicePeriod);
-    constexpr REFERENCE_TIME HNSEC_TO_MILLISEC = 10000;
-    constexpr DWORD SLEEP_DIVISOR = 2;
-    DWORD sleepTime = (DWORD)(devicePeriod / HNSEC_TO_MILLISEC / SLEEP_DIVISOR);
+    // Wait handles for event-driven capture
+    HANDLE waitHandles[2] = { m_stopEvent, m_audioReadyEvent };
+    constexpr DWORD STOP_EVENT_INDEX = 0;
+    constexpr DWORD AUDIO_READY_INDEX = 1;
 
     while (m_isCapturing)
     {
-        // Wait for stop event or timeout
-        DWORD result = WaitForSingleObject(m_stopEvent, sleepTime);
-        if (result == WAIT_OBJECT_0)
+        // Wait for stop event or audio ready event
+        DWORD waitResult = WaitForMultipleObjects(2, waitHandles, FALSE, INFINITE);
+        
+        if (waitResult == WAIT_OBJECT_0 + STOP_EVENT_INDEX)
         {
             break; // Stop event signaled
         }
+        
+        if (waitResult != WAIT_OBJECT_0 + AUDIO_READY_INDEX)
+        {
+            continue; // Unexpected result, continue loop
+        }
 
-        // Get available audio data
+        // Audio ready event was signaled - process all available packets
         UINT32 packetLength = 0;
         hr = m_captureClient->GetNextPacketSize(&packetLength);
         if (FAILED(hr)) continue;
@@ -219,7 +254,7 @@ void AudioCaptureManager::CaptureLoop()
 
             if (FAILED(hr)) break;
 
-            // Calculate relative timestamp
+            // Calculate relative timestamp using QPC position for accurate synchronization
             LONGLONG relativeTimestamp = 0;
             if (m_firstAudioTimestamp == 0)
             {
@@ -227,26 +262,29 @@ void AudioCaptureManager::CaptureLoop()
             }
             
             // Convert QPC to 100ns units relative to start
-            LARGE_INTEGER qpcFreq;
-            QueryPerformanceFrequency(&qpcFreq);
             LONGLONG qpcDelta = qpcPosition - m_firstAudioTimestamp;
             relativeTimestamp = (qpcDelta * 10000000LL) / qpcFreq.QuadPart;
 
-            // Handle silence flag
+            // Prepare sample data
+            BYTE* sampleData = data;
+            UINT32 dataSize = numFramesAvailable * m_audioFormat->nBlockAlign;
+            
+            // Handle silence flag - write actual silent audio instead of skipping
             if ((flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0)
             {
-                // Skip silent buffers - don't write them to avoid null pointer issues
-                m_captureClient->ReleaseBuffer(numFramesAvailable);
-                hr = m_captureClient->GetNextPacketSize(&packetLength);
-                if (FAILED(hr)) break;
-                continue;
+                // Create silent buffer if needed
+                if (silentBuffer.size() < dataSize)
+                {
+                    silentBuffer.resize(dataSize, 0);
+                }
+                sampleData = silentBuffer.data();
             }
 
-            // Call the callback with audio data
-            if (m_onAudioSample && numFramesAvailable > 0 && data)
+            // Call the callback with audio data (silent or actual)
+            // This maintains stream continuity and prevents gaps/static
+            if (m_onAudioSample && numFramesAvailable > 0 && sampleData)
             {
-                UINT32 dataSize = numFramesAvailable * m_audioFormat->nBlockAlign;
-                m_onAudioSample(data, dataSize, relativeTimestamp);
+                m_onAudioSample(sampleData, dataSize, relativeTimestamp);
             }
 
             m_captureClient->ReleaseBuffer(numFramesAvailable);

@@ -32,6 +32,7 @@ private:
     
     HANDLE m_captureThread = nullptr;
     HANDLE m_stopEvent = nullptr;
+    HANDLE m_audioReadyEvent = nullptr;
     volatile bool m_isCapturing = false;
     
     std::function<void(BYTE*, UINT32, LONGLONG)> m_onAudioSample;
