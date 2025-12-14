@@ -63,6 +63,14 @@ using CaptureTool.Core.Implementations.Actions.Settings;
 
 namespace CaptureTool.UI.Windows;
 
+/// <summary>
+/// Configures and provides dependency injection services for the CaptureTool application.
+/// </summary>
+/// <remarks>
+/// This class registers all services, ViewModels, and action handlers used throughout the application.
+/// Services are organized by concern: feature management, generic services, platform-specific services,
+/// domain services, core services, action handlers, ViewModels, and factories.
+/// </remarks>
 public partial class AppServiceProvider : IServiceProvider, IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
@@ -71,10 +79,14 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
     {
         ServiceCollection collection = new();
 
-        // Feature management
+        #region Feature Management
+
         collection.AddSingleton<IFeatureManager, MicrosoftFeatureManager>();
 
-        // Generic services
+        #endregion
+
+        #region Generic Services
+
         collection.AddSingleton<ICancellationService, CancellationService>();
         collection.AddSingleton<IGlobalizationService, GlobalizationService>();
         collection.AddSingleton<INavigationService, NavigationService>();
@@ -86,7 +98,10 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<ILogService, ShortTermMemoryLogService>();
 #endif
 
-        // Windows services
+        #endregion
+
+        #region Platform-Specific Services (Windows)
+
         collection.AddSingleton<IClipboardService, WindowsClipboardService>();
         collection.AddSingleton<IStoreService, WindowsStoreService>();
         collection.AddSingleton<IChromaKeyService, Win2DChromaKeyService>();
@@ -101,17 +116,27 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<ITaskEnvironment, WinUITaskEnvironment>(CreateWinUITaskEnvironment);
         collection.AddSingleton<IShutdownHandler, WindowsShutdownHandler>();
 
-        // Windows domains
+        #endregion
+
+        #region Domain Services
+
         collection.AddSingleton<IScreenCapture, WindowsScreenCapture>();
         collection.AddSingleton<IScreenRecorder, WindowsScreenRecorder>();
 
-        // Core services
+        #endregion
+
+        #region Core Services
+
         collection.AddSingleton<IActivationHandler, CaptureToolActivationHandler>();
         collection.AddSingleton<IImageCaptureHandler, CaptureToolImageCaptureHandler>();
         collection.AddSingleton<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
         collection.AddSingleton<IAppNavigation, CaptureToolAppNavigation>();
 
-        // Action handlers
+        #endregion
+
+        #region Action Handlers
+
+        // Capture Overlay actions
         collection.AddTransient<ICaptureOverlayCloseAction, CaptureOverlayCloseAction>();
         collection.AddTransient<ICaptureOverlayGoBackAction, CaptureOverlayGoBackAction>();
         collection.AddTransient<ICaptureOverlayToggleDesktopAudioAction, CaptureOverlayToggleDesktopAudioAction>();
@@ -148,7 +173,6 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<ISettingsUpdateAppLanguageAction, SettingsUpdateAppLanguageAction>();
         collection.AddTransient<ISettingsUpdateAppThemeAction, SettingsUpdateAppThemeAction>();
         collection.AddTransient<ISettingsChangeScreenshotsFolderAction, SettingsChangeScreenshotsFolderAction>();
-        // For actions requiring context values, consider factory pattern or service-based resolution; leaving open folder actions out of DI for now.
         collection.AddTransient<ISettingsActions, SettingsActions>();
 
         // VideoEdit actions
@@ -156,7 +180,10 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<IVideoEditCopyAction, VideoEditCopyAction>();
         collection.AddTransient<IVideoEditActions, VideoEditActions>();
 
-        // ViewModels
+        #endregion
+
+        #region ViewModels
+
         collection.AddTransient<MainWindowViewModel>();
         collection.AddTransient<SelectionOverlayWindowViewModel>();
         collection.AddTransient<ErrorPageViewModel>();
@@ -172,17 +199,25 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddTransient<SelectionOverlayHostViewModel>();
         collection.AddTransient<CaptureOverlayViewModel>();
 
-        // ViewModel factories
+        #endregion
+
+        #region ViewModel Factories
+
         collection.AddTransient<IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?>, AppLanguageViewModelFactory>();
         collection.AddTransient<IFactoryServiceWithArgs<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
         collection.AddTransient<IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode>, CaptureModeViewModelFactory>();
         collection.AddTransient<IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType>, CaptureTypeViewModelFactory>();
         collection.AddTransient<IFactoryServiceWithArgs<RecentCaptureViewModel, string>, RecentCaptureViewModelFactory>();
 
-        // App specific handlers
+        #endregion
+
+        #region Application-Specific Handlers
+
         collection.AddSingleton<AppNavigationHandler>();
         collection.AddSingleton<INavigationHandler>(sp => sp.GetRequiredService<AppNavigationHandler>());
         collection.AddSingleton<IWindowHandleProvider>(sp => sp.GetRequiredService<AppNavigationHandler>());
+
+        #endregion
 
         _serviceProvider = collection.BuildServiceProvider();
     }

@@ -10,9 +10,9 @@ namespace CaptureTool.UI.Windows;
 // https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/applifecycle/applifecycle-single-instance
 public class Program
 {
-    private const string SingleInstanceKey = "MySingleInstanceApp";
+    private const string SingleInstanceKey = "CaptureTool_SingleInstance";
     private const uint InfiniteTimeout = uint.MaxValue;
-    private const uint DefaultFlags = 0;
+    private const uint DefaultEventFlags = 0;
 
     [STAThread]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "App entry point")]
@@ -69,7 +69,7 @@ public class Program
         // Pump COM and wait for the event
         Span<HANDLE> handles = [evtHandle];
         global::Windows.Win32.PInvoke.CoWaitForMultipleObjects(
-            dwFlags: DefaultFlags,
+            dwFlags: DefaultEventFlags,
             dwTimeout: InfiniteTimeout,
             pHandles: handles,
             out _);
