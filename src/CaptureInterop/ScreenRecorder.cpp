@@ -12,7 +12,7 @@ static wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool
 static EventRegistrationToken g_frameArrivedEventToken;
 static MP4SinkWriter g_sinkWriter;
 static std::unique_ptr<AudioCaptureManager> g_audioCapture;
-static LONGLONG g_recordingStartQPC = 0; // Shared QPC timestamp for synchronization
+LONGLONG g_recordingStartQPC = 0; // Shared QPC timestamp for synchronization (externally referenced)
 
 // Exported API
 extern "C"
