@@ -24,7 +24,7 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddFeatureManagementServices();
 
         // Generic services
-        collection.AddServiceServices();
+        collection.AddGenericServices();
 
         // Core services
         collection.AddCoreServices();

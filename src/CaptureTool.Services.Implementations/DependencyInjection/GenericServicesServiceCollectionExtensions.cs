@@ -14,9 +14,9 @@ using CaptureTool.Services.Implementations.Telemetry;
 
 namespace CaptureTool.Services.Implementations.DependencyInjection;
 
-public static class ServicesServiceCollectionExtensions
+public static class GenericServicesServiceCollectionExtensions
 {
-    public static IServiceCollection AddServiceServices(this IServiceCollection services)
+    public static IServiceCollection AddGenericServices(this IServiceCollection services)
     {
         services.AddSingleton<ICancellationService, CancellationService>();
         services.AddSingleton<IGlobalizationService, GlobalizationService>();
