@@ -223,7 +223,7 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
     <value>Copiar</value>
   </data>
   <data name="ImageEdit_FlipXButton.Label" xml:space="preserve">
-    <value>Espejo horizontal</value>
+    <value>Espejo</value>
   </data>
   <data name="ImageEdit_RotateButton.Label" xml:space="preserve">
     <value>Rotar</value>
@@ -337,7 +337,7 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
     <value>Nueva captura (Ctrl+N)</value>
   </data>
   <data name="ImageEdit_FlipYButton.Label" xml:space="preserve">
-    <value>Voltear verticalmente</value>
+    <value>Voltear</value>
   </data>
   <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
     <value>Los cambios se aplicarán tras reiniciar la aplicación.</value>
@@ -361,7 +361,7 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
     <value>Grabación de pantalla</value>
   </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
-    <value>Usar el tema del sistema</value>
+    <value>Usar el idioma del sistema</value>
   </data>
   <data name="CaptureType_Rectangle" xml:space="preserve">
     <value>Rectángulo</value>
@@ -544,7 +544,7 @@ SOFTWARE.
     <value>Compartir</value>
   </data>
   <data name="ImageOrientation_Mirrored" xml:space="preserve">
-    <value>Normal</value>
+    <value>Reflejado</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
     <value>Borrar archivos</value>
@@ -568,7 +568,7 @@ SOFTWARE.
     <value>Recientes</value>
   </data>
   <data name="ImageOrientation_Normal" xml:space="preserve">
-    <value>Reflejado</value>
+    <value>Normal</value>
   </data>
   <data name="ImageEdit_Info_Dimensions.ToolTipService.ToolTip" xml:space="preserve">
     <value>Dimensiones</value>

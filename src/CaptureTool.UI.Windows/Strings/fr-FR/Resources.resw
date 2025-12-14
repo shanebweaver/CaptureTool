@@ -544,7 +544,7 @@ SOFTWARE.
     <value>Partager</value>
   </data>
   <data name="ImageOrientation_Mirrored" xml:space="preserve">
-    <value>Normal</value>
+    <value>Miroir</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
     <value>Effacer les fichiers</value>
@@ -568,7 +568,7 @@ SOFTWARE.
     <value>Récents</value>
   </data>
   <data name="ImageOrientation_Normal" xml:space="preserve">
-    <value>Miroir</value>
+    <value>Normal</value>
   </data>
   <data name="ImageEdit_Info_Dimensions.ToolTipService.ToolTip" xml:space="preserve">
     <value>Dimensions</value>

@@ -124,7 +124,7 @@
     <value>Dunkel</value>
   </data>
   <data name="AppTheme_Light" xml:space="preserve">
-    <value>Licht</value>
+    <value>Hell</value>
   </data>
   <data name="AppTheme_SystemDefault" xml:space="preserve">
     <value>Systemstandard verwenden</value>
@@ -331,13 +331,13 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
     <value>Bild horizontal spiegeln</value>
   </data>
   <data name="ImageEdit_FlipYButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Bild vertikal kippen</value>
+    <value>Bild vertikal spiegeln</value>
   </data>
   <data name="NewCaptureButton_Image.ToolTipService.ToolTip" xml:space="preserve">
     <value>Neue Aufnahme (Strg+N)</value>
   </data>
   <data name="ImageEdit_FlipYButton.Label" xml:space="preserve">
-    <value>Kippen</value>
+    <value>Vertikal spiegeln</value>
   </data>
   <data name="Settings_FullChangesWillTakeAffectLabel.Text" xml:space="preserve">
     <value>Änderungen werden nach dem Neustart übernommen.</value>
@@ -544,7 +544,7 @@ SOFTWARE.
     <value>Teilen</value>
   </data>
   <data name="ImageOrientation_Mirrored" xml:space="preserve">
-    <value>Normal</value>
+    <value>Gespiegelt</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
     <value>Dateien löschen</value>
@@ -568,7 +568,7 @@ SOFTWARE.
     <value>Zuletzt verwendet</value>
   </data>
   <data name="ImageOrientation_Normal" xml:space="preserve">
-    <value>Gespiegelt</value>
+    <value>Normal</value>
   </data>
   <data name="ImageEdit_Info_Dimensions.ToolTipService.ToolTip" xml:space="preserve">
     <value>Abmessungen</value>
