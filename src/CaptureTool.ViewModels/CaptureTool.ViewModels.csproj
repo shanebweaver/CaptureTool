@@ -3,6 +3,7 @@
   <!-- Package references -->
   <ItemGroup>
     <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>
 
   <!-- Project references -->

@@ -88,4 +88,78 @@ public class SettingsActionsTests
         restart.Verify(a => a.CanExecute(), Times.Once);
         restart.Verify(a => a.Execute(), Times.Once);
     }
+
+    [TestMethod]
+    public void ClearTemporaryFiles_ShouldDelegateToAction_WithProvidedPath()
+    {
+        var goBack = Fixture.Freeze<Mock<ISettingsGoBackAction>>();
+        var restart = Fixture.Freeze<Mock<ISettingsRestartAppAction>>();
+        var updateCopy = Fixture.Freeze<Mock<ISettingsUpdateImageAutoCopyAction>>();
+        var updateSave = Fixture.Freeze<Mock<ISettingsUpdateImageAutoSaveAction>>();
+        var updateLang = Fixture.Freeze<Mock<ISettingsUpdateAppLanguageAction>>();
+        var updateTheme = Fixture.Freeze<Mock<ISettingsUpdateAppThemeAction>>();
+        var changeFolder = Fixture.Freeze<Mock<ISettingsChangeScreenshotsFolderAction>>();
+        var openShots = Fixture.Freeze<Mock<ISettingsOpenScreenshotsFolderAction>>();
+        var openTemp = Fixture.Freeze<Mock<ISettingsOpenTempFolderAction>>();
+        var clearTemp = Fixture.Freeze<Mock<ISettingsClearTempFilesAction>>();
+        var restore = Fixture.Freeze<Mock<ISettingsRestoreDefaultsAction>>();
+
+        var tempPath = Fixture.Create<string>();
+        clearTemp.Setup(a => a.CanExecute(tempPath)).Returns(true);
+
+        var actions = new SettingsActions(
+            goBack.Object,
+            restart.Object,
+            updateCopy.Object,
+            updateSave.Object,
+            updateLang.Object,
+            updateTheme.Object,
+            changeFolder.Object,
+            openShots.Object,
+            openTemp.Object,
+            clearTemp.Object,
+            restore.Object);
+
+        actions.ClearTemporaryFiles(tempPath);
+
+        clearTemp.Verify(a => a.CanExecute(tempPath), Times.Once);
+        clearTemp.Verify(a => a.Execute(tempPath), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task RestoreDefaultSettingsAsync_ShouldDelegateToAsyncAction()
+    {
+        var goBack = Fixture.Freeze<Mock<ISettingsGoBackAction>>();
+        var restart = Fixture.Freeze<Mock<ISettingsRestartAppAction>>();
+        var updateCopy = Fixture.Freeze<Mock<ISettingsUpdateImageAutoCopyAction>>();
+        var updateSave = Fixture.Freeze<Mock<ISettingsUpdateImageAutoSaveAction>>();
+        var updateLang = Fixture.Freeze<Mock<ISettingsUpdateAppLanguageAction>>();
+        var updateTheme = Fixture.Freeze<Mock<ISettingsUpdateAppThemeAction>>();
+        var changeFolder = Fixture.Freeze<Mock<ISettingsChangeScreenshotsFolderAction>>();
+        var openShots = Fixture.Freeze<Mock<ISettingsOpenScreenshotsFolderAction>>();
+        var openTemp = Fixture.Freeze<Mock<ISettingsOpenTempFolderAction>>();
+        var clearTemp = Fixture.Freeze<Mock<ISettingsClearTempFilesAction>>();
+        var restore = Fixture.Freeze<Mock<ISettingsRestoreDefaultsAction>>();
+
+        restore.Setup(a => a.CanExecute()).Returns(true);
+        restore.Setup(a => a.ExecuteAsync()).Returns(Task.CompletedTask);
+
+        var actions = new SettingsActions(
+            goBack.Object,
+            restart.Object,
+            updateCopy.Object,
+            updateSave.Object,
+            updateLang.Object,
+            updateTheme.Object,
+            changeFolder.Object,
+            openShots.Object,
+            openTemp.Object,
+            clearTemp.Object,
+            restore.Object);
+
+        await actions.RestoreDefaultSettingsAsync(CancellationToken.None);
+
+        restore.Verify(a => a.CanExecute(), Times.Once);
+        restore.Verify(a => a.ExecuteAsync(), Times.Once);
+    }
 }
