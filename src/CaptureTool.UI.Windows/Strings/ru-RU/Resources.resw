@@ -361,7 +361,7 @@
     <value>Запись с экрана</value>
   </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
-    <value>Использовать системную тему</value>
+    <value>Использовать системный язык</value>
   </data>
   <data name="CaptureType_Rectangle" xml:space="preserve">
     <value>Прямоугольник</value>
@@ -544,7 +544,7 @@ SOFTWARE.
     <value>Поделиться</value>
   </data>
   <data name="ImageOrientation_Mirrored" xml:space="preserve">
-    <value>Нормально</value>
+    <value>Отражено</value>
   </data>
   <data name="Settings_TemporaryFolder_ClearButton.Text" xml:space="preserve">
     <value>Удалить файлы</value>
@@ -568,7 +568,7 @@ SOFTWARE.
     <value>Недавние</value>
   </data>
   <data name="ImageOrientation_Normal" xml:space="preserve">
-    <value>Отражено</value>
+    <value>Нормально</value>
   </data>
   <data name="ImageEdit_Info_Dimensions.ToolTipService.ToolTip" xml:space="preserve">
     <value>Размеры</value>
