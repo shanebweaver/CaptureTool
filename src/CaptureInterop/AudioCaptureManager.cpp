@@ -289,10 +289,17 @@ void AudioCaptureManager::CaptureLoop()
 
             if (FAILED(hr)) break;
 
-            // Calculate relative timestamp using shared recording start time
-            // This ensures audio and video use the same time base
-            LONGLONG qpcDelta = qpcPosition - g_recordingStartQPC;
-            LONGLONG relativeTimestamp = (qpcDelta * 10000000LL) / qpcFreq.QuadPart;
+            // Calculate relative timestamp using first audio sample as base
+            // This ensures audio timestamps start from 0, same as video
+            LONGLONG relativeTimestamp = 0;
+            if (m_firstAudioTimestamp == 0)
+            {
+                m_firstAudioTimestamp = qpcPosition;
+            }
+            
+            // Convert QPC delta to 100ns units
+            LONGLONG qpcDelta = qpcPosition - m_firstAudioTimestamp;
+            relativeTimestamp = (qpcDelta * 10000000LL) / qpcFreq.QuadPart;
 
             // Prepare sample data
             BYTE* sampleData = data;

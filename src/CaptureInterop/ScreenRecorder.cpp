@@ -13,6 +13,7 @@ static EventRegistrationToken g_frameArrivedEventToken;
 static MP4SinkWriter g_sinkWriter;
 static std::unique_ptr<AudioCaptureManager> g_audioCapture;
 LONGLONG g_recordingStartQPC = 0; // Shared QPC timestamp for synchronization (externally referenced)
+LONGLONG g_firstVideoSystemTime = 0; // First video frame's SystemRelativeTime for offset calculation
 
 // Exported API
 extern "C"
@@ -155,7 +156,8 @@ extern "C"
             g_framePool.reset();
         }
         
-        // Reset shared timestamp
+        // Reset shared timestamps
         g_recordingStartQPC = 0;
+        g_firstVideoSystemTime = 0;
     }
 }
