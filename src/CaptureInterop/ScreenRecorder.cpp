@@ -13,9 +13,6 @@ static EventRegistrationToken g_frameArrivedEventToken;
 static MP4SinkWriter g_sinkWriter;
 static std::unique_ptr<AudioCaptureManager> g_audioCapture;
 
-// Shared QPC timestamp used for synchronizing video frames with audio samples
-extern LONGLONG g_recordingStartQPC = 0;
-
 // Exported API
 extern "C"
 {
@@ -96,11 +93,6 @@ extern "C"
             if (g_audioCapture) g_audioCapture.reset();
             return false;
         }
-        
-        // Record start time for synchronization
-        LARGE_INTEGER qpc;
-        QueryPerformanceCounter(&qpc);
-        g_recordingStartQPC = qpc.QuadPart;
         
         g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter , &hr);
 

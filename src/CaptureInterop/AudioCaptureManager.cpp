@@ -204,9 +204,6 @@ void AudioCaptureManager::CaptureLoop()
         return;
     }
 
-    // Get shared recording start time for synchronization
-    extern LONGLONG g_recordingStartQPC;
-
     // Pre-allocate silent buffer to maximum expected size to avoid allocations in capture loop
     // Assuming max 48kHz stereo * 32-bit float * 1 second buffer = 384KB
     constexpr size_t MAX_BUFFER_SIZE = 48000 * 4 * 4; // 48kHz * 4 bytes/sample * stereo * safety margin
