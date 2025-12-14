@@ -289,12 +289,15 @@ void AudioCaptureManager::CaptureLoop()
 
             if (FAILED(hr)) break;
 
-            // Calculate relative timestamp using shared recording start QPC
-            // This ensures audio and video use the SAME clock domain (QPC)
-            // Both streams will have perfectly synchronized timestamps
-            extern LONGLONG g_recordingStartQPC;
+            // Calculate relative timestamp from first audio sample
+            // Convert QPC to 100ns units (Media Foundation standard)
+            // This makes audio timestamps comparable to video's SystemRelativeTime
+            if (m_firstAudioTimestamp == 0)
+            {
+                m_firstAudioTimestamp = qpcPosition;
+            }
             
-            LONGLONG qpcDelta = qpcPosition - g_recordingStartQPC;
+            LONGLONG qpcDelta = qpcPosition - m_firstAudioTimestamp;
             LONGLONG relativeTimestamp = (qpcDelta * 10000000LL) / qpcFreq.QuadPart;
 
             // Prepare sample data

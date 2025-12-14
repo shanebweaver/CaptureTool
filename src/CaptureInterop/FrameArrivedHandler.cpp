@@ -84,19 +84,19 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
-    // Use QPC for timestamp (same clock domain as audio)
-    // This is the ONLY correct way to ensure audio/video sync
-    extern LONGLONG g_recordingStartQPC;
+    // Use SystemRelativeTime directly - it's already in 100ns units and monotonic
+    // This is the capture timestamp from Windows.Graphics.Capture API
+    // It represents when the frame was actually captured by the GPU
+    TimeSpan timestamp;
+    hr = frame->get_SystemRelativeTime(&timestamp);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
     
-    LARGE_INTEGER qpc;
-    QueryPerformanceCounter(&qpc);
-    
-    LARGE_INTEGER qpcFreq;
-    QueryPerformanceFrequency(&qpcFreq);
-    
-    // Calculate relative timestamp in 100ns units (Media Foundation standard)
-    LONGLONG qpcDelta = qpc.QuadPart - g_recordingStartQPC;
-    LONGLONG relativeTimestamp = (qpcDelta * 10000000LL) / qpcFreq.QuadPart;
+    // timestamp.Duration is already in 100ns units (Media Foundation standard)
+    // and already relative to the start of the capture session
+    LONGLONG relativeTimestamp = timestamp.Duration;
 
     return m_sinkWriter->WriteFrame(texture.get(), relativeTimestamp);
 }

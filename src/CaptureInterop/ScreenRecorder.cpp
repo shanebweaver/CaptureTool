@@ -12,7 +12,7 @@ static wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool
 static EventRegistrationToken g_frameArrivedEventToken;
 static MP4SinkWriter g_sinkWriter;
 static std::unique_ptr<AudioCaptureManager> g_audioCapture;
-LONGLONG g_recordingStartQPC = 0; // Shared QPC timestamp for synchronization (externally referenced)
+// No shared timestamp base needed - video uses SystemRelativeTime, audio uses its own QPC base
 
 // Exported API
 extern "C"
@@ -95,10 +95,9 @@ extern "C"
             return false;
         }
         
-        // Store the recording start time for timestamp synchronization
-        LARGE_INTEGER qpc;
-        QueryPerformanceCounter(&qpc);
-        g_recordingStartQPC = qpc.QuadPart;
+        // No need to capture start time - each stream uses its own timeline
+        // Video: SystemRelativeTime (already relative, in 100ns units)
+        // Audio: QPC converted to relative time in AudioCaptureManager
         
         g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter , &hr);
 
