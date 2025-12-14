@@ -1,16 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Project properties -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <Platforms>x64;ARM64</Platforms>
+  </PropertyGroup>
+
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
     <ProjectReference Include="..\CaptureTool.Core.Interfaces\CaptureTool.Core.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Core.Implementations\CaptureTool.Core.Implementations.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domains.Capture.Implementations.Windows\CaptureTool.Domains.Capture.Implementations.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Domains.Capture.Interfaces\CaptureTool.Domains.Capture.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domains.Edit.Implementations.Windows\CaptureTool.Domains.Edit.Implementations.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Domains.Edit.Interfaces\CaptureTool.Domains.Edit.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Implementations.FeatureManagement\CaptureTool.Services.Implementations.FeatureManagement.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Implementations\CaptureTool.Services.Implementations.csproj" />
+    <ProjectReference Include="..\CaptureTool.Services.Implementations.Windows\CaptureTool.Services.Implementations.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
   </ItemGroup>
-
+	
   <!-- Package references -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />

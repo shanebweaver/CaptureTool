@@ -1,21 +1,9 @@
-﻿using CaptureTool.Core.Implementations.Actions.About;
-using CaptureTool.Core.Implementations.Actions.AddOns;
-using CaptureTool.Core.Implementations.Actions.CaptureOverlay;
-using CaptureTool.Core.Implementations.Actions.Error;
-using CaptureTool.Core.Implementations.Actions.VideoEdit;
-using CaptureTool.Core.Interfaces.Actions.About;
-using CaptureTool.Core.Interfaces.Actions.AddOns;
-using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
-using CaptureTool.Core.Interfaces.Actions.Error;
-using CaptureTool.Core.Interfaces.Actions.VideoEdit;
-using CaptureTool.Core.Implementations.Activation;
+﻿using CaptureTool.Core.Implementations.Activation;
 using CaptureTool.Core.Implementations.Capture;
+using CaptureTool.Core.Implementations.DependencyInjection;
 using CaptureTool.Core.Implementations.Navigation;
+using CaptureTool.Core.Implementations.Windows.DependencyInjection;
 using CaptureTool.Core.Interfaces.Navigation;
-using CaptureTool.Core.Implementations.Actions.Loading;
-using CaptureTool.Core.Interfaces.Actions.Loading;
-using CaptureTool.Core.Implementations.Actions.Home;
-using CaptureTool.Core.Interfaces.Actions.Home;
 using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Implementations.Windows;
@@ -58,8 +46,6 @@ using CaptureTool.Services.Interfaces.Windowing;
 using CaptureTool.ViewModels;
 using CaptureTool.ViewModels.Factories;
 using Microsoft.Extensions.DependencyInjection;
-using CaptureTool.Core.Interfaces.Actions.Settings;
-using CaptureTool.Core.Implementations.Actions.Settings;
 
 namespace CaptureTool.UI.Windows;
 
@@ -112,52 +98,16 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IAppNavigation, CaptureToolAppNavigation>();
 
         // Action handlers
-        collection.AddTransient<ICaptureOverlayCloseAction, CaptureOverlayCloseAction>();
-        collection.AddTransient<ICaptureOverlayGoBackAction, CaptureOverlayGoBackAction>();
-        collection.AddTransient<ICaptureOverlayToggleDesktopAudioAction, CaptureOverlayToggleDesktopAudioAction>();
-        collection.AddTransient<ICaptureOverlayStartVideoCaptureAction, CaptureOverlayStartVideoCaptureAction>();
-        collection.AddTransient<ICaptureOverlayStopVideoCaptureAction, CaptureOverlayStopVideoCaptureAction>();
-        collection.AddTransient<ICaptureOverlayActions, CaptureOverlayActions>();
-
-        // About actions
-        collection.AddTransient<IAboutGoBackAction, AboutGoBackAction>();
-        collection.AddTransient<IAboutActions, AboutActions>();
-
-        // AddOns actions
-        collection.AddTransient<IAddOnsGoBackAction, AddOnsGoBackAction>();
-        collection.AddTransient<IAddOnsActions, AddOnsActions>();
-
-        // Error actions
-        collection.AddTransient<IErrorRestartAppAction, ErrorRestartAppAction>();
-        collection.AddTransient<IErrorActions, ErrorActions>();
-
-        // Loading actions
-        collection.AddTransient<ILoadingGoBackAction, LoadingGoBackAction>();
-        collection.AddTransient<ILoadingActions, LoadingActions>();
-
-        // Home actions
-        collection.AddTransient<IHomeNewImageCaptureAction, HomeNewImageCaptureAction>();
-        collection.AddTransient<IHomeNewVideoCaptureAction, HomeNewVideoCaptureAction>();
-        collection.AddTransient<IHomeActions, HomeActions>();
-        
-        // Settings actions
-        collection.AddTransient<ISettingsGoBackAction, SettingsGoBackAction>();
-        collection.AddTransient<ISettingsRestartAppAction, SettingsRestartAppAction>();
-        collection.AddTransient<ISettingsUpdateImageAutoCopyAction, SettingsUpdateImageAutoCopyAction>();
-        collection.AddTransient<ISettingsUpdateImageAutoSaveAction, SettingsUpdateImageAutoSaveAction>();
-        collection.AddTransient<ISettingsUpdateAppLanguageAction, SettingsUpdateAppLanguageAction>();
-        collection.AddTransient<ISettingsUpdateAppThemeAction, SettingsUpdateAppThemeAction>();
-        collection.AddTransient<ISettingsChangeScreenshotsFolderAction, SettingsChangeScreenshotsFolderAction>();
-        collection.AddTransient<ISettingsOpenScreenshotsFolderAction, SettingsOpenScreenshotsFolderAction>();
-        collection.AddTransient<ISettingsOpenTempFolderAction, SettingsOpenTempFolderAction>();
-        collection.AddTransient<ISettingsClearTempFilesAction, SettingsClearTempFilesAction>();
-        collection.AddTransient<ISettingsRestoreDefaultsAction, SettingsRestoreDefaultsAction>();
-        collection.AddTransient<ISettingsActions, SettingsActions>();
-
-        // VideoEdit actions
-        collection.AddTransient<IVideoEditSaveAction, VideoEditSaveAction>();
-        collection.AddTransient<IVideoEditCopyAction, VideoEditCopyAction>();
-        collection.AddTransient<IVideoEditActions, VideoEditActions>();
+        collection
+            .AddCaptureOverlayActions()
+            .AddAboutActions()
+            .AddAddOnsActions()
+            .AddErrorActions()
+            .AddLoadingActions()
+            .AddHomeActions()
+            .AddSettingsActions()
+            .AddVideoEditActions()
+            .AddCoreWindowsSettingsActions();
 
         // ViewModels
         collection.AddTransient<MainWindowViewModel>();
