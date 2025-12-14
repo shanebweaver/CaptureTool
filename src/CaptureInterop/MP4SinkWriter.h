@@ -12,7 +12,7 @@ public:
     // Write a frame to the MP4 file
     HRESULT WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTicks);
 
-    // Write audio sample to the MP4 file
+    // Write audio sample to the MP4 file (non-blocking)
     HRESULT WriteAudioSample(BYTE* data, UINT32 dataSize, LONGLONG relativeTicks);
 
     // Finalize MP4 file

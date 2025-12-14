@@ -190,7 +190,15 @@ HRESULT MP4SinkWriter::WriteAudioSample(BYTE* data, UINT32 dataSize, LONGLONG re
 {
     if (!m_sinkWriter || !m_hasAudio || !data || dataSize == 0) return E_FAIL;
 
-    std::lock_guard<std::mutex> lock(m_writeMutex);
+    // Use try_lock to avoid blocking the audio capture thread
+    // If we can't get the lock immediately, skip this sample to prevent UI freezes
+    std::unique_lock<std::mutex> lock(m_writeMutex, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+        // Mutex is busy (video write in progress), skip this audio sample
+        // Missing a few audio samples is better than freezing the UI
+        return S_OK; // Return success to avoid error propagation
+    }
 
     HRESULT hr;
     wil::com_ptr<IMFMediaBuffer> buffer;
