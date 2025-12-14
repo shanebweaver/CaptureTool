@@ -4,5 +4,10 @@
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
   </ItemGroup>
+	
+  <!-- Package references -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
 
 </Project>

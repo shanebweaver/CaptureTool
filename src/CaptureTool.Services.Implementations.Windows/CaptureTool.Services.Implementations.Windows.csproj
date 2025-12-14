@@ -9,6 +9,7 @@
 
   <!-- Package references -->
   <ItemGroup>
+	<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 	<PackageReference Include="Microsoft.Services.Store.SDK" />
     <PackageReference Include="Microsoft.WindowsAppSDK" />
     <PackageReference Include="System.Drawing.Common" />

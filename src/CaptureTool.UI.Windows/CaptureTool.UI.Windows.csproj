@@ -83,7 +83,6 @@
 
   <!-- Publish profiles -->
   <ItemGroup>
-    <Folder Include="DependencyInjection\" />
     <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
 
