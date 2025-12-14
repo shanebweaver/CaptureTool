@@ -148,8 +148,5 @@ extern "C"
         {
             g_framePool.reset();
         }
-        
-        // Reset shared timestamp
-        g_recordingStartQPC = 0;
     }
 }
