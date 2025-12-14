@@ -1,16 +1,12 @@
 ﻿using CaptureTool.Core.Implementations.DependencyInjection;
 using CaptureTool.Core.Implementations.Windows.DependencyInjection;
-using CaptureTool.Domains.Capture.Implementations.Windows;
+using CaptureTool.Domains.Capture.Implementations.Windows.DependencyInjection;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Domains.Edit.Implementations.Windows;
-using CaptureTool.Domains.Edit.Implementations.Windows.ChromaKey;
-using CaptureTool.Domains.Edit.Interfaces;
-using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
+using CaptureTool.Domains.Edit.Implementations.Windows.DependencyInjection;
 using CaptureTool.Services.Implementations.DependencyInjection;
-using CaptureTool.Services.Implementations.FeatureManagement;
+using CaptureTool.Services.Implementations.FeatureManagement.DependencyInjection;
 using CaptureTool.Services.Implementations.Windows.DependencyInjection;
 using CaptureTool.Services.Interfaces;
-using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Navigation;
 using CaptureTool.Services.Interfaces.Themes;
@@ -30,7 +26,7 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         ServiceCollection collection = new();
 
         // Feature management
-        collection.AddSingleton<IFeatureManager, MicrosoftFeatureManager>();
+        collection.AddFeatureManagementServices();
 
         // Generic services
         collection.AddServiceServices();
@@ -43,11 +39,8 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddWindowsServices(App.Current.DispatcherQueue);
 
         // Windows domains
-        collection.AddSingleton<IScreenCapture, WindowsScreenCapture>();
-        collection.AddSingleton<IScreenRecorder, WindowsScreenRecorder>();
-        collection.AddSingleton<IChromaKeyService, Win2DChromaKeyService>();
-        collection.AddSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();
-        collection.AddSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
+        collection.AddWindowsCaptureDomains();
+        collection.AddWindowsEditDomains();
 
         // Action handlers
         collection
