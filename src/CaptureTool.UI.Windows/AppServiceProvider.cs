@@ -1,9 +1,5 @@
-﻿using CaptureTool.Core.Implementations.Activation;
-using CaptureTool.Core.Implementations.Capture;
-using CaptureTool.Core.Implementations.DependencyInjection;
-using CaptureTool.Core.Implementations.Navigation;
+﻿using CaptureTool.Core.Implementations.DependencyInjection;
 using CaptureTool.Core.Implementations.Windows.DependencyInjection;
-using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Implementations.Windows;
@@ -14,7 +10,6 @@ using CaptureTool.Services.Implementations.DependencyInjection;
 using CaptureTool.Services.Implementations.FeatureManagement;
 using CaptureTool.Services.Implementations.Windows.DependencyInjection;
 using CaptureTool.Services.Interfaces;
-using CaptureTool.Services.Interfaces.Activation;
 using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Navigation;
@@ -38,7 +33,11 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IFeatureManager, MicrosoftFeatureManager>();
 
         // Generic services
+        collection.AddServiceServices();
+
+        // Core services
         collection.AddCoreServices();
+        collection.AddCoreCaptureServices();
 
         // Windows services
         collection.AddWindowsServices(App.Current.DispatcherQueue);
@@ -49,12 +48,6 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddSingleton<IChromaKeyService, Win2DChromaKeyService>();
         collection.AddSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();
         collection.AddSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
-
-        // Core services
-        collection.AddSingleton<IActivationHandler, CaptureToolActivationHandler>();
-        collection.AddSingleton<IImageCaptureHandler, CaptureToolImageCaptureHandler>();
-        collection.AddSingleton<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
-        collection.AddSingleton<IAppNavigation, CaptureToolAppNavigation>();
 
         // Action handlers
         collection

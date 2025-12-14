@@ -16,7 +16,7 @@ namespace CaptureTool.Services.Implementations.DependencyInjection;
 
 public static class ServicesServiceCollectionExtensions
 {
-    public static IServiceCollection AddCoreServices(this IServiceCollection services)
+    public static IServiceCollection AddServiceServices(this IServiceCollection services)
     {
         services.AddSingleton<ICancellationService, CancellationService>();
         services.AddSingleton<IGlobalizationService, GlobalizationService>();

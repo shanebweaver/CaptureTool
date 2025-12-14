@@ -12,7 +12,7 @@ using CaptureTool.Services.Interfaces.Settings;
 using System.Collections.Specialized;
 using System.Web;
 
-namespace CaptureTool.Core.Implementations.Activation;
+namespace CaptureTool.Core.Implementations.Services.Activation;
 
 public sealed partial class CaptureToolActivationHandler : IActivationHandler
 {
