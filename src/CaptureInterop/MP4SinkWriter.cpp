@@ -86,7 +86,8 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
         hr = sinkWriter->AddStream(audioTypeOut.get(), &audioStreamIndex);
         if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
-        // Input type: PCM audio
+        // Input type: PCM audio (16-bit)
+        // Note: We convert float audio to 16-bit PCM in AudioCaptureManager if needed
         wil::com_ptr<IMFMediaType> audioTypeIn;
         hr = MFCreateMediaType(audioTypeIn.put());
         if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
@@ -95,9 +96,9 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
         audioTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
         audioTypeIn->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
         audioTypeIn->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
-        audioTypeIn->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, audioFormat->wBitsPerSample);
-        audioTypeIn->SetUINT32(MF_MT_AUDIO_BLOCK_ALIGNMENT, audioFormat->nBlockAlign);
-        audioTypeIn->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, audioFormat->nAvgBytesPerSec);
+        audioTypeIn->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16); // Always 16-bit PCM
+        audioTypeIn->SetUINT32(MF_MT_AUDIO_BLOCK_ALIGNMENT, audioFormat->nChannels * 2); // 2 bytes per sample
+        audioTypeIn->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, audioFormat->nSamplesPerSec * audioFormat->nChannels * 2);
 
         hr = sinkWriter->SetInputMediaType(audioStreamIndex, audioTypeIn.get(), nullptr);
         if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }

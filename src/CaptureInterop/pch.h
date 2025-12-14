@@ -28,6 +28,9 @@
 #include <mmdeviceapi.h>
 #include <audioclient.h>
 #include <functiondiscoverykeys_devpkey.h>
+#include <mmreg.h>
+#include <ks.h>
+#include <ksmedia.h>
 
 // Windows Implementation Library
 #include <wil/com.h>

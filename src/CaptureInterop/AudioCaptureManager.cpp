@@ -209,6 +209,24 @@ void AudioCaptureManager::CaptureLoop()
     constexpr size_t MAX_BUFFER_SIZE = 48000 * 4 * 4; // 48kHz * 4 bytes/sample * stereo * safety margin
     std::vector<BYTE> silentBuffer(MAX_BUFFER_SIZE, 0);
     
+    // Pre-allocate conversion buffer for float to PCM conversion
+    std::vector<BYTE> pcmBuffer(MAX_BUFFER_SIZE, 0);
+    
+    // Check if we need to convert float to PCM (WASAPI often returns float)
+    bool isFloatFormat = false;
+    if (m_audioFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT)
+    {
+        isFloatFormat = true;
+    }
+    else if (m_audioFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
+    {
+        WAVEFORMATEXTENSIBLE* formatEx = (WAVEFORMATEXTENSIBLE*)m_audioFormat;
+        if (IsEqualGUID(formatEx->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT))
+        {
+            isFloatFormat = true;
+        }
+    }
+    
     // Get QPC frequency once
     LARGE_INTEGER qpcFreq;
     QueryPerformanceFrequency(&qpcFreq);
@@ -300,8 +318,41 @@ void AudioCaptureManager::CaptureLoop()
                     continue;
                 }
             }
+            else if (isFloatFormat && data)
+            {
+                // Convert float32 to int16 PCM for proper audio encoding
+                // This is the KEY FIX for the static issue
+                const float* floatData = reinterpret_cast<const float*>(data);
+                int16_t* pcmData = reinterpret_cast<int16_t*>(pcmBuffer.data());
+                UINT32 numSamples = numFramesAvailable * m_audioFormat->nChannels;
+                UINT32 pcmDataSize = numSamples * sizeof(int16_t);
+                
+                if (pcmDataSize <= pcmBuffer.size())
+                {
+                    // Convert float [-1.0, 1.0] to int16 [-32768, 32767]
+                    for (UINT32 i = 0; i < numSamples; ++i)
+                    {
+                        float sample = floatData[i];
+                        // Clamp to valid range
+                        if (sample > 1.0f) sample = 1.0f;
+                        if (sample < -1.0f) sample = -1.0f;
+                        // Convert to 16-bit integer
+                        pcmData[i] = static_cast<int16_t>(sample * 32767.0f);
+                    }
+                    sampleData = pcmBuffer.data();
+                    dataSize = pcmDataSize;
+                }
+                else
+                {
+                    // Buffer too small, skip this packet
+                    m_captureClient->ReleaseBuffer(numFramesAvailable);
+                    hr = m_captureClient->GetNextPacketSize(&packetLength);
+                    if (FAILED(hr)) break;
+                    continue;
+                }
+            }
 
-            // Call the callback with audio data (silent or actual)
+            // Call the callback with audio data (silent, converted, or actual)
             // This maintains stream continuity and prevents gaps/static
             if (m_onAudioSample && numFramesAvailable > 0 && sampleData)
             {
