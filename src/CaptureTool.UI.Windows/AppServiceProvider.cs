@@ -1,18 +1,13 @@
 ﻿using CaptureTool.Core.Implementations.DependencyInjection;
 using CaptureTool.Core.Implementations.Windows.DependencyInjection;
 using CaptureTool.Domains.Capture.Implementations.Windows.DependencyInjection;
-using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Implementations.Windows.DependencyInjection;
 using CaptureTool.Services.Implementations.DependencyInjection;
 using CaptureTool.Services.Implementations.FeatureManagement.DependencyInjection;
 using CaptureTool.Services.Implementations.Windows.DependencyInjection;
-using CaptureTool.Services.Interfaces;
-using CaptureTool.Services.Interfaces.Localization;
-using CaptureTool.Services.Interfaces.Navigation;
-using CaptureTool.Services.Interfaces.Themes;
-using CaptureTool.Services.Interfaces.Windowing;
-using CaptureTool.ViewModels;
-using CaptureTool.ViewModels.Factories;
+using CaptureTool.UI.Windows.DependencyInjection;
+using CaptureTool.ViewModels.DependencyInjection;
+using CaptureTool.ViewModels.Factories.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.UI.Windows;
@@ -55,32 +50,13 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
             .AddCoreWindowsSettingsActions();
 
         // ViewModels
-        collection.AddTransient<MainWindowViewModel>();
-        collection.AddTransient<SelectionOverlayWindowViewModel>();
-        collection.AddTransient<ErrorPageViewModel>();
-        collection.AddTransient<AboutPageViewModel>();
-        collection.AddTransient<AddOnsPageViewModel>();
-        collection.AddTransient<HomePageViewModel>();
-        collection.AddTransient<SettingsPageViewModel>();
-        collection.AddTransient<LoadingPageViewModel>();
-        collection.AddTransient<ImageEditPageViewModel>();
-        collection.AddTransient<VideoEditPageViewModel>();
-        collection.AddTransient<AppMenuViewModel>();
-        collection.AddTransient<DiagnosticsViewModel>();
-        collection.AddTransient<SelectionOverlayHostViewModel>();
-        collection.AddTransient<CaptureOverlayViewModel>();
+        collection.AddViewModels();
 
         // ViewModel factories
-        collection.AddTransient<IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?>, AppLanguageViewModelFactory>();
-        collection.AddTransient<IFactoryServiceWithArgs<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
-        collection.AddTransient<IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode>, CaptureModeViewModelFactory>();
-        collection.AddTransient<IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType>, CaptureTypeViewModelFactory>();
-        collection.AddTransient<IFactoryServiceWithArgs<RecentCaptureViewModel, string>, RecentCaptureViewModelFactory>();
+        collection.AddViewModelFactories();
 
         // App specific handlers
-        collection.AddSingleton<AppNavigationHandler>();
-        collection.AddSingleton<INavigationHandler>(sp => sp.GetRequiredService<AppNavigationHandler>());
-        collection.AddSingleton<IWindowHandleProvider>(sp => sp.GetRequiredService<AppNavigationHandler>());
+        collection.AddAppWindowsServices();
 
         _serviceProvider = collection.BuildServiceProvider();
     }
