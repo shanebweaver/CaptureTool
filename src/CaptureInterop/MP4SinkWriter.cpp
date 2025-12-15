@@ -86,20 +86,12 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     }
 
     // Store audio format for later use (handle extended formats with cbSize > 0)
-    size_t formatSize = sizeof(WAVEFORMATEX) + audioFormat->cbSize;
-    if (formatSize > sizeof(WAVEFORMATEX))
-    {
-        // For extended formats, we only copy the base WAVEFORMATEX structure
-        // since m_audioFormat is just WAVEFORMATEX (not WAVEFORMATEXTENSIBLE)
-        memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
-    }
-    else
-    {
-        memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
-    }
+    // We only copy the base WAVEFORMATEX structure since m_audioFormat
+    // is WAVEFORMATEX (not WAVEFORMATEXTENSIBLE)
+    memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
 
-    // Output type: AAC
-    const UINT32 AAC_BITRATE = 20000; // 160 kbps (20000 bytes/sec * 8 bits/byte = 160000 bps)
+    // Output type: AAC at 160 kbps
+    const UINT32 AAC_BITRATE = 20000; // bytes per second (160000 bits per second / 8)
     wil::com_ptr<IMFMediaType> mediaTypeOut;
     HRESULT hr = MFCreateMediaType(mediaTypeOut.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
@@ -261,6 +253,8 @@ HRESULT MP4SinkWriter::WriteAudioSample(const BYTE* pData, UINT32 numFrames, LON
     if (m_prevAudioTimestamp > 0)
     {
         LONGLONG calculatedDuration = timestamp - m_prevAudioTimestamp;
+        // Use calculated duration if it's positive and less than 1 second
+        // (reject durations >= 1 second as they indicate timestamp discontinuity)
         if (calculatedDuration > 0 && calculatedDuration < TICKS_PER_SECOND)
         {
             duration = calculatedDuration;
