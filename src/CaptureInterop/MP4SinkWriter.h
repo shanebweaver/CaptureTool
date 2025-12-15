@@ -12,6 +12,12 @@ public:
     // Initialize audio stream (call after Initialize, before BeginWriting if audio is needed)
     bool InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* outHr = nullptr);
 
+    // Set the recording start time (in QPC ticks) for synchronization
+    void SetRecordingStartTime(LONGLONG qpcStart);
+    
+    // Get the recording start time (in QPC ticks)
+    LONGLONG GetRecordingStartTime() const { return m_recordingStartQpc; }
+
     // Write a frame to the MP4 file
     HRESULT WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTicks);
 
@@ -38,5 +44,6 @@ private:
     ID3D11DeviceContext* m_context = nullptr;
     LONGLONG m_prevVideoTimestamp = 0;
     LONGLONG m_prevAudioTimestamp = 0;
+    LONGLONG m_recordingStartQpc = 0;  // Common start time for synchronization (QPC ticks)
     WAVEFORMATEX m_audioFormat = {};
 };

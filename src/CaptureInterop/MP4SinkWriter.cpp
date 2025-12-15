@@ -8,6 +8,11 @@ MP4SinkWriter::~MP4SinkWriter()
     Finalize();
 }
 
+void MP4SinkWriter::SetRecordingStartTime(LONGLONG qpcStart)
+{
+    m_recordingStartQpc = qpcStart;
+}
+
 bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, UINT32 width, UINT32 height, HRESULT* outHr)
 {
     if (outHr) *outHr = S_OK;

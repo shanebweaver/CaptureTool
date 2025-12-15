@@ -30,10 +30,32 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
         return false;
     }
 
-    // Get the starting QPC timestamp
-    LARGE_INTEGER qpc;
-    QueryPerformanceCounter(&qpc);
-    m_startQpc = qpc.QuadPart;
+    // If we have a sink writer, use its recording start time for synchronization
+    // Otherwise, record our own start time (for cases without video)
+    if (m_sinkWriter)
+    {
+        LONGLONG sinkStartTime = m_sinkWriter->GetRecordingStartTime();
+        if (sinkStartTime != 0)
+        {
+            // Use existing recording start time from sink writer
+            m_startQpc = sinkStartTime;
+        }
+        else
+        {
+            // Set the recording start time on the sink writer
+            LARGE_INTEGER qpc;
+            QueryPerformanceCounter(&qpc);
+            m_startQpc = qpc.QuadPart;
+            m_sinkWriter->SetRecordingStartTime(m_startQpc);
+        }
+    }
+    else
+    {
+        // No sink writer, use local start time
+        LARGE_INTEGER qpc;
+        QueryPerformanceCounter(&qpc);
+        m_startQpc = qpc.QuadPart;
+    }
 
     m_isRunning = true;
     m_captureThread = std::thread(&AudioCaptureHandler::CaptureThreadProc, this);
