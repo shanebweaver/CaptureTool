@@ -93,7 +93,6 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
 
     // Phase 3: Use common QPC-based time base for synchronization
     static LONGLONG firstFrameSystemTime = 0;
-    static bool hasSetStartTime = false;
     
     if (firstFrameSystemTime == 0)
     {
@@ -102,13 +101,9 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         
         // Set the recording start time on the sink writer for audio synchronization
         // We use the current QPC time as the common start point
-        if (!hasSetStartTime)
-        {
-            LARGE_INTEGER qpc;
-            QueryPerformanceCounter(&qpc);
-            m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
-            hasSetStartTime = true;
-        }
+        LARGE_INTEGER qpc;
+        QueryPerformanceCounter(&qpc);
+        m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
     }
     
     // Calculate relative timestamp in 100-nanosecond units
