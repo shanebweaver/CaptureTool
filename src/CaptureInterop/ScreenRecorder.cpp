@@ -73,12 +73,7 @@ extern "C"
         if (captureAudio)
         {
             // Initialize audio capture device (true = loopback mode for system audio)
-            if (!g_audioHandler.Initialize(true, &hr))
-            {
-                // Audio initialization failed, but we can continue with video-only
-                audioEnabled = false;
-            }
-            else
+            if (g_audioHandler.Initialize(true, &hr))
             {
                 // Initialize audio stream on sink writer
                 WAVEFORMATEX* audioFormat = g_audioHandler.GetFormat();
@@ -96,7 +91,7 @@ extern "C"
             }
         }
         
-        g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter , &hr);
+        g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter, &hr);
 
         hr = g_session->StartCapture();
         if (FAILED(hr))
