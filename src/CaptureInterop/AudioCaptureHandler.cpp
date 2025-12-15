@@ -89,7 +89,10 @@ void AudioCaptureHandler::CaptureThreadProc()
             // Write audio sample to MP4SinkWriter if available and not silent
             if (m_sinkWriter && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
             {
-                m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
+                HRESULT hr = m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
+                // Note: We don't fail on audio write errors to avoid stopping the entire capture
+                // Audio frames may be dropped, but video capture continues
+                (void)hr; // Explicitly ignore return value after checking
             }
 
             m_device.ReleaseBuffer(framesRead);

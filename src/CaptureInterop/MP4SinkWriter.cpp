@@ -85,9 +85,11 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
         return false;
     }
 
-    // Store audio format for later use (handle extended formats with cbSize > 0)
-    // We only copy the base WAVEFORMATEX structure since m_audioFormat
-    // is WAVEFORMATEX (not WAVEFORMATEXTENSIBLE)
+    // Store audio format for later use
+    // Note: We only copy the base WAVEFORMATEX structure, not extended format data.
+    // This is intentional - m_audioFormat is WAVEFORMATEX (not WAVEFORMATEXTENSIBLE),
+    // and we only need the basic format info (sample rate, channels, bits per sample).
+    // Media Foundation handles any extended format conversion automatically.
     memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
 
     // Output type: AAC at 160 kbps
@@ -101,6 +103,7 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, AAC_BITRATE);
+    // AAC output is always 16-bit; Media Foundation handles conversion from input format
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
 
     DWORD audioStreamIndex = 0;
