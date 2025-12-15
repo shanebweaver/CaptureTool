@@ -30,6 +30,7 @@ private:
     DWORD m_videoStreamIndex = 0;
     DWORD m_audioStreamIndex = 0;
     bool m_hasAudioStream = false;
+    bool m_hasBegunWriting = false;
     UINT64 m_frameIndex = 0;
     UINT32 m_width = 0;
     UINT32 m_height = 0;

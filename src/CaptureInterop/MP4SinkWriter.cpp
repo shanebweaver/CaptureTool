@@ -85,10 +85,21 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
         return false;
     }
 
-    // Store audio format for later use
-    memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
+    // Store audio format for later use (handle extended formats with cbSize > 0)
+    size_t formatSize = sizeof(WAVEFORMATEX) + audioFormat->cbSize;
+    if (formatSize > sizeof(WAVEFORMATEX))
+    {
+        // For extended formats, we only copy the base WAVEFORMATEX structure
+        // since m_audioFormat is just WAVEFORMATEX (not WAVEFORMATEXTENSIBLE)
+        memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
+    }
+    else
+    {
+        memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
+    }
 
     // Output type: AAC
+    const UINT32 AAC_BITRATE = 20000; // 160 kbps (20000 bytes/sec * 8 bits/byte = 160000 bps)
     wil::com_ptr<IMFMediaType> mediaTypeOut;
     HRESULT hr = MFCreateMediaType(mediaTypeOut.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
@@ -97,7 +108,7 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     mediaTypeOut->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_AAC);
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
-    mediaTypeOut->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, 20000); // 160 kbps
+    mediaTypeOut->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, AAC_BITRATE);
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
 
     DWORD audioStreamIndex = 0;
@@ -126,6 +137,7 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     // Now that all streams are added, begin writing
     hr = m_sinkWriter->BeginWriting();
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+    m_hasBegunWriting = true;
 
     if (outHr) *outHr = S_OK;
     return true;
@@ -136,12 +148,11 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTic
     if (!texture || !m_sinkWriter) return E_FAIL;
 
     // If we don't have audio and haven't started writing yet, begin now
-    static bool hasBegunWriting = false;
-    if (!hasBegunWriting && !m_hasAudioStream)
+    if (!m_hasBegunWriting && !m_hasAudioStream)
     {
         HRESULT hr = m_sinkWriter->BeginWriting();
         if (FAILED(hr)) return hr;
-        hasBegunWriting = true;
+        m_hasBegunWriting = true;
     }
 
     // Copy to staging for CPU read
