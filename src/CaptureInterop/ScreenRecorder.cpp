@@ -69,13 +69,14 @@ extern "C"
         }
         
         // Phase 4: Initialize and start audio capture if requested
+        bool audioEnabled = false;  // Track actual audio capture state
         if (captureAudio)
         {
             // Initialize audio capture device (true = loopback mode for system audio)
             if (!g_audioHandler.Initialize(true, &hr))
             {
                 // Audio initialization failed, but we can continue with video-only
-                captureAudio = false;
+                audioEnabled = false;
             }
             else
             {
@@ -87,16 +88,10 @@ extern "C"
                     g_audioHandler.SetSinkWriter(&g_sinkWriter);
                     
                     // Start audio capture
-                    if (!g_audioHandler.Start(&hr))
+                    if (g_audioHandler.Start(&hr))
                     {
-                        // Audio start failed, continue with video-only
-                        captureAudio = false;
+                        audioEnabled = true;
                     }
-                }
-                else
-                {
-                    // Audio stream initialization failed, continue with video-only
-                    captureAudio = false;
                 }
             }
         }
@@ -107,7 +102,7 @@ extern "C"
         if (FAILED(hr))
         {
             // If video capture fails, stop audio if it was started
-            if (captureAudio)
+            if (audioEnabled)
             {
                 g_audioHandler.Stop();
             }
