@@ -121,7 +121,22 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     mediaTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-    mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+    
+    // Check if audio format is float or PCM
+    // WASAPI often returns float format, which needs to be specified correctly
+    if (audioFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT || 
+        (audioFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE && 
+         audioFormat->wBitsPerSample == 32))
+    {
+        // Float audio format
+        mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
+    }
+    else
+    {
+        // PCM audio format
+        mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+    }
+    
     mediaTypeIn->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
     mediaTypeIn->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
     mediaTypeIn->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, audioFormat->wBitsPerSample);
