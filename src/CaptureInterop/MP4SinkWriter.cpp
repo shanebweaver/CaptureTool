@@ -115,7 +115,7 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     hr = m_sinkWriter->AddStream(mediaTypeOut.get(), &audioStreamIndex);
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
-    // Input type: PCM (from WASAPI)
+    // Input type: PCM or Float (from WASAPI)
     wil::com_ptr<IMFMediaType> mediaTypeIn;
     hr = MFCreateMediaType(mediaTypeIn.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
@@ -124,16 +124,29 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     
     // Check if audio format is float or PCM
     // WASAPI often returns float format, which needs to be specified correctly
-    if (audioFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT || 
-        (audioFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE && 
-         audioFormat->wBitsPerSample == 32))
+    bool isFloatFormat = false;
+    
+    if (audioFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT)
     {
-        // Float audio format
+        // Direct float format
+        isFloatFormat = true;
+    }
+    else if (audioFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
+    {
+        // Extended format - check the SubFormat GUID
+        WAVEFORMATEXTENSIBLE* pFormatEx = reinterpret_cast<WAVEFORMATEXTENSIBLE*>(audioFormat);
+        if (IsEqualGUID(pFormatEx->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT))
+        {
+            isFloatFormat = true;
+        }
+    }
+    
+    if (isFloatFormat)
+    {
         mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
     }
     else
     {
-        // PCM audio format
         mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
     }
     
