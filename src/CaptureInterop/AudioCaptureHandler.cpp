@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "AudioCaptureHandler.h"
+#include "MP4SinkWriter.h"
 
 AudioCaptureHandler::AudioCaptureHandler()
 {
@@ -85,12 +86,11 @@ void AudioCaptureHandler::CaptureThreadProc()
             LONGLONG relativeQpc = qpcPosition - m_startQpc;
             LONGLONG timestamp = (relativeQpc * 10000000) / m_qpcFrequency.QuadPart;
 
-            // TODO Phase 2: Write audio sample to MP4SinkWriter
-            // For now, just release the buffer
-            // if (m_sinkWriter && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
-            // {
-            //     m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
-            // }
+            // Write audio sample to MP4SinkWriter if available and not silent
+            if (m_sinkWriter && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
+            {
+                m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
+            }
 
             m_device.ReleaseBuffer(framesRead);
         }
