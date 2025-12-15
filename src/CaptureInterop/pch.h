@@ -24,8 +24,18 @@
 #include <mfreadwrite.h>
 #include <mferror.h>
 
+// Audio Capture (WASAPI)
+#include <mmdeviceapi.h>
+#include <audioclient.h>
+#include <functiondiscoverykeys_devpkey.h>
+
 // Windows Implementation Library
 #include <wil/com.h>
+
+// Standard Library
+#include <thread>
+#include <atomic>
+#include <mutex>
 
 // Windows ABI
 #include <windows.foundation.h>
