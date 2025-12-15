@@ -90,11 +90,29 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
         return false;
     }
 
+    // Detect audio format type before storing
+    // WASAPI often returns float format, which needs to be specified correctly
+    bool isFloatFormat = false;
+    
+    if (audioFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT)
+    {
+        // Direct float format
+        isFloatFormat = true;
+    }
+    else if (audioFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
+    {
+        // Extended format - check the SubFormat GUID
+        WAVEFORMATEXTENSIBLE* pFormatEx = reinterpret_cast<WAVEFORMATEXTENSIBLE*>(audioFormat);
+        if (IsEqualGUID(pFormatEx->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT))
+        {
+            isFloatFormat = true;
+        }
+    }
+    
     // Store audio format for later use
     // Note: We only copy the base WAVEFORMATEX structure, not extended format data.
-    // This is intentional - m_audioFormat is WAVEFORMATEX (not WAVEFORMATEXTENSIBLE),
-    // and we only need the basic format info (sample rate, channels, bits per sample).
-    // Media Foundation handles any extended format conversion automatically.
+    // This is sufficient since we've already detected the format type above
+    // and will use that information when configuring Media Foundation.
     memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
 
     // Output type: AAC at 160 kbps
@@ -122,25 +140,7 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
 
     mediaTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
     
-    // Check if audio format is float or PCM
-    // WASAPI often returns float format, which needs to be specified correctly
-    bool isFloatFormat = false;
-    
-    if (audioFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT)
-    {
-        // Direct float format
-        isFloatFormat = true;
-    }
-    else if (audioFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
-    {
-        // Extended format - check the SubFormat GUID
-        WAVEFORMATEXTENSIBLE* pFormatEx = reinterpret_cast<WAVEFORMATEXTENSIBLE*>(audioFormat);
-        if (IsEqualGUID(pFormatEx->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT))
-        {
-            isFloatFormat = true;
-        }
-    }
-    
+    // Use the format type we detected earlier
     if (isFloatFormat)
     {
         mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
