@@ -93,27 +93,27 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
 
     // Phase 3: Use common QPC-based time base for synchronization
     static LONGLONG firstFrameSystemTime = 0;
-    static LONGLONG firstFrameQpc = 0;
-    static LARGE_INTEGER qpcFrequency = {};
+    static bool hasSetStartTime = false;
     
     if (firstFrameSystemTime == 0)
     {
         // First frame - establish the time base
         firstFrameSystemTime = timestamp.Duration;
         
-        LARGE_INTEGER qpc;
-        QueryPerformanceCounter(&qpc);
-        firstFrameQpc = qpc.QuadPart;
-        QueryPerformanceFrequency(&qpcFrequency);
-        
         // Set the recording start time on the sink writer for audio synchronization
-        m_sinkWriter->SetRecordingStartTime(firstFrameQpc);
+        // We use the current QPC time as the common start point
+        if (!hasSetStartTime)
+        {
+            LARGE_INTEGER qpc;
+            QueryPerformanceCounter(&qpc);
+            m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
+            hasSetStartTime = true;
+        }
     }
     
     // Calculate relative timestamp in 100-nanosecond units
-    // Convert frame's SystemRelativeTime to elapsed time, then add to our QPC base
-    LONGLONG elapsedSinceFirstFrame = timestamp.Duration - firstFrameSystemTime;
-    LONGLONG relativeTimestamp = elapsedSinceFirstFrame;
+    // Frame's SystemRelativeTime is already in 100ns units, so we just need the elapsed time
+    LONGLONG relativeTimestamp = timestamp.Duration - firstFrameSystemTime;
 
     return m_sinkWriter->WriteFrame(texture.get(), relativeTimestamp);
 }
