@@ -131,26 +131,27 @@ void AudioCaptureHandler::CaptureThreadProc()
                 continue;
             }
             
-            // Use accumulated timestamp to prevent overlapping samples
-            // This is crucial: using wall clock time would create overlaps since
-            // the capture loop runs faster (1-2ms) than audio buffer duration (10ms)
-            LONGLONG timestamp = m_nextAudioTimestamp;
-            
-            // Calculate duration based on actual audio frame count
-            // This gives the exact playback duration of this sample
-            const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
-            LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
-            
-            // Advance timestamp for next sample (creates sequential, non-overlapping timeline)
-            m_nextAudioTimestamp += duration;
-
             // Write audio sample to MP4 sink writer (if configured, enabled, and not silent)
             if (m_sinkWriter && m_isEnabled && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
             {
+                // Use accumulated timestamp to prevent overlapping samples
+                // This is crucial: using wall clock time would create overlaps since
+                // the capture loop runs faster (1-2ms) than audio buffer duration (10ms)
+                LONGLONG timestamp = m_nextAudioTimestamp;
+                
+                // Calculate duration based on actual audio frame count
+                // This gives the exact playback duration of this sample
+                const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
+                LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
+                
                 HRESULT hr = m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
                 // Don't fail on write errors - allow video capture to continue
                 // Audio frames may be dropped, but recording doesn't stop
                 (void)hr;
+                
+                // Advance timestamp for next sample (creates sequential, non-overlapping timeline)
+                // Only advance when we actually write audio to prevent timeline gaps
+                m_nextAudioTimestamp += duration;
             }
 
             m_device.ReleaseBuffer(framesRead);
