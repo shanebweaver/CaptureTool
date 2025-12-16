@@ -30,7 +30,7 @@ jobs:
       run: dotnet restore
 
     - name: Build solution
-      run: msbuild CaptureTool.sln /p:Configuration=Release /p:Platform=x64
+      run: msbuild CaptureTool.slnx /p:Configuration=Release /p:Platform=x64
 
     - name: Run .NET tests
       run: |
