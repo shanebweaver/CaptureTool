@@ -149,8 +149,9 @@ void AudioCaptureHandler::CaptureThreadProc()
                     m_nextAudioTimestamp = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
                     m_wasDisabled = false;
                     
-                    // Skip this first sample after re-enabling to avoid potential timestamp issues
-                    // The buffer might contain old data from when audio was disabled
+                    // Skip this first sample after re-enabling to prevent encoder blocking
+                    // The WASAPI buffer may contain stale audio data captured while disabled,
+                    // which would cause timestamp mismatches and block the Media Foundation encoder
                     m_device.ReleaseBuffer(framesRead);
                     continue;
                 }
