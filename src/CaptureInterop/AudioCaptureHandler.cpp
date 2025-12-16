@@ -131,6 +131,8 @@ void AudioCaptureHandler::CaptureThreadProc()
                 continue;
             }
             
+            const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
+            
             // Write audio sample to MP4 sink writer (if configured, enabled, and not silent)
             if (m_sinkWriter && m_isEnabled && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
             {
@@ -144,7 +146,7 @@ void AudioCaptureHandler::CaptureThreadProc()
                     LONGLONG elapsedQpc = currentQpc - m_startQpc;
                     
                     // Convert QPC ticks to 100ns units (Media Foundation time)
-                    m_nextAudioTimestamp = (elapsedQpc * 10000000LL) / m_qpcFrequency.QuadPart;
+                    m_nextAudioTimestamp = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
                     m_wasDisabled = false;
                 }
                 
@@ -155,7 +157,6 @@ void AudioCaptureHandler::CaptureThreadProc()
                 
                 // Calculate duration based on actual audio frame count
                 // This gives the exact playback duration of this sample
-                const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
                 LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
                 
                 HRESULT hr = m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
