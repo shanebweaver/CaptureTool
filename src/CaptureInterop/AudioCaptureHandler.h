@@ -54,6 +54,19 @@ public:
     /// <param name="sinkWriter">Pointer to the MP4SinkWriter instance.</param>
     void SetSinkWriter(MP4SinkWriter* sinkWriter) { m_sinkWriter = sinkWriter; }
 
+    /// <summary>
+    /// Enable or disable audio capture writing.
+    /// When disabled, audio samples are still captured but not written to the output.
+    /// </summary>
+    /// <param name="enabled">True to enable audio writing, false to mute.</param>
+    void SetEnabled(bool enabled) { m_isEnabled = enabled; }
+
+    /// <summary>
+    /// Check if audio capture writing is enabled.
+    /// </summary>
+    /// <returns>True if enabled, false if muted.</returns>
+    bool IsEnabled() const { return m_isEnabled; }
+
 private:
     /// <summary>
     /// Audio capture thread procedure.
@@ -67,6 +80,7 @@ private:
     
     std::thread m_captureThread;
     std::atomic<bool> m_isRunning{false};
+    std::atomic<bool> m_isEnabled{true};        // Controls whether audio is written to output
     
     LONGLONG m_startQpc = 0;                    // QPC value at recording start (for synchronization)
     LARGE_INTEGER m_qpcFrequency{};             // QPC frequency for time calculations

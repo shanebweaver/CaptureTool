@@ -9,6 +9,7 @@ public partial interface IVideoCaptureHandler
 
     bool IsDesktopAudioEnabled { get; }
     void SetIsDesktopAudioEnabled(bool value);
+    void ToggleDesktopAudioCapture(bool enabled);
 
     void StartVideoCapture(NewCaptureArgs args);
     IVideoFile StopVideoCapture();

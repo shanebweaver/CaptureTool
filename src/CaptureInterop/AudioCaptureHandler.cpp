@@ -144,8 +144,8 @@ void AudioCaptureHandler::CaptureThreadProc()
             // Advance timestamp for next sample (creates sequential, non-overlapping timeline)
             m_nextAudioTimestamp += duration;
 
-            // Write audio sample to MP4 sink writer (if configured and not silent)
-            if (m_sinkWriter && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
+            // Write audio sample to MP4 sink writer (if configured, enabled, and not silent)
+            if (m_sinkWriter && m_isEnabled && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
             {
                 HRESULT hr = m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
                 // Don't fail on write errors - allow video capture to continue

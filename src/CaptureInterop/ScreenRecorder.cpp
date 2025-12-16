@@ -137,4 +137,9 @@ extern "C"
             g_framePool.reset();
         }
     }
+
+    __declspec(dllexport) void TryToggleAudioCapture(bool enabled)
+    {
+        g_audioHandler.SetEnabled(enabled);
+    }
 }

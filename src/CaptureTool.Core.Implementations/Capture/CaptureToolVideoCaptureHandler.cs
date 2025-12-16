@@ -84,4 +84,12 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         IsDesktopAudioEnabled = value;
         DesktopAudioStateChanged?.Invoke(this, value);
     }
+
+    public void ToggleDesktopAudioCapture(bool enabled)
+    {
+        if (isRecording)
+        {
+            _screenRecorder.ToggleAudioCapture(enabled);
+        }
+    }
 }

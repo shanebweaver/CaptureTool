@@ -12,4 +12,6 @@ public partial class WindowsScreenRecorder : IScreenRecorder
     public void PauseRecording() => CaptureInterop.TryPauseRecording();
 
     public void StopRecording() => CaptureInterop.TryStopRecording();
+
+    public void ToggleAudioCapture(bool enabled) => CaptureInterop.TryToggleAudioCapture(enabled);
 }
