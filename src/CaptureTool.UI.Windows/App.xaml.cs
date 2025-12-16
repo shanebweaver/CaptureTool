@@ -13,8 +13,6 @@ public partial class App : Application
     internal AppServiceProvider ServiceProvider { get; }
     internal DispatcherQueue DispatcherQueue { get; }
 
-    private readonly KeepAlive _keepAlive;
-
     public App()
     {
         UnhandledException += App_UnhandledException;
@@ -22,10 +20,6 @@ public partial class App : Application
         ServiceProvider = new();
         InitializeComponent();
         RestoreAppTheme();
-        // KeepAlive is not explicitly disposed. The WinUI framework handles cleanup
-        // during its natural shutdown sequence. Explicit disposal causes Win32 exception
-        // 0xc000027b due to blocking .Wait() call on async shutdown operation.
-        _keepAlive = new KeepAlive();
     }
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
