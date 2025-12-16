@@ -123,7 +123,13 @@ void AudioCaptureHandler::CaptureThreadProc()
             // The qpcPosition from WASAPI represents when audio was captured by device,
             // which can be in the past (buffered), causing audio to speed up
             LARGE_INTEGER currentQpc;
-            QueryPerformanceCounter(&currentQpc);
+            if (!QueryPerformanceCounter(&currentQpc))
+            {
+                // QueryPerformanceCounter failed, skip this sample
+                m_device.ReleaseBuffer(framesRead);
+                continue;
+            }
+            
             LONGLONG relativeQpc = currentQpc.QuadPart - m_startQpc;
             LONGLONG timestamp = (relativeQpc * 10000000) / m_qpcFrequency.QuadPart;
 
