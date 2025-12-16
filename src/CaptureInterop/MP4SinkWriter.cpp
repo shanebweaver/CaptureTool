@@ -283,19 +283,9 @@ HRESULT MP4SinkWriter::WriteAudioSample(const BYTE* pData, UINT32 numFrames, LON
     sample->SetSampleTime(timestamp);
 
     // Calculate duration based on number of frames and sample rate
+    // This is the actual duration of the audio data, not the time between captures
     const LONGLONG TICKS_PER_SECOND = 10000000LL;
     LONGLONG duration = (numFrames * TICKS_PER_SECOND) / m_audioFormat.nSamplesPerSec;
-    
-    if (m_prevAudioTimestamp > 0)
-    {
-        LONGLONG calculatedDuration = timestamp - m_prevAudioTimestamp;
-        // Use calculated duration if it's positive and less than 1 second
-        // (reject durations >= 1 second as they indicate timestamp discontinuity)
-        if (calculatedDuration > 0 && calculatedDuration < TICKS_PER_SECOND)
-        {
-            duration = calculatedDuration;
-        }
-    }
     
     sample->SetSampleDuration(duration);
     m_prevAudioTimestamp = timestamp;
