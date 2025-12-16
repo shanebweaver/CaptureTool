@@ -60,6 +60,9 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
         m_startQpc = qpc.QuadPart;
     }
 
+    // Reset audio timestamp counter
+    m_nextAudioTimestamp = 0;
+
     m_isRunning = true;
     m_captureThread = std::thread(&AudioCaptureHandler::CaptureThreadProc, this);
 
@@ -118,20 +121,18 @@ void AudioCaptureHandler::CaptureThreadProc()
 
         if (framesRead > 0)
         {
-            // Calculate relative timestamp in 100-nanosecond units
-            // Use current QPC time instead of device position for better synchronization
-            // The qpcPosition from WASAPI represents when audio was captured by device,
-            // which can be in the past (buffered), causing audio to speed up
-            LARGE_INTEGER currentQpc;
-            if (!QueryPerformanceCounter(&currentQpc))
-            {
-                // QueryPerformanceCounter failed, skip this sample
-                m_device.ReleaseBuffer(framesRead);
-                continue;
-            }
+            // Use accumulated timestamp based on audio samples written, not wall clock time
+            // This prevents overlapping audio samples which would cause speedup
+            LONGLONG timestamp = m_nextAudioTimestamp;
             
-            LONGLONG relativeQpc = currentQpc.QuadPart - m_startQpc;
-            LONGLONG timestamp = (relativeQpc * 10000000) / m_qpcFrequency.QuadPart;
+            // Calculate duration for this sample
+            const LONGLONG TICKS_PER_SECOND = 10000000LL;
+            WAVEFORMATEX* format = m_device.GetFormat();
+            if (format)
+            {
+                LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
+                m_nextAudioTimestamp += duration;  // Advance for next sample
+            }
 
             // Write audio sample to MP4SinkWriter if available and not silent
             // Note: We still process silent frames but Media Foundation might optimize them

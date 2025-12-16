@@ -41,4 +41,5 @@ private:
     
     LONGLONG m_startQpc = 0;
     LARGE_INTEGER m_qpcFrequency{};
+    LONGLONG m_nextAudioTimestamp = 0;  // Track expected timestamp based on audio written
 };
