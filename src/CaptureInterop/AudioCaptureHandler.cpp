@@ -176,20 +176,21 @@ void AudioCaptureHandler::CaptureThreadProc()
                 BYTE* pAudioData = pData;
                 if (!m_isEnabled)
                 {
-                    // Allocate and zero-fill a buffer for silent audio
+                    // Reuse or resize silent buffer for efficiency
                     UINT32 bufferSize = framesRead * format->nBlockAlign;
-                    BYTE* silentBuffer = new BYTE[bufferSize];
-                    memset(silentBuffer, 0, bufferSize);
-                    pAudioData = silentBuffer;
+                    if (m_silentBuffer.size() < bufferSize)
+                    {
+                        m_silentBuffer.resize(bufferSize, 0);
+                    }
+                    else
+                    {
+                        // Zero out the buffer for reuse
+                        memset(m_silentBuffer.data(), 0, bufferSize);
+                    }
+                    pAudioData = m_silentBuffer.data();
                 }
                 
                 HRESULT hr = m_sinkWriter->WriteAudioSample(pAudioData, framesRead, timestamp);
-                
-                // Free silent buffer if we allocated it
-                if (!m_isEnabled && pAudioData != pData)
-                {
-                    delete[] pAudioData;
-                }
                 
                 // If write fails, stop trying to write more samples to prevent blocking
                 if (FAILED(hr))
