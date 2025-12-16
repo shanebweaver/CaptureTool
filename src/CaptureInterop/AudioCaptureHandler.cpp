@@ -133,8 +133,8 @@ void AudioCaptureHandler::CaptureThreadProc()
             
             const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
             
-            // Write audio sample to MP4 sink writer (if configured, enabled, and not silent)
-            if (m_sinkWriter && m_isEnabled && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
+            // Always process audio samples to maintain timeline continuity
+            if (m_sinkWriter && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
             {
                 // If this is the first write after being disabled, sync timestamp to current recording time
                 // and prepare to skip several samples to drain any stale buffer data
@@ -171,7 +171,25 @@ void AudioCaptureHandler::CaptureThreadProc()
                 // This gives the exact playback duration of this sample
                 LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
                 
-                HRESULT hr = m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
+                // When audio is disabled, write silent samples to maintain timeline continuity
+                // This prevents video from skipping ahead when audio is muted
+                BYTE* pAudioData = pData;
+                if (!m_isEnabled)
+                {
+                    // Allocate and zero-fill a buffer for silent audio
+                    UINT32 bufferSize = framesRead * format->nBlockAlign;
+                    BYTE* silentBuffer = new BYTE[bufferSize];
+                    memset(silentBuffer, 0, bufferSize);
+                    pAudioData = silentBuffer;
+                }
+                
+                HRESULT hr = m_sinkWriter->WriteAudioSample(pAudioData, framesRead, timestamp);
+                
+                // Free silent buffer if we allocated it
+                if (!m_isEnabled && pAudioData != pData)
+                {
+                    delete[] pAudioData;
+                }
                 
                 // If write fails, stop trying to write more samples to prevent blocking
                 if (FAILED(hr))
@@ -181,14 +199,8 @@ void AudioCaptureHandler::CaptureThreadProc()
                     m_wasDisabled = true;
                 }
                 
-                // Advance timestamp for next sample (creates sequential, non-overlapping timeline)
-                // Only advance when we actually write audio to prevent timeline gaps
+                // Always advance timestamp to maintain continuous timeline
                 m_nextAudioTimestamp += duration;
-            }
-            else if (!m_isEnabled)
-            {
-                // Track that we were disabled so we can resync when re-enabled
-                m_wasDisabled = true;
             }
 
             m_device.ReleaseBuffer(framesRead);
