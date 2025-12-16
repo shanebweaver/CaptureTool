@@ -36,7 +36,7 @@ public partial class App : Application
     private void OnShutdownRequested(object? sender, EventArgs e)
     {
         // Dispose of the KeepAlive to ensure clean shutdown
-        _keepAlive?.Dispose();
+        _keepAlive.Dispose();
     }
 
     private void RestoreAppTheme()
