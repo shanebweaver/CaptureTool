@@ -2,6 +2,7 @@
 #include "ScreenRecorder.h"
 #include "MP4SinkWriter.h"
 #include "FrameArrivedHandler.h"
+#include "AudioCaptureHandler.h"
 #include "GraphicsCaptureHelpers.cpp"
 
 using namespace GraphicsCaptureHelpers;
@@ -10,11 +11,12 @@ static wil::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession> g_
 static wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool> g_framePool;
 static EventRegistrationToken g_frameArrivedEventToken;
 static MP4SinkWriter g_sinkWriter;
+static AudioCaptureHandler g_audioHandler;
 
 // Exported API
 extern "C"
 {
-    __declspec(dllexport) bool TryStartRecording(HMONITOR hMonitor, const wchar_t* outputPath)
+    __declspec(dllexport) bool TryStartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio)
     {
         HRESULT hr = S_OK;
 
@@ -59,16 +61,46 @@ extern "C"
         SizeInt32 size{};
         hr = captureItem->get_Size(&size);
         if (FAILED(hr)) return false;
+        
+        // Phase 4: Initialize video sink writer
         if (!g_sinkWriter.Initialize(outputPath, device.get(), size.Width, size.Height, &hr))
         {
             return false;
         }
         
-        g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter , &hr);
+        // Phase 4: Initialize and start audio capture if requested
+        bool audioEnabled = false;  // Track actual audio capture state
+        if (captureAudio)
+        {
+            // Initialize audio capture device (true = loopback mode for system audio)
+            if (g_audioHandler.Initialize(true, &hr))
+            {
+                // Initialize audio stream on sink writer
+                WAVEFORMATEX* audioFormat = g_audioHandler.GetFormat();
+                if (audioFormat && g_sinkWriter.InitializeAudioStream(audioFormat, &hr))
+                {
+                    // Set the sink writer on audio handler so it can write samples
+                    g_audioHandler.SetSinkWriter(&g_sinkWriter);
+                    
+                    // Start audio capture
+                    if (g_audioHandler.Start(&hr))
+                    {
+                        audioEnabled = true;
+                    }
+                }
+            }
+        }
+        
+        g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter, &hr);
 
         hr = g_session->StartCapture();
         if (FAILED(hr))
         {
+            // If video capture fails, stop audio if it was started
+            if (audioEnabled)
+            {
+                g_audioHandler.Stop();
+            }
             return false;
         }
 
@@ -82,12 +114,17 @@ extern "C"
 
     __declspec(dllexport) void TryStopRecording()
     {
+        // Phase 4: Stop audio capture first
+        g_audioHandler.Stop();
+        
         if (g_framePool)
         {
             g_framePool->remove_FrameArrived(g_frameArrivedEventToken);
         }
 
         g_frameArrivedEventToken.value = 0;
+        
+        // Finalize MP4 file after both streams have stopped
         g_sinkWriter.Finalize();
 
         if (g_session)

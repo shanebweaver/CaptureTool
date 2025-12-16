@@ -22,6 +22,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     {
         _screenRecorder = screenRecorder;
         _storageService = storageService;
+
+        IsDesktopAudioEnabled = true;
     }
 
     public void StartVideoCapture(NewCaptureArgs args)
@@ -40,7 +42,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             fileName
         );
 
-        _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath);
+        _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled);
     }
 
     public IVideoFile StopVideoCapture()
