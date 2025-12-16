@@ -18,8 +18,8 @@ public partial class App : Application
     public App()
     {
         UnhandledException += App_UnhandledException;
-        ServiceProvider = new();
         DispatcherQueue = DispatcherQueue.GetForCurrentThread();
+        ServiceProvider = new();
         InitializeComponent();
         RestoreAppTheme();
         _keepAlive = new KeepAlive();
