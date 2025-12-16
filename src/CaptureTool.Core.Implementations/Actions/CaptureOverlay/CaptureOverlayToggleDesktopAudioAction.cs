@@ -18,5 +18,6 @@ public sealed partial class CaptureOverlayToggleDesktopAudioAction : ActionComma
     {
         bool newValue = !_videoCaptureHandler.IsDesktopAudioEnabled;
         _videoCaptureHandler.SetIsDesktopAudioEnabled(newValue);
+        _videoCaptureHandler.ToggleDesktopAudioCapture(newValue);
     }
 }

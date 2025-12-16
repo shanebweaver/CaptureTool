@@ -54,6 +54,25 @@ public:
     /// <param name="sinkWriter">Pointer to the MP4SinkWriter instance.</param>
     void SetSinkWriter(MP4SinkWriter* sinkWriter) { m_sinkWriter = sinkWriter; }
 
+    /// <summary>
+    /// Enable or disable audio capture writing.
+    /// When disabled, audio samples are still captured but not written to the output.
+    /// </summary>
+    /// <param name="enabled">True to enable audio writing, false to mute.</param>
+    void SetEnabled(bool enabled) { m_isEnabled = enabled; }
+
+    /// <summary>
+    /// Check if audio capture writing is enabled.
+    /// </summary>
+    /// <returns>True if enabled, false if muted.</returns>
+    bool IsEnabled() const { return m_isEnabled; }
+
+    /// <summary>
+    /// Check if audio capture is currently running.
+    /// </summary>
+    /// <returns>True if capture thread is active, false otherwise.</returns>
+    bool IsRunning() const { return m_isRunning; }
+
 private:
     /// <summary>
     /// Audio capture thread procedure.
@@ -67,6 +86,11 @@ private:
     
     std::thread m_captureThread;
     std::atomic<bool> m_isRunning{false};
+    std::atomic<bool> m_isEnabled{true};        // Controls whether audio is written to output
+    std::atomic<bool> m_wasDisabled{false};     // Tracks if audio was previously disabled for resync
+    std::atomic<int> m_samplesToSkip{0};        // Number of samples to skip after re-enabling
+    
+    std::vector<BYTE> m_silentBuffer;           // Reusable buffer for silent audio samples
     
     LONGLONG m_startQpc = 0;                    // QPC value at recording start (for synchronization)
     LARGE_INTEGER m_qpcFrequency{};             // QPC frequency for time calculations

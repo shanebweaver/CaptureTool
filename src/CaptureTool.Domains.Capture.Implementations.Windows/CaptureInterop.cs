@@ -12,4 +12,7 @@ internal static partial class CaptureInterop
 
     [DllImport("CaptureInterop.dll")]
     internal static extern void TryStopRecording();
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void TryToggleAudioCapture(bool enabled);
 }

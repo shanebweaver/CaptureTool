@@ -27,5 +27,6 @@ public class CaptureOverlayToggleDesktopAudioActionTests
         action.Execute();
 
         handler.Verify(h => h.SetIsDesktopAudioEnabled(true), Times.Once);
+        handler.Verify(h => h.ToggleDesktopAudioCapture(true), Times.Once);
     }
 }

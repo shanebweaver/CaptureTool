@@ -131,26 +131,77 @@ void AudioCaptureHandler::CaptureThreadProc()
                 continue;
             }
             
-            // Use accumulated timestamp to prevent overlapping samples
-            // This is crucial: using wall clock time would create overlaps since
-            // the capture loop runs faster (1-2ms) than audio buffer duration (10ms)
-            LONGLONG timestamp = m_nextAudioTimestamp;
-            
-            // Calculate duration based on actual audio frame count
-            // This gives the exact playback duration of this sample
             const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
-            LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
             
-            // Advance timestamp for next sample (creates sequential, non-overlapping timeline)
-            m_nextAudioTimestamp += duration;
-
-            // Write audio sample to MP4 sink writer (if configured and not silent)
+            // Always process audio samples to maintain timeline continuity
             if (m_sinkWriter && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
             {
-                HRESULT hr = m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
-                // Don't fail on write errors - allow video capture to continue
-                // Audio frames may be dropped, but recording doesn't stop
-                (void)hr;
+                // If this is the first write after being disabled, sync timestamp to current recording time
+                // and prepare to skip several samples to drain any stale buffer data
+                if (m_nextAudioTimestamp == 0 || m_wasDisabled)
+                {
+                    LARGE_INTEGER qpc;
+                    QueryPerformanceCounter(&qpc);
+                    LONGLONG currentQpc = qpc.QuadPart;
+                    LONGLONG elapsedQpc = currentQpc - m_startQpc;
+                    
+                    // Convert QPC ticks to 100ns units (Media Foundation time)
+                    m_nextAudioTimestamp = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
+                    m_wasDisabled = false;
+                    
+                    // Skip next few samples to fully drain stale buffer data
+                    // WASAPI typically buffers 10-30ms of audio, which is 3-5 samples at 10ms per sample
+                    m_samplesToSkip = 5;
+                }
+                
+                // Skip samples if we're draining stale buffer data
+                if (m_samplesToSkip > 0)
+                {
+                    m_samplesToSkip--;
+                    m_device.ReleaseBuffer(framesRead);
+                    continue;
+                }
+                
+                // Use accumulated timestamp to prevent overlapping samples
+                // This is crucial: using wall clock time would create overlaps since
+                // the capture loop runs faster (1-2ms) than audio buffer duration (10ms)
+                LONGLONG timestamp = m_nextAudioTimestamp;
+                
+                // Calculate duration based on actual audio frame count
+                // This gives the exact playback duration of this sample
+                LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
+                
+                // When audio is disabled, write silent samples to maintain timeline continuity
+                // This prevents video from skipping ahead when audio is muted
+                BYTE* pAudioData = pData;
+                if (!m_isEnabled)
+                {
+                    // Reuse or resize silent buffer for efficiency
+                    UINT32 bufferSize = framesRead * format->nBlockAlign;
+                    if (m_silentBuffer.size() < bufferSize)
+                    {
+                        m_silentBuffer.resize(bufferSize, 0);
+                    }
+                    else
+                    {
+                        // Zero out the buffer for reuse
+                        memset(m_silentBuffer.data(), 0, bufferSize);
+                    }
+                    pAudioData = m_silentBuffer.data();
+                }
+                
+                HRESULT hr = m_sinkWriter->WriteAudioSample(pAudioData, framesRead, timestamp);
+                
+                // If write fails, stop trying to write more samples to prevent blocking
+                if (FAILED(hr))
+                {
+                    // Disable audio writing to prevent further blocking
+                    m_isEnabled = false;
+                    m_wasDisabled = true;
+                }
+                
+                // Always advance timestamp to maintain continuous timeline
+                m_nextAudioTimestamp += duration;
             }
 
             m_device.ReleaseBuffer(framesRead);
