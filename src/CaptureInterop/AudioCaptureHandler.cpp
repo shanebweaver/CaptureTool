@@ -134,12 +134,6 @@ void AudioCaptureHandler::CaptureThreadProc()
 
             m_device.ReleaseBuffer(framesRead);
         }
-        else
-        {
-            // No data available, wait a bit longer before trying again
-            // Use a shorter sleep when no data to be more responsive
-            Sleep(1);
-        }
 
         // Very short sleep to yield CPU but remain responsive
         // This prevents busy-waiting while keeping latency low
