@@ -5,7 +5,7 @@ namespace CaptureTool.Domains.Capture.Implementations.Windows;
 internal static partial class CaptureInterop
 {
     [DllImport("CaptureInterop.dll", CharSet = CharSet.Unicode)]
-    internal static extern bool TryStartRecording(IntPtr hMonitor, string outputPath);
+    internal static extern bool TryStartRecording(IntPtr hMonitor, string outputPath, bool captureAudio = false);
 
     [DllImport("CaptureInterop.dll")]
     internal static extern void TryPauseRecording();
