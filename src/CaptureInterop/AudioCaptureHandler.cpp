@@ -119,7 +119,12 @@ void AudioCaptureHandler::CaptureThreadProc()
         if (framesRead > 0)
         {
             // Calculate relative timestamp in 100-nanosecond units
-            LONGLONG relativeQpc = qpcPosition - m_startQpc;
+            // Use current QPC time instead of device position for better synchronization
+            // The qpcPosition from WASAPI represents when audio was captured by device,
+            // which can be in the past (buffered), causing audio to speed up
+            LARGE_INTEGER currentQpc;
+            QueryPerformanceCounter(&currentQpc);
+            LONGLONG relativeQpc = currentQpc.QuadPart - m_startQpc;
             LONGLONG timestamp = (relativeQpc * 10000000) / m_qpcFrequency.QuadPart;
 
             // Write audio sample to MP4SinkWriter if available and not silent
