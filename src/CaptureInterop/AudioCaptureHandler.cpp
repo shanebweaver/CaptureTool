@@ -134,6 +134,20 @@ void AudioCaptureHandler::CaptureThreadProc()
             // Write audio sample to MP4 sink writer (if configured, enabled, and not silent)
             if (m_sinkWriter && m_isEnabled && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
             {
+                // If this is the first write after being disabled, sync timestamp to current recording time
+                // This prevents trying to write "old" audio samples that would block the encoder
+                if (m_nextAudioTimestamp == 0 || m_wasDisabled)
+                {
+                    LARGE_INTEGER qpc;
+                    QueryPerformanceCounter(&qpc);
+                    LONGLONG currentQpc = qpc.QuadPart;
+                    LONGLONG elapsedQpc = currentQpc - m_startQpc;
+                    
+                    // Convert QPC ticks to 100ns units (Media Foundation time)
+                    m_nextAudioTimestamp = (elapsedQpc * 10000000LL) / m_qpcFrequency.QuadPart;
+                    m_wasDisabled = false;
+                }
+                
                 // Use accumulated timestamp to prevent overlapping samples
                 // This is crucial: using wall clock time would create overlaps since
                 // the capture loop runs faster (1-2ms) than audio buffer duration (10ms)
@@ -152,6 +166,11 @@ void AudioCaptureHandler::CaptureThreadProc()
                 // Advance timestamp for next sample (creates sequential, non-overlapping timeline)
                 // Only advance when we actually write audio to prevent timeline gaps
                 m_nextAudioTimestamp += duration;
+            }
+            else if (!m_isEnabled)
+            {
+                // Track that we were disabled so we can resync when re-enabled
+                m_wasDisabled = true;
             }
 
             m_device.ReleaseBuffer(framesRead);
