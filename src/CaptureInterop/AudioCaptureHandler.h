@@ -67,6 +67,12 @@ public:
     /// <returns>True if enabled, false if muted.</returns>
     bool IsEnabled() const { return m_isEnabled; }
 
+    /// <summary>
+    /// Check if audio capture is currently running.
+    /// </summary>
+    /// <returns>True if capture thread is active, false otherwise.</returns>
+    bool IsRunning() const { return m_isRunning; }
+
 private:
     /// <summary>
     /// Audio capture thread procedure.
