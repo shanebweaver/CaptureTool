@@ -114,7 +114,7 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
 
     // Configure output audio stream: AAC at 160 kbps
-    const UINT32 AAC_BITRATE = 20000; // 160 kbps in bytes/second (160000 bits / 8)
+    const UINT32 AAC_BITRATE = 20000; // 160 kbps = 160000 bps / 8 = 20000 bytes/sec
     wil::com_ptr<IMFMediaType> mediaTypeOut;
     HRESULT hr = MFCreateMediaType(mediaTypeOut.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
