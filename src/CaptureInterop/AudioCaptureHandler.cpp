@@ -12,6 +12,10 @@ AudioCaptureHandler::~AudioCaptureHandler()
     Stop();
 }
 
+// ============================================================================
+// Initialization and Lifecycle
+// ============================================================================
+
 bool AudioCaptureHandler::Initialize(bool loopback, HRESULT* outHr)
 {
     return m_device.Initialize(loopback, outHr);
@@ -30,19 +34,18 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
         return false;
     }
 
-    // If we have a sink writer, use its recording start time for synchronization
-    // Otherwise, record our own start time (for cases without video)
+    // Synchronize start time with video capture if available
     if (m_sinkWriter)
     {
         LONGLONG sinkStartTime = m_sinkWriter->GetRecordingStartTime();
         if (sinkStartTime != 0)
         {
-            // Use existing recording start time from sink writer
+            // Use existing recording start time from sink writer (video started first)
             m_startQpc = sinkStartTime;
         }
         else
         {
-            // Set the recording start time on the sink writer
+            // Set the recording start time on the sink writer (audio starting first)
             LARGE_INTEGER qpc;
             QueryPerformanceCounter(&qpc);
             m_startQpc = qpc.QuadPart;
@@ -51,7 +54,7 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
     }
     else
     {
-        // No sink writer, use local start time
+        // No sink writer, use local start time (audio-only mode)
         LARGE_INTEGER qpc;
         QueryPerformanceCounter(&qpc);
         m_startQpc = qpc.QuadPart;
@@ -79,13 +82,24 @@ void AudioCaptureHandler::Stop()
     }
 }
 
+// ============================================================================
+// Audio Format Access
+// ============================================================================
+
 WAVEFORMATEX* AudioCaptureHandler::GetFormat() const
 {
     return m_device.GetFormat();
 }
 
+// ============================================================================
+// Audio Capture Thread
+// ============================================================================
+
 void AudioCaptureHandler::CaptureThreadProc()
 {
+    // Set thread priority to time-critical for audio capture
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+    
     while (m_isRunning)
     {
         BYTE* pData = nullptr;
@@ -109,6 +123,7 @@ void AudioCaptureHandler::CaptureThreadProc()
             LONGLONG timestamp = (relativeQpc * 10000000) / m_qpcFrequency.QuadPart;
 
             // Write audio sample to MP4SinkWriter if available and not silent
+            // Note: We still process silent frames but Media Foundation might optimize them
             if (m_sinkWriter && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
             {
                 HRESULT hr = m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
@@ -119,8 +134,15 @@ void AudioCaptureHandler::CaptureThreadProc()
 
             m_device.ReleaseBuffer(framesRead);
         }
+        else
+        {
+            // No data available, wait a bit longer before trying again
+            // Use a shorter sleep when no data to be more responsive
+            Sleep(1);
+        }
 
-        // Small sleep to prevent busy-waiting
-        Sleep(5);
+        // Very short sleep to yield CPU but remain responsive
+        // This prevents busy-waiting while keeping latency low
+        Sleep(1);
     }
 }

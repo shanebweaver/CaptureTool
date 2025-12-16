@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "AudioCaptureDevice.h"
 
+// ============================================================================
+// Constructor / Destructor
+// ============================================================================
+
 AudioCaptureDevice::AudioCaptureDevice() = default;
 
 AudioCaptureDevice::~AudioCaptureDevice()
@@ -13,8 +17,13 @@ AudioCaptureDevice::~AudioCaptureDevice()
     }
 }
 
+// ============================================================================
+// Device Initialization
+// ============================================================================
+
 bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr)
 {
+    // Initialize COM for this thread
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
     {
@@ -101,6 +110,10 @@ bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr)
     return true;
 }
 
+// ============================================================================
+// Capture Control
+// ============================================================================
+
 bool AudioCaptureDevice::Start(HRESULT* outHr)
 {
     if (!m_audioClient)
@@ -129,6 +142,10 @@ void AudioCaptureDevice::Stop()
         m_isCapturing = false;
     }
 }
+
+// ============================================================================
+// Audio Sample Reading
+// ============================================================================
 
 UINT32 AudioCaptureDevice::ReadSamples(
     BYTE** ppData,
