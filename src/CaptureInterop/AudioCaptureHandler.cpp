@@ -100,8 +100,8 @@ WAVEFORMATEX* AudioCaptureHandler::GetFormat() const
 
 void AudioCaptureHandler::CaptureThreadProc()
 {
-    // Set thread priority to time-critical for audio capture
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+    // Set thread priority to above normal (not TIME_CRITICAL to avoid starving UI)
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
     
     while (m_isRunning)
     {
@@ -151,9 +151,11 @@ void AudioCaptureHandler::CaptureThreadProc()
 
             m_device.ReleaseBuffer(framesRead);
         }
-
-        // Very short sleep to yield CPU but remain responsive
-        // This prevents busy-waiting while keeping latency low
-        Sleep(1);
+        else
+        {
+            // No audio data available, sleep longer to avoid busy-waiting
+            // This prevents CPU spinning and gives UI thread time to run
+            Sleep(10);
+        }
     }
 }
