@@ -101,7 +101,7 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     }
     else if (audioFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
     {
-        // Extended format - check the SubFormat GUID
+        // Check extended format SubFormat GUID for float audio
         WAVEFORMATEXTENSIBLE* pFormatEx = reinterpret_cast<WAVEFORMATEXTENSIBLE*>(audioFormat);
         if (IsEqualGUID(pFormatEx->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT))
         {
@@ -109,14 +109,12 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
         }
     }
     
-    // Store audio format for later use
-    // Note: We only copy the base WAVEFORMATEX structure, not extended format data.
-    // This is sufficient since we've already detected the format type above
-    // and will use that information when configuring Media Foundation.
+    // Cache audio format for later use (base structure only)
+    // Format type (float vs PCM) is already detected above
     memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
 
-    // Output type: AAC at 160 kbps
-    const UINT32 AAC_BITRATE = 20000; // bytes per second (160000 bits per second / 8)
+    // Configure output audio stream: AAC at 160 kbps
+    const UINT32 AAC_BITRATE = 20000; // 160 kbps in bytes/second (160000 bits / 8)
     wil::com_ptr<IMFMediaType> mediaTypeOut;
     HRESULT hr = MFCreateMediaType(mediaTypeOut.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
@@ -126,21 +124,21 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, AAC_BITRATE);
-    // AAC output is always 16-bit; Media Foundation handles conversion from input format
-    mediaTypeOut->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
+    mediaTypeOut->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);  // AAC output is always 16-bit
 
     DWORD audioStreamIndex = 0;
     hr = m_sinkWriter->AddStream(mediaTypeOut.get(), &audioStreamIndex);
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
-    // Input type: PCM or Float (from WASAPI)
+    // Configure input audio format: PCM or Float from WASAPI
+    // Media Foundation will automatically convert to AAC
     wil::com_ptr<IMFMediaType> mediaTypeIn;
     hr = MFCreateMediaType(mediaTypeIn.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     mediaTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
     
-    // Use the format type we detected earlier
+    // Set correct subtype based on detected format
     if (isFloatFormat)
     {
         mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
@@ -162,7 +160,7 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     m_audioStreamIndex = audioStreamIndex;
     m_hasAudioStream = true;
 
-    // Now that all streams are added, begin writing
+    // Begin writing now that all streams are configured
     hr = m_sinkWriter->BeginWriting();
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
     m_hasBegunWriting = true;
@@ -175,7 +173,7 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTic
 {
     if (!texture || !m_sinkWriter) return E_FAIL;
 
-    // If we don't have audio and haven't started writing yet, begin now
+    // For video-only recording (no audio), begin writing on first frame
     if (!m_hasBegunWriting && !m_hasAudioStream)
     {
         HRESULT hr = m_sinkWriter->BeginWriting();
@@ -183,7 +181,7 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTic
         m_hasBegunWriting = true;
     }
 
-    // Copy to staging for CPU read
+    // Copy texture to staging for CPU read access
     D3D11_TEXTURE2D_DESC desc{};
     texture->GetDesc(&desc);
 
@@ -256,15 +254,16 @@ HRESULT MP4SinkWriter::WriteAudioSample(const BYTE* pData, UINT32 numFrames, LON
         return E_FAIL;
     }
 
-    // Calculate buffer size
+    // Calculate buffer size: frames * bytes per frame
+    // Each frame contains one sample for each channel
     UINT32 bufferSize = numFrames * m_audioFormat.nBlockAlign;
 
-    // Create media buffer
+    // Create Media Foundation buffer for audio data
     wil::com_ptr<IMFMediaBuffer> buffer;
     HRESULT hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
     if (FAILED(hr)) return hr;
 
-    // Copy audio data to buffer
+    // Copy raw audio data into Media Foundation buffer
     BYTE* pBufferData = nullptr;
     DWORD maxLen = 0, curLen = 0;
     hr = buffer->Lock(&pBufferData, &maxLen, &curLen);
@@ -274,21 +273,25 @@ HRESULT MP4SinkWriter::WriteAudioSample(const BYTE* pData, UINT32 numFrames, LON
     buffer->SetCurrentLength(bufferSize);
     buffer->Unlock();
 
-    // Create sample
+    // Create Media Foundation sample
     wil::com_ptr<IMFSample> sample;
     hr = MFCreateSample(sample.put());
     if (FAILED(hr)) return hr;
 
     sample->AddBuffer(buffer.get());
+    
+    // Set timestamp (when this sample should play in the timeline)
     sample->SetSampleTime(timestamp);
 
-    // Calculate duration based on number of frames and sample rate
-    // This is the actual duration of the audio data, not the time between captures
-    const LONGLONG TICKS_PER_SECOND = 10000000LL;
+    // Calculate duration based on actual audio frame count
+    // Duration = (frames * ticks_per_second) / sample_rate
+    // This gives exact playback duration of this sample
+    const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
     LONGLONG duration = (numFrames * TICKS_PER_SECOND) / m_audioFormat.nSamplesPerSec;
     
     sample->SetSampleDuration(duration);
 
+    // Write sample to MP4 file (Media Foundation converts to AAC automatically)
     return m_sinkWriter->WriteSample(m_audioStreamIndex, sample.get());
 }
 

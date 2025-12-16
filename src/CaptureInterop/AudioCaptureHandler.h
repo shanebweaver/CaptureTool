@@ -8,29 +8,58 @@
 // Forward declaration
 class MP4SinkWriter;
 
-// Manages audio capture in a separate thread and buffers samples
+/// <summary>
+/// Manages audio capture in a dedicated thread with synchronized timestamps.
+/// Captures audio samples from WASAPI and writes them to an MP4 sink writer.
+/// Uses accumulated timestamps to ensure proper audio playback speed.
+/// </summary>
 class AudioCaptureHandler
 {
 public:
     AudioCaptureHandler();
     ~AudioCaptureHandler();
 
-    // Initialize audio capture (loopback = true for system audio)
+    /// <summary>
+    /// Initialize the audio capture device.
+    /// </summary>
+    /// <param name="loopback">True for system audio loopback, false for microphone.</param>
+    /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
+    /// <returns>True if initialization succeeded, false otherwise.</returns>
     bool Initialize(bool loopback, HRESULT* outHr = nullptr);
     
-    // Start capturing audio
+    /// <summary>
+    /// Start the audio capture thread.
+    /// Synchronizes start time with video capture if MP4SinkWriter is set.
+    /// </summary>
+    /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
+    /// <returns>True if capture started successfully, false otherwise.</returns>
     bool Start(HRESULT* outHr = nullptr);
     
-    // Stop capturing audio
+    /// <summary>
+    /// Stop the audio capture thread and wait for it to complete.
+    /// Safe to call multiple times.
+    /// </summary>
     void Stop();
     
-    // Get the audio format
+    /// <summary>
+    /// Get the audio format of the capture device.
+    /// </summary>
+    /// <returns>Pointer to WAVEFORMATEX structure, or nullptr if not initialized.</returns>
     WAVEFORMATEX* GetFormat() const;
     
-    // Set the sink writer to receive audio samples (will be used in Phase 2)
+    /// <summary>
+    /// Set the MP4 sink writer to receive captured audio samples.
+    /// Must be called before Start() to enable audio/video synchronization.
+    /// </summary>
+    /// <param name="sinkWriter">Pointer to the MP4SinkWriter instance.</param>
     void SetSinkWriter(MP4SinkWriter* sinkWriter) { m_sinkWriter = sinkWriter; }
 
 private:
+    /// <summary>
+    /// Audio capture thread procedure.
+    /// Runs at ABOVE_NORMAL priority to ensure responsive capture without starving UI.
+    /// Uses accumulated timestamps to prevent audio speedup from overlapping samples.
+    /// </summary>
     void CaptureThreadProc();
     
     AudioCaptureDevice m_device;
@@ -39,7 +68,7 @@ private:
     std::thread m_captureThread;
     std::atomic<bool> m_isRunning{false};
     
-    LONGLONG m_startQpc = 0;
-    LARGE_INTEGER m_qpcFrequency{};
-    LONGLONG m_nextAudioTimestamp = 0;  // Track expected timestamp based on audio written
+    LONGLONG m_startQpc = 0;                    // QPC value at recording start (for synchronization)
+    LARGE_INTEGER m_qpcFrequency{};             // QPC frequency for time calculations
+    LONGLONG m_nextAudioTimestamp = 0;          // Accumulated timestamp (prevents overlapping samples)
 };

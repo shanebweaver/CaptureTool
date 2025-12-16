@@ -101,6 +101,7 @@ WAVEFORMATEX* AudioCaptureHandler::GetFormat() const
 void AudioCaptureHandler::CaptureThreadProc()
 {
     // Set thread priority to above normal (not TIME_CRITICAL to avoid starving UI)
+    // This provides responsive audio capture while keeping the UI responsive
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
     
     while (m_isRunning)
@@ -121,40 +122,44 @@ void AudioCaptureHandler::CaptureThreadProc()
 
         if (framesRead > 0)
         {
-            // Get format for duration calculation
+            // Get audio format for duration calculation
             WAVEFORMATEX* format = m_device.GetFormat();
             if (!format)
             {
-                // No format available, skip this sample
+                // No format available, skip this sample and release buffer
                 m_device.ReleaseBuffer(framesRead);
                 continue;
             }
             
-            // Use accumulated timestamp based on audio samples written, not wall clock time
-            // This prevents overlapping audio samples which would cause speedup
+            // Use accumulated timestamp to prevent overlapping samples
+            // This is crucial: using wall clock time would create overlaps since
+            // the capture loop runs faster (1-2ms) than audio buffer duration (10ms)
             LONGLONG timestamp = m_nextAudioTimestamp;
             
-            // Calculate duration for this sample
-            const LONGLONG TICKS_PER_SECOND = 10000000LL;
+            // Calculate duration based on actual audio frame count
+            // This gives the exact playback duration of this sample
+            const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
             LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
-            m_nextAudioTimestamp += duration;  // Advance for next sample
+            
+            // Advance timestamp for next sample (creates sequential, non-overlapping timeline)
+            m_nextAudioTimestamp += duration;
 
-            // Write audio sample to MP4SinkWriter if available and not silent
-            // Note: We still process silent frames but Media Foundation might optimize them
+            // Write audio sample to MP4 sink writer (if configured and not silent)
             if (m_sinkWriter && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
             {
                 HRESULT hr = m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
-                // Note: We don't fail on audio write errors to avoid stopping the entire capture
-                // Audio frames may be dropped, but video capture continues
-                (void)hr; // Explicitly ignore return value after checking
+                // Don't fail on write errors - allow video capture to continue
+                // Audio frames may be dropped, but recording doesn't stop
+                (void)hr;
             }
 
             m_device.ReleaseBuffer(framesRead);
         }
         else
         {
-            // No audio data available, sleep longer to avoid busy-waiting
-            // This prevents CPU spinning and gives UI thread time to run
+            // No audio data available - sleep to avoid busy-waiting
+            // Longer sleep (10ms) prevents CPU spinning and allows UI thread to run
+            // This prevents memory buildup and UI freezes
             Sleep(10);
         }
     }
