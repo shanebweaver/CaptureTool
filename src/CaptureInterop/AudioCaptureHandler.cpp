@@ -148,6 +148,11 @@ void AudioCaptureHandler::CaptureThreadProc()
                     // Convert QPC ticks to 100ns units (Media Foundation time)
                     m_nextAudioTimestamp = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
                     m_wasDisabled = false;
+                    
+                    // Skip this first sample after re-enabling to avoid potential timestamp issues
+                    // The buffer might contain old data from when audio was disabled
+                    m_device.ReleaseBuffer(framesRead);
+                    continue;
                 }
                 
                 // Use accumulated timestamp to prevent overlapping samples
