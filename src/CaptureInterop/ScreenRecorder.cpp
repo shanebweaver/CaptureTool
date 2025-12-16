@@ -140,7 +140,7 @@ extern "C"
 
     __declspec(dllexport) void TryToggleAudioCapture(bool enabled)
     {
-        // Only toggle if audio capture was initialized and is running
+        // Only toggle if audio capture is currently running
         // This prevents issues when audio was not started initially
         if (g_audioHandler.IsRunning())
         {
