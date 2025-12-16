@@ -23,11 +23,20 @@ public partial class App : Application
         InitializeComponent();
         RestoreAppTheme();
         _keepAlive = new KeepAlive();
+        
+        // Subscribe to shutdown event to ensure proper cleanup
+        AppServiceLocator.ShutdownHandler.ShutdownRequested += OnShutdownRequested;
     }
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
         AppServiceLocator.Logging.LogException(e.Exception, "Unhandled exception occurred.");
+    }
+
+    private void OnShutdownRequested(object? sender, EventArgs e)
+    {
+        // Dispose of the KeepAlive to ensure clean shutdown
+        _keepAlive?.Dispose();
     }
 
     private void RestoreAppTheme()

@@ -3,7 +3,6 @@ using CaptureTool.Services.Interfaces.Logging;
 using CaptureTool.Services.Interfaces.Shutdown;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
-using System.Diagnostics;
 
 namespace CaptureTool.Services.Implementations.Windows.Shutdown;
 
@@ -76,7 +75,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
             }
             catch (Exception e)
             {
-                Debug.Fail($"Error during shutdown: {e.Message}");
+                _logService.LogException(e, "Error during shutdown. Forcing exit.");
                 Environment.Exit(0);
             }
         }
