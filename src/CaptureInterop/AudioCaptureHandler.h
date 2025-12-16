@@ -88,6 +88,7 @@ private:
     std::atomic<bool> m_isRunning{false};
     std::atomic<bool> m_isEnabled{true};        // Controls whether audio is written to output
     std::atomic<bool> m_wasDisabled{false};     // Tracks if audio was previously disabled for resync
+    std::atomic<int> m_samplesToSkip{0};        // Number of samples to skip after re-enabling
     
     LONGLONG m_startQpc = 0;                    // QPC value at recording start (for synchronization)
     LARGE_INTEGER m_qpcFrequency{};             // QPC frequency for time calculations

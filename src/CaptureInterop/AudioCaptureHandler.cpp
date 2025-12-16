@@ -137,7 +137,7 @@ void AudioCaptureHandler::CaptureThreadProc()
             if (m_sinkWriter && m_isEnabled && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
             {
                 // If this is the first write after being disabled, sync timestamp to current recording time
-                // This prevents trying to write "old" audio samples that would block the encoder
+                // and prepare to skip several samples to drain any stale buffer data
                 if (m_nextAudioTimestamp == 0 || m_wasDisabled)
                 {
                     LARGE_INTEGER qpc;
@@ -149,9 +149,15 @@ void AudioCaptureHandler::CaptureThreadProc()
                     m_nextAudioTimestamp = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
                     m_wasDisabled = false;
                     
-                    // Skip this first sample after re-enabling to prevent encoder blocking
-                    // The WASAPI buffer may contain stale audio data captured while disabled,
-                    // which would cause timestamp mismatches and block the Media Foundation encoder
+                    // Skip next few samples to fully drain stale buffer data
+                    // WASAPI typically buffers 10-30ms of audio, which is 3-5 samples at 10ms per sample
+                    m_samplesToSkip = 5;
+                }
+                
+                // Skip samples if we're draining stale buffer data
+                if (m_samplesToSkip > 0)
+                {
+                    m_samplesToSkip--;
                     m_device.ReleaseBuffer(framesRead);
                     continue;
                 }
@@ -166,9 +172,14 @@ void AudioCaptureHandler::CaptureThreadProc()
                 LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
                 
                 HRESULT hr = m_sinkWriter->WriteAudioSample(pData, framesRead, timestamp);
-                // Don't fail on write errors - allow video capture to continue
-                // Audio frames may be dropped, but recording doesn't stop
-                (void)hr;
+                
+                // If write fails, stop trying to write more samples to prevent blocking
+                if (FAILED(hr))
+                {
+                    // Disable audio writing to prevent further blocking
+                    m_isEnabled = false;
+                    m_wasDisabled = true;
+                }
                 
                 // Advance timestamp for next sample (creates sequential, non-overlapping timeline)
                 // Only advance when we actually write audio to prevent timeline gaps
