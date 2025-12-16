@@ -288,7 +288,6 @@ HRESULT MP4SinkWriter::WriteAudioSample(const BYTE* pData, UINT32 numFrames, LON
     LONGLONG duration = (numFrames * TICKS_PER_SECOND) / m_audioFormat.nSamplesPerSec;
     
     sample->SetSampleDuration(duration);
-    m_prevAudioTimestamp = timestamp;
 
     return m_sinkWriter->WriteSample(m_audioStreamIndex, sample.get());
 }
