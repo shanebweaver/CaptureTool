@@ -168,19 +168,27 @@ public sealed partial class ImageCanvas : UserControlBase
             bool queued = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
             {
                 // Step 1 & 2: Force resource recreation and update canvas size
+                // Toggle DpiScale to force Win2D to recreate resources with new DPI
                 RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? 1.0001f : 1f;
                 UpdateDrawingCanvasSize();
                 
                 // Step 3 & 4: Queue low priority to run after layout completes
-                DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+                bool zoomQueued = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
                 {
                     ZoomAndCenter();
                 });
+                
+                // If zoom queuing fails, call immediately as fallback
+                if (!zoomQueued)
+                {
+                    ZoomAndCenter();
+                }
             });
             
             // If queuing fails (rare), call immediately since we're already on the UI thread
             if (!queued)
             {
+                // Toggle DpiScale to force Win2D to recreate resources with new DPI
                 RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? 1.0001f : 1f;
                 UpdateDrawingCanvasSize();
                 ZoomAndCenter();
