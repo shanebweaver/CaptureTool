@@ -152,6 +152,11 @@ extern "C"
         {
             g_framePool.reset();
         }
+
+        // Reset sink writer and audio handler to fresh state for next recording
+        g_sinkWriter = MP4SinkWriter();
+        g_audioHandler.~AudioCaptureHandler();
+        new (&g_audioHandler) AudioCaptureHandler();
     }
 
     __declspec(dllexport) void TryToggleAudioCapture(bool enabled)
