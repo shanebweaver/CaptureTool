@@ -13,6 +13,11 @@ static EventRegistrationToken g_frameArrivedEventToken;
 static MP4SinkWriter g_sinkWriter;
 static AudioCaptureHandler g_audioHandler;
 
+// Pause/Resume state management
+static std::atomic<bool> g_isPaused{false};
+static std::atomic<LONGLONG> g_totalPausedDuration{0};
+static LONGLONG g_pauseStartQpc = 0;
+
 // Exported API
 extern "C"
 {
@@ -109,7 +114,45 @@ extern "C"
 
     __declspec(dllexport) void TryPauseRecording()
     {
-        // Not implemented yet, don't worry about it.
+        // If already paused, return immediately
+        if (g_isPaused)
+        {
+            return;
+        }
+        
+        // Set pause state
+        g_isPaused = true;
+        
+        // Record pause start time
+        LARGE_INTEGER qpc;
+        QueryPerformanceCounter(&qpc);
+        g_pauseStartQpc = qpc.QuadPart;
+        
+        // Pause audio capture
+        g_audioHandler.SetPaused(true);
+    }
+
+    __declspec(dllexport) void TryResumeRecording()
+    {
+        // If not paused, return immediately
+        if (!g_isPaused)
+        {
+            return;
+        }
+        
+        // Calculate pause duration
+        LARGE_INTEGER qpc;
+        QueryPerformanceCounter(&qpc);
+        LONGLONG pauseDuration = qpc.QuadPart - g_pauseStartQpc;
+        
+        // Add to total paused duration
+        g_totalPausedDuration += pauseDuration;
+        
+        // Clear pause state
+        g_isPaused = false;
+        
+        // Resume audio capture - set wasDisabled to trigger buffer drain
+        g_audioHandler.SetPaused(false);
     }
 
     __declspec(dllexport) void TryStopRecording()
@@ -136,6 +179,11 @@ extern "C"
         {
             g_framePool.reset();
         }
+        
+        // Reset pause state
+        g_isPaused = false;
+        g_totalPausedDuration = 0;
+        g_pauseStartQpc = 0;
     }
 
     __declspec(dllexport) void TryToggleAudioCapture(bool enabled)

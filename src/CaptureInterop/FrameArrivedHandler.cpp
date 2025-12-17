@@ -7,6 +7,10 @@ using namespace ABI::Windows::Graphics::DirectX::Direct3D11;
 using namespace ABI::Windows::Graphics;
 using namespace ABI::Windows::Graphics::Capture;
 
+// Access to global pause state from ScreenRecorder.cpp
+extern std::atomic<bool> g_isPaused;
+extern std::atomic<LONGLONG> g_totalPausedDuration;
+
 FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter) noexcept
     : m_sinkWriter(std::move(sinkWriter)),
     m_ref(1)
@@ -63,6 +67,13 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
+    // Check if recording is paused
+    if (g_isPaused)
+    {
+        // Skip writing frame when paused, but continue receiving frames
+        return S_OK;
+    }
+
     TimeSpan timestamp{};
     hr = frame->get_SystemRelativeTime(&timestamp);
     if (FAILED(hr))
@@ -93,11 +104,15 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
 
     // Phase 3: Use common QPC-based time base for synchronization
     static LONGLONG firstFrameSystemTime = 0;
+    static LARGE_INTEGER qpcFrequency = {};
     
     if (firstFrameSystemTime == 0)
     {
         // First frame - establish the time base
         firstFrameSystemTime = timestamp.Duration;
+        
+        // Initialize QPC frequency for timestamp conversion
+        QueryPerformanceFrequency(&qpcFrequency);
         
         // Set the recording start time on the sink writer for audio synchronization
         // We use the current QPC time as the common start point
@@ -109,6 +124,21 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
     // Calculate relative timestamp in 100-nanosecond units
     // Frame's SystemRelativeTime is already in 100ns units, so we just need the elapsed time
     LONGLONG relativeTimestamp = timestamp.Duration - firstFrameSystemTime;
+    
+    // Adjust timestamp by subtracting total paused duration
+    // Convert QPC ticks to 100-nanosecond units
+    LONGLONG totalPausedDuration = g_totalPausedDuration.load();
+    if (totalPausedDuration > 0 && qpcFrequency.QuadPart > 0)
+    {
+        LONGLONG pausedDuration100ns = (totalPausedDuration * 10000000LL) / qpcFrequency.QuadPart;
+        relativeTimestamp -= pausedDuration100ns;
+        
+        // Ensure timestamp doesn't go negative
+        if (relativeTimestamp < 0)
+        {
+            relativeTimestamp = 0;
+        }
+    }
 
     return m_sinkWriter->WriteFrame(texture.get(), relativeTimestamp);
 }

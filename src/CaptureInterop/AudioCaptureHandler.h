@@ -73,6 +73,19 @@ public:
     /// <returns>True if capture thread is active, false otherwise.</returns>
     bool IsRunning() const { return m_isRunning; }
 
+    /// <summary>
+    /// Set the paused state of audio capture.
+    /// When paused, audio samples are read but not written to output.
+    /// </summary>
+    /// <param name="paused">True to pause, false to resume.</param>
+    void SetPaused(bool paused);
+
+    /// <summary>
+    /// Check if audio capture is currently paused.
+    /// </summary>
+    /// <returns>True if paused, false otherwise.</returns>
+    bool IsPaused() const { return m_isPaused; }
+
 private:
     /// <summary>
     /// Audio capture thread procedure.
@@ -89,6 +102,7 @@ private:
     std::atomic<bool> m_isEnabled{true};        // Controls whether audio is written to output
     std::atomic<bool> m_wasDisabled{false};     // Tracks if audio was previously disabled for resync
     std::atomic<int> m_samplesToSkip{0};        // Number of samples to skip after re-enabling
+    std::atomic<bool> m_isPaused{false};        // Controls whether recording is paused
     
     std::vector<BYTE> m_silentBuffer;           // Reusable buffer for silent audio samples
     

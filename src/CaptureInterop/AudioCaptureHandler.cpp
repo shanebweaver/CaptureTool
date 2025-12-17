@@ -95,6 +95,26 @@ WAVEFORMATEX* AudioCaptureHandler::GetFormat() const
 }
 
 // ============================================================================
+// Pause Control
+// ============================================================================
+
+void AudioCaptureHandler::SetPaused(bool paused)
+{
+    if (paused)
+    {
+        // Setting to paused
+        m_isPaused = true;
+    }
+    else
+    {
+        // Resuming from pause - mark as disabled to trigger buffer drain
+        m_wasDisabled = true;
+        m_samplesToSkip = 5;
+        m_isPaused = false;
+    }
+}
+
+// ============================================================================
 // Audio Capture Thread
 // ============================================================================
 
@@ -132,6 +152,15 @@ void AudioCaptureHandler::CaptureThreadProc()
             }
             
             const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
+            
+            // Check if recording is paused
+            if (m_isPaused)
+            {
+                // When paused, continue reading samples but don't write them
+                // This prevents buffer overflow and keeps the device running
+                m_device.ReleaseBuffer(framesRead);
+                continue;
+            }
             
             // Always process audio samples to maintain timeline continuity
             if (m_sinkWriter && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
