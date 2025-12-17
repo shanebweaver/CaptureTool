@@ -312,7 +312,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public void ForceCanvasRedrawWithResources()
     {
-        RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? 1.0001f : 1f;
+        RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? DPI_SCALE_TOGGLE_VALUE : 1f;
         InvalidateCanvas();
     }
 
