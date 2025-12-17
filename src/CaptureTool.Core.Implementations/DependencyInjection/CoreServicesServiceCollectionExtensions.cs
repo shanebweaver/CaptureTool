@@ -1,5 +1,6 @@
 using CaptureTool.Core.Implementations.Services.Activation;
 using CaptureTool.Core.Implementations.Services.Navigation;
+using CaptureTool.Core.Interfaces;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Services.Interfaces.Activation;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,7 @@ public static class CoreServicesServiceCollectionExtensions
         // Core app services
         services.AddSingleton<IActivationHandler, CaptureToolActivationHandler>();
         services.AddSingleton<IAppNavigation, CaptureToolAppNavigation>();
+        services.AddSingleton<IFileTypeDetector, FileTypeDetector>();
         return services;
     }
 }

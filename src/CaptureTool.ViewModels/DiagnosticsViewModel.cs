@@ -1,15 +1,14 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Interfaces.Settings;
+using CaptureTool.Core.Interfaces.Actions.Diagnostics;
 using CaptureTool.Services.Interfaces.Logging;
-using CaptureTool.Services.Interfaces.Settings;
 
 namespace CaptureTool.ViewModels;
 
 public sealed partial class DiagnosticsViewModel : ViewModelBase
 {
+    private readonly IDiagnosticsActions _diagnosticsActions;
     private readonly ILogService _logService;
-    private readonly ISettingsService _settingsService;
 
     public RelayCommand ClearLogsCommand { get; }
     public AsyncRelayCommand<bool> UpdateLoggingEnablementCommand { get; }
@@ -27,19 +26,19 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     }
 
     public DiagnosticsViewModel(
-        ILogService logService,
-        ISettingsService settingsService)
+        IDiagnosticsActions diagnosticsActions,
+        ILogService logService)
     {
+        _diagnosticsActions = diagnosticsActions;
         _logService = logService;
-        _settingsService = settingsService;
 
         _logService.LogAdded += OnLogAdded;
 
         ClearLogsCommand = new(ClearLogs); 
         UpdateLoggingEnablementCommand = new(UpdateLoggingEnablementAsync);
 
-        IsLoggingEnabled = _logService.IsEnabled;
-        Logs = string.Join(Environment.NewLine, _logService.GetLogs().Select(log => log.ToString()));
+        IsLoggingEnabled = _diagnosticsActions.IsLoggingEnabled();
+        Logs = string.Join(Environment.NewLine, _diagnosticsActions.GetCurrentLogs().Select(log => log.ToString()));
     }
 
     ~DiagnosticsViewModel()
@@ -55,23 +54,12 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     private async Task UpdateLoggingEnablementAsync(bool newValue)
     {
         IsLoggingEnabled = newValue;
-
-        if (IsLoggingEnabled)
-        {
-            _logService.Enable();
-        }
-        else
-        {
-            _logService.Disable();
-        }
-
-        _settingsService.Set(CaptureToolSettings.VerboseLogging, IsLoggingEnabled);
-        await _settingsService.TrySaveAsync(CancellationToken.None);
+        await _diagnosticsActions.UpdateLoggingStateAsync(newValue, CancellationToken.None);
     }
 
     private void ClearLogs()
     {
         Logs = string.Empty;
-        _logService.ClearLogs();
+        _diagnosticsActions.ClearLogs();
     }
 }
