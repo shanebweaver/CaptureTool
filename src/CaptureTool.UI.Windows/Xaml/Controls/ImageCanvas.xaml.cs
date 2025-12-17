@@ -7,6 +7,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using System;
 using System.Drawing;
 using Point = Windows.Foundation.Point;
 
@@ -155,7 +156,9 @@ public sealed partial class ImageCanvas : UserControlBase
     private void HandleDpiScaleUpdate()
     {
         // Toggle DpiScale to force Win2D to recreate resources with new DPI
-        RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? DPI_SCALE_TOGGLE_VALUE : 1f;
+        // Use a small epsilon for floating-point comparison
+        float currentScale = RenderCanvas.DpiScale;
+        RenderCanvas.DpiScale = Math.Abs(currentScale - 1f) < 0.0001f ? DPI_SCALE_TOGGLE_VALUE : 1f;
         UpdateDrawingCanvasSize();
     }
 
@@ -312,7 +315,10 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public void ForceCanvasRedrawWithResources()
     {
-        RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? DPI_SCALE_TOGGLE_VALUE : 1f;
+        // Toggle DpiScale to force Win2D to recreate resources
+        // Use a small epsilon for floating-point comparison
+        float currentScale = RenderCanvas.DpiScale;
+        RenderCanvas.DpiScale = Math.Abs(currentScale - 1f) < 0.0001f ? DPI_SCALE_TOGGLE_VALUE : 1f;
         InvalidateCanvas();
     }
 
