@@ -76,12 +76,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
-    public bool IsPaused
-    {
-        get => field;
-        private set => Set(ref field, value);
-    }
-
     public RelayCommand CloseOverlayCommand { get; }
     public RelayCommand GoBackCommand { get; }
     public RelayCommand StartVideoCaptureCommand { get; }
