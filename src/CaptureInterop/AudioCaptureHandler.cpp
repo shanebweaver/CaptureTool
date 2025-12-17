@@ -136,6 +136,16 @@ LONGLONG AudioCaptureHandler::GetElapsedRecordingTime() const
     // (elapsed / freq) * TICKS_PER_SECOND + ((elapsed % freq) * TICKS_PER_SECOND) / freq
     const LONGLONG TICKS_PER_SECOND = 10000000LL;
     LONGLONG seconds = elapsedQpc / m_qpcFrequency.QuadPart;
+    
+    // Sanity check: limit to reasonable maximum (1000 hours = ~3.6e15 ticks)
+    // This prevents overflow in the multiplication below (seconds * TICKS_PER_SECOND)
+    const LONGLONG MAX_HOURS = 1000;
+    const LONGLONG MAX_SECONDS = MAX_HOURS * 3600;
+    if (seconds > MAX_SECONDS)
+    {
+        seconds = MAX_SECONDS;  // Cap at 1000 hours
+    }
+    
     LONGLONG remainder = elapsedQpc % m_qpcFrequency.QuadPart;
     LONGLONG elapsedTicks = seconds * TICKS_PER_SECOND + (remainder * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
     
