@@ -3,6 +3,7 @@ using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.Drawable;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -160,7 +161,7 @@ public sealed partial class ImageCanvas : UserControlBase
             
             // Force canvas to recreate resources with the new DPI scale
             // Use DispatcherQueue to ensure proper synchronization
-            bool queued = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+            bool queued = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
             {
                 ForceCanvasRedrawWithResources();
             });
