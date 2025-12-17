@@ -47,6 +47,8 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
             .AddHomeActions()
             .AddSettingsActions()
             .AddVideoEditActions()
+            .AddAppMenuActions()
+            .AddDiagnosticsActions()
             .AddCoreWindowsSettingsActions();
 
         // ViewModels

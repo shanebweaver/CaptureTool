@@ -1,14 +1,12 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
+using CaptureTool.Core.Interfaces.Actions.AppMenu;
 using CaptureTool.Core.Interfaces.FeatureManagement;
-using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces;
 using CaptureTool.Services.Interfaces.FeatureManagement;
-using CaptureTool.Services.Interfaces.Shutdown;
 using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
-using CaptureTool.Services.Interfaces.Windowing;
 using CaptureTool.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 
@@ -29,12 +27,8 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         public static readonly string OpenRecentCapture = "OpenRecentCapture";
     }
 
-    private readonly IShutdownHandler _shutdownHandler;
-    private readonly IAppNavigation _appNavigation;
-    private readonly IWindowHandleProvider _windowingService;
+    private readonly IAppMenuActions _appMenuActions;
     private readonly ITelemetryService _telemetryService;
-    private readonly IFilePickerService _filePickerService;
-    private readonly IStorageService _storageService;
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
@@ -59,23 +53,15 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     }
 
     public AppMenuViewModel(
-        IShutdownHandler shutdownHandler,
-        IAppNavigation appNavigation,
+        IAppMenuActions appMenuActions,
         ITelemetryService telemetryService,
-        IWindowHandleProvider windowingService,
-        IFilePickerService filePickerService,
         IFeatureManager featureManager,
-        IStorageService storageService,
         IImageCaptureHandler imageCaptureHandler,
         IVideoCaptureHandler videoCaptureHandler,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory)
     {
-        _shutdownHandler = shutdownHandler;
-        _appNavigation = appNavigation;
+        _appMenuActions = appMenuActions;
         _telemetryService = telemetryService;
-        _windowingService = windowingService;
-        _filePickerService = filePickerService;
-        _storageService = storageService;
         _imageCaptureHandler = imageCaptureHandler;
         _videoCaptureHandler = videoCaptureHandler;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
@@ -126,7 +112,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewImageCapture, () =>
         {
-            _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
+            _appMenuActions.NewImageCapture();
         });
     }
 
@@ -134,10 +120,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.OpenFile, async () =>
         {
-            nint hwnd = _windowingService.GetMainWindowHandle();
-            IFile file = await _filePickerService.PickFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures) 
-                ?? throw new OperationCanceledException("No file was selected.");
-            _appNavigation.GoToImageEdit(new ImageFile(file.FilePath));
+            await _appMenuActions.OpenFileAsync(CancellationToken.None);
         });
     }
 
@@ -145,7 +128,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NavigateToSettings, () =>
         {
-            _appNavigation.GoToSettings();
+            _appMenuActions.NavigateToSettings();
         });
     }
 
@@ -153,7 +136,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ShowAboutApp, () =>
         {
-            _appNavigation.GoToAbout();
+            _appMenuActions.ShowAboutApp();
         });
     }
 
@@ -161,7 +144,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ShowAddOns, () =>
         {
-            _appNavigation.GoToAddOns();
+            _appMenuActions.ShowAddOns();
         });
     }
 
@@ -169,13 +152,13 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ExitApplication, () =>
         {
-            _shutdownHandler.Shutdown();
+            _appMenuActions.ExitApplication();
         });
     }
 
     private void OpenRecentCapture(RecentCaptureViewModel? model)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenRecentCapture, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenRecentCapture, async () =>
         {
             if (model != null)
             {
@@ -185,19 +168,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
                 }
                 else
                 {
-                    switch (model.CaptureFileType)
-                    {
-                        case CaptureFileType.Image:
-                            ImageFile imageFile = new(model.FilePath);
-                            _appNavigation.GoToImageEdit(imageFile);
-                            break;
-
-                        case CaptureFileType.Video:
-                            VideoFile videoFile = new(model.FilePath);
-                            _appNavigation.GoToVideoEdit(videoFile);
-                            break;
-                    }
-
+                    await _appMenuActions.OpenRecentCaptureAsync(model.FilePath, CancellationToken.None);
                 }
             }
         });
@@ -205,21 +176,12 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     public void RefreshRecentCaptures()
     {
-        string recentCapturesFolder = _storageService.GetApplicationTemporaryFolderPath();
-
-        var recentCaptureFiles = Directory.GetFiles(recentCapturesFolder, "*.*")
-            .OrderByDescending(File.GetLastWriteTimeUtc)
-            .Take(5);
+        var recentCaptures = _appMenuActions.LoadRecentCapturesAsync(CancellationToken.None).GetAwaiter().GetResult();
 
         RecentCaptures.Clear();
-        foreach (var filePath in recentCaptureFiles)
+        foreach (var recentCapture in recentCaptures)
         {
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
-            {
-                continue;
-            }
-
-            var recentCaptureViewModel = _recentCaptureViewModelFactory.Create(filePath);
+            var recentCaptureViewModel = _recentCaptureViewModelFactory.Create(recentCapture.FilePath);
             RecentCaptures.Add(recentCaptureViewModel);
         }
 
