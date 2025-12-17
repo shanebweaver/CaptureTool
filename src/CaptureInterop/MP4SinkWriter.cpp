@@ -333,8 +333,10 @@ void MP4SinkWriter::PrepareForFinalization(LONGLONG finalAudioTimestamp)
         // Calculate how many audio frames we need to fill the gap
         // Note: For typical recordings (up to several hours), overflow is not a concern:
         // e.g., 1 hour gap = 36000000000000 ticks * 48000 Hz / 10000000 = ~172 million frames (within UINT32 range)
+        // However, for extremely long gaps, we cap at UINT32_MAX to prevent overflow
         const LONGLONG TICKS_PER_SECOND = 10000000LL;
-        UINT32 framesNeeded = static_cast<UINT32>((gap * m_audioFormat.nSamplesPerSec) / TICKS_PER_SECOND);
+        LONGLONG framesNeeded64 = (gap * m_audioFormat.nSamplesPerSec) / TICKS_PER_SECOND;
+        UINT32 framesNeeded = (framesNeeded64 > UINT32_MAX) ? UINT32_MAX : static_cast<UINT32>(framesNeeded64);
         
         if (framesNeeded > 0)
         {
@@ -364,6 +366,7 @@ void MP4SinkWriter::PrepareForFinalization(LONGLONG finalAudioTimestamp)
                 
                 memset(pBufferData, 0, bufferSize);
                 hr = buffer->SetCurrentLength(bufferSize);
+                // Unlock buffer before checking result to ensure proper cleanup
                 buffer->Unlock();
                 if (FAILED(hr)) break;  // Stop on error to avoid partial/corrupted audio
                 

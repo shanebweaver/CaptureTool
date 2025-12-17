@@ -121,11 +121,7 @@ extern "C"
     __declspec(dllexport) void TryStopRecording()
     {
         // Phase 4: Stop audio capture first and get final timestamp
-        LONGLONG finalAudioTimestamp = 0;
-        if (g_audioHandler.IsRunning())
-        {
-            finalAudioTimestamp = g_audioHandler.GetLastAudioTimestamp();
-        }
+        LONGLONG finalAudioTimestamp = g_audioHandler.IsRunning() ? g_audioHandler.GetLastAudioTimestamp() : 0;
         g_audioHandler.Stop();
         
         // First remove the event registration (releases the event system's reference)
