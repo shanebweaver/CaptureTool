@@ -94,6 +94,26 @@ WAVEFORMATEX* AudioCaptureHandler::GetFormat() const
     return m_device.GetFormat();
 }
 
+LONGLONG AudioCaptureHandler::GetElapsedRecordingTime() const
+{
+    if (m_startQpc == 0)
+    {
+        return 0;  // Recording hasn't started
+    }
+
+    // Get current time
+    LARGE_INTEGER qpc;
+    QueryPerformanceCounter(&qpc);
+    LONGLONG currentQpc = qpc.QuadPart;
+    LONGLONG elapsedQpc = currentQpc - m_startQpc;
+    
+    // Convert QPC ticks to 100ns units (Media Foundation time)
+    const LONGLONG TICKS_PER_SECOND = 10000000LL;
+    LONGLONG elapsedTicks = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
+    
+    return elapsedTicks;
+}
+
 // ============================================================================
 // Audio Capture Thread
 // ============================================================================

@@ -120,8 +120,11 @@ extern "C"
 
     __declspec(dllexport) void TryStopRecording()
     {
-        // Phase 4: Stop audio capture first and get final timestamp
-        LONGLONG finalAudioTimestamp = g_audioHandler.IsRunning() ? g_audioHandler.GetLastAudioTimestamp() : 0;
+        // Get the expected audio duration based on elapsed recording time
+        // This is more reliable than GetLastAudioTimestamp() when no audio is playing
+        LONGLONG expectedAudioDuration = g_audioHandler.IsRunning() ? g_audioHandler.GetElapsedRecordingTime() : 0;
+        
+        // Stop audio capture
         g_audioHandler.Stop();
         
         // First remove the event registration (releases the event system's reference)
@@ -142,7 +145,8 @@ extern "C"
         }
         
         // Prepare for finalization by synchronizing audio and video streams
-        g_sinkWriter.PrepareForFinalization(finalAudioTimestamp);
+        // Use the expected audio duration (based on elapsed time) rather than actual samples written
+        g_sinkWriter.PrepareForFinalization(expectedAudioDuration);
         
         // Finalize MP4 file after both streams have stopped and been synchronized
         g_sinkWriter.Finalize();

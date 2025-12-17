@@ -320,9 +320,13 @@ void MP4SinkWriter::PrepareForFinalization(LONGLONG finalAudioTimestamp)
         return;
     }
 
-    // Check if audio timeline is behind video timeline
-    // Use the final audio timestamp from the audio handler if available
-    LONGLONG audioEndTime = (finalAudioTimestamp > 0) ? finalAudioTimestamp : m_lastAudioTimestamp;
+    // Determine the actual audio end position
+    // finalAudioTimestamp is the expected duration based on elapsed time
+    // m_lastAudioTimestamp is the actual position based on samples written
+    // Use whichever is greater to handle cases where audio capture didn't keep up
+    LONGLONG audioEndTime = (finalAudioTimestamp > m_lastAudioTimestamp) ? finalAudioTimestamp : m_lastAudioTimestamp;
+    
+    // Video end time is based on the last video frame written
     LONGLONG videoEndTime = m_prevVideoTimestamp;
 
     // If audio is behind video, fill the gap with silent samples

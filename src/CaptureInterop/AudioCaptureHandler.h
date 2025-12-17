@@ -80,6 +80,13 @@ public:
     /// <returns>The next audio timestamp (position where next sample would be written).</returns>
     LONGLONG GetLastAudioTimestamp() const { return m_nextAudioTimestamp; }
 
+    /// <summary>
+    /// Calculate the expected audio duration based on elapsed recording time.
+    /// This is more reliable than GetLastAudioTimestamp() when no audio is playing.
+    /// </summary>
+    /// <returns>Expected audio duration in 100ns ticks based on wall-clock time.</returns>
+    LONGLONG GetElapsedRecordingTime() const;
+
 private:
     /// <summary>
     /// Audio capture thread procedure.
