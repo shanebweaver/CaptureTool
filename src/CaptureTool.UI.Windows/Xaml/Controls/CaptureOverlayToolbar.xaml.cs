@@ -18,6 +18,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
+    public static readonly DependencyProperty IsPausedProperty = DependencyProperty.Register(
+        nameof(IsPaused),
+        typeof(bool),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(DependencyProperty.UnsetValue));
+
     public static readonly DependencyProperty CloseCommandProperty = DependencyProperty.Register(
         nameof(CloseCommand),
         typeof(ICommand),
@@ -74,6 +80,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     {
         get => Get<bool>(IsRecordingProperty);
         set => Set(IsRecordingProperty, value);
+    }
+
+    public bool IsPaused
+    {
+        get => Get<bool>(IsPausedProperty);
+        set => Set(IsPausedProperty, value);
     }
 
     public ICommand CloseCommand
