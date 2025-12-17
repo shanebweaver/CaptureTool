@@ -122,10 +122,47 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private bool _isPointerDown;
     private Point _lastPointerPosition;
+    private double _lastRasterizationScale;
 
     public ImageCanvas()
     {
         InitializeComponent();
+        Loaded += ImageCanvas_Loaded;
+        Unloaded += ImageCanvas_Unloaded;
+    }
+
+    private void ImageCanvas_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (XamlRoot != null)
+        {
+            _lastRasterizationScale = XamlRoot.RasterizationScale;
+            XamlRoot.Changed += XamlRoot_Changed;
+        }
+    }
+
+    private void ImageCanvas_Unloaded(object sender, RoutedEventArgs e)
+    {
+        if (XamlRoot != null)
+        {
+            XamlRoot.Changed -= XamlRoot_Changed;
+        }
+    }
+
+    private void XamlRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args)
+    {
+        // Check if the DPI scale has changed
+        double currentScale = sender.RasterizationScale;
+        if (Math.Abs(currentScale - _lastRasterizationScale) > 0.0001)
+        {
+            _lastRasterizationScale = currentScale;
+            
+            // Force canvas to recreate resources with the new DPI scale
+            // Use DispatcherQueue to ensure proper synchronization
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+            {
+                ForceCanvasRedrawWithResources();
+            });
+        }
     }
 
     #region Zoom, Center, and Size
