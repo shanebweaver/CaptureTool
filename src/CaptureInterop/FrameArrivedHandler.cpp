@@ -11,7 +11,8 @@ FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter)
     : m_sinkWriter(std::move(sinkWriter)),
     m_ref(1),
     m_running(true),
-    m_stopped(false)
+    m_stopped(false),
+    m_processingStarted(false)
 {
     // Note: Thread is started after object is fully constructed
     // This prevents accessing uninitialized members in ProcessingThreadProc
@@ -20,7 +21,9 @@ FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter)
 void FrameArrivedHandler::StartProcessing()
 {
     // Start background processing thread after object is fully constructed
-    if (!m_processingThread.joinable())
+    // Ensure only one thread is created (thread-safe)
+    bool expected = false;
+    if (m_processingStarted.compare_exchange_strong(expected, true))
     {
         m_processingThread = std::thread(&FrameArrivedHandler::ProcessingThreadProc, this);
     }
@@ -203,6 +206,8 @@ void FrameArrivedHandler::ProcessingThreadProc()
                 
                 // Capture a reference to sink writer while holding the lock
                 // This ensures thread-safe access to m_sinkWriter
+                // Note: m_sinkWriter lifetime is managed by the owner (ScreenRecorder)
+                // and is guaranteed to outlive this handler's processing thread
                 sinkWriter = m_sinkWriter;
             }
             else

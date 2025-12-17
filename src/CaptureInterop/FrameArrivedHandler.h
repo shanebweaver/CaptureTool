@@ -51,6 +51,7 @@ private:
     std::thread m_processingThread;
     std::atomic<bool> m_running{true};
     std::atomic<bool> m_stopped{false};  // Guard for idempotent Stop()
+    std::atomic<bool> m_processingStarted{false};  // Guard for StartProcessing()
     
     // First frame tracking for timestamp calculation
     std::atomic<LONGLONG> m_firstFrameSystemTime{0};
