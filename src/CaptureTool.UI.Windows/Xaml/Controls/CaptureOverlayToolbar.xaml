@@ -25,10 +25,14 @@
                 <SymbolIcon Symbol="Back" />
             </Button>
 
-            <Button Command="{x:Bind TogglePauseResumeCommand, Mode=OneWay}" Style="{StaticResource IconButtonStyle}">
+            <Button Command="{x:Bind TogglePauseResumeCommand, Mode=OneWay}" 
+                    Style="{StaticResource IconButtonStyle}"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsRecording), Mode=OneWay}">
                 <Grid>
-                    <SymbolIcon Symbol="Play" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsPaused), Mode=OneWay}" />
-                    <SymbolIcon Symbol="Pause" Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsPaused), Mode=OneWay}" />
+                    <SymbolIcon Symbol="Play" 
+                                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsPaused), Mode=OneWay}" />
+                    <SymbolIcon Symbol="Pause" 
+                                Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsPaused), Mode=OneWay}" />
                 </Grid>
             </Button>
 

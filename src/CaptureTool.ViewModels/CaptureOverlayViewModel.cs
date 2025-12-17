@@ -76,6 +76,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
+    public bool IsPaused
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public RelayCommand CloseOverlayCommand { get; }
     public RelayCommand GoBackCommand { get; }
     public RelayCommand StartVideoCaptureCommand { get; }
@@ -118,6 +124,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             IsDesktopAudioEnabled = _videoCaptureHandler.IsDesktopAudioEnabled;
             _videoCaptureHandler.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
 
+            IsPaused = _videoCaptureHandler.IsPaused;
+            _videoCaptureHandler.PausedStateChanged += OnPausedStateChanged;
+
             _monitorCaptureResult = options.Monitor;
             _captureArea = options.Area;
 
@@ -133,8 +142,18 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         });
     }
 
+    private void OnPausedStateChanged(object? sender, bool value)
+    {
+        _taskEnvironment.TryExecute(() =>
+        {
+            IsPaused = value;
+        });
+    }
+
     public override void Dispose()
     {
+        _videoCaptureHandler.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
+        _videoCaptureHandler.PausedStateChanged -= OnPausedStateChanged;
         StopTimer();
         base.Dispose();
     }

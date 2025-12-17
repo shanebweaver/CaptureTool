@@ -6,6 +6,7 @@ public partial interface IVideoCaptureHandler
 {
     event EventHandler<IVideoFile>? NewVideoCaptured;
     event EventHandler<bool>? DesktopAudioStateChanged;
+    event EventHandler<bool>? PausedStateChanged;
 
     bool IsDesktopAudioEnabled { get; }
     bool IsRecording { get; }

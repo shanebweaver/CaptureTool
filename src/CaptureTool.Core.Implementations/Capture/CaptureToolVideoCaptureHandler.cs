@@ -16,6 +16,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public event EventHandler<IVideoFile>? NewVideoCaptured;
     public event EventHandler<bool>? DesktopAudioStateChanged;
+    public event EventHandler<bool>? PausedStateChanged;
 
     public CaptureToolVideoCaptureHandler(
         IScreenRecorder screenRecorder,
@@ -97,6 +98,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     public void ToggleIsPaused(bool isPaused)
     {
         IsPaused = isPaused;
+        PausedStateChanged?.Invoke(this, isPaused);
 
         if (IsRecording)
         {
@@ -104,7 +106,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             {
                 _screenRecorder.PauseRecording();
             }
-            else if (!isPaused)
+            else
             {
                 _screenRecorder.ResumeRecording();
             }
