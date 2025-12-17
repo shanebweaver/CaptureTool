@@ -146,6 +146,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     public override void Dispose()
     {
+        _videoCaptureHandler.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
+        _videoCaptureHandler.PausedStateChanged -= OnPausedStateChanged;
         StopTimer();
         base.Dispose();
     }
