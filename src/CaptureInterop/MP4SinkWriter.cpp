@@ -305,8 +305,94 @@ HRESULT MP4SinkWriter::WriteAudioSample(const BYTE* pData, UINT32 numFrames, LON
     
     sample->SetSampleDuration(duration);
 
+    // Track the last audio timestamp for synchronization during finalization
+    m_lastAudioTimestamp = timestamp + duration;
+
     // Write sample to MP4 file (Media Foundation converts to AAC automatically)
     return m_sinkWriter->WriteSample(m_audioStreamIndex, sample.get());
+}
+
+void MP4SinkWriter::PrepareForFinalization(LONGLONG finalAudioTimestamp)
+{
+    // Only synchronize if we have an audio stream
+    if (!m_hasAudioStream || !m_sinkWriter)
+    {
+        return;
+    }
+
+    // Check if audio timeline is behind video timeline
+    // Use the final audio timestamp from the audio handler if available
+    LONGLONG audioEndTime = (finalAudioTimestamp > 0) ? finalAudioTimestamp : m_lastAudioTimestamp;
+    LONGLONG videoEndTime = m_prevVideoTimestamp;
+
+    // If audio is behind video, fill the gap with silent samples
+    if (audioEndTime < videoEndTime)
+    {
+        LONGLONG gap = videoEndTime - audioEndTime;
+        
+        // Calculate how many audio frames we need to fill the gap
+        const LONGLONG TICKS_PER_SECOND = 10000000LL;
+        UINT32 framesNeeded = static_cast<UINT32>((gap * m_audioFormat.nSamplesPerSec) / TICKS_PER_SECOND);
+        
+        if (framesNeeded > 0)
+        {
+            // Write silent samples in chunks (e.g., 1024 frames at a time)
+            // to avoid creating excessively large buffers
+            const UINT32 CHUNK_SIZE = 1024;
+            UINT32 framesRemaining = framesNeeded;
+            LONGLONG currentTimestamp = audioEndTime;
+            
+            // Create a buffer of silent audio (zeros)
+            UINT32 chunkBufferSize = CHUNK_SIZE * m_audioFormat.nBlockAlign;
+            std::vector<BYTE> silentBuffer(chunkBufferSize, 0);
+            
+            while (framesRemaining > 0)
+            {
+                UINT32 framesToWrite = (framesRemaining < CHUNK_SIZE) ? framesRemaining : CHUNK_SIZE;
+                
+                // Calculate buffer size for this chunk
+                UINT32 bufferSize = framesToWrite * m_audioFormat.nBlockAlign;
+                
+                // Create Media Foundation buffer for silent audio data
+                wil::com_ptr<IMFMediaBuffer> buffer;
+                HRESULT hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
+                if (FAILED(hr)) break;
+                
+                // Copy silent data into buffer
+                BYTE* pBufferData = nullptr;
+                DWORD maxLen = 0, curLen = 0;
+                hr = buffer->Lock(&pBufferData, &maxLen, &curLen);
+                if (FAILED(hr)) break;
+                
+                memset(pBufferData, 0, bufferSize);
+                buffer->SetCurrentLength(bufferSize);
+                buffer->Unlock();
+                
+                // Create Media Foundation sample
+                wil::com_ptr<IMFSample> sample;
+                hr = MFCreateSample(sample.put());
+                if (FAILED(hr)) break;
+                
+                sample->AddBuffer(buffer.get());
+                sample->SetSampleTime(currentTimestamp);
+                
+                // Calculate duration for this chunk
+                LONGLONG duration = (framesToWrite * TICKS_PER_SECOND) / m_audioFormat.nSamplesPerSec;
+                sample->SetSampleDuration(duration);
+                
+                // Write the silent sample
+                hr = m_sinkWriter->WriteSample(m_audioStreamIndex, sample.get());
+                if (FAILED(hr)) break;
+                
+                // Update tracking variables
+                currentTimestamp += duration;
+                framesRemaining -= framesToWrite;
+            }
+            
+            // Update last audio timestamp to match video
+            m_lastAudioTimestamp = currentTimestamp;
+        }
+    }
 }
 
 void MP4SinkWriter::Finalize()

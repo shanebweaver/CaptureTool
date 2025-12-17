@@ -38,6 +38,7 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <vector>
 
 // Windows ABI
 #include <windows.foundation.h>

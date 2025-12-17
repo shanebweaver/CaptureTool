@@ -70,6 +70,13 @@ public:
     /// </summary>
     void Finalize();
 
+    /// <summary>
+    /// Prepare streams for finalization by synchronizing audio and video timelines.
+    /// If audio stream exists and is shorter than video, fills the gap with silent samples.
+    /// </summary>
+    /// <param name="finalAudioTimestamp">The final timestamp from the audio capture handler.</param>
+    void PrepareForFinalization(LONGLONG finalAudioTimestamp);
+
     ULONG STDMETHODCALLTYPE AddRef();
     ULONG STDMETHODCALLTYPE Release();
 
@@ -86,6 +93,7 @@ private:
     ID3D11Device* m_device = nullptr;
     ID3D11DeviceContext* m_context = nullptr;
     LONGLONG m_prevVideoTimestamp = 0;
+    LONGLONG m_lastAudioTimestamp = 0;          // Track last audio sample timestamp
     LONGLONG m_recordingStartQpc = 0;           // Common start time for A/V sync (QPC ticks)
     WAVEFORMATEX m_audioFormat = {};            // Cached audio format info
 };

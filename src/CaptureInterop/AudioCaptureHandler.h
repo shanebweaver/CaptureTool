@@ -73,6 +73,13 @@ public:
     /// <returns>True if capture thread is active, false otherwise.</returns>
     bool IsRunning() const { return m_isRunning; }
 
+    /// <summary>
+    /// Get the last audio timestamp written to the sink writer.
+    /// Used for synchronization during finalization.
+    /// </summary>
+    /// <returns>The next audio timestamp (position where next sample would be written).</returns>
+    LONGLONG GetLastAudioTimestamp() const { return m_nextAudioTimestamp; }
+
 private:
     /// <summary>
     /// Audio capture thread procedure.
