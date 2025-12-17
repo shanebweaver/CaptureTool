@@ -14,4 +14,5 @@ public interface ICaptureOverlayActions
     // Stop video capture
     bool CanStopVideoCapture();
     void StopVideoCapture();
+    void TogglePauseResume();
 }

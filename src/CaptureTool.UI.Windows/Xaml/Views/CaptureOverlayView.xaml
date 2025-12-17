@@ -19,10 +19,12 @@
                 CloseCommand="{x:Bind ViewModel.CloseOverlayCommand}"
                 GoBackCommand="{x:Bind ViewModel.GoBackCommand}"
                 IsLocalAudioEnabled="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=OneWay}"
+                IsPaused="{x:Bind ViewModel.IsPaused, Mode=OneWay}"
                 IsRecording="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
                 StartVideoCaptureCommand="{x:Bind ViewModel.StartVideoCaptureCommand}"
                 StopVideoCaptureCommand="{x:Bind ViewModel.StopVideoCaptureCommand}"
-                ToggleLocalAudioCommand="{x:Bind ViewModel.ToggleDesktopAudioCommand}" />
+                ToggleLocalAudioCommand="{x:Bind ViewModel.ToggleDesktopAudioCommand}"
+                TogglePauseResumeCommand="{x:Bind ViewModel.TogglePauseResumeCommand}" />
         </Grid>
     </Grid>
 </local:CaptureOverlayViewBase>

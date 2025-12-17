@@ -24,6 +24,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         public static readonly string StartVideoCapture = "StartVideoCapture";
         public static readonly string StopVideoCapture = "StopVideoCapture";
         public static readonly string ToggleDesktopAudio = "ToggleDesktopAudio";
+        public static readonly string TogglePauseResume = "TogglePauseResume";
     }
 
     private readonly IAppNavigation _appNavigation;
@@ -40,6 +41,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private DateTime _captureStartTime;
 
     public bool IsRecording
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsPaused
     {
         get => field;
         private set => Set(ref field, value);
@@ -74,6 +81,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public RelayCommand StartVideoCaptureCommand { get; }
     public RelayCommand StopVideoCaptureCommand { get; }
     public RelayCommand ToggleDesktopAudioCommand { get; }
+    public RelayCommand TogglePauseResumeCommand { get; }
 
     public CaptureOverlayViewModel(
         IAppNavigation appNavigation,
@@ -97,6 +105,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         StartVideoCaptureCommand = new(StartVideoCapture);
         StopVideoCaptureCommand = new(StopVideoCapture);
         ToggleDesktopAudioCommand = new(ToggleDesktopAudio);
+        TogglePauseResumeCommand = new(TogglePauseResume);
     }
 
     public override void Load(CaptureOverlayViewModelOptions options)
@@ -108,6 +117,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
             IsDesktopAudioEnabled = _videoCaptureHandler.IsDesktopAudioEnabled;
             _videoCaptureHandler.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
+
+            IsPaused = _videoCaptureHandler.IsPaused;
+            _videoCaptureHandler.PausedStateChanged += OnPausedStateChanged;
 
             _monitorCaptureResult = options.Monitor;
             _captureArea = options.Area;
@@ -124,8 +136,18 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         });
     }
 
+    private void OnPausedStateChanged(object? sender, bool value)
+    {
+        _taskEnvironment.TryExecute(() =>
+        {
+            IsPaused = value;
+        });
+    }
+
     public override void Dispose()
     {
+        _videoCaptureHandler.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
+        _videoCaptureHandler.PausedStateChanged -= OnPausedStateChanged;
         StopTimer();
         base.Dispose();
     }
@@ -189,6 +211,15 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleDesktopAudio, () =>
         {
             _captureOverlayActions.ToggleDesktopAudio();
+        });
+    }
+
+    private void TogglePauseResume()
+    {
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.TogglePauseResume, () =>
+        {
+            IsPaused = !IsPaused;
+            _captureOverlayActions.TogglePauseResume();
         });
     }
 

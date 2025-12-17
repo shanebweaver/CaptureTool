@@ -112,6 +112,11 @@ extern "C"
         // Not implemented yet, don't worry about it.
     }
 
+    __declspec(dllexport) void TryResumeRecording()
+    {
+        // Not implemented yet, don't worry about it.
+    }
+
     __declspec(dllexport) void TryStopRecording()
     {
         // Phase 4: Stop audio capture first
