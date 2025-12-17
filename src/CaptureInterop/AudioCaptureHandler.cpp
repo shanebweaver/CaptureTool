@@ -134,7 +134,8 @@ void AudioCaptureHandler::CaptureThreadProc()
             const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
             
             // Always process audio samples to maintain timeline continuity
-            if (m_sinkWriter && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
+            // Process even when AUDCLNT_BUFFERFLAGS_SILENT is set to prevent tight loop that freezes UI
+            if (m_sinkWriter)
             {
                 // If this is the first write after being disabled, sync timestamp to current recording time
                 // and prepare to skip several samples to drain any stale buffer data
@@ -171,10 +172,10 @@ void AudioCaptureHandler::CaptureThreadProc()
                 // This gives the exact playback duration of this sample
                 LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
                 
-                // When audio is disabled, write silent samples to maintain timeline continuity
-                // This prevents video from skipping ahead when audio is muted
+                // When audio is disabled or silent, write silent samples to maintain timeline continuity
+                // This prevents video from skipping ahead and prevents UI freeze from tight loops
                 BYTE* pAudioData = pData;
-                if (!m_isEnabled)
+                if (!m_isEnabled || (flags & AUDCLNT_BUFFERFLAGS_SILENT))
                 {
                     // Reuse or resize silent buffer for efficiency
                     UINT32 bufferSize = framesRead * format->nBlockAlign;

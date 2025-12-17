@@ -10,6 +10,7 @@ using namespace GraphicsCaptureHelpers;
 static wil::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession> g_session;
 static wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool> g_framePool;
 static EventRegistrationToken g_frameArrivedEventToken;
+static FrameArrivedHandler* g_frameHandler = nullptr;
 static MP4SinkWriter g_sinkWriter;
 static AudioCaptureHandler g_audioHandler;
 
@@ -91,7 +92,7 @@ extern "C"
             }
         }
         
-        g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter, &hr);
+        g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter, &g_frameHandler, &hr);
 
         hr = g_session->StartCapture();
         if (FAILED(hr))
@@ -122,12 +123,22 @@ extern "C"
         // Phase 4: Stop audio capture first
         g_audioHandler.Stop();
         
+        // First remove the event registration (releases the event system's reference)
         if (g_framePool)
         {
             g_framePool->remove_FrameArrived(g_frameArrivedEventToken);
         }
 
         g_frameArrivedEventToken.value = 0;
+        
+        // Then stop the frame handler and release our reference
+        // This ensures clean shutdown: event unregistered -> thread stopped -> resources released
+        if (g_frameHandler)
+        {
+            g_frameHandler->Stop();
+            g_frameHandler->Release();
+            g_frameHandler = nullptr;
+        }
         
         // Finalize MP4 file after both streams have stopped
         g_sinkWriter.Finalize();

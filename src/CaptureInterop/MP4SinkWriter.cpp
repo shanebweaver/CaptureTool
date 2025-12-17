@@ -29,8 +29,22 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
     HRESULT hr = MFStartup(MF_VERSION);
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
+    // Create attributes to enable hardware acceleration and improve performance
+    wil::com_ptr<IMFAttributes> attributes;
+    hr = MFCreateAttributes(attributes.put(), 3);
+    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+    
+    // Enable hardware transforms (GPU encoding) for better performance
+    attributes->SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, TRUE);
+    
+    // Enable format converters to allow automatic format conversion when needed
+    attributes->SetUINT32(MF_READWRITE_DISABLE_CONVERTERS, FALSE);
+    
+    // Set low latency mode to reduce encoder queue buildup
+    attributes->SetUINT32(MF_LOW_LATENCY, TRUE);
+
     wil::com_ptr<IMFSinkWriter> sinkWriter;
-    hr = MFCreateSinkWriterFromURL(outputPath, nullptr, nullptr, sinkWriter.put());
+    hr = MFCreateSinkWriterFromURL(outputPath, nullptr, attributes.get(), sinkWriter.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     // Output type: H.264
