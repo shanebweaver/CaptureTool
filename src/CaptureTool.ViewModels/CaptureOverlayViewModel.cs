@@ -46,6 +46,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
+    public bool IsPaused
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public TimeSpan CaptureTime
     {
         get => field;
@@ -199,6 +205,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.TogglePauseResume, () =>
         {
+            IsPaused = !IsPaused;
             _captureOverlayActions.TogglePauseResume();
         });
     }
