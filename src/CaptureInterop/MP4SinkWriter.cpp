@@ -342,9 +342,8 @@ void MP4SinkWriter::PrepareForFinalization(LONGLONG finalAudioTimestamp)
             UINT32 framesRemaining = framesNeeded;
             LONGLONG currentTimestamp = audioEndTime;
             
-            // Create a buffer of silent audio (zeros)
+            // Create a reusable buffer of silent audio (zeros) for the chunk size
             UINT32 chunkBufferSize = CHUNK_SIZE * m_audioFormat.nBlockAlign;
-            std::vector<BYTE> silentBuffer(chunkBufferSize, 0);
             
             while (framesRemaining > 0)
             {
@@ -358,14 +357,13 @@ void MP4SinkWriter::PrepareForFinalization(LONGLONG finalAudioTimestamp)
                 HRESULT hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
                 if (FAILED(hr)) break;  // Stop on error to avoid partial/corrupted audio
                 
-                // Copy silent data into buffer
+                // Fill buffer with silent audio (zeros)
                 BYTE* pBufferData = nullptr;
                 DWORD maxLen = 0, curLen = 0;
                 hr = buffer->Lock(&pBufferData, &maxLen, &curLen);
                 if (FAILED(hr)) break;  // Stop on error to avoid partial/corrupted audio
                 
-                // Copy silent samples from pre-zeroed vector (no need to memset)
-                memcpy(pBufferData, silentBuffer.data(), bufferSize);
+                memset(pBufferData, 0, bufferSize);
                 buffer->SetCurrentLength(bufferSize);
                 buffer->Unlock();
                 
