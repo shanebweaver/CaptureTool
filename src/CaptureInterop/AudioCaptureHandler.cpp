@@ -206,11 +206,6 @@ void AudioCaptureHandler::CaptureThreadProc()
             }
 
             m_device.ReleaseBuffer(framesRead);
-            
-            // Sleep briefly after processing audio to prevent flooding the Media Foundation encoder queue
-            // This prevents the sink writer from blocking when the queue fills up
-            // 5ms sleep allows encoder to process samples while maintaining responsive capture
-            Sleep(5);
         }
         else
         {
