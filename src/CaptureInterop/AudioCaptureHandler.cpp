@@ -104,6 +104,13 @@ LONGLONG AudioCaptureHandler::GetElapsedRecordingTime() const
         return 0;
     }
 
+    // Check if QPC frequency is valid (should have been initialized in constructor)
+    if (m_qpcFrequency.QuadPart == 0)
+    {
+        // Invalid frequency, cannot calculate elapsed time reliably
+        return 0;
+    }
+
     // Get current time
     LARGE_INTEGER qpc;
     if (!QueryPerformanceCounter(&qpc))
@@ -115,6 +122,13 @@ LONGLONG AudioCaptureHandler::GetElapsedRecordingTime() const
     
     LONGLONG currentQpc = qpc.QuadPart;
     LONGLONG elapsedQpc = currentQpc - m_startQpc;
+    
+    // Handle potential negative elapsed time (QPC wraparound or clock adjustments)
+    if (elapsedQpc < 0)
+    {
+        // This shouldn't happen in normal operation, but handle it gracefully
+        return 0;
+    }
     
     // Convert QPC ticks to 100ns units (Media Foundation time)
     // Restructure calculation to avoid potential overflow for very long recordings:
