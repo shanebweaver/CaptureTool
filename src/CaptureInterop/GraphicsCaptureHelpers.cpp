@@ -180,7 +180,7 @@ namespace GraphicsCaptureHelpers
         hr = factory->Create(
             direct3DDevice.get(),
             DirectXPixelFormat_B8G8R8A8UIntNormalized,
-            2, // number of buffers
+            6, // number of buffers - increased from 2 to prevent stalls when WriteSample blocks
             size,
             framePool.put());
         if (FAILED(hr))
