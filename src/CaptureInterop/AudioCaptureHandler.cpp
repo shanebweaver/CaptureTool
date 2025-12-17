@@ -98,18 +98,32 @@ LONGLONG AudioCaptureHandler::GetElapsedRecordingTime() const
 {
     if (m_startQpc == 0)
     {
-        return 0;  // Recording hasn't started
+        // Recording hasn't started or hasn't been initialized
+        // Note: While QPC could theoretically return 0, it's extremely unlikely in practice
+        // as it represents high-resolution performance counter ticks since system boot
+        return 0;
     }
 
     // Get current time
     LARGE_INTEGER qpc;
-    QueryPerformanceCounter(&qpc);
+    if (!QueryPerformanceCounter(&qpc))
+    {
+        // QueryPerformanceCounter failure is extremely rare on modern systems
+        // but if it happens, return 0 to avoid using incorrect timestamps
+        return 0;
+    }
+    
     LONGLONG currentQpc = qpc.QuadPart;
     LONGLONG elapsedQpc = currentQpc - m_startQpc;
     
     // Convert QPC ticks to 100ns units (Media Foundation time)
+    // Restructure calculation to avoid potential overflow for very long recordings:
+    // Instead of (elapsed * TICKS_PER_SECOND) / freq, use:
+    // (elapsed / freq) * TICKS_PER_SECOND + ((elapsed % freq) * TICKS_PER_SECOND) / freq
     const LONGLONG TICKS_PER_SECOND = 10000000LL;
-    LONGLONG elapsedTicks = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
+    LONGLONG seconds = elapsedQpc / m_qpcFrequency.QuadPart;
+    LONGLONG remainder = elapsedQpc % m_qpcFrequency.QuadPart;
+    LONGLONG elapsedTicks = seconds * TICKS_PER_SECOND + (remainder * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
     
     return elapsedTicks;
 }
