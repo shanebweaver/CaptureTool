@@ -331,6 +331,8 @@ void MP4SinkWriter::PrepareForFinalization(LONGLONG finalAudioTimestamp)
         LONGLONG gap = videoEndTime - audioEndTime;
         
         // Calculate how many audio frames we need to fill the gap
+        // Note: For typical recordings (up to several hours), overflow is not a concern:
+        // e.g., 1 hour gap = 36000000000000 ticks * 48000 Hz / 10000000 = ~172 million frames (within UINT32 range)
         const LONGLONG TICKS_PER_SECOND = 10000000LL;
         UINT32 framesNeeded = static_cast<UINT32>((gap * m_audioFormat.nSamplesPerSec) / TICKS_PER_SECOND);
         
@@ -341,9 +343,6 @@ void MP4SinkWriter::PrepareForFinalization(LONGLONG finalAudioTimestamp)
             const UINT32 CHUNK_SIZE = 1024;
             UINT32 framesRemaining = framesNeeded;
             LONGLONG currentTimestamp = audioEndTime;
-            
-            // Create a reusable buffer of silent audio (zeros) for the chunk size
-            UINT32 chunkBufferSize = CHUNK_SIZE * m_audioFormat.nBlockAlign;
             
             while (framesRemaining > 0)
             {
@@ -364,8 +363,9 @@ void MP4SinkWriter::PrepareForFinalization(LONGLONG finalAudioTimestamp)
                 if (FAILED(hr)) break;  // Stop on error to avoid partial/corrupted audio
                 
                 memset(pBufferData, 0, bufferSize);
-                buffer->SetCurrentLength(bufferSize);
+                hr = buffer->SetCurrentLength(bufferSize);
                 buffer->Unlock();
+                if (FAILED(hr)) break;  // Stop on error to avoid partial/corrupted audio
                 
                 // Create Media Foundation sample
                 wil::com_ptr<IMFSample> sample;
