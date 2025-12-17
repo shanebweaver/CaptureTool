@@ -170,8 +170,9 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
                 {
                     // Execute async operation synchronously since this is called from a command
                     // The command infrastructure doesn't support async void
+                    // ConfigureAwait(false) helps avoid potential deadlocks
                     _appMenuActions.OpenRecentCaptureAsync(model.FilePath, CancellationToken.None)
-                        .GetAwaiter().GetResult();
+                        .ConfigureAwait(false).GetAwaiter().GetResult();
                 }
             }
         });
@@ -180,8 +181,9 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     public void RefreshRecentCaptures()
     {
         // Execute async operation synchronously since this needs to be callable from non-async contexts
+        // ConfigureAwait(false) helps avoid potential deadlocks
         var recentCaptures = _appMenuActions.LoadRecentCapturesAsync(CancellationToken.None)
-            .GetAwaiter().GetResult();
+            .ConfigureAwait(false).GetAwaiter().GetResult();
 
         RecentCaptures.Clear();
         foreach (var recentCapture in recentCaptures)
