@@ -15,6 +15,7 @@ namespace CaptureTool.UI.Windows.Xaml.Controls;
 public sealed partial class ImageCanvas : UserControlBase
 {
     private const double DPI_SCALE_THRESHOLD = 0.0001;
+    private const float DPI_SCALE_TOGGLE_VALUE = 1.0001f;
 
     public static readonly DependencyProperty DrawablesProperty = DependencyProperty.Register(
         nameof(Drawables),
@@ -151,6 +152,13 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
+    private void HandleDpiScaleUpdate()
+    {
+        // Toggle DpiScale to force Win2D to recreate resources with new DPI
+        RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? DPI_SCALE_TOGGLE_VALUE : 1f;
+        UpdateDrawingCanvasSize();
+    }
+
     private void XamlRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args)
     {
         // Note: This event is always raised on the UI thread by the framework
@@ -168,9 +176,7 @@ public sealed partial class ImageCanvas : UserControlBase
             bool queued = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
             {
                 // Step 1 & 2: Force resource recreation and update canvas size
-                // Toggle DpiScale to force Win2D to recreate resources with new DPI
-                RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? 1.0001f : 1f;
-                UpdateDrawingCanvasSize();
+                HandleDpiScaleUpdate();
                 
                 // Step 3 & 4: Queue low priority to run after layout completes
                 bool zoomQueued = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
@@ -188,9 +194,7 @@ public sealed partial class ImageCanvas : UserControlBase
             // If queuing fails (rare), call immediately since we're already on the UI thread
             if (!queued)
             {
-                // Toggle DpiScale to force Win2D to recreate resources with new DPI
-                RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? 1.0001f : 1f;
-                UpdateDrawingCanvasSize();
+                HandleDpiScaleUpdate();
                 ZoomAndCenter();
             }
         }
