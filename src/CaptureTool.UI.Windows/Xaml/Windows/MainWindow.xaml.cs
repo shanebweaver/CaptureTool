@@ -135,9 +135,7 @@ public sealed partial class MainWindow : Window
 
         ViewModel.Dispose();
 
-        // Let the shutdown handler know we're closing, but don't force exit here
-        // as that can cause crashes. Let WinUI handle the window closure naturally.
-        AppServiceLocator.ShutdownHandler.NotifyMainWindowClosed();
+        AppServiceLocator.ShutdownHandler.Shutdown();
     }
 
     private void OnViewModelNavigationRequested(object? sender, INavigationRequest navigationRequest)

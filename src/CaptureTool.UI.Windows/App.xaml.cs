@@ -13,8 +13,6 @@ public partial class App : Application
     internal AppServiceProvider ServiceProvider { get; }
     internal DispatcherQueue DispatcherQueue { get; }
 
-    private readonly KeepAlive _keepAlive;
-
     public App()
     {
         UnhandledException += App_UnhandledException;
@@ -22,7 +20,6 @@ public partial class App : Application
         ServiceProvider = new();
         InitializeComponent();
         RestoreAppTheme();
-        _keepAlive = new KeepAlive();
     }
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
