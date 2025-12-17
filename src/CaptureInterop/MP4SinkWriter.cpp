@@ -356,22 +356,23 @@ void MP4SinkWriter::PrepareForFinalization(LONGLONG finalAudioTimestamp)
                 // Create Media Foundation buffer for silent audio data
                 wil::com_ptr<IMFMediaBuffer> buffer;
                 HRESULT hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
-                if (FAILED(hr)) break;
+                if (FAILED(hr)) break;  // Stop on error to avoid partial/corrupted audio
                 
                 // Copy silent data into buffer
                 BYTE* pBufferData = nullptr;
                 DWORD maxLen = 0, curLen = 0;
                 hr = buffer->Lock(&pBufferData, &maxLen, &curLen);
-                if (FAILED(hr)) break;
+                if (FAILED(hr)) break;  // Stop on error to avoid partial/corrupted audio
                 
-                memset(pBufferData, 0, bufferSize);
+                // Copy silent samples from pre-zeroed vector (no need to memset)
+                memcpy(pBufferData, silentBuffer.data(), bufferSize);
                 buffer->SetCurrentLength(bufferSize);
                 buffer->Unlock();
                 
                 // Create Media Foundation sample
                 wil::com_ptr<IMFSample> sample;
                 hr = MFCreateSample(sample.put());
-                if (FAILED(hr)) break;
+                if (FAILED(hr)) break;  // Stop on error to avoid partial/corrupted audio
                 
                 sample->AddBuffer(buffer.get());
                 sample->SetSampleTime(currentTimestamp);
@@ -382,7 +383,7 @@ void MP4SinkWriter::PrepareForFinalization(LONGLONG finalAudioTimestamp)
                 
                 // Write the silent sample
                 hr = m_sinkWriter->WriteSample(m_audioStreamIndex, sample.get());
-                if (FAILED(hr)) break;
+                if (FAILED(hr)) break;  // Stop on error to avoid partial/corrupted audio
                 
                 // Update tracking variables
                 currentTimestamp += duration;
