@@ -153,6 +153,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void XamlRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args)
     {
+        // Note: This event is always raised on the UI thread by the framework
         // Check if the DPI scale has changed
         double currentScale = sender.RasterizationScale;
         if (Math.Abs(currentScale - _lastRasterizationScale) > DPI_SCALE_THRESHOLD)
@@ -160,13 +161,13 @@ public sealed partial class ImageCanvas : UserControlBase
             _lastRasterizationScale = currentScale;
             
             // Force canvas to recreate resources with the new DPI scale
-            // Use DispatcherQueue to ensure proper synchronization
+            // Use DispatcherQueue to ensure proper synchronization and avoid reentrancy
             bool queued = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
             {
                 ForceCanvasRedrawWithResources();
             });
             
-            // If queuing fails, try to redraw immediately as a fallback
+            // If queuing fails (rare), call immediately since we're already on the UI thread
             if (!queued)
             {
                 ForceCanvasRedrawWithResources();
