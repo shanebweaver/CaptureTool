@@ -22,7 +22,8 @@
                 IsRecording="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
                 StartVideoCaptureCommand="{x:Bind ViewModel.StartVideoCaptureCommand}"
                 StopVideoCaptureCommand="{x:Bind ViewModel.StopVideoCaptureCommand}"
-                ToggleLocalAudioCommand="{x:Bind ViewModel.ToggleDesktopAudioCommand}" />
+                ToggleLocalAudioCommand="{x:Bind ViewModel.ToggleDesktopAudioCommand}"
+                TogglePauseResumeCommand="{x:Bind ViewModel.TogglePauseResumeCommand}" />
         </Grid>
     </Grid>
 </local:CaptureOverlayViewBase>

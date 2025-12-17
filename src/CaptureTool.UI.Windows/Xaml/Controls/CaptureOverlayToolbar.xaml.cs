@@ -48,6 +48,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
+    public static readonly DependencyProperty TogglePauseResumeCommandProperty = DependencyProperty.Register(
+        nameof(TogglePauseResumeCommand),
+        typeof(ICommand),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(DependencyProperty.UnsetValue));
+
     public CaptureOverlayToolbar()
     {
         InitializeComponent();
@@ -98,5 +104,11 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     {
         get => Get<ICommand>(ToggleLocalAudioCommandProperty);
         set => Set(ToggleLocalAudioCommandProperty, value);
+    }
+
+    public ICommand TogglePauseResumeCommand
+    {
+        get => Get<ICommand>(TogglePauseResumeCommandProperty);
+        set => Set(TogglePauseResumeCommandProperty, value);
     }
 }

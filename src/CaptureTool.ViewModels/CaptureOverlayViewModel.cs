@@ -24,6 +24,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         public static readonly string StartVideoCapture = "StartVideoCapture";
         public static readonly string StopVideoCapture = "StopVideoCapture";
         public static readonly string ToggleDesktopAudio = "ToggleDesktopAudio";
+        public static readonly string TogglePauseResume = "TogglePauseResume";
     }
 
     private readonly IAppNavigation _appNavigation;
@@ -74,6 +75,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public RelayCommand StartVideoCaptureCommand { get; }
     public RelayCommand StopVideoCaptureCommand { get; }
     public RelayCommand ToggleDesktopAudioCommand { get; }
+    public RelayCommand TogglePauseResumeCommand { get; }
 
     public CaptureOverlayViewModel(
         IAppNavigation appNavigation,
@@ -97,6 +99,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         StartVideoCaptureCommand = new(StartVideoCapture);
         StopVideoCaptureCommand = new(StopVideoCapture);
         ToggleDesktopAudioCommand = new(ToggleDesktopAudio);
+        TogglePauseResumeCommand = new(TogglePauseResume);
     }
 
     public override void Load(CaptureOverlayViewModelOptions options)
@@ -189,6 +192,14 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleDesktopAudio, () =>
         {
             _captureOverlayActions.ToggleDesktopAudio();
+        });
+    }
+
+    private void TogglePauseResume()
+    {
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.TogglePauseResume, () =>
+        {
+            _captureOverlayActions.TogglePauseResume();
         });
     }
 

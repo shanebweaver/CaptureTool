@@ -9,9 +9,10 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private readonly IStorageService _storageService;
     
     private string? _tempVideoPath;
-    private bool isRecording;
 
     public bool IsDesktopAudioEnabled { get; private set; }
+    public bool IsRecording { get; private set; }
+    public bool IsPaused { get; private set; }
 
     public event EventHandler<IVideoFile>? NewVideoCaptured;
     public event EventHandler<bool>? DesktopAudioStateChanged;
@@ -28,12 +29,12 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public void StartVideoCapture(NewCaptureArgs args)
     {
-        if (isRecording)
+        if (IsRecording)
         {
             throw new InvalidOperationException("A video is already being recorded.");
         }
 
-        isRecording = true;
+        IsRecording = true;
 
         DateTime timestamp = DateTime.Now;
         string fileName = $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.mp4";
@@ -47,7 +48,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public IVideoFile StopVideoCapture()
     {
-        if (!isRecording || string.IsNullOrEmpty(_tempVideoPath))
+        if (!IsRecording || string.IsNullOrEmpty(_tempVideoPath))
         {
             throw new InvalidOperationException("Cannot stop, no video is recording.");
         }
@@ -65,7 +66,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     {
         try
         {
-            if (!isRecording)
+            if (!IsRecording)
             {
                 return;
             }
@@ -75,7 +76,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         finally
         {
            _tempVideoPath = null;
-            isRecording = false;
+            IsRecording = false;
         }
     }
 
@@ -87,9 +88,26 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public void ToggleDesktopAudioCapture(bool enabled)
     {
-        if (isRecording)
+        if (IsRecording)
         {
             _screenRecorder.ToggleAudioCapture(enabled);
+        }
+    }
+
+    public void ToggleIsPaused(bool isPaused)
+    {
+        IsPaused = isPaused;
+
+        if (IsRecording)
+        {
+            if (isPaused)
+            {
+                _screenRecorder.PauseRecording();
+            }
+            else if (!isPaused)
+            {
+                _screenRecorder.ResumeRecording();
+            }
         }
     }
 }

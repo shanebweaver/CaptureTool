@@ -9,6 +9,7 @@ public sealed partial class CaptureOverlayActions : ICaptureOverlayActions
     private readonly ICaptureOverlayCloseAction _closeAction;
     private readonly ICaptureOverlayGoBackAction _goBackAction;
     private readonly ICaptureOverlayToggleDesktopAudioAction _toggleDesktopAudioAction;
+    private readonly ICaptureOverlayTogglePauseResumeAction _togglePauseResumeAction;
     private readonly ICaptureOverlayStartVideoCaptureAction _startVideoCaptureAction;
     private readonly ICaptureOverlayStopVideoCaptureAction _stopVideoCaptureAction;
 
@@ -16,6 +17,7 @@ public sealed partial class CaptureOverlayActions : ICaptureOverlayActions
         ICaptureOverlayCloseAction closeAction,
         ICaptureOverlayGoBackAction goBackAction,
         ICaptureOverlayToggleDesktopAudioAction toggleDesktopAudioAction,
+        ICaptureOverlayTogglePauseResumeAction togglePauseResumeAction,
         ICaptureOverlayStartVideoCaptureAction startVideoCaptureAction,
         ICaptureOverlayStopVideoCaptureAction stopVideoCaptureAction)
     {
@@ -24,6 +26,7 @@ public sealed partial class CaptureOverlayActions : ICaptureOverlayActions
         _toggleDesktopAudioAction = toggleDesktopAudioAction;
         _startVideoCaptureAction = startVideoCaptureAction;
         _stopVideoCaptureAction = stopVideoCaptureAction;
+        _togglePauseResumeAction = togglePauseResumeAction;
     }
 
     // Close
@@ -45,4 +48,8 @@ public sealed partial class CaptureOverlayActions : ICaptureOverlayActions
     // Stop video capture
     public bool CanStopVideoCapture() => _stopVideoCaptureAction.CanExecute();
     public void StopVideoCapture() => _stopVideoCaptureAction.ExecuteCommand();
+
+    // Toggle pause/resume
+    public bool CanTogglePauseResume() => _togglePauseResumeAction.CanExecute();
+    public void TogglePauseResume() => _togglePauseResumeAction.ExecuteCommand();
 }

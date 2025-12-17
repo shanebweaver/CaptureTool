@@ -30,6 +30,7 @@ public static class CoreActionsServiceCollectionExtensions
         services.AddTransient<ICaptureOverlayCloseAction, CaptureOverlayCloseAction>();
         services.AddTransient<ICaptureOverlayGoBackAction, CaptureOverlayGoBackAction>();
         services.AddTransient<ICaptureOverlayToggleDesktopAudioAction, CaptureOverlayToggleDesktopAudioAction>();
+        services.AddTransient<ICaptureOverlayTogglePauseResumeAction, CaptureOverlayTogglePauseResumeAction>();
         services.AddTransient<ICaptureOverlayStartVideoCaptureAction, CaptureOverlayStartVideoCaptureAction>();
         services.AddTransient<ICaptureOverlayStopVideoCaptureAction, CaptureOverlayStopVideoCaptureAction>();
         services.AddTransient<ICaptureOverlayActions, CaptureOverlayActions>();

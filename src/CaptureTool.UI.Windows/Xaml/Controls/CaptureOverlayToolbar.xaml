@@ -25,6 +25,13 @@
                 <SymbolIcon Symbol="Back" />
             </Button>
 
+            <Button Command="{x:Bind TogglePauseResumeCommand, Mode=OneWay}" Style="{StaticResource IconButtonStyle}">
+                <Grid>
+                    <SymbolIcon Symbol="Play" />
+                    <SymbolIcon Symbol="Pause" />
+                </Grid>
+            </Button>
+
             <Grid>
                 <Button
                     MinWidth="100"
