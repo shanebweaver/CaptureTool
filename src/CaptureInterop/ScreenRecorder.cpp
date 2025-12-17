@@ -92,6 +92,15 @@ extern "C"
             }
         }
         
+        // If audio is not enabled, we still need to set the recording start time
+        // so video timestamps are calculated relative to a proper start point
+        if (!audioEnabled)
+        {
+            LARGE_INTEGER qpc;
+            QueryPerformanceCounter(&qpc);
+            g_sinkWriter.SetRecordingStartTime(qpc.QuadPart);
+        }
+        
         g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter, &g_frameHandler, &hr);
 
         hr = g_session->StartCapture();
