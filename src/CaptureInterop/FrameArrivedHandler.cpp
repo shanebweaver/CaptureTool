@@ -178,7 +178,14 @@ void FrameArrivedHandler::ProcessingThreadProc()
         // Process the frame outside the lock
         if (frame.texture && m_sinkWriter)
         {
-            m_sinkWriter->WriteFrame(frame.texture.get(), frame.relativeTimestamp);
+            HRESULT hr = m_sinkWriter->WriteFrame(frame.texture.get(), frame.relativeTimestamp);
+            // If write fails, continue processing (don't stop the thread)
+            // The sink writer will handle errors internally
+            if (FAILED(hr))
+            {
+                // Frame write failed, but continue processing queue
+                // This prevents one bad frame from stopping the entire recording
+            }
         }
     }
 }
