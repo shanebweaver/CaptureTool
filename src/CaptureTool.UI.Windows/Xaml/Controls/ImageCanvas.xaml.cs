@@ -160,17 +160,30 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             _lastRasterizationScale = currentScale;
             
-            // Force canvas to recreate resources with the new DPI scale
-            // Use DispatcherQueue to ensure proper synchronization and avoid reentrancy
+            // When DPI changes, we need to:
+            // 1. Force canvas to recreate resources with new DPI
+            // 2. Update canvas size based on new dimensions
+            // 3. Wait for layout pass to complete so container dimensions reflect new DPI
+            // 4. Recalculate zoom based on updated container size
             bool queued = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
             {
-                ForceCanvasRedrawWithResources();
+                // Step 1 & 2: Force resource recreation and update canvas size
+                RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? 1.0001f : 1f;
+                UpdateDrawingCanvasSize();
+                
+                // Step 3 & 4: Queue low priority to run after layout completes
+                DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+                {
+                    ZoomAndCenter();
+                });
             });
             
             // If queuing fails (rare), call immediately since we're already on the UI thread
             if (!queued)
             {
-                ForceCanvasRedrawWithResources();
+                RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? 1.0001f : 1f;
+                UpdateDrawingCanvasSize();
+                ZoomAndCenter();
             }
         }
     }
