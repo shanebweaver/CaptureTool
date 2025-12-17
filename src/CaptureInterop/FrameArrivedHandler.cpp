@@ -9,10 +9,21 @@ using namespace ABI::Windows::Graphics::Capture;
 
 FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter) noexcept
     : m_sinkWriter(std::move(sinkWriter)),
-    m_ref(1)
+    m_ref(1),
+    m_running(true),
+    m_stopped(false)
 {
-    // Start background processing thread
-    m_processingThread = std::thread(&FrameArrivedHandler::ProcessingThreadProc, this);
+    // Note: Thread is started after object is fully constructed
+    // This prevents accessing uninitialized members in ProcessingThreadProc
+}
+
+void FrameArrivedHandler::StartProcessing()
+{
+    // Start background processing thread after object is fully constructed
+    if (!m_processingThread.joinable())
+    {
+        m_processingThread = std::thread(&FrameArrivedHandler::ProcessingThreadProc, this);
+    }
 }
 
 FrameArrivedHandler::~FrameArrivedHandler()
@@ -22,6 +33,14 @@ FrameArrivedHandler::~FrameArrivedHandler()
 
 void FrameArrivedHandler::Stop()
 {
+    // Make Stop() idempotent and thread-safe
+    bool expected = false;
+    if (!m_stopped.compare_exchange_strong(expected, true))
+    {
+        // Already stopped
+        return;
+    }
+    
     m_running = false;
     m_queueCV.notify_one();
     
@@ -118,11 +137,17 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         if (m_firstFrameSystemTime.compare_exchange_strong(expected, timestamp.Duration))
         {
             // We successfully set it - also set recording start time
+            // Only set recording start time if we won the race to set first frame time
             LARGE_INTEGER qpc;
             QueryPerformanceCounter(&qpc);
             m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
+            firstFrameTime = timestamp.Duration;
         }
-        firstFrameTime = m_firstFrameSystemTime.load();
+        else
+        {
+            // Another thread won the race, use their value
+            firstFrameTime = m_firstFrameSystemTime.load();
+        }
     }
     
     // Calculate relative timestamp
@@ -133,8 +158,9 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
     {
         std::lock_guard<std::mutex> lock(m_queueMutex);
         
-        // Limit queue size to prevent memory buildup
-        if (m_frameQueue.size() < 10)
+        // Increased queue size to 30 frames (~1 second at 30fps) to match the 6 frame pool buffers
+        // This provides sufficient buffering when encoder falls behind
+        if (m_frameQueue.size() < 30)
         {
             QueuedFrame queuedFrame;
             queuedFrame.texture = texture;
@@ -142,7 +168,12 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
             m_frameQueue.push(std::move(queuedFrame));
             m_queueCV.notify_one();
         }
-        // If queue is full, drop this frame (better than blocking the callback)
+        else
+        {
+            // Queue is full - drop this frame to prevent blocking
+            // This can happen when encoder is significantly slower than capture rate
+            // Consider adding telemetry here if frame drops become problematic
+        }
     }
 
     return S_OK;
@@ -153,6 +184,7 @@ void FrameArrivedHandler::ProcessingThreadProc()
     while (m_running)
     {
         QueuedFrame frame;
+        wil::com_ptr<MP4SinkWriter> sinkWriter;
         
         // Wait for a frame to process
         {
@@ -168,6 +200,10 @@ void FrameArrivedHandler::ProcessingThreadProc()
             {
                 frame = std::move(m_frameQueue.front());
                 m_frameQueue.pop();
+                
+                // Capture a reference to sink writer while holding the lock
+                // This ensures thread-safe access to m_sinkWriter
+                sinkWriter = m_sinkWriter;
             }
             else
             {
@@ -176,9 +212,9 @@ void FrameArrivedHandler::ProcessingThreadProc()
         }
         
         // Process the frame outside the lock
-        if (frame.texture && m_sinkWriter)
+        if (frame.texture && sinkWriter)
         {
-            HRESULT hr = m_sinkWriter->WriteFrame(frame.texture.get(), frame.relativeTimestamp);
+            HRESULT hr = sinkWriter->WriteFrame(frame.texture.get(), frame.relativeTimestamp);
             // If write fails, continue processing (don't stop the thread)
             // The sink writer will handle errors internally
             if (FAILED(hr))
@@ -198,10 +234,14 @@ EventRegistrationToken RegisterFrameArrivedHandler(
 {
     EventRegistrationToken token{};
     auto handler = new FrameArrivedHandler(sinkWriter);
+    
+    // Start the processing thread after object is fully constructed
+    handler->StartProcessing();
+    
     HRESULT hr = framePool->add_FrameArrived(handler, &token);
     
-    // Store handler reference if requested (for cleanup)
-    if (outHandler)
+    // Only provide handler reference to caller if registration succeeded
+    if (SUCCEEDED(hr) && outHandler)
     {
         *outHandler = handler;
         handler->AddRef(); // Keep reference for caller

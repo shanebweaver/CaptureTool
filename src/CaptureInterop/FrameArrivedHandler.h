@@ -32,6 +32,9 @@ public:
     // ITypedEventHandler
     HRESULT STDMETHODCALLTYPE Invoke(IDirect3D11CaptureFramePool* sender, IInspectable* args) noexcept override;
 
+    // Start the background processing thread (called after construction)
+    void StartProcessing();
+
     // Stop the background processing thread
     void Stop();
 
@@ -47,6 +50,7 @@ private:
     std::condition_variable m_queueCV;
     std::thread m_processingThread;
     std::atomic<bool> m_running{true};
+    std::atomic<bool> m_stopped{false};  // Guard for idempotent Stop()
     
     // First frame tracking for timestamp calculation
     std::atomic<LONGLONG> m_firstFrameSystemTime{0};

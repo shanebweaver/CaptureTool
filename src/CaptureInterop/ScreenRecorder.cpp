@@ -123,20 +123,22 @@ extern "C"
         // Phase 4: Stop audio capture first
         g_audioHandler.Stop();
         
-        // Stop frame handler background thread before removing event
-        if (g_frameHandler)
-        {
-            g_frameHandler->Stop();
-            g_frameHandler->Release(); // Release our reference
-            g_frameHandler = nullptr;
-        }
-        
+        // First remove the event registration (releases the event system's reference)
         if (g_framePool)
         {
             g_framePool->remove_FrameArrived(g_frameArrivedEventToken);
         }
 
         g_frameArrivedEventToken.value = 0;
+        
+        // Then stop the frame handler and release our reference
+        // This ensures clean shutdown: event unregistered -> thread stopped -> resources released
+        if (g_frameHandler)
+        {
+            g_frameHandler->Stop();
+            g_frameHandler->Release();
+            g_frameHandler = nullptr;
+        }
         
         // Finalize MP4 file after both streams have stopped
         g_sinkWriter.Finalize();
