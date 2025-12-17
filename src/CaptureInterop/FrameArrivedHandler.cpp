@@ -11,6 +11,24 @@ FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter)
     : m_sinkWriter(std::move(sinkWriter)),
     m_ref(1)
 {
+    // Start background processing thread
+    m_processingThread = std::thread(&FrameArrivedHandler::ProcessingThreadProc, this);
+}
+
+FrameArrivedHandler::~FrameArrivedHandler()
+{
+    Stop();
+}
+
+void FrameArrivedHandler::Stop()
+{
+    m_running = false;
+    m_queueCV.notify_one();
+    
+    if (m_processingThread.joinable())
+    {
+        m_processingThread.join();
+    }
 }
 
 HRESULT STDMETHODCALLTYPE FrameArrivedHandler::QueryInterface(REFIID riid, void** ppvObject)
@@ -91,36 +109,97 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
-    // Phase 3: Use common QPC-based time base for synchronization
-    static LONGLONG firstFrameSystemTime = 0;
-    
-    if (firstFrameSystemTime == 0)
+    // First frame - establish the time base
+    LONGLONG firstFrameTime = m_firstFrameSystemTime.load();
+    if (firstFrameTime == 0)
     {
-        // First frame - establish the time base
-        firstFrameSystemTime = timestamp.Duration;
-        
-        // Set the recording start time on the sink writer for audio synchronization
-        // We use the current QPC time as the common start point
-        LARGE_INTEGER qpc;
-        QueryPerformanceCounter(&qpc);
-        m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
+        // Try to set it atomically
+        LONGLONG expected = 0;
+        if (m_firstFrameSystemTime.compare_exchange_strong(expected, timestamp.Duration))
+        {
+            // We successfully set it - also set recording start time
+            LARGE_INTEGER qpc;
+            QueryPerformanceCounter(&qpc);
+            m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
+        }
+        firstFrameTime = m_firstFrameSystemTime.load();
     }
     
-    // Calculate relative timestamp in 100-nanosecond units
-    // Frame's SystemRelativeTime is already in 100ns units, so we just need the elapsed time
-    LONGLONG relativeTimestamp = timestamp.Duration - firstFrameSystemTime;
+    // Calculate relative timestamp
+    LONGLONG relativeTimestamp = timestamp.Duration - firstFrameTime;
 
-    return m_sinkWriter->WriteFrame(texture.get(), relativeTimestamp);
+    // Queue the frame for background processing instead of processing synchronously
+    // This prevents blocking the event callback thread
+    {
+        std::lock_guard<std::mutex> lock(m_queueMutex);
+        
+        // Limit queue size to prevent memory buildup
+        if (m_frameQueue.size() < 10)
+        {
+            QueuedFrame queuedFrame;
+            queuedFrame.texture = texture;
+            queuedFrame.relativeTimestamp = relativeTimestamp;
+            m_frameQueue.push(std::move(queuedFrame));
+            m_queueCV.notify_one();
+        }
+        // If queue is full, drop this frame (better than blocking the callback)
+    }
+
+    return S_OK;
+}
+
+void FrameArrivedHandler::ProcessingThreadProc()
+{
+    while (m_running)
+    {
+        QueuedFrame frame;
+        
+        // Wait for a frame to process
+        {
+            std::unique_lock<std::mutex> lock(m_queueMutex);
+            m_queueCV.wait(lock, [this] { return !m_frameQueue.empty() || !m_running; });
+            
+            if (!m_running && m_frameQueue.empty())
+            {
+                break;
+            }
+            
+            if (!m_frameQueue.empty())
+            {
+                frame = std::move(m_frameQueue.front());
+                m_frameQueue.pop();
+            }
+            else
+            {
+                continue;
+            }
+        }
+        
+        // Process the frame outside the lock
+        if (frame.texture && m_sinkWriter)
+        {
+            m_sinkWriter->WriteFrame(frame.texture.get(), frame.relativeTimestamp);
+        }
+    }
 }
 
 EventRegistrationToken RegisterFrameArrivedHandler(
     wil::com_ptr<IDirect3D11CaptureFramePool> framePool,
     wil::com_ptr<MP4SinkWriter> sinkWriter,
+    FrameArrivedHandler** outHandler,
     HRESULT* outHr)
 {
     EventRegistrationToken token{};
     auto handler = new FrameArrivedHandler(sinkWriter);
     HRESULT hr = framePool->add_FrameArrived(handler, &token);
+    
+    // Store handler reference if requested (for cleanup)
+    if (outHandler)
+    {
+        *outHandler = handler;
+        handler->AddRef(); // Keep reference for caller
+    }
+    
     handler->Release(); // balance new
     if (outHr) *outHr = hr;
     return token;
