@@ -108,6 +108,8 @@ void AudioCaptureHandler::SetPaused(bool paused)
     else
     {
         // Resuming from pause - mark as disabled to trigger buffer drain
+        // Skip 5 samples to drain stale buffer data (WASAPI typically buffers 10-30ms 
+        // of audio, which is 3-5 samples at 10ms per sample)
         m_wasDisabled = true;
         m_samplesToSkip = 5;
         m_isPaused = false;
