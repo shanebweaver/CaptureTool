@@ -100,9 +100,9 @@ WAVEFORMATEX* AudioCaptureHandler::GetFormat() const
 
 void AudioCaptureHandler::CaptureThreadProc()
 {
-    // Set thread priority to normal to prevent UI thread starvation
-    // Normal priority is sufficient for audio capture and ensures UI remains responsive
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+    // Set thread priority to above normal (not TIME_CRITICAL to avoid starving UI)
+    // This provides responsive audio capture while keeping the UI responsive
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
     
     while (m_isRunning)
     {
@@ -134,7 +134,8 @@ void AudioCaptureHandler::CaptureThreadProc()
             const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
             
             // Always process audio samples to maintain timeline continuity
-            if (m_sinkWriter && !(flags & AUDCLNT_BUFFERFLAGS_SILENT))
+            // Process even when AUDCLNT_BUFFERFLAGS_SILENT is set to prevent tight loop that freezes UI
+            if (m_sinkWriter)
             {
                 // If this is the first write after being disabled, sync timestamp to current recording time
                 // and prepare to skip several samples to drain any stale buffer data
@@ -171,10 +172,10 @@ void AudioCaptureHandler::CaptureThreadProc()
                 // This gives the exact playback duration of this sample
                 LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
                 
-                // When audio is disabled, write silent samples to maintain timeline continuity
-                // This prevents video from skipping ahead when audio is muted
+                // When audio is disabled or silent, write silent samples to maintain timeline continuity
+                // This prevents video from skipping ahead and prevents UI freeze from tight loops
                 BYTE* pAudioData = pData;
-                if (!m_isEnabled)
+                if (!m_isEnabled || (flags & AUDCLNT_BUFFERFLAGS_SILENT))
                 {
                     // Reuse or resize silent buffer for efficiency
                     UINT32 bufferSize = framesRead * format->nBlockAlign;
@@ -209,9 +210,9 @@ void AudioCaptureHandler::CaptureThreadProc()
         else
         {
             // No audio data available - sleep to avoid busy-waiting
-            // Short sleep (1ms) provides better responsiveness while preventing CPU spinning
-            // This prevents UI freezes during silent audio capture periods
-            Sleep(1);
+            // Longer sleep (10ms) prevents CPU spinning and allows UI thread to run
+            // This prevents memory buildup and UI freezes
+            Sleep(10);
         }
     }
 }
