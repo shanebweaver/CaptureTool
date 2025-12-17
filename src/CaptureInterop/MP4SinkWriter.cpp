@@ -37,7 +37,7 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
     // Enable hardware transforms (GPU encoding) for better performance
     attributes->SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, TRUE);
     
-    // Disable throttling to allow faster encoding when possible
+    // Enable format converters to allow automatic format conversion when needed
     attributes->SetUINT32(MF_READWRITE_DISABLE_CONVERTERS, FALSE);
     
     // Set low latency mode to reduce encoder queue buildup
