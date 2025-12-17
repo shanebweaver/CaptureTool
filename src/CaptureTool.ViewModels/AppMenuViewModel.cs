@@ -158,7 +158,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private void OpenRecentCapture(RecentCaptureViewModel? model)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenRecentCapture, async () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenRecentCapture, () =>
         {
             if (model != null)
             {
@@ -168,7 +168,10 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
                 }
                 else
                 {
-                    await _appMenuActions.OpenRecentCaptureAsync(model.FilePath, CancellationToken.None);
+                    // Execute async operation synchronously since this is called from a command
+                    // The command infrastructure doesn't support async void
+                    _appMenuActions.OpenRecentCaptureAsync(model.FilePath, CancellationToken.None)
+                        .GetAwaiter().GetResult();
                 }
             }
         });
@@ -176,7 +179,9 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     public void RefreshRecentCaptures()
     {
-        var recentCaptures = _appMenuActions.LoadRecentCapturesAsync(CancellationToken.None).GetAwaiter().GetResult();
+        // Execute async operation synchronously since this needs to be callable from non-async contexts
+        var recentCaptures = _appMenuActions.LoadRecentCapturesAsync(CancellationToken.None)
+            .GetAwaiter().GetResult();
 
         RecentCaptures.Clear();
         foreach (var recentCapture in recentCaptures)

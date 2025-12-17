@@ -12,5 +12,4 @@ public interface IAppMenuActions
     void ShowAboutApp();
     void ShowAddOns();
     void ExitApplication();
-    void RefreshRecentCaptures();
 }

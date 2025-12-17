@@ -123,13 +123,4 @@ public class AppMenuActionsTests
         await Assert.ThrowsExceptionAsync<FileNotFoundException>(
             async () => await actions.OpenRecentCaptureAsync("nonexistent.png", CancellationToken.None));
     }
-
-    [TestMethod]
-    public void RefreshRecentCaptures_IsNoOp()
-    {
-        var actions = Fixture.Create<AppMenuActions>();
-        
-        // Should not throw
-        actions.RefreshRecentCaptures();
-    }
 }

@@ -119,9 +119,4 @@ public sealed class AppMenuActions : IAppMenuActions
     {
         _shutdownHandler.Shutdown();
     }
-
-    public void RefreshRecentCaptures()
-    {
-        // This is a no-op here as the ViewModel will handle the refresh by calling LoadRecentCapturesAsync
-    }
 }
