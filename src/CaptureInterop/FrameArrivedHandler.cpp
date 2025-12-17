@@ -139,9 +139,7 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         LONGLONG expected = 0;
         if (m_firstFrameSystemTime.compare_exchange_strong(expected, timestamp.Duration))
         {
-            // We successfully set it - also set recording start time if not already set
-            // Only set recording start time if we won the race to set first frame time
-            // and if the recording start time hasn't been set externally (e.g., by ScreenRecorder)
+            // We successfully set it - also set recording start time if not already set externally (e.g., by ScreenRecorder)
             LONGLONG existingStartTime = m_sinkWriter->GetRecordingStartTime();
             if (existingStartTime == 0)
             {
