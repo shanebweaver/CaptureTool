@@ -13,6 +13,8 @@ namespace CaptureTool.UI.Windows.Xaml.Controls;
 
 public sealed partial class ImageCanvas : UserControlBase
 {
+    private const double DPI_SCALE_THRESHOLD = 0.0001;
+
     public static readonly DependencyProperty DrawablesProperty = DependencyProperty.Register(
         nameof(Drawables),
         typeof(IEnumerable<IDrawable>),
@@ -152,16 +154,22 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         // Check if the DPI scale has changed
         double currentScale = sender.RasterizationScale;
-        if (Math.Abs(currentScale - _lastRasterizationScale) > 0.0001)
+        if (Math.Abs(currentScale - _lastRasterizationScale) > DPI_SCALE_THRESHOLD)
         {
             _lastRasterizationScale = currentScale;
             
             // Force canvas to recreate resources with the new DPI scale
             // Use DispatcherQueue to ensure proper synchronization
-            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+            bool queued = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
             {
                 ForceCanvasRedrawWithResources();
             });
+            
+            // If queuing fails, try to redraw immediately as a fallback
+            if (!queued)
+            {
+                ForceCanvasRedrawWithResources();
+            }
         }
     }
 
