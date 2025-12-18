@@ -111,6 +111,9 @@
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GraphicsCaptureHelpers.cpp" />
+    <ClInclude Include="IAudioSource.h" />
+    <ClInclude Include="IMediaSource.h" />
+    <ClInclude Include="IVideoSource.h" />
     <ClInclude Include="MP4SinkWriter.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenRecorder.h" />

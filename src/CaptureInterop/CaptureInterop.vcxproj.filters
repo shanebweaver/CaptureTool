@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Abstraction">
+      <UniqueIdentifier>{8A9C3D52-F1E4-4B2A-9D73-4E5F6C7D8E9F}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -35,6 +38,15 @@
     </ClInclude>
     <ClInclude Include="AudioCaptureHandler.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IMediaSource.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
+    <ClInclude Include="IVideoSource.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
+    <ClInclude Include="IAudioSource.h">
+      <Filter>Source Abstraction</Filter>
     </ClInclude>
     <ClInclude Include="GraphicsCaptureHelpers.cpp">
       <Filter>Source Files</Filter>
