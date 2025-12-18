@@ -39,6 +39,9 @@
     <ClInclude Include="AudioCaptureHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AudioDeviceEnumerator.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
     <ClInclude Include="IMediaSource.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
@@ -82,6 +85,9 @@
     </ClCompile>
     <ClCompile Include="AudioCaptureHandler.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioDeviceEnumerator.cpp">
+      <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="DesktopAudioSource.cpp">
       <Filter>Source Abstraction</Filter>

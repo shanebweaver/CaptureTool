@@ -168,4 +168,79 @@ extern "C"
             g_audioHandler.SetEnabled(enabled);
         }
     }
+    
+    // Audio device enumeration
+    __declspec(dllexport) int EnumerateAudioCaptureDevices(AudioDeviceInfo** devices)
+    {
+        if (!devices)
+        {
+            return 0;
+        }
+        
+        AudioDeviceEnumerator enumerator;
+        std::vector<AudioDeviceInfo> deviceList;
+        
+        if (!enumerator.EnumerateCaptureDevices(deviceList))
+        {
+            *devices = nullptr;
+            return 0;
+        }
+        
+        if (deviceList.empty())
+        {
+            *devices = nullptr;
+            return 0;
+        }
+        
+        // Allocate array
+        AudioDeviceInfo* devicesArray = new AudioDeviceInfo[deviceList.size()];
+        for (size_t i = 0; i < deviceList.size(); i++)
+        {
+            devicesArray[i] = deviceList[i];
+        }
+        
+        *devices = devicesArray;
+        return static_cast<int>(deviceList.size());
+    }
+    
+    __declspec(dllexport) int EnumerateAudioRenderDevices(AudioDeviceInfo** devices)
+    {
+        if (!devices)
+        {
+            return 0;
+        }
+        
+        AudioDeviceEnumerator enumerator;
+        std::vector<AudioDeviceInfo> deviceList;
+        
+        if (!enumerator.EnumerateRenderDevices(deviceList))
+        {
+            *devices = nullptr;
+            return 0;
+        }
+        
+        if (deviceList.empty())
+        {
+            *devices = nullptr;
+            return 0;
+        }
+        
+        // Allocate array
+        AudioDeviceInfo* devicesArray = new AudioDeviceInfo[deviceList.size()];
+        for (size_t i = 0; i < deviceList.size(); i++)
+        {
+            devicesArray[i] = deviceList[i];
+        }
+        
+        *devices = devicesArray;
+        return static_cast<int>(deviceList.size());
+    }
+    
+    __declspec(dllexport) void FreeAudioDeviceInfo(AudioDeviceInfo* devices)
+    {
+        if (devices)
+        {
+            delete[] devices;
+        }
+    }
 }
