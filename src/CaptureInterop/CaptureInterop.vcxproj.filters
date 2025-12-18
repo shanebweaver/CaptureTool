@@ -84,6 +84,9 @@
     <ClInclude Include="MicrophoneAudioSource.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
+    <ClInclude Include="MP4Muxer.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
     <ClInclude Include="ScreenCaptureSource.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
@@ -135,6 +138,9 @@
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="MicrophoneAudioSource.cpp">
+      <Filter>Source Abstraction</Filter>
+    </ClCompile>
+    <ClCompile Include="MP4Muxer.cpp">
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="ScreenCaptureSource.cpp">

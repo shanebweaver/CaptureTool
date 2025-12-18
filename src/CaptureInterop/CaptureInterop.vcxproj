@@ -126,6 +126,7 @@
     <ClInclude Include="IMediaSource.h" />
     <ClInclude Include="IVideoSource.h" />
     <ClInclude Include="MicrophoneAudioSource.h" />
+    <ClInclude Include="MP4Muxer.h" />
     <ClInclude Include="MP4SinkWriter.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenCaptureSource.h" />
@@ -148,6 +149,7 @@
     <ClCompile Include="FrameArrivedHandler.cpp" />
     <ClCompile Include="H264VideoEncoder.cpp" />
     <ClCompile Include="MicrophoneAudioSource.cpp" />
+    <ClCompile Include="MP4Muxer.cpp" />
     <ClCompile Include="MP4SinkWriter.cpp" />
     <ClCompile Include="ScreenCaptureSource.cpp" />
     <ClCompile Include="ScreenRecorder.cpp" />
