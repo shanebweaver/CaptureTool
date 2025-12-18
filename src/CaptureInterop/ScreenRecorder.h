@@ -4,7 +4,12 @@
 
 extern "C"
 {    
+	// New source-based recording with microphone support (4 parameters)
+	__declspec(dllexport) bool TryStartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool captureDesktopAudio, bool captureMicrophone);
+	
+	// Legacy signature for backward compatibility (3 parameters)
 	__declspec(dllexport) bool TryStartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio = false);
+	
 	__declspec(dllexport) void TryPauseRecording();
 	__declspec(dllexport) void TryResumeRecording();
 	__declspec(dllexport) void TryStopRecording();
