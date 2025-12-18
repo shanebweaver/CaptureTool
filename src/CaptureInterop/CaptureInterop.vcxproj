@@ -119,6 +119,7 @@
     <ClInclude Include="IVideoEncoder.h" />
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="H264VideoEncoder.h" />
     <ClInclude Include="GraphicsCaptureHelpers.cpp" />
     <ClInclude Include="IAudioSource.h" />
     <ClInclude Include="IMediaSource.h" />
@@ -143,6 +144,7 @@
     <ClCompile Include="EncoderPresets.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="FrameArrivedHandler.cpp" />
+    <ClCompile Include="H264VideoEncoder.cpp" />
     <ClCompile Include="MicrophoneAudioSource.cpp" />
     <ClCompile Include="MP4SinkWriter.cpp" />
     <ClCompile Include="ScreenCaptureSource.cpp" />
