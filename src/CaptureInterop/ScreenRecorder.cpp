@@ -243,4 +243,47 @@ extern "C"
             delete[] devices;
         }
     }
+    
+    // Source management exports
+    __declspec(dllexport) SourceHandle RegisterVideoSource(void* sourcePtr)
+    {
+        if (!sourcePtr)
+        {
+            return INVALID_SOURCE_HANDLE;
+        }
+        
+        IMediaSource* source = static_cast<IMediaSource*>(sourcePtr);
+        return SourceManager::Instance().RegisterSource(source);
+    }
+    
+    __declspec(dllexport) SourceHandle RegisterAudioSource(void* sourcePtr)
+    {
+        if (!sourcePtr)
+        {
+            return INVALID_SOURCE_HANDLE;
+        }
+        
+        IMediaSource* source = static_cast<IMediaSource*>(sourcePtr);
+        return SourceManager::Instance().RegisterSource(source);
+    }
+    
+    __declspec(dllexport) void UnregisterSource(SourceHandle handle)
+    {
+        SourceManager::Instance().UnregisterSource(handle);
+    }
+    
+    __declspec(dllexport) bool StartAllSources()
+    {
+        return SourceManager::Instance().StartAll();
+    }
+    
+    __declspec(dllexport) void StopAllSources()
+    {
+        SourceManager::Instance().StopAll();
+    }
+    
+    __declspec(dllexport) int GetSourceCount()
+    {
+        return static_cast<int>(SourceManager::Instance().GetSourceCount());
+    }
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "AudioDeviceEnumerator.h"
+#include "SourceManager.h"
 
 extern "C"
 {    
@@ -13,4 +14,12 @@ extern "C"
 	__declspec(dllexport) int EnumerateAudioCaptureDevices(AudioDeviceInfo** devices);
 	__declspec(dllexport) int EnumerateAudioRenderDevices(AudioDeviceInfo** devices);
 	__declspec(dllexport) void FreeAudioDeviceInfo(AudioDeviceInfo* devices);
+	
+	// Source management exports
+	__declspec(dllexport) SourceHandle RegisterVideoSource(void* sourcePtr);
+	__declspec(dllexport) SourceHandle RegisterAudioSource(void* sourcePtr);
+	__declspec(dllexport) void UnregisterSource(SourceHandle handle);
+	__declspec(dllexport) bool StartAllSources();
+	__declspec(dllexport) void StopAllSources();
+	__declspec(dllexport) int GetSourceCount();
 }

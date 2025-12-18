@@ -63,6 +63,9 @@
     <ClInclude Include="ScreenCaptureSource.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
+    <ClInclude Include="SourceManager.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
     <ClInclude Include="WindowsVersionHelper.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
@@ -105,6 +108,9 @@
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="ScreenCaptureSource.cpp">
+      <Filter>Source Abstraction</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceManager.cpp">
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="WindowsVersionHelper.cpp">
