@@ -6,6 +6,7 @@
 #include "ScreenCaptureSource.h"
 #include "DesktopAudioSource.h"
 #include "MicrophoneAudioSource.h"
+#include "AudioRoutingConfig.h"
 #include "GraphicsCaptureHelpers.cpp"
 
 using namespace GraphicsCaptureHelpers;
@@ -484,5 +485,53 @@ extern "C"
     __declspec(dllexport) int GetSourceCount()
     {
         return static_cast<int>(SourceManager::Instance().GetSourceCount());
+    }
+    
+    // Audio routing configuration exports
+    static AudioRoutingConfig g_audioRoutingConfig;
+    
+    __declspec(dllexport) void SetAudioSourceTrack(uint64_t sourceHandle, int trackIndex)
+    {
+        g_audioRoutingConfig.SetSourceTrack(sourceHandle, trackIndex);
+    }
+    
+    __declspec(dllexport) int GetAudioSourceTrack(uint64_t sourceHandle)
+    {
+        return g_audioRoutingConfig.GetSourceTrack(sourceHandle);
+    }
+    
+    __declspec(dllexport) void SetAudioSourceVolume(uint64_t sourceHandle, float volume)
+    {
+        g_audioRoutingConfig.SetSourceVolume(sourceHandle, volume);
+    }
+    
+    __declspec(dllexport) float GetAudioSourceVolume(uint64_t sourceHandle)
+    {
+        return g_audioRoutingConfig.GetSourceVolume(sourceHandle);
+    }
+    
+    __declspec(dllexport) void SetAudioSourceMuted(uint64_t sourceHandle, bool muted)
+    {
+        g_audioRoutingConfig.SetSourceMuted(sourceHandle, muted);
+    }
+    
+    __declspec(dllexport) bool GetAudioSourceMuted(uint64_t sourceHandle)
+    {
+        return g_audioRoutingConfig.IsSourceMuted(sourceHandle);
+    }
+    
+    __declspec(dllexport) void SetAudioTrackName(int trackIndex, const wchar_t* name)
+    {
+        g_audioRoutingConfig.SetTrackName(trackIndex, name);
+    }
+    
+    __declspec(dllexport) void SetAudioMixingMode(bool mixedMode)
+    {
+        g_audioRoutingConfig.SetMixedMode(mixedMode);
+    }
+    
+    __declspec(dllexport) bool GetAudioMixingMode()
+    {
+        return g_audioRoutingConfig.IsMixedMode();
     }
 }

@@ -45,6 +45,9 @@
     <ClInclude Include="AudioMixer.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
+    <ClInclude Include="AudioRoutingConfig.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
     <ClInclude Include="ApplicationAudioSource.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
@@ -102,6 +105,9 @@
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="AudioMixer.cpp">
+      <Filter>Source Abstraction</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioRoutingConfig.cpp">
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="ApplicationAudioSource.cpp">

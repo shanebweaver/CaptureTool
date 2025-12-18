@@ -27,4 +27,15 @@ extern "C"
 	__declspec(dllexport) bool StartAllSources();
 	__declspec(dllexport) void StopAllSources();
 	__declspec(dllexport) int GetSourceCount();
+	
+	// Audio routing configuration exports
+	__declspec(dllexport) void SetAudioSourceTrack(uint64_t sourceHandle, int trackIndex);
+	__declspec(dllexport) int GetAudioSourceTrack(uint64_t sourceHandle);
+	__declspec(dllexport) void SetAudioSourceVolume(uint64_t sourceHandle, float volume);
+	__declspec(dllexport) float GetAudioSourceVolume(uint64_t sourceHandle);
+	__declspec(dllexport) void SetAudioSourceMuted(uint64_t sourceHandle, bool muted);
+	__declspec(dllexport) bool GetAudioSourceMuted(uint64_t sourceHandle);
+	__declspec(dllexport) void SetAudioTrackName(int trackIndex, const wchar_t* name);
+	__declspec(dllexport) void SetAudioMixingMode(bool mixedMode);
+	__declspec(dllexport) bool GetAudioMixingMode();
 }
