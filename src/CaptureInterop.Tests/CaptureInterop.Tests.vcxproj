@@ -23,7 +23,7 @@
     <ProjectGuid>{439DC4FA-FB32-9479-597E-630984C30EDD}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>CaptureInteropTests</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <ProjectSubType>NativeUnitTestProject</ProjectSubType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
