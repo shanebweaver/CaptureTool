@@ -33,6 +33,18 @@ public:
     bool InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* outHr = nullptr);
 
     /// <summary>
+    /// Initialize an audio stream for a specific track in the MP4 file.
+    /// Can be called multiple times to add up to 6 audio tracks.
+    /// Must be called after Initialize() but before any WriteFrame() or WriteAudioSample() calls.
+    /// </summary>
+    /// <param name="audioFormat">Audio format from WASAPI or mixer (PCM or Float).</param>
+    /// <param name="trackIndex">Track index (0-5).</param>
+    /// <param name="trackName">Optional track name (e.g., "Desktop Audio", "Microphone").</param>
+    /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
+    /// <returns>True if audio stream was added successfully, false otherwise.</returns>
+    bool InitializeAudioTrack(WAVEFORMATEX* audioFormat, int trackIndex, const wchar_t* trackName = nullptr, HRESULT* outHr = nullptr);
+
+    /// <summary>
     /// Set the recording start time for audio/video synchronization.
     /// Should be called by the first capture stream to start (usually video).
     /// </summary>
@@ -65,20 +77,53 @@ public:
     HRESULT WriteAudioSample(const BYTE* pData, UINT32 numFrames, LONGLONG timestamp);
 
     /// <summary>
+    /// Write an audio sample to a specific track in the MP4 file.
+    /// Audio is automatically encoded to AAC format by Media Foundation.
+    /// </summary>
+    /// <param name="pData">Pointer to raw audio data (PCM or Float from WASAPI or mixer).</param>
+    /// <param name="numFrames">Number of audio frames (one sample per channel).</param>
+    /// <param name="timestamp">Timestamp in 100-nanosecond units (accumulated, not relative).</param>
+    /// <param name="trackIndex">Track index (0-5).</param>
+    /// <returns>S_OK on success, or error HRESULT.</returns>
+    HRESULT WriteAudioSample(const BYTE* pData, UINT32 numFrames, LONGLONG timestamp, int trackIndex);
+
+    /// <summary>
     /// Finalize and close the MP4 file.
     /// Must be called when recording is complete to properly close the file.
     /// </summary>
     void Finalize();
 
+    /// <summary>
+    /// Get the number of audio tracks initialized.
+    /// </summary>
+    /// <returns>Number of audio tracks (0-6).</returns>
+    int GetAudioTrackCount() const { return m_audioTrackCount; }
+
+    /// <summary>
+    /// Check if a specific track index is initialized.
+    /// </summary>
+    /// <param name="trackIndex">Track index to check (0-5).</param>
+    /// <returns>True if track is initialized, false otherwise.</returns>
+    bool HasAudioTrack(int trackIndex) const;
+
     ULONG STDMETHODCALLTYPE AddRef();
     ULONG STDMETHODCALLTYPE Release();
 
 private:
+    static const int MAX_AUDIO_TRACKS = 6;
+
     volatile long m_ref = 1;
     wil::com_ptr<IMFSinkWriter> m_sinkWriter;
     DWORD m_videoStreamIndex = 0;
-    DWORD m_audioStreamIndex = 0;
-    bool m_hasAudioStream = false;
+    DWORD m_audioStreamIndex = 0;              // Legacy single track (track 0)
+    bool m_hasAudioStream = false;              // Legacy single track flag
+    
+    // Multi-track support
+    DWORD m_audioStreamIndices[MAX_AUDIO_TRACKS] = { 0 };  // IMF stream indices
+    bool m_audioTrackInitialized[MAX_AUDIO_TRACKS] = { false };
+    WAVEFORMATEX m_audioFormats[MAX_AUDIO_TRACKS] = {};
+    int m_audioTrackCount = 0;
+    
     bool m_hasBegunWriting = false;
     UINT64 m_frameIndex = 0;
     UINT32 m_width = 0;
@@ -87,5 +132,5 @@ private:
     ID3D11DeviceContext* m_context = nullptr;
     LONGLONG m_prevVideoTimestamp = 0;
     LONGLONG m_recordingStartQpc = 0;           // Common start time for A/V sync (QPC ticks)
-    WAVEFORMATEX m_audioFormat = {};            // Cached audio format info
+    WAVEFORMATEX m_audioFormat = {};            // Legacy cached audio format info
 };

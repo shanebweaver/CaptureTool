@@ -183,6 +183,124 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     return true;
 }
 
+bool MP4SinkWriter::InitializeAudioTrack(WAVEFORMATEX* audioFormat, int trackIndex, const wchar_t* trackName, HRESULT* outHr)
+{
+    if (!m_sinkWriter || !audioFormat)
+    {
+        if (outHr) *outHr = E_INVALIDARG;
+        return false;
+    }
+
+    // Validate track index
+    if (trackIndex < 0 || trackIndex >= MAX_AUDIO_TRACKS)
+    {
+        if (outHr) *outHr = E_INVALIDARG;
+        return false;
+    }
+
+    // Check if track already initialized
+    if (m_audioTrackInitialized[trackIndex])
+    {
+        if (outHr) *outHr = E_NOT_VALID_STATE;
+        return false;
+    }
+
+    // Detect audio format type before storing
+    bool isFloatFormat = false;
+    
+    if (audioFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT)
+    {
+        isFloatFormat = true;
+    }
+    else if (audioFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
+    {
+        WAVEFORMATEXTENSIBLE* pFormatEx = reinterpret_cast<WAVEFORMATEXTENSIBLE*>(audioFormat);
+        if (IsEqualGUID(pFormatEx->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT))
+        {
+            isFloatFormat = true;
+        }
+    }
+    
+    // Cache audio format for this track
+    memcpy(&m_audioFormats[trackIndex], audioFormat, sizeof(WAVEFORMATEX));
+
+    // Configure output audio stream: AAC at 160 kbps
+    const UINT32 AAC_BITRATE = 20000; // 160 kbps = 160000 bps / 8 = 20000 bytes/sec
+    wil::com_ptr<IMFMediaType> mediaTypeOut;
+    HRESULT hr = MFCreateMediaType(mediaTypeOut.put());
+    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+
+    mediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+    mediaTypeOut->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_AAC);
+    mediaTypeOut->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
+    mediaTypeOut->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
+    mediaTypeOut->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, AAC_BITRATE);
+    mediaTypeOut->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);  // AAC output is always 16-bit
+
+    // Set track name if provided (using MF_MT_USER_DATA as metadata)
+    if (trackName != nullptr)
+    {
+        // Store track name in a user data attribute (for MP4 metadata)
+        UINT32 nameLen = (UINT32)wcslen(trackName);
+        hr = mediaTypeOut->SetBlob(MF_MT_USER_DATA, (const UINT8*)trackName, nameLen * sizeof(wchar_t));
+        // Non-critical failure, continue even if this fails
+    }
+
+    DWORD audioStreamIndex = 0;
+    hr = m_sinkWriter->AddStream(mediaTypeOut.get(), &audioStreamIndex);
+    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+
+    // Configure input audio format: PCM or Float from WASAPI/Mixer
+    wil::com_ptr<IMFMediaType> mediaTypeIn;
+    hr = MFCreateMediaType(mediaTypeIn.put());
+    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+
+    mediaTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+    
+    // Set correct subtype based on detected format
+    if (isFloatFormat)
+    {
+        mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
+    }
+    else
+    {
+        mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+    }
+    
+    mediaTypeIn->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
+    mediaTypeIn->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
+    mediaTypeIn->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, audioFormat->wBitsPerSample);
+    mediaTypeIn->SetUINT32(MF_MT_AUDIO_BLOCK_ALIGNMENT, audioFormat->nBlockAlign);
+    mediaTypeIn->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, audioFormat->nAvgBytesPerSec);
+
+    hr = m_sinkWriter->SetInputMediaType(audioStreamIndex, mediaTypeIn.get(), nullptr);
+    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+
+    m_audioStreamIndices[trackIndex] = audioStreamIndex;
+    m_audioTrackInitialized[trackIndex] = true;
+    m_audioTrackCount++;
+
+    // If this is track 0, also set legacy members for backward compatibility
+    if (trackIndex == 0)
+    {
+        m_audioStreamIndex = audioStreamIndex;
+        m_hasAudioStream = true;
+        memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
+    }
+
+    // Begin writing if all expected tracks are configured
+    // (Caller should call this for all tracks before starting recording)
+    if (!m_hasBegunWriting)
+    {
+        hr = m_sinkWriter->BeginWriting();
+        if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+        m_hasBegunWriting = true;
+    }
+
+    if (outHr) *outHr = S_OK;
+    return true;
+}
+
 HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTicks)
 {
     if (!texture || !m_sinkWriter) return E_FAIL;
@@ -307,6 +425,65 @@ HRESULT MP4SinkWriter::WriteAudioSample(const BYTE* pData, UINT32 numFrames, LON
 
     // Write sample to MP4 file (Media Foundation converts to AAC automatically)
     return m_sinkWriter->WriteSample(m_audioStreamIndex, sample.get());
+}
+
+HRESULT MP4SinkWriter::WriteAudioSample(const BYTE* pData, UINT32 numFrames, LONGLONG timestamp, int trackIndex)
+{
+    // Validate track index
+    if (trackIndex < 0 || trackIndex >= MAX_AUDIO_TRACKS)
+    {
+        return E_INVALIDARG;
+    }
+
+    // Check if track is initialized
+    if (!m_audioTrackInitialized[trackIndex] || !m_sinkWriter || !pData || numFrames == 0)
+    {
+        return E_FAIL;
+    }
+
+    // Calculate buffer size: frames * bytes per frame
+    WAVEFORMATEX& trackFormat = m_audioFormats[trackIndex];
+    UINT32 bufferSize = numFrames * trackFormat.nBlockAlign;
+
+    // Create Media Foundation buffer for audio data
+    wil::com_ptr<IMFMediaBuffer> buffer;
+    HRESULT hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
+    if (FAILED(hr)) return hr;
+
+    // Copy raw audio data into Media Foundation buffer
+    BYTE* pBufferData = nullptr;
+    DWORD maxLen = 0, curLen = 0;
+    hr = buffer->Lock(&pBufferData, &maxLen, &curLen);
+    if (FAILED(hr)) return hr;
+
+    memcpy(pBufferData, pData, bufferSize);
+    buffer->SetCurrentLength(bufferSize);
+    buffer->Unlock();
+
+    // Create Media Foundation sample
+    wil::com_ptr<IMFSample> sample;
+    hr = MFCreateSample(sample.put());
+    if (FAILED(hr)) return hr;
+
+    sample->AddBuffer(buffer.get());
+    sample->SetSampleTime(timestamp);
+
+    // Calculate duration based on actual audio frame count
+    const LONGLONG TICKS_PER_SECOND = 10000000LL;
+    LONGLONG duration = (numFrames * TICKS_PER_SECOND) / trackFormat.nSamplesPerSec;
+    sample->SetSampleDuration(duration);
+
+    // Write sample to the specified track
+    return m_sinkWriter->WriteSample(m_audioStreamIndices[trackIndex], sample.get());
+}
+
+bool MP4SinkWriter::HasAudioTrack(int trackIndex) const
+{
+    if (trackIndex < 0 || trackIndex >= MAX_AUDIO_TRACKS)
+    {
+        return false;
+    }
+    return m_audioTrackInitialized[trackIndex];
 }
 
 void MP4SinkWriter::Finalize()
