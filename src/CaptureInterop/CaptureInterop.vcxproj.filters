@@ -51,6 +51,9 @@
     <ClInclude Include="AudioRoutingConfig.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
+    <ClInclude Include="EncoderPipeline.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
     <ClInclude Include="EncoderPresets.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
@@ -150,6 +153,9 @@
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="WindowsVersionHelper.cpp">
+      <Filter>Source Abstraction</Filter>
+    </ClCompile>
+    <ClCompile Include="EncoderPipeline.cpp">
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="EncoderPresets.cpp">
