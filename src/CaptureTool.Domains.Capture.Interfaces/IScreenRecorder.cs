@@ -23,4 +23,14 @@ public partial interface IScreenRecorder
     void SetAudioTrackName(int trackIndex, string trackName);
     void SetAudioMixingMode(bool mixedMode);
     bool GetAudioMixingMode();
+
+    // Encoder Pipeline Configuration (Phase 4)
+    void UseEncoderPipeline(bool enable);
+    bool IsEncoderPipelineEnabled();
+    void SetVideoEncoderPreset(int preset);
+    int GetVideoEncoderPreset();
+    void SetAudioEncoderQuality(int quality);
+    int GetAudioEncoderQuality();
+    void EnableHardwareEncoding(bool enable);
+    bool IsHardwareEncodingEnabled();
 }

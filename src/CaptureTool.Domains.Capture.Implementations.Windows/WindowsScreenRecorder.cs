@@ -47,4 +47,29 @@ public partial class WindowsScreenRecorder : IScreenRecorder
     public bool GetAudioMixingMode() 
         => CaptureInterop.GetAudioMixingMode();
 
+    // Encoder Pipeline Configuration (Phase 4)
+    public void UseEncoderPipeline(bool enable) 
+        => CaptureInterop.UseEncoderPipeline(enable);
+
+    public bool IsEncoderPipelineEnabled() 
+        => CaptureInterop.IsEncoderPipelineEnabled();
+
+    public void SetVideoEncoderPreset(int preset) 
+        => CaptureInterop.SetVideoEncoderPreset(preset);
+
+    public int GetVideoEncoderPreset() 
+        => CaptureInterop.GetVideoEncoderPreset();
+
+    public void SetAudioEncoderQuality(int quality) 
+        => CaptureInterop.SetAudioEncoderQuality(quality);
+
+    public int GetAudioEncoderQuality() 
+        => CaptureInterop.GetAudioEncoderQuality();
+
+    public void EnableHardwareEncoding(bool enable) 
+        => CaptureInterop.EnableHardwareEncoding(enable);
+
+    public bool IsHardwareEncodingEnabled() 
+        => CaptureInterop.IsHardwareEncodingEnabled();
+
 }

@@ -51,4 +51,29 @@ internal static partial class CaptureInterop
 
     [DllImport("CaptureInterop.dll")]
     internal static extern bool GetAudioMixingMode();
+
+    // Phase 4: Encoder Pipeline Configuration APIs
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void UseEncoderPipeline(bool enable);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern bool IsEncoderPipelineEnabled();
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void SetVideoEncoderPreset(int preset);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern int GetVideoEncoderPreset();
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void SetAudioEncoderQuality(int quality);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern int GetAudioEncoderQuality();
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void EnableHardwareEncoding(bool enable);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern bool IsHardwareEncodingEnabled();
 }
