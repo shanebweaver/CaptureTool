@@ -1,15 +1,6 @@
 #include "pch.h"
 #include "WindowsVersionHelper.h"
-
-// RTL_OSVERSIONINFOW definition (from ntdll)
-typedef struct _RTL_OSVERSIONINFOW {
-    ULONG dwOSVersionInfoSize;
-    ULONG dwMajorVersion;
-    ULONG dwMinorVersion;
-    ULONG dwBuildNumber;
-    ULONG dwPlatformId;
-    WCHAR szCSDVersion[128];
-} RTL_OSVERSIONINFOW, *PRTL_OSVERSIONINFOW;
+#include <winternl.h>  // For RTL_OSVERSIONINFOW
 
 bool WindowsVersionHelper::IsWindows11_22H2OrLater()
 {

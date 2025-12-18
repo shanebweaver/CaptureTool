@@ -2,7 +2,7 @@
 #include "IAudioSource.h"
 #include "AudioCaptureDevice.h"
 #include <thread>
-#antml:parameter name <atomic>
+#include <atomic>
 #include <vector>
 
 /// <summary>

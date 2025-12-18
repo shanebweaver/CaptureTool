@@ -23,6 +23,8 @@
 #include <mfidl.h>
 #include <mfreadwrite.h>
 #include <mferror.h>
+#include <codecapi.h>
+#include <wmcodecdsp.h>
 
 // Audio Capture (WASAPI)
 #include <mmdeviceapi.h>
@@ -38,6 +40,9 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <vector>
+#include <map>
+#include <string>
 
 // Windows ABI
 #include <windows.foundation.h>

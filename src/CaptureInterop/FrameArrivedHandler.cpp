@@ -316,11 +316,3 @@ EventRegistrationToken RegisterFrameArrivedHandlerWithCallback(
     
     return token;
 }
-        *outHandler = handler;
-        handler->AddRef(); // Keep reference for caller
-    }
-    
-    handler->Release(); // balance new
-    if (outHr) *outHr = hr;
-    return token;
-}
