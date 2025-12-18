@@ -1,12 +1,20 @@
-#include "MP4SinkWriter.h"
+#pragma once
 #include <queue>
 #include <mutex>
 #include <condition_variable>
 #include <thread>
 #include <atomic>
+#include <functional>
+#include <d3d11.h>
+
+// Forward declaration for MP4SinkWriter (for backward compatibility)
+class MP4SinkWriter;
 
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Graphics::Capture;
+
+// Callback signature for frame delivery
+using FrameCallback = std::function<void(ID3D11Texture2D* texture, LONGLONG timestamp)>;
 
 // Structure to hold frame data for processing
 struct QueuedFrame
@@ -15,13 +23,18 @@ struct QueuedFrame
     LONGLONG relativeTimestamp;
 };
 
-// FrameArrivedHandler handles new capture frames and forwards them to the MP4SinkWriter.
+// FrameArrivedHandler handles new capture frames and forwards them via callback.
 // Uses a background thread to avoid blocking the event callback thread.
 class FrameArrivedHandler final
     : public ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>
 {
 public:
+    // New constructor: accepts callback for modern source-based architecture
+    explicit FrameArrivedHandler(FrameCallback callback) noexcept;
+    
+    // Legacy constructor: accepts MP4SinkWriter for backward compatibility
     explicit FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter) noexcept;
+    
     ~FrameArrivedHandler();
 
     // IUnknown
@@ -42,7 +55,8 @@ private:
     void ProcessingThreadProc();
 
     volatile long m_ref;
-    wil::com_ptr<MP4SinkWriter> m_sinkWriter;
+    FrameCallback m_callback;
+    wil::com_ptr<MP4SinkWriter> m_sinkWriter;  // For backward compatibility
     
     // Background processing
     std::queue<QueuedFrame> m_frameQueue;
@@ -57,5 +71,8 @@ private:
     std::atomic<LONGLONG> m_firstFrameSystemTime{0};
 };
 
-// Helper to register the frame-arrived event.
+// Helper to register the frame-arrived event (legacy version for backward compatibility)
 EventRegistrationToken RegisterFrameArrivedHandler(wil::com_ptr<IDirect3D11CaptureFramePool> framePool, wil::com_ptr<MP4SinkWriter> sinkWriter, FrameArrivedHandler** outHandler = nullptr, HRESULT* outHr = nullptr);
+
+// Helper to register the frame-arrived event (new callback-based version)
+EventRegistrationToken RegisterFrameArrivedHandlerWithCallback(wil::com_ptr<IDirect3D11CaptureFramePool> framePool, FrameCallback callback, FrameArrivedHandler** outHandler = nullptr, HRESULT* outHr = nullptr);

@@ -2,6 +2,14 @@
 #include "ScreenCaptureSource.h"
 #include "GraphicsCaptureHelpers.cpp"
 
+// Forward declaration of the new callback-based helper
+EventRegistrationToken RegisterFrameArrivedHandlerWithCallback(
+    wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool> framePool,
+    VideoFrameCallback callback,
+    FrameArrivedHandler** outHandler,
+    HRESULT* outHr
+);
+
 using namespace GraphicsCaptureHelpers;
 using namespace ABI::Windows::Graphics::Capture;
 
@@ -120,16 +128,11 @@ bool ScreenCaptureSource::Start()
     HRESULT hr = S_OK;
 
     // Create frame arrived handler with callback
-    // Note: For Phase 1, we'll need to modify FrameArrivedHandler to accept a callback
-    // For now, we'll register it with a wrapper that will be updated in Task 6
-    m_frameArrivedToken = RegisterFrameArrivedHandler(m_framePool, nullptr, &m_frameHandler, &hr);
+    m_frameArrivedToken = RegisterFrameArrivedHandlerWithCallback(m_framePool, m_frameCallback, &m_frameHandler, &hr);
     if (FAILED(hr) || !m_frameHandler)
     {
         return false;
     }
-
-    // Start the frame handler's processing thread
-    m_frameHandler->StartProcessing();
 
     // Start capture
     hr = m_session->StartCapture();

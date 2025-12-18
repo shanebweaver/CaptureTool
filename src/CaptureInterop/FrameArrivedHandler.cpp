@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "FrameArrivedHandler.h"
+#include "MP4SinkWriter.h"
 
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Graphics::DirectX;
@@ -7,6 +8,17 @@ using namespace ABI::Windows::Graphics::DirectX::Direct3D11;
 using namespace ABI::Windows::Graphics;
 using namespace ABI::Windows::Graphics::Capture;
 
+// New callback-based constructor
+FrameArrivedHandler::FrameArrivedHandler(FrameCallback callback) noexcept
+    : m_callback(std::move(callback)),
+    m_ref(1),
+    m_running(true),
+    m_stopped(false),
+    m_processingStarted(false)
+{
+}
+
+// Legacy constructor for backward compatibility
 FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter) noexcept
     : m_sinkWriter(std::move(sinkWriter)),
     m_ref(1),
@@ -139,11 +151,13 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         LONGLONG expected = 0;
         if (m_firstFrameSystemTime.compare_exchange_strong(expected, timestamp.Duration))
         {
-            // We successfully set it - also set recording start time
-            // Only set recording start time if we won the race to set first frame time
-            LARGE_INTEGER qpc;
-            QueryPerformanceCounter(&qpc);
-            m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
+            // We successfully set it - also set recording start time if using sink writer
+            if (m_sinkWriter)
+            {
+                LARGE_INTEGER qpc;
+                QueryPerformanceCounter(&qpc);
+                m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
+            }
             firstFrameTime = timestamp.Duration;
         }
         else
@@ -204,10 +218,7 @@ void FrameArrivedHandler::ProcessingThreadProc()
                 frame = std::move(m_frameQueue.front());
                 m_frameQueue.pop();
                 
-                // Capture a reference to sink writer while holding the lock
-                // This ensures thread-safe access to m_sinkWriter
-                // Note: m_sinkWriter lifetime is managed by the owner (ScreenRecorder)
-                // and is guaranteed to outlive this handler's processing thread
+                // Capture a reference to sink writer while holding the lock (for legacy path)
                 sinkWriter = m_sinkWriter;
             }
             else
@@ -217,15 +228,21 @@ void FrameArrivedHandler::ProcessingThreadProc()
         }
         
         // Process the frame outside the lock
-        if (frame.texture && sinkWriter)
+        if (frame.texture)
         {
-            HRESULT hr = sinkWriter->WriteFrame(frame.texture.get(), frame.relativeTimestamp);
-            // If write fails, continue processing (don't stop the thread)
-            // The sink writer will handle errors internally
-            if (FAILED(hr))
+            // New callback-based path (preferred)
+            if (m_callback)
             {
-                // Frame write failed, but continue processing queue
-                // This prevents one bad frame from stopping the entire recording
+                m_callback(frame.texture.get(), frame.relativeTimestamp);
+            }
+            // Legacy direct sink writer path (for backward compatibility)
+            else if (sinkWriter)
+            {
+                HRESULT hr = sinkWriter->WriteFrame(frame.texture.get(), frame.relativeTimestamp);
+                if (FAILED(hr))
+                {
+                    // Frame write failed, but continue processing queue
+                }
             }
         }
     }
@@ -248,6 +265,57 @@ EventRegistrationToken RegisterFrameArrivedHandler(
     // Only provide handler reference to caller if registration succeeded
     if (SUCCEEDED(hr) && outHandler)
     {
+        *outHandler = handler;
+    }
+    else if (FAILED(hr))
+    {
+        // Registration failed, release the handler
+        handler->Release();
+        handler = nullptr;
+    }
+    
+    if (outHr)
+    {
+        *outHr = hr;
+    }
+    
+    return token;
+}
+
+// New callback-based registration helper
+EventRegistrationToken RegisterFrameArrivedHandlerWithCallback(
+    wil::com_ptr<IDirect3D11CaptureFramePool> framePool,
+    FrameCallback callback,
+    FrameArrivedHandler** outHandler,
+    HRESULT* outHr)
+{
+    EventRegistrationToken token{};
+    auto handler = new FrameArrivedHandler(callback);
+    
+    // Start the processing thread after object is fully constructed
+    handler->StartProcessing();
+    
+    HRESULT hr = framePool->add_FrameArrived(handler, &token);
+    
+    // Only provide handler reference to caller if registration succeeded
+    if (SUCCEEDED(hr) && outHandler)
+    {
+        *outHandler = handler;
+    }
+    else if (FAILED(hr))
+    {
+        // Registration failed, release the handler
+        handler->Release();
+        handler = nullptr;
+    }
+    
+    if (outHr)
+    {
+        *outHr = hr;
+    }
+    
+    return token;
+}
         *outHandler = handler;
         handler->AddRef(); // Keep reference for caller
     }
