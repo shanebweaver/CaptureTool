@@ -177,6 +177,7 @@ extern "C"
             config.videoHeight = height;
             config.fps = 30;
             config.videoPreset = g_videoPreset;  // Use global configuration
+            config.useHardwareEncoding = g_useHardwareEncoding;  // Use global configuration
             config.audioQuality = g_audioQuality;  // Use global configuration
             config.audioSampleRate = 48000;
             config.audioChannels = 2;
@@ -857,6 +858,7 @@ extern "C"
     // Phase 4: Encoder pipeline configuration
     static EncoderPreset g_videoPreset = EncoderPreset::Balanced;
     static AudioQuality g_audioQuality = AudioQuality::High;
+    static bool g_useHardwareEncoding = true;
     
     __declspec(dllexport) void UseEncoderPipeline(bool enable)
     {
@@ -892,5 +894,15 @@ extern "C"
     __declspec(dllexport) int GetAudioEncoderQuality()
     {
         return static_cast<int>(g_audioQuality);
+    }
+    
+    __declspec(dllexport) void EnableHardwareEncoding(bool enable)
+    {
+        g_useHardwareEncoding = enable;
+    }
+    
+    __declspec(dllexport) bool IsHardwareEncodingEnabled()
+    {
+        return g_useHardwareEncoding;
     }
 }

@@ -46,4 +46,6 @@ extern "C"
 	__declspec(dllexport) int GetVideoEncoderPreset();
 	__declspec(dllexport) void SetAudioEncoderQuality(int quality);
 	__declspec(dllexport) int GetAudioEncoderQuality();
+	__declspec(dllexport) void EnableHardwareEncoding(bool enable);
+	__declspec(dllexport) bool IsHardwareEncodingEnabled();
 }
