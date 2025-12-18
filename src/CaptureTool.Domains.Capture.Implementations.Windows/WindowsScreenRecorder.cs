@@ -19,4 +19,32 @@ public partial class WindowsScreenRecorder : IScreenRecorder
 
     public void ToggleAudioCapture(bool enabled) => CaptureInterop.TryToggleAudioCapture(enabled);
 
+    // Audio Mixer Configuration (Phase 3)
+    public void SetAudioSourceTrack(int sourceId, int trackIndex) 
+        => CaptureInterop.SetAudioSourceTrack(sourceId, trackIndex);
+
+    public int GetAudioSourceTrack(int sourceId) 
+        => CaptureInterop.GetAudioSourceTrack(sourceId);
+
+    public void SetAudioSourceVolume(int sourceId, float volume) 
+        => CaptureInterop.SetAudioSourceVolume(sourceId, volume);
+
+    public float GetAudioSourceVolume(int sourceId) 
+        => CaptureInterop.GetAudioSourceVolume(sourceId);
+
+    public void SetAudioSourceMuted(int sourceId, bool muted) 
+        => CaptureInterop.SetAudioSourceMuted(sourceId, muted);
+
+    public bool IsAudioSourceMuted(int sourceId) 
+        => CaptureInterop.IsAudioSourceMuted(sourceId);
+
+    public void SetAudioTrackName(int trackIndex, string trackName) 
+        => CaptureInterop.SetAudioTrackName(trackIndex, trackName);
+
+    public void SetAudioMixingMode(bool mixedMode) 
+        => CaptureInterop.SetAudioMixingMode(mixedMode);
+
+    public bool GetAudioMixingMode() 
+        => CaptureInterop.GetAudioMixingMode();
+
 }

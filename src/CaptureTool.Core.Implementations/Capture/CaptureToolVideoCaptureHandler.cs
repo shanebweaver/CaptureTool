@@ -129,4 +129,50 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             }
         }
     }
+
+    // Audio Mixer Configuration (Phase 3)
+    public void SetAudioSourceTrack(int sourceId, int trackIndex)
+    {
+        _screenRecorder.SetAudioSourceTrack(sourceId, trackIndex);
+    }
+
+    public int GetAudioSourceTrack(int sourceId)
+    {
+        return _screenRecorder.GetAudioSourceTrack(sourceId);
+    }
+
+    public void SetAudioSourceVolume(int sourceId, float volume)
+    {
+        _screenRecorder.SetAudioSourceVolume(sourceId, volume);
+    }
+
+    public float GetAudioSourceVolume(int sourceId)
+    {
+        return _screenRecorder.GetAudioSourceVolume(sourceId);
+    }
+
+    public void SetAudioSourceMuted(int sourceId, bool muted)
+    {
+        _screenRecorder.SetAudioSourceMuted(sourceId, muted);
+    }
+
+    public bool IsAudioSourceMuted(int sourceId)
+    {
+        return _screenRecorder.IsAudioSourceMuted(sourceId);
+    }
+
+    public void SetAudioTrackName(int trackIndex, string trackName)
+    {
+        _screenRecorder.SetAudioTrackName(trackIndex, trackName);
+    }
+
+    public void SetAudioMixingMode(bool mixedMode)
+    {
+        _screenRecorder.SetAudioMixingMode(mixedMode);
+    }
+
+    public bool GetAudioMixingMode()
+    {
+        return _screenRecorder.GetAudioMixingMode();
+    }
 }

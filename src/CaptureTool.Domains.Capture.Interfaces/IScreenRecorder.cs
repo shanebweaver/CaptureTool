@@ -12,4 +12,15 @@ public partial interface IScreenRecorder
     void PauseRecording();
     void ResumeRecording();
     void ToggleAudioCapture(bool enabled);
+
+    // Audio Mixer Configuration (Phase 3)
+    void SetAudioSourceTrack(int sourceId, int trackIndex);
+    int GetAudioSourceTrack(int sourceId);
+    void SetAudioSourceVolume(int sourceId, float volume);
+    float GetAudioSourceVolume(int sourceId);
+    void SetAudioSourceMuted(int sourceId, bool muted);
+    bool IsAudioSourceMuted(int sourceId);
+    void SetAudioTrackName(int trackIndex, string trackName);
+    void SetAudioMixingMode(bool mixedMode);
+    bool GetAudioMixingMode();
 }

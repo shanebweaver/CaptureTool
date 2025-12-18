@@ -23,4 +23,32 @@ internal static partial class CaptureInterop
 
     [DllImport("CaptureInterop.dll")]
     internal static extern void TryToggleAudioCapture(bool enabled);
+
+    // Audio Routing Configuration APIs (Phase 3)
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void SetAudioSourceTrack(int sourceId, int trackIndex);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern int GetAudioSourceTrack(int sourceId);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void SetAudioSourceVolume(int sourceId, float volume);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern float GetAudioSourceVolume(int sourceId);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void SetAudioSourceMuted(int sourceId, bool muted);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern bool IsAudioSourceMuted(int sourceId);
+
+    [DllImport("CaptureInterop.dll", CharSet = CharSet.Unicode)]
+    internal static extern void SetAudioTrackName(int trackIndex, string trackName);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void SetAudioMixingMode(bool mixedMode);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern bool GetAudioMixingMode();
 }
