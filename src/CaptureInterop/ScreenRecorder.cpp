@@ -151,7 +151,7 @@ extern "C"
         if (g_sinkWriter)
         {
             g_sinkWriter->Finalize();
-            // Release our reference (wil::com_ptr will call Release automatically)
+            // Release ScreenRecorder's reference (FrameArrivedHandler may still hold a reference)
             g_sinkWriter.reset();
         }
 
