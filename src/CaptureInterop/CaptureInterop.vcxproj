@@ -106,6 +106,7 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
+    <ClInclude Include="ApplicationAudioSource.h" />
     <ClInclude Include="AudioCaptureDevice.h" />
     <ClInclude Include="AudioCaptureHandler.h" />
     <ClInclude Include="AudioDeviceEnumerator.h" />
@@ -121,9 +122,11 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenCaptureSource.h" />
     <ClInclude Include="ScreenRecorder.h" />
+    <ClInclude Include="WindowsVersionHelper.h" />
   </ItemGroup>
 
   <ItemGroup>
+    <ClCompile Include="ApplicationAudioSource.cpp" />
     <ClCompile Include="AudioCaptureDevice.cpp" />
     <ClCompile Include="AudioCaptureHandler.cpp" />
     <ClCompile Include="AudioDeviceEnumerator.cpp" />
@@ -134,6 +137,7 @@
     <ClCompile Include="MP4SinkWriter.cpp" />
     <ClCompile Include="ScreenCaptureSource.cpp" />
     <ClCompile Include="ScreenRecorder.cpp" />
+    <ClCompile Include="WindowsVersionHelper.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Create</PrecompiledHeader>
