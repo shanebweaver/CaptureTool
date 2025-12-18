@@ -38,4 +38,12 @@ extern "C"
 	__declspec(dllexport) void SetAudioTrackName(int trackIndex, const wchar_t* name);
 	__declspec(dllexport) void SetAudioMixingMode(bool mixedMode);
 	__declspec(dllexport) bool GetAudioMixingMode();
+	
+	// Phase 4: Encoder pipeline configuration exports
+	__declspec(dllexport) void UseEncoderPipeline(bool enable);
+	__declspec(dllexport) bool IsEncoderPipelineEnabled();
+	__declspec(dllexport) void SetVideoEncoderPreset(int preset);
+	__declspec(dllexport) int GetVideoEncoderPreset();
+	__declspec(dllexport) void SetAudioEncoderQuality(int quality);
+	__declspec(dllexport) int GetAudioEncoderQuality();
 }

@@ -8,6 +8,7 @@
 #include "MicrophoneAudioSource.h"
 #include "AudioRoutingConfig.h"
 #include "AudioMixer.h"
+#include "EncoderPipeline.h"
 #include "GraphicsCaptureHelpers.cpp"
 #include <thread>
 #include <atomic>
@@ -32,6 +33,10 @@ static D3DDeviceAndContext g_d3dDevice;
 static bool g_useSourceAbstraction = false;  // Flag to track which path is active
 static uint64_t g_desktopAudioSourceId = 0;
 static uint64_t g_microphoneSourceId = 0;
+
+// Phase 4: Encoder pipeline globals
+static EncoderPipeline* g_encoderPipeline = nullptr;
+static bool g_useEncoderPipeline = false;  // Feature flag for Phase 4 encoder pipeline
 
 // Phase 3: Audio mixing thread for periodic mixer polling
 static std::thread g_mixerThread;
@@ -61,16 +66,38 @@ static void MixerThreadProc()
             
             if (framesMixed > 0)
             {
-                if (g_routingConfig.IsMixedMode())
+                if (g_useEncoderPipeline)
                 {
-                    // Mixed mode: Write to single track
-                    g_sinkWriter.WriteAudioSample(mixBuffer.data(), framesMixed, g_mixerTimestamp);
+                    // Phase 4: Route through encoder pipeline
+                    if (g_encoderPipeline)
+                    {
+                        if (g_routingConfig.IsMixedMode())
+                        {
+                            // Mixed mode: Write to single track (track 0)
+                            g_encoderPipeline->ProcessAudioSamples(mixBuffer.data(), framesMixed, g_mixerTimestamp, 0);
+                        }
+                        else
+                        {
+                            // Separate track mode: Write each source to its track
+                            // For now, write mixed audio to track 0 (Phase 4.4 will add per-source track writing)
+                            g_encoderPipeline->ProcessAudioSamples(mixBuffer.data(), framesMixed, g_mixerTimestamp, 0);
+                        }
+                    }
                 }
                 else
                 {
-                    // Separate track mode: Write each source to its track
-                    // For now, write mixed audio to track 0 (Phase 3.5 will add per-source track writing)
-                    g_sinkWriter.WriteAudioSample(0, mixBuffer.data(), framesMixed, g_mixerTimestamp);
+                    // Phase 3: Legacy MP4SinkWriter path
+                    if (g_routingConfig.IsMixedMode())
+                    {
+                        // Mixed mode: Write to single track
+                        g_sinkWriter.WriteAudioSample(mixBuffer.data(), framesMixed, g_mixerTimestamp);
+                    }
+                    else
+                    {
+                        // Separate track mode: Write each source to its track
+                        // For now, write mixed audio to track 0 (Phase 3.5 will add per-source track writing)
+                        g_sinkWriter.WriteAudioSample(0, mixBuffer.data(), framesMixed, g_mixerTimestamp);
+                    }
                 }
                 
                 // Advance timestamp (100ns units)
@@ -121,19 +148,66 @@ extern "C"
         UINT32 width, height;
         g_videoSource->GetResolution(width, height);
         
-        // Initialize MP4 sink writer
-        if (!g_sinkWriter.Initialize(outputPath, g_d3dDevice.device.get(), width, height, &hr))
+        // Phase 4: Choose pipeline based on feature flag
+        if (g_useEncoderPipeline)
         {
-            g_videoSource->Release();
-            g_videoSource = nullptr;
-            g_useSourceAbstraction = false;
-            return false;
+            // Initialize EncoderPipeline (Phase 4 path)
+            g_encoderPipeline = new EncoderPipeline();
+            
+            EncoderPipelineConfig config = {};
+            config.outputPath = outputPath;
+            config.videoWidth = width;
+            config.videoHeight = height;
+            config.fps = 30;
+            config.videoPreset = g_videoPreset;  // Use global configuration
+            config.audioQuality = g_audioQuality;  // Use global configuration
+            config.audioSampleRate = 48000;
+            config.audioChannels = 2;
+            
+            if (FAILED(g_encoderPipeline->Initialize(g_d3dDevice.device.get(), config)))
+            {
+                delete g_encoderPipeline;
+                g_encoderPipeline = nullptr;
+                g_videoSource->Release();
+                g_videoSource = nullptr;
+                g_useSourceAbstraction = false;
+                return false;
+            }
+            
+            if (FAILED(g_encoderPipeline->Start()))
+            {
+                delete g_encoderPipeline;
+                g_encoderPipeline = nullptr;
+                g_videoSource->Release();
+                g_videoSource = nullptr;
+                g_useSourceAbstraction = false;
+                return false;
+            }
+            
+            // Set up video callback to route through encoder pipeline
+            g_videoSource->SetFrameCallback([](ID3D11Texture2D* texture, LONGLONG timestamp) {
+                if (g_encoderPipeline)
+                {
+                    g_encoderPipeline->ProcessVideoFrame(texture, timestamp);
+                }
+            });
         }
-        
-        // Set up video callback
-        g_videoSource->SetFrameCallback([](ID3D11Texture2D* texture, LONGLONG timestamp) {
-            g_sinkWriter.WriteFrame(texture, timestamp);
-        });
+        else
+        {
+            // Initialize MP4 sink writer (Phase 3 legacy path)
+            if (!g_sinkWriter.Initialize(outputPath, g_d3dDevice.device.get(), width, height, &hr))
+            {
+                g_videoSource->Release();
+                g_videoSource = nullptr;
+                g_useSourceAbstraction = false;
+                return false;
+            }
+            
+            // Set up video callback to route through MP4SinkWriter
+            g_videoSource->SetFrameCallback([](ID3D11Texture2D* texture, LONGLONG timestamp) {
+                g_sinkWriter.WriteFrame(texture, timestamp);
+            });
+        }
         
         // Phase 3: Initialize audio mixer if any audio sources are requested
         bool needsAudioMixer = captureDesktopAudio || captureMicrophone;
@@ -224,38 +298,74 @@ extern "C"
             }
         }
         
-        // Phase 3: Initialize audio tracks based on routing configuration
+        // Phase 3/4: Initialize audio tracks based on routing configuration
         if (g_audioMixer && (desktopAudioEnabled || microphoneEnabled))
         {
             WAVEFORMATEX* mixerFormat = const_cast<WAVEFORMATEX*>(g_audioMixer->GetOutputFormat());
             
-            if (g_routingConfig.IsMixedMode())
+            if (g_useEncoderPipeline)
             {
-                // Mixed mode: Single track with all sources mixed
-                if (g_sinkWriter.InitializeAudioStream(mixerFormat, &hr))
+                // Phase 4: Initialize audio tracks in EncoderPipeline
+                if (g_routingConfig.IsMixedMode())
                 {
-                    // Audio will be written via mixer callback
+                    // Mixed mode: Single track with all sources mixed
+                    g_encoderPipeline->InitializeAudioTrack(0, mixerFormat, L"Mixed Audio");
+                }
+                else
+                {
+                    // Separate track mode: Initialize tracks for each source
+                    int trackIndex = 0;
+                    if (desktopAudioEnabled)
+                    {
+                        int configuredTrack = g_routingConfig.GetSourceTrack(g_desktopAudioSourceId);
+                        trackIndex = (configuredTrack >= 0) ? configuredTrack : trackIndex;
+                        const wchar_t* trackName = g_routingConfig.GetTrackName(trackIndex);
+                        g_encoderPipeline->InitializeAudioTrack(trackIndex, mixerFormat, 
+                            trackName ? trackName : L"Desktop Audio");
+                        trackIndex++;
+                    }
+                    
+                    if (microphoneEnabled)
+                    {
+                        int configuredTrack = g_routingConfig.GetSourceTrack(g_microphoneSourceId);
+                        trackIndex = (configuredTrack >= 0) ? configuredTrack : trackIndex;
+                        const wchar_t* trackName = g_routingConfig.GetTrackName(trackIndex);
+                        g_encoderPipeline->InitializeAudioTrack(trackIndex, mixerFormat, 
+                            trackName ? trackName : L"Microphone");
+                    }
                 }
             }
             else
             {
-                // Separate track mode: Initialize tracks for each source
-                int trackIndex = 0;
-                if (desktopAudioEnabled)
+                // Phase 3: Initialize audio tracks in MP4SinkWriter (legacy path)
+                if (g_routingConfig.IsMixedMode())
                 {
-                    int configuredTrack = g_routingConfig.GetSourceTrack(g_desktopAudioSourceId);
-                    trackIndex = (configuredTrack >= 0) ? configuredTrack : trackIndex;
-                    const wchar_t* trackName = g_routingConfig.GetTrackName(trackIndex);
-                    g_sinkWriter.InitializeAudioTrack(trackIndex, mixerFormat, trackName ? trackName : L"Desktop Audio");
-                    trackIndex++;
+                    // Mixed mode: Single track with all sources mixed
+                    if (g_sinkWriter.InitializeAudioStream(mixerFormat, &hr))
+                    {
+                        // Audio will be written via mixer callback
+                    }
                 }
-                
-                if (microphoneEnabled)
+                else
                 {
-                    int configuredTrack = g_routingConfig.GetSourceTrack(g_microphoneSourceId);
-                    trackIndex = (configuredTrack >= 0) ? configuredTrack : trackIndex;
-                    const wchar_t* trackName = g_routingConfig.GetTrackName(trackIndex);
-                    g_sinkWriter.InitializeAudioTrack(trackIndex, mixerFormat, trackName ? trackName : L"Microphone");
+                    // Separate track mode: Initialize tracks for each source
+                    int trackIndex = 0;
+                    if (desktopAudioEnabled)
+                    {
+                        int configuredTrack = g_routingConfig.GetSourceTrack(g_desktopAudioSourceId);
+                        trackIndex = (configuredTrack >= 0) ? configuredTrack : trackIndex;
+                        const wchar_t* trackName = g_routingConfig.GetTrackName(trackIndex);
+                        g_sinkWriter.InitializeAudioTrack(trackIndex, mixerFormat, trackName ? trackName : L"Desktop Audio");
+                        trackIndex++;
+                    }
+                    
+                    if (microphoneEnabled)
+                    {
+                        int configuredTrack = g_routingConfig.GetSourceTrack(g_microphoneSourceId);
+                        trackIndex = (configuredTrack >= 0) ? configuredTrack : trackIndex;
+                        const wchar_t* trackName = g_routingConfig.GetTrackName(trackIndex);
+                        g_sinkWriter.InitializeAudioTrack(trackIndex, mixerFormat, trackName ? trackName : L"Microphone");
+                    }
                 }
             }
         }
@@ -414,7 +524,7 @@ extern "C"
     {
         if (g_useSourceAbstraction)
         {
-            // New source-based path (Phase 3: with AudioMixer)
+            // New source-based path (Phase 3/4: with AudioMixer and optional EncoderPipeline)
             // Stop mixer thread first
             if (g_mixerThreadRunning.load())
             {
@@ -471,11 +581,24 @@ extern "C"
                 g_videoSource = nullptr;
             }
             
-            // Finalize MP4 file
-            g_sinkWriter.Finalize();
+            // Phase 4: Stop and cleanup encoder pipeline or MP4SinkWriter
+            if (g_useEncoderPipeline)
+            {
+                if (g_encoderPipeline)
+                {
+                    g_encoderPipeline->Stop();
+                    delete g_encoderPipeline;
+                    g_encoderPipeline = nullptr;
+                }
+            }
+            else
+            {
+                // Phase 3: Finalize MP4 file (legacy path)
+                g_sinkWriter.Finalize();
+                // Reset sink writer to fresh state
+                g_sinkWriter = MP4SinkWriter();
+            }
             
-            // Reset sink writer to fresh state
-            g_sinkWriter = MP4SinkWriter();
             g_useSourceAbstraction = false;
         }
         else
@@ -712,5 +835,45 @@ extern "C"
     __declspec(dllexport) bool GetAudioMixingMode()
     {
         return g_audioRoutingConfig.IsMixedMode();
+    }
+    
+    // Phase 4: Encoder pipeline configuration
+    static EncoderPreset g_videoPreset = EncoderPreset::Balanced;
+    static AudioQuality g_audioQuality = AudioQuality::High;
+    
+    __declspec(dllexport) void UseEncoderPipeline(bool enable)
+    {
+        g_useEncoderPipeline = enable;
+    }
+    
+    __declspec(dllexport) bool IsEncoderPipelineEnabled()
+    {
+        return g_useEncoderPipeline;
+    }
+    
+    __declspec(dllexport) void SetVideoEncoderPreset(int preset)
+    {
+        if (preset >= 0 && preset <= static_cast<int>(EncoderPreset::Lossless))
+        {
+            g_videoPreset = static_cast<EncoderPreset>(preset);
+        }
+    }
+    
+    __declspec(dllexport) int GetVideoEncoderPreset()
+    {
+        return static_cast<int>(g_videoPreset);
+    }
+    
+    __declspec(dllexport) void SetAudioEncoderQuality(int quality)
+    {
+        if (quality >= 0 && quality <= static_cast<int>(AudioQuality::VeryHigh))
+        {
+            g_audioQuality = static_cast<AudioQuality>(quality);
+        }
+    }
+    
+    __declspec(dllexport) int GetAudioEncoderQuality()
+    {
+        return static_cast<int>(g_audioQuality);
     }
 }
