@@ -17,6 +17,7 @@ H264VideoEncoder::H264VideoEncoder()
     , m_pOutputType(nullptr)
     , m_pD3DDevice(nullptr)
     , m_pD3DContext(nullptr)
+    , m_pTextureConverter(nullptr)
     , m_encodedFrameCount(0)
     , m_droppedFrameCount(0)
     , m_totalEncodingTimeMs(0.0)
@@ -27,6 +28,12 @@ H264VideoEncoder::H264VideoEncoder()
 H264VideoEncoder::~H264VideoEncoder()
 {
     Stop();
+    
+    if (m_pTextureConverter)
+    {
+        delete m_pTextureConverter;
+        m_pTextureConverter = nullptr;
+    }
     
     if (m_pEncoder)
     {
@@ -600,14 +607,28 @@ HRESULT H264VideoEncoder::CreateOutputMediaType(IMFMediaType** ppMediaType)
 
 HRESULT H264VideoEncoder::ConvertTextureToSample(ID3D11Texture2D* pTexture, IMFSample** ppSample)
 {
-    // This is a placeholder - actual implementation would need to:
-    // 1. Map the texture
-    // 2. Convert to NV12 format if needed
-    // 3. Copy to MF buffer
-    // 4. Create MF sample
+    if (!pTexture || !ppSample)
+    {
+        return E_INVALIDARG;
+    }
     
-    // For now, return not implemented
-    return E_NOTIMPL;
+    // Initialize texture converter on first use
+    if (!m_pTextureConverter)
+    {
+        m_pTextureConverter = new TextureConverter();
+        HRESULT hr = m_pTextureConverter->Initialize(m_config.d3dDevice, m_config.width, m_config.height);
+        if (FAILED(hr))
+        {
+            delete m_pTextureConverter;
+            m_pTextureConverter = nullptr;
+            return hr;
+        }
+    }
+    
+    // Convert texture to Media Foundation sample
+    // Timestamp will be set by the encoder based on frame timing
+    int64_t timestamp = 0; // Placeholder - actual timestamp should come from capture
+    return m_pTextureConverter->ConvertTextureToSample(pTexture, timestamp, ppSample);
 }
 
 HRESULT H264VideoEncoder::ProcessEncoderOutput(IMFSample** ppSample)

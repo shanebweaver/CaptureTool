@@ -96,6 +96,9 @@
     <ClInclude Include="SourceManager.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
+    <ClInclude Include="TextureConverter.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
     <ClInclude Include="WindowsVersionHelper.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
@@ -150,6 +153,9 @@
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="SourceManager.cpp">
+      <Filter>Source Abstraction</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureConverter.cpp">
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="WindowsVersionHelper.cpp">

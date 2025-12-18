@@ -133,6 +133,7 @@
     <ClInclude Include="ScreenCaptureSource.h" />
     <ClInclude Include="ScreenRecorder.h" />
     <ClInclude Include="SourceManager.h" />
+    <ClInclude Include="TextureConverter.h" />
     <ClInclude Include="WindowsVersionHelper.h" />
   </ItemGroup>
 
@@ -141,7 +142,7 @@
     <ClCompile Include="ApplicationAudioSource.cpp" />
     <ClCompile Include="AudioCaptureDevice.cpp" />
     <ClCompile Include="AudioCaptureHandler.cpp" />
-    <ClCompile Include="AudioDeviceEnumerator.cpp" />
+    <ClInclude Include="AudioDeviceEnumerator.cpp" />
     <ClCompile Include="AudioMixer.cpp" />
     <ClCompile Include="AudioRoutingConfig.cpp" />
     <ClCompile Include="DesktopAudioSource.cpp" />
@@ -156,6 +157,7 @@
     <ClCompile Include="ScreenCaptureSource.cpp" />
     <ClCompile Include="ScreenRecorder.cpp" />
     <ClCompile Include="SourceManager.cpp" />
+    <ClCompile Include="TextureConverter.cpp" />
     <ClCompile Include="WindowsVersionHelper.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

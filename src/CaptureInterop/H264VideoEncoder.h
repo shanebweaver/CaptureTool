@@ -1,5 +1,6 @@
 #pragma once
 #include "IVideoEncoder.h"
+#include "TextureConverter.h"
 #include <mfapi.h>
 #include <mfidl.h>
 #include <mfreadwrite.h>
@@ -78,6 +79,9 @@ namespace CaptureInterop
         // D3D11 support for hardware encoding
         ID3D11Device* m_pD3DDevice;
         ID3D11DeviceContext* m_pD3DContext;
+        
+        // Texture converter for D3D11 → Media Foundation
+        TextureConverter* m_pTextureConverter;
         
         // Stats
         uint64_t m_encodedFrameCount;
