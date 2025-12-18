@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>18.0</VCProjectVersion>
+    <VCProjectVersion>17.0</VCProjectVersion>
     <ProjectGuid>{439DC4FA-FB32-9479-597E-630984C30EDD}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>CaptureInteropTests</RootNamespace>
