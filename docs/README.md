@@ -9,6 +9,7 @@ A comprehensive plan to implement OBS-style capture capabilities in CaptureTool,
 #### Documents:
 - **[OBS-Style Capture Architecture Plan](./OBS-Style-Capture-Architecture-Plan.md)** - Complete 6-month implementation plan with 5 phases
 - **[Quick Reference Guide](./OBS-Capture-Quick-Reference.md)** - Executive summary and developer quick-start
+- **[Architecture Comparison](./Architecture-Comparison.md)** - Visual comparison of current vs. target architecture
 
 #### Project Goals:
 - Multiple independent video and audio sources
@@ -36,9 +37,10 @@ A comprehensive plan to implement OBS-style capture capabilities in CaptureTool,
 
 ## Getting Started with the Plan
 
-1. **For Project Managers:** Read the [Quick Reference Guide](./OBS-Capture-Quick-Reference.md)
-2. **For Developers:** Review the [Full Architecture Plan](./OBS-Style-Capture-Architecture-Plan.md)
-3. **For Stakeholders:** See Phase 1-5 summaries in the Quick Reference
+1. **For Visual Learners:** Start with the [Architecture Comparison](./Architecture-Comparison.md) diagrams
+2. **For Project Managers:** Read the [Quick Reference Guide](./OBS-Capture-Quick-Reference.md)
+3. **For Developers:** Review the [Full Architecture Plan](./OBS-Style-Capture-Architecture-Plan.md)
+4. **For Stakeholders:** See Phase 1-5 summaries in the Quick Reference
 
 ---
 
