@@ -110,6 +110,7 @@
     <ClInclude Include="AudioCaptureDevice.h" />
     <ClInclude Include="AudioCaptureHandler.h" />
     <ClInclude Include="AudioDeviceEnumerator.h" />
+    <ClInclude Include="AudioMixer.h" />
     <ClInclude Include="DesktopAudioSource.h" />
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
@@ -131,6 +132,7 @@
     <ClCompile Include="AudioCaptureDevice.cpp" />
     <ClCompile Include="AudioCaptureHandler.cpp" />
     <ClCompile Include="AudioDeviceEnumerator.cpp" />
+    <ClCompile Include="AudioMixer.cpp" />
     <ClCompile Include="DesktopAudioSource.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="FrameArrivedHandler.cpp" />
