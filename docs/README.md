@@ -1,0 +1,53 @@
+# CaptureTool Documentation
+
+## Planning Documents
+
+### OBS-Style Capture Architecture
+
+A comprehensive plan to implement OBS-style capture capabilities in CaptureTool, enabling multiple video/audio sources, multi-track recording, and flexible audio routing.
+
+#### Documents:
+- **[OBS-Style Capture Architecture Plan](./OBS-Style-Capture-Architecture-Plan.md)** - Complete 6-month implementation plan with 5 phases
+- **[Quick Reference Guide](./OBS-Capture-Quick-Reference.md)** - Executive summary and developer quick-start
+
+#### Project Goals:
+- Multiple independent video and audio sources
+- Multi-track audio recording (up to 6 tracks)
+- Per-source configuration and control
+- Flexible audio routing and mixing
+- Advanced muxing with separate track management
+
+#### Timeline:
+- **Phase 1:** Source Abstraction Layer (2-3 weeks)
+- **Phase 2:** Multiple Source Support (3-4 weeks)
+- **Phase 3:** Audio Mixer System (4-5 weeks)
+- **Phase 4:** Advanced Muxing/Interleaving (5-6 weeks)
+- **Phase 5:** UI Enhancements (4-5 weeks, parallel)
+- **Total:** ~6 months
+
+#### Key Benefits:
+- Record game audio and microphone on separate tracks
+- Control volume and muting per audio source
+- Support for desktop, microphone, and per-application audio
+- Edit audio tracks independently in post-production
+- Professional-grade multi-track recording like OBS Studio
+
+---
+
+## Getting Started with the Plan
+
+1. **For Project Managers:** Read the [Quick Reference Guide](./OBS-Capture-Quick-Reference.md)
+2. **For Developers:** Review the [Full Architecture Plan](./OBS-Style-Capture-Architecture-Plan.md)
+3. **For Stakeholders:** See Phase 1-5 summaries in the Quick Reference
+
+---
+
+## Current Status
+
+- ✅ Planning phase complete
+- ⏳ Awaiting approval to begin Phase 1
+- 📅 Created: 2025-12-18
+
+---
+
+_This documentation is maintained as part of the CaptureTool project._
