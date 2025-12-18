@@ -11,7 +11,7 @@ static wil::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession> g_
 static wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool> g_framePool;
 static EventRegistrationToken g_frameArrivedEventToken;
 static FrameArrivedHandler* g_frameHandler = nullptr;
-static MP4SinkWriter* g_sinkWriter = nullptr;
+static wil::com_ptr<MP4SinkWriter> g_sinkWriter;
 static AudioCaptureHandler g_audioHandler;
 
 // Exported API
@@ -64,13 +64,15 @@ extern "C"
         if (FAILED(hr)) return false;
         
         // Phase 4: Initialize video sink writer (allocate on heap for COM-style reference counting)
-        g_sinkWriter = new MP4SinkWriter();
-        if (!g_sinkWriter->Initialize(outputPath, device.get(), size.Width, size.Height, &hr))
+        MP4SinkWriter* pSinkWriter = new MP4SinkWriter();
+        if (!pSinkWriter->Initialize(outputPath, device.get(), size.Width, size.Height, &hr))
         {
-            delete g_sinkWriter;
-            g_sinkWriter = nullptr;
+            delete pSinkWriter;
             return false;
         }
+        
+        // Attach to wil::com_ptr (takes ownership, doesn't call AddRef since ref count is already 1)
+        g_sinkWriter.attach(pSinkWriter);
         
         // Phase 4: Initialize and start audio capture if requested
         bool audioEnabled = false;  // Track actual audio capture state
@@ -84,7 +86,7 @@ extern "C"
                 if (audioFormat && g_sinkWriter->InitializeAudioStream(audioFormat, &hr))
                 {
                     // Set the sink writer on audio handler so it can write samples
-                    g_audioHandler.SetSinkWriter(g_sinkWriter);
+                    g_audioHandler.SetSinkWriter(g_sinkWriter.get());
                     
                     // Start audio capture
                     if (g_audioHandler.Start(&hr))
@@ -105,6 +107,8 @@ extern "C"
             {
                 g_audioHandler.Stop();
             }
+            // Clean up sink writer on failure (wil::com_ptr handles Release automatically)
+            g_sinkWriter.reset();
             return false;
         }
 
@@ -147,9 +151,8 @@ extern "C"
         if (g_sinkWriter)
         {
             g_sinkWriter->Finalize();
-            // The sink writer will be deleted by its own Release() when ref count reaches 0
-            // (via wil::com_ptr in FrameArrivedHandler)
-            g_sinkWriter = nullptr;
+            // Release our reference (wil::com_ptr will call Release automatically)
+            g_sinkWriter.reset();
         }
 
         if (g_session)
