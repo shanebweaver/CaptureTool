@@ -115,6 +115,7 @@
     <ClInclude Include="IAudioSource.h" />
     <ClInclude Include="IMediaSource.h" />
     <ClInclude Include="IVideoSource.h" />
+    <ClInclude Include="MicrophoneAudioSource.h" />
     <ClInclude Include="MP4SinkWriter.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenCaptureSource.h" />
@@ -127,6 +128,7 @@
     <ClCompile Include="DesktopAudioSource.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="FrameArrivedHandler.cpp" />
+    <ClCompile Include="MicrophoneAudioSource.cpp" />
     <ClCompile Include="MP4SinkWriter.cpp" />
     <ClCompile Include="ScreenCaptureSource.cpp" />
     <ClCompile Include="ScreenRecorder.cpp" />

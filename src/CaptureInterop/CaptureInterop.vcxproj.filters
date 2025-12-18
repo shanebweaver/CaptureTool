@@ -51,6 +51,9 @@
     <ClInclude Include="DesktopAudioSource.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
+    <ClInclude Include="MicrophoneAudioSource.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
     <ClInclude Include="ScreenCaptureSource.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
@@ -81,6 +84,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DesktopAudioSource.cpp">
+      <Filter>Source Abstraction</Filter>
+    </ClCompile>
+    <ClCompile Include="MicrophoneAudioSource.cpp">
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="ScreenCaptureSource.cpp">
