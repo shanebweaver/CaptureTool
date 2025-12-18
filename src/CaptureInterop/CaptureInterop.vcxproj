@@ -122,7 +122,6 @@
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="H264VideoEncoder.h" />
-    <ClInclude Include="GraphicsCaptureHelpers.cpp" />
     <ClInclude Include="IAudioSource.h" />
     <ClInclude Include="IMediaSource.h" />
     <ClInclude Include="IVideoSource.h" />
@@ -142,7 +141,7 @@
     <ClCompile Include="ApplicationAudioSource.cpp" />
     <ClCompile Include="AudioCaptureDevice.cpp" />
     <ClCompile Include="AudioCaptureHandler.cpp" />
-    <ClInclude Include="AudioDeviceEnumerator.cpp" />
+    <ClCompile Include="AudioDeviceEnumerator.cpp" />
     <ClCompile Include="AudioMixer.cpp" />
     <ClCompile Include="AudioRoutingConfig.cpp" />
     <ClCompile Include="DesktopAudioSource.cpp" />
@@ -150,6 +149,7 @@
     <ClCompile Include="EncoderPresets.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="FrameArrivedHandler.cpp" />
+    <ClCompile Include="GraphicsCaptureHelpers.cpp" />
     <ClCompile Include="H264VideoEncoder.cpp" />
     <ClCompile Include="MicrophoneAudioSource.cpp" />
     <ClCompile Include="MP4Muxer.cpp" />
