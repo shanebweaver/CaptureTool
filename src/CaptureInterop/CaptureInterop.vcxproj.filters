@@ -48,6 +48,18 @@
     <ClInclude Include="AudioRoutingConfig.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
+    <ClInclude Include="EncoderPresets.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
+    <ClInclude Include="IAudioEncoder.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
+    <ClInclude Include="IMuxer.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
+    <ClInclude Include="IVideoEncoder.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
     <ClInclude Include="ApplicationAudioSource.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
@@ -126,6 +138,9 @@
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="WindowsVersionHelper.cpp">
+      <Filter>Source Abstraction</Filter>
+    </ClCompile>
+    <ClCompile Include="EncoderPresets.cpp">
       <Filter>Source Abstraction</Filter>
     </ClCompile>
   </ItemGroup>
