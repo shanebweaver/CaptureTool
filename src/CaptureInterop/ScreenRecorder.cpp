@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "ScreenRecorder.h"
 #include "MP4SinkWriter.h"
 #include "FrameArrivedHandler.h"
@@ -7,7 +7,10 @@
 #include "DesktopAudioSource.h"
 #include "MicrophoneAudioSource.h"
 #include "AudioRoutingConfig.h"
+#include "AudioMixer.h"
 #include "GraphicsCaptureHelpers.cpp"
+#include <thread>
+#include <atomic>
 
 using namespace GraphicsCaptureHelpers;
 
@@ -19,12 +22,66 @@ static FrameArrivedHandler* g_frameHandler = nullptr;
 static MP4SinkWriter g_sinkWriter;
 static AudioCaptureHandler g_audioHandler;
 
-// New source-based globals (Phase 2 implementation)
+// New source-based globals (Phase 2+3 implementation)
 static ScreenCaptureSource* g_videoSource = nullptr;
 static DesktopAudioSource* g_desktopAudioSource = nullptr;
 static MicrophoneAudioSource* g_microphoneSource = nullptr;
+static AudioMixer* g_audioMixer = nullptr;
+static AudioRoutingConfig g_routingConfig;
 static D3DDeviceAndContext g_d3dDevice;
 static bool g_useSourceAbstraction = false;  // Flag to track which path is active
+static uint64_t g_desktopAudioSourceId = 0;
+static uint64_t g_microphoneSourceId = 0;
+
+// Phase 3: Audio mixing thread for periodic mixer polling
+static std::thread g_mixerThread;
+static std::atomic<bool> g_mixerThreadRunning = false;
+static LONGLONG g_mixerTimestamp = 0;
+
+// Phase 3: Mixer thread function
+static void MixerThreadProc()
+{
+    // Set thread priority
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+    
+    // Calculate frames per buffer (10ms worth at 48kHz)
+    const UINT32 framesPerBuffer = 480;  // 48000 * 0.010 = 480 frames
+    const UINT32 bufferSize = framesPerBuffer * 2 * 2;  // stereo * 16-bit (2 bytes per sample)
+    std::vector<BYTE> mixBuffer(bufferSize);
+    
+    // Sleep duration for 10ms intervals
+    const DWORD sleepMs = 10;
+    
+    while (g_mixerThreadRunning.load())
+    {
+        if (g_audioMixer)
+        {
+            // Mix audio from all sources
+            UINT32 framesMixed = g_audioMixer->MixAudio(mixBuffer.data(), framesPerBuffer, g_mixerTimestamp);
+            
+            if (framesMixed > 0)
+            {
+                if (g_routingConfig.IsMixedMode())
+                {
+                    // Mixed mode: Write to single track
+                    g_sinkWriter.WriteAudioSample(mixBuffer.data(), framesMixed, g_mixerTimestamp);
+                }
+                else
+                {
+                    // Separate track mode: Write each source to its track
+                    // For now, write mixed audio to track 0 (Phase 3.5 will add per-source track writing)
+                    g_sinkWriter.WriteAudioSample(0, mixBuffer.data(), framesMixed, g_mixerTimestamp);
+                }
+                
+                // Advance timestamp (100ns units)
+                // frames * 10,000,000 / sampleRate
+                g_mixerTimestamp += (framesMixed * 10000000LL) / 48000;
+            }
+        }
+        
+        Sleep(sleepMs);
+    }
+}
 
 // Exported API
 extern "C"
@@ -78,20 +135,38 @@ extern "C"
             g_sinkWriter.WriteFrame(texture, timestamp);
         });
         
+        // Phase 3: Initialize audio mixer if any audio sources are requested
+        bool needsAudioMixer = captureDesktopAudio || captureMicrophone;
+        
+        if (needsAudioMixer)
+        {
+            // Create audio mixer with standard output format (48kHz, stereo, 16-bit)
+            g_audioMixer = new AudioMixer();
+            if (!g_audioMixer->Initialize(48000, 2, 16))
+            {
+                delete g_audioMixer;
+                g_audioMixer = nullptr;
+                needsAudioMixer = false;
+            }
+        }
+        
         // Create desktop audio source if requested
         bool desktopAudioEnabled = false;
-        if (captureDesktopAudio)
+        if (captureDesktopAudio && g_audioMixer)
         {
             g_desktopAudioSource = new DesktopAudioSource();
             
             if (g_desktopAudioSource->Initialize())
             {
-                WAVEFORMATEX* audioFormat = g_desktopAudioSource->GetFormat();
-                if (audioFormat && g_sinkWriter.InitializeAudioStream(audioFormat, &hr))
+                // Register with audio mixer
+                float volume = g_routingConfig.GetSourceVolume((uint64_t)g_desktopAudioSource);
+                g_desktopAudioSourceId = g_audioMixer->RegisterSource(g_desktopAudioSource, volume);
+                
+                if (g_desktopAudioSourceId > 0)
                 {
-                    g_desktopAudioSource->SetAudioCallback([](const BYTE* data, UINT32 frames, LONGLONG ts) {
-                        g_sinkWriter.WriteAudioSample(data, frames, ts);
-                    });
+                    // Apply routing configuration
+                    bool muted = g_routingConfig.IsSourceMuted(g_desktopAudioSourceId);
+                    g_audioMixer->SetSourceMuted(g_desktopAudioSourceId, muted);
                     
                     if (g_desktopAudioSource->Start(&hr))
                     {
@@ -102,6 +177,11 @@ extern "C"
             
             if (!desktopAudioEnabled && g_desktopAudioSource)
             {
+                if (g_desktopAudioSourceId > 0)
+                {
+                    g_audioMixer->UnregisterSource(g_desktopAudioSourceId);
+                    g_desktopAudioSourceId = 0;
+                }
                 g_desktopAudioSource->Release();
                 g_desktopAudioSource = nullptr;
             }
@@ -109,23 +189,21 @@ extern "C"
         
         // Create microphone source if requested
         bool microphoneEnabled = false;
-        if (captureMicrophone)
+        if (captureMicrophone && g_audioMixer)
         {
             g_microphoneSource = new MicrophoneAudioSource();
             
             if (g_microphoneSource->Initialize())
             {
-                WAVEFORMATEX* micFormat = g_microphoneSource->GetFormat();
+                // Register with audio mixer
+                float volume = g_routingConfig.GetSourceVolume((uint64_t)g_microphoneSource);
+                g_microphoneSourceId = g_audioMixer->RegisterSource(g_microphoneSource, volume);
                 
-                // For Phase 2: microphone is captured but not yet mixed with desktop audio
-                // Phase 3 will add mixing and multi-track support
-                // For now, just capture to test the infrastructure (no write to avoid conflicts)
-                if (micFormat)
+                if (g_microphoneSourceId > 0)
                 {
-                    g_microphoneSource->SetAudioCallback([](const BYTE* data, UINT32 frames, LONGLONG ts) {
-                        // TODO Phase 3: Route to mixer instead of direct write
-                        // For now, just capture (no write to avoid conflicts with desktop audio)
-                    });
+                    // Apply routing configuration
+                    bool muted = g_routingConfig.IsSourceMuted(g_microphoneSourceId);
+                    g_audioMixer->SetSourceMuted(g_microphoneSourceId, muted);
                     
                     if (g_microphoneSource->Start(&hr))
                     {
@@ -136,8 +214,49 @@ extern "C"
             
             if (!microphoneEnabled && g_microphoneSource)
             {
+                if (g_microphoneSourceId > 0)
+                {
+                    g_audioMixer->UnregisterSource(g_microphoneSourceId);
+                    g_microphoneSourceId = 0;
+                }
                 g_microphoneSource->Release();
                 g_microphoneSource = nullptr;
+            }
+        }
+        
+        // Phase 3: Initialize audio tracks based on routing configuration
+        if (g_audioMixer && (desktopAudioEnabled || microphoneEnabled))
+        {
+            WAVEFORMATEX* mixerFormat = const_cast<WAVEFORMATEX*>(g_audioMixer->GetOutputFormat());
+            
+            if (g_routingConfig.IsMixedMode())
+            {
+                // Mixed mode: Single track with all sources mixed
+                if (g_sinkWriter.InitializeAudioStream(mixerFormat, &hr))
+                {
+                    // Audio will be written via mixer callback
+                }
+            }
+            else
+            {
+                // Separate track mode: Initialize tracks for each source
+                int trackIndex = 0;
+                if (desktopAudioEnabled)
+                {
+                    int configuredTrack = g_routingConfig.GetSourceTrack(g_desktopAudioSourceId);
+                    trackIndex = (configuredTrack >= 0) ? configuredTrack : trackIndex;
+                    const wchar_t* trackName = g_routingConfig.GetTrackName(trackIndex);
+                    g_sinkWriter.InitializeAudioTrack(trackIndex, mixerFormat, trackName ? trackName : L"Desktop Audio");
+                    trackIndex++;
+                }
+                
+                if (microphoneEnabled)
+                {
+                    int configuredTrack = g_routingConfig.GetSourceTrack(g_microphoneSourceId);
+                    trackIndex = (configuredTrack >= 0) ? configuredTrack : trackIndex;
+                    const wchar_t* trackName = g_routingConfig.GetTrackName(trackIndex);
+                    g_sinkWriter.InitializeAudioTrack(trackIndex, mixerFormat, trackName ? trackName : L"Microphone");
+                }
             }
         }
         
@@ -148,19 +267,42 @@ extern "C"
             if (g_desktopAudioSource)
             {
                 g_desktopAudioSource->Stop();
+                if (g_desktopAudioSourceId > 0 && g_audioMixer)
+                {
+                    g_audioMixer->UnregisterSource(g_desktopAudioSourceId);
+                    g_desktopAudioSourceId = 0;
+                }
                 g_desktopAudioSource->Release();
                 g_desktopAudioSource = nullptr;
             }
             if (g_microphoneSource)
             {
                 g_microphoneSource->Stop();
+                if (g_microphoneSourceId > 0 && g_audioMixer)
+                {
+                    g_audioMixer->UnregisterSource(g_microphoneSourceId);
+                    g_microphoneSourceId = 0;
+                }
                 g_microphoneSource->Release();
                 g_microphoneSource = nullptr;
+            }
+            if (g_audioMixer)
+            {
+                delete g_audioMixer;
+                g_audioMixer = nullptr;
             }
             g_videoSource->Release();
             g_videoSource = nullptr;
             g_useSourceAbstraction = false;
             return false;
+        }
+        
+        // Phase 3: Start mixer thread if audio mixer is active
+        if (g_audioMixer)
+        {
+            g_mixerTimestamp = 0;
+            g_mixerThreadRunning.store(true);
+            g_mixerThread = std::thread(MixerThreadProc);
         }
         
         return true;
@@ -272,8 +414,34 @@ extern "C"
     {
         if (g_useSourceAbstraction)
         {
-            // New source-based path
-            // Stop all audio sources first
+            // New source-based path (Phase 3: with AudioMixer)
+            // Stop mixer thread first
+            if (g_mixerThreadRunning.load())
+            {
+                g_mixerThreadRunning.store(false);
+                if (g_mixerThread.joinable())
+                {
+                    g_mixerThread.join();
+                }
+            }
+            
+            // Unregister sources from mixer before stopping
+            if (g_audioMixer)
+            {
+                if (g_microphoneSourceId > 0)
+                {
+                    g_audioMixer->UnregisterSource(g_microphoneSourceId);
+                    g_microphoneSourceId = 0;
+                }
+                
+                if (g_desktopAudioSourceId > 0)
+                {
+                    g_audioMixer->UnregisterSource(g_desktopAudioSourceId);
+                    g_desktopAudioSourceId = 0;
+                }
+            }
+            
+            // Stop all audio sources
             if (g_microphoneSource)
             {
                 g_microphoneSource->Stop();
@@ -286,6 +454,13 @@ extern "C"
                 g_desktopAudioSource->Stop();
                 g_desktopAudioSource->Release();
                 g_desktopAudioSource = nullptr;
+            }
+            
+            // Delete audio mixer
+            if (g_audioMixer)
+            {
+                delete g_audioMixer;
+                g_audioMixer = nullptr;
             }
             
             // Stop video source
@@ -350,8 +525,12 @@ extern "C"
     {
         if (g_useSourceAbstraction)
         {
-            // New source-based path: toggle desktop audio only
-            // Phase 3 will add per-source control in UI
+            // New source-based path: toggle desktop audio through mixer
+            if (g_audioMixer && g_desktopAudioSourceId > 0)
+            {
+                g_audioMixer->SetSourceMuted(g_desktopAudioSourceId, !enabled);
+            }
+            // Also toggle at source level for efficiency
             if (g_desktopAudioSource)
             {
                 g_desktopAudioSource->SetEnabled(enabled);
