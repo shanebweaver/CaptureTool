@@ -45,6 +45,9 @@
     <ClInclude Include="AudioMixer.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
+    <ClInclude Include="AACEncoder.h">
+      <Filter>Source Abstraction</Filter>
+    </ClInclude>
     <ClInclude Include="AudioRoutingConfig.h">
       <Filter>Source Abstraction</Filter>
     </ClInclude>
@@ -147,6 +150,9 @@
       <Filter>Source Abstraction</Filter>
     </ClCompile>
     <ClCompile Include="H264VideoEncoder.cpp">
+      <Filter>Source Abstraction</Filter>
+    </ClCompile>
+    <ClCompile Include="AACEncoder.cpp">
       <Filter>Source Abstraction</Filter>
     </ClCompile>
   </ItemGroup>

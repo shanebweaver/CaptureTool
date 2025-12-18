@@ -112,6 +112,7 @@
     <ClInclude Include="AudioDeviceEnumerator.h" />
     <ClInclude Include="AudioMixer.h" />
     <ClInclude Include="AudioRoutingConfig.h" />
+    <ClInclude Include="AACEncoder.h" />
     <ClInclude Include="DesktopAudioSource.h" />
     <ClInclude Include="EncoderPresets.h" />
     <ClInclude Include="IAudioEncoder.h" />
@@ -134,6 +135,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ClCompile Include="AACEncoder.cpp" />
     <ClCompile Include="ApplicationAudioSource.cpp" />
     <ClCompile Include="AudioCaptureDevice.cpp" />
     <ClCompile Include="AudioCaptureHandler.cpp" />
