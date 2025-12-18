@@ -106,6 +106,24 @@ public:
     UINT32 MixAudio(BYTE* outputBuffer, UINT32 outputFrames, LONGLONG timestamp);
 
     /// <summary>
+    /// Get audio from a specific source (without mixing with other sources).
+    /// Used for separate track recording where each source goes to its own track.
+    /// Output buffer must be pre-allocated by caller.
+    /// </summary>
+    /// <param name="sourceId">Source ID to get audio from</param>
+    /// <param name="outputBuffer">Pre-allocated output buffer</param>
+    /// <param name="outputFrames">Number of frames to generate</param>
+    /// <param name="timestamp">Current timestamp in 100-nanosecond units</param>
+    /// <returns>Number of frames actually processed</returns>
+    UINT32 GetSourceAudio(uint64_t sourceId, BYTE* outputBuffer, UINT32 outputFrames, LONGLONG timestamp);
+
+    /// <summary>
+    /// Get list of all registered source IDs.
+    /// </summary>
+    /// <returns>Vector of source IDs</returns>
+    std::vector<uint64_t> GetSourceIds() const;
+
+    /// <summary>
     /// Get the mixer output format information.
     /// </summary>
     UINT32 GetOutputSampleRate() const { return m_outputFormat.nSamplesPerSec; }

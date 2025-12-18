@@ -378,3 +378,109 @@ void AudioMixer::MixBuffers(BYTE* dest, const BYTE* src, UINT32 numFrames)
         }
     }
 }
+
+UINT32 AudioMixer::GetSourceAudio(uint64_t sourceId, BYTE* outputBuffer, UINT32 outputFrames, LONGLONG timestamp)
+{
+    if (!outputBuffer || outputFrames == 0)
+    {
+        return 0;
+    }
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    if (!m_initialized)
+    {
+        return 0;
+    }
+
+    // Find the source
+    AudioSourceEntry* entry = FindSource(sourceId);
+    if (!entry || !entry->source)
+    {
+        // Source not found, return silence
+        ZeroMemory(outputBuffer, outputFrames * m_outputFormat.nBlockAlign);
+        return 0;
+    }
+
+    // If source is muted, return silence
+    if (entry->muted)
+    {
+        ZeroMemory(outputBuffer, outputFrames * m_outputFormat.nBlockAlign);
+        return outputFrames;
+    }
+
+    // Get audio data from the source
+    UINT32 framesRead = 0;
+    BYTE* sourceData = nullptr;
+    
+    if (entry->source->IsRunning())
+    {
+        framesRead = entry->source->GetAudioData(&sourceData, outputFrames, timestamp);
+    }
+
+    if (framesRead == 0 || !sourceData)
+    {
+        // No data available, return silence
+        ZeroMemory(outputBuffer, outputFrames * m_outputFormat.nBlockAlign);
+        return 0;
+    }
+
+    // Check if we need to resample/convert
+    auto resamplerIt = m_resamplers.find(sourceId);
+    if (resamplerIt != m_resamplers.end())
+    {
+        // TODO: Implement resampling (for Phase 4, we'll assume matching formats for now)
+        // For simplicity, just copy the data if sizes match
+        UINT32 sourceBytes = framesRead * entry->format.nBlockAlign;
+        UINT32 outputBytes = outputFrames * m_outputFormat.nBlockAlign;
+        
+        if (sourceBytes <= outputBytes)
+        {
+            CopyMemory(outputBuffer, sourceData, sourceBytes);
+            if (sourceBytes < outputBytes)
+            {
+                ZeroMemory(outputBuffer + sourceBytes, outputBytes - sourceBytes);
+            }
+        }
+        else
+        {
+            CopyMemory(outputBuffer, sourceData, outputBytes);
+        }
+    }
+    else
+    {
+        // Formats match, just copy
+        UINT32 bytesToCopy = std::min(framesRead, outputFrames) * m_outputFormat.nBlockAlign;
+        CopyMemory(outputBuffer, sourceData, bytesToCopy);
+        
+        // Zero pad if needed
+        if (framesRead < outputFrames)
+        {
+            UINT32 paddingBytes = (outputFrames - framesRead) * m_outputFormat.nBlockAlign;
+            ZeroMemory(outputBuffer + bytesToCopy, paddingBytes);
+        }
+    }
+
+    // Apply volume
+    if (entry->volume != 1.0f)
+    {
+        ApplyVolume(outputBuffer, outputFrames, entry->volume);
+    }
+
+    return std::min(framesRead, outputFrames);
+}
+
+std::vector<uint64_t> AudioMixer::GetSourceIds() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    std::vector<uint64_t> sourceIds;
+    sourceIds.reserve(m_sources.size());
+    
+    for (const auto& entry : m_sources)
+    {
+        sourceIds.push_back(entry.sourceId);
+    }
+    
+    return sourceIds;
+}

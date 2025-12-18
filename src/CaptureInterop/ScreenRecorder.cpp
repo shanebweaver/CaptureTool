@@ -61,32 +61,50 @@ static void MixerThreadProc()
     {
         if (g_audioMixer)
         {
-            // Mix audio from all sources
-            UINT32 framesMixed = g_audioMixer->MixAudio(mixBuffer.data(), framesPerBuffer, g_mixerTimestamp);
-            
-            if (framesMixed > 0)
+            if (g_useEncoderPipeline && g_encoderPipeline)
             {
-                if (g_useEncoderPipeline)
+                // Phase 4: Route through encoder pipeline
+                if (g_routingConfig.IsMixedMode())
                 {
-                    // Phase 4: Route through encoder pipeline
-                    if (g_encoderPipeline)
+                    // Mixed mode: Mix all sources and write to single track (track 0)
+                    UINT32 framesMixed = g_audioMixer->MixAudio(mixBuffer.data(), framesPerBuffer, g_mixerTimestamp);
+                    if (framesMixed > 0)
                     {
-                        if (g_routingConfig.IsMixedMode())
-                        {
-                            // Mixed mode: Write to single track (track 0)
-                            g_encoderPipeline->ProcessAudioSamples(mixBuffer.data(), framesMixed, g_mixerTimestamp, 0);
-                        }
-                        else
-                        {
-                            // Separate track mode: Write each source to its track
-                            // For now, write mixed audio to track 0 (Phase 4.4 will add per-source track writing)
-                            g_encoderPipeline->ProcessAudioSamples(mixBuffer.data(), framesMixed, g_mixerTimestamp, 0);
-                        }
+                        g_encoderPipeline->ProcessAudioSamples(mixBuffer.data(), framesMixed, g_mixerTimestamp, 0);
                     }
                 }
                 else
                 {
-                    // Phase 3: Legacy MP4SinkWriter path
+                    // Separate track mode: Write each source to its assigned track (Phase 4.4)
+                    std::vector<uint64_t> sourceIds = g_audioMixer->GetSourceIds();
+                    
+                    for (uint64_t sourceId : sourceIds)
+                    {
+                        // Get the track assignment for this source
+                        int trackIndex = g_routingConfig.GetSourceTrack(sourceId);
+                        if (trackIndex < 0 || trackIndex >= 6)
+                        {
+                            trackIndex = 0;  // Default to track 0 if invalid
+                        }
+                        
+                        // Get audio data for this specific source
+                        UINT32 framesRead = g_audioMixer->GetSourceAudio(sourceId, mixBuffer.data(), framesPerBuffer, g_mixerTimestamp);
+                        
+                        if (framesRead > 0)
+                        {
+                            // Write to the source's assigned track
+                            g_encoderPipeline->ProcessAudioSamples(mixBuffer.data(), framesRead, g_mixerTimestamp, trackIndex);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Phase 3: Legacy MP4SinkWriter path
+                UINT32 framesMixed = g_audioMixer->MixAudio(mixBuffer.data(), framesPerBuffer, g_mixerTimestamp);
+                
+                if (framesMixed > 0)
+                {
                     if (g_routingConfig.IsMixedMode())
                     {
                         // Mixed mode: Write to single track
@@ -94,16 +112,15 @@ static void MixerThreadProc()
                     }
                     else
                     {
-                        // Separate track mode: Write each source to its track
-                        // For now, write mixed audio to track 0 (Phase 3.5 will add per-source track writing)
+                        // Separate track mode: Write mixed audio to track 0 (Phase 3 limitation)
                         g_sinkWriter.WriteAudioSample(0, mixBuffer.data(), framesMixed, g_mixerTimestamp);
                     }
                 }
-                
-                // Advance timestamp (100ns units)
-                // frames * 10,000,000 / sampleRate
-                g_mixerTimestamp += (framesMixed * 10000000LL) / 48000;
             }
+            
+            // Advance timestamp (100ns units)
+            // frames * 10,000,000 / sampleRate
+            g_mixerTimestamp += (framesPerBuffer * 10000000LL) / 48000;
         }
         
         Sleep(sleepMs);
