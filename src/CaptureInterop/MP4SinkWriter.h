@@ -85,7 +85,6 @@ private:
     UINT32 m_height = 0;
     ID3D11Device* m_device = nullptr;
     ID3D11DeviceContext* m_context = nullptr;
-    LONGLONG m_prevVideoTimestamp = 0;
     LONGLONG m_recordingStartQpc = 0;           // Common start time for A/V sync (QPC ticks)
     WAVEFORMATEX m_audioFormat = {};            // Cached audio format info
 };

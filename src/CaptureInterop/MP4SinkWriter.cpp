@@ -246,16 +246,11 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTic
     sample->AddBuffer(buffer.get());
     sample->SetSampleTime(relativeTicks);
 
-    if (m_prevVideoTimestamp == 0)
-        m_prevVideoTimestamp = relativeTicks;
-
+    // Use fixed frame duration for all frames (30 FPS)
+    // This ensures the last frame has proper duration, fixing video-only recording length
     const LONGLONG TICKS_PER_SECOND = 10000000LL;
-    const LONGLONG frameDuration = TICKS_PER_SECOND / 30; // 30 FPS
-
-    LONGLONG duration = relativeTicks - m_prevVideoTimestamp;
-    if (duration <= 0) duration = frameDuration; // fallback ~30 fps
-    sample->SetSampleDuration(duration);
-    m_prevVideoTimestamp = relativeTicks;
+    const LONGLONG frameDuration = TICKS_PER_SECOND / 30; // 30 FPS = 333,333 ticks
+    sample->SetSampleDuration(frameDuration);
 
     m_frameIndex++;
     return m_sinkWriter->WriteSample(m_videoStreamIndex, sample.get());
