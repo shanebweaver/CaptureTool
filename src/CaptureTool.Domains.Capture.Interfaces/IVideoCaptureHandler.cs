@@ -9,10 +9,12 @@ public partial interface IVideoCaptureHandler
     event EventHandler<bool>? PausedStateChanged;
 
     bool IsDesktopAudioEnabled { get; }
+    bool IsMicrophoneEnabled { get; }
     bool IsRecording { get; }
     bool IsPaused { get; }
 
     void SetIsDesktopAudioEnabled(bool value);
+    void SetIsMicrophoneEnabled(bool value);
     void ToggleDesktopAudioCapture(bool enabled);
 
     void StartVideoCapture(NewCaptureArgs args);

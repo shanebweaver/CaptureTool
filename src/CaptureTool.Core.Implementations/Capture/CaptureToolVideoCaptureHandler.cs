@@ -11,6 +11,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private string? _tempVideoPath;
 
     public bool IsDesktopAudioEnabled { get; private set; }
+    public bool IsMicrophoneEnabled { get; private set; }
     public bool IsRecording { get; private set; }
     public bool IsPaused { get; private set; }
 
@@ -26,6 +27,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         _storageService = storageService;
 
         IsDesktopAudioEnabled = true;
+        IsMicrophoneEnabled = false;
     }
 
     public void StartVideoCapture(NewCaptureArgs args)
@@ -44,7 +46,15 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             fileName
         );
 
-        _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled);
+        // Use new 4-parameter method if microphone is enabled, otherwise use legacy 3-parameter method
+        if (IsMicrophoneEnabled)
+        {
+            _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled, IsMicrophoneEnabled);
+        }
+        else
+        {
+            _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled);
+        }
     }
 
     public IVideoFile StopVideoCapture()
@@ -85,6 +95,13 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     {
         IsDesktopAudioEnabled = value;
         DesktopAudioStateChanged?.Invoke(this, value);
+    }
+
+    public void SetIsMicrophoneEnabled(bool value)
+    {
+        IsMicrophoneEnabled = value;
+        // Note: Microphone can only be enabled/disabled before starting recording
+        // Runtime toggle not supported yet (Phase 3 will add this)
     }
 
     public void ToggleDesktopAudioCapture(bool enabled)
