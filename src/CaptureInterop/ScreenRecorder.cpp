@@ -11,7 +11,7 @@ static wil::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession> g_
 static wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool> g_framePool;
 static EventRegistrationToken g_frameArrivedEventToken;
 static FrameArrivedHandler* g_frameHandler = nullptr;
-static MP4SinkWriter g_sinkWriter;
+static MP4SinkWriter* g_sinkWriter = nullptr;
 static AudioCaptureHandler g_audioHandler;
 
 // Exported API
@@ -63,9 +63,12 @@ extern "C"
         hr = captureItem->get_Size(&size);
         if (FAILED(hr)) return false;
         
-        // Phase 4: Initialize video sink writer
-        if (!g_sinkWriter.Initialize(outputPath, device.get(), size.Width, size.Height, &hr))
+        // Phase 4: Initialize video sink writer (allocate on heap for COM-style reference counting)
+        g_sinkWriter = new MP4SinkWriter();
+        if (!g_sinkWriter->Initialize(outputPath, device.get(), size.Width, size.Height, &hr))
         {
+            delete g_sinkWriter;
+            g_sinkWriter = nullptr;
             return false;
         }
         
@@ -78,10 +81,10 @@ extern "C"
             {
                 // Initialize audio stream on sink writer
                 WAVEFORMATEX* audioFormat = g_audioHandler.GetFormat();
-                if (audioFormat && g_sinkWriter.InitializeAudioStream(audioFormat, &hr))
+                if (audioFormat && g_sinkWriter->InitializeAudioStream(audioFormat, &hr))
                 {
                     // Set the sink writer on audio handler so it can write samples
-                    g_audioHandler.SetSinkWriter(&g_sinkWriter);
+                    g_audioHandler.SetSinkWriter(g_sinkWriter);
                     
                     // Start audio capture
                     if (g_audioHandler.Start(&hr))
@@ -92,7 +95,7 @@ extern "C"
             }
         }
         
-        g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, &g_sinkWriter, &g_frameHandler, &hr);
+        g_frameArrivedEventToken = RegisterFrameArrivedHandler(g_framePool, g_sinkWriter, &g_frameHandler, &hr);
 
         hr = g_session->StartCapture();
         if (FAILED(hr))
@@ -141,7 +144,13 @@ extern "C"
         }
         
         // Finalize MP4 file after both streams have stopped
-        g_sinkWriter.Finalize();
+        if (g_sinkWriter)
+        {
+            g_sinkWriter->Finalize();
+            // The sink writer will be deleted by its own Release() when ref count reaches 0
+            // (via wil::com_ptr in FrameArrivedHandler)
+            g_sinkWriter = nullptr;
+        }
 
         if (g_session)
         {
@@ -153,8 +162,7 @@ extern "C"
             g_framePool.reset();
         }
 
-        // Reset sink writer and audio handler to fresh state for next recording
-        g_sinkWriter = MP4SinkWriter();
+        // Reset audio handler to fresh state for next recording
         g_audioHandler.~AudioCaptureHandler();
         new (&g_audioHandler) AudioCaptureHandler();
     }
