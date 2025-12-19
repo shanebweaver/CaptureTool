@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|ARM64">
       <Configuration>Debug</Configuration>
@@ -19,15 +18,13 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{e576bd23-e4b5-4a1e-a385-87cb932e6d32}</ProjectGuid>
-    <RootNamespace>CaptureInterop</RootNamespace>
+    <ProjectGuid>{8B5E7A7C-3D1F-4E9A-9C2B-1F6D8E3A5B4C}</ProjectGuid>
+    <RootNamespace>CaptureInteropLib</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
-
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
     <VcpkgManifestMode>true</VcpkgManifestMode>
@@ -37,97 +34,82 @@
     <VcpkgRoot>$(SolutionDir)\vcpkg</VcpkgRoot>
     <VcpkgInstalledDir>$(SolutionDir)\vcpkg_installed</VcpkgInstalledDir>
   </PropertyGroup>
-
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <OutDir>$(SolutionDir)bin\$(Configuration)\$(PlatformTarget)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
-
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)src\CaptureInterop.Lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
-
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableUAC>false</EnableUAC>
+    <Lib>
       <AdditionalDependencies>
         mfplat.lib;mfreadwrite.lib;mfuuid.lib;d3d11.lib;dxgi.lib;windowsapp.lib;runtimeobject.lib;%(AdditionalDependencies)
       </AdditionalDependencies>
-    </Link>
+      <AdditionalOptions>/IGNORE:4006 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
   </ItemDefinitionGroup>
-
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <PreprocessorDefinitions>
-        _DEBUG;CAPTUREINTEROP_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)
+        _DEBUG;_LIB;%(PreprocessorDefinitions)
       </PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
-
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>
-        NDEBUG;CAPTUREINTEROP_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)
+        NDEBUG;_LIB;%(PreprocessorDefinitions)
       </PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
-
   <ItemGroup>
-    <ClInclude Include="ScreenRecorder.h" />
+    <ClInclude Include="AudioCaptureDevice.h" />
+    <ClInclude Include="AudioCaptureHandler.h" />
+    <ClInclude Include="FrameArrivedHandler.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="GraphicsCaptureHelpers.cpp" />
+    <ClInclude Include="MP4SinkWriter.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="ScreenRecorderImpl.h" />
   </ItemGroup>
-
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="ScreenRecorder.cpp" />
+    <ClCompile Include="AudioCaptureDevice.cpp" />
+    <ClCompile Include="AudioCaptureHandler.cpp" />
+    <ClCompile Include="FrameArrivedHandler.cpp" />
+    <ClCompile Include="MP4SinkWriter.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ScreenRecorderImpl.cpp" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\CaptureInterop.Lib\CaptureInterop.Lib.vcxproj">
-      <Project>{8B5E7A7C-3D1F-4E9A-9C2B-1F6D8E3A5B4C}</Project>
-    </ProjectReference>
-  </ItemGroup>
-
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-
-  <Target Name="CopyNativeDllToWinUI" AfterTargets="Link">
-    <PropertyGroup>
-      <ManagedProjectPath>src\CaptureTool.UI.Windows\</ManagedProjectPath>
-      <ManagedOutDir>$(SolutionDir)$(ManagedProjectPath)bin\$(Platform)\$(Configuration)\net10.0-windows10.0.26100.0\win-$(Platform)\AppX\</ManagedOutDir>
-    </PropertyGroup>
-    <Message Text="Copying native DLL to $(ManagedOutDir)" Importance="high" />
-    <MakeDir Directories="$(ManagedOutDir)" Condition="!Exists('$(ManagedOutDir)')" />
-    <Copy SourceFiles="$(OutDir)$(TargetName)$(TargetExt)" DestinationFolder="$(ManagedOutDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
-  </Target>
 </Project>

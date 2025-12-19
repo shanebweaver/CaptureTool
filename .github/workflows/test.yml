@@ -23,8 +23,13 @@ jobs:
 
     - name: Setup vcpkg
       run: |
-        vcpkg\bootstrap-vcpkg.bat
-        vcpkg\vcpkg.exe install
+        cd vcpkg
+        .\bootstrap-vcpkg.bat
+        .\vcpkg.exe integrate install
+
+    - name: Set VCPKG_ROOT environment variable
+      run: |
+        echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" >> $env:GITHUB_ENV
 
     - name: Restore .NET dependencies
       run: dotnet restore
@@ -32,9 +37,15 @@ jobs:
     - name: Build solution
       run: msbuild CaptureTool.slnx /p:Configuration=Release /p:Platform=x64
 
+    - name: Run C++ native tests
+      run: |
+        $vsTestPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Workload.NativeDesktop -property installationPath
+        $vsTestExe = Join-Path $vsTestPath "Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
+        & $vsTestExe "${{ github.workspace }}\x64\Release\CaptureInterop.Tests.dll" /Platform:x64
+
     - name: Run .NET tests
       run: |
-        dotnet test src\CaptureInterop.Tests\CaptureInterop.Tests.vcxproj -p:Platform=x64
-        dotnet test src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj -p:Platform=x64
-        dotnet test src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj -p:Platform=x64
-        dotnet test src\CaptureTool.Domains.Edit.Tests\CaptureTool.Domains.Edit.Tests.csproj -p:Platform=x64
+        dotnet test src\CaptureTool.Core.Tests\CaptureTool.Core.Tests.csproj -p:Platform=x64 --no-build --configuration Release
+        dotnet test src\CaptureTool.Services.Tests\CaptureTool.Services.Tests.csproj -p:Platform=x64 --no-build --configuration Release
+        dotnet test src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj -p:Platform=x64 --no-build --configuration Release
+        dotnet test src\CaptureTool.Domains.Edit.Tests\CaptureTool.Domains.Edit.Tests.csproj -p:Platform=x64 --no-build --configuration Release
