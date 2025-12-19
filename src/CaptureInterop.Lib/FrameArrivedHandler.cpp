@@ -26,6 +26,7 @@ void FrameArrivedHandler::StartProcessing()
     if (m_processingStarted.compare_exchange_strong(expected, true))
     {
         m_processingThread = std::thread(&FrameArrivedHandler::ProcessingThreadProc, this);
+        m_timerThread = std::thread(&FrameArrivedHandler::TimerThreadProc, this);
     }
 }
 
@@ -50,6 +51,11 @@ void FrameArrivedHandler::Stop()
     if (m_processingThread.joinable())
     {
         m_processingThread.join();
+    }
+    
+    if (m_timerThread.joinable())
+    {
+        m_timerThread.join();
     }
 }
 
@@ -152,6 +158,17 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
     // Calculate relative timestamp
     LONGLONG relativeTimestamp = timestamp.Duration - firstFrameTime;
 
+    // Update last frame tracking for duplicate frame generation
+    {
+        std::lock_guard<std::mutex> lock(m_lastTextureMutex);
+        m_lastTexture = texture;
+    }
+    m_lastFrameTimestamp = relativeTimestamp;
+    
+    // Update next expected timestamp for 30 FPS (333333 ticks per frame)
+    const LONGLONG FRAME_DURATION = 333333; // 100ns ticks for 30 FPS
+    m_nextExpectedTimestamp = relativeTimestamp + FRAME_DURATION;
+
     // Queue the frame for background processing instead of processing synchronously
     // This prevents blocking the event callback thread
     {
@@ -164,6 +181,7 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
             QueuedFrame queuedFrame;
             queuedFrame.texture = texture;
             queuedFrame.relativeTimestamp = relativeTimestamp;
+            queuedFrame.isDuplicateFrame = false;
             m_frameQueue.push(std::move(queuedFrame));
             m_queueCV.notify_one();
         }
@@ -222,6 +240,63 @@ void FrameArrivedHandler::ProcessingThreadProc()
             {
                 // Frame write failed, but continue processing queue
                 // This prevents one bad frame from stopping the entire recording
+            }
+        }
+    }
+}
+
+void FrameArrivedHandler::TimerThreadProc()
+{
+    const LONGLONG FRAME_DURATION = 333333; // 100ns ticks for 30 FPS (1/30 second)
+    const int SLEEP_MS = 33; // Sleep for ~33ms (30 FPS)
+    
+    while (m_running)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MS));
+        
+        if (!m_running)
+        {
+            break;
+        }
+        
+        // Check if we have received any frames yet
+        LONGLONG firstFrameTime = m_firstFrameSystemTime.load();
+        if (firstFrameTime == 0)
+        {
+            // No frames yet, skip
+            continue;
+        }
+        
+        // Get the last frame timestamp and expected next timestamp
+        LONGLONG lastTimestamp = m_lastFrameTimestamp.load();
+        LONGLONG nextExpected = m_nextExpectedTimestamp.load();
+        
+        // Generate duplicate frame at the expected timestamp
+        if (lastTimestamp >= 0 && nextExpected > lastTimestamp)
+        {
+            wil::com_ptr<ID3D11Texture2D> lastTexture;
+            {
+                std::lock_guard<std::mutex> lock(m_lastTextureMutex);
+                lastTexture = m_lastTexture;
+            }
+            
+            if (lastTexture)
+            {
+                // Generate duplicate frame
+                std::lock_guard<std::mutex> lock(m_queueMutex);
+                if (m_frameQueue.size() < 30)
+                {
+                    QueuedFrame queuedFrame;
+                    queuedFrame.texture = lastTexture;
+                    queuedFrame.relativeTimestamp = nextExpected;
+                    queuedFrame.isDuplicateFrame = true;
+                    m_frameQueue.push(std::move(queuedFrame));
+                    m_queueCV.notify_one();
+                    
+                    // Update for next iteration
+                    m_lastFrameTimestamp = nextExpected;
+                    m_nextExpectedTimestamp = nextExpected + FRAME_DURATION;
+                }
             }
         }
     }
