@@ -69,29 +69,31 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
         return false;
     }
     
-    // Initialize and start audio capture if requested
-    bool audioEnabled = false;
-    if (captureAudio)
+    // Always initialize and start audio capture for timeline management
+    // Use captureAudio flag to control whether audio is written to output
+    bool audioInitialized = false;
+    if (m_audioHandler->Initialize(true, &hr))
     {
-        // Initialize audio capture device (true = loopback mode for system audio)
-        if (m_audioHandler->Initialize(true, &hr))
+        // Initialize audio stream on sink writer
+        WAVEFORMATEX* audioFormat = m_audioHandler->GetFormat();
+        if (audioFormat && m_sinkWriter.InitializeAudioStream(audioFormat, &hr))
         {
-            // Initialize audio stream on sink writer
-            WAVEFORMATEX* audioFormat = m_audioHandler->GetFormat();
-            if (audioFormat && m_sinkWriter.InitializeAudioStream(audioFormat, &hr))
+            // Set the sink writer on audio handler so it can write samples
+            m_audioHandler->SetSinkWriter(&m_sinkWriter);
+            
+            // Set whether audio should be written to output (user's choice)
+            m_audioHandler->SetEnabled(captureAudio);
+            
+            // Start audio capture (always runs for timeline management)
+            if (m_audioHandler->Start(&hr))
             {
-                // Set the sink writer on audio handler so it can write samples
-                m_audioHandler->SetSinkWriter(&m_sinkWriter);
-                
-                // Start audio capture
-                if (m_audioHandler->Start(&hr))
-                {
-                    audioEnabled = true;
-                }
+                audioInitialized = true;
             }
         }
     }
-    else
+    
+    // If audio failed to initialize, fall back to video-only mode
+    if (!audioInitialized)
     {
         // For video-only recording, begin writing immediately
         // This ensures timeline is established before frames arrive
@@ -102,8 +104,8 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
     }
     
     wil::com_ptr<MP4SinkWriter> sinkWriterPtr(&m_sinkWriter);
-    // Disable video timer when audio is enabled - audio will maintain the timeline
-    bool enableVideoTimer = !audioEnabled;
+    // Disable video timer when audio is initialized - audio will maintain the timeline
+    bool enableVideoTimer = !audioInitialized;
     m_frameArrivedEventToken = RegisterFrameArrivedHandler(m_framePool, sinkWriterPtr, &m_frameHandler, &hr, enableVideoTimer);
 
     hr = m_session->StartCapture();
