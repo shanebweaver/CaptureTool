@@ -108,6 +108,9 @@
       <Project>{8B5E7A7C-3D1F-4E9A-9C2B-1F6D8E3A5B4C}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CaptureInterop.Tests.vcxproj.new" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

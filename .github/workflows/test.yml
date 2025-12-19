@@ -41,7 +41,7 @@ jobs:
       run: |
         $vsTestPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Workload.NativeDesktop -property installationPath
         $vsTestExe = Join-Path $vsTestPath "Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
-        & $vsTestExe "bin\Release\x64\CaptureInterop.Tests.dll" /Platform:x64
+        & $vsTestExe "${{ github.workspace }}\x64\Release\CaptureInterop.Tests.dll" /Platform:x64
 
     - name: Run .NET tests
       run: |
