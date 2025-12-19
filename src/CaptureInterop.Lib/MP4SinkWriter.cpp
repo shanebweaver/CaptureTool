@@ -195,6 +195,22 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTic
         m_hasBegunWriting = true;
     }
 
+    // Validate timestamp is non-negative
+    if (relativeTicks < 0)
+    {
+        // Negative timestamps are invalid - clamp to zero
+        relativeTicks = 0;
+    }
+    
+    // Ensure monotonically increasing timestamps
+    if (m_prevVideoTimestamp != 0 && relativeTicks < m_prevVideoTimestamp)
+    {
+        // Timestamp went backwards - use previous timestamp + small increment
+        const LONGLONG TICKS_PER_SECOND = 10000000LL;
+        const LONGLONG frameDuration = TICKS_PER_SECOND / 30; // 30 FPS
+        relativeTicks = m_prevVideoTimestamp + frameDuration;
+    }
+
     // Copy texture to staging for CPU read access
     D3D11_TEXTURE2D_DESC desc{};
     texture->GetDesc(&desc);

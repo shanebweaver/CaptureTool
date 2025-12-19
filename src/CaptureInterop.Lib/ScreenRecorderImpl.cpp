@@ -69,6 +69,15 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
         return false;
     }
     
+    // Set recording start time immediately for video-only recordings
+    // This ensures proper timeline initialization before frames arrive
+    if (!captureAudio)
+    {
+        LARGE_INTEGER qpc;
+        QueryPerformanceCounter(&qpc);
+        m_sinkWriter.SetRecordingStartTime(qpc.QuadPart);
+    }
+    
     // Initialize and start audio capture if requested
     bool audioEnabled = false;
     if (captureAudio)

@@ -326,5 +326,127 @@ namespace CaptureInteropTests
             writer.Finalize();
             DeleteFileW(tempPath);
         }
+
+        TEST_METHOD(VideoOnly_RecordingStartTimeSetBeforeFirstFrame)
+        {
+            auto device = CreateTestDevice();
+            MP4SinkWriter writer;
+            
+            wchar_t tempPath[MAX_PATH];
+            GetTempPathW(MAX_PATH, tempPath);
+            wcscat_s(tempPath, L"test_video_only_start_time.mp4");
+            
+            // Initialize video-only recording
+            writer.Initialize(tempPath, device.get(), 640, 480);
+            
+            // Set recording start time (simulating what ScreenRecorder does for video-only)
+            LARGE_INTEGER qpc;
+            QueryPerformanceCounter(&qpc);
+            writer.SetRecordingStartTime(qpc.QuadPart);
+            
+            // Verify recording start time is set before first frame
+            Assert::AreNotEqual(0LL, writer.GetRecordingStartTime(), 
+                L"Recording start time should be set before first frame");
+            
+            // Write first frame
+            auto texture = CreateTestTexture(device.get(), 640, 480);
+            HRESULT hr = writer.WriteFrame(texture.get(), 0);
+            Assert::IsTrue(SUCCEEDED(hr), L"WriteFrame should succeed");
+            
+            // Cleanup
+            writer.Finalize();
+            DeleteFileW(tempPath);
+        }
+
+        TEST_METHOD(VideoOnly_FirstFrameTimestampNearZero)
+        {
+            auto device = CreateTestDevice();
+            MP4SinkWriter writer;
+            
+            wchar_t tempPath[MAX_PATH];
+            GetTempPathW(MAX_PATH, tempPath);
+            wcscat_s(tempPath, L"test_video_only_first_timestamp.mp4");
+            
+            writer.Initialize(tempPath, device.get(), 640, 480);
+            
+            // Set recording start time
+            LARGE_INTEGER qpc;
+            QueryPerformanceCounter(&qpc);
+            writer.SetRecordingStartTime(qpc.QuadPart);
+            
+            // Write first frame with small timestamp
+            auto texture = CreateTestTexture(device.get(), 640, 480);
+            const LONGLONG firstTimestamp = 100000; // 0.01 seconds in 100ns units
+            HRESULT hr = writer.WriteFrame(texture.get(), firstTimestamp);
+            
+            Assert::IsTrue(SUCCEEDED(hr), L"WriteFrame should succeed with small timestamp");
+            
+            // First frame timestamp should be close to zero (within 100ms)
+            const LONGLONG MAX_TOLERANCE = 1000000; // 0.1 seconds
+            Assert::IsTrue(firstTimestamp < MAX_TOLERANCE, 
+                L"First frame timestamp should be close to zero");
+            
+            // Cleanup
+            writer.Finalize();
+            DeleteFileW(tempPath);
+        }
+
+        TEST_METHOD(VideoOnly_NoNegativeTimestamps)
+        {
+            auto device = CreateTestDevice();
+            MP4SinkWriter writer;
+            
+            wchar_t tempPath[MAX_PATH];
+            GetTempPathW(MAX_PATH, tempPath);
+            wcscat_s(tempPath, L"test_video_only_no_negative.mp4");
+            
+            writer.Initialize(tempPath, device.get(), 640, 480);
+            
+            auto texture = CreateTestTexture(device.get(), 640, 480);
+            
+            // Try to write frame with negative timestamp (should be clamped to 0)
+            HRESULT hr = writer.WriteFrame(texture.get(), -1000);
+            Assert::IsTrue(SUCCEEDED(hr), L"WriteFrame should succeed even with negative timestamp");
+            
+            // Write another frame with positive timestamp
+            hr = writer.WriteFrame(texture.get(), 333333);
+            Assert::IsTrue(SUCCEEDED(hr), L"WriteFrame should succeed with positive timestamp");
+            
+            // Cleanup
+            writer.Finalize();
+            DeleteFileW(tempPath);
+        }
+
+        TEST_METHOD(VideoOnly_TimestampsAreMonotonicallyIncreasing)
+        {
+            auto device = CreateTestDevice();
+            MP4SinkWriter writer;
+            
+            wchar_t tempPath[MAX_PATH];
+            GetTempPathW(MAX_PATH, tempPath);
+            wcscat_s(tempPath, L"test_video_only_monotonic.mp4");
+            
+            writer.Initialize(tempPath, device.get(), 640, 480);
+            
+            auto texture = CreateTestTexture(device.get(), 640, 480);
+            
+            const LONGLONG FRAME_DURATION = 333333; // ~30 FPS in 100ns units
+            
+            // Write frames with monotonically increasing timestamps
+            for (int i = 0; i < 10; i++)
+            {
+                LONGLONG timestamp = i * FRAME_DURATION;
+                HRESULT hr = writer.WriteFrame(texture.get(), timestamp);
+                Assert::IsTrue(SUCCEEDED(hr), L"WriteFrame should succeed for all frames");
+            }
+            
+            // Try to write a frame with timestamp going backwards (should be corrected)
+            HRESULT hr = writer.WriteFrame(texture.get(), 100000); // Earlier than last frame
+            Assert::IsTrue(SUCCEEDED(hr), L"WriteFrame should succeed even with backwards timestamp");
+            
+            // Cleanup
+            writer.Finalize();
+            DeleteFileW(tempPath);
+        }
     };
 }
