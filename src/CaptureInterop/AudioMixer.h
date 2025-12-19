@@ -7,7 +7,7 @@
 #include <mftransform.h>
 
 /// <summary>
-/// Audio source with associated mixing configuration.
+/// Audio source with associated mixing configuration and circular buffer for data.
 /// </summary>
 struct AudioSourceEntry
 {
@@ -16,6 +16,14 @@ struct AudioSourceEntry
     bool muted;                    // If true, source is muted (overrides volume)
     WAVEFORMATEX format;          // Cached format of this source
     uint64_t sourceId;            // Unique identifier for this source
+    
+    // Circular buffer for audio data (stores up to 2 seconds of audio)
+    std::vector<BYTE> audioBuffer;
+    size_t writePos;              // Write position in circular buffer
+    size_t readPos;               // Read position in circular buffer
+    size_t availableBytes;        // Number of bytes available to read
+    std::mutex bufferMutex;       // Protects buffer access
+    LONGLONG lastTimestamp;       // Last timestamp received from callback
 };
 
 /// <summary>
@@ -138,6 +146,8 @@ private:
     UINT32 ConvertAndMixSource(AudioSourceEntry& entry, BYTE* mixBuffer, UINT32 mixFrames, LONGLONG timestamp);
     void ApplyVolume(BYTE* buffer, UINT32 numFrames, float volume);
     void MixBuffers(BYTE* dest, const BYTE* src, UINT32 numFrames);
+    void OnAudioCallback(uint64_t sourceId, const BYTE* data, UINT32 numFrames, LONGLONG timestamp);
+    UINT32 ReadFromBuffer(AudioSourceEntry& entry, BYTE* buffer, UINT32 maxFrames);
 
     // State
     bool m_initialized;

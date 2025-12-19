@@ -94,6 +94,14 @@ uint64_t AudioMixer::RegisterSource(IAudioSource* source, float volume)
     entry.muted = false;
     entry.sourceId = m_nextSourceId++;
     CopyMemory(&entry.format, sourceFormat, sizeof(WAVEFORMATEX));
+    
+    // Initialize circular buffer (2 seconds of audio)
+    size_t bufferSize = entry.format.nAvgBytesPerSec * 2;
+    entry.audioBuffer.resize(bufferSize, 0);
+    entry.writePos = 0;
+    entry.readPos = 0;
+    entry.availableBytes = 0;
+    entry.lastTimestamp = 0;
 
     // If source format doesn't match output format, create a resampler
     if (entry.format.nSamplesPerSec != m_outputFormat.nSamplesPerSec ||
@@ -108,8 +116,15 @@ uint64_t AudioMixer::RegisterSource(IAudioSource* source, float volume)
         m_resamplers[entry.sourceId] = std::move(resampler);
     }
 
-    m_sources.push_back(entry);
-    return entry.sourceId;
+    m_sources.push_back(std::move(entry));
+    
+    // Set up callback to receive audio data
+    uint64_t sourceId = m_sources.back().sourceId;
+    source->SetAudioCallback([this, sourceId](const BYTE* data, UINT32 numFrames, LONGLONG timestamp) {
+        this->OnAudioCallback(sourceId, data, numFrames, timestamp);
+    });
+    
+    return sourceId;
 }
 
 void AudioMixer::UnregisterSource(uint64_t sourceId)
@@ -202,10 +217,8 @@ UINT32 AudioMixer::MixAudio(BYTE* outputBuffer, UINT32 outputFrames, LONGLONG ti
             continue;  // Skip muted sources
         }
 
-        // TODO: In Phase 3, we'll implement actual audio capture and mixing here
-        // For now, this is a framework that will be filled in during implementation
-        
-        // ConvertAndMixSource(entry, outputBuffer, outputFrames, timestamp);
+        // Convert and mix this source into the output
+        ConvertAndMixSource(entry, outputBuffer, outputFrames, timestamp);
     }
 
     return outputFrames;
@@ -312,13 +325,92 @@ bool AudioMixer::CreateResampler(const WAVEFORMATEX* inputFormat, const WAVEFORM
 
 UINT32 AudioMixer::ConvertAndMixSource(AudioSourceEntry& entry, BYTE* mixBuffer, UINT32 mixFrames, LONGLONG timestamp)
 {
-    // TODO: Implement in full Phase 3 implementation
-    // This will:
-    // 1. Get audio data from the source
-    // 2. Apply sample rate conversion if needed (using resampler from m_resamplers)
-    // 3. Apply volume
-    // 4. Mix into output buffer
-    return 0;
+    // Read audio data from the source's circular buffer
+    UINT32 framesRead = ReadFromBuffer(entry, m_tempBuffer.data(), mixFrames);
+    if (framesRead == 0)
+    {
+        return 0;  // No data available
+    }
+    
+    BYTE* sourceData = m_tempBuffer.data();
+    UINT32 sourceFrames = framesRead;
+    
+    // Apply sample rate conversion if needed
+    auto resamplerIt = m_resamplers.find(entry.sourceId);
+    if (resamplerIt != m_resamplers.end())
+    {
+        IMFTransform* resampler = resamplerIt->second.get();
+        
+        // Create input sample
+        wil::com_ptr<IMFSample> inputSample;
+        wil::com_ptr<IMFMediaBuffer> inputBuffer;
+        
+        HRESULT hr = MFCreateMemoryBuffer(sourceFrames * entry.format.nBlockAlign, inputBuffer.put());
+        if (FAILED(hr)) return 0;
+        
+        BYTE* bufferPtr = nullptr;
+        hr = inputBuffer->Lock(&bufferPtr, nullptr, nullptr);
+        if (FAILED(hr)) return 0;
+        
+        memcpy(bufferPtr, sourceData, sourceFrames * entry.format.nBlockAlign);
+        inputBuffer->Unlock();
+        inputBuffer->SetCurrentLength(sourceFrames * entry.format.nBlockAlign);
+        
+        hr = MFCreateSample(inputSample.put());
+        if (FAILED(hr)) return 0;
+        
+        inputSample->AddBuffer(inputBuffer.get());
+        
+        // Process through resampler
+        hr = resampler->ProcessInput(0, inputSample.get(), 0);
+        if (FAILED(hr)) return 0;
+        
+        // Get output
+        MFT_OUTPUT_DATA_BUFFER outputData = {};
+        wil::com_ptr<IMFSample> outputSample;
+        wil::com_ptr<IMFMediaBuffer> outputBuffer;
+        
+        hr = MFCreateSample(outputSample.put());
+        if (FAILED(hr)) return 0;
+        
+        hr = MFCreateMemoryBuffer(mixFrames * m_outputFormat.nBlockAlign, outputBuffer.put());
+        if (FAILED(hr)) return 0;
+        
+        outputSample->AddBuffer(outputBuffer.get());
+        outputData.pSample = outputSample.get();
+        
+        DWORD status = 0;
+        hr = resampler->ProcessOutput(0, 1, &outputData, &status);
+        if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT)
+        {
+            return 0;  // Need more input data
+        }
+        if (FAILED(hr)) return 0;
+        
+        // Extract resampled data
+        wil::com_ptr<IMFMediaBuffer> outBuffer;
+        hr = outputSample->ConvertToContiguousBuffer(outBuffer.put());
+        if (FAILED(hr)) return 0;
+        
+        BYTE* outData = nullptr;
+        DWORD outLength = 0;
+        hr = outBuffer->Lock(&outData, nullptr, &outLength);
+        if (FAILED(hr)) return 0;
+        
+        sourceFrames = outLength / m_outputFormat.nBlockAlign;
+        memcpy(m_mixBuffer.data(), outData, outLength);
+        outBuffer->Unlock();
+        
+        sourceData = m_mixBuffer.data();
+    }
+    
+    // Apply volume to the source data
+    ApplyVolume(sourceData, sourceFrames, entry.volume);
+    
+    // Mix into output buffer
+    MixBuffers(mixBuffer, sourceData, sourceFrames);
+    
+    return sourceFrames;
 }
 
 void AudioMixer::ApplyVolume(BYTE* buffer, UINT32 numFrames, float volume)
@@ -418,11 +510,99 @@ UINT32 AudioMixer::GetSourceAudio(uint64_t sourceId, BYTE* outputBuffer, UINT32 
         return outputFrames;
     }
 
-    // TODO: Implement audio data retrieval in Phase 3
-    // The IAudioSource uses a callback pattern rather than direct data access
-    // For now, return silence as this is a placeholder implementation
-    ZeroMemory(outputBuffer, outputFrames * m_outputFormat.nBlockAlign);
-    return 0;
+    // Read audio data from circular buffer
+    UINT32 framesRead = ReadFromBuffer(*entry, m_tempBuffer.data(), outputFrames);
+    if (framesRead == 0)
+    {
+        // No data available, return silence
+        ZeroMemory(outputBuffer, outputFrames * m_outputFormat.nBlockAlign);
+        return 0;
+    }
+    
+    BYTE* sourceData = m_tempBuffer.data();
+    UINT32 sourceFrames = framesRead;
+    
+    // Apply sample rate conversion if needed
+    auto resamplerIt = m_resamplers.find(sourceId);
+    if (resamplerIt != m_resamplers.end())
+    {
+        IMFTransform* resampler = resamplerIt->second.get();
+        
+        // Create input sample
+        wil::com_ptr<IMFSample> inputSample;
+        wil::com_ptr<IMFMediaBuffer> inputBuffer;
+        
+        HRESULT hr = MFCreateMemoryBuffer(sourceFrames * entry->format.nBlockAlign, inputBuffer.put());
+        if (SUCCEEDED(hr))
+        {
+            BYTE* bufferPtr = nullptr;
+            hr = inputBuffer->Lock(&bufferPtr, nullptr, nullptr);
+            if (SUCCEEDED(hr))
+            {
+                memcpy(bufferPtr, sourceData, sourceFrames * entry->format.nBlockAlign);
+                inputBuffer->Unlock();
+                inputBuffer->SetCurrentLength(sourceFrames * entry->format.nBlockAlign);
+                
+                hr = MFCreateSample(inputSample.put());
+                if (SUCCEEDED(hr))
+                {
+                    inputSample->AddBuffer(inputBuffer.get());
+                    hr = resampler->ProcessInput(0, inputSample.get(), 0);
+                    
+                    if (SUCCEEDED(hr))
+                    {
+                        // Get output
+                        MFT_OUTPUT_DATA_BUFFER outputData = {};
+                        wil::com_ptr<IMFSample> outputSample;
+                        wil::com_ptr<IMFMediaBuffer> outputBuffer_;
+                        
+                        hr = MFCreateSample(outputSample.put());
+                        if (SUCCEEDED(hr))
+                        {
+                            hr = MFCreateMemoryBuffer(outputFrames * m_outputFormat.nBlockAlign, outputBuffer_.put());
+                            if (SUCCEEDED(hr))
+                            {
+                                outputSample->AddBuffer(outputBuffer_.get());
+                                outputData.pSample = outputSample.get();
+                                
+                                DWORD status = 0;
+                                hr = resampler->ProcessOutput(0, 1, &outputData, &status);
+                                if (SUCCEEDED(hr))
+                                {
+                                    // Extract resampled data
+                                    wil::com_ptr<IMFMediaBuffer> outBuffer;
+                                    hr = outputSample->ConvertToContiguousBuffer(outBuffer.put());
+                                    if (SUCCEEDED(hr))
+                                    {
+                                        BYTE* outData = nullptr;
+                                        DWORD outLength = 0;
+                                        hr = outBuffer->Lock(&outData, nullptr, &outLength);
+                                        if (SUCCEEDED(hr))
+                                        {
+                                            sourceFrames = outLength / m_outputFormat.nBlockAlign;
+                                            memcpy(outputBuffer, outData, outLength);
+                                            outBuffer->Unlock();
+                                            sourceData = outputBuffer;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        // No resampling needed, copy directly
+        memcpy(outputBuffer, sourceData, sourceFrames * m_outputFormat.nBlockAlign);
+    }
+    
+    // Apply volume
+    ApplyVolume(outputBuffer, sourceFrames, entry->volume);
+    
+    return sourceFrames;
 }
 
 std::vector<uint64_t> AudioMixer::GetSourceIds() const
@@ -438,4 +618,65 @@ std::vector<uint64_t> AudioMixer::GetSourceIds() const
     }
     
     return sourceIds;
+}
+
+void AudioMixer::OnAudioCallback(uint64_t sourceId, const BYTE* data, UINT32 numFrames, LONGLONG timestamp)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    AudioSourceEntry* entry = FindSource(sourceId);
+    if (!entry)
+    {
+        return;  // Source not found
+    }
+    
+    std::lock_guard<std::mutex> bufferLock(entry->bufferMutex);
+    
+    // Calculate bytes to write
+    UINT32 bytesToWrite = numFrames * entry->format.nBlockAlign;
+    
+    // If buffer would overflow, drop oldest data
+    if (entry->availableBytes + bytesToWrite > entry->audioBuffer.size())
+    {
+        // Advance read position to make room
+        size_t bytesToDrop = (entry->availableBytes + bytesToWrite) - entry->audioBuffer.size();
+        entry->readPos = (entry->readPos + bytesToDrop) % entry->audioBuffer.size();
+        entry->availableBytes -= bytesToDrop;
+    }
+    
+    // Write data to circular buffer
+    for (UINT32 i = 0; i < bytesToWrite; i++)
+    {
+        entry->audioBuffer[entry->writePos] = data[i];
+        entry->writePos = (entry->writePos + 1) % entry->audioBuffer.size();
+    }
+    
+    entry->availableBytes += bytesToWrite;
+    entry->lastTimestamp = timestamp;
+}
+
+UINT32 AudioMixer::ReadFromBuffer(AudioSourceEntry& entry, BYTE* buffer, UINT32 maxFrames)
+{
+    std::lock_guard<std::mutex> bufferLock(entry.bufferMutex);
+    
+    // Calculate bytes to read
+    UINT32 maxBytes = maxFrames * entry.format.nBlockAlign;
+    UINT32 bytesToRead = (maxBytes < entry.availableBytes) ? maxBytes : static_cast<UINT32>(entry.availableBytes);
+    
+    if (bytesToRead == 0)
+    {
+        return 0;  // No data available
+    }
+    
+    // Read data from circular buffer
+    for (UINT32 i = 0; i < bytesToRead; i++)
+    {
+        buffer[i] = entry.audioBuffer[entry.readPos];
+        entry.readPos = (entry.readPos + 1) % entry.audioBuffer.size();
+    }
+    
+    entry.availableBytes -= bytesToRead;
+    
+    // Return number of frames read
+    return bytesToRead / entry.format.nBlockAlign;
 }
