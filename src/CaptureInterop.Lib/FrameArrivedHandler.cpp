@@ -271,20 +271,17 @@ void FrameArrivedHandler::TimerThreadProc()
         
         // Acquire lock for atomic read of last frame data
         wil::com_ptr<ID3D11Texture2D> lastTexture;
-        LONGLONG lastTimestamp;
         LONGLONG nextExpected;
         {
             std::lock_guard<std::mutex> lock(m_lastTextureMutex);
             lastTexture = m_lastTexture;
-            lastTimestamp = m_lastFrameTimestamp;
             nextExpected = m_nextExpectedTimestamp;
         }
         
-        // Generate duplicate frame at the expected timestamp
-        // Check that we have a texture and nextExpected is ahead of lastTimestamp
-        if (lastTexture && nextExpected > 0 && nextExpected > lastTimestamp)
+        // Generate duplicate frame if we have a texture and an expected timestamp
+        if (lastTexture && nextExpected > 0)
         {
-            // Generate duplicate frame
+            // Generate duplicate frame at the next expected timestamp
             {
                 std::lock_guard<std::mutex> lock(m_queueMutex);
                 if (m_frameQueue.size() < MAX_QUEUE_SIZE)
@@ -298,15 +295,10 @@ void FrameArrivedHandler::TimerThreadProc()
                 }
             }
             
-            // Update for next iteration - use mutex to avoid race with Invoke
+            // Update next expected timestamp for next iteration
             {
                 std::lock_guard<std::mutex> lock(m_lastTextureMutex);
-                // Only update if no new real frame has arrived
-                if (m_lastFrameTimestamp == lastTimestamp)
-                {
-                    m_lastFrameTimestamp = nextExpected;
-                    m_nextExpectedTimestamp = nextExpected + FRAME_DURATION;
-                }
+                m_nextExpectedTimestamp = nextExpected + FRAME_DURATION;
             }
         }
     }
