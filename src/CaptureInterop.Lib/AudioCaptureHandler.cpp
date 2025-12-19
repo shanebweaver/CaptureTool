@@ -209,9 +209,56 @@ void AudioCaptureHandler::CaptureThreadProc()
         }
         else
         {
-            // No audio data available - sleep to avoid busy-waiting
-            // Longer sleep (10ms) prevents CPU spinning and allows UI thread to run
-            // This prevents memory buildup and UI freezes
+            // No audio data available - generate silent samples to maintain timeline continuity
+            // This is crucial: when no audio is playing, WASAPI may not provide samples,
+            // but we still need to write silent audio to keep the video timeline synchronized
+            
+            WAVEFORMATEX* format = m_device.GetFormat();
+            if (format && m_sinkWriter && m_isRunning)
+            {
+                const LONGLONG TICKS_PER_SECOND = 10000000LL;
+                
+                // Generate 10ms of silent audio (standard WASAPI buffer duration)
+                const UINT32 SILENT_DURATION_MS = 10;
+                UINT32 silentFrames = (format->nSamplesPerSec * SILENT_DURATION_MS) / 1000;
+                UINT32 bufferSize = silentFrames * format->nBlockAlign;
+                
+                // Initialize timestamp on first write
+                if (m_nextAudioTimestamp == 0)
+                {
+                    LARGE_INTEGER qpc;
+                    QueryPerformanceCounter(&qpc);
+                    LONGLONG currentQpc = qpc.QuadPart;
+                    LONGLONG elapsedQpc = currentQpc - m_startQpc;
+                    m_nextAudioTimestamp = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
+                }
+                
+                // Ensure silent buffer is large enough
+                if (m_silentBuffer.size() < bufferSize)
+                {
+                    m_silentBuffer.resize(bufferSize, 0);
+                }
+                else
+                {
+                    memset(m_silentBuffer.data(), 0, bufferSize);
+                }
+                
+                // Write silent sample
+                LONGLONG timestamp = m_nextAudioTimestamp;
+                LONGLONG duration = (silentFrames * TICKS_PER_SECOND) / format->nSamplesPerSec;
+                
+                HRESULT hr = m_sinkWriter->WriteAudioSample(m_silentBuffer.data(), silentFrames, timestamp);
+                if (FAILED(hr))
+                {
+                    m_isEnabled = false;
+                    m_wasDisabled = true;
+                }
+                
+                // Advance timestamp
+                m_nextAudioTimestamp += duration;
+            }
+            
+            // Sleep to avoid busy-waiting (10ms matches silent sample duration)
             Sleep(10);
         }
     }
