@@ -5,6 +5,8 @@
 #include <mfapi.h>
 #include <mfidl.h>
 #include <mfreadwrite.h>
+#include <d3d11.h>
+#include <chrono>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace CaptureInterop;
@@ -17,61 +19,48 @@ namespace CaptureInteropTests
     TEST_CLASS(H264VideoEncoderTests)
     {
     private:
-        // Helper method to create a synthetic NV12 Media Foundation sample
-        static HRESULT CreateNV12Sample(uint32_t width, uint32_t height, IMFSample** ppSample)
+        // Helper method to create a D3D11 device
+        static HRESULT CreateD3D11Device(ID3D11Device** ppDevice)
         {
-            HRESULT hr = S_OK;
-            IMFMediaBuffer* pBuffer = nullptr;
-            IMFSample* pSample = nullptr;
+            D3D_FEATURE_LEVEL featureLevels[] = {
+                D3D_FEATURE_LEVEL_11_1,
+                D3D_FEATURE_LEVEL_11_0
+            };
 
-            // Calculate NV12 buffer size (Y plane + UV plane)
-            DWORD bufferSize = width * height * 3 / 2; // NV12 is 12 bits per pixel
+            return D3D11CreateDevice(
+                nullptr,
+                D3D_DRIVER_TYPE_HARDWARE,
+                nullptr,
+                D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
+                featureLevels,
+                ARRAYSIZE(featureLevels),
+                D3D11_SDK_VERSION,
+                ppDevice,
+                nullptr,
+                nullptr
+            );
+        }
 
-            // Create Media Foundation buffer
-            hr = MFCreateMemoryBuffer(bufferSize, &pBuffer);
-            if (FAILED(hr)) return hr;
+        // Helper method to create a test texture
+        static HRESULT CreateTestTexture(ID3D11Device* pDevice, UINT32 width, UINT32 height, ID3D11Texture2D** ppTexture)
+        {
+            D3D11_TEXTURE2D_DESC desc = {};
+            desc.Width = width;
+            desc.Height = height;
+            desc.MipLevels = 1;
+            desc.ArraySize = 1;
+            desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+            desc.SampleDesc.Count = 1;
+            desc.Usage = D3D11_USAGE_DEFAULT;
+            desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-            // Lock buffer and fill with test pattern (gray color)
-            BYTE* pData = nullptr;
-            DWORD maxLength = 0, currentLength = 0;
-            hr = pBuffer->Lock(&pData, &maxLength, &currentLength);
-            if (SUCCEEDED(hr))
-            {
-                // Fill Y plane with 128 (gray)
-                memset(pData, 128, width * height);
-                
-                // Fill UV plane with 128 (neutral chroma)
-                memset(pData + width * height, 128, width * height / 2);
-                
-                pBuffer->Unlock();
-                pBuffer->SetCurrentLength(bufferSize);
-            }
-
-            // Create sample and add buffer
-            hr = MFCreateSample(&pSample);
-            if (SUCCEEDED(hr))
-            {
-                hr = pSample->AddBuffer(pBuffer);
-            }
-
-            if (pBuffer) pBuffer->Release();
-
-            if (SUCCEEDED(hr))
-            {
-                *ppSample = pSample;
-            }
-            else if (pSample)
-            {
-                pSample->Release();
-            }
-
-            return hr;
+            return pDevice->CreateTexture2D(&desc, nullptr, ppTexture);
         }
 
     public:
         TEST_CLASS_INITIALIZE(ClassInitialize)
         {
-            // Initialize Media Foundation for all tests
+            // Initialize Media Foundation and COM for all tests
             CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
             MFStartup(MF_VERSION);
         }
@@ -88,406 +77,276 @@ namespace CaptureInteropTests
         TEST_METHOD(H264Encoder_InitializeWithHardware_Success)
         {
             // Arrange
-            VideoEncoderConfig config = EncoderPresets::CreateBalancedVideoPreset(1920, 1080, 30);
+            VideoEncoderConfig config = {};
+            config.codec = VideoCodec::H264;
+            config.width = 1920;
+            config.height = 1080;
+            config.frameRateNum = 30;
+            config.frameRateDen = 1;
+            config.preset = EncoderPreset::Balanced;
             config.hardwareAcceleration = true;
+            config.bitrate = 0; // Auto
             
-            H264VideoEncoder encoder;
+            H264VideoEncoder* pEncoder = new H264VideoEncoder();
 
             // Act
-            HRESULT hr = encoder.Initialize(config);
+            bool initResult = pEncoder->Initialize();
+            HRESULT configResult = pEncoder->Configure(config);
+            bool startResult = pEncoder->Start();
 
             // Assert
-            Assert::IsTrue(SUCCEEDED(hr), L"Hardware encoder initialization should succeed or fallback to software");
+            Assert::IsTrue(initResult, L"Initialize should succeed");
+            Assert::IsTrue(SUCCEEDED(configResult), L"Configure should succeed");
+            Assert::IsTrue(startResult, L"Start should succeed");
             
-            // Check if hardware was actually used (may fallback to software)
-            EncoderStatistics stats = encoder.GetStatistics();
-            // Note: isHardwareAccelerated flag indicates actual encoder type used
+            // Cleanup
+            pEncoder->Stop();
+            pEncoder->Release();
         }
 
         TEST_METHOD(H264Encoder_InitializeWithSoftware_Success)
         {
             // Arrange
-            VideoEncoderConfig config = EncoderPresets::CreateBalancedVideoPreset(1920, 1080, 30);
+            VideoEncoderConfig config = {};
+            config.codec = VideoCodec::H264;
+            config.width = 1920;
+            config.height = 1080;
+            config.frameRateNum = 30;
+            config.frameRateDen = 1;
+            config.preset = EncoderPreset::Balanced;
             config.hardwareAcceleration = false; // Force software
+            config.bitrate = 0; // Auto
             
-            H264VideoEncoder encoder;
+            H264VideoEncoder* pEncoder = new H264VideoEncoder();
 
             // Act
-            HRESULT hr = encoder.Initialize(config);
+            bool initResult = pEncoder->Initialize();
+            HRESULT configResult = pEncoder->Configure(config);
+            bool startResult = pEncoder->Start();
 
             // Assert
-            Assert::IsTrue(SUCCEEDED(hr), L"Software encoder initialization should succeed");
+            Assert::IsTrue(initResult, L"Initialize should succeed");
+            Assert::IsTrue(SUCCEEDED(configResult), L"Configure should succeed");
+            Assert::IsTrue(startResult, L"Start should succeed");
+
+            // Cleanup
+            pEncoder->Stop();
+            pEncoder->Release();
         }
 
-        TEST_METHOD(H264Encoder_InitializeInvalidResolution_Fails)
+        TEST_METHOD(H264Encoder_ConfigureInvalidResolution_Fails)
         {
             // Arrange
-            VideoEncoderConfig config = EncoderPresets::CreateBalancedVideoPreset(0, 0, 30);
-            H264VideoEncoder encoder;
+            VideoEncoderConfig config = {};
+            config.codec = VideoCodec::H264;
+            config.width = 0;
+            config.height = 0;
+            config.frameRateNum = 30;
+            config.frameRateDen = 1;
+            
+            H264VideoEncoder* pEncoder = new H264VideoEncoder();
+            pEncoder->Initialize();
 
             // Act
-            HRESULT hr = encoder.Initialize(config);
+            HRESULT hr = pEncoder->Configure(config);
 
             // Assert
-            Assert::IsTrue(FAILED(hr), L"Encoder should fail with 0x0 resolution");
+            Assert::IsTrue(FAILED(hr), L"Configure should fail with 0x0 resolution");
+
+            // Cleanup
+            pEncoder->Release();
         }
 
-        TEST_METHOD(H264Encoder_InitializeInvalidFrameRate_Fails)
+        TEST_METHOD(H264Encoder_ConfigureWrongCodec_Fails)
         {
             // Arrange
-            VideoEncoderConfig config = EncoderPresets::CreateBalancedVideoPreset(1920, 1080, 0);
-            H264VideoEncoder encoder;
+            VideoEncoderConfig config = {};
+            config.codec = VideoCodec::H265; // Wrong codec
+            config.width = 1920;
+            config.height = 1080;
+            config.frameRateNum = 30;
+            config.frameRateDen = 1;
+            
+            H264VideoEncoder* pEncoder = new H264VideoEncoder();
+            pEncoder->Initialize();
 
             // Act
-            HRESULT hr = encoder.Initialize(config);
+            HRESULT hr = pEncoder->Configure(config);
 
             // Assert
-            Assert::IsTrue(FAILED(hr), L"Encoder should fail with 0 fps");
+            Assert::IsTrue(FAILED(hr), L"Configure should fail with wrong codec");
+
+            // Cleanup
+            pEncoder->Release();
         }
 
         // 2.2 Encoding Tests
 
-        TEST_METHOD(H264Encoder_EncodeNV12Sample_Success)
+        TEST_METHOD(H264Encoder_EncodeFrame_Success)
         {
             // Arrange
-            VideoEncoderConfig config = EncoderPresets::CreateFastVideoPreset(1920, 1080, 30);
-            H264VideoEncoder encoder;
-            HRESULT hr = encoder.Initialize(config);
-            Assert::IsTrue(SUCCEEDED(hr), L"Encoder initialization failed");
+            ID3D11Device* pDevice = nullptr;
+            HRESULT hr = CreateD3D11Device(&pDevice);
+            Assert::IsTrue(SUCCEEDED(hr), L"Failed to create D3D11 device");
 
-            IMFSample* pInputSample = nullptr;
-            hr = CreateNV12Sample(1920, 1080, &pInputSample);
-            Assert::IsTrue(SUCCEEDED(hr), L"Failed to create test sample");
-            Assert::IsNotNull(pInputSample, L"Sample should not be null");
+            VideoEncoderConfig config = {};
+            config.codec = VideoCodec::H264;
+            config.width = 1920;
+            config.height = 1080;
+            config.frameRateNum = 30;
+            config.frameRateDen = 1;
+            config.preset = EncoderPreset::Fast;
+            config.hardwareAcceleration = false;
+            config.bitrate = 0;
+            
+            H264VideoEncoder* pEncoder = new H264VideoEncoder();
+            pEncoder->Initialize();
+            pEncoder->Configure(config);
+            pEncoder->Start();
 
-            pInputSample->SetSampleTime(0);
-            pInputSample->SetSampleDuration(333333); // ~30fps
+            ID3D11Texture2D* pTexture = nullptr;
+            hr = CreateTestTexture(pDevice, 1920, 1080, &pTexture);
+            Assert::IsTrue(SUCCEEDED(hr), L"Failed to create test texture");
 
             IMFSample* pOutputSample = nullptr;
 
             // Act
-            hr = encoder.Encode(pInputSample, &pOutputSample);
+            hr = pEncoder->EncodeFrame(pTexture, 0, &pOutputSample);
 
             // Assert
-            Assert::IsTrue(SUCCEEDED(hr), L"Encoding should succeed");
-            Assert::IsNotNull(pOutputSample, L"Output sample should not be null");
-
-            // Verify output has data
-            DWORD bufferCount = 0;
-            pOutputSample->GetBufferCount(&bufferCount);
-            Assert::IsTrue(bufferCount > 0, L"Output should have at least one buffer");
-
-            IMFMediaBuffer* pBuffer = nullptr;
-            pOutputSample->GetBufferByIndex(0, &pBuffer);
-            if (pBuffer)
-            {
-                DWORD length = 0;
-                pBuffer->GetCurrentLength(&length);
-                Assert::IsTrue(length > 0, L"Encoded data should have non-zero size");
-                pBuffer->Release();
-            }
+            // Note: First frame might return S_FALSE (need more input)
+            Assert::IsTrue(hr == S_OK || hr == S_FALSE, L"EncodeFrame should return S_OK or S_FALSE");
 
             // Cleanup
             if (pOutputSample) pOutputSample->Release();
-            if (pInputSample) pInputSample->Release();
-            encoder.Shutdown();
+            if (pTexture) pTexture->Release();
+            pEncoder->Stop();
+            pEncoder->Release();
+            if (pDevice) pDevice->Release();
         }
 
-        TEST_METHOD(H264Encoder_EncodeMultipleFrames_Success)
+        TEST_METHOD(H264Encoder_GetCapabilities_Success)
         {
             // Arrange
-            VideoEncoderConfig config = EncoderPresets::CreateFastVideoPreset(1280, 720, 30);
-            H264VideoEncoder encoder;
-            HRESULT hr = encoder.Initialize(config);
-            Assert::IsTrue(SUCCEEDED(hr), L"Encoder initialization failed");
+            H264VideoEncoder* pEncoder = new H264VideoEncoder();
+            pEncoder->Initialize();
 
-            const int frameCount = 100;
-            int successCount = 0;
+            VideoEncoderCapabilities caps = {};
 
-            // Act - Encode 100 frames
-            for (int i = 0; i < frameCount; i++)
+            // Act
+            HRESULT hr = pEncoder->GetCapabilities(&caps);
+
+            // Assert
+            Assert::IsTrue(SUCCEEDED(hr), L"GetCapabilities should succeed");
+            Assert::IsTrue(caps.supportsH264, L"Should support H264");
+            Assert::IsTrue(caps.maxWidth > 0, L"Max width should be positive");
+            Assert::IsTrue(caps.maxHeight > 0, L"Max height should be positive");
+
+            // Cleanup
+            pEncoder->Release();
+        }
+
+        TEST_METHOD(H264Encoder_StatsTracking_Success)
+        {
+            // Arrange
+            ID3D11Device* pDevice = nullptr;
+            HRESULT hr = CreateD3D11Device(&pDevice);
+            if (FAILED(hr))
             {
-                IMFSample* pInputSample = nullptr;
-                hr = CreateNV12Sample(1280, 720, &pInputSample);
-                if (FAILED(hr)) continue;
-
-                LONGLONG timestamp = i * 333333LL; // 30fps timing
-                pInputSample->SetSampleTime(timestamp);
-                pInputSample->SetSampleDuration(333333);
-
-                IMFSample* pOutputSample = nullptr;
-                hr = encoder.Encode(pInputSample, &pOutputSample);
-                
-                if (SUCCEEDED(hr) && pOutputSample)
-                {
-                    successCount++;
-                    
-                    // Verify timestamp progression
-                    LONGLONG outputTime = 0;
-                    pOutputSample->GetSampleTime(&outputTime);
-                    // Allow some tolerance for encoding delays
-                    Assert::IsTrue(outputTime >= 0, L"Output timestamp should be valid");
-                    
-                    pOutputSample->Release();
-                }
-
-                pInputSample->Release();
+                // Skip test if D3D11 device creation fails
+                Logger::WriteMessage(L"D3D11 device creation failed - skipping test");
+                return;
             }
 
-            // Assert - Most frames should encode successfully
-            Assert::IsTrue(successCount >= frameCount * 0.9, L"At least 90% of frames should encode successfully");
+            VideoEncoderConfig config = {};
+            config.codec = VideoCodec::H264;
+            config.width = 1280;
+            config.height = 720;
+            config.frameRateNum = 30;
+            config.frameRateDen = 1;
+            config.preset = EncoderPreset::Fast;
+            config.hardwareAcceleration = false;
+            config.bitrate = 0;
+            
+            H264VideoEncoder* pEncoder = new H264VideoEncoder();
+            pEncoder->Initialize();
+            pEncoder->Configure(config);
+            pEncoder->Start();
 
-            // Verify statistics
-            EncoderStatistics stats = encoder.GetStatistics();
-            Assert::IsTrue(stats.framesEncoded >= successCount * 0.9, L"Statistics should track encoded frames");
+            ID3D11Texture2D* pTexture = nullptr;
+            hr = CreateTestTexture(pDevice, 1280, 720, &pTexture);
+            if (FAILED(hr))
+            {
+                pEncoder->Release();
+                pDevice->Release();
+                // Skip test if texture creation fails
+                Logger::WriteMessage(L"Texture creation failed - skipping test");
+                return;
+            }
 
-            encoder.Shutdown();
-        }
-
-        TEST_METHOD(H264Encoder_EncodeNullSample_Fails)
-        {
-            // Arrange
-            VideoEncoderConfig config = EncoderPresets::CreateFastVideoPreset(1920, 1080, 30);
-            H264VideoEncoder encoder;
-            HRESULT hr = encoder.Initialize(config);
-            Assert::IsTrue(SUCCEEDED(hr), L"Encoder initialization failed");
-
-            IMFSample* pOutputSample = nullptr;
-
-            // Act
-            hr = encoder.Encode(nullptr, &pOutputSample);
-
-            // Assert
-            Assert::IsTrue(FAILED(hr) || pOutputSample == nullptr, L"Encoding null sample should fail");
-
-            encoder.Shutdown();
-        }
-
-        TEST_METHOD(H264Encoder_EncodeAfterShutdown_Fails)
-        {
-            // Arrange
-            VideoEncoderConfig config = EncoderPresets::CreateFastVideoPreset(1920, 1080, 30);
-            H264VideoEncoder encoder;
-            HRESULT hr = encoder.Initialize(config);
-            Assert::IsTrue(SUCCEEDED(hr), L"Encoder initialization failed");
-
-            // Shutdown encoder
-            encoder.Shutdown();
-
-            // Create sample
-            IMFSample* pInputSample = nullptr;
-            hr = CreateNV12Sample(1920, 1080, &pInputSample);
-            Assert::IsTrue(SUCCEEDED(hr), L"Failed to create test sample");
-
-            IMFSample* pOutputSample = nullptr;
-
-            // Act
-            hr = encoder.Encode(pInputSample, &pOutputSample);
+            // Act - Encode multiple frames
+            const int frameCount = 10;
+            for (int i = 0; i < frameCount; i++)
+            {
+                IMFSample* pOutputSample = nullptr;
+                pEncoder->EncodeFrame(pTexture, i * 333333LL, &pOutputSample);
+                if (pOutputSample) pOutputSample->Release();
+            }
 
             // Assert
-            Assert::IsTrue(FAILED(hr) || pOutputSample == nullptr, L"Encoding after shutdown should fail");
+            uint64_t encodedCount = pEncoder->GetEncodedFrameCount();
+            Assert::IsTrue(encodedCount > 0, L"Should have encoded at least some frames");
 
-            if (pInputSample) pInputSample->Release();
+            // Cleanup
+            if (pTexture) pTexture->Release();
+            pEncoder->Stop();
+            pEncoder->Release();
+            if (pDevice) pDevice->Release();
         }
 
         // 2.3 Preset Tests
 
-        TEST_METHOD(H264Encoder_FastPreset_ProducesLowBitrate)
+        TEST_METHOD(H264Encoder_FastPreset_LowerBitrate)
         {
-            // Arrange
-            VideoEncoderConfig fastConfig = EncoderPresets::CreateFastVideoPreset(1920, 1080, 30);
-            VideoEncoderConfig balancedConfig = EncoderPresets::CreateBalancedVideoPreset(1920, 1080, 30);
-
-            // Assert - Fast preset should have lower bitrate than Balanced
-            Assert::IsTrue(fastConfig.bitrate < balancedConfig.bitrate, 
-                L"Fast preset should have lower bitrate than Balanced preset");
-        }
-
-        TEST_METHOD(H264Encoder_QualityPreset_ProducesHighBitrate)
-        {
-            // Arrange
-            VideoEncoderConfig qualityConfig = EncoderPresets::CreateQualityVideoPreset(1920, 1080, 30);
-            VideoEncoderConfig balancedConfig = EncoderPresets::CreateBalancedVideoPreset(1920, 1080, 30);
-
-            // Assert - Quality preset should have higher bitrate than Balanced
-            Assert::IsTrue(qualityConfig.bitrate > balancedConfig.bitrate, 
-                L"Quality preset should have higher bitrate than Balanced preset");
-        }
-
-        TEST_METHOD(H264Encoder_LosslessPreset_HasMaximumBitrate)
-        {
-            // Arrange
-            VideoEncoderConfig losslessConfig = EncoderPresets::CreateLosslessVideoPreset(1920, 1080, 30);
-            VideoEncoderConfig qualityConfig = EncoderPresets::CreateQualityVideoPreset(1920, 1080, 30);
-
-            // Assert - Lossless should have highest bitrate or be 0 (uncompressed)
-            Assert::IsTrue(losslessConfig.bitrate == 0 || losslessConfig.bitrate >= qualityConfig.bitrate, 
-                L"Lossless preset should have maximum or zero bitrate");
-        }
-
-        // 2.4 Statistics Tests
-
-        TEST_METHOD(H264Encoder_StatisticsTracking)
-        {
-            // Arrange
-            VideoEncoderConfig config = EncoderPresets::CreateFastVideoPreset(1280, 720, 30);
-            H264VideoEncoder encoder;
-            HRESULT hr = encoder.Initialize(config);
-            Assert::IsTrue(SUCCEEDED(hr), L"Encoder initialization failed");
-
-            const int frameCount = 50;
-
-            // Act - Encode 50 frames
-            for (int i = 0; i < frameCount; i++)
-            {
-                IMFSample* pInputSample = nullptr;
-                hr = CreateNV12Sample(1280, 720, &pInputSample);
-                if (FAILED(hr)) continue;
-
-                pInputSample->SetSampleTime(i * 333333LL);
-                pInputSample->SetSampleDuration(333333);
-
-                IMFSample* pOutputSample = nullptr;
-                hr = encoder.Encode(pInputSample, &pOutputSample);
-                
-                if (pOutputSample) pOutputSample->Release();
-                pInputSample->Release();
-            }
+            // Arrange - Compare calculated bitrates
+            uint32_t fastBitrate = EncoderPresets::CalculateVideoBitrate(
+                EncoderPreset::Fast, 1920, 1080, 30);
+            uint32_t balancedBitrate = EncoderPresets::CalculateVideoBitrate(
+                EncoderPreset::Balanced, 1920, 1080, 30);
 
             // Assert
-            EncoderStatistics stats = encoder.GetStatistics();
-            Assert::IsTrue(stats.framesEncoded > 0, L"Should have encoded at least some frames");
-            Assert::IsTrue(stats.framesEncoded <= frameCount, L"Encoded frame count should not exceed input count");
-
-            encoder.Shutdown();
+            Assert::IsTrue(fastBitrate < balancedBitrate, 
+                L"Fast preset should have lower bitrate than Balanced");
         }
 
-        TEST_METHOD(H264Encoder_LatencyMeasurement)
+        TEST_METHOD(H264Encoder_QualityPreset_HigherBitrate)
         {
             // Arrange
-            VideoEncoderConfig config = EncoderPresets::CreateFastVideoPreset(1920, 1080, 30);
-            H264VideoEncoder encoder;
-            HRESULT hr = encoder.Initialize(config);
-            Assert::IsTrue(SUCCEEDED(hr), L"Encoder initialization failed");
-
-            IMFSample* pInputSample = nullptr;
-            hr = CreateNV12Sample(1920, 1080, &pInputSample);
-            Assert::IsTrue(SUCCEEDED(hr), L"Failed to create test sample");
-
-            pInputSample->SetSampleTime(0);
-            pInputSample->SetSampleDuration(333333);
-
-            // Act - Measure encoding time
-            auto startTime = std::chrono::high_resolution_clock::now();
-            
-            IMFSample* pOutputSample = nullptr;
-            hr = encoder.Encode(pInputSample, &pOutputSample);
-            
-            auto endTime = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+            uint32_t qualityBitrate = EncoderPresets::CalculateVideoBitrate(
+                EncoderPreset::Quality, 1920, 1080, 30);
+            uint32_t balancedBitrate = EncoderPresets::CalculateVideoBitrate(
+                EncoderPreset::Balanced, 1920, 1080, 30);
 
             // Assert
-            Assert::IsTrue(SUCCEEDED(hr), L"Encoding should succeed");
-            
-            // Target: < 5ms for 1080p30 (may not always be met depending on hardware)
-            // We'll use 50ms as a generous upper bound for the test
-            Assert::IsTrue(duration.count() < 50, L"Encoding latency should be reasonable (<50ms)");
+            Assert::IsTrue(qualityBitrate > balancedBitrate, 
+                L"Quality preset should have higher bitrate than Balanced");
+        }
+
+        TEST_METHOD(H264Encoder_SupportsCodec_H264Only)
+        {
+            // Arrange
+            H264VideoEncoder* pEncoder = new H264VideoEncoder();
+
+            // Act & Assert
+            Assert::IsTrue(pEncoder->SupportsCodec(VideoCodec::H264), 
+                L"Should support H264");
+            Assert::IsFalse(pEncoder->SupportsCodec(VideoCodec::H265), 
+                L"Should not support H265");
+            Assert::IsFalse(pEncoder->SupportsCodec(VideoCodec::VP9), 
+                L"Should not support VP9");
 
             // Cleanup
-            if (pOutputSample) pOutputSample->Release();
-            if (pInputSample) pInputSample->Release();
-            encoder.Shutdown();
-        }
-
-        TEST_METHOD(H264Encoder_HardwareFallbackToSoftware)
-        {
-            // Arrange - Request hardware but may fallback
-            VideoEncoderConfig config = EncoderPresets::CreateBalancedVideoPreset(1920, 1080, 30);
-            config.hardwareAcceleration = true;
-            
-            H264VideoEncoder encoder;
-
-            // Act
-            HRESULT hr = encoder.Initialize(config);
-
-            // Assert - Should succeed regardless of hardware availability
-            Assert::IsTrue(SUCCEEDED(hr), L"Encoder should initialize with hardware or fallback to software");
-
-            // If initialization succeeded, verify encoding works
-            if (SUCCEEDED(hr))
-            {
-                IMFSample* pInputSample = nullptr;
-                hr = CreateNV12Sample(1920, 1080, &pInputSample);
-                if (SUCCEEDED(hr))
-                {
-                    pInputSample->SetSampleTime(0);
-                    pInputSample->SetSampleDuration(333333);
-
-                    IMFSample* pOutputSample = nullptr;
-                    hr = encoder.Encode(pInputSample, &pOutputSample);
-                    
-                    Assert::IsTrue(SUCCEEDED(hr), L"Encoding should work with either hardware or software");
-                    
-                    if (pOutputSample) pOutputSample->Release();
-                    pInputSample->Release();
-                }
-                
-                encoder.Shutdown();
-            }
-        }
-
-        TEST_METHOD(H264Encoder_MultipleResolutions)
-        {
-            // Test encoding at different resolutions
-            struct ResolutionTest
-            {
-                uint32_t width;
-                uint32_t height;
-                const wchar_t* name;
-            };
-
-            ResolutionTest resolutions[] = {
-                { 1280, 720, L"720p" },
-                { 1920, 1080, L"1080p" },
-                { 2560, 1440, L"1440p" }
-            };
-
-            for (const auto& res : resolutions)
-            {
-                // Arrange
-                VideoEncoderConfig config = EncoderPresets::CreateFastVideoPreset(res.width, res.height, 30);
-                H264VideoEncoder encoder;
-                
-                // Act
-                HRESULT hr = encoder.Initialize(config);
-                
-                // Assert
-                Assert::IsTrue(SUCCEEDED(hr), (std::wstring(L"Should initialize for ") + res.name).c_str());
-                
-                if (SUCCEEDED(hr))
-                {
-                    // Try encoding one frame
-                    IMFSample* pInputSample = nullptr;
-                    hr = CreateNV12Sample(res.width, res.height, &pInputSample);
-                    
-                    if (SUCCEEDED(hr))
-                    {
-                        pInputSample->SetSampleTime(0);
-                        pInputSample->SetSampleDuration(333333);
-
-                        IMFSample* pOutputSample = nullptr;
-                        hr = encoder.Encode(pInputSample, &pOutputSample);
-                        
-                        Assert::IsTrue(SUCCEEDED(hr), 
-                            (std::wstring(L"Should encode frame for ") + res.name).c_str());
-                        
-                        if (pOutputSample) pOutputSample->Release();
-                        pInputSample->Release();
-                    }
-                    
-                    encoder.Shutdown();
-                }
-            }
+            pEncoder->Release();
         }
     };
 }

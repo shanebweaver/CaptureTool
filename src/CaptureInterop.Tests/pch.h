@@ -15,5 +15,21 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <chrono>
+
+// Media Foundation
+#include <mfapi.h>
+#include <mfidl.h>
+#include <mfreadwrite.h>
+
+// DirectX
+#include <d3d11.h>
+
+// Link required libraries
+#pragma comment(lib, "mfplat.lib")
+#pragma comment(lib, "mfreadwrite.lib")
+#pragma comment(lib, "mfuuid.lib")
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxgi.lib")
 
 #endif //PCH_H
