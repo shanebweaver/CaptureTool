@@ -142,4 +142,14 @@
     <MakeDir Directories="$(ManagedOutDir)" Condition="!Exists('$(ManagedOutDir)')" />
     <Copy SourceFiles="$(OutDir)$(TargetName)$(TargetExt)" DestinationFolder="$(ManagedOutDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
   </Target>
+
+  <Target Name="CopyNativeDllToTests" AfterTargets="Link">
+    <PropertyGroup>
+      <TestProjectPath>src\CaptureInterop.Tests\</TestProjectPath>
+      <TestOutDir>$(SolutionDir)$(TestProjectPath)$(Platform)\$(Configuration)\</TestOutDir>
+    </PropertyGroup>
+    <Message Text="Copying native DLL to $(TestOutDir)" Importance="high" />
+    <MakeDir Directories="$(TestOutDir)" Condition="!Exists('$(TestOutDir)')" />
+    <Copy SourceFiles="$(OutDir)$(TargetName)$(TargetExt)" DestinationFolder="$(TestOutDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
+  </Target>
 </Project>
