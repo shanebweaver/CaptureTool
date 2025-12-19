@@ -8,6 +8,8 @@
 #include <codecapi.h>
 #include <mutex>
 
+using namespace CaptureInterop;
+
 // AAC Audio Encoder Implementation
 // Uses Media Foundation to encode PCM audio to AAC format
 class AACEncoder : public IAudioEncoder
@@ -17,19 +19,27 @@ public:
     virtual ~AACEncoder();
 
     // IAudioEncoder interface implementation
-    HRESULT Initialize(const AudioEncoderConfig& config) override;
-    HRESULT EncodeAudio(const BYTE* pData, DWORD dataSize, LONGLONG timestamp, IMFSample** ppSample) override;
-    HRESULT Finalize() override;
+    HRESULT Configure(const AudioEncoderConfig& config) override;
+    HRESULT GetConfiguration(AudioEncoderConfig* pConfig) const override;
     
-    AudioEncoderCapabilities GetCapabilities() const override;
-    bool IsHardwareAccelerated() const override { return m_isHardwareAccelerated; }
+    HRESULT GetCapabilities(AudioEncoderCapabilities* pCapabilities) const override;
+    bool SupportsCodec(AudioCodec codec) const override;
     
-    AudioEncoderConfig GetCurrentConfig() const override { return m_config; }
+    HRESULT EncodeAudio(const uint8_t* pData, uint32_t dataSize, int64_t timestamp, IMFSample** ppSample) override;
+    HRESULT Flush(IMFSample** ppSample) override;
     
+    uint64_t GetEncodedSampleCount() const override;
+    double GetAverageEncodingTimeMs() const override;
+    
+    // IMediaSource interface (inherited)
+    MediaSourceType GetSourceType() const override { return MediaSourceType::Audio; }
+    bool Initialize() override { return true; }
+    bool Start() override { return true; }
+    void Stop() override {}
+    bool IsRunning() const override { return m_isInitialized; }
+
     // Statistics
-    UINT32 GetEncodedSampleCount() const { return m_encodedSamples; }
     UINT32 GetDroppedSampleCount() const { return m_droppedSamples; }
-    double GetAverageEncodingTime() const;
 
     // Reference counting (COM-style)
     ULONG AddRef() override;
@@ -65,7 +75,7 @@ private:
     UINT32 m_samplesPerFrame;  // AAC frame size (typically 1024 samples)
     
     // Statistics
-    UINT32 m_encodedSamples;
+    uint64_t m_encodedSamples;
     UINT32 m_droppedSamples;
     double m_totalEncodingTime;
     

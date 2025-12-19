@@ -26,12 +26,21 @@
 #include <codecapi.h>
 #include <wmcodecdsp.h>
 
+// Link Media Foundation libraries
+#pragma comment(lib, "mfplat.lib")
+#pragma comment(lib, "mfreadwrite.lib")
+#pragma comment(lib, "mfuuid.lib")  // Contains CLSID definitions for MF codecs
+#pragma comment(lib, "wmcodecdspuuid.lib")  // Contains CLSID definitions for resampler
+
 // Audio Capture (WASAPI)
 #include <mmdeviceapi.h>
 #include <audioclient.h>
 #include <functiondiscoverykeys_devpkey.h>
 #include <mmreg.h>  // For WAVE_FORMAT constants
 #include <ksmedia.h>  // For KSDATAFORMAT_SUBTYPE constants
+
+// Link WASAPI libraries
+#pragma comment(lib, "uuid.lib")
 
 // Windows Implementation Library
 #include <wil/com.h>

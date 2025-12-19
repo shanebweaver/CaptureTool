@@ -6,15 +6,22 @@
 #include <string>
 #include <mutex>
 #include <vector>
+#include <map>
 #include "IVideoEncoder.h"
 #include "IAudioEncoder.h"
 #include "IMuxer.h"
 #include "EncoderPresets.h"
 
 // Forward declarations
-class H264VideoEncoder;
+namespace CaptureInterop
+{
+    class H264VideoEncoder;
+}
 class AACEncoder;
-class MP4Muxer;
+namespace CaptureInterop
+{
+    class MP4Muxer;
+}
 
 // Configuration structure for encoder pipeline
 struct EncoderPipelineConfig
@@ -23,7 +30,7 @@ struct EncoderPipelineConfig
     UINT32 videoWidth;
     UINT32 videoHeight;
     UINT32 videoFPS;
-    EncoderPreset videoPreset;
+    CaptureInterop::EncoderPreset videoPreset;
     bool useHardwareEncoding;
     
     // Audio configuration
@@ -31,7 +38,7 @@ struct EncoderPipelineConfig
     UINT32 audioChannels;
     UINT32 audioBitsPerSample;
     UINT32 audioTrackCount;
-    AudioQuality audioQuality;
+    CaptureInterop::AudioQuality audioQuality;
     
     // Output configuration
     std::wstring outputPath;
@@ -42,13 +49,13 @@ struct EncoderPipelineConfig
         : videoWidth(1920)
         , videoHeight(1080)
         , videoFPS(30)
-        , videoPreset(EncoderPreset::Balanced)
+        , videoPreset(CaptureInterop::EncoderPreset::Balanced)
         , useHardwareEncoding(true)
         , audioSampleRate(48000)
         , audioChannels(2)
         , audioBitsPerSample(16)
         , audioTrackCount(1)
-        , audioQuality(AudioQuality::High)
+        , audioQuality(CaptureInterop::AudioQuality::High)
         , d3dDevice(nullptr)
     {
     }
@@ -143,7 +150,7 @@ private:
     static void OnAudioDataEncoded(const BYTE* data, UINT32 size, UINT64 timestamp, UINT32 trackIndex, void* context);
     
     // Member variables
-    std::mutex m_mutex;
+    mutable std::mutex m_mutex;
     ULONG m_refCount;
     bool m_isInitialized;
     bool m_isRunning;
@@ -152,9 +159,9 @@ private:
     EncoderPipelineConfig m_config;
     
     // Encoders and muxer
-    H264VideoEncoder* m_videoEncoder;
+    CaptureInterop::H264VideoEncoder* m_videoEncoder;
     std::vector<AACEncoder*> m_audioEncoders;  // One per track
-    MP4Muxer* m_muxer;
+    CaptureInterop::MP4Muxer* m_muxer;
     
     // Track mapping
     std::map<UINT32, UINT32> m_trackToEncoderMap;  // AudioMixer track index → encoder index

@@ -21,7 +21,7 @@ AACEncoder::AACEncoder()
 
 AACEncoder::~AACEncoder()
 {
-    Finalize();
+    Flush(nullptr);
 }
 
 ULONG AACEncoder::AddRef()
@@ -39,7 +39,7 @@ ULONG AACEncoder::Release()
     return count;
 }
 
-HRESULT AACEncoder::Initialize(const AudioEncoderConfig& config)
+HRESULT AACEncoder::Configure(const AudioEncoderConfig& config)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     
@@ -59,25 +59,37 @@ HRESULT AACEncoder::Initialize(const AudioEncoderConfig& config)
     hr = ConfigureEncoder();
     if (FAILED(hr))
     {
-        Finalize();
+        Flush(nullptr);
         return hr;
     }
     
     hr = m_pEncoder->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
     if (FAILED(hr))
     {
-        Finalize();
+        Flush(nullptr);
         return hr;
     }
     
     hr = m_pEncoder->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
     if (FAILED(hr))
     {
-        Finalize();
+        Flush(nullptr);
         return hr;
     }
     
     m_isInitialized = true;
+    return S_OK;
+}
+
+HRESULT AACEncoder::GetConfiguration(AudioEncoderConfig* pConfig) const
+{
+    if (!pConfig)
+    {
+        return E_POINTER;
+    }
+    
+    std::lock_guard<std::mutex> lock(m_mutex);
+    *pConfig = m_config;
     return S_OK;
 }
 
@@ -292,7 +304,7 @@ UINT32 AACEncoder::GetQualityValue() const
     }
 }
 
-HRESULT AACEncoder::EncodeAudio(const BYTE* pData, DWORD dataSize, LONGLONG timestamp, IMFSample** ppSample)
+HRESULT AACEncoder::EncodeAudio(const uint8_t* pData, uint32_t dataSize, int64_t timestamp, IMFSample** ppSample)
 {
     if (!m_isInitialized || !pData || !ppSample)
     {
@@ -440,14 +452,26 @@ HRESULT AACEncoder::ProcessOutput(IMFSample** ppSample)
     return S_OK;
 }
 
-HRESULT AACEncoder::Finalize()
+HRESULT AACEncoder::Flush(IMFSample** ppSample)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
+    
+    if (ppSample)
+    {
+        *ppSample = nullptr;
+    }
     
     if (m_pEncoder)
     {
         m_pEncoder->ProcessMessage(MFT_MESSAGE_NOTIFY_END_OF_STREAM, 0);
         m_pEncoder->ProcessMessage(MFT_MESSAGE_COMMAND_DRAIN, 0);
+        
+        // Try to get any remaining output
+        if (ppSample)
+        {
+            ProcessOutput(ppSample);
+        }
+        
         m_pEncoder->Release();
         m_pEncoder = nullptr;
     }
@@ -470,24 +494,35 @@ HRESULT AACEncoder::Finalize()
     return S_OK;
 }
 
-AudioEncoderCapabilities AACEncoder::GetCapabilities() const
+HRESULT AACEncoder::GetCapabilities(AudioEncoderCapabilities* pCapabilities) const
 {
-    AudioEncoderCapabilities caps;
+    if (!pCapabilities)
+    {
+        return E_POINTER;
+    }
     
-    caps.supportedCodecs.push_back(AudioCodec::AAC);
-    caps.maxChannels = 8;  // AAC supports up to 7.1
-    caps.minSampleRate = 8000;
-    caps.maxSampleRate = 96000;
-    caps.supportedSampleRates = { 8000, 11025, 16000, 22050, 24000, 32000, 44100, 48000, 88200, 96000 };
-    caps.supportsVBR = false;  // Using CBR for now
-    caps.supportsCBR = true;
-    caps.minBitrate = 32000;   // 32 kbps
-    caps.maxBitrate = 512000;  // 512 kbps
+    pCapabilities->supportsAAC = true;
+    pCapabilities->supportsFLAC = false;
+    pCapabilities->supportsOpus = false;
+    pCapabilities->supportsPCM = false;
+    pCapabilities->maxChannels = 8;  // AAC supports up to 7.1
+    pCapabilities->maxSampleRate = 96000;
     
-    return caps;
+    return S_OK;
 }
 
-double AACEncoder::GetAverageEncodingTime() const
+bool AACEncoder::SupportsCodec(AudioCodec codec) const
+{
+    return codec == AudioCodec::AAC;
+}
+
+uint64_t AACEncoder::GetEncodedSampleCount() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_encodedSamples;
+}
+
+double AACEncoder::GetAverageEncodingTimeMs() const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     if (m_encodedSamples == 0)

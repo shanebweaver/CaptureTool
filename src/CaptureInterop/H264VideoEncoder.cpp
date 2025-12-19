@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "H264VideoEncoder.h"
+#include "EncoderPresets.h"
 #include <codecapi.h>
 #include <chrono>
 #include <numeric>
@@ -66,14 +67,14 @@ H264VideoEncoder::~H264VideoEncoder()
     }
 }
 
-uint32_t H264VideoEncoder::AddRef()
+ULONG H264VideoEncoder::AddRef()
 {
     return ++m_refCount;
 }
 
-uint32_t H264VideoEncoder::Release()
+ULONG H264VideoEncoder::Release()
 {
-    uint32_t count = --m_refCount;
+    ULONG count = --m_refCount;
     if (count == 0)
     {
         delete this;
@@ -81,20 +82,20 @@ uint32_t H264VideoEncoder::Release()
     return count;
 }
 
-HRESULT H264VideoEncoder::Initialize()
+bool H264VideoEncoder::Initialize()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     
     if (m_initialized)
     {
-        return S_OK;
+        return true;
     }
     
     // Initialize Media Foundation
     HRESULT hr = MFStartup(MF_VERSION);
     if (FAILED(hr))
     {
-        return hr;
+        return false;
     }
     
     // Detect hardware encoder capability
@@ -114,21 +115,21 @@ HRESULT H264VideoEncoder::Initialize()
     m_capabilities.maxHeight = 4320;
     
     m_initialized = true;
-    return S_OK;
+    return true;
 }
 
-HRESULT H264VideoEncoder::Start()
+bool H264VideoEncoder::Start()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     
     if (!m_initialized)
     {
-        return E_NOT_VALID_STATE;
+        return false;
     }
     
     if (m_running)
     {
-        return S_OK;
+        return true;
     }
     
     // Create encoder based on configuration
@@ -156,40 +157,40 @@ HRESULT H264VideoEncoder::Start()
     
     if (FAILED(hr))
     {
-        return hr;
+        return false;
     }
     
     // Configure the encoder
     hr = ConfigureEncoder();
     if (FAILED(hr))
     {
-        return hr;
+        return false;
     }
     
     // Start streaming
     hr = m_pEncoder->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
     if (FAILED(hr))
     {
-        return hr;
+        return false;
     }
     
     hr = m_pEncoder->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
     if (FAILED(hr))
     {
-        return hr;
+        return false;
     }
     
     m_running = true;
-    return S_OK;
+    return true;
 }
 
-HRESULT H264VideoEncoder::Stop()
+void H264VideoEncoder::Stop()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     
     if (!m_running)
     {
-        return S_OK;
+        return;
     }
     
     if (m_pEncoder)
@@ -199,7 +200,6 @@ HRESULT H264VideoEncoder::Stop()
     }
     
     m_running = false;
-    return S_OK;
 }
 
 bool H264VideoEncoder::IsRunning() const
@@ -237,8 +237,9 @@ HRESULT H264VideoEncoder::Configure(const VideoEncoderConfig& config)
     // Calculate bitrate if not specified
     if (m_config.bitrate == 0)
     {
-        m_config.bitrate = CalculateVideoBitrate(m_config.preset, m_config.width, m_config.height, 
-                                                  m_config.frameRateNum / m_config.frameRateDen);
+        m_config.bitrate = CaptureInterop::EncoderPresets::CalculateVideoBitrate(
+            m_config.preset, m_config.width, m_config.height, 
+            m_config.frameRateNum / m_config.frameRateDen);
     }
     
     return S_OK;
@@ -612,17 +613,32 @@ HRESULT H264VideoEncoder::ConvertTextureToSample(ID3D11Texture2D* pTexture, IMFS
         return E_INVALIDARG;
     }
     
+    // Get D3D11 device from texture if not already set
+    if (!m_pD3DDevice && pTexture)
+    {
+        pTexture->GetDevice(&m_pD3DDevice);
+        if (m_pD3DDevice)
+        {
+            m_pD3DDevice->GetImmediateContext(&m_pD3DContext);
+        }
+    }
+    
     // Initialize texture converter on first use
-    if (!m_pTextureConverter)
+    if (!m_pTextureConverter && m_pD3DDevice)
     {
         m_pTextureConverter = new TextureConverter();
-        HRESULT hr = m_pTextureConverter->Initialize(m_config.d3dDevice, m_config.width, m_config.height);
+        HRESULT hr = m_pTextureConverter->Initialize(m_pD3DDevice, m_config.width, m_config.height);
         if (FAILED(hr))
         {
             delete m_pTextureConverter;
             m_pTextureConverter = nullptr;
             return hr;
         }
+    }
+    
+    if (!m_pTextureConverter)
+    {
+        return E_FAIL;
     }
     
     // Convert texture to Media Foundation sample
@@ -678,34 +694,4 @@ void H264VideoEncoder::UpdateEncodingStats(double encodingTimeMs)
     {
         m_recentEncodingTimes.erase(m_recentEncodingTimes.begin());
     }
-}
-
-uint32_t EncoderPresets::CalculateVideoBitrate(EncoderPreset preset, uint32_t width, uint32_t height, uint32_t fps)
-{
-    // Calculate pixels per second
-    uint64_t pixelsPerSecond = static_cast<uint64_t>(width) * height * fps;
-    
-    // Bits per pixel based on preset
-    double bitsPerPixel = 0.0;
-    
-    switch (preset)
-    {
-    case EncoderPreset::Fast:
-        bitsPerPixel = 0.08;  // ~5 Mbps for 1080p30
-        break;
-    case EncoderPreset::Balanced:
-        bitsPerPixel = 0.12;  // ~8 Mbps for 1080p30
-        break;
-    case EncoderPreset::Quality:
-        bitsPerPixel = 0.20;  // ~13 Mbps for 1080p30
-        break;
-    case EncoderPreset::Lossless:
-        bitsPerPixel = 0.30;  // ~20 Mbps for 1080p30
-        break;
-    default:
-        bitsPerPixel = 0.12;
-        break;
-    }
-    
-    return static_cast<uint32_t>(pixelsPerSecond * bitsPerPixel);
 }

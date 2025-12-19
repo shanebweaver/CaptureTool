@@ -81,7 +81,7 @@ namespace CaptureInterop
         // Statistics
         uint64_t m_conversionCount;
         double m_totalConversionTimeMs;
-        std::mutex m_mutex;
+        mutable std::mutex m_mutex;
 
         // Constants
         static const UINT32 MAX_RECENT_SAMPLES = 100;

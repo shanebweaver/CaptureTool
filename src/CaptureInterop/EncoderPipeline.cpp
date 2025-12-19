@@ -105,7 +105,7 @@ HRESULT EncoderPipeline::Initialize(const EncoderPipelineConfig& config)
 HRESULT EncoderPipeline::InitializeVideoEncoder()
 {
     // Create video encoder
-    m_videoEncoder = new (std::nothrow) H264VideoEncoder();
+    m_videoEncoder = new (std::nothrow) CaptureInterop::H264VideoEncoder();
     if (!m_videoEncoder)
     {
         return E_OUTOFMEMORY;
@@ -114,17 +114,18 @@ HRESULT EncoderPipeline::InitializeVideoEncoder()
     m_videoEncoder->AddRef();
     
     // Create video encoder configuration
-    VideoEncoderConfig videoConfig;
-    videoConfig.codec = VideoCodec::H264;
+    CaptureInterop::VideoEncoderConfig videoConfig;
+    videoConfig.codec = CaptureInterop::VideoCodec::H264;
     videoConfig.width = m_config.videoWidth;
     videoConfig.height = m_config.videoHeight;
-    videoConfig.frameRate = m_config.videoFPS;
+    videoConfig.frameRateNum = m_config.videoFPS;
+    videoConfig.frameRateDen = 1;
     videoConfig.preset = m_config.videoPreset;
-    videoConfig.useHardwareAcceleration = m_config.useHardwareEncoding;
-    videoConfig.d3dDevice = m_config.d3dDevice;
+    videoConfig.hardwareAcceleration = m_config.useHardwareEncoding;
+    videoConfig.bitrate = 0;  // Auto
     
     // Initialize encoder
-    HRESULT hr = m_videoEncoder->Initialize(videoConfig);
+    HRESULT hr = m_videoEncoder->Configure(videoConfig);
     if (FAILED(hr))
     {
         m_videoEncoder->Release();
@@ -132,9 +133,34 @@ HRESULT EncoderPipeline::InitializeVideoEncoder()
         return hr;
     }
     
-    // Add video track to muxer
-    hr = m_muxer->AddVideoTrack(m_config.videoWidth, m_config.videoHeight, 
-                                 m_config.videoFPS, VideoCodec::H264, nullptr, &m_videoTrackIndex);
+    // Create video media type for muxer
+    wil::com_ptr<IMFMediaType> videoMediaType;
+    hr = MFCreateMediaType(videoMediaType.put());
+    if (FAILED(hr))
+    {
+        m_videoEncoder->Release();
+        m_videoEncoder = nullptr;
+        return hr;
+    }
+    
+    videoMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+    videoMediaType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_H264);
+    MFSetAttributeSize(videoMediaType.get(), MF_MT_FRAME_SIZE, m_config.videoWidth, m_config.videoHeight);
+    MFSetAttributeRatio(videoMediaType.get(), MF_MT_FRAME_RATE, m_config.videoFPS, 1);
+    videoMediaType->SetUINT32(MF_MT_AVG_BITRATE, videoConfig.bitrate);
+    videoMediaType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+    
+    // Create TrackInfo for video track
+    CaptureInterop::TrackInfo videoTrack;
+    videoTrack.type = CaptureInterop::TrackType::Video;
+    videoTrack.name = L"Video";
+    videoTrack.pMediaType = videoMediaType.get();
+    
+    // Add track to muxer
+    uint32_t videoTrackIdx = 0;
+    hr = m_muxer->AddTrack(videoTrack, &videoTrackIdx);
+    m_videoTrackIndex = videoTrackIdx;
+    
     if (FAILED(hr))
     {
         m_videoEncoder->Release();
@@ -163,15 +189,16 @@ HRESULT EncoderPipeline::InitializeAudioEncoders()
         m_audioEncoders[i] = encoder;
         
         // Create audio encoder configuration
-        AudioEncoderConfig audioConfig;
-        audioConfig.codec = AudioCodec::AAC;
+        CaptureInterop::AudioEncoderConfig audioConfig;
+        audioConfig.codec = CaptureInterop::AudioCodec::AAC;
         audioConfig.sampleRate = m_config.audioSampleRate;
         audioConfig.channels = m_config.audioChannels;
         audioConfig.bitsPerSample = m_config.audioBitsPerSample;
         audioConfig.quality = m_config.audioQuality;
+        audioConfig.bitrate = 0;  // Auto
         
         // Initialize encoder
-        HRESULT hr = encoder->Initialize(audioConfig);
+        HRESULT hr = encoder->Configure(audioConfig);
         if (FAILED(hr))
         {
             return hr;
@@ -187,7 +214,7 @@ HRESULT EncoderPipeline::InitializeAudioEncoders()
 HRESULT EncoderPipeline::InitializeMuxer()
 {
     // Create MP4 muxer
-    m_muxer = new (std::nothrow) MP4Muxer();
+    m_muxer = new (std::nothrow) CaptureInterop::MP4Muxer();
     if (!m_muxer)
     {
         return E_OUTOFMEMORY;
@@ -196,15 +223,23 @@ HRESULT EncoderPipeline::InitializeMuxer()
     m_muxer->AddRef();
     
     // Create muxer configuration
-    MuxerConfig muxerConfig;
-    muxerConfig.format = ContainerFormat::MP4;
+    CaptureInterop::MuxerConfig muxerConfig;
+    muxerConfig.format = CaptureInterop::ContainerFormat::MP4;
     muxerConfig.outputPath = m_config.outputPath;
-    muxerConfig.maxInterleaveDeltaMs = 1000;  // 1 second default
     muxerConfig.fastStart = true;
     muxerConfig.fragmentedMP4 = false;
     
-    // Initialize muxer
-    HRESULT hr = m_muxer->Initialize(muxerConfig, m_config.d3dDevice);
+    // Initialize muxer (only takes one parameter)
+    HRESULT hr = m_muxer->Initialize(muxerConfig);
+    if (FAILED(hr))
+    {
+        m_muxer->Release();
+        m_muxer = nullptr;
+        return hr;
+    }
+    
+    // Set D3D device for hardware encoding support
+    hr = m_muxer->SetD3DDevice(m_config.d3dDevice);
     if (FAILED(hr))
     {
         m_muxer->Release();
@@ -224,10 +259,30 @@ HRESULT EncoderPipeline::InitializeAudioTrack(UINT32 trackIndex, const WAVEFORMA
         return E_INVALIDARG;
     }
     
+    // Create audio media type
+    wil::com_ptr<IMFMediaType> audioMediaType;
+    HRESULT hr = MFCreateMediaType(audioMediaType.put());
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+    
+    audioMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+    audioMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_AAC);
+    audioMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, format->nSamplesPerSec);
+    audioMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, format->nChannels);
+    audioMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
+    audioMediaType->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, 20000); // 160 kbps AAC
+    
+    // Create TrackInfo for audio track
+    CaptureInterop::TrackInfo audioTrack;
+    audioTrack.type = CaptureInterop::TrackType::Audio;
+    audioTrack.name = trackName ? trackName : L"Audio";
+    audioTrack.pMediaType = audioMediaType.get();
+    
     // Add audio track to muxer
-    UINT32 muxerTrackIndex = 0;
-    HRESULT hr = m_muxer->AddAudioTrack(format->nSamplesPerSec, format->nChannels,
-                                         AudioCodec::AAC, trackName, &muxerTrackIndex);
+    uint32_t muxerTrackIndex = 0;
+    hr = m_muxer->AddTrack(audioTrack, &muxerTrackIndex);
     if (FAILED(hr))
     {
         return hr;
@@ -320,24 +375,18 @@ HRESULT EncoderPipeline::ProcessVideoFrame(ID3D11Texture2D* texture, UINT64 time
         }
         m_stats.averageVideoEncodingTimeMs = sum / m_videoEncodingTimes.size();
         
-        // Get encoded data size
+        // Get encoded data size for statistics
         IMFMediaBuffer* buffer = nullptr;
         if (SUCCEEDED(encodedSample->ConvertToContiguousBuffer(&buffer)))
         {
             DWORD dataLen = 0;
             buffer->GetCurrentLength(&dataLen);
             m_stats.videoBytesize += dataLen;
-            
-            // Write to muxer
-            BYTE* data = nullptr;
-            if (SUCCEEDED(buffer->Lock(&data, nullptr, &dataLen)))
-            {
-                hr = m_muxer->WriteVideoSample(m_videoTrackIndex, data, dataLen, timestamp, true);
-                buffer->Unlock();
-            }
-            
             buffer->Release();
         }
+        
+        // Write to muxer using WriteSample
+        hr = m_muxer->WriteSample(m_videoTrackIndex, encodedSample);
         
         encodedSample->Release();
     }
@@ -380,7 +429,7 @@ HRESULT EncoderPipeline::ProcessAudioSamples(const BYTE* data, UINT32 length, UI
     
     // Encode audio samples
     IMFSample* encodedSample = nullptr;
-    HRESULT hr = encoder->EncodeSamples(data, length, timestamp, &encodedSample);
+    HRESULT hr = encoder->EncodeAudio((const uint8_t*)data, length, timestamp, &encodedSample);
     
     QueryPerformanceCounter(&end);
     double elapsedMs = (double)(end.QuadPart - start.QuadPart) * 1000.0 / (double)frequency.QuadPart;
@@ -403,24 +452,18 @@ HRESULT EncoderPipeline::ProcessAudioSamples(const BYTE* data, UINT32 length, UI
         }
         m_stats.averageAudioEncodingTimeMs[trackIndex] = sum / m_audioEncodingTimes[trackIndex].size();
         
-        // Get encoded data size
+        // Get encoded data size for statistics
         IMFMediaBuffer* buffer = nullptr;
         if (SUCCEEDED(encodedSample->ConvertToContiguousBuffer(&buffer)))
         {
             DWORD dataLen = 0;
             buffer->GetCurrentLength(&dataLen);
             m_stats.audioByteSize[trackIndex] += dataLen;
-            
-            // Write to muxer
-            BYTE* audioData = nullptr;
-            if (SUCCEEDED(buffer->Lock(&audioData, nullptr, &dataLen)))
-            {
-                hr = m_muxer->WriteAudioSample(trackIndex, audioData, dataLen, timestamp);
-                buffer->Unlock();
-            }
-            
             buffer->Release();
         }
+        
+        // Write to muxer using WriteSample
+        hr = m_muxer->WriteSample(trackIndex, encodedSample);
         
         encodedSample->Release();
     }

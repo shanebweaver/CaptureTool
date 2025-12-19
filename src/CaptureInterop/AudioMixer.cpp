@@ -3,6 +3,15 @@
 #include <algorithm>
 #include <cmath>
 
+// Helper function to avoid Windows min/max macro conflicts
+template<typename T>
+inline T Clamp(T value, T minVal, T maxVal)
+{
+    if (value < minVal) return minVal;
+    if (value > maxVal) return maxVal;
+    return value;
+}
+
 AudioMixer::AudioMixer()
     : m_initialized(false)
     , m_nextSourceId(1)
@@ -81,7 +90,7 @@ uint64_t AudioMixer::RegisterSource(IAudioSource* source, float volume)
     // Create entry
     AudioSourceEntry entry;
     entry.source = source;
-    entry.volume = std::max(0.0f, std::min(2.0f, volume));  // Clamp to 0.0-2.0
+    entry.volume = Clamp(volume, 0.0f, 2.0f);  // Clamp to 0.0-2.0
     entry.muted = false;
     entry.sourceId = m_nextSourceId++;
     CopyMemory(&entry.format, sourceFormat, sizeof(WAVEFORMATEX));
@@ -125,7 +134,7 @@ void AudioMixer::SetSourceVolume(uint64_t sourceId, float volume)
     AudioSourceEntry* entry = FindSource(sourceId);
     if (entry)
     {
-        entry->volume = std::max(0.0f, std::min(2.0f, volume));  // Clamp to 0.0-2.0
+        entry->volume = Clamp(volume, 0.0f, 2.0f);  // Clamp to 0.0-2.0
     }
 }
 
@@ -329,7 +338,7 @@ void AudioMixer::ApplyVolume(BYTE* buffer, UINT32 numFrames, float volume)
         {
             float value = static_cast<float>(samples[i]) * volume;
             // Clamp to prevent overflow
-            value = std::max(-32768.0f, std::min(32767.0f, value));
+            value = Clamp(value, -32768.0f, 32767.0f);
             samples[i] = static_cast<int16_t>(value);
         }
     }
@@ -341,7 +350,7 @@ void AudioMixer::ApplyVolume(BYTE* buffer, UINT32 numFrames, float volume)
         {
             samples[i] *= volume;
             // Clamp to prevent clipping
-            samples[i] = std::max(-1.0f, std::min(1.0f, samples[i]));
+            samples[i] = Clamp(samples[i], -1.0f, 1.0f);
         }
     }
 }
@@ -360,7 +369,7 @@ void AudioMixer::MixBuffers(BYTE* dest, const BYTE* src, UINT32 numFrames)
         {
             int32_t mixed = static_cast<int32_t>(destSamples[i]) + static_cast<int32_t>(srcSamples[i]);
             // Clamp to prevent overflow
-            mixed = std::max(-32768, std::min(32767, mixed));
+            mixed = Clamp(mixed, -32768, 32767);
             destSamples[i] = static_cast<int16_t>(mixed);
         }
     }
@@ -374,7 +383,7 @@ void AudioMixer::MixBuffers(BYTE* dest, const BYTE* src, UINT32 numFrames)
         {
             destSamples[i] += srcSamples[i];
             // Clamp to prevent clipping
-            destSamples[i] = std::max(-1.0f, std::min(1.0f, destSamples[i]));
+            destSamples[i] = Clamp(destSamples[i], -1.0f, 1.0f);
         }
     }
 }
@@ -409,65 +418,11 @@ UINT32 AudioMixer::GetSourceAudio(uint64_t sourceId, BYTE* outputBuffer, UINT32 
         return outputFrames;
     }
 
-    // Get audio data from the source
-    UINT32 framesRead = 0;
-    BYTE* sourceData = nullptr;
-    
-    if (entry->source->IsRunning())
-    {
-        framesRead = entry->source->GetAudioData(&sourceData, outputFrames, timestamp);
-    }
-
-    if (framesRead == 0 || !sourceData)
-    {
-        // No data available, return silence
-        ZeroMemory(outputBuffer, outputFrames * m_outputFormat.nBlockAlign);
-        return 0;
-    }
-
-    // Check if we need to resample/convert
-    auto resamplerIt = m_resamplers.find(sourceId);
-    if (resamplerIt != m_resamplers.end())
-    {
-        // TODO: Implement resampling (for Phase 4, we'll assume matching formats for now)
-        // For simplicity, just copy the data if sizes match
-        UINT32 sourceBytes = framesRead * entry->format.nBlockAlign;
-        UINT32 outputBytes = outputFrames * m_outputFormat.nBlockAlign;
-        
-        if (sourceBytes <= outputBytes)
-        {
-            CopyMemory(outputBuffer, sourceData, sourceBytes);
-            if (sourceBytes < outputBytes)
-            {
-                ZeroMemory(outputBuffer + sourceBytes, outputBytes - sourceBytes);
-            }
-        }
-        else
-        {
-            CopyMemory(outputBuffer, sourceData, outputBytes);
-        }
-    }
-    else
-    {
-        // Formats match, just copy
-        UINT32 bytesToCopy = std::min(framesRead, outputFrames) * m_outputFormat.nBlockAlign;
-        CopyMemory(outputBuffer, sourceData, bytesToCopy);
-        
-        // Zero pad if needed
-        if (framesRead < outputFrames)
-        {
-            UINT32 paddingBytes = (outputFrames - framesRead) * m_outputFormat.nBlockAlign;
-            ZeroMemory(outputBuffer + bytesToCopy, paddingBytes);
-        }
-    }
-
-    // Apply volume
-    if (entry->volume != 1.0f)
-    {
-        ApplyVolume(outputBuffer, outputFrames, entry->volume);
-    }
-
-    return std::min(framesRead, outputFrames);
+    // TODO: Implement audio data retrieval in Phase 3
+    // The IAudioSource uses a callback pattern rather than direct data access
+    // For now, return silence as this is a placeholder implementation
+    ZeroMemory(outputBuffer, outputFrames * m_outputFormat.nBlockAlign);
+    return 0;
 }
 
 std::vector<uint64_t> AudioMixer::GetSourceIds() const

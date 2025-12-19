@@ -16,14 +16,15 @@ namespace CaptureInterop
         H264VideoEncoder();
         
         // IMediaSource interface
-        HRESULT Initialize() override;
-        HRESULT Start() override;
-        HRESULT Stop() override;
+        MediaSourceType GetSourceType() const override { return MediaSourceType::Video; }
+        bool Initialize() override;
+        bool Start() override;
+        void Stop() override;
         bool IsRunning() const override;
         
         // Reference counting
-        uint32_t AddRef() override;
-        uint32_t Release() override;
+        ULONG AddRef() override;
+        ULONG Release() override;
         
         // IVideoEncoder interface
         HRESULT Configure(const VideoEncoderConfig& config) override;
@@ -60,7 +61,7 @@ namespace CaptureInterop
         void UpdateEncodingStats(double encodingTimeMs);
         
         // Member variables
-        std::atomic<uint32_t> m_refCount;
+        std::atomic<ULONG> m_refCount;
         mutable std::mutex m_mutex;
         bool m_initialized;
         bool m_running;

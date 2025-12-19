@@ -13,6 +13,7 @@
 #include <thread>
 #include <atomic>
 
+using namespace CaptureInterop;
 using namespace GraphicsCaptureHelpers;
 
 // Legacy path globals (for backward compatibility)
@@ -37,6 +38,11 @@ static uint64_t g_microphoneSourceId = 0;
 // Phase 4: Encoder pipeline globals
 static EncoderPipeline* g_encoderPipeline = nullptr;
 static bool g_useEncoderPipeline = false;  // Feature flag for Phase 4 encoder pipeline
+
+// Phase 4: Encoder pipeline configuration (must be declared before use)
+static CaptureInterop::EncoderPreset g_videoPreset = CaptureInterop::EncoderPreset::Balanced;
+static CaptureInterop::AudioQuality g_audioQuality = CaptureInterop::AudioQuality::High;
+static bool g_useHardwareEncoding = true;
 
 // Phase 3: Audio mixing thread for periodic mixer polling
 static std::thread g_mixerThread;
@@ -113,7 +119,8 @@ static void MixerThreadProc()
                     else
                     {
                         // Separate track mode: Write mixed audio to track 0 (Phase 3 limitation)
-                        g_sinkWriter.WriteAudioSample(0, mixBuffer.data(), framesMixed, g_mixerTimestamp);
+                        UINT32 numBytes = framesMixed * 2 * 2;  // framesMixed * channels * bytes_per_sample
+                        g_sinkWriter.WriteAudioSample(mixBuffer.data(), numBytes, g_mixerTimestamp, 0);
                     }
                 }
             }
@@ -175,14 +182,17 @@ extern "C"
             config.outputPath = outputPath;
             config.videoWidth = width;
             config.videoHeight = height;
-            config.fps = 30;
+            config.videoFPS = 30;
             config.videoPreset = g_videoPreset;  // Use global configuration
             config.useHardwareEncoding = g_useHardwareEncoding;  // Use global configuration
             config.audioQuality = g_audioQuality;  // Use global configuration
             config.audioSampleRate = 48000;
             config.audioChannels = 2;
+            config.audioBitsPerSample = 16;
+            config.audioTrackCount = 1;  // Default to 1 track, will be adjusted based on routing
+            config.d3dDevice = g_d3dDevice.device.get();
             
-            if (FAILED(g_encoderPipeline->Initialize(g_d3dDevice.device.get(), config)))
+            if (FAILED(g_encoderPipeline->Initialize(config)))
             {
                 delete g_encoderPipeline;
                 g_encoderPipeline = nullptr;
@@ -260,7 +270,7 @@ extern "C"
                     bool muted = g_routingConfig.IsSourceMuted(g_desktopAudioSourceId);
                     g_audioMixer->SetSourceMuted(g_desktopAudioSourceId, muted);
                     
-                    if (g_desktopAudioSource->Start(&hr))
+                    if (g_desktopAudioSource->Start())
                     {
                         desktopAudioEnabled = true;
                     }
@@ -297,7 +307,7 @@ extern "C"
                     bool muted = g_routingConfig.IsSourceMuted(g_microphoneSourceId);
                     g_audioMixer->SetSourceMuted(g_microphoneSourceId, muted);
                     
-                    if (g_microphoneSource->Start(&hr))
+                    if (g_microphoneSource->Start())
                     {
                         microphoneEnabled = true;
                     }
@@ -373,7 +383,7 @@ extern "C"
                         int configuredTrack = g_routingConfig.GetSourceTrack(g_desktopAudioSourceId);
                         trackIndex = (configuredTrack >= 0) ? configuredTrack : trackIndex;
                         const wchar_t* trackName = g_routingConfig.GetTrackName(trackIndex);
-                        g_sinkWriter.InitializeAudioTrack(trackIndex, mixerFormat, trackName ? trackName : L"Desktop Audio");
+                        g_sinkWriter.InitializeAudioTrack(mixerFormat, trackIndex, trackName ? trackName : L"Desktop Audio");
                         trackIndex++;
                     }
                     
@@ -382,7 +392,7 @@ extern "C"
                         int configuredTrack = g_routingConfig.GetSourceTrack(g_microphoneSourceId);
                         trackIndex = (configuredTrack >= 0) ? configuredTrack : trackIndex;
                         const wchar_t* trackName = g_routingConfig.GetTrackName(trackIndex);
-                        g_sinkWriter.InitializeAudioTrack(trackIndex, mixerFormat, trackName ? trackName : L"Microphone");
+                        g_sinkWriter.InitializeAudioTrack(mixerFormat, trackIndex, trackName ? trackName : L"Microphone");
                     }
                 }
             }
@@ -437,7 +447,7 @@ extern "C"
     }
     
     // Legacy signature (for existing callers) - 3 parameter version
-    __declspec(dllexport) bool TryStartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio)
+    __declspec(dllexport) bool TryStartRecordingLegacy(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio)
     {
         HRESULT hr = S_OK;
 
@@ -855,11 +865,7 @@ extern "C"
         return g_audioRoutingConfig.IsMixedMode();
     }
     
-    // Phase 4: Encoder pipeline configuration
-    static EncoderPreset g_videoPreset = EncoderPreset::Balanced;
-    static AudioQuality g_audioQuality = AudioQuality::High;
-    static bool g_useHardwareEncoding = true;
-    
+    // Phase 4: Encoder pipeline configuration - setters and getters
     __declspec(dllexport) void UseEncoderPipeline(bool enable)
     {
         g_useEncoderPipeline = enable;
@@ -872,9 +878,9 @@ extern "C"
     
     __declspec(dllexport) void SetVideoEncoderPreset(int preset)
     {
-        if (preset >= 0 && preset <= static_cast<int>(EncoderPreset::Lossless))
+        if (preset >= 0 && preset <= static_cast<int>(CaptureInterop::EncoderPreset::Lossless))
         {
-            g_videoPreset = static_cast<EncoderPreset>(preset);
+            g_videoPreset = static_cast<CaptureInterop::EncoderPreset>(preset);
         }
     }
     
@@ -885,9 +891,9 @@ extern "C"
     
     __declspec(dllexport) void SetAudioEncoderQuality(int quality)
     {
-        if (quality >= 0 && quality <= static_cast<int>(AudioQuality::VeryHigh))
+        if (quality >= 0 && quality <= static_cast<int>(CaptureInterop::AudioQuality::VeryHigh))
         {
-            g_audioQuality = static_cast<AudioQuality>(quality);
+            g_audioQuality = static_cast<CaptureInterop::AudioQuality>(quality);
         }
     }
     
