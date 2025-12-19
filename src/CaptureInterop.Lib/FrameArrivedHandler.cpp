@@ -159,24 +159,25 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
     LONGLONG relativeTimestamp = timestamp.Duration - firstFrameTime;
 
     // Update last frame tracking for duplicate frame generation
+    // Use the same mutex for both texture and timestamp updates to avoid race conditions
     {
         std::lock_guard<std::mutex> lock(m_lastTextureMutex);
         m_lastTexture = texture;
+        m_lastFrameTimestamp = relativeTimestamp;
+        
+        // Update next expected timestamp for 30 FPS (333333 ticks per frame)
+        const LONGLONG FRAME_DURATION = 333333; // 100ns ticks for 30 FPS
+        m_nextExpectedTimestamp = relativeTimestamp + FRAME_DURATION;
     }
-    m_lastFrameTimestamp = relativeTimestamp;
-    
-    // Update next expected timestamp for 30 FPS (333333 ticks per frame)
-    const LONGLONG FRAME_DURATION = 333333; // 100ns ticks for 30 FPS
-    m_nextExpectedTimestamp = relativeTimestamp + FRAME_DURATION;
 
     // Queue the frame for background processing instead of processing synchronously
     // This prevents blocking the event callback thread
     {
         std::lock_guard<std::mutex> lock(m_queueMutex);
         
-        // Increased queue size to 30 frames (~1 second at 30fps) to match the 6 frame pool buffers
-        // This provides sufficient buffering when encoder falls behind
-        if (m_frameQueue.size() < 30)
+        // Maximum queue size to prevent unbounded memory growth
+        const size_t MAX_QUEUE_SIZE = 30; // ~1 second at 30fps, matches 6 frame pool buffers
+        if (m_frameQueue.size() < MAX_QUEUE_SIZE)
         {
             QueuedFrame queuedFrame;
             queuedFrame.texture = texture;
@@ -249,6 +250,7 @@ void FrameArrivedHandler::TimerThreadProc()
 {
     const LONGLONG FRAME_DURATION = 333333; // 100ns ticks for 30 FPS (1/30 second)
     const int SLEEP_MS = 33; // Sleep for ~33ms (30 FPS)
+    const size_t MAX_QUEUE_SIZE = 30; // Match queue size constant from Invoke
     
     while (m_running)
     {
@@ -267,24 +269,25 @@ void FrameArrivedHandler::TimerThreadProc()
             continue;
         }
         
-        // Get the last frame timestamp and expected next timestamp
-        LONGLONG lastTimestamp = m_lastFrameTimestamp.load();
-        LONGLONG nextExpected = m_nextExpectedTimestamp.load();
+        // Acquire lock for atomic read of last frame data
+        wil::com_ptr<ID3D11Texture2D> lastTexture;
+        LONGLONG lastTimestamp;
+        LONGLONG nextExpected;
+        {
+            std::lock_guard<std::mutex> lock(m_lastTextureMutex);
+            lastTexture = m_lastTexture;
+            lastTimestamp = m_lastFrameTimestamp;
+            nextExpected = m_nextExpectedTimestamp;
+        }
         
         // Generate duplicate frame at the expected timestamp
-        if (lastTimestamp >= 0 && nextExpected > lastTimestamp)
+        // Check that we have a texture and nextExpected is ahead of lastTimestamp
+        if (lastTexture && nextExpected > 0 && nextExpected > lastTimestamp)
         {
-            wil::com_ptr<ID3D11Texture2D> lastTexture;
+            // Generate duplicate frame
             {
-                std::lock_guard<std::mutex> lock(m_lastTextureMutex);
-                lastTexture = m_lastTexture;
-            }
-            
-            if (lastTexture)
-            {
-                // Generate duplicate frame
                 std::lock_guard<std::mutex> lock(m_queueMutex);
-                if (m_frameQueue.size() < 30)
+                if (m_frameQueue.size() < MAX_QUEUE_SIZE)
                 {
                     QueuedFrame queuedFrame;
                     queuedFrame.texture = lastTexture;
@@ -292,8 +295,15 @@ void FrameArrivedHandler::TimerThreadProc()
                     queuedFrame.isDuplicateFrame = true;
                     m_frameQueue.push(std::move(queuedFrame));
                     m_queueCV.notify_one();
-                    
-                    // Update for next iteration
+                }
+            }
+            
+            // Update for next iteration - use mutex to avoid race with Invoke
+            {
+                std::lock_guard<std::mutex> lock(m_lastTextureMutex);
+                // Only update if no new real frame has arrived
+                if (m_lastFrameTimestamp == lastTimestamp)
+                {
                     m_lastFrameTimestamp = nextExpected;
                     m_nextExpectedTimestamp = nextExpected + FRAME_DURATION;
                 }
