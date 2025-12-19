@@ -296,9 +296,15 @@ void FrameArrivedHandler::TimerThreadProc()
             }
             
             // Update next expected timestamp for next iteration
+            // Only update if no new real frame has updated it to a later time
             {
                 std::lock_guard<std::mutex> lock(m_lastTextureMutex);
-                m_nextExpectedTimestamp = nextExpected + FRAME_DURATION;
+                if (m_nextExpectedTimestamp == nextExpected)
+                {
+                    // No new real frame arrived, safe to increment
+                    m_nextExpectedTimestamp = nextExpected + FRAME_DURATION;
+                }
+                // else: A real frame arrived and updated nextExpected, use that instead
             }
         }
     }
