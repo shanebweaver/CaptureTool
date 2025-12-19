@@ -7,6 +7,13 @@
 #ifndef PCH_H
 #define PCH_H
 
-// add headers that you want to pre-compile here
+// Windows headers
+#include <windows.h>
+
+// Standard library headers
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <vector>
 
 #endif //PCH_H
