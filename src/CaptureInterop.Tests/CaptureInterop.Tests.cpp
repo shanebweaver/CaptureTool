@@ -1,40 +1,57 @@
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "TestUtility.h"
+#include "MP4SinkWriter.h"
+#include "AudioCaptureDevice.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace CaptureInteropTests
 {
-	TEST_CLASS(CaptureInteropTests)
+	TEST_CLASS(MP4SinkWriterTests)
 	{
 	public:
 		
-		TEST_METHOD(TestAddNumbers)
+		TEST_METHOD(TestMP4SinkWriterConstruction)
 		{
-			// Test basic addition
-			int result = AddNumbers(2, 3);
-			Assert::AreEqual(5, result);
-
-			// Test negative numbers
-			result = AddNumbers(-5, 3);
-			Assert::AreEqual(-2, result);
-
-			// Test zero
-			result = AddNumbers(0, 0);
-			Assert::AreEqual(0, result);
+			// Test that we can construct and destruct an MP4SinkWriter
+			MP4SinkWriter writer;
+			// If we get here, construction and destruction worked
+			Assert::IsTrue(true);
 		}
 
-		TEST_METHOD(TestIsValidPath)
+		TEST_METHOD(TestMP4SinkWriterGetRecordingStartTimeReturnsZeroInitially)
 		{
-			// Test valid path
-			Assert::IsTrue(IsValidPath(L"C:\\test\\path"));
+			MP4SinkWriter writer;
+			LONGLONG startTime = writer.GetRecordingStartTime();
+			Assert::AreEqual(0LL, startTime, L"Recording start time should be 0 before SetRecordingStartTime is called");
+		}
 
-			// Test empty path
-			Assert::IsFalse(IsValidPath(L""));
+		TEST_METHOD(TestMP4SinkWriterSetRecordingStartTime)
+		{
+			MP4SinkWriter writer;
+			LONGLONG testTime = 12345678LL;
+			writer.SetRecordingStartTime(testTime);
+			Assert::AreEqual(testTime, writer.GetRecordingStartTime(), L"Recording start time should match the set value");
+		}
+	};
 
-			// Test null path
-			Assert::IsFalse(IsValidPath(nullptr));
+	TEST_CLASS(AudioCaptureDeviceTests)
+	{
+	public:
+		
+		TEST_METHOD(TestAudioCaptureDeviceConstruction)
+		{
+			// Test that we can construct and destruct an AudioCaptureDevice
+			AudioCaptureDevice device;
+			// If we get here, construction and destruction worked
+			Assert::IsTrue(true);
+		}
+
+		TEST_METHOD(TestAudioCaptureDeviceGetFormatReturnsNullBeforeInit)
+		{
+			AudioCaptureDevice device;
+			WAVEFORMATEX* format = device.GetFormat();
+			Assert::IsNull(format, L"Format should be null before initialization");
 		}
 	};
 }

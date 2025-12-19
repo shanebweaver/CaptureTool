@@ -114,7 +114,6 @@
     <ClInclude Include="MP4SinkWriter.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenRecorder.h" />
-    <ClInclude Include="TestUtility.h" />
   </ItemGroup>
 
   <ItemGroup>
@@ -124,7 +123,6 @@
     <ClCompile Include="FrameArrivedHandler.cpp" />
     <ClCompile Include="MP4SinkWriter.cpp" />
     <ClCompile Include="ScreenRecorder.cpp" />
-    <ClCompile Include="TestUtility.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Create</PrecompiledHeader>
@@ -143,15 +141,5 @@
     <Message Text="Copying native DLL to $(ManagedOutDir)" Importance="high" />
     <MakeDir Directories="$(ManagedOutDir)" Condition="!Exists('$(ManagedOutDir)')" />
     <Copy SourceFiles="$(OutDir)$(TargetName)$(TargetExt)" DestinationFolder="$(ManagedOutDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
-  </Target>
-
-  <Target Name="CopyNativeDllToTests" AfterTargets="Link">
-    <PropertyGroup>
-      <TestProjectPath>src\CaptureInterop.Tests\</TestProjectPath>
-      <TestOutDir>$(SolutionDir)$(TestProjectPath)$(Platform)\$(Configuration)\</TestOutDir>
-    </PropertyGroup>
-    <Message Text="Copying native DLL to $(TestOutDir)" Importance="high" />
-    <MakeDir Directories="$(TestOutDir)" Condition="!Exists('$(TestOutDir)')" />
-    <Copy SourceFiles="$(OutDir)$(TargetName)$(TargetExt)" DestinationFolder="$(TestOutDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
   </Target>
 </Project>
