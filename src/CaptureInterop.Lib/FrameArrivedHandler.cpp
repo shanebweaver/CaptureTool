@@ -159,15 +159,10 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
     LONGLONG relativeTimestamp = timestamp.Duration - firstFrameTime;
 
     // Update last frame tracking for duplicate frame generation
-    // Use the same mutex for both texture and timestamp updates to avoid race conditions
     {
         std::lock_guard<std::mutex> lock(m_lastTextureMutex);
         m_lastTexture = texture;
         m_lastFrameTimestamp = relativeTimestamp;
-        
-        // Update next expected timestamp for 30 FPS (333333 ticks per frame)
-        const LONGLONG FRAME_DURATION = 333333; // 100ns ticks for 30 FPS
-        m_nextExpectedTimestamp = relativeTimestamp + FRAME_DURATION;
     }
 
     // Queue the frame for background processing instead of processing synchronously
@@ -252,6 +247,11 @@ void FrameArrivedHandler::TimerThreadProc()
     const int SLEEP_MS = 33; // Sleep for ~33ms (30 FPS)
     const size_t MAX_QUEUE_SIZE = 30; // Match queue size constant from Invoke
     
+    // Wait a bit for first frame to arrive and be processed
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    LONGLONG currentTimestamp = 0;
+    
     while (m_running)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MS));
@@ -271,40 +271,29 @@ void FrameArrivedHandler::TimerThreadProc()
         
         // Acquire lock for atomic read of last frame data
         wil::com_ptr<ID3D11Texture2D> lastTexture;
-        LONGLONG nextExpected;
         {
             std::lock_guard<std::mutex> lock(m_lastTextureMutex);
             lastTexture = m_lastTexture;
-            nextExpected = m_nextExpectedTimestamp;
         }
         
-        // Generate duplicate frame if we have a texture and an expected timestamp
-        if (lastTexture && nextExpected > 0)
+        // Generate duplicate frame if we have a texture
+        if (lastTexture)
         {
-            // Generate duplicate frame at the next expected timestamp
+            // Always increment timestamp to ensure continuous 30 FPS
+            currentTimestamp += FRAME_DURATION;
+            
+            // Generate duplicate frame at the current timestamp
             {
                 std::lock_guard<std::mutex> lock(m_queueMutex);
                 if (m_frameQueue.size() < MAX_QUEUE_SIZE)
                 {
                     QueuedFrame queuedFrame;
                     queuedFrame.texture = lastTexture;
-                    queuedFrame.relativeTimestamp = nextExpected;
+                    queuedFrame.relativeTimestamp = currentTimestamp;
                     queuedFrame.isDuplicateFrame = true;
                     m_frameQueue.push(std::move(queuedFrame));
                     m_queueCV.notify_one();
                 }
-            }
-            
-            // Update next expected timestamp for next iteration
-            // Only update if no new real frame has updated it to a later time
-            {
-                std::lock_guard<std::mutex> lock(m_lastTextureMutex);
-                if (m_nextExpectedTimestamp == nextExpected)
-                {
-                    // No new real frame arrived, safe to increment
-                    m_nextExpectedTimestamp = nextExpected + FRAME_DURATION;
-                }
-                // else: A real frame arrived and updated nextExpected, use that instead
             }
         }
     }
