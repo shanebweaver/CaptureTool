@@ -64,7 +64,6 @@
   </ImportGroup>
 
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)\vcpkg_installed\x64-windows\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
