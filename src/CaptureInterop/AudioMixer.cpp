@@ -87,39 +87,42 @@ uint64_t AudioMixer::RegisterSource(IAudioSource* source, float volume)
         return 0;
     }
 
-    // Create entry
-    AudioSourceEntry entry;
-    entry.source = source;
-    entry.volume = Clamp(volume, 0.0f, 2.0f);  // Clamp to 0.0-2.0
-    entry.muted = false;
-    entry.sourceId = m_nextSourceId++;
-    CopyMemory(&entry.format, sourceFormat, sizeof(WAVEFORMATEX));
+    // Assign source ID
+    uint64_t sourceId = m_nextSourceId++;
     
-    // Initialize circular buffer (2 seconds of audio)
-    size_t bufferSize = entry.format.nAvgBytesPerSec * 2;
-    entry.audioBuffer.resize(bufferSize, 0);
-    entry.writePos = 0;
-    entry.readPos = 0;
-    entry.availableBytes = 0;
-    entry.lastTimestamp = 0;
-
     // If source format doesn't match output format, create a resampler
-    if (entry.format.nSamplesPerSec != m_outputFormat.nSamplesPerSec ||
-        entry.format.nChannels != m_outputFormat.nChannels ||
-        entry.format.wBitsPerSample != m_outputFormat.wBitsPerSample)
+    wil::com_ptr<IMFTransform> resampler;
+    if (sourceFormat->nSamplesPerSec != m_outputFormat.nSamplesPerSec ||
+        sourceFormat->nChannels != m_outputFormat.nChannels ||
+        sourceFormat->wBitsPerSample != m_outputFormat.wBitsPerSample)
     {
-        wil::com_ptr<IMFTransform> resampler;
-        if (!CreateResampler(&entry.format, &m_outputFormat, resampler.put()))
+        if (!CreateResampler(sourceFormat, &m_outputFormat, resampler.put()))
         {
             return 0;
         }
-        m_resamplers[entry.sourceId] = std::move(resampler);
+        m_resamplers[sourceId] = std::move(resampler);
     }
 
+    // Create entry using unique_ptr
+    auto entry = std::make_unique<AudioSourceEntry>();
+    
+    entry->source = source;
+    entry->volume = Clamp(volume, 0.0f, 2.0f);  // Clamp to 0.0-2.0
+    entry->muted = false;
+    entry->sourceId = sourceId;
+    CopyMemory(&entry->format, sourceFormat, sizeof(WAVEFORMATEX));
+    
+    // Initialize circular buffer (2 seconds of audio)
+    size_t bufferSize = entry->format.nAvgBytesPerSec * 2;
+    entry->audioBuffer.resize(bufferSize, 0);
+    entry->writePos = 0;
+    entry->readPos = 0;
+    entry->availableBytes = 0;
+    entry->lastTimestamp = 0;
+    
     m_sources.push_back(std::move(entry));
     
     // Set up callback to receive audio data
-    uint64_t sourceId = m_sources.back().sourceId;
     source->SetAudioCallback([this, sourceId](const BYTE* data, UINT32 numFrames, LONGLONG timestamp) {
         this->OnAudioCallback(sourceId, data, numFrames, timestamp);
     });
@@ -134,7 +137,9 @@ void AudioMixer::UnregisterSource(uint64_t sourceId)
     // Remove from sources
     m_sources.erase(
         std::remove_if(m_sources.begin(), m_sources.end(),
-            [sourceId](const AudioSourceEntry& entry) { return entry.sourceId == sourceId; }),
+            [sourceId](const std::unique_ptr<AudioSourceEntry>& entry) { 
+                return entry && entry->sourceId == sourceId; 
+            }),
         m_sources.end()
     );
 
@@ -210,15 +215,15 @@ UINT32 AudioMixer::MixAudio(BYTE* outputBuffer, UINT32 outputFrames, LONGLONG ti
     }
 
     // Mix each source
-    for (AudioSourceEntry& entry : m_sources)
+    for (auto& entryPtr : m_sources)
     {
-        if (entry.muted || entry.volume == 0.0f)
+        if (!entryPtr || entryPtr->muted || entryPtr->volume == 0.0f)
         {
             continue;  // Skip muted sources
         }
 
         // Convert and mix this source into the output
-        ConvertAndMixSource(entry, outputBuffer, outputFrames, timestamp);
+        ConvertAndMixSource(*entryPtr, outputBuffer, outputFrames, timestamp);
     }
 
     return outputFrames;
@@ -226,11 +231,11 @@ UINT32 AudioMixer::MixAudio(BYTE* outputBuffer, UINT32 outputFrames, LONGLONG ti
 
 AudioSourceEntry* AudioMixer::FindSource(uint64_t sourceId)
 {
-    for (AudioSourceEntry& entry : m_sources)
+    for (auto& entryPtr : m_sources)
     {
-        if (entry.sourceId == sourceId)
+        if (entryPtr && entryPtr->sourceId == sourceId)
         {
-            return &entry;
+            return entryPtr.get();
         }
     }
     return nullptr;
@@ -238,11 +243,11 @@ AudioSourceEntry* AudioMixer::FindSource(uint64_t sourceId)
 
 const AudioSourceEntry* AudioMixer::FindSource(uint64_t sourceId) const
 {
-    for (const AudioSourceEntry& entry : m_sources)
+    for (const auto& entryPtr : m_sources)
     {
-        if (entry.sourceId == sourceId)
+        if (entryPtr && entryPtr->sourceId == sourceId)
         {
-            return &entry;
+            return entryPtr.get();
         }
     }
     return nullptr;
@@ -612,9 +617,12 @@ std::vector<uint64_t> AudioMixer::GetSourceIds() const
     std::vector<uint64_t> sourceIds;
     sourceIds.reserve(m_sources.size());
     
-    for (const auto& entry : m_sources)
+    for (const auto& entryPtr : m_sources)
     {
-        sourceIds.push_back(entry.sourceId);
+        if (entryPtr)
+        {
+            sourceIds.push_back(entryPtr->sourceId);
+        }
     }
     
     return sourceIds;

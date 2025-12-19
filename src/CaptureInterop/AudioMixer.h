@@ -24,6 +24,15 @@ struct AudioSourceEntry
     size_t availableBytes;        // Number of bytes available to read
     std::mutex bufferMutex;       // Protects buffer access
     LONGLONG lastTimestamp;       // Last timestamp received from callback
+    
+    // Delete copy and move operations since std::mutex is neither copyable nor movable
+    AudioSourceEntry(const AudioSourceEntry&) = delete;
+    AudioSourceEntry& operator=(const AudioSourceEntry&) = delete;
+    AudioSourceEntry(AudioSourceEntry&&) = delete;
+    AudioSourceEntry& operator=(AudioSourceEntry&&) = delete;
+    
+    // Default constructor
+    AudioSourceEntry() = default;
 };
 
 /// <summary>
@@ -152,7 +161,7 @@ private:
     // State
     bool m_initialized;
     WAVEFORMATEX m_outputFormat;
-    std::vector<AudioSourceEntry> m_sources;
+    std::vector<std::unique_ptr<AudioSourceEntry>> m_sources;
     uint64_t m_nextSourceId;
     mutable std::mutex m_mutex;
 

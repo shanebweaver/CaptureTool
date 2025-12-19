@@ -316,52 +316,17 @@ HRESULT MP4Muxer::SetMetadata(const wchar_t* key, const wchar_t* value)
     
     m_metadata[key] = value;
     
-    // Write metadata to MP4 container using IMFSinkWriter attributes
-    if (m_pSinkWriter)
-    {
-        // Map common metadata keys to Media Foundation property GUIDs
-        PROPERTYKEY propKey = {};
-        
-        if (_wcsicmp(key, L"title") == 0)
-        {
-            propKey = MF_PD_TITLE;
-        }
-        else if (_wcsicmp(key, L"author") == 0)
-        {
-            propKey = MF_PD_AUTHOR;
-        }
-        else if (_wcsicmp(key, L"copyright") == 0)
-        {
-            propKey = MF_PD_COPYRIGHT;
-        }
-        else if (_wcsicmp(key, L"description") == 0 || _wcsicmp(key, L"comment") == 0)
-        {
-            propKey = MF_PD_DESCRIPTION;
-        }
-        else
-        {
-            // Unsupported metadata key - store in map but don't write to file
-            return S_OK;
-        }
-        
-        // Create PROPVARIANT with string value
-        PROPVARIANT propVar;
-        PropVariantInit(&propVar);
-        propVar.vt = VT_LPWSTR;
-        propVar.pwszVal = const_cast<LPWSTR>(value);
-        
-        // Set the attribute on the sink writer
-        HRESULT hr = m_pSinkWriter->SetAttribute(MF_SINK_WRITER_AUTHOR_ATTRIBUTES, propKey, propVar);
-        
-        // Don't clear propVar since we don't own the string
-        propVar.pwszVal = nullptr;
-        PropVariantClear(&propVar);
-        
-        if (FAILED(hr))
-        {
-            return hr;
-        }
-    }
+    // Note: MP4 metadata should be set before creating the sink writer
+    // Media Foundation doesn't provide a simple API to set arbitrary metadata
+    // after the sink writer is created. The metadata constants like MF_PD_TITLE
+    // are for reading metadata from media sources, not for setting on sink writers.
+    // 
+    // For proper MP4 metadata support, we would need to:
+    // 1. Use IMFMetadata interface (if available)
+    // 2. Or use IMFAttributes on the sink writer before adding streams
+    // 3. Or write custom atoms to the MP4 file post-processing
+    //
+    // For now, we just store it in our map for potential future use
     
     return S_OK;
 }
