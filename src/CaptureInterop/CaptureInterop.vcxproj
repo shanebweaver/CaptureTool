@@ -64,7 +64,7 @@
   </ImportGroup>
 
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)\vcpkg_installed\x64-windows\include;$(SolutionDir)src\CaptureInterop.Lib;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)src\CaptureInterop.Lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
