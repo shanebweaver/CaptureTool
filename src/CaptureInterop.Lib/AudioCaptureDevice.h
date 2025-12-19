@@ -1,7 +1,4 @@
 #pragma once
-#include <mmdeviceapi.h>
-#include <audioclient.h>
-#include <functiondiscoverykeys_devpkey.h>
 
 /// <summary>
 /// WASAPI-based audio capture device wrapper.

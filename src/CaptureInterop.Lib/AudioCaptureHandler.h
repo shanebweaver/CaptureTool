@@ -1,9 +1,5 @@
 #pragma once
 #include "AudioCaptureDevice.h"
-#include <thread>
-#include <atomic>
-#include <mutex>
-#include <vector>
 
 // Forward declaration
 class MP4SinkWriter;

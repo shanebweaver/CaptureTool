@@ -1,13 +1,6 @@
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "../CaptureInterop.Lib/MP4SinkWriter.h"
-#include <d3d11.h>
-#include <wil/com.h>
-
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "mfplat.lib")
-#pragma comment(lib, "mfreadwrite.lib")
-#pragma comment(lib, "mfuuid.lib")
+#include "MP4SinkWriter.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 

@@ -37,7 +37,10 @@
 // Standard Library
 #include <thread>
 #include <atomic>
+#include <memory>
 #include <mutex>
+#include <queue>
+#include <vector>
 
 // Windows ABI
 #include <windows.foundation.h>

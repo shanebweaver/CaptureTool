@@ -1,9 +1,4 @@
 #include "MP4SinkWriter.h"
-#include <queue>
-#include <mutex>
-#include <condition_variable>
-#include <thread>
-#include <atomic>
 
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Graphics::Capture;
