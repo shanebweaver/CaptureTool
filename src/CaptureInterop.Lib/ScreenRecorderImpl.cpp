@@ -81,7 +81,8 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
                 
             // Start audio capture
             m_audioHandler->SetEnabled(captureAudio);
-            m_audioHandler->Start(&hr);
+            hr = m_audioHandler->Start(&hr);
+            if (FAILED(hr)) return false;
         }
     }
     
