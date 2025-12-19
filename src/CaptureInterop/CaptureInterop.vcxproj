@@ -114,6 +114,7 @@
     <ClInclude Include="MP4SinkWriter.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenRecorder.h" />
+    <ClInclude Include="TestUtility.h" />
   </ItemGroup>
 
   <ItemGroup>
@@ -123,6 +124,7 @@
     <ClCompile Include="FrameArrivedHandler.cpp" />
     <ClCompile Include="MP4SinkWriter.cpp" />
     <ClCompile Include="ScreenRecorder.cpp" />
+    <ClCompile Include="TestUtility.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Create</PrecompiledHeader>
