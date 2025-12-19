@@ -9,10 +9,13 @@ using namespace ABI::Windows::Graphics::Capture;
 
 FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter) noexcept
     : m_sinkWriter(std::move(sinkWriter)),
+FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter, bool enableTimer) noexcept :
+    m_sinkWriter(std::move(sinkWriter)),
     m_ref(1),
     m_running(true),
     m_stopped(false),
-    m_processingStarted(false)
+    m_processingStarted(false),
+    m_enableTimer(enableTimer)
 {
     // Note: Thread is started after object is fully constructed
     // This prevents accessing uninitialized members in ProcessingThreadProc
@@ -26,7 +29,12 @@ void FrameArrivedHandler::StartProcessing()
     if (m_processingStarted.compare_exchange_strong(expected, true))
     {
         m_processingThread = std::thread(&FrameArrivedHandler::ProcessingThreadProc, this);
-        m_timerThread = std::thread(&FrameArrivedHandler::TimerThreadProc, this);
+        
+        // Only start timer thread if enabled (disabled when audio is enabled)
+        if (m_enableTimer)
+        {
+            m_timerThread = std::thread(&FrameArrivedHandler::TimerThreadProc, this);
+        }
     }
 }
 
@@ -330,10 +338,11 @@ EventRegistrationToken RegisterFrameArrivedHandler(
     wil::com_ptr<IDirect3D11CaptureFramePool> framePool,
     wil::com_ptr<MP4SinkWriter> sinkWriter,
     FrameArrivedHandler** outHandler,
-    HRESULT* outHr)
+    HRESULT* outHr,
+    bool enableTimer)
 {
     EventRegistrationToken token{};
-    auto handler = new FrameArrivedHandler(sinkWriter);
+    auto handler = new FrameArrivedHandler(sinkWriter, enableTimer);
     
     // Start the processing thread after object is fully constructed
     handler->StartProcessing();

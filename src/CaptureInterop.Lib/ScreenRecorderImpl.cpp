@@ -102,7 +102,9 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
     }
     
     wil::com_ptr<MP4SinkWriter> sinkWriterPtr(&m_sinkWriter);
-    m_frameArrivedEventToken = RegisterFrameArrivedHandler(m_framePool, sinkWriterPtr, &m_frameHandler, &hr);
+    // Disable video timer when audio is enabled - audio will maintain the timeline
+    bool enableVideoTimer = !audioEnabled;
+    m_frameArrivedEventToken = RegisterFrameArrivedHandler(m_framePool, sinkWriterPtr, &m_frameHandler, &hr, enableVideoTimer);
 
     hr = m_session->StartCapture();
     if (FAILED(hr))

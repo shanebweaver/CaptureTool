@@ -18,7 +18,7 @@ class FrameArrivedHandler final
     : public ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>
 {
 public:
-    explicit FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter) noexcept;
+    explicit FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter, bool enableTimer = true) noexcept;
     ~FrameArrivedHandler();
 
     // IUnknown
@@ -51,6 +51,7 @@ private:
     std::atomic<bool> m_running{true};
     std::atomic<bool> m_stopped{false};  // Guard for idempotent Stop()
     std::atomic<bool> m_processingStarted{false};  // Guard for StartProcessing()
+    bool m_enableTimer;  // Whether to run the timer thread
     
     // First frame tracking for timestamp calculation
     std::atomic<LONGLONG> m_firstFrameSystemTime{0};
@@ -63,4 +64,4 @@ private:
 };
 
 // Helper to register the frame-arrived event.
-EventRegistrationToken RegisterFrameArrivedHandler(wil::com_ptr<IDirect3D11CaptureFramePool> framePool, wil::com_ptr<MP4SinkWriter> sinkWriter, FrameArrivedHandler** outHandler = nullptr, HRESULT* outHr = nullptr);
+EventRegistrationToken RegisterFrameArrivedHandler(wil::com_ptr<IDirect3D11CaptureFramePool> framePool, wil::com_ptr<MP4SinkWriter> sinkWriter, FrameArrivedHandler** outHandler = nullptr, HRESULT* outHr = nullptr, bool enableTimer = true);
