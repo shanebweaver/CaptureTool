@@ -69,26 +69,20 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
         return false;
     }
     
-    // Initialize and start audio capture if requested
-    bool audioEnabled = false;
-    if (captureAudio)
+    // Initialize audio capture device (true = loopback mode for system audio)
+    if (m_audioHandler->Initialize(true, &hr))
     {
-        // Initialize audio capture device (true = loopback mode for system audio)
-        if (m_audioHandler->Initialize(true, &hr))
+        // Initialize audio stream on sink writer
+        WAVEFORMATEX* audioFormat = m_audioHandler->GetFormat();
+        if (audioFormat && m_sinkWriter.InitializeAudioStream(audioFormat, &hr))
         {
-            // Initialize audio stream on sink writer
-            WAVEFORMATEX* audioFormat = m_audioHandler->GetFormat();
-            if (audioFormat && m_sinkWriter.InitializeAudioStream(audioFormat, &hr))
-            {
-                // Set the sink writer on audio handler so it can write samples
-                m_audioHandler->SetSinkWriter(&m_sinkWriter);
+            // Set the sink writer on audio handler so it can write samples
+            m_audioHandler->SetSinkWriter(&m_sinkWriter);
                 
-                // Start audio capture
-                if (m_audioHandler->Start(&hr))
-                {
-                    audioEnabled = true;
-                }
-            }
+            // Start audio capture
+            m_audioHandler->SetEnabled(captureAudio);
+            hr = m_audioHandler->Start(&hr);
+            if (FAILED(hr)) return false;
         }
     }
     
@@ -99,7 +93,7 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
     if (FAILED(hr))
     {
         // If video capture fails, stop audio if it was started
-        if (audioEnabled)
+        if (m_audioHandler->IsRunning())
         {
             m_audioHandler->Stop();
         }
