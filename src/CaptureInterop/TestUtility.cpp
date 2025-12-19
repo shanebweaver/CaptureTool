@@ -8,7 +8,11 @@ int AddNumbers(int a, int b)
 
 bool IsValidPath(const wchar_t* path)
 {
-	if (path == nullptr || wcslen(path) == 0)
+	if (path == nullptr)
+	{
+		return false;
+	}
+	if (wcslen(path) == 0)
 	{
 		return false;
 	}
