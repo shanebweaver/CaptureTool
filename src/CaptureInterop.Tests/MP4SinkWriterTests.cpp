@@ -3,9 +3,6 @@
 #include "../CaptureInterop.Lib/MP4SinkWriter.h"
 #include <d3d11.h>
 #include <wil/com.h>
-#include <mfapi.h>
-#include <mfidl.h>
-#include <mfreadwrite.h>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "mfplat.lib")
