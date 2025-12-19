@@ -14,8 +14,13 @@
     <File Path="README.md" />
     <File Path="SECURITY.md" />
   </Folder>
+  <Project Path="src/CaptureInterop.Lib/CaptureInterop.Lib.vcxproj" Id="8B5E7A7C-3D1F-4E9A-9C2B-1F6D8E3A5B4C">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
   <Project Path="src/CaptureInterop.Tests/CaptureInterop.Tests.vcxproj">
-    <Platform Project="x64" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="src/CaptureInterop/CaptureInterop.vcxproj" Id="e576bd23-e4b5-4a1e-a385-87cb932e6d32" />
   <Project Path="src/CaptureTool.Common/CaptureTool.Common.csproj" />
