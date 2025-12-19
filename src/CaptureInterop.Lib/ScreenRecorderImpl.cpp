@@ -92,7 +92,7 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
     if (FAILED(hr))
     {
         // If video capture fails, stop audio if it was started
-        if (m_audioHandler->IsEnabled())
+        if (m_audioHandler->IsRunning())
         {
             m_audioHandler->Stop();
         }
