@@ -33,6 +33,14 @@ public:
     bool InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* outHr = nullptr);
 
     /// <summary>
+    /// Begin writing for video-only recording.
+    /// Must be called after Initialize() and before any WriteFrame() calls for video-only mode.
+    /// </summary>
+    /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
+    /// <returns>True if writing started successfully, false otherwise.</returns>
+    bool BeginWritingForVideoOnly(HRESULT* outHr = nullptr);
+
+    /// <summary>
     /// Set the recording start time for audio/video synchronization.
     /// Should be called by the first capture stream to start (usually video).
     /// </summary>

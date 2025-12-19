@@ -90,6 +90,38 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
     return true;
 }
 
+bool MP4SinkWriter::BeginWritingForVideoOnly(HRESULT* outHr)
+{
+    if (!m_sinkWriter)
+    {
+        if (outHr) *outHr = E_NOT_VALID_STATE;
+        return false;
+    }
+
+    if (m_hasBegunWriting)
+    {
+        if (outHr) *outHr = E_NOT_VALID_STATE;
+        return false;
+    }
+
+    // Set recording start time
+    LARGE_INTEGER qpc;
+    QueryPerformanceCounter(&qpc);
+    SetRecordingStartTime(qpc.QuadPart);
+
+    // Begin writing now for video-only mode
+    HRESULT hr = m_sinkWriter->BeginWriting();
+    if (FAILED(hr))
+    {
+        if (outHr) *outHr = hr;
+        return false;
+    }
+    
+    m_hasBegunWriting = true;
+    if (outHr) *outHr = S_OK;
+    return true;
+}
+
 bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* outHr)
 {
     if (!m_sinkWriter || !audioFormat)

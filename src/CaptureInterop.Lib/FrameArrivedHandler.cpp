@@ -133,8 +133,6 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
 
     // First frame - establish the time base
     LONGLONG firstFrameTime = m_firstFrameSystemTime.load();
-    LONGLONG relativeTimestamp;
-    
     if (firstFrameTime == 0)
     {
         // Try to set it atomically
@@ -142,16 +140,6 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         if (m_firstFrameSystemTime.compare_exchange_strong(expected, timestamp.Duration))
         {
             // We successfully set the first frame time
-            // For video-only recordings, recording start time should already be set
-            // For audio recordings, audio handler sets it first
-            LONGLONG recordingStartQpc = m_sinkWriter->GetRecordingStartTime();
-            if (recordingStartQpc == 0)
-            {
-                // Fallback: set recording start time now if not already set
-                LARGE_INTEGER qpc;
-                QueryPerformanceCounter(&qpc);
-                m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
-            }
             firstFrameTime = timestamp.Duration;
         }
         else
@@ -162,23 +150,7 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
     }
     
     // Calculate relative timestamp
-    // For first frame with pre-set recording start time, use QPC-based calculation
-    LONGLONG recordingStartQpc = m_sinkWriter->GetRecordingStartTime();
-    if (recordingStartQpc != 0 && firstFrameTime == timestamp.Duration)
-    {
-        // First frame - use QPC-based timestamp for better accuracy
-        LARGE_INTEGER qpc, freq;
-        QueryPerformanceCounter(&qpc);
-        QueryPerformanceFrequency(&freq);
-        LONGLONG elapsedQpc = qpc.QuadPart - recordingStartQpc;
-        const LONGLONG TICKS_PER_SECOND = 10000000LL;
-        relativeTimestamp = (elapsedQpc * TICKS_PER_SECOND) / freq.QuadPart;
-    }
-    else
-    {
-        // Subsequent frames or no recording start time - use frame timestamps
-        relativeTimestamp = timestamp.Duration - firstFrameTime;
-    }
+    LONGLONG relativeTimestamp = timestamp.Duration - firstFrameTime;
 
     // Queue the frame for background processing instead of processing synchronously
     // This prevents blocking the event callback thread

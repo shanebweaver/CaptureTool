@@ -339,10 +339,11 @@ namespace CaptureInteropTests
             // Initialize video-only recording
             writer.Initialize(tempPath, device.get(), 640, 480);
             
-            // Set recording start time (simulating what ScreenRecorder does for video-only)
-            LARGE_INTEGER qpc;
-            QueryPerformanceCounter(&qpc);
-            writer.SetRecordingStartTime(qpc.QuadPart);
+            // Begin writing for video-only mode (simulating what ScreenRecorder does)
+            HRESULT hr;
+            bool result = writer.BeginWritingForVideoOnly(&hr);
+            Assert::IsTrue(result, L"BeginWritingForVideoOnly should succeed");
+            Assert::AreEqual(S_OK, hr);
             
             // Verify recording start time is set before first frame
             Assert::AreNotEqual(0LL, writer.GetRecordingStartTime(), 
@@ -350,7 +351,7 @@ namespace CaptureInteropTests
             
             // Write first frame
             auto texture = CreateTestTexture(device.get(), 640, 480);
-            HRESULT hr = writer.WriteFrame(texture.get(), 0);
+            hr = writer.WriteFrame(texture.get(), 0);
             Assert::IsTrue(SUCCEEDED(hr), L"WriteFrame should succeed");
             
             // Cleanup
@@ -369,10 +370,8 @@ namespace CaptureInteropTests
             
             writer.Initialize(tempPath, device.get(), 640, 480);
             
-            // Set recording start time
-            LARGE_INTEGER qpc;
-            QueryPerformanceCounter(&qpc);
-            writer.SetRecordingStartTime(qpc.QuadPart);
+            // Begin writing for video-only mode
+            writer.BeginWritingForVideoOnly();
             
             // Write first frame with small timestamp
             auto texture = CreateTestTexture(device.get(), 640, 480);

@@ -69,15 +69,6 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
         return false;
     }
     
-    // Set recording start time immediately for video-only recordings
-    // This ensures proper timeline initialization before frames arrive
-    if (!captureAudio)
-    {
-        LARGE_INTEGER qpc;
-        QueryPerformanceCounter(&qpc);
-        m_sinkWriter.SetRecordingStartTime(qpc.QuadPart);
-    }
-    
     // Initialize and start audio capture if requested
     bool audioEnabled = false;
     if (captureAudio)
@@ -98,6 +89,15 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
                     audioEnabled = true;
                 }
             }
+        }
+    }
+    else
+    {
+        // For video-only recording, begin writing immediately
+        // This ensures timeline is established before frames arrive
+        if (!m_sinkWriter.BeginWritingForVideoOnly(&hr))
+        {
+            return false;
         }
     }
     
