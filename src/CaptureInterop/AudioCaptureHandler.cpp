@@ -16,9 +16,9 @@ AudioCaptureHandler::~AudioCaptureHandler()
 // Initialization and Lifecycle
 // ============================================================================
 
-bool AudioCaptureHandler::Initialize(bool loopback, HRESULT* outHr)
+bool AudioCaptureHandler::Initialize(bool loopback, HRESULT* outHr, const wchar_t* deviceId)
 {
-    return m_device.Initialize(loopback, outHr);
+    return m_device.Initialize(loopback, outHr, deviceId);
 }
 
 bool AudioCaptureHandler::Start(HRESULT* outHr)

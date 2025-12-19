@@ -316,7 +316,52 @@ HRESULT MP4Muxer::SetMetadata(const wchar_t* key, const wchar_t* value)
     
     m_metadata[key] = value;
     
-    // TODO: Write metadata to MP4 container using IMFSinkWriter attributes
+    // Write metadata to MP4 container using IMFSinkWriter attributes
+    if (m_pSinkWriter)
+    {
+        // Map common metadata keys to Media Foundation property GUIDs
+        PROPERTYKEY propKey = {};
+        
+        if (_wcsicmp(key, L"title") == 0)
+        {
+            propKey = MF_PD_TITLE;
+        }
+        else if (_wcsicmp(key, L"author") == 0)
+        {
+            propKey = MF_PD_AUTHOR;
+        }
+        else if (_wcsicmp(key, L"copyright") == 0)
+        {
+            propKey = MF_PD_COPYRIGHT;
+        }
+        else if (_wcsicmp(key, L"description") == 0 || _wcsicmp(key, L"comment") == 0)
+        {
+            propKey = MF_PD_DESCRIPTION;
+        }
+        else
+        {
+            // Unsupported metadata key - store in map but don't write to file
+            return S_OK;
+        }
+        
+        // Create PROPVARIANT with string value
+        PROPVARIANT propVar;
+        PropVariantInit(&propVar);
+        propVar.vt = VT_LPWSTR;
+        propVar.pwszVal = const_cast<LPWSTR>(value);
+        
+        // Set the attribute on the sink writer
+        HRESULT hr = m_pSinkWriter->SetAttribute(MF_SINK_WRITER_AUTHOR_ATTRIBUTES, propKey, propVar);
+        
+        // Don't clear propVar since we don't own the string
+        propVar.pwszVal = nullptr;
+        PropVariantClear(&propVar);
+        
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+    }
     
     return S_OK;
 }
@@ -499,7 +544,22 @@ HRESULT MP4Muxer::ConfigureVideoStream(const TrackInfo& trackInfo, DWORD* pStrea
     // Set track name as metadata if provided
     if (!trackInfo.name.empty())
     {
-        // TODO: Set track name via IMFSinkWriter attributes
+        // Set stream name using IMFAttributes
+        // Note: Stream names may not be widely supported in MP4 format
+        // but we set it anyway for tools that do support it
+        wil::com_ptr<IMFAttributes> pAttributes;
+        HRESULT hrName = m_pSinkWriter->GetServiceForStream(
+            streamIndex,
+            GUID_NULL,
+            __uuidof(IMFAttributes),
+            pAttributes.put_void()
+        );
+        
+        if (SUCCEEDED(hrName) && pAttributes)
+        {
+            hrName = pAttributes->SetString(MF_SD_STREAM_NAME, trackInfo.name.c_str());
+        }
+        // Ignore failures - stream names are optional
     }
     
     *pStreamIndex = streamIndex;
@@ -525,7 +585,21 @@ HRESULT MP4Muxer::ConfigureAudioStream(const TrackInfo& trackInfo, DWORD* pStrea
     // Set track name as metadata if provided
     if (!trackInfo.name.empty())
     {
-        // TODO: Set track name via IMFSinkWriter attributes
+        // Set stream name using IMFAttributes
+        // This helps professional tools identify audio tracks (e.g., "Desktop Audio", "Microphone")
+        wil::com_ptr<IMFAttributes> pAttributes;
+        HRESULT hrName = m_pSinkWriter->GetServiceForStream(
+            streamIndex,
+            GUID_NULL,
+            __uuidof(IMFAttributes),
+            pAttributes.put_void()
+        );
+        
+        if (SUCCEEDED(hrName) && pAttributes)
+        {
+            hrName = pAttributes->SetString(MF_SD_STREAM_NAME, trackInfo.name.c_str());
+        }
+        // Ignore failures - stream names are optional
     }
     
     *pStreamIndex = streamIndex;

@@ -59,9 +59,9 @@ bool MicrophoneAudioSource::Initialize()
     HRESULT hr = S_OK;
     
     // Initialize in capture mode (false = capture endpoint, not loopback)
-    // TODO Phase 2 Task 2: Add support for specific device ID via m_deviceId
-    // For now, use default microphone
-    if (!m_device.Initialize(false, &hr))
+    // Pass device ID for specific device selection (nullptr/empty for default)
+    const wchar_t* deviceIdPtr = m_deviceId.empty() ? nullptr : m_deviceId.c_str();
+    if (!m_device.Initialize(false, &hr, deviceIdPtr))
     {
         return false;
     }

@@ -21,7 +21,7 @@ AudioCaptureDevice::~AudioCaptureDevice()
 // Device Initialization
 // ============================================================================
 
-bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr)
+bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr, const wchar_t* deviceId)
 {
     // Initialize COM for this thread
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
@@ -45,17 +45,31 @@ bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr)
         return false;
     }
 
-    // Get default audio endpoint
-    EDataFlow dataFlow = loopback ? eRender : eCapture;
-    hr = m_deviceEnumerator->GetDefaultAudioEndpoint(
-        dataFlow,
-        eConsole,
-        m_device.put()
-    );
-    if (FAILED(hr))
+    // Get audio endpoint (specific device or default)
+    if (deviceId && wcslen(deviceId) > 0)
     {
-        if (outHr) *outHr = hr;
-        return false;
+        // Use specific device ID
+        hr = m_deviceEnumerator->GetDevice(deviceId, m_device.put());
+        if (FAILED(hr))
+        {
+            if (outHr) *outHr = hr;
+            return false;
+        }
+    }
+    else
+    {
+        // Get default audio endpoint
+        EDataFlow dataFlow = loopback ? eRender : eCapture;
+        hr = m_deviceEnumerator->GetDefaultAudioEndpoint(
+            dataFlow,
+            eConsole,
+            m_device.put()
+        );
+        if (FAILED(hr))
+        {
+            if (outHr) *outHr = hr;
+            return false;
+        }
     }
 
     // Activate audio client
