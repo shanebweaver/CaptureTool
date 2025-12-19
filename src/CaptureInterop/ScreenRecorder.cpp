@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ScreenRecorder.h"
 #include "MP4SinkWriter.h"
 #include "FrameArrivedHandler.h"
