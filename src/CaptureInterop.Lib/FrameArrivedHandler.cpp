@@ -250,7 +250,8 @@ void FrameArrivedHandler::TimerThreadProc()
     // Wait a bit for first frame to arrive and be processed
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
-    LONGLONG currentTimestamp = 0;
+    // Track last generated timestamp to ensure we don't go backwards
+    LONGLONG lastGeneratedTimestamp = 0;
     
     while (m_running)
     {
@@ -279,8 +280,32 @@ void FrameArrivedHandler::TimerThreadProc()
         // Generate duplicate frame if we have a texture
         if (lastTexture)
         {
-            // Always increment timestamp to ensure continuous 30 FPS
-            currentTimestamp += FRAME_DURATION;
+            // Calculate current timestamp based on actual elapsed time
+            // This ensures synchronization with audio timeline when audio is enabled
+            LONGLONG currentTimestamp;
+            LONGLONG recordingStartQpc = m_sinkWriter->GetRecordingStartTime();
+            
+            if (recordingStartQpc != 0)
+            {
+                // Use QPC to calculate elapsed time from recording start
+                LARGE_INTEGER qpc, freq;
+                QueryPerformanceCounter(&qpc);
+                QueryPerformanceFrequency(&freq);
+                LONGLONG elapsedQpc = qpc.QuadPart - recordingStartQpc;
+                const LONGLONG TICKS_PER_SECOND = 10000000LL;
+                currentTimestamp = (elapsedQpc * TICKS_PER_SECOND) / freq.QuadPart;
+            }
+            else
+            {
+                // Fallback: use incremental timestamps
+                currentTimestamp = lastGeneratedTimestamp + FRAME_DURATION;
+            }
+            
+            // Ensure timestamp doesn't go backwards
+            if (currentTimestamp <= lastGeneratedTimestamp)
+            {
+                currentTimestamp = lastGeneratedTimestamp + FRAME_DURATION;
+            }
             
             // Generate duplicate frame at the current timestamp
             {
@@ -293,6 +318,8 @@ void FrameArrivedHandler::TimerThreadProc()
                     queuedFrame.isDuplicateFrame = true;
                     m_frameQueue.push(std::move(queuedFrame));
                     m_queueCV.notify_one();
+                    
+                    lastGeneratedTimestamp = currentTimestamp;
                 }
             }
         }
