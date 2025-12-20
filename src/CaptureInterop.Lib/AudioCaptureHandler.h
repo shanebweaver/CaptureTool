@@ -88,7 +88,5 @@ private:
     
     std::vector<BYTE> m_silentBuffer;           // Reusable buffer for silent audio samples
     
-    LONGLONG m_startQpc = 0;                    // QPC value at recording start (for synchronization)
-    LARGE_INTEGER m_qpcFrequency{};             // QPC frequency for time calculations
     LONGLONG m_nextAudioTimestamp = 0;          // Accumulated timestamp (prevents overlapping samples)
 };

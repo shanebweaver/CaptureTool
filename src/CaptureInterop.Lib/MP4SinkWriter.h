@@ -1,5 +1,8 @@
 #pragma once
 
+// Forward declaration
+class MediaClock;
+
 /// <summary>
 /// MP4 file writer supporting H.264 video and optional AAC audio streams.
 /// Handles video encoding and audio encoding via Media Foundation.
@@ -47,6 +50,12 @@ public:
     LONGLONG GetRecordingStartTime() const { return m_recordingStartQpc; }
 
     /// <summary>
+    /// Get the media clock for synchronized timing across audio and video.
+    /// </summary>
+    /// <returns>Pointer to the MediaClock instance.</returns>
+    MediaClock* GetClock() { return m_clock; }
+
+    /// <summary>
     /// Write a video frame to the MP4 file.
     /// </summary>
     /// <param name="texture">D3D11 texture containing the video frame.</param>
@@ -86,6 +95,7 @@ private:
     ID3D11Device* m_device = nullptr;
     ID3D11DeviceContext* m_context = nullptr;
     LONGLONG m_prevVideoTimestamp = 0;
-    LONGLONG m_recordingStartQpc = 0;           // Common start time for A/V sync (QPC ticks)
+    LONGLONG m_recordingStartQpc = 0;           // Common start time for A/V sync (QPC ticks) - kept for backward compatibility
     WAVEFORMATEX m_audioFormat = {};            // Cached audio format info
+    MediaClock* m_clock = nullptr;              // Media clock for synchronized timing
 };

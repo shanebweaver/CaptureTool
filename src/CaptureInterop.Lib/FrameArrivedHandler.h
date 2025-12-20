@@ -48,8 +48,8 @@ private:
     std::atomic<bool> m_stopped{false};  // Guard for idempotent Stop()
     std::atomic<bool> m_processingStarted{false};  // Guard for StartProcessing()
     
-    // First frame tracking for timestamp calculation
-    std::atomic<LONGLONG> m_firstFrameSystemTime{0};
+    // Clock management
+    std::atomic<bool> m_clockStarted{false};  // Track if we started the clock
 };
 
 // Helper to register the frame-arrived event.

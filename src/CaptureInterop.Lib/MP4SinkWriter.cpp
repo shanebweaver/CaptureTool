@@ -1,11 +1,23 @@
 #include "pch.h"
 #include "MP4SinkWriter.h"
+#include "MediaClock.h"
 
-MP4SinkWriter::MP4SinkWriter() = default;
+MP4SinkWriter::MP4SinkWriter()
+{
+    // Create the MediaClock instance
+    m_clock = new MediaClock();
+}
 
 MP4SinkWriter::~MP4SinkWriter()
 {
     Finalize();
+    
+    // Clean up the MediaClock
+    if (m_clock)
+    {
+        delete m_clock;
+        m_clock = nullptr;
+    }
 }
 
 void MP4SinkWriter::SetRecordingStartTime(LONGLONG qpcStart)
@@ -327,6 +339,12 @@ void MP4SinkWriter::Finalize()
     {
         m_device->Release();
         m_device = nullptr;
+    }
+
+    // Reset the media clock for the next recording session
+    if (m_clock)
+    {
+        m_clock->Reset();
     }
 
     MFShutdown();

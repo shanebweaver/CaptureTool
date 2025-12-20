@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "FrameArrivedHandler.h"
+#include "MediaClock.h"
 
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Graphics::DirectX;
@@ -12,7 +13,8 @@ FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter)
     m_ref(1),
     m_running(true),
     m_stopped(false),
-    m_processingStarted(false)
+    m_processingStarted(false),
+    m_clockStarted(false)
 {
     // Note: Thread is started after object is fully constructed
     // This prevents accessing uninitialized members in ProcessingThreadProc
@@ -131,30 +133,29 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
-    // First frame - establish the time base
-    LONGLONG firstFrameTime = m_firstFrameSystemTime.load();
-    if (firstFrameTime == 0)
+    // Start the media clock on first frame (idempotent - safe if audio already started it)
+    MediaClock* clock = m_sinkWriter ? m_sinkWriter->GetClock() : nullptr;
+    if (!clock)
     {
-        // Try to set it atomically
-        LONGLONG expected = 0;
-        if (m_firstFrameSystemTime.compare_exchange_strong(expected, timestamp.Duration))
+        return E_POINTER;
+    }
+    
+    // Start clock on first frame (only first call will actually start it)
+    if (clock->Start())
+    {
+        // We started the clock
+        m_clockStarted.store(true);
+        
+        // Keep backward compatibility: still set on sink writer
+        LONGLONG startQpc = clock->GetStartQpc();
+        if (startQpc != 0)
         {
-            // We successfully set it - also set recording start time
-            // Only set recording start time if we won the race to set first frame time
-            LARGE_INTEGER qpc;
-            QueryPerformanceCounter(&qpc);
-            m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
-            firstFrameTime = timestamp.Duration;
-        }
-        else
-        {
-            // Another thread won the race, use their value
-            firstFrameTime = m_firstFrameSystemTime.load();
+            m_sinkWriter->SetRecordingStartTime(startQpc);
         }
     }
     
-    // Calculate relative timestamp
-    LONGLONG relativeTimestamp = timestamp.Duration - firstFrameTime;
+    // Get current elapsed time from clock (replaces relative timestamp calculation)
+    LONGLONG timestamp = clock->GetElapsedTime();
 
     // Queue the frame for background processing instead of processing synchronously
     // This prevents blocking the event callback thread
@@ -167,7 +168,7 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         {
             QueuedFrame queuedFrame;
             queuedFrame.texture = texture;
-            queuedFrame.relativeTimestamp = relativeTimestamp;
+            queuedFrame.relativeTimestamp = timestamp;
             m_frameQueue.push(std::move(queuedFrame));
             m_queueCV.notify_one();
         }

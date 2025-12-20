@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "AudioCaptureHandler.h"
 #include "MP4SinkWriter.h"
+#include "MediaClock.h"
 
 AudioCaptureHandler::AudioCaptureHandler()
 {
-    QueryPerformanceFrequency(&m_qpcFrequency);
+    // No longer need to query QPC frequency - MediaClock handles it
 }
 
 AudioCaptureHandler::~AudioCaptureHandler()
@@ -34,30 +35,21 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
         return false;
     }
 
-    // Synchronize start time with video capture if available
+    // Start the media clock if available (idempotent - safe if video already started it)
     if (m_sinkWriter)
     {
-        LONGLONG sinkStartTime = m_sinkWriter->GetRecordingStartTime();
-        if (sinkStartTime != 0)
+        MediaClock* clock = m_sinkWriter->GetClock();
+        if (clock)
         {
-            // Use existing recording start time from sink writer (video started first)
-            m_startQpc = sinkStartTime;
+            clock->Start();  // Idempotent - only first call starts the clock
+            
+            // Keep backward compatibility: still set on sink writer
+            LONGLONG startQpc = clock->GetStartQpc();
+            if (startQpc != 0)
+            {
+                m_sinkWriter->SetRecordingStartTime(startQpc);
+            }
         }
-        else
-        {
-            // Set the recording start time on the sink writer (audio starting first)
-            LARGE_INTEGER qpc;
-            QueryPerformanceCounter(&qpc);
-            m_startQpc = qpc.QuadPart;
-            m_sinkWriter->SetRecordingStartTime(m_startQpc);
-        }
-    }
-    else
-    {
-        // No sink writer, use local start time (audio-only mode)
-        LARGE_INTEGER qpc;
-        QueryPerformanceCounter(&qpc);
-        m_startQpc = qpc.QuadPart;
     }
 
     // Reset audio timestamp counter
@@ -141,13 +133,11 @@ void AudioCaptureHandler::CaptureThreadProc()
                 // and prepare to skip several samples to drain any stale buffer data
                 if (m_nextAudioTimestamp == 0 || m_wasDisabled)
                 {
-                    LARGE_INTEGER qpc;
-                    QueryPerformanceCounter(&qpc);
-                    LONGLONG currentQpc = qpc.QuadPart;
-                    LONGLONG elapsedQpc = currentQpc - m_startQpc;
-                    
-                    // Convert QPC ticks to 100ns units (Media Foundation time)
-                    m_nextAudioTimestamp = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
+                    MediaClock* clock = m_sinkWriter ? m_sinkWriter->GetClock() : nullptr;
+                    if (clock)
+                    {
+                        m_nextAudioTimestamp = clock->GetElapsedTime();
+                    }
                     m_wasDisabled = false;
                     
                     // Skip next few samples to fully drain stale buffer data

@@ -2,6 +2,7 @@
 #include "ScreenRecorderImpl.h"
 #include "FrameArrivedHandler.h"
 #include "AudioCaptureHandler.h"
+#include "MediaClock.h"
 #include "GraphicsCaptureHelpers.cpp"
 
 using namespace GraphicsCaptureHelpers;
@@ -67,6 +68,14 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
     if (!m_sinkWriter.Initialize(outputPath, device.get(), size.Width, size.Height, &hr))
     {
         return false;
+    }
+    
+    // Explicitly start the media clock before any capture begins
+    // This ensures predictable timing and eliminates race conditions
+    MediaClock* clock = m_sinkWriter.GetClock();
+    if (clock)
+    {
+        clock->Start();  // Start clock before any capture streams
     }
     
     // Initialize audio capture device (true = loopback mode for system audio)
