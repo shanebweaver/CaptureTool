@@ -33,6 +33,9 @@
     <ClInclude Include="AudioCaptureHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MediaClock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="GraphicsCaptureHelpers.cpp">
       <Filter>Source Files</Filter>
     </ClInclude>

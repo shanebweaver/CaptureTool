@@ -94,6 +94,7 @@
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GraphicsCaptureHelpers.cpp" />
+    <ClInclude Include="MediaClock.h" />
     <ClInclude Include="MP4SinkWriter.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenRecorderImpl.h" />

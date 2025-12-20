@@ -34,6 +34,19 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
         return false;
     }
 
+    // Get audio format to create MediaClock with correct sample rate
+    WAVEFORMATEX* format = m_device.GetFormat();
+    if (!format) {
+        if (outHr) *outHr = E_FAIL;
+        return false;
+    }
+
+    // Create the MediaClock with the audio device's sample rate
+    // This becomes the master clock for all media sources
+    m_mediaClock = std::make_unique<MediaClock>(
+        MediaClock::SampleRate{format->nSamplesPerSec}
+    );
+
     // Synchronize start time with video capture if available
     if (m_sinkWriter)
     {
@@ -82,6 +95,7 @@ void AudioCaptureHandler::Stop()
         }
         
         m_device.Stop();
+        m_mediaClock.reset(); // Clear the clock to reset state
     }
 }
 
@@ -122,6 +136,12 @@ void AudioCaptureHandler::CaptureThreadProc()
 
         if (framesRead > 0)
         {
+            // Advance the master clock first (audio is the law)
+            // This must happen before any timestamp usage to ensure clock is up-to-date
+            if (m_mediaClock) {
+                m_mediaClock->Advance(framesRead);
+            }
+            
             // Get audio format for duration calculation
             WAVEFORMATEX* format = m_device.GetFormat();
             if (!format)
@@ -141,13 +161,18 @@ void AudioCaptureHandler::CaptureThreadProc()
                 // and prepare to skip several samples to drain any stale buffer data
                 if (m_nextAudioTimestamp == 0 || m_wasDisabled)
                 {
-                    LARGE_INTEGER qpc;
-                    QueryPerformanceCounter(&qpc);
-                    LONGLONG currentQpc = qpc.QuadPart;
-                    LONGLONG elapsedQpc = currentQpc - m_startQpc;
-                    
-                    // Convert QPC ticks to 100ns units (Media Foundation time)
-                    m_nextAudioTimestamp = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
+                    // Use MediaClock as the authoritative timestamp source
+                    // First buffer after start/resume = MediaClock's current time
+                    if (m_mediaClock) {
+                        m_nextAudioTimestamp = m_mediaClock->CurrentTime().ticks;
+                    } else {
+                        // Fallback to QPC if MediaClock not available (shouldn't happen)
+                        LARGE_INTEGER qpc;
+                        QueryPerformanceCounter(&qpc);
+                        LONGLONG currentQpc = qpc.QuadPart;
+                        LONGLONG elapsedQpc = currentQpc - m_startQpc;
+                        m_nextAudioTimestamp = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
+                    }
                     m_wasDisabled = false;
                     
                     // Skip next few samples to fully drain stale buffer data
@@ -201,7 +226,9 @@ void AudioCaptureHandler::CaptureThreadProc()
                     m_wasDisabled = true;
                 }
                 
-                // Always advance timestamp to maintain continuous timeline
+                // Advance timestamp for next buffer
+                // This works in tandem with MediaClock: the clock tracks total samples,
+                // while this timestamp tracks the write position in the output stream
                 m_nextAudioTimestamp += duration;
             }
 

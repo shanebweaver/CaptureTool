@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="MediaClockTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="MP4SinkWriterTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
