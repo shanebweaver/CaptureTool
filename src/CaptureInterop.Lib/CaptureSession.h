@@ -4,7 +4,7 @@
 
 // Forward declarations
 class FrameArrivedHandler;
-class AudioCaptureHandler;
+class IAudioInputSource;
 
 /// <summary>
 /// Encapsulates a single capture session including audio and video capture.
@@ -55,6 +55,6 @@ private:
     EventRegistrationToken m_frameArrivedEventToken;
     FrameArrivedHandler* m_frameHandler;
     MP4SinkWriter m_sinkWriter;
-    std::unique_ptr<AudioCaptureHandler> m_audioHandler;
+    std::unique_ptr<IAudioInputSource> m_audioInputSource;
     bool m_isActive;
 };

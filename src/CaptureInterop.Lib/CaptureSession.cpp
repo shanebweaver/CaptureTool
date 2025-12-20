@@ -1,14 +1,14 @@
 #include "pch.h"
 #include "CaptureSession.h"
 #include "FrameArrivedHandler.h"
-#include "AudioCaptureHandler.h"
+#include "SystemAudioInputSource.h"
 #include "GraphicsCaptureHelpers.cpp"
 
 using namespace GraphicsCaptureHelpers;
 
 CaptureSession::CaptureSession()
     : m_frameHandler(nullptr)
-    , m_audioHandler(std::make_unique<AudioCaptureHandler>())
+    , m_audioInputSource(std::make_unique<SystemAudioInputSource>())
     , m_isActive(false)
 {
     m_frameArrivedEventToken.value = 0;
@@ -87,18 +87,18 @@ bool CaptureSession::Start(HMONITOR hMonitor, const wchar_t* outputPath, bool au
     }
     
     // Initialize audio capture device (true = loopback mode for system audio)
-    if (m_audioHandler->Initialize(true, &hr))
+    if (m_audioInputSource->Initialize(&hr))
     {
         // Initialize audio stream on sink writer
-        WAVEFORMATEX* audioFormat = m_audioHandler->GetFormat();
+        WAVEFORMATEX* audioFormat = m_audioInputSource->GetFormat();
         if (audioFormat && m_sinkWriter.InitializeAudioStream(audioFormat, &hr))
         {
-            // Set the sink writer on audio handler so it can write samples
-            m_audioHandler->SetSinkWriter(&m_sinkWriter);
+            // Set the sink writer on audio input source so it can write samples
+            m_audioInputSource->SetSinkWriter(&m_sinkWriter);
                     
             // Start audio capture
-            m_audioHandler->SetEnabled(audioEnabled);
-            hr = m_audioHandler->Start(&hr);
+            m_audioInputSource->SetEnabled(audioEnabled);
+            hr = m_audioInputSource->Start(&hr);
             if (FAILED(hr))
             {
                 if (outHr) *outHr = hr;
@@ -116,9 +116,9 @@ bool CaptureSession::Start(HMONITOR hMonitor, const wchar_t* outputPath, bool au
     if (FAILED(hr))
     {
         // If video capture fails, stop audio if it was started
-        if (m_audioHandler->IsRunning())
+        if (m_audioInputSource->IsRunning())
         {
-            m_audioHandler->Stop();
+            m_audioInputSource->Stop();
         }
         if (outHr) *outHr = hr;
         return false;
@@ -137,9 +137,9 @@ void CaptureSession::Stop()
     }
 
     // Stop audio capture first
-    if (m_audioHandler)
+    if (m_audioInputSource)
     {
-        m_audioHandler->Stop();
+        m_audioInputSource->Stop();
     }
     
     // Remove the event registration
@@ -179,8 +179,8 @@ void CaptureSession::Stop()
 void CaptureSession::ToggleAudioCapture(bool enabled)
 {
     // Only toggle if audio capture is currently running
-    if (m_audioHandler && m_audioHandler->IsRunning())
+    if (m_audioInputSource && m_audioInputSource->IsRunning())
     {
-        m_audioHandler->SetEnabled(enabled);
+        m_audioInputSource->SetEnabled(enabled);
     }
 }

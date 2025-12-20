@@ -95,9 +95,11 @@
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GraphicsCaptureHelpers.cpp" />
+    <ClInclude Include="IAudioInputSource.h" />
     <ClInclude Include="MP4SinkWriter.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenRecorderImpl.h" />
+    <ClInclude Include="SystemAudioInputSource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AudioCaptureDevice.cpp" />
@@ -112,6 +114,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ScreenRecorderImpl.cpp" />
+    <ClCompile Include="SystemAudioInputSource.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
