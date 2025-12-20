@@ -20,6 +20,13 @@ WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
     Stop();
 }
 
+bool WindowsGraphicsCaptureSession::Start(const CaptureSessionConfig& config, HRESULT* outHr)
+{
+    // Delegate to existing Start method
+    // TODO: Use config.frameRate, config.videoBitrate, and config.audioBitrate when implementing encoder settings
+    return Start(config.hMonitor, config.outputPath, config.audioEnabled, outHr);
+}
+
 bool WindowsGraphicsCaptureSession::Start(HMONITOR hMonitor, const wchar_t* outputPath, bool audioEnabled, HRESULT* outHr)
 {
     HRESULT hr = S_OK;

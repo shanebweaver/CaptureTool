@@ -26,6 +26,7 @@ public:
     WindowsGraphicsCaptureSession& operator=(WindowsGraphicsCaptureSession&&) = delete;
 
     // ICaptureSession implementation
+    bool Start(const CaptureSessionConfig& config, HRESULT* outHr = nullptr) override;
     bool Start(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio, HRESULT* outHr = nullptr) override;
     void Stop() override;
     void ToggleAudioCapture(bool enabled) override;

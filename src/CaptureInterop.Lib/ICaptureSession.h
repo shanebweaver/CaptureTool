@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "CaptureSessionConfig.h"
 
 /// <summary>
 /// Interface for a capture session that manages audio and video recording.
@@ -10,6 +11,14 @@ class ICaptureSession
 {
 public:
     virtual ~ICaptureSession() = default;
+
+    /// <summary>
+    /// Initialize and start the capture session with configuration.
+    /// </summary>
+    /// <param name="config">Configuration settings for the capture session.</param>
+    /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
+    /// <returns>True if session started successfully, false otherwise.</returns>
+    virtual bool Start(const CaptureSessionConfig& config, HRESULT* outHr = nullptr) = 0;
 
     /// <summary>
     /// Initialize and start the capture session.

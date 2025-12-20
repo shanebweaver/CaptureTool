@@ -1,9 +1,15 @@
 #include "pch.h"
 #include "ScreenRecorderImpl.h"
-#include "WindowsGraphicsCaptureSession.h"
+#include "WindowsGraphicsCaptureSessionFactory.h"
+
+ScreenRecorderImpl::ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> factory)
+    : m_factory(std::move(factory))
+    , m_captureSession(nullptr)
+{
+}
 
 ScreenRecorderImpl::ScreenRecorderImpl()
-    : m_captureSession(nullptr)
+    : ScreenRecorderImpl(std::make_unique<WindowsGraphicsCaptureSessionFactory>())
 {
 }
 
@@ -12,23 +18,30 @@ ScreenRecorderImpl::~ScreenRecorderImpl()
     StopRecording();
 }
 
-bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool audioEnabled)
+bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
 {
     // Stop any existing session
     StopRecording();
 
-    // Create a new Windows Graphics Capture session
-    m_captureSession = std::make_unique<WindowsGraphicsCaptureSession>();
-    
-    // Start the session
+    // Create a new capture session using the factory
+    m_captureSession = m_factory->CreateSession();
+       
+    // Start the session with config
     HRESULT hr = S_OK;
-    if (!m_captureSession->Start(hMonitor, outputPath, audioEnabled, &hr))
+    if (!m_captureSession->Start(config, &hr))
     {
         m_captureSession.reset();
         return false;
     }
 
     return true;
+}
+
+bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool audioEnabled)
+{
+    // Create config and delegate to config-based method
+    CaptureSessionConfig config(hMonitor, outputPath, audioEnabled);
+    return StartRecording(config);
 }
 
 void ScreenRecorderImpl::PauseRecording()

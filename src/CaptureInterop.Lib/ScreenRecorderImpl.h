@@ -1,6 +1,8 @@
 #pragma once
 #include "pch.h"
 #include "ICaptureSession.h"
+#include "ICaptureSessionFactory.h"
+#include "CaptureSessionConfig.h"
 
 /// <summary>
 /// Implementation class for screen recording functionality.
@@ -9,8 +11,25 @@
 class ScreenRecorderImpl
 {
 public:
+    /// <summary>
+    /// Constructor that takes a factory for creating capture sessions.
+    /// </summary>
+    /// <param name="factory">Factory for creating ICaptureSession instances. Ownership is transferred.</param>
+    explicit ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> factory);
+    
+    /// <summary>
+    /// Default constructor that creates a default factory.
+    /// </summary>
     ScreenRecorderImpl();
+    
     ~ScreenRecorderImpl();
+
+    /// <summary>
+    /// Start recording with configuration settings.
+    /// </summary>
+    /// <param name="config">Configuration settings for the capture session.</param>
+    /// <returns>True if recording started successfully, false otherwise.</returns>
+    bool StartRecording(const CaptureSessionConfig& config);
 
     /// <summary>
     /// Start recording the specified monitor to an output file.
@@ -44,4 +63,5 @@ public:
 
 private:
     std::unique_ptr<ICaptureSession> m_captureSession;
+    std::unique_ptr<ICaptureSessionFactory> m_factory;
 };

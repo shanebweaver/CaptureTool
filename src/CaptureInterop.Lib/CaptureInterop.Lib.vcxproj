@@ -91,10 +91,12 @@
   <ItemGroup>
     <ClInclude Include="AudioCaptureDevice.h" />
     <ClInclude Include="AudioCaptureHandler.h" />
+    <ClInclude Include="CaptureSessionConfig.h" />
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="IAudioInputSource.h" />
     <ClInclude Include="ICaptureSession.h" />
+    <ClInclude Include="ICaptureSessionFactory.h" />
     <ClInclude Include="IMediaClockController.h" />
     <ClInclude Include="IMediaClockReader.h" />
     <ClInclude Include="IMediaClockWriter.h" />
@@ -103,6 +105,8 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenRecorderImpl.h" />
     <ClInclude Include="SystemAudioInputSource.h" />
+    <ClInclude Include="WindowsCaptureSessionFactory.h" />
+    <ClInclude Include="WindowsGraphicsCaptureSessionFactory.h" />
     <ClInclude Include="WindowsGraphicsCaptureHelpers.h" />
     <ClInclude Include="WindowsGraphicsCaptureSession.h" />
   </ItemGroup>
@@ -120,6 +124,7 @@
     </ClCompile>
     <ClCompile Include="ScreenRecorderImpl.cpp" />
     <ClCompile Include="SystemAudioInputSource.cpp" />
+    <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSession.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
