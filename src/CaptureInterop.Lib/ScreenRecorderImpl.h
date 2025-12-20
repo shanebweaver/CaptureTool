@@ -1,6 +1,6 @@
 #pragma once
 #include "pch.h"
-#include "CaptureSession.h"
+#include "ICaptureSession.h"
 
 /// <summary>
 /// Implementation class for screen recording functionality.
@@ -43,5 +43,5 @@ public:
     void ToggleAudioCapture(bool enabled);
 
 private:
-    std::unique_ptr<CaptureSession> m_captureSession;
+    std::unique_ptr<ICaptureSession> m_captureSession;
 };

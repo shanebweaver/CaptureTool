@@ -1,12 +1,13 @@
 #include "pch.h"
-#include "CaptureSession.h"
+#include "WindowsGraphicsCaptureSession.h"
 #include "FrameArrivedHandler.h"
 #include "SystemAudioInputSource.h"
-#include "GraphicsCaptureHelpers.cpp"
+#include "MediaClock.h"
+#include "WindowsGraphicsCaptureHelpers.h"
 
-using namespace GraphicsCaptureHelpers;
+using namespace WindowsGraphicsCaptureHelpers;
 
-CaptureSession::CaptureSession()
+WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession()
     : m_frameHandler(nullptr)
     , m_audioInputSource(std::make_unique<SystemAudioInputSource>())
     , m_isActive(false)
@@ -14,12 +15,12 @@ CaptureSession::CaptureSession()
     m_frameArrivedEventToken.value = 0;
 }
 
-CaptureSession::~CaptureSession()
+WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
 {
     Stop();
 }
 
-bool CaptureSession::Start(HMONITOR hMonitor, const wchar_t* outputPath, bool audioEnabled, HRESULT* outHr)
+bool WindowsGraphicsCaptureSession::Start(HMONITOR hMonitor, const wchar_t* outputPath, bool audioEnabled, HRESULT* outHr)
 {
     HRESULT hr = S_OK;
 
@@ -129,7 +130,7 @@ bool CaptureSession::Start(HMONITOR hMonitor, const wchar_t* outputPath, bool au
     return true;
 }
 
-void CaptureSession::Stop()
+void WindowsGraphicsCaptureSession::Stop()
 {
     if (!m_isActive)
     {
@@ -176,7 +177,7 @@ void CaptureSession::Stop()
     m_isActive = false;
 }
 
-void CaptureSession::ToggleAudioCapture(bool enabled)
+void WindowsGraphicsCaptureSession::ToggleAudioCapture(bool enabled)
 {
     // Only toggle if audio capture is currently running
     if (m_audioInputSource && m_audioInputSource->IsRunning())

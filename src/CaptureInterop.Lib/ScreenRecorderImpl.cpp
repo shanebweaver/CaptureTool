@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "ScreenRecorderImpl.h"
-#include "CaptureSession.h"
+#include "WindowsGraphicsCaptureSession.h"
 
 ScreenRecorderImpl::ScreenRecorderImpl()
     : m_captureSession(nullptr)
@@ -17,8 +17,8 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
     // Stop any existing session
     StopRecording();
 
-    // Create a new capture session
-    m_captureSession = std::make_unique<CaptureSession>();
+    // Create a new Windows Graphics Capture session
+    m_captureSession = std::make_unique<WindowsGraphicsCaptureSession>();
     
     // Start the session
     HRESULT hr = S_OK;

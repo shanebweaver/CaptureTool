@@ -33,19 +33,34 @@
     <ClInclude Include="AudioCaptureHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicsCaptureHelpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="ScreenRecorderImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CaptureSession.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="IAudioInputSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SystemAudioInputSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IMediaClockReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MediaClock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IMediaClockWriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IMediaClockController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ICaptureSession.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsGraphicsCaptureSession.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsGraphicsCaptureHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,10 +83,13 @@
     <ClCompile Include="ScreenRecorderImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CaptureSession.cpp">
+    <ClCompile Include="SystemAudioInputSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SystemAudioInputSource.cpp">
+    <ClCompile Include="WindowsGraphicsCaptureSession.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MediaClock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
