@@ -91,6 +91,7 @@
   <ItemGroup>
     <ClInclude Include="AudioCaptureDevice.h" />
     <ClInclude Include="AudioCaptureHandler.h" />
+    <ClInclude Include="CaptureSession.h" />
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GraphicsCaptureHelpers.cpp" />
@@ -101,6 +102,7 @@
   <ItemGroup>
     <ClCompile Include="AudioCaptureDevice.cpp" />
     <ClCompile Include="AudioCaptureHandler.cpp" />
+    <ClCompile Include="CaptureSession.cpp" />
     <ClCompile Include="FrameArrivedHandler.cpp" />
     <ClCompile Include="MP4SinkWriter.cpp" />
     <ClCompile Include="pch.cpp">

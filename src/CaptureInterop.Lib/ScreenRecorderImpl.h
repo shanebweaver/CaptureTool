@@ -1,14 +1,10 @@
 #pragma once
 #include "pch.h"
-#include "MP4SinkWriter.h"
-
-// Forward declarations
-class FrameArrivedHandler;
-class AudioCaptureHandler;
+#include "CaptureSession.h"
 
 /// <summary>
 /// Implementation class for screen recording functionality.
-/// Manages the capture session, frame pool, and audio/video sink writers.
+/// Manages the capture session lifecycle.
 /// </summary>
 class ScreenRecorderImpl
 {
@@ -47,10 +43,5 @@ public:
     void ToggleAudioCapture(bool enabled);
 
 private:
-    wil::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession> m_session;
-    wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool> m_framePool;
-    EventRegistrationToken m_frameArrivedEventToken;
-    FrameArrivedHandler* m_frameHandler;
-    MP4SinkWriter m_sinkWriter;
-    std::unique_ptr<AudioCaptureHandler> m_audioHandler;
+    std::unique_ptr<CaptureSession> m_captureSession;
 };
