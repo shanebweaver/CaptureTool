@@ -1,3 +1,4 @@
+#pragma once
 #include "pch.h"
 
 using namespace ABI::Windows::Graphics;
@@ -5,9 +6,22 @@ using namespace ABI::Windows::Graphics::Capture;
 using namespace ABI::Windows::Graphics::DirectX;
 using namespace ABI::Windows::Graphics::DirectX::Direct3D11;
 
-namespace GraphicsCaptureHelpers
+namespace WindowsGraphicsCaptureHelpers
 {
-    static wil::com_ptr<IGraphicsCaptureItemInterop> GetGraphicsCaptureItemInterop(HRESULT* outHr = nullptr)
+    /// <summary>
+    /// Helper structure containing D3D11 device and context.
+    /// </summary>
+    struct D3DDeviceAndContext
+    {
+        wil::com_ptr<ID3D11Device> device;
+        wil::com_ptr<ID3D11DeviceContext> context;
+    };
+
+    /// <summary>
+    /// Get the Graphics Capture Item interop factory.
+    /// Required for creating capture items from HWNDs or HMONITORs.
+    /// </summary>
+    inline wil::com_ptr<IGraphicsCaptureItemInterop> GetGraphicsCaptureItemInterop(HRESULT* outHr = nullptr)
     {
         wil::com_ptr<IGraphicsCaptureItemInterop> interop;
 
@@ -48,7 +62,13 @@ namespace GraphicsCaptureHelpers
         return interop;
     }
 
-    static wil::com_ptr<IGraphicsCaptureItem> GetGraphicsCaptureItemForMonitor(HMONITOR hMonitor, wil::com_ptr<IGraphicsCaptureItemInterop> interop, HRESULT* outHr = nullptr)
+    /// <summary>
+    /// Create a Graphics Capture Item for a specific monitor.
+    /// </summary>
+    inline wil::com_ptr<IGraphicsCaptureItem> GetGraphicsCaptureItemForMonitor(
+        HMONITOR hMonitor, 
+        wil::com_ptr<IGraphicsCaptureItemInterop> interop, 
+        HRESULT* outHr = nullptr)
     {
         wil::com_ptr<IGraphicsCaptureItem> item;
         HRESULT hr = interop->CreateForMonitor(
@@ -67,13 +87,10 @@ namespace GraphicsCaptureHelpers
         return item;
     }
 
-    struct D3DDeviceAndContext
-    {
-        wil::com_ptr<ID3D11Device> device;
-        wil::com_ptr<ID3D11DeviceContext> context;
-    };
-
-    static D3DDeviceAndContext InitializeD3D(HRESULT* outHr = nullptr)
+    /// <summary>
+    /// Initialize Direct3D 11 device and context with BGRA support for capture.
+    /// </summary>
+    inline D3DDeviceAndContext InitializeD3D(HRESULT* outHr = nullptr)
     {
         D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
         wil::com_ptr<ID3D11Device> device;
@@ -98,11 +115,17 @@ namespace GraphicsCaptureHelpers
             return {};
         }
 
-        if (outHr) *outHr = hr;
+        if (outHr) *outHr = S_OK;
         return { std::move(device), std::move(context) };
     }
 
-    static wil::com_ptr<IDirect3DDevice> CreateDirect3DDevice(wil::com_ptr<ID3D11Device> device, HRESULT* outHr = nullptr)
+    /// <summary>
+    /// Create a WinRT Direct3DDevice from a D3D11 device.
+    /// Required for interop with Windows.Graphics.Capture API.
+    /// </summary>
+    inline wil::com_ptr<IDirect3DDevice> CreateDirect3DDevice(
+        wil::com_ptr<ID3D11Device> device, 
+        HRESULT* outHr = nullptr)
     {
         HRESULT hr;
         wil::com_ptr<IDXGIDevice> dxgiDevice;
@@ -133,7 +156,10 @@ namespace GraphicsCaptureHelpers
         return direct3DDevice;
     }
 
-    static wil::com_ptr<IDirect3D11CaptureFramePool> CreateCaptureFramePool(
+    /// <summary>
+    /// Create a Direct3D11 capture frame pool for buffering captured frames.
+    /// </summary>
+    inline wil::com_ptr<IDirect3D11CaptureFramePool> CreateCaptureFramePool(
         wil::com_ptr<IGraphicsCaptureItem> captureItem,
         wil::com_ptr<IDirect3DDevice> direct3DDevice,
         HRESULT* outHr = nullptr)
@@ -193,7 +219,10 @@ namespace GraphicsCaptureHelpers
         return framePool;
     }
 
-    static wil::com_ptr<IGraphicsCaptureSession> CreateCaptureSession(
+    /// <summary>
+    /// Create a Graphics Capture Session from a frame pool and capture item.
+    /// </summary>
+    inline wil::com_ptr<IGraphicsCaptureSession> CreateCaptureSession(
         wil::com_ptr<IDirect3D11CaptureFramePool> framePool,
         wil::com_ptr<IGraphicsCaptureItem> captureItem,
         HRESULT* outHr = nullptr)
@@ -207,6 +236,7 @@ namespace GraphicsCaptureHelpers
             return nullptr;
         }
 
+        if (outHr) *outHr = S_OK;
         return session;
     }
 }

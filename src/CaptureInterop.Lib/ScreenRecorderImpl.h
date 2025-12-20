@@ -1,20 +1,35 @@
 #pragma once
 #include "pch.h"
-#include "MP4SinkWriter.h"
-
-// Forward declarations
-class FrameArrivedHandler;
-class AudioCaptureHandler;
+#include "ICaptureSession.h"
+#include "ICaptureSessionFactory.h"
+#include "CaptureSessionConfig.h"
 
 /// <summary>
 /// Implementation class for screen recording functionality.
-/// Manages the capture session, frame pool, and audio/video sink writers.
+/// Manages the capture session lifecycle.
 /// </summary>
 class ScreenRecorderImpl
 {
 public:
+    /// <summary>
+    /// Constructor that takes a factory for creating capture sessions.
+    /// </summary>
+    /// <param name="factory">Factory for creating ICaptureSession instances. Ownership is transferred.</param>
+    explicit ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> factory);
+    
+    /// <summary>
+    /// Default constructor that creates a default factory.
+    /// </summary>
     ScreenRecorderImpl();
+    
     ~ScreenRecorderImpl();
+
+    /// <summary>
+    /// Start recording with configuration settings.
+    /// </summary>
+    /// <param name="config">Configuration settings for the capture session.</param>
+    /// <returns>True if recording started successfully, false otherwise.</returns>
+    bool StartRecording(const CaptureSessionConfig& config);
 
     /// <summary>
     /// Start recording the specified monitor to an output file.
@@ -47,10 +62,6 @@ public:
     void ToggleAudioCapture(bool enabled);
 
 private:
-    wil::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession> m_session;
-    wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool> m_framePool;
-    EventRegistrationToken m_frameArrivedEventToken;
-    FrameArrivedHandler* m_frameHandler;
-    MP4SinkWriter m_sinkWriter;
-    std::unique_ptr<AudioCaptureHandler> m_audioHandler;
+    std::unique_ptr<ICaptureSession> m_captureSession;
+    std::unique_ptr<ICaptureSessionFactory> m_factory;
 };
