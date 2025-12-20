@@ -7,8 +7,9 @@
 
 using namespace WindowsGraphicsCaptureHelpers;
 
-WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession()
-    : m_frameHandler(nullptr)
+WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(const CaptureSessionConfig& config)
+    : m_config(config)
+    , m_frameHandler(nullptr)
     , m_audioInputSource(std::make_unique<SystemAudioInputSource>())
     , m_isActive(false)
 {
@@ -20,14 +21,7 @@ WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
     Stop();
 }
 
-bool WindowsGraphicsCaptureSession::Start(const CaptureSessionConfig& config, HRESULT* outHr)
-{
-    // Delegate to existing Start method
-    // TODO: Use config.frameRate, config.videoBitrate, and config.audioBitrate when implementing encoder settings
-    return Start(config.hMonitor, config.outputPath, config.audioEnabled, outHr);
-}
-
-bool WindowsGraphicsCaptureSession::Start(HMONITOR hMonitor, const wchar_t* outputPath, bool audioEnabled, HRESULT* outHr)
+bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
 
@@ -39,7 +33,7 @@ bool WindowsGraphicsCaptureSession::Start(HMONITOR hMonitor, const wchar_t* outp
         return false;
     }
 
-    wil::com_ptr<IGraphicsCaptureItem> captureItem = GetGraphicsCaptureItemForMonitor(hMonitor, interop, &hr);
+    wil::com_ptr<IGraphicsCaptureItem> captureItem = GetGraphicsCaptureItemForMonitor(m_config.hMonitor, interop, &hr);
     if (!captureItem)
     {
         if (outHr) *outHr = hr;
@@ -88,7 +82,8 @@ bool WindowsGraphicsCaptureSession::Start(HMONITOR hMonitor, const wchar_t* outp
     }
     
     // Initialize video sink writer
-    if (!m_sinkWriter.Initialize(outputPath, device.get(), size.Width, size.Height, &hr))
+    // TODO: Use m_config.frameRate, m_config.videoBitrate, and m_config.audioBitrate when implementing encoder settings
+    if (!m_sinkWriter.Initialize(m_config.outputPath, device.get(), size.Width, size.Height, &hr))
     {
         if (outHr) *outHr = hr;
         return false;
@@ -105,7 +100,7 @@ bool WindowsGraphicsCaptureSession::Start(HMONITOR hMonitor, const wchar_t* outp
             m_audioInputSource->SetSinkWriter(&m_sinkWriter);
                     
             // Start audio capture
-            m_audioInputSource->SetEnabled(audioEnabled);
+            m_audioInputSource->SetEnabled(m_config.audioEnabled);
             hr = m_audioInputSource->Start(&hr);
             if (FAILED(hr))
             {

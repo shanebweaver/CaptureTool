@@ -6,10 +6,5 @@ std::unique_ptr<ICaptureSession> WindowsGraphicsCaptureSessionFactory::CreateSes
 {
     // Create session and configure it
     // For now, we just create the session. The config will be used when Start() is called.
-    return std::make_unique<WindowsGraphicsCaptureSession>();
-}
-
-std::unique_ptr<ICaptureSession> WindowsGraphicsCaptureSessionFactory::CreateSession()
-{
-    return std::make_unique<WindowsGraphicsCaptureSession>();
+    return std::make_unique<WindowsGraphicsCaptureSession>(config);
 }

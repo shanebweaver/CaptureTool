@@ -72,9 +72,6 @@
     <ClInclude Include="WindowsGraphicsCaptureSessionFactory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WindowsCaptureSessionFactory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

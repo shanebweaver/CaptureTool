@@ -16,7 +16,7 @@ class MediaClock;
 class WindowsGraphicsCaptureSession : public ICaptureSession
 {
 public:
-    WindowsGraphicsCaptureSession();
+    WindowsGraphicsCaptureSession(const CaptureSessionConfig& config);
     ~WindowsGraphicsCaptureSession() override;
 
     // Delete copy and move operations
@@ -26,13 +26,15 @@ public:
     WindowsGraphicsCaptureSession& operator=(WindowsGraphicsCaptureSession&&) = delete;
 
     // ICaptureSession implementation
-    bool Start(const CaptureSessionConfig& config, HRESULT* outHr = nullptr) override;
-    bool Start(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio, HRESULT* outHr = nullptr) override;
+    bool Start(HRESULT* outHr = nullptr) override;
     void Stop() override;
     void ToggleAudioCapture(bool enabled) override;
     bool IsActive() const override { return m_isActive; }
 
 private:
+    // Configuration
+    CaptureSessionConfig m_config;
+    
     // Windows Graphics Capture resources
     wil::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession> m_captureSession;
     wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool> m_framePool;

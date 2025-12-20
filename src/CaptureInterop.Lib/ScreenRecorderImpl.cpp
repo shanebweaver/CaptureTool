@@ -23,12 +23,12 @@ bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
     // Stop any existing session
     StopRecording();
 
-    // Create a new capture session using the factory
-    m_captureSession = m_factory->CreateSession();
+    // Create a new capture session using the factory with the config
+    m_captureSession = m_factory->CreateSession(config);
        
-    // Start the session with config
+    // Start the session
     HRESULT hr = S_OK;
-    if (!m_captureSession->Start(config, &hr))
+    if (!m_captureSession->Start(&hr))
     {
         m_captureSession.reset();
         return false;
