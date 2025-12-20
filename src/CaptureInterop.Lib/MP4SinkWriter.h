@@ -36,20 +36,6 @@ public:
     bool InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* outHr = nullptr);
 
     /// <summary>
-    /// Set the recording start time for audio/video synchronization.
-    /// Should be called by the first capture stream to start (usually video).
-    /// </summary>
-    /// <param name="qpcStart">QPC timestamp at recording start.</param>
-    void SetRecordingStartTime(LONGLONG qpcStart);
-    
-    /// <summary>
-    /// Get the recording start time for audio/video synchronization.
-    /// Returns 0 if not yet set.
-    /// </summary>
-    /// <returns>QPC timestamp at recording start, or 0 if not set.</returns>
-    LONGLONG GetRecordingStartTime() const { return m_recordingStartQpc; }
-
-    /// <summary>
     /// Get the media clock for synchronized timing across audio and video.
     /// </summary>
     /// <returns>Pointer to the MediaClock instance.</returns>
@@ -95,7 +81,6 @@ private:
     ID3D11Device* m_device = nullptr;
     ID3D11DeviceContext* m_context = nullptr;
     LONGLONG m_prevVideoTimestamp = 0;
-    LONGLONG m_recordingStartQpc = 0;           // Common start time for A/V sync (QPC ticks) - kept for backward compatibility
     WAVEFORMATEX m_audioFormat = {};            // Cached audio format info
     MediaClock* m_clock = nullptr;              // Media clock for synchronized timing
 };

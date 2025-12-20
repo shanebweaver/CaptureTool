@@ -145,13 +145,6 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
     {
         // We started the clock
         m_clockStarted.store(true);
-        
-        // Keep backward compatibility: still set on sink writer
-        LONGLONG startQpc = clock->GetStartQpc();
-        if (startQpc != 0)
-        {
-            m_sinkWriter->SetRecordingStartTime(startQpc);
-        }
     }
     
     // Get current elapsed time from clock (replaces relative timestamp calculation)

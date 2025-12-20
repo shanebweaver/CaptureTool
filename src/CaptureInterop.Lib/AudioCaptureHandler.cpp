@@ -42,13 +42,6 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
         if (clock)
         {
             clock->Start();  // Idempotent - only first call starts the clock
-            
-            // Keep backward compatibility: still set on sink writer
-            LONGLONG startQpc = clock->GetStartQpc();
-            if (startQpc != 0)
-            {
-                m_sinkWriter->SetRecordingStartTime(startQpc);
-            }
         }
     }
 
