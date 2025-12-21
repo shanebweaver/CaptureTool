@@ -5,6 +5,7 @@
 // Forward declarations
 class IMediaClockFactory;
 class IAudioCaptureSourceFactory;
+class IVideoCaptureSourceFactory;
 
 /// <summary>
 /// Factory implementation for creating Windows Graphics Capture sessions.
@@ -15,7 +16,8 @@ class WindowsGraphicsCaptureSessionFactory : public ICaptureSessionFactory
 public:
     WindowsGraphicsCaptureSessionFactory(
         IMediaClockFactory* mediaClockFactory,
-        IAudioCaptureSourceFactory* audioCaptureSourceFactory);
+        IAudioCaptureSourceFactory* audioCaptureSourceFactory,
+        IVideoCaptureSourceFactory* videoCaptureSourceFactory);
     ~WindowsGraphicsCaptureSessionFactory() override = default;
 
     // Delete copy and move operations
@@ -34,4 +36,5 @@ public:
 private:
     IMediaClockFactory* m_mediaClockFactory;
     IAudioCaptureSourceFactory* m_audioCaptureSourceFactory;
+    IVideoCaptureSourceFactory* m_videoCaptureSourceFactory;
 };

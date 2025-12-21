@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -31,6 +31,12 @@
     <Filter Include="Source Files\AudioCapture">
       <UniqueIdentifier>{e1841522-c212-4664-a754-2cd32d4971f8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\VideoCapture">
+      <UniqueIdentifier>{abbe531b-6bc4-481c-b92a-2a168797ba52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\VideoCapture">
+      <UniqueIdentifier>{f3a2ba12-d175-476e-a2b2-6bc3b9a1479d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -40,9 +46,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MP4SinkWriter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameArrivedHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ScreenRecorderImpl.h">
@@ -96,14 +99,29 @@
     <ClInclude Include="AudioCaptureHandler.h">
       <Filter>Header Files\AudioCapture</Filter>
     </ClInclude>
-    <ClInclude Include="WindowsSystemAudioCaptureSource.h">
+    <ClInclude Include="WindowsLocalAudioCaptureSource.h">
+      <Filter>Header Files\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsLocalAudioCaptureSourceFactory.h">
       <Filter>Header Files\AudioCapture</Filter>
     </ClInclude>
     <ClInclude Include="IAudioCaptureSourceFactory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowsSystemAudioCaptureSourceFactory.h">
       <Filter>Header Files\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="IVideoCaptureSource.h">
+      <Filter>Header Files\VideoCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="IVideoCaptureSourceFactory.h">
+      <Filter>Header Files\VideoCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameArrivedHandler.h">
+      <Filter>Header Files\VideoCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsDesktopVideoCaptureSource.h">
+      <Filter>Header Files\VideoCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsDesktopVideoCaptureSourceFactory.h">
+      <Filter>Header Files\VideoCapture</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -111,9 +129,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MP4SinkWriter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FrameArrivedHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ScreenRecorderImpl.cpp">
@@ -131,10 +146,10 @@
     <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp">
       <Filter>Source Files\CaptureSession</Filter>
     </ClCompile>
-    <ClCompile Include="WindowsSystemAudioCaptureSource.cpp">
+    <ClCompile Include="WindowsLocalAudioCaptureSource.cpp">
       <Filter>Source Files\AudioCapture</Filter>
     </ClCompile>
-    <ClCompile Include="WindowsSystemAudioCaptureSourceFactory.cpp">
+    <ClCompile Include="WindowsLocalAudioCaptureSourceFactory.cpp">
       <Filter>Source Files\AudioCapture</Filter>
     </ClCompile>
     <ClCompile Include="AudioCaptureDevice.cpp">
@@ -142,6 +157,15 @@
     </ClCompile>
     <ClCompile Include="AudioCaptureHandler.cpp">
       <Filter>Source Files\AudioCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="FrameArrivedHandler.cpp">
+      <Filter>Source Files\VideoCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsDesktopVideoCaptureSource.cpp">
+      <Filter>Source Files\VideoCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsDesktopVideoCaptureSourceFactory.cpp">
+      <Filter>Source Files\VideoCapture</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

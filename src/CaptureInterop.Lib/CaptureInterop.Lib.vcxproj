@@ -103,16 +103,20 @@
     <ClInclude Include="IMediaClockFactory.h" />
     <ClInclude Include="IMediaClockReader.h" />
     <ClInclude Include="IMediaClockWriter.h" />
+    <ClInclude Include="IVideoCaptureSource.h" />
+    <ClInclude Include="IVideoCaptureSourceFactory.h" />
     <ClInclude Include="SimpleMediaClock.h" />
     <ClInclude Include="MP4SinkWriter.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenRecorderImpl.h" />
     <ClInclude Include="SimpleMediaClockFactory.h" />
-    <ClInclude Include="WindowsSystemAudioCaptureSource.h" />
+    <ClInclude Include="WindowsDesktopVideoCaptureSource.h" />
+    <ClInclude Include="WindowsDesktopVideoCaptureSourceFactory.h" />
+    <ClInclude Include="WindowsLocalAudioCaptureSource.h" />
     <ClInclude Include="WindowsGraphicsCaptureSessionFactory.h" />
     <ClInclude Include="WindowsGraphicsCaptureHelpers.h" />
     <ClInclude Include="WindowsGraphicsCaptureSession.h" />
-    <ClInclude Include="WindowsSystemAudioCaptureSourceFactory.h" />
+    <ClInclude Include="WindowsLocalAudioCaptureSourceFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AudioCaptureDevice.cpp" />
@@ -128,10 +132,12 @@
     </ClCompile>
     <ClCompile Include="ScreenRecorderImpl.cpp" />
     <ClCompile Include="SimpleMediaClockFactory.cpp" />
-    <ClCompile Include="WindowsSystemAudioCaptureSource.cpp" />
+    <ClCompile Include="WindowsDesktopVideoCaptureSource.cpp" />
+    <ClCompile Include="WindowsDesktopVideoCaptureSourceFactory.cpp" />
+    <ClCompile Include="WindowsLocalAudioCaptureSource.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSession.cpp" />
-    <ClCompile Include="WindowsSystemAudioCaptureSourceFactory.cpp" />
+    <ClCompile Include="WindowsLocalAudioCaptureSourceFactory.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

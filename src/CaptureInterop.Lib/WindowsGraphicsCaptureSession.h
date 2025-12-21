@@ -6,8 +6,10 @@
 // Forward declarations
 class FrameArrivedHandler;
 class IAudioCaptureSource;
+class IVideoCaptureSource;
 class IMediaClockFactory;
 class IAudioCaptureSourceFactory;
+class IVideoCaptureSourceFactory;
 class IMediaClock;
 
 /// <summary>
@@ -21,7 +23,8 @@ public:
     WindowsGraphicsCaptureSession(
         const CaptureSessionConfig& config,
         IMediaClockFactory* mediaClockFactory,
-        IAudioCaptureSourceFactory* audioCaptureSourceFactory);
+        IAudioCaptureSourceFactory* audioCaptureSourceFactory,
+        IVideoCaptureSourceFactory* videoCaptureSourceFactory);
     ~WindowsGraphicsCaptureSession() override;
 
     // Delete copy and move operations
@@ -43,20 +46,16 @@ private:
     // Factories
     IMediaClockFactory* m_mediaClockFactory;
     IAudioCaptureSourceFactory* m_audioCaptureSourceFactory;
-    
-    // Windows Graphics Capture resources
-    wil::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession> m_captureSession;
-    wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool> m_framePool;
-    EventRegistrationToken m_frameArrivedEventToken;
-    
-    // Frame processing handler
-    FrameArrivedHandler* m_frameHandler;
+    IVideoCaptureSourceFactory* m_videoCaptureSourceFactory;
     
     // Media output
     MP4SinkWriter m_sinkWriter;
     
     // Audio capture
     std::unique_ptr<IAudioCaptureSource> m_audioInputSource;
+    
+    // Video capture
+    std::unique_ptr<IVideoCaptureSource> m_videoCaptureSource;
     
     // Media clock for A/V synchronization
     std::unique_ptr<IMediaClock> m_mediaClock;

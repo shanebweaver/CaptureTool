@@ -2,6 +2,9 @@
 #include "WindowsGraphicsCaptureSession.h"
 #include "FrameArrivedHandler.h"
 #include "IAudioCaptureSourceFactory.h"
+#include "IVideoCaptureSourceFactory.h"
+#include "IVideoCaptureSource.h"
+#include "WindowsDesktopVideoCaptureSource.h"
 #include "IMediaClockFactory.h"
 #include "WindowsGraphicsCaptureHelpers.h"
 
@@ -10,15 +13,16 @@ using namespace WindowsGraphicsCaptureHelpers;
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     const CaptureSessionConfig& config,
     IMediaClockFactory* mediaClockFactory,
-    IAudioCaptureSourceFactory* audioCaptureSourceFactory)
+    IAudioCaptureSourceFactory* audioCaptureSourceFactory,
+    IVideoCaptureSourceFactory* videoCaptureSourceFactory)
     : m_config(config)
     , m_mediaClockFactory(mediaClockFactory)
     , m_audioCaptureSourceFactory(audioCaptureSourceFactory)
-    , m_frameHandler(nullptr)
+    , m_videoCaptureSourceFactory(videoCaptureSourceFactory)
     , m_audioInputSource(nullptr)
+    , m_videoCaptureSource(nullptr)
     , m_isActive(false)
 {
-    m_frameArrivedEventToken.value = 0;
 }
 
 WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
@@ -33,7 +37,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     // Simplify into these steps:
     // 1. Create clock
     // 2. Create audio input source
-    // 3. Create video input source
+    // 3. Create video capture source
     // 4. Configure clock using audio source
 	// 5. Start the clock and capture on both sources
 
@@ -59,71 +63,37 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         return false;
     }
 
-    // Get the graphics capture item
-    wil::com_ptr<IGraphicsCaptureItemInterop> interop = GetGraphicsCaptureItemInterop(&hr);
-    if (!interop)
+    // 3. Create video capture source
+    if (m_videoCaptureSourceFactory)
+    {
+        m_videoCaptureSource = m_videoCaptureSourceFactory->CreateVideoCaptureSource(m_config);
+    }
+    if (!m_videoCaptureSource)
+    {
+        if (outHr) *outHr = E_FAIL;
+        return false;
+    }
+
+    // Initialize video capture source
+    if (!m_videoCaptureSource->Initialize(&hr))
     {
         if (outHr) *outHr = hr;
         return false;
     }
 
-    wil::com_ptr<IGraphicsCaptureItem> captureItem = GetGraphicsCaptureItemForMonitor(m_config.hMonitor, interop, &hr);
-    if (!captureItem)
-    {
-        if (outHr) *outHr = hr;
-        return false;
-    }
-
-    // Initialize D3D device
-    D3DDeviceAndContext d3d = InitializeD3D(&hr);
-    if (FAILED(hr))
-    {
-        if (outHr) *outHr = hr;
-        return false;
-    }
-
-    wil::com_ptr<ID3D11Device> device = d3d.device;
-    wil::com_ptr<IDirect3DDevice> abiDevice = CreateDirect3DDevice(device, &hr);
-    if (FAILED(hr))
-    {
-        if (outHr) *outHr = hr;
-        return false;
-    }
-
-    // Create frame pool
-    m_framePool = CreateCaptureFramePool(captureItem, abiDevice, &hr);
-    if (FAILED(hr))
-    {
-        if (outHr) *outHr = hr;
-        return false;
-    }
-
-    // Create capture session
-    m_captureSession = CreateCaptureSession(m_framePool, captureItem, &hr);
-    if (FAILED(hr))
-    {
-        if (outHr) *outHr = hr;
-        return false;
-    }
-
-    // Get capture item size
-    SizeInt32 size{};
-    hr = captureItem->get_Size(&size);
-    if (FAILED(hr))
-    {
-        if (outHr) *outHr = hr;
-        return false;
-    }
+    // Initialize video sink writer using dimensions from video source
+    UINT32 width = m_videoCaptureSource->GetWidth();
+    UINT32 height = m_videoCaptureSource->GetHeight();
+    ID3D11Device* device = static_cast<WindowsDesktopVideoCaptureSource*>(m_videoCaptureSource.get())->GetDevice();
     
-    // Initialize video sink writer
     // TODO: Use m_config.frameRate, m_config.videoBitrate, and m_config.audioBitrate when implementing encoder settings
-    if (!m_sinkWriter.Initialize(m_config.outputPath, device.get(), size.Width, size.Height, &hr))
+    if (!m_sinkWriter.Initialize(m_config.outputPath, device, width, height, &hr))
     {
         if (outHr) *outHr = hr;
         return false;
     }
     
-    // Initialize audio capture device (true = loopback mode for system audio)
+    // Initialize audio capture device
     if (m_audioInputSource && m_audioInputSource->Initialize(&hr))
     {
         // Initialize audio stream on sink writer
@@ -144,13 +114,11 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         }
     }
     
-    // Register frame arrived handler
-    wil::com_ptr<MP4SinkWriter> sinkWriterPtr(&m_sinkWriter);
-    m_frameArrivedEventToken = RegisterFrameArrivedHandler(m_framePool, sinkWriterPtr, &m_frameHandler, &hr);
-
+    // Set the sink writer on video capture source
+    m_videoCaptureSource->SetSinkWriter(&m_sinkWriter);
+    
     // Start video capture
-    hr = m_captureSession->StartCapture();
-    if (FAILED(hr))
+    if (!m_videoCaptureSource->Start(&hr))
     {
         // If video capture fails, stop audio if it was started
         if (m_audioInputSource && m_audioInputSource->IsRunning())
@@ -173,42 +141,20 @@ void WindowsGraphicsCaptureSession::Stop()
         return;
     }
 
-    // Stop audio capture first
+    // Stop video capture first
+    if (m_videoCaptureSource)
+    {
+        m_videoCaptureSource->Stop();
+    }
+
+    // Stop audio capture
     if (m_audioInputSource)
     {
         m_audioInputSource->Stop();
     }
     
-    // Remove the event registration
-    if (m_framePool)
-    {
-        m_framePool->remove_FrameArrived(m_frameArrivedEventToken);
-    }
-
-    m_frameArrivedEventToken.value = 0;
-    
-    // Stop the frame handler and release our reference
-    if (m_frameHandler)
-    {
-        m_frameHandler->Stop();
-        m_frameHandler->Release();
-        m_frameHandler = nullptr;
-    }
-    
     // Finalize MP4 file after both streams have stopped
     m_sinkWriter.Finalize();
-
-    // Release capture session
-    if (m_captureSession)
-    {
-        m_captureSession.reset();
-    }
-
-    // Release frame pool
-    if (m_framePool)
-    {
-        m_framePool.reset();
-    }
 
     m_isActive = false;
 }

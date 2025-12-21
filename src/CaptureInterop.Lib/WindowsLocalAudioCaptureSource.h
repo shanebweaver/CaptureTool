@@ -7,11 +7,11 @@
 /// Audio input source that captures system audio using WASAPI loopback mode.
 /// Implements IAudioCaptureSource to provide system-wide audio capture.
 /// </summary>
-class WindowsSystemAudioCaptureSource : public IAudioCaptureSource
+class WindowsLocalAudioCaptureSource : public IAudioCaptureSource
 {
 public:
-    WindowsSystemAudioCaptureSource();
-    ~WindowsSystemAudioCaptureSource() override;
+    WindowsLocalAudioCaptureSource();
+    ~WindowsLocalAudioCaptureSource() override;
 
     // IAudioCaptureSource implementation
     bool Initialize(HRESULT* outHr = nullptr) override;

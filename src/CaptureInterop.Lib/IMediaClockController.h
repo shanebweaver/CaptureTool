@@ -35,4 +35,6 @@ public:
     /// Future feature for supporting pause/resume functionality.
     /// </summary>
     virtual void Resume() = 0;
+
+    // TODO: New method to Set the audio input source that controls the clock.
 };
