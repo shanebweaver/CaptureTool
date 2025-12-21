@@ -1,14 +1,10 @@
 #include "pch.h"
 #include "WindowsGraphicsCaptureSession.h"
-#include "FrameArrivedHandler.h"
 #include "IAudioCaptureSourceFactory.h"
 #include "IVideoCaptureSourceFactory.h"
 #include "IVideoCaptureSource.h"
 #include "WindowsDesktopVideoCaptureSource.h"
 #include "IMediaClockFactory.h"
-#include "WindowsGraphicsCaptureHelpers.h"
-
-using namespace WindowsGraphicsCaptureHelpers;
 
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     const CaptureSessionConfig& config,
@@ -34,14 +30,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
 
-    // Simplify into these steps:
-    // 1. Create clock
-    // 2. Create audio input source
-    // 3. Create video capture source
-    // 4. Configure clock using audio source
-	// 5. Start the clock and capture on both sources
-
-    // 1. Create clock
+    // Create clock
     if (m_mediaClockFactory)
     {
         m_mediaClock = m_mediaClockFactory->CreateClock();
@@ -52,10 +41,10 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         return false;
     }
 
-    // 2. Create audio input source
+    // Create audio input source with clock reader
     if (m_audioCaptureSourceFactory)
     {
-        m_audioInputSource = m_audioCaptureSourceFactory->CreateAudioCaptureSource();
+        m_audioInputSource = m_audioCaptureSourceFactory->CreateAudioCaptureSource(m_mediaClock.get());
     }
     if (!m_audioInputSource)
     {
@@ -63,10 +52,22 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         return false;
     }
 
-    // 3. Create video capture source
+    // Connect the audio source as the clock advancer so it drives the timeline
+    m_mediaClock->SetClockAdvancer(m_audioInputSource.get());
+
+    // Start the media clock early
+    LARGE_INTEGER qpc;
+    QueryPerformanceCounter(&qpc);
+    LONGLONG startQpc = qpc.QuadPart;
+    if (m_mediaClock)
+    {
+        m_mediaClock->Start(startQpc);
+    }
+
+    // Create video capture source with clock reader
     if (m_videoCaptureSourceFactory)
     {
-        m_videoCaptureSource = m_videoCaptureSourceFactory->CreateVideoCaptureSource(m_config);
+        m_videoCaptureSource = m_videoCaptureSourceFactory->CreateVideoCaptureSource(m_config, m_mediaClock.get());
     }
     if (!m_videoCaptureSource)
     {
@@ -116,18 +117,6 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     
     // Set the sink writer on video capture source
     m_videoCaptureSource->SetSinkWriter(&m_sinkWriter);
-
-    // Connect the audio source as the clock advancer so it drives the timeline
-    m_mediaClock->SetClockAdvancer(m_audioInputSource.get());
-
-    // Start the media clock
-    LARGE_INTEGER qpc;
-    QueryPerformanceCounter(&qpc);
-    LONGLONG startQpc = qpc.QuadPart;
-    if (m_mediaClock)
-    {
-        m_mediaClock->Start(startQpc);
-    }
 
     // Start video capture
     if (!m_videoCaptureSource->Start(&hr))

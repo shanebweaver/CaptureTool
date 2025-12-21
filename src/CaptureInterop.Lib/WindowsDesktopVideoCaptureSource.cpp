@@ -6,11 +6,11 @@
 
 using namespace WindowsGraphicsCaptureHelpers;
 
-WindowsDesktopVideoCaptureSource::WindowsDesktopVideoCaptureSource(const CaptureSessionConfig& config)
+WindowsDesktopVideoCaptureSource::WindowsDesktopVideoCaptureSource(const CaptureSessionConfig& config, IMediaClockReader* clockReader)
     : m_config(config)
     , m_frameHandler(nullptr)
     , m_sinkWriter(nullptr)
-    , m_clockWriter(nullptr)
+    , m_clockReader(clockReader)
     , m_width(0)
     , m_height(0)
     , m_isRunning(false)
@@ -108,9 +108,9 @@ bool WindowsDesktopVideoCaptureSource::Start(HRESULT* outHr)
         return false;
     }
 
-    // Register frame arrived handler
+    // Register frame arrived handler with clock reader for timestamps
     wil::com_ptr<MP4SinkWriter> sinkWriterPtr(m_sinkWriter);
-    m_frameArrivedEventToken = RegisterFrameArrivedHandler(m_framePool, sinkWriterPtr, &m_frameHandler, &hr);
+    m_frameArrivedEventToken = RegisterFrameArrivedHandler(m_framePool, sinkWriterPtr, m_clockReader, &m_frameHandler, &hr);
     if (FAILED(hr))
     {
         if (outHr) *outHr = hr;

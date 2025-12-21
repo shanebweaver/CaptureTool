@@ -2,7 +2,6 @@
 
 // Forward declarations
 class MP4SinkWriter;
-class IMediaClockWriter;
 
 /// <summary>
 /// Interface for video capture sources that can be captured and written to an output stream.
@@ -50,13 +49,6 @@ public:
     /// </summary>
     /// <param name="sinkWriter">Pointer to the MP4SinkWriter instance.</param>
     virtual void SetSinkWriter(MP4SinkWriter* sinkWriter) = 0;
-
-    /// <summary>
-    /// Set the media clock writer for timestamp synchronization.
-    /// Must be called before Start() for proper A/V sync.
-    /// </summary>
-    /// <param name="clockWriter">Pointer to the IMediaClockWriter instance.</param>
-    virtual void SetMediaClockWriter(IMediaClockWriter* clockWriter) = 0;
 
     /// <summary>
     /// Check if the video capture source is currently running.

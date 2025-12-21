@@ -4,16 +4,17 @@
 // Forward declarations
 class MP4SinkWriter;
 class IMediaClockWriter;
+class IMediaClockReader;
 
 /// <summary>
 /// Manages audio capture in a dedicated thread with synchronized timestamps.
 /// Captures audio samples from WASAPI and writes them to an MP4 sink writer.
-/// Uses accumulated timestamps to ensure proper audio playback speed.
+/// Uses the media clock reader to get synchronized timestamps.
 /// </summary>
 class AudioCaptureHandler
 {
 public:
-    AudioCaptureHandler();
+    AudioCaptureHandler(IMediaClockReader* clockReader);
     ~AudioCaptureHandler();
 
     /// <summary>
@@ -83,13 +84,14 @@ private:
     /// <summary>
     /// Audio capture thread procedure.
     /// Runs at ABOVE_NORMAL priority to ensure responsive capture without starving UI.
-    /// Uses accumulated timestamps to prevent audio speedup from overlapping samples.
+    /// Uses the media clock reader to get synchronized timestamps.
     /// </summary>
     void CaptureThreadProc();
     
     AudioCaptureDevice m_device;
     MP4SinkWriter* m_sinkWriter = nullptr;
     IMediaClockWriter* m_clockWriter = nullptr;
+    IMediaClockReader* m_clockReader = nullptr;
     
     std::thread m_captureThread;
     std::atomic<bool> m_isRunning{false};
@@ -99,7 +101,5 @@ private:
     
     std::vector<BYTE> m_silentBuffer;           // Reusable buffer for silent audio samples
     
-    LONGLONG m_startQpc = 0;                    // QPC value at recording start (for synchronization)
     LARGE_INTEGER m_qpcFrequency{};             // QPC frequency for time calculations
-    LONGLONG m_nextAudioTimestamp = 0;          // Accumulated timestamp (prevents overlapping samples)
 };

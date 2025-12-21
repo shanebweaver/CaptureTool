@@ -126,23 +126,6 @@ namespace CaptureInteropTests
             DeleteFileW(tempPath);
         }
 
-        TEST_METHOD(SetRecordingStartTime_StoresValue)
-        {
-            MP4SinkWriter writer;
-            LONGLONG testTime = 123456789LL;
-            
-            writer.SetRecordingStartTime(testTime);
-            
-            Assert::AreEqual(testTime, writer.GetRecordingStartTime());
-        }
-
-        TEST_METHOD(GetRecordingStartTime_DefaultsToZero)
-        {
-            MP4SinkWriter writer;
-            
-            Assert::AreEqual(0LL, writer.GetRecordingStartTime());
-        }
-
         TEST_METHOD(InitializeAudioStream_WithValidFormat_Succeeds)
         {
             auto device = CreateTestDevice();

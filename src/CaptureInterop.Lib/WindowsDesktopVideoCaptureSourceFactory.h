@@ -11,5 +11,5 @@ public:
     ~WindowsDesktopVideoCaptureSourceFactory() override = default;
 
     // IVideoCaptureSourceFactory implementation
-    std::unique_ptr<IVideoCaptureSource> CreateVideoCaptureSource(const CaptureSessionConfig& config) override;
+    std::unique_ptr<IVideoCaptureSource> CreateVideoCaptureSource(const CaptureSessionConfig& config, IMediaClockReader* clockReader) override;
 };

@@ -6,7 +6,7 @@
 // Forward declarations
 class FrameArrivedHandler;
 class MP4SinkWriter;
-class IMediaClockWriter;
+class IMediaClockReader;
 
 /// <summary>
 /// Windows Graphics Capture API implementation of IVideoCaptureSource.
@@ -15,7 +15,7 @@ class IMediaClockWriter;
 class WindowsDesktopVideoCaptureSource : public IVideoCaptureSource
 {
 public:
-    explicit WindowsDesktopVideoCaptureSource(const CaptureSessionConfig& config);
+    WindowsDesktopVideoCaptureSource(const CaptureSessionConfig& config, IMediaClockReader* clockReader);
     ~WindowsDesktopVideoCaptureSource() override;
 
     // Delete copy and move operations
@@ -31,7 +31,6 @@ public:
     UINT32 GetWidth() const override { return m_width; }
     UINT32 GetHeight() const override { return m_height; }
     void SetSinkWriter(MP4SinkWriter* sinkWriter) override { m_sinkWriter = sinkWriter; }
-    void SetMediaClockWriter(IMediaClockWriter* clockWriter) override { m_clockWriter = clockWriter; }
     bool IsRunning() const override { return m_isRunning; }
 
     /// <summary>
@@ -58,7 +57,7 @@ private:
     
     // Output
     MP4SinkWriter* m_sinkWriter;
-    IMediaClockWriter* m_clockWriter;
+    IMediaClockReader* m_clockReader;
     
     // Video dimensions
     UINT32 m_width;

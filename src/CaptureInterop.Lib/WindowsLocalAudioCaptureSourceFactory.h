@@ -21,6 +21,7 @@ public:
     /// <summary>
     /// Create a new WindowsLocalAudioCaptureSource instance.
     /// </summary>
+    /// <param name="clockReader">The media clock reader for timestamp synchronization.</param>
     /// <returns>A unique pointer to a new WindowsLocalAudioCaptureSource.</returns>
-    std::unique_ptr<IAudioCaptureSource> CreateAudioCaptureSource() override;
+    std::unique_ptr<IAudioCaptureSource> CreateAudioCaptureSource(IMediaClockReader* clockReader) override;
 };

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "FrameArrivedHandler.h"
+#include "IMediaClockReader.h"
 
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Graphics::DirectX;
@@ -7,8 +8,9 @@ using namespace ABI::Windows::Graphics::DirectX::Direct3D11;
 using namespace ABI::Windows::Graphics;
 using namespace ABI::Windows::Graphics::Capture;
 
-FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter) noexcept
+FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter, IMediaClockReader* clockReader) noexcept
     : m_sinkWriter(std::move(sinkWriter)),
+    m_clockReader(clockReader),
     m_ref(1),
     m_running(true),
     m_stopped(false),
@@ -103,13 +105,6 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
-    TimeSpan timestamp{};
-    hr = frame->get_SystemRelativeTime(&timestamp);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
     wil::com_ptr<IDirect3DSurface> surface;
     hr = frame->get_Surface(surface.put());
     if (FAILED(hr) || !surface)
@@ -131,30 +126,12 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
-    // First frame - establish the time base
-    LONGLONG firstFrameTime = m_firstFrameSystemTime.load();
-    if (firstFrameTime == 0)
+    // Get timestamp from media clock
+    LONGLONG timestamp = 0;
+    if (m_clockReader && m_clockReader->IsRunning())
     {
-        // Try to set it atomically
-        LONGLONG expected = 0;
-        if (m_firstFrameSystemTime.compare_exchange_strong(expected, timestamp.Duration))
-        {
-            // We successfully set it - also set recording start time
-            // Only set recording start time if we won the race to set first frame time
-            LARGE_INTEGER qpc;
-            QueryPerformanceCounter(&qpc);
-            m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
-            firstFrameTime = timestamp.Duration;
-        }
-        else
-        {
-            // Another thread won the race, use their value
-            firstFrameTime = m_firstFrameSystemTime.load();
-        }
+        timestamp = m_clockReader->GetCurrentTime();
     }
-    
-    // Calculate relative timestamp
-    LONGLONG relativeTimestamp = timestamp.Duration - firstFrameTime;
 
     // Queue the frame for background processing instead of processing synchronously
     // This prevents blocking the event callback thread
@@ -167,7 +144,7 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         {
             QueuedFrame queuedFrame;
             queuedFrame.texture = texture;
-            queuedFrame.relativeTimestamp = relativeTimestamp;
+            queuedFrame.relativeTimestamp = timestamp;
             m_frameQueue.push(std::move(queuedFrame));
             m_queueCV.notify_one();
         }
@@ -234,11 +211,12 @@ void FrameArrivedHandler::ProcessingThreadProc()
 EventRegistrationToken RegisterFrameArrivedHandler(
     wil::com_ptr<IDirect3D11CaptureFramePool> framePool,
     wil::com_ptr<MP4SinkWriter> sinkWriter,
+    IMediaClockReader* clockReader,
     FrameArrivedHandler** outHandler,
     HRESULT* outHr)
 {
     EventRegistrationToken token{};
-    auto handler = new FrameArrivedHandler(sinkWriter);
+    auto handler = new FrameArrivedHandler(sinkWriter, clockReader);
     
     // Start the processing thread after object is fully constructed
     handler->StartProcessing();

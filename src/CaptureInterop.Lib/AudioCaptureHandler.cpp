@@ -2,8 +2,10 @@
 #include "AudioCaptureHandler.h"
 #include "MP4SinkWriter.h"
 #include "IMediaClockWriter.h"
+#include "IMediaClockReader.h"
 
-AudioCaptureHandler::AudioCaptureHandler()
+AudioCaptureHandler::AudioCaptureHandler(IMediaClockReader* clockReader)
+    : m_clockReader(clockReader)
 {
     QueryPerformanceFrequency(&m_qpcFrequency);
 }
@@ -34,35 +36,6 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
     {
         return false;
     }
-
-    // Synchronize start time with video capture if available
-    if (m_sinkWriter)
-    {
-        LONGLONG sinkStartTime = m_sinkWriter->GetRecordingStartTime();
-        if (sinkStartTime != 0)
-        {
-            // Use existing recording start time from sink writer (video started first)
-            m_startQpc = sinkStartTime;
-        }
-        else
-        {
-            // Set the recording start time on the sink writer (audio starting first)
-            LARGE_INTEGER qpc;
-            QueryPerformanceCounter(&qpc);
-            m_startQpc = qpc.QuadPart;
-            m_sinkWriter->SetRecordingStartTime(m_startQpc);
-        }
-    }
-    else
-    {
-        // No sink writer, use local start time (audio-only mode)
-        LARGE_INTEGER qpc;
-        QueryPerformanceCounter(&qpc);
-        m_startQpc = qpc.QuadPart;
-    }
-
-    // Reset audio timestamp counter
-    m_nextAudioTimestamp = 0;
 
     m_isRunning = true;
     m_captureThread = std::thread(&AudioCaptureHandler::CaptureThreadProc, this);
@@ -105,6 +78,8 @@ void AudioCaptureHandler::CaptureThreadProc()
     // This provides responsive audio capture while keeping the UI responsive
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
     
+    LONGLONG lastTimestamp = 0;
+    
     while (m_isRunning)
     {
         BYTE* pData = nullptr;
@@ -134,21 +109,28 @@ void AudioCaptureHandler::CaptureThreadProc()
             
             const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
             
+            // Calculate duration based on actual audio frame count
+            LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
+            
             // Always process audio samples to maintain timeline continuity
-            // Process even when AUDCLNT_BUFFERFLAGS_SILENT is set to prevent tight loop that freezes UI
             if (m_sinkWriter)
             {
-                // If this is the first write after being disabled, sync timestamp to current recording time
-                // and prepare to skip several samples to drain any stale buffer data
-                if (m_nextAudioTimestamp == 0 || m_wasDisabled)
+                // Get current timestamp from media clock
+                LONGLONG timestamp = 0;
+                if (m_clockReader && m_clockReader->IsRunning())
                 {
-                    LARGE_INTEGER qpc;
-                    QueryPerformanceCounter(&qpc);
-                    LONGLONG currentQpc = qpc.QuadPart;
-                    LONGLONG elapsedQpc = currentQpc - m_startQpc;
-                    
-                    // Convert QPC ticks to 100ns units (Media Foundation time)
-                    m_nextAudioTimestamp = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
+                    timestamp = m_clockReader->GetCurrentTime();
+                }
+                else
+                {
+                    // Fallback: use last timestamp + duration if clock not available
+                    timestamp = lastTimestamp + duration;
+                }
+                
+                // If this is the first write after being disabled, prepare to skip several samples
+                // to drain any stale buffer data
+                if (m_wasDisabled)
+                {
                     m_wasDisabled = false;
                     
                     // Skip next few samples to fully drain stale buffer data
@@ -163,15 +145,6 @@ void AudioCaptureHandler::CaptureThreadProc()
                     m_device.ReleaseBuffer(framesRead);
                     continue;
                 }
-                
-                // Use accumulated timestamp to prevent overlapping samples
-                // This is crucial: using wall clock time would create overlaps since
-                // the capture loop runs faster (1-2ms) than audio buffer duration (10ms)
-                LONGLONG timestamp = m_nextAudioTimestamp;
-                
-                // Calculate duration based on actual audio frame count
-                // This gives the exact playback duration of this sample
-                LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
                 
                 // When audio is disabled or silent, write silent samples to maintain timeline continuity
                 // This prevents video from skipping ahead and prevents UI freeze from tight loops
@@ -202,8 +175,7 @@ void AudioCaptureHandler::CaptureThreadProc()
                     m_wasDisabled = true;
                 }
                 
-                // Always advance timestamp to maintain continuous timeline
-                m_nextAudioTimestamp += duration;
+                lastTimestamp = timestamp;
             }
 
             // Advance the media clock based on audio samples processed

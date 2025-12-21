@@ -33,24 +33,10 @@ public:
     bool InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* outHr = nullptr);
 
     /// <summary>
-    /// Set the recording start time for audio/video synchronization.
-    /// Should be called by the first capture stream to start (usually video).
-    /// </summary>
-    /// <param name="qpcStart">QPC timestamp at recording start.</param>
-    void SetRecordingStartTime(LONGLONG qpcStart);
-    
-    /// <summary>
-    /// Get the recording start time for audio/video synchronization.
-    /// Returns 0 if not yet set.
-    /// </summary>
-    /// <returns>QPC timestamp at recording start, or 0 if not set.</returns>
-    LONGLONG GetRecordingStartTime() const { return m_recordingStartQpc; }
-
-    /// <summary>
     /// Write a video frame to the MP4 file.
     /// </summary>
     /// <param name="texture">D3D11 texture containing the video frame.</param>
-    /// <param name="relativeTicks">Timestamp in 100-nanosecond units (relative to recording start).</param>
+    /// <param name="relativeTicks">Timestamp in 100-nanosecond units (from media clock).</param>
     /// <returns>S_OK on success, or error HRESULT.</returns>
     HRESULT WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTicks);
 
@@ -60,7 +46,7 @@ public:
     /// </summary>
     /// <param name="pData">Pointer to raw audio data (PCM or Float from WASAPI).</param>
     /// <param name="numFrames">Number of audio frames (one sample per channel).</param>
-    /// <param name="timestamp">Timestamp in 100-nanosecond units (accumulated, not relative).</param>
+    /// <param name="timestamp">Timestamp in 100-nanosecond units (from media clock).</param>
     /// <returns>S_OK on success, or error HRESULT.</returns>
     HRESULT WriteAudioSample(const BYTE* pData, UINT32 numFrames, LONGLONG timestamp);
 
@@ -86,6 +72,5 @@ private:
     ID3D11Device* m_device = nullptr;
     ID3D11DeviceContext* m_context = nullptr;
     LONGLONG m_prevVideoTimestamp = 0;
-    LONGLONG m_recordingStartQpc = 0;           // Common start time for A/V sync (QPC ticks)
     WAVEFORMATEX m_audioFormat = {};            // Cached audio format info
 };

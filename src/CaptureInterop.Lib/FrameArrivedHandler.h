@@ -3,6 +3,9 @@
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Graphics::Capture;
 
+// Forward declaration
+class IMediaClockReader;
+
 // Structure to hold frame data for processing
 struct QueuedFrame
 {
@@ -16,7 +19,7 @@ class FrameArrivedHandler final
     : public ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>
 {
 public:
-    explicit FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter) noexcept;
+    explicit FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter, IMediaClockReader* clockReader) noexcept;
     ~FrameArrivedHandler();
 
     // IUnknown
@@ -38,6 +41,7 @@ private:
 
     volatile long m_ref;
     wil::com_ptr<MP4SinkWriter> m_sinkWriter;
+    IMediaClockReader* m_clockReader;
     
     // Background processing
     std::queue<QueuedFrame> m_frameQueue;
@@ -47,10 +51,7 @@ private:
     std::atomic<bool> m_running{true};
     std::atomic<bool> m_stopped{false};  // Guard for idempotent Stop()
     std::atomic<bool> m_processingStarted{false};  // Guard for StartProcessing()
-    
-    // First frame tracking for timestamp calculation
-    std::atomic<LONGLONG> m_firstFrameSystemTime{0};
 };
 
 // Helper to register the frame-arrived event.
-EventRegistrationToken RegisterFrameArrivedHandler(wil::com_ptr<IDirect3D11CaptureFramePool> framePool, wil::com_ptr<MP4SinkWriter> sinkWriter, FrameArrivedHandler** outHandler = nullptr, HRESULT* outHr = nullptr);
+EventRegistrationToken RegisterFrameArrivedHandler(wil::com_ptr<IDirect3D11CaptureFramePool> framePool, wil::com_ptr<MP4SinkWriter> sinkWriter, IMediaClockReader* clockReader, FrameArrivedHandler** outHandler = nullptr, HRESULT* outHr = nullptr);

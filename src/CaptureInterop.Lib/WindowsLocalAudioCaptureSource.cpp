@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "WindowsLocalAudioCaptureSource.h"
 
-WindowsLocalAudioCaptureSource::WindowsLocalAudioCaptureSource()
-    : m_handler(std::make_unique<AudioCaptureHandler>())
+WindowsLocalAudioCaptureSource::WindowsLocalAudioCaptureSource(IMediaClockReader* clockReader)
+    : m_handler(std::make_unique<AudioCaptureHandler>(clockReader))
 {
 }
 

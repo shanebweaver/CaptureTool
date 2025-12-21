@@ -3,6 +3,9 @@
 #include "AudioCaptureHandler.h"
 #include <memory>
 
+// Forward declaration
+class IMediaClockReader;
+
 /// <summary>
 /// Audio input source that captures system audio using WASAPI loopback mode.
 /// Implements IAudioCaptureSource to provide system-wide audio capture.
@@ -10,7 +13,7 @@
 class WindowsLocalAudioCaptureSource : public IAudioCaptureSource
 {
 public:
-    WindowsLocalAudioCaptureSource();
+    explicit WindowsLocalAudioCaptureSource(IMediaClockReader* clockReader);
     ~WindowsLocalAudioCaptureSource() override;
 
     // IAudioCaptureSource implementation
