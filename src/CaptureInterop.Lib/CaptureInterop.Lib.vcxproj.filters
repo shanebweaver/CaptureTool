@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\MediaClock">
+      <UniqueIdentifier>{dbc25cd8-c255-47b5-aaef-1454086eebee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MediaClock">
+      <UniqueIdentifier>{f24db683-976f-40b6-ba6a-a8781db8ed52}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -42,18 +48,6 @@
     <ClInclude Include="SystemAudioInputSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="IMediaClockReader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MediaClock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMediaClockWriter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMediaClockController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ICaptureSession.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -71,6 +65,21 @@
     </ClInclude>
     <ClInclude Include="WindowsGraphicsCaptureSessionFactory.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IMediaClockWriter.h">
+      <Filter>Header Files\MediaClock</Filter>
+    </ClInclude>
+    <ClInclude Include="IMediaClockReader.h">
+      <Filter>Header Files\MediaClock</Filter>
+    </ClInclude>
+    <ClInclude Include="IMediaClockController.h">
+      <Filter>Header Files\MediaClock</Filter>
+    </ClInclude>
+    <ClInclude Include="IMediaClock.h">
+      <Filter>Header Files\MediaClock</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleMediaClock.h">
+      <Filter>Header Files\MediaClock</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -98,11 +107,11 @@
     <ClCompile Include="WindowsGraphicsCaptureSession.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MediaClock.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleMediaClock.cpp">
+      <Filter>Source Files\MediaClock</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

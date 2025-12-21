@@ -2,7 +2,7 @@
 #include "WindowsGraphicsCaptureSession.h"
 #include "FrameArrivedHandler.h"
 #include "SystemAudioInputSource.h"
-#include "MediaClock.h"
+#include "SimpleMediaClock.h"
 #include "WindowsGraphicsCaptureHelpers.h"
 
 using namespace WindowsGraphicsCaptureHelpers;
@@ -24,6 +24,16 @@ WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
 bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
+
+    // Simplify into these steps:
+    // 1. Create clock
+    // 2. Create audio input source
+    // 3. Create video input source
+    // 4. Configure clock using audio source
+	// 5. Start capture on both sources
+
+
+
 
     // Get the graphics capture item
     wil::com_ptr<IGraphicsCaptureItemInterop> interop = GetGraphicsCaptureItemInterop(&hr);

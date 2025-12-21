@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "MediaClock.h"
+#include "SimpleMediaClock.h"
 
-MediaClock::MediaClock()
+SimpleMediaClock::SimpleMediaClock()
     : m_currentTime(0)
     , m_startQpc(0)
     , m_qpcFrequency(0)
@@ -17,17 +17,17 @@ MediaClock::MediaClock()
 // IMediaClockReader implementation
 // ============================================================================
 
-LONGLONG MediaClock::GetCurrentTime() const
+LONGLONG SimpleMediaClock::GetCurrentTime() const
 {
     return m_currentTime.load();
 }
 
-LONGLONG MediaClock::GetStartTime() const
+LONGLONG SimpleMediaClock::GetStartTime() const
 {
     return m_startQpc.load();
 }
 
-LONGLONG MediaClock::GetRelativeTime(LONGLONG qpcTimestamp) const
+LONGLONG SimpleMediaClock::GetRelativeTime(LONGLONG qpcTimestamp) const
 {
     LONGLONG startQpc = m_startQpc.load();
     if (startQpc == 0)
@@ -39,12 +39,12 @@ LONGLONG MediaClock::GetRelativeTime(LONGLONG qpcTimestamp) const
     return QpcToTicks(qpcDelta);
 }
 
-bool MediaClock::IsRunning() const
+bool SimpleMediaClock::IsRunning() const
 {
     return m_isRunning.load();
 }
 
-LONGLONG MediaClock::GetQpcFrequency() const
+LONGLONG SimpleMediaClock::GetQpcFrequency() const
 {
     return m_qpcFrequency;
 }
@@ -53,7 +53,7 @@ LONGLONG MediaClock::GetQpcFrequency() const
 // IMediaClockController implementation
 // ============================================================================
 
-void MediaClock::Start(LONGLONG startQpc)
+void SimpleMediaClock::Start(LONGLONG startQpc)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     
@@ -63,7 +63,7 @@ void MediaClock::Start(LONGLONG startQpc)
     m_isPaused.store(false);
 }
 
-void MediaClock::Reset()
+void SimpleMediaClock::Reset()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     
@@ -73,7 +73,7 @@ void MediaClock::Reset()
     m_isPaused.store(false);
 }
 
-void MediaClock::Pause()
+void SimpleMediaClock::Pause()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     
@@ -83,7 +83,7 @@ void MediaClock::Pause()
     }
 }
 
-void MediaClock::Resume()
+void SimpleMediaClock::Resume()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     
@@ -97,7 +97,7 @@ void MediaClock::Resume()
 // IMediaClockWriter implementation
 // ============================================================================
 
-void MediaClock::AdvanceByAudioSamples(UINT32 numFrames, UINT32 sampleRate)
+void SimpleMediaClock::AdvanceByAudioSamples(UINT32 numFrames, UINT32 sampleRate)
 {
     if (!m_isRunning.load() || m_isPaused.load())
     {
@@ -116,7 +116,7 @@ void MediaClock::AdvanceByAudioSamples(UINT32 numFrames, UINT32 sampleRate)
 // Helper methods
 // ============================================================================
 
-LONGLONG MediaClock::QpcToTicks(LONGLONG qpcDelta) const
+LONGLONG SimpleMediaClock::QpcToTicks(LONGLONG qpcDelta) const
 {
     // Convert QPC ticks to 100ns units (REFERENCE_TIME)
     // ticks = (qpcDelta * TICKS_PER_SECOND) / qpcFrequency

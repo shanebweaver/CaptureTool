@@ -6,7 +6,7 @@
 // Forward declarations
 class FrameArrivedHandler;
 class IAudioInputSource;
-class MediaClock;
+class IMediaClock;
 
 /// <summary>
 /// Windows Graphics Capture API implementation of ICaptureSession.
@@ -50,7 +50,7 @@ private:
     std::unique_ptr<IAudioInputSource> m_audioInputSource;
     
     // Media clock for A/V synchronization (TODO: integrate properly)
-    // std::unique_ptr<MediaClock> m_mediaClock;
+    // std::unique_ptr<IMediaClock> m_mediaClock;
     
     // Session state
     bool m_isActive;

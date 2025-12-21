@@ -97,10 +97,11 @@
     <ClInclude Include="IAudioInputSource.h" />
     <ClInclude Include="ICaptureSession.h" />
     <ClInclude Include="ICaptureSessionFactory.h" />
+    <ClInclude Include="IMediaClock.h" />
     <ClInclude Include="IMediaClockController.h" />
     <ClInclude Include="IMediaClockReader.h" />
     <ClInclude Include="IMediaClockWriter.h" />
-    <ClInclude Include="MediaClock.h" />
+    <ClInclude Include="SimpleMediaClock.h" />
     <ClInclude Include="MP4SinkWriter.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenRecorderImpl.h" />
@@ -113,7 +114,7 @@
     <ClCompile Include="AudioCaptureDevice.cpp" />
     <ClCompile Include="AudioCaptureHandler.cpp" />
     <ClCompile Include="FrameArrivedHandler.cpp" />
-    <ClCompile Include="MediaClock.cpp" />
+    <ClCompile Include="SimpleMediaClock.cpp" />
     <ClCompile Include="MP4SinkWriter.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

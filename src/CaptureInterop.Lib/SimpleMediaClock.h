@@ -1,15 +1,13 @@
 #pragma once
-#include "IMediaClockReader.h"
-#include "IMediaClockController.h"
-#include "IMediaClockWriter.h"
+#include "IMediaClock.h"
 #include <atomic>
 #include <mutex>
 
 /// <summary>
-/// MediaClock provides a unified timeline for synchronizing audio and video streams.
+/// SimpleMediaClock provides a unified timeline for synchronizing audio and video streams.
 /// 
 /// Design principles:
-/// - Implements three separate interfaces for different responsibilities:
+/// - Implements IMediaClock interface with three responsibilities:
 ///   * IMediaClockReader (read-only access)
 ///   * IMediaClockController (lifecycle management)
 ///   * IMediaClockWriter (time advancement)
@@ -18,24 +16,24 @@
 /// - Converts between QPC (QueryPerformanceCounter) and media time (100ns ticks)
 /// 
 /// Usage pattern:
-/// 1. CaptureSession creates MediaClock instance
+/// 1. CaptureSession creates SimpleMediaClock instance
 /// 2. CaptureSession passes IMediaClockController to itself for lifecycle control
 /// 3. CaptureSession passes IMediaClockWriter to IAudioInputSource for time advancement
 /// 4. CaptureSession passes IMediaClockReader to video frame handlers for reading time
 /// 5. Audio source calls AdvanceByAudioSamples() to drive the clock
 /// 6. Video handlers call GetCurrentTime() to get synchronized timestamps
 /// </summary>
-class MediaClock : public IMediaClockReader, public IMediaClockController, public IMediaClockWriter
+class SimpleMediaClock : public IMediaClock
 {
 public:
-    MediaClock();
-    ~MediaClock() override = default;
+    SimpleMediaClock();
+    ~SimpleMediaClock() override = default;
 
     // Delete copy and move operations
-    MediaClock(const MediaClock&) = delete;
-    MediaClock& operator=(const MediaClock&) = delete;
-    MediaClock(MediaClock&&) = delete;
-    MediaClock& operator=(MediaClock&&) = delete;
+    SimpleMediaClock(const SimpleMediaClock&) = delete;
+    SimpleMediaClock& operator=(const SimpleMediaClock&) = delete;
+    SimpleMediaClock(SimpleMediaClock&&) = delete;
+    SimpleMediaClock& operator=(SimpleMediaClock&&) = delete;
 
     // IMediaClockReader implementation
     LONGLONG GetCurrentTime() const override;
