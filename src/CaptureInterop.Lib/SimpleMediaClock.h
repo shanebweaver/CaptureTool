@@ -18,7 +18,7 @@
 /// Usage pattern:
 /// 1. CaptureSession creates SimpleMediaClock instance
 /// 2. CaptureSession passes IMediaClockController to itself for lifecycle control
-/// 3. CaptureSession passes IMediaClockWriter to IAudioInputSource for time advancement
+/// 3. CaptureSession passes IMediaClockWriter to IAudioCaptureSource for time advancement
 /// 4. CaptureSession passes IMediaClockReader to video frame handlers for reading time
 /// 5. Audio source calls AdvanceByAudioSamples() to drive the clock
 /// 6. Video handlers call GetCurrentTime() to get synchronized timestamps

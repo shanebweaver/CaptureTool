@@ -5,7 +5,7 @@
 
 // Forward declarations
 class FrameArrivedHandler;
-class IAudioInputSource;
+class IAudioCaptureSource;
 class IMediaClock;
 
 /// <summary>
@@ -47,10 +47,10 @@ private:
     MP4SinkWriter m_sinkWriter;
     
     // Audio capture
-    std::unique_ptr<IAudioInputSource> m_audioInputSource;
+    std::unique_ptr<IAudioCaptureSource> m_audioInputSource;
     
-    // Media clock for A/V synchronization (TODO: integrate properly)
-    // std::unique_ptr<IMediaClock> m_mediaClock;
+    // Media clock for A/V synchronization
+    std::unique_ptr<IMediaClock> m_mediaClock;
     
     // Session state
     bool m_isActive;

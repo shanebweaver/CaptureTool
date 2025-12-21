@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "WindowsGraphicsCaptureSession.h"
 #include "FrameArrivedHandler.h"
-#include "SystemAudioInputSource.h"
-#include "SimpleMediaClock.h"
+#include "WasapiAudioCaptureSource.h"
+#include "SimpleMediaClockFactory.h"
 #include "WindowsGraphicsCaptureHelpers.h"
 
 using namespace WindowsGraphicsCaptureHelpers;
@@ -10,7 +10,7 @@ using namespace WindowsGraphicsCaptureHelpers;
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(const CaptureSessionConfig& config)
     : m_config(config)
     , m_frameHandler(nullptr)
-    , m_audioInputSource(std::make_unique<SystemAudioInputSource>())
+    , m_audioInputSource(std::make_unique<WasapiAudioCaptureSource>())
     , m_isActive(false)
 {
     m_frameArrivedEventToken.value = 0;
@@ -32,8 +32,14 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     // 4. Configure clock using audio source
 	// 5. Start capture on both sources
 
-
-
+    // 1. Create clock
+    SimpleMediaClockFactory clockFactory;
+    m_mediaClock = clockFactory.CreateClock();
+    if (!m_mediaClock)
+    {
+        if (outHr) *outHr = E_FAIL;
+        return false;
+    }
 
     // Get the graphics capture item
     wil::com_ptr<IGraphicsCaptureItemInterop> interop = GetGraphicsCaptureItemInterop(&hr);

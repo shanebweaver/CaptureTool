@@ -7,10 +7,10 @@ class MP4SinkWriter;
 /// Interface for audio input sources that can be captured and written to an output stream.
 /// Implementations provide different audio sources (system audio, microphone, etc.)
 /// </summary>
-class IAudioInputSource
+class IAudioCaptureSource
 {
 public:
-    virtual ~IAudioInputSource() = default;
+    virtual ~IAudioCaptureSource() = default;
 
     /// <summary>
     /// Initialize the audio input source.

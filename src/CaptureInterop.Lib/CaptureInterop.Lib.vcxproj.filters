@@ -19,6 +19,15 @@
     <Filter Include="Source Files\MediaClock">
       <UniqueIdentifier>{f24db683-976f-40b6-ba6a-a8781db8ed52}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\CaptureSession">
+      <UniqueIdentifier>{1331fa4c-7971-4888-b70b-279d068b1b95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\CaptureSession">
+      <UniqueIdentifier>{7c7a820d-99c9-426e-b4ca-68968cab35d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\AudioCapture">
+      <UniqueIdentifier>{b922d1ed-521e-4b64-a37e-ff190ce8a74f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -33,37 +42,7 @@
     <ClInclude Include="FrameArrivedHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AudioCaptureDevice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioCaptureHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ScreenRecorderImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IAudioInputSource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SystemAudioInputSource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ICaptureSession.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowsGraphicsCaptureSession.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowsGraphicsCaptureHelpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ICaptureSessionFactory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CaptureSessionConfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowsGraphicsCaptureSessionFactory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="IMediaClockWriter.h">
@@ -80,6 +59,42 @@
     </ClInclude>
     <ClInclude Include="SimpleMediaClock.h">
       <Filter>Header Files\MediaClock</Filter>
+    </ClInclude>
+    <ClInclude Include="IMediaClockFactory.h">
+      <Filter>Header Files\MediaClock</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleMediaClockFactory.h">
+      <Filter>Header Files\MediaClock</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureSessionConfig.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="ICaptureSession.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="ICaptureSessionFactory.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsGraphicsCaptureSession.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsGraphicsCaptureSessionFactory.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsGraphicsCaptureHelpers.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="IAudioCaptureSource.h">
+      <Filter>Header Files\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioCaptureDevice.h">
+      <Filter>Header Files\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioCaptureHandler.h">
+      <Filter>Header Files\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="WasapiAudioCaptureSource.h">
+      <Filter>Header Files\AudioCapture</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -101,17 +116,20 @@
     <ClCompile Include="ScreenRecorderImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SystemAudioInputSource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WindowsGraphicsCaptureSession.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp">
+    <ClCompile Include="WasapiAudioCaptureSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SimpleMediaClock.cpp">
       <Filter>Source Files\MediaClock</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleMediaClockFactory.cpp">
+      <Filter>Source Files\MediaClock</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsGraphicsCaptureSession.cpp">
+      <Filter>Source Files\CaptureSession</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp">
+      <Filter>Source Files\CaptureSession</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
