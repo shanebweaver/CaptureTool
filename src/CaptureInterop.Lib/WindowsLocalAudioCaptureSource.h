@@ -21,7 +21,7 @@ public:
     bool Start(HRESULT* outHr = nullptr) override;
     void Stop() override;
     WAVEFORMATEX* GetFormat() const override;
-    void SetSinkWriter(MP4SinkWriter* sinkWriter) override;
+    void SetAudioSampleReadyCallback(AudioSampleReadyCallback callback) override;
     void SetEnabled(bool enabled) override;
     bool IsEnabled() const override;
     bool IsRunning() const override;

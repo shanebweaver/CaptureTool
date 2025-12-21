@@ -1,14 +1,25 @@
 #pragma once
 #include "AudioCaptureDevice.h"
+#include <functional>
 
 // Forward declarations
-class MP4SinkWriter;
 class IMediaClockWriter;
 class IMediaClockReader;
 
 /// <summary>
+/// Event arguments for audio sample ready event.
+/// Contains the audio sample data and timing information.
+/// </summary>
+struct AudioSampleReadyEventArgs;
+
+/// <summary>
+/// Callback function type for audio sample ready events.
+/// </summary>
+using AudioSampleReadyCallback = std::function<void(const AudioSampleReadyEventArgs&)>;
+
+/// <summary>
 /// Manages audio capture in a dedicated thread with synchronized timestamps.
-/// Captures audio samples from WASAPI and writes them to an MP4 sink writer.
+/// Captures audio samples from WASAPI and fires an event when samples are ready.
 /// Uses the media clock reader to get synchronized timestamps.
 /// </summary>
 class AudioCaptureHandler
@@ -27,7 +38,6 @@ public:
     
     /// <summary>
     /// Start the audio capture thread.
-    /// Synchronizes start time with video capture if MP4SinkWriter is set.
     /// </summary>
     /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
     /// <returns>True if capture started successfully, false otherwise.</returns>
@@ -44,13 +54,13 @@ public:
     /// </summary>
     /// <returns>Pointer to WAVEFORMATEX structure, or nullptr if not initialized.</returns>
     WAVEFORMATEX* GetFormat() const;
-    
+
     /// <summary>
-    /// Set the MP4 sink writer to receive captured audio samples.
-    /// Must be called before Start() to enable audio/video synchronization.
+    /// Set the callback to be invoked when an audio sample is ready.
+    /// The callback is invoked on the audio capture thread.
     /// </summary>
-    /// <param name="sinkWriter">Pointer to the MP4SinkWriter instance.</param>
-    void SetSinkWriter(MP4SinkWriter* sinkWriter) { m_sinkWriter = sinkWriter; }
+    /// <param name="callback">Callback function to receive audio samples.</param>
+    void SetAudioSampleReadyCallback(AudioSampleReadyCallback callback) { m_audioSampleReadyCallback = callback; }
 
     /// <summary>
     /// Set the media clock writer to advance as audio samples are captured.
@@ -89,7 +99,7 @@ private:
     void CaptureThreadProc();
     
     AudioCaptureDevice m_device;
-    MP4SinkWriter* m_sinkWriter = nullptr;
+    AudioSampleReadyCallback m_audioSampleReadyCallback;
     IMediaClockWriter* m_clockWriter = nullptr;
     IMediaClockReader* m_clockReader = nullptr;
     

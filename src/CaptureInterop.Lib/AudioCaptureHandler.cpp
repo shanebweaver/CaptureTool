@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "AudioCaptureHandler.h"
-#include "MP4SinkWriter.h"
+#include "IAudioCaptureSource.h"
 #include "IMediaClockWriter.h"
 #include "IMediaClockReader.h"
 
@@ -113,7 +113,7 @@ void AudioCaptureHandler::CaptureThreadProc()
             LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
             
             // Always process audio samples to maintain timeline continuity
-            if (m_sinkWriter)
+            if (m_audioSampleReadyCallback)
             {
                 // Get current timestamp from media clock
                 LONGLONG timestamp = 0;
@@ -165,15 +165,14 @@ void AudioCaptureHandler::CaptureThreadProc()
                     pAudioData = m_silentBuffer.data();
                 }
                 
-                HRESULT hr = m_sinkWriter->WriteAudioSample(pAudioData, framesRead, timestamp);
+                // Fire the audio sample ready event
+                AudioSampleReadyEventArgs args;
+                args.pData = pAudioData;
+                args.numFrames = framesRead;
+                args.timestamp = timestamp;
+                args.pFormat = format;
                 
-                // If write fails, stop trying to write more samples to prevent blocking
-                if (FAILED(hr))
-                {
-                    // Disable audio writing to prevent further blocking
-                    m_isEnabled = false;
-                    m_wasDisabled = true;
-                }
+                m_audioSampleReadyCallback(args);
                 
                 lastTimestamp = timestamp;
             }

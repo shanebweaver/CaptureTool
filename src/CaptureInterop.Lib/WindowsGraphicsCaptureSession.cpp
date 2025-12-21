@@ -3,6 +3,7 @@
 #include "IAudioCaptureSourceFactory.h"
 #include "IVideoCaptureSourceFactory.h"
 #include "IVideoCaptureSource.h"
+#include "IAudioCaptureSource.h"
 #include "WindowsDesktopVideoCaptureSource.h"
 #include "IMediaClockFactory.h"
 
@@ -82,11 +83,35 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         return false;
     }
 
+    // Initialize audio capture source
+    if (!m_audioInputSource->Initialize(&hr))
+    {
+        if (outHr) *outHr = hr;
+        return false;
+    }
+
     // Initialize sink writer with video and audio streams
     if (!InitializeSinkWriter(&hr))
     {
         if (outHr) *outHr = hr;
         return false;
+    }
+    
+    // Set up audio sample callback to write to sink writer
+    if (m_audioInputSource)
+    {
+        m_audioInputSource->SetAudioSampleReadyCallback(
+            [this](const AudioSampleReadyEventArgs& args) {
+                // Write audio sample to sink writer
+                HRESULT hr = m_sinkWriter.WriteAudioSample(args.pData, args.numFrames, args.timestamp);
+                
+                // If write fails, disable audio to prevent further blocking
+                if (FAILED(hr))
+                {
+                    m_audioInputSource->SetEnabled(false);
+                }
+            }
+        );
     }
     
     // Start audio capture
@@ -134,7 +159,7 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
     }
     
     // Initialize audio stream if audio source is available
-    if (m_audioInputSource && m_audioInputSource->Initialize(&hr))
+    if (m_audioInputSource)
     {
         WAVEFORMATEX* audioFormat = m_audioInputSource->GetFormat();
         if (audioFormat)
@@ -144,9 +169,6 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
                 if (outHr) *outHr = hr;
                 return false;
             }
-            
-            // Set the sink writer on audio input source
-            m_audioInputSource->SetSinkWriter(&m_sinkWriter);
         }
     }
     

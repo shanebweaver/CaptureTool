@@ -32,9 +32,9 @@ WAVEFORMATEX* WindowsLocalAudioCaptureSource::GetFormat() const
     return m_handler->GetFormat();
 }
 
-void WindowsLocalAudioCaptureSource::SetSinkWriter(MP4SinkWriter* sinkWriter)
+void WindowsLocalAudioCaptureSource::SetAudioSampleReadyCallback(AudioSampleReadyCallback callback)
 {
-    m_handler->SetSinkWriter(sinkWriter);
+    m_handler->SetAudioSampleReadyCallback(callback);
 }
 
 void WindowsLocalAudioCaptureSource::SetEnabled(bool enabled)
