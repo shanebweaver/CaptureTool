@@ -107,7 +107,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenRecorderImpl.h" />
     <ClInclude Include="SimpleMediaClockFactory.h" />
-    <ClInclude Include="WasapiAudioCaptureSource.h" />
+    <ClInclude Include="WindowsSystemAudioCaptureSource.h" />
     <ClInclude Include="WindowsGraphicsCaptureSessionFactory.h" />
     <ClInclude Include="WindowsGraphicsCaptureHelpers.h" />
     <ClInclude Include="WindowsGraphicsCaptureSession.h" />
@@ -126,7 +126,7 @@
     </ClCompile>
     <ClCompile Include="ScreenRecorderImpl.cpp" />
     <ClCompile Include="SimpleMediaClockFactory.cpp" />
-    <ClCompile Include="WasapiAudioCaptureSource.cpp" />
+    <ClCompile Include="WindowsSystemAudioCaptureSource.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSession.cpp" />
   </ItemGroup>

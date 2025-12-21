@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "WindowsGraphicsCaptureSession.h"
 #include "FrameArrivedHandler.h"
-#include "WasapiAudioCaptureSource.h"
+#include "WindowsSystemAudioCaptureSource.h"
 #include "SimpleMediaClockFactory.h"
 #include "WindowsGraphicsCaptureHelpers.h"
 
@@ -10,7 +10,7 @@ using namespace WindowsGraphicsCaptureHelpers;
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(const CaptureSessionConfig& config)
     : m_config(config)
     , m_frameHandler(nullptr)
-    , m_audioInputSource(std::make_unique<WasapiAudioCaptureSource>())
+    , m_audioInputSource(std::make_unique<WindowsSystemAudioCaptureSource>())
     , m_isActive(false)
 {
     m_frameArrivedEventToken.value = 0;
@@ -30,7 +30,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     // 2. Create audio input source
     // 3. Create video input source
     // 4. Configure clock using audio source
-	// 5. Start capture on both sources
+	// 5. Start the clock and capture on both sources
 
     // 1. Create clock
     SimpleMediaClockFactory clockFactory;

@@ -93,7 +93,7 @@
     <ClInclude Include="AudioCaptureHandler.h">
       <Filter>Header Files\AudioCapture</Filter>
     </ClInclude>
-    <ClInclude Include="WasapiAudioCaptureSource.h">
+    <ClInclude Include="WindowsSystemAudioCaptureSource.h">
       <Filter>Header Files\AudioCapture</Filter>
     </ClInclude>
   </ItemGroup>
@@ -116,7 +116,7 @@
     <ClCompile Include="ScreenRecorderImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WasapiAudioCaptureSource.cpp">
+    <ClCompile Include="WindowsSystemAudioCaptureSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SimpleMediaClock.cpp">
