@@ -95,6 +95,7 @@
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="IAudioCaptureSource.h" />
+    <ClInclude Include="IAudioCaptureSourceFactory.h" />
     <ClInclude Include="ICaptureSession.h" />
     <ClInclude Include="ICaptureSessionFactory.h" />
     <ClInclude Include="IMediaClock.h" />
@@ -111,6 +112,7 @@
     <ClInclude Include="WindowsGraphicsCaptureSessionFactory.h" />
     <ClInclude Include="WindowsGraphicsCaptureHelpers.h" />
     <ClInclude Include="WindowsGraphicsCaptureSession.h" />
+    <ClInclude Include="WindowsSystemAudioCaptureSourceFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AudioCaptureDevice.cpp" />
@@ -129,6 +131,7 @@
     <ClCompile Include="WindowsSystemAudioCaptureSource.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSession.cpp" />
+    <ClCompile Include="WindowsSystemAudioCaptureSourceFactory.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

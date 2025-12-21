@@ -28,6 +28,9 @@
     <Filter Include="Header Files\AudioCapture">
       <UniqueIdentifier>{b922d1ed-521e-4b64-a37e-ff190ce8a74f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\AudioCapture">
+      <UniqueIdentifier>{e1841522-c212-4664-a754-2cd32d4971f8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -96,6 +99,12 @@
     <ClInclude Include="WindowsSystemAudioCaptureSource.h">
       <Filter>Header Files\AudioCapture</Filter>
     </ClInclude>
+    <ClInclude Include="IAudioCaptureSourceFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsSystemAudioCaptureSourceFactory.h">
+      <Filter>Header Files\AudioCapture</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -107,16 +116,7 @@
     <ClCompile Include="FrameArrivedHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AudioCaptureDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioCaptureHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ScreenRecorderImpl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WindowsSystemAudioCaptureSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SimpleMediaClock.cpp">
@@ -130,6 +130,18 @@
     </ClCompile>
     <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp">
       <Filter>Source Files\CaptureSession</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsSystemAudioCaptureSource.cpp">
+      <Filter>Source Files\AudioCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsSystemAudioCaptureSourceFactory.cpp">
+      <Filter>Source Files\AudioCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioCaptureDevice.cpp">
+      <Filter>Source Files\AudioCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioCaptureHandler.cpp">
+      <Filter>Source Files\AudioCapture</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

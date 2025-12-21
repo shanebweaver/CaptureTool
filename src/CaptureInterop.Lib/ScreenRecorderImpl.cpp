@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "ScreenRecorderImpl.h"
 #include "WindowsGraphicsCaptureSessionFactory.h"
+#include "WindowsSystemAudioCaptureSourceFactory.h"
+#include "SimpleMediaClockFactory.h"
 
 ScreenRecorderImpl::ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> factory)
     : m_factory(std::move(factory))
@@ -9,7 +11,9 @@ ScreenRecorderImpl::ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> f
 }
 
 ScreenRecorderImpl::ScreenRecorderImpl()
-    : ScreenRecorderImpl(std::make_unique<WindowsGraphicsCaptureSessionFactory>())
+    : ScreenRecorderImpl(std::make_unique<WindowsGraphicsCaptureSessionFactory>(
+        new SimpleMediaClockFactory(),
+        new WindowsSystemAudioCaptureSourceFactory()))
 {
 }
 

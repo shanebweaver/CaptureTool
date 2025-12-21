@@ -6,6 +6,8 @@
 // Forward declarations
 class FrameArrivedHandler;
 class IAudioCaptureSource;
+class IMediaClockFactory;
+class IAudioCaptureSourceFactory;
 class IMediaClock;
 
 /// <summary>
@@ -16,7 +18,10 @@ class IMediaClock;
 class WindowsGraphicsCaptureSession : public ICaptureSession
 {
 public:
-    WindowsGraphicsCaptureSession(const CaptureSessionConfig& config);
+    WindowsGraphicsCaptureSession(
+        const CaptureSessionConfig& config,
+        IMediaClockFactory* mediaClockFactory,
+        IAudioCaptureSourceFactory* audioCaptureSourceFactory);
     ~WindowsGraphicsCaptureSession() override;
 
     // Delete copy and move operations
@@ -34,6 +39,10 @@ public:
 private:
     // Configuration
     CaptureSessionConfig m_config;
+    
+    // Factories
+    IMediaClockFactory* m_mediaClockFactory;
+    IAudioCaptureSourceFactory* m_audioCaptureSourceFactory;
     
     // Windows Graphics Capture resources
     wil::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession> m_captureSession;

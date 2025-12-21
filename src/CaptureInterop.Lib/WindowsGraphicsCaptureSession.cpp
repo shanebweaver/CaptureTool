@@ -1,16 +1,21 @@
 #include "pch.h"
 #include "WindowsGraphicsCaptureSession.h"
 #include "FrameArrivedHandler.h"
-#include "WindowsSystemAudioCaptureSource.h"
-#include "SimpleMediaClockFactory.h"
+#include "IAudioCaptureSourceFactory.h"
+#include "IMediaClockFactory.h"
 #include "WindowsGraphicsCaptureHelpers.h"
 
 using namespace WindowsGraphicsCaptureHelpers;
 
-WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(const CaptureSessionConfig& config)
+WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
+    const CaptureSessionConfig& config,
+    IMediaClockFactory* mediaClockFactory,
+    IAudioCaptureSourceFactory* audioCaptureSourceFactory)
     : m_config(config)
+    , m_mediaClockFactory(mediaClockFactory)
+    , m_audioCaptureSourceFactory(audioCaptureSourceFactory)
     , m_frameHandler(nullptr)
-    , m_audioInputSource(std::make_unique<WindowsSystemAudioCaptureSource>())
+    , m_audioInputSource(nullptr)
     , m_isActive(false)
 {
     m_frameArrivedEventToken.value = 0;
@@ -33,9 +38,22 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
 	// 5. Start the clock and capture on both sources
 
     // 1. Create clock
-    SimpleMediaClockFactory clockFactory;
-    m_mediaClock = clockFactory.CreateClock();
+    if (m_mediaClockFactory)
+    {
+        m_mediaClock = m_mediaClockFactory->CreateClock();
+    }
     if (!m_mediaClock)
+    {
+        if (outHr) *outHr = E_FAIL;
+        return false;
+    }
+
+    // 2. Create audio input source
+    if (m_audioCaptureSourceFactory)
+    {
+        m_audioInputSource = m_audioCaptureSourceFactory->CreateAudioCaptureSource();
+    }
+    if (!m_audioInputSource)
     {
         if (outHr) *outHr = E_FAIL;
         return false;
@@ -106,7 +124,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     }
     
     // Initialize audio capture device (true = loopback mode for system audio)
-    if (m_audioInputSource->Initialize(&hr))
+    if (m_audioInputSource && m_audioInputSource->Initialize(&hr))
     {
         // Initialize audio stream on sink writer
         WAVEFORMATEX* audioFormat = m_audioInputSource->GetFormat();
@@ -135,7 +153,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     if (FAILED(hr))
     {
         // If video capture fails, stop audio if it was started
-        if (m_audioInputSource->IsRunning())
+        if (m_audioInputSource && m_audioInputSource->IsRunning())
         {
             m_audioInputSource->Stop();
         }
