@@ -40,6 +40,10 @@ public:
     bool IsActive() const override { return m_isActive; }
 
 private:
+    // Helper methods for initialization
+    bool InitializeSinkWriter(HRESULT* outHr);
+    bool StartAudioCapture(HRESULT* outHr);
+
     // Configuration
     CaptureSessionConfig m_config;
     

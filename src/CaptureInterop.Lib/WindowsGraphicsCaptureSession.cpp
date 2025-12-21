@@ -82,37 +82,18 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         return false;
     }
 
-    // Initialize video sink writer using dimensions from video source
-    UINT32 width = m_videoCaptureSource->GetWidth();
-    UINT32 height = m_videoCaptureSource->GetHeight();
-    ID3D11Device* device = static_cast<WindowsDesktopVideoCaptureSource*>(m_videoCaptureSource.get())->GetDevice();
-    
-    // TODO: Use m_config.frameRate, m_config.videoBitrate, and m_config.audioBitrate when implementing encoder settings
-    if (!m_sinkWriter.Initialize(m_config.outputPath, device, width, height, &hr))
+    // Initialize sink writer with video and audio streams
+    if (!InitializeSinkWriter(&hr))
     {
         if (outHr) *outHr = hr;
         return false;
     }
     
-    // Initialize audio capture device
-    if (m_audioInputSource && m_audioInputSource->Initialize(&hr))
+    // Start audio capture
+    if (!StartAudioCapture(&hr))
     {
-        // Initialize audio stream on sink writer
-        WAVEFORMATEX* audioFormat = m_audioInputSource->GetFormat();
-        if (audioFormat && m_sinkWriter.InitializeAudioStream(audioFormat, &hr))
-        {
-            // Set the sink writer on audio input source so it can write samples
-            m_audioInputSource->SetSinkWriter(&m_sinkWriter);
-                    
-            // Start audio capture
-            m_audioInputSource->SetEnabled(m_config.audioEnabled);
-            hr = m_audioInputSource->Start(&hr);
-            if (FAILED(hr))
-            {
-                if (outHr) *outHr = hr;
-                return false;
-            }
-        }
+        if (outHr) *outHr = hr;
+        return false;
     }
     
     // Set the sink writer on video capture source
@@ -131,6 +112,68 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     }
 
     m_isActive = true;
+    if (outHr) *outHr = S_OK;
+    return true;
+}
+
+bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
+{
+    HRESULT hr = S_OK;
+    
+    // Get video dimensions and device
+    UINT32 width = m_videoCaptureSource->GetWidth();
+    UINT32 height = m_videoCaptureSource->GetHeight();
+    ID3D11Device* device = static_cast<WindowsDesktopVideoCaptureSource*>(m_videoCaptureSource.get())->GetDevice();
+    
+    // Initialize video stream
+    // TODO: Use m_config.frameRate, m_config.videoBitrate, and m_config.audioBitrate when implementing encoder settings
+    if (!m_sinkWriter.Initialize(m_config.outputPath, device, width, height, &hr))
+    {
+        if (outHr) *outHr = hr;
+        return false;
+    }
+    
+    // Initialize audio stream if audio source is available
+    if (m_audioInputSource && m_audioInputSource->Initialize(&hr))
+    {
+        WAVEFORMATEX* audioFormat = m_audioInputSource->GetFormat();
+        if (audioFormat)
+        {
+            if (!m_sinkWriter.InitializeAudioStream(audioFormat, &hr))
+            {
+                if (outHr) *outHr = hr;
+                return false;
+            }
+            
+            // Set the sink writer on audio input source
+            m_audioInputSource->SetSinkWriter(&m_sinkWriter);
+        }
+    }
+    
+    if (outHr) *outHr = S_OK;
+    return true;
+}
+
+bool WindowsGraphicsCaptureSession::StartAudioCapture(HRESULT* outHr)
+{
+    // Only start if audio source exists and has a format (meaning it was initialized)
+    if (!m_audioInputSource || !m_audioInputSource->GetFormat())
+    {
+        if (outHr) *outHr = S_OK;
+        return true;
+    }
+    
+    // Enable/disable audio based on config
+    m_audioInputSource->SetEnabled(m_config.audioEnabled);
+    
+    // Start audio capture
+    HRESULT hr = S_OK;
+    if (!m_audioInputSource->Start(&hr))
+    {
+        if (outHr) *outHr = hr;
+        return false;
+    }
+    
     if (outHr) *outHr = S_OK;
     return true;
 }
