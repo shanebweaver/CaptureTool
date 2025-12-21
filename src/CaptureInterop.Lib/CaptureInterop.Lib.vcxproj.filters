@@ -123,6 +123,9 @@
     <ClInclude Include="WindowsDesktopVideoCaptureSourceFactory.h">
       <Filter>Header Files\VideoCapture</Filter>
     </ClInclude>
+    <ClInclude Include="IMediaClockAdvancer.h">
+      <Filter>Header Files\MediaClock</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

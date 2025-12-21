@@ -3,6 +3,9 @@
 #include <atomic>
 #include <mutex>
 
+// Forward declaration
+class IMediaClockAdvancer;
+
 /// <summary>
 /// SimpleMediaClock provides a unified timeline for synchronizing audio and video streams.
 /// 
@@ -18,7 +21,7 @@
 /// Usage pattern:
 /// 1. CaptureSession creates SimpleMediaClock instance
 /// 2. CaptureSession passes IMediaClockController to itself for lifecycle control
-/// 3. CaptureSession passes IMediaClockWriter to IAudioCaptureSource for time advancement
+/// 3. CaptureSession calls SetClockAdvancer() with audio source to establish timing source
 /// 4. CaptureSession passes IMediaClockReader to video frame handlers for reading time
 /// 5. Audio source calls AdvanceByAudioSamples() to drive the clock
 /// 6. Video handlers call GetCurrentTime() to get synchronized timestamps
@@ -47,6 +50,7 @@ public:
     void Reset() override;
     void Pause() override;
     void Resume() override;
+    void SetClockAdvancer(IMediaClockAdvancer* advancer) override;
 
     // IMediaClockWriter implementation
     void AdvanceByAudioSamples(UINT32 numFrames, UINT32 sampleRate) override;

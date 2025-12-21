@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "SimpleMediaClock.h"
+#include "IMediaClockAdvancer.h"
 
 SimpleMediaClock::SimpleMediaClock()
     : m_currentTime(0)
@@ -90,6 +91,16 @@ void SimpleMediaClock::Resume()
     if (m_isRunning.load() && m_isPaused.load())
     {
         m_isPaused.store(false);
+    }
+}
+
+void SimpleMediaClock::SetClockAdvancer(IMediaClockAdvancer* advancer)
+{
+    if (advancer)
+    {
+        // Provide this clock's IMediaClockWriter interface to the advancer
+        // The advancer will call AdvanceByAudioSamples() to update the timeline
+        advancer->SetClockWriter(this);
     }
 }
 

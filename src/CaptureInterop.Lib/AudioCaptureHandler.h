@@ -1,8 +1,9 @@
 #pragma once
 #include "AudioCaptureDevice.h"
 
-// Forward declaration
+// Forward declarations
 class MP4SinkWriter;
+class IMediaClockWriter;
 
 /// <summary>
 /// Manages audio capture in a dedicated thread with synchronized timestamps.
@@ -51,6 +52,15 @@ public:
     void SetSinkWriter(MP4SinkWriter* sinkWriter) { m_sinkWriter = sinkWriter; }
 
     /// <summary>
+    /// Set the media clock writer to advance as audio samples are captured.
+    /// The handler advances the clock with each audio sample to maintain
+    /// accurate timeline synchronization for A/V sync.
+    /// Must be called before Start() to enable clock advancement.
+    /// </summary>
+    /// <param name="clockWriter">Pointer to the IMediaClockWriter instance.</param>
+    void SetClockWriter(IMediaClockWriter* clockWriter) { m_clockWriter = clockWriter; }
+
+    /// <summary>
     /// Enable or disable audio capture writing.
     /// When disabled, audio samples are still captured but not written to the output.
     /// </summary>
@@ -79,6 +89,7 @@ private:
     
     AudioCaptureDevice m_device;
     MP4SinkWriter* m_sinkWriter = nullptr;
+    IMediaClockWriter* m_clockWriter = nullptr;
     
     std::thread m_captureThread;
     std::atomic<bool> m_isRunning{false};

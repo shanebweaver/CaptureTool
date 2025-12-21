@@ -23,6 +23,9 @@ public:
     bool IsEnabled() const override;
     bool IsRunning() const override;
 
+    // IMediaClockAdvancer implementation
+    void SetClockWriter(IMediaClockWriter* clockWriter) override;
+
 private:
     std::unique_ptr<AudioCaptureHandler> m_handler;
 };

@@ -51,3 +51,8 @@ bool WindowsLocalAudioCaptureSource::IsRunning() const
 {
     return m_handler->IsRunning();
 }
+
+void WindowsLocalAudioCaptureSource::SetClockWriter(IMediaClockWriter* clockWriter)
+{
+    m_handler->SetClockWriter(clockWriter);
+}

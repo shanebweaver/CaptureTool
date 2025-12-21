@@ -99,6 +99,7 @@
     <ClInclude Include="ICaptureSession.h" />
     <ClInclude Include="ICaptureSessionFactory.h" />
     <ClInclude Include="IMediaClock.h" />
+    <ClInclude Include="IMediaClockAdvancer.h" />
     <ClInclude Include="IMediaClockController.h" />
     <ClInclude Include="IMediaClockFactory.h" />
     <ClInclude Include="IMediaClockReader.h" />

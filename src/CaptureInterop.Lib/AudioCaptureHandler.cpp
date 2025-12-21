@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "AudioCaptureHandler.h"
 #include "MP4SinkWriter.h"
+#include "IMediaClockWriter.h"
 
 AudioCaptureHandler::AudioCaptureHandler()
 {
@@ -203,6 +204,13 @@ void AudioCaptureHandler::CaptureThreadProc()
                 
                 // Always advance timestamp to maintain continuous timeline
                 m_nextAudioTimestamp += duration;
+            }
+
+            // Advance the media clock based on audio samples processed
+            // This is done regardless of whether audio is written to maintain accurate timeline
+            if (m_clockWriter && format)
+            {
+                m_clockWriter->AdvanceByAudioSamples(framesRead, format->nSamplesPerSec);
             }
 
             m_device.ReleaseBuffer(framesRead);

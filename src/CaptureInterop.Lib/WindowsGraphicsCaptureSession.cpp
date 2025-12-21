@@ -116,7 +116,19 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     
     // Set the sink writer on video capture source
     m_videoCaptureSource->SetSinkWriter(&m_sinkWriter);
-    
+
+    // Connect the audio source as the clock advancer so it drives the timeline
+    m_mediaClock->SetClockAdvancer(m_audioInputSource.get());
+
+    // Start the media clock
+    LARGE_INTEGER qpc;
+    QueryPerformanceCounter(&qpc);
+    LONGLONG startQpc = qpc.QuadPart;
+    if (m_mediaClock)
+    {
+        m_mediaClock->Start(startQpc);
+    }
+
     // Start video capture
     if (!m_videoCaptureSource->Start(&hr))
     {
@@ -141,6 +153,12 @@ void WindowsGraphicsCaptureSession::Stop()
         return;
     }
 
+    // Stop the clock
+    if (m_mediaClock)
+    {
+        m_mediaClock->Pause();
+    }
+
     // Stop video capture first
     if (m_videoCaptureSource)
     {
@@ -152,9 +170,15 @@ void WindowsGraphicsCaptureSession::Stop()
     {
         m_audioInputSource->Stop();
     }
-    
+
     // Finalize MP4 file after both streams have stopped
     m_sinkWriter.Finalize();
+
+    // Reset the clock
+    if (m_mediaClock)
+    {
+        m_mediaClock->Reset();
+    }
 
     m_isActive = false;
 }

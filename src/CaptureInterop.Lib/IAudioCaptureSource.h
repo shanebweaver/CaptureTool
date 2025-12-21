@@ -1,4 +1,5 @@
-#pragma once
+# pragma once
+#include "IMediaClockAdvancer.h"
 
 // Forward declaration
 class MP4SinkWriter;
@@ -6,8 +7,9 @@ class MP4SinkWriter;
 /// <summary>
 /// Interface for audio input sources that can be captured and written to an output stream.
 /// Implementations provide different audio sources (system audio, microphone, etc.)
+/// Extends IMediaClockAdvancer to drive the media clock timeline based on audio samples.
 /// </summary>
-class IAudioCaptureSource
+class IAudioCaptureSource : public IMediaClockAdvancer
 {
 public:
     virtual ~IAudioCaptureSource() = default;
