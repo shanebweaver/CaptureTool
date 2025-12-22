@@ -96,12 +96,14 @@ WAVEFORMATEX* AudioCaptureHandler::GetFormat() const
 
 BYTE* AudioCaptureHandler::GetSilentBuffer(UINT32 requiredSize)
 {
+    static constexpr size_t BUFFER_GROWTH_FACTOR = 2;
+    
     std::lock_guard<std::mutex> lock(m_silentBufferMutex);
     
     if (m_silentBuffer.size() < requiredSize)
     {
         // Reserve extra space to reduce future reallocations
-        m_silentBuffer.resize(requiredSize * 2, 0);
+        m_silentBuffer.resize(requiredSize * BUFFER_GROWTH_FACTOR, 0);
     }
     else
     {
