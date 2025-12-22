@@ -3,14 +3,14 @@
 #include "WindowsGraphicsCaptureSession.h"
 
 WindowsGraphicsCaptureSessionFactory::WindowsGraphicsCaptureSessionFactory(
-    IMediaClockFactory* mediaClockFactory,
-    IAudioCaptureSourceFactory* audioCaptureSourceFactory,
-    IVideoCaptureSourceFactory* videoCaptureSourceFactory,
-    IMP4SinkWriterFactory* mp4SinkWriterFactory)
-    : m_mediaClockFactory(mediaClockFactory)
-    , m_audioCaptureSourceFactory(audioCaptureSourceFactory)
-    , m_videoCaptureSourceFactory(videoCaptureSourceFactory)
-    , m_mp4SinkWriterFactory(mp4SinkWriterFactory)
+    std::unique_ptr<IMediaClockFactory> mediaClockFactory,
+    std::unique_ptr<IAudioCaptureSourceFactory> audioCaptureSourceFactory,
+    std::unique_ptr<IVideoCaptureSourceFactory> videoCaptureSourceFactory,
+    std::unique_ptr<IMP4SinkWriterFactory> mp4SinkWriterFactory)
+    : m_mediaClockFactory(std::move(mediaClockFactory))
+    , m_audioCaptureSourceFactory(std::move(audioCaptureSourceFactory))
+    , m_videoCaptureSourceFactory(std::move(videoCaptureSourceFactory))
+    , m_mp4SinkWriterFactory(std::move(mp4SinkWriterFactory))
 {
 }
 
@@ -20,8 +20,8 @@ std::unique_ptr<ICaptureSession> WindowsGraphicsCaptureSessionFactory::CreateSes
     // For now, we just create the session. The config will be used when Start() is called.
     return std::make_unique<WindowsGraphicsCaptureSession>(
         config,
-        m_mediaClockFactory,
-        m_audioCaptureSourceFactory,
-        m_videoCaptureSourceFactory,
-        m_mp4SinkWriterFactory);
+        m_mediaClockFactory.get(),
+        m_audioCaptureSourceFactory.get(),
+        m_videoCaptureSourceFactory.get(),
+        m_mp4SinkWriterFactory.get());
 }

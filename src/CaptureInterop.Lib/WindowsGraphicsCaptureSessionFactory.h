@@ -16,10 +16,10 @@ class WindowsGraphicsCaptureSessionFactory : public ICaptureSessionFactory
 {
 public:
     WindowsGraphicsCaptureSessionFactory(
-        IMediaClockFactory* mediaClockFactory,
-        IAudioCaptureSourceFactory* audioCaptureSourceFactory,
-        IVideoCaptureSourceFactory* videoCaptureSourceFactory,
-        IMP4SinkWriterFactory* mp4SinkWriterFactory);
+        std::unique_ptr<IMediaClockFactory> mediaClockFactory,
+        std::unique_ptr<IAudioCaptureSourceFactory> audioCaptureSourceFactory,
+        std::unique_ptr<IVideoCaptureSourceFactory> videoCaptureSourceFactory,
+        std::unique_ptr<IMP4SinkWriterFactory> mp4SinkWriterFactory);
     ~WindowsGraphicsCaptureSessionFactory() override = default;
 
     // Delete copy and move operations
@@ -36,8 +36,8 @@ public:
     std::unique_ptr<ICaptureSession> CreateSession(const CaptureSessionConfig& config) override;
 
 private:
-    IMediaClockFactory* m_mediaClockFactory;
-    IAudioCaptureSourceFactory* m_audioCaptureSourceFactory;
-    IVideoCaptureSourceFactory* m_videoCaptureSourceFactory;
-    IMP4SinkWriterFactory* m_mp4SinkWriterFactory;
+    std::unique_ptr<IMediaClockFactory> m_mediaClockFactory;
+    std::unique_ptr<IAudioCaptureSourceFactory> m_audioCaptureSourceFactory;
+    std::unique_ptr<IVideoCaptureSourceFactory> m_videoCaptureSourceFactory;
+    std::unique_ptr<IMP4SinkWriterFactory> m_mp4SinkWriterFactory;
 };
