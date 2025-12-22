@@ -4,6 +4,9 @@
 #include <thread>
 #include <atomic>
 #include <vector>
+#include <mmreg.h>
+#include <Windows.h>
+#include <mutex>
 
 // Forward declarations
 class IMediaClockWriter;
