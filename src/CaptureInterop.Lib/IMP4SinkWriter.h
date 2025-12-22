@@ -1,15 +1,19 @@
 #pragma once
+#include <cstdint>
+#include <mmreg.h>
+
+// Forward declarations
+struct ID3D11Device;
+struct ID3D11Texture2D;
 
 /// <summary>
-/// MP4 file writer supporting H.264 video and optional AAC audio streams.
-/// Handles video encoding and audio encoding via Media Foundation.
-/// Supports synchronized audio/video recording with common time base.
+/// Interface for MP4 file writing with H.264 video and optional AAC audio.
+/// Provides abstraction for sink writer implementations to enable dependency injection and testing.
 /// </summary>
-class MP4SinkWriter
+class IMP4SinkWriter
 {
 public:
-    MP4SinkWriter();
-    ~MP4SinkWriter();
+    virtual ~IMP4SinkWriter() = default;
 
     /// <summary>
     /// Initialize the MP4 sink writer for video recording.
@@ -20,7 +24,7 @@ public:
     /// <param name="height">Video frame height in pixels.</param>
     /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
     /// <returns>True if initialization succeeded, false otherwise.</returns>
-    bool Initialize(const wchar_t* outputPath, ID3D11Device* device, UINT32 width, UINT32 height, HRESULT* outHr = nullptr);
+    virtual bool Initialize(const wchar_t* outputPath, ID3D11Device* device, uint32_t width, uint32_t height, long* outHr = nullptr) = 0;
 
     /// <summary>
     /// Initialize the audio stream for the MP4 file.
@@ -30,7 +34,7 @@ public:
     /// <param name="audioFormat">Audio format from WASAPI (PCM or Float).</param>
     /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
     /// <returns>True if audio stream was added successfully, false otherwise.</returns>
-    bool InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* outHr = nullptr);
+    virtual bool InitializeAudioStream(WAVEFORMATEX* audioFormat, long* outHr = nullptr) = 0;
 
     /// <summary>
     /// Write a video frame to the MP4 file.
@@ -38,7 +42,7 @@ public:
     /// <param name="texture">D3D11 texture containing the video frame.</param>
     /// <param name="relativeTicks">Timestamp in 100-nanosecond units (from media clock).</param>
     /// <returns>S_OK on success, or error HRESULT.</returns>
-    HRESULT WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTicks);
+    virtual long WriteFrame(ID3D11Texture2D* texture, int64_t relativeTicks) = 0;
 
     /// <summary>
     /// Write an audio sample to the MP4 file.
@@ -48,29 +52,11 @@ public:
     /// <param name="numFrames">Number of audio frames (one sample per channel).</param>
     /// <param name="timestamp">Timestamp in 100-nanosecond units (from media clock).</param>
     /// <returns>S_OK on success, or error HRESULT.</returns>
-    HRESULT WriteAudioSample(const BYTE* pData, UINT32 numFrames, LONGLONG timestamp);
+    virtual long WriteAudioSample(const uint8_t* pData, uint32_t numFrames, int64_t timestamp) = 0;
 
     /// <summary>
     /// Finalize and close the MP4 file.
     /// Must be called when recording is complete to properly close the file.
     /// </summary>
-    void Finalize();
-
-    ULONG STDMETHODCALLTYPE AddRef();
-    ULONG STDMETHODCALLTYPE Release();
-
-private:
-    volatile long m_ref = 1;
-    wil::com_ptr<IMFSinkWriter> m_sinkWriter;
-    DWORD m_videoStreamIndex = 0;
-    DWORD m_audioStreamIndex = 0;
-    bool m_hasAudioStream = false;
-    bool m_hasBegunWriting = false;
-    UINT64 m_frameIndex = 0;
-    UINT32 m_width = 0;
-    UINT32 m_height = 0;
-    ID3D11Device* m_device = nullptr;
-    ID3D11DeviceContext* m_context = nullptr;
-    LONGLONG m_prevVideoTimestamp = 0;
-    WAVEFORMATEX m_audioFormat = {};            // Cached audio format info
+    virtual void Finalize() = 0;
 };

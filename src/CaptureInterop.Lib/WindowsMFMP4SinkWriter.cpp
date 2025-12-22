@@ -1,14 +1,14 @@
 #include "pch.h"
-#include "MP4SinkWriter.h"
+#include "WindowsMFMP4SinkWriter.h"
 
-MP4SinkWriter::MP4SinkWriter() = default;
+WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter() = default;
 
-MP4SinkWriter::~MP4SinkWriter()
+WindowsMFMP4SinkWriter::~WindowsMFMP4SinkWriter()
 {
     Finalize();
 }
 
-bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, UINT32 width, UINT32 height, HRESULT* outHr)
+bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, uint32_t width, uint32_t height, long* outHr)
 {
     if (outHr) *outHr = S_OK;
     m_device = device;
@@ -79,13 +79,10 @@ bool MP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, 
     m_sinkWriter = std::move(sinkWriter);
     m_videoStreamIndex = streamIndex;
 
-    // Don't call BeginWriting yet - caller may want to add audio stream first
-    // If no audio stream is added, WriteFrame will call BeginWriting on first frame
-
     return true;
 }
 
-bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* outHr)
+bool WindowsMFMP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, long* outHr)
 {
     if (!m_sinkWriter || !audioFormat)
     {
@@ -100,17 +97,14 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     }
 
     // Detect audio format type before storing
-    // WASAPI often returns float format, which needs to be specified correctly
     bool isFloatFormat = false;
     
     if (audioFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT)
     {
-        // Direct float format
         isFloatFormat = true;
     }
     else if (audioFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
     {
-        // Check extended format SubFormat GUID for float audio
         WAVEFORMATEXTENSIBLE* pFormatEx = reinterpret_cast<WAVEFORMATEXTENSIBLE*>(audioFormat);
         if (IsEqualGUID(pFormatEx->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT))
         {
@@ -118,12 +112,10 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
         }
     }
     
-    // Cache audio format for later use (base structure only)
-    // Format type (float vs PCM) is already detected above
     memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
 
     // Configure output audio stream: AAC at 160 kbps
-    const UINT32 AAC_BITRATE = 20000; // 160 kbps = 160000 bps / 8 = 20000 bytes/sec
+    const UINT32 AAC_BITRATE = 20000;
     wil::com_ptr<IMFMediaType> mediaTypeOut;
     HRESULT hr = MFCreateMediaType(mediaTypeOut.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
@@ -133,21 +125,19 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
     mediaTypeOut->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, AAC_BITRATE);
-    mediaTypeOut->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);  // AAC output is always 16-bit
+    mediaTypeOut->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
 
     DWORD audioStreamIndex = 0;
     hr = m_sinkWriter->AddStream(mediaTypeOut.get(), &audioStreamIndex);
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
-    // Configure input audio format: PCM or Float from WASAPI
-    // Media Foundation will automatically convert to AAC
+    // Configure input audio format
     wil::com_ptr<IMFMediaType> mediaTypeIn;
     hr = MFCreateMediaType(mediaTypeIn.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     mediaTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
     
-    // Set correct subtype based on detected format
     if (isFloatFormat)
     {
         mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
@@ -169,7 +159,6 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     m_audioStreamIndex = audioStreamIndex;
     m_hasAudioStream = true;
 
-    // Begin writing now that all streams are configured
     hr = m_sinkWriter->BeginWriting();
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
     m_hasBegunWriting = true;
@@ -178,11 +167,11 @@ bool MP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, HRESULT* ou
     return true;
 }
 
-HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTicks)
+long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relativeTicks)
 {
     if (!texture || !m_sinkWriter) return E_FAIL;
 
-    // For video-only recording (no audio), begin writing on first frame
+    // For video-only recording, begin writing on first frame
     if (!m_hasBegunWriting && !m_hasAudioStream)
     {
         HRESULT hr = m_sinkWriter->BeginWriting();
@@ -190,7 +179,6 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTic
         m_hasBegunWriting = true;
     }
 
-    // Copy texture to staging for CPU read access
     D3D11_TEXTURE2D_DESC desc{};
     texture->GetDesc(&desc);
 
@@ -245,10 +233,10 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTic
         m_prevVideoTimestamp = relativeTicks;
 
     const LONGLONG TICKS_PER_SECOND = 10000000LL;
-    const LONGLONG frameDuration = TICKS_PER_SECOND / 30; // 30 FPS
+    const LONGLONG frameDuration = TICKS_PER_SECOND / 30;
 
     LONGLONG duration = relativeTicks - m_prevVideoTimestamp;
-    if (duration <= 0) duration = frameDuration; // fallback ~30 fps
+    if (duration <= 0) duration = frameDuration;
     sample->SetSampleDuration(duration);
     m_prevVideoTimestamp = relativeTicks;
 
@@ -256,23 +244,19 @@ HRESULT MP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, LONGLONG relativeTic
     return m_sinkWriter->WriteSample(m_videoStreamIndex, sample.get());
 }
 
-HRESULT MP4SinkWriter::WriteAudioSample(const BYTE* pData, UINT32 numFrames, LONGLONG timestamp)
+long WindowsMFMP4SinkWriter::WriteAudioSample(const uint8_t* pData, uint32_t numFrames, int64_t timestamp)
 {
     if (!m_sinkWriter || !m_hasAudioStream || !pData || numFrames == 0)
     {
         return E_FAIL;
     }
 
-    // Calculate buffer size: frames * bytes per frame
-    // Each frame contains one sample for each channel
     UINT32 bufferSize = numFrames * m_audioFormat.nBlockAlign;
 
-    // Create Media Foundation buffer for audio data
     wil::com_ptr<IMFMediaBuffer> buffer;
     HRESULT hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
     if (FAILED(hr)) return hr;
 
-    // Copy raw audio data into Media Foundation buffer
     BYTE* pBufferData = nullptr;
     DWORD maxLen = 0, curLen = 0;
     hr = buffer->Lock(&pBufferData, &maxLen, &curLen);
@@ -282,29 +266,22 @@ HRESULT MP4SinkWriter::WriteAudioSample(const BYTE* pData, UINT32 numFrames, LON
     buffer->SetCurrentLength(bufferSize);
     buffer->Unlock();
 
-    // Create Media Foundation sample
     wil::com_ptr<IMFSample> sample;
     hr = MFCreateSample(sample.put());
     if (FAILED(hr)) return hr;
 
     sample->AddBuffer(buffer.get());
-    
-    // Set timestamp (when this sample should play in the timeline)
     sample->SetSampleTime(timestamp);
 
-    // Calculate duration based on actual audio frame count
-    // Duration = (frames * ticks_per_second) / sample_rate
-    // This gives exact playback duration of this sample
-    const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
+    const LONGLONG TICKS_PER_SECOND = 10000000LL;
     LONGLONG duration = (numFrames * TICKS_PER_SECOND) / m_audioFormat.nSamplesPerSec;
     
     sample->SetSampleDuration(duration);
 
-    // Write sample to MP4 file (Media Foundation converts to AAC automatically)
     return m_sinkWriter->WriteSample(m_audioStreamIndex, sample.get());
 }
 
-void MP4SinkWriter::Finalize()
+void WindowsMFMP4SinkWriter::Finalize()
 {
     if (m_sinkWriter)
     {
@@ -327,12 +304,12 @@ void MP4SinkWriter::Finalize()
     MFShutdown();
 }
 
-ULONG STDMETHODCALLTYPE MP4SinkWriter::AddRef()
+unsigned long WindowsMFMP4SinkWriter::AddRef()
 {
     return InterlockedIncrement(&m_ref);
 }
 
-ULONG STDMETHODCALLTYPE MP4SinkWriter::Release()
+unsigned long WindowsMFMP4SinkWriter::Release()
 {
     ULONG ref = InterlockedDecrement(&m_ref);
     if (ref == 0)

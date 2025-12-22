@@ -6,6 +6,7 @@
 class IMediaClockFactory;
 class IAudioCaptureSourceFactory;
 class IVideoCaptureSourceFactory;
+class IMP4SinkWriterFactory;
 
 /// <summary>
 /// Factory implementation for creating Windows Graphics Capture sessions.
@@ -17,7 +18,8 @@ public:
     WindowsGraphicsCaptureSessionFactory(
         IMediaClockFactory* mediaClockFactory,
         IAudioCaptureSourceFactory* audioCaptureSourceFactory,
-        IVideoCaptureSourceFactory* videoCaptureSourceFactory);
+        IVideoCaptureSourceFactory* videoCaptureSourceFactory,
+        IMP4SinkWriterFactory* mp4SinkWriterFactory);
     ~WindowsGraphicsCaptureSessionFactory() override = default;
 
     // Delete copy and move operations
@@ -37,4 +39,5 @@ private:
     IMediaClockFactory* m_mediaClockFactory;
     IAudioCaptureSourceFactory* m_audioCaptureSourceFactory;
     IVideoCaptureSourceFactory* m_videoCaptureSourceFactory;
+	IMP4SinkWriterFactory* m_mp4SinkWriterFactory;
 };

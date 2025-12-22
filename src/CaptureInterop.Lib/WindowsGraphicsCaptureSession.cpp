@@ -2,9 +2,6 @@
 #include "WindowsGraphicsCaptureSession.h"
 #include "IAudioCaptureSourceFactory.h"
 #include "IVideoCaptureSourceFactory.h"
-#include "IVideoCaptureSource.h"
-#include "IAudioCaptureSource.h"
-#include "WindowsDesktopVideoCaptureSource.h"
 #include "IMediaClockFactory.h"
 #include "CaptureSessionConfig.h"
 
@@ -12,18 +9,23 @@
 #include <strsafe.h>
 #include <d3d11.h>
 #include <Windows.h>
+#include "IMP4SinkWriterFactory.h"
+#include "WindowsDesktopVideoCaptureSource.h"
 
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     const CaptureSessionConfig& config,
     IMediaClockFactory* mediaClockFactory,
     IAudioCaptureSourceFactory* audioCaptureSourceFactory,
-    IVideoCaptureSourceFactory* videoCaptureSourceFactory)
+    IVideoCaptureSourceFactory* videoCaptureSourceFactory,
+    IMP4SinkWriterFactory* mp4SinkWriterFactory)
     : m_config(config)
     , m_mediaClockFactory(mediaClockFactory)
     , m_audioCaptureSourceFactory(audioCaptureSourceFactory)
     , m_videoCaptureSourceFactory(videoCaptureSourceFactory)
+    , m_mp4SinkWriterFactory(mp4SinkWriterFactory)
     , m_audioCaptureSource(nullptr)
     , m_videoCaptureSource(nullptr)
+	, m_sinkWriter(nullptr)
     , m_isActive(false)
 {
 }
@@ -97,6 +99,12 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     }
 
     // Initialize sink writer with video and audio streams
+	m_sinkWriter = m_mp4SinkWriterFactory->CreateSinkWriter();
+	if (!m_sinkWriter)
+    {
+        if (outHr) *outHr = E_FAIL;
+        return false;
+    }
     if (!InitializeSinkWriter(&hr))
     {
         if (outHr) *outHr = hr;
@@ -107,7 +115,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     m_audioCaptureSource->SetAudioSampleReadyCallback(
         [this](const AudioSampleReadyEventArgs& args) {
             // Write audio sample to sink writer
-            HRESULT hr = m_sinkWriter.WriteAudioSample(args.pData, args.numFrames, args.timestamp);
+            HRESULT hr = m_sinkWriter->WriteAudioSample(args.pData, args.numFrames, args.timestamp);
                 
             // If write fails, disable audio to prevent further blocking
             if (FAILED(hr))
@@ -121,7 +129,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     m_videoCaptureSource->SetVideoFrameReadyCallback(
         [this](const VideoFrameReadyEventArgs& args) {
             // Write video frame to sink writer
-            HRESULT hr = m_sinkWriter.WriteFrame(args.pTexture, args.timestamp);
+            HRESULT hr = m_sinkWriter->WriteFrame(args.pTexture, args.timestamp);
             
             // If write fails, log or handle error
             // Note: We don't stop video capture on write failure to maintain stability
@@ -174,7 +182,7 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
     
     // Initialize video stream
     // TODO: Use m_config.frameRate, m_config.videoBitrate, and m_config.audioBitrate when implementing encoder settings
-    if (!m_sinkWriter.Initialize(m_config.outputPath, device, width, height, &hr))
+    if (!m_sinkWriter->Initialize(m_config.outputPath, device, width, height, &hr))
     {
         if (outHr) *outHr = hr;
         return false;
@@ -184,7 +192,7 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
     WAVEFORMATEX* audioFormat = m_audioCaptureSource->GetFormat();
     if (audioFormat)
     {
-        if (!m_sinkWriter.InitializeAudioStream(audioFormat, &hr))
+        if (!m_sinkWriter->InitializeAudioStream(audioFormat, &hr))
         {
             if (outHr) *outHr = hr;
             return false;
@@ -245,7 +253,7 @@ void WindowsGraphicsCaptureSession::Stop()
     }
 
     // Finalize MP4 file after both streams have stopped
-    m_sinkWriter.Finalize();
+    m_sinkWriter->Finalize();
 
     // Reset the clock
     if (m_mediaClock)

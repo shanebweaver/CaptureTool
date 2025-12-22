@@ -37,15 +37,18 @@
     <Filter Include="Header Files\VideoCapture">
       <UniqueIdentifier>{f3a2ba12-d175-476e-a2b2-6bc3b9a1479d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\SinkWriter">
+      <UniqueIdentifier>{3301799f-21fa-4f18-b628-6fcb979b0ab6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\SinkWriter">
+      <UniqueIdentifier>{4905f059-ba5f-4c8f-ab0e-e2ee71df8abf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MP4SinkWriter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ScreenRecorderImpl.h">
@@ -126,12 +129,21 @@
     <ClInclude Include="IMediaClockAdvancer.h">
       <Filter>Header Files\MediaClock</Filter>
     </ClInclude>
+    <ClInclude Include="WindowsMFMP4SinkWriterFactory.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMFMP4SinkWriter.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IMP4SinkWriterFactory.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IMP4SinkWriter.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MP4SinkWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ScreenRecorderImpl.cpp">
@@ -169,6 +181,12 @@
     </ClCompile>
     <ClCompile Include="WindowsDesktopVideoCaptureSourceFactory.cpp">
       <Filter>Source Files\VideoCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsMFMP4SinkWriter.cpp">
+      <Filter>Source Files\SinkWriter</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsMFMP4SinkWriterFactory.cpp">
+      <Filter>Source Files\SinkWriter</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

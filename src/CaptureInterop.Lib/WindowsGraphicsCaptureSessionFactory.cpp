@@ -5,10 +5,12 @@
 WindowsGraphicsCaptureSessionFactory::WindowsGraphicsCaptureSessionFactory(
     IMediaClockFactory* mediaClockFactory,
     IAudioCaptureSourceFactory* audioCaptureSourceFactory,
-    IVideoCaptureSourceFactory* videoCaptureSourceFactory)
+    IVideoCaptureSourceFactory* videoCaptureSourceFactory,
+    IMP4SinkWriterFactory* mp4SinkWriterFactory)
     : m_mediaClockFactory(mediaClockFactory)
     , m_audioCaptureSourceFactory(audioCaptureSourceFactory)
     , m_videoCaptureSourceFactory(videoCaptureSourceFactory)
+    , m_mp4SinkWriterFactory(mp4SinkWriterFactory)
 {
 }
 
@@ -20,5 +22,6 @@ std::unique_ptr<ICaptureSession> WindowsGraphicsCaptureSessionFactory::CreateSes
         config,
         m_mediaClockFactory,
         m_audioCaptureSourceFactory,
-        m_videoCaptureSourceFactory);
+        m_videoCaptureSourceFactory,
+        m_mp4SinkWriterFactory);
 }

@@ -3,6 +3,7 @@
 #include "WindowsGraphicsCaptureSessionFactory.h"
 #include "WindowsLocalAudioCaptureSourceFactory.h"
 #include "WindowsDesktopVideoCaptureSourceFactory.h"
+#include "WindowsMFMP4SinkWriterFactory.h"
 #include "SimpleMediaClockFactory.h"
 
 ScreenRecorderImpl::ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> factory)
@@ -15,7 +16,8 @@ ScreenRecorderImpl::ScreenRecorderImpl()
     : ScreenRecorderImpl(std::make_unique<WindowsGraphicsCaptureSessionFactory>(
         new SimpleMediaClockFactory(),
         new WindowsLocalAudioCaptureSourceFactory(),
-        new WindowsDesktopVideoCaptureSourceFactory()))
+        new WindowsDesktopVideoCaptureSourceFactory(),
+        new WindowsMFMP4SinkWriterFactory()))
 {
 }
 

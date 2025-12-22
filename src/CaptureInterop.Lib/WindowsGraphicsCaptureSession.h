@@ -1,7 +1,12 @@
 #pragma once
 #include "pch.h"
 #include "ICaptureSession.h"
-#include "MP4SinkWriter.h"
+#include "IMP4SinkWriterFactory.h"
+#include "CaptureSessionConfig.h"
+#include "IMP4SinkWriter.h"
+
+#include <Windows.h>
+#include <memory>
 
 // Forward declarations
 class FrameArrivedHandler;
@@ -24,7 +29,8 @@ public:
         const CaptureSessionConfig& config,
         IMediaClockFactory* mediaClockFactory,
         IAudioCaptureSourceFactory* audioCaptureSourceFactory,
-        IVideoCaptureSourceFactory* videoCaptureSourceFactory);
+        IVideoCaptureSourceFactory* videoCaptureSourceFactory,
+        IMP4SinkWriterFactory* mp4SinkWriterFactory);
     ~WindowsGraphicsCaptureSession() override;
 
     // Delete copy and move operations
@@ -51,9 +57,10 @@ private:
     IMediaClockFactory* m_mediaClockFactory;
     IAudioCaptureSourceFactory* m_audioCaptureSourceFactory;
     IVideoCaptureSourceFactory* m_videoCaptureSourceFactory;
+	IMP4SinkWriterFactory* m_mp4SinkWriterFactory;
     
     // Media output
-    MP4SinkWriter m_sinkWriter;
+    std::unique_ptr<IMP4SinkWriter> m_sinkWriter;
     
     // Audio capture
     std::unique_ptr<IAudioCaptureSource> m_audioCaptureSource;

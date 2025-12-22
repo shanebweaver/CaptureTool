@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "MP4SinkWriter.h"
+#include "WindowsMFMP4SinkWriter.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -82,14 +82,14 @@ namespace CaptureInteropTests
     public:
         TEST_METHOD(Constructor_CreatesInstance)
         {
-            MP4SinkWriter* writer = new MP4SinkWriter();
+            WindowsMFMP4SinkWriter* writer = new WindowsMFMP4SinkWriter();
             Assert::IsNotNull(writer);
             delete writer;
         }
 
         TEST_METHOD(AddRef_Release_ManagesReferenceCount)
         {
-            MP4SinkWriter* writer = new MP4SinkWriter();
+            WindowsMFMP4SinkWriter* writer = new WindowsMFMP4SinkWriter();
             
             ULONG ref1 = writer->AddRef();
             Assert::AreEqual(2UL, ref1);
@@ -109,7 +109,7 @@ namespace CaptureInteropTests
         TEST_METHOD(Initialize_WithValidParameters_Succeeds)
         {
             auto device = CreateTestDevice();
-            MP4SinkWriter writer;
+            WindowsMFMP4SinkWriter writer;
             
             HRESULT hr;
             wchar_t tempPath[MAX_PATH];
@@ -129,7 +129,7 @@ namespace CaptureInteropTests
         TEST_METHOD(InitializeAudioStream_WithValidFormat_Succeeds)
         {
             auto device = CreateTestDevice();
-            MP4SinkWriter writer;
+            WindowsMFMP4SinkWriter writer;
             
             wchar_t tempPath[MAX_PATH];
             GetTempPathW(MAX_PATH, tempPath);
@@ -153,7 +153,7 @@ namespace CaptureInteropTests
         TEST_METHOD(InitializeAudioStream_WithNullFormat_Fails)
         {
             auto device = CreateTestDevice();
-            MP4SinkWriter writer;
+            WindowsMFMP4SinkWriter writer;
             
             wchar_t tempPath[MAX_PATH];
             GetTempPathW(MAX_PATH, tempPath);
@@ -175,7 +175,7 @@ namespace CaptureInteropTests
         TEST_METHOD(WriteFrame_WithValidTexture_Succeeds)
         {
             auto device = CreateTestDevice();
-            MP4SinkWriter writer;
+            WindowsMFMP4SinkWriter writer;
             
             wchar_t tempPath[MAX_PATH];
             GetTempPathW(MAX_PATH, tempPath);
@@ -198,7 +198,7 @@ namespace CaptureInteropTests
         TEST_METHOD(WriteFrame_WithNullTexture_Fails)
         {
             auto device = CreateTestDevice();
-            MP4SinkWriter writer;
+            WindowsMFMP4SinkWriter writer;
             
             wchar_t tempPath[MAX_PATH];
             GetTempPathW(MAX_PATH, tempPath);
@@ -218,7 +218,7 @@ namespace CaptureInteropTests
         TEST_METHOD(WriteAudioSample_WithValidData_Succeeds)
         {
             auto device = CreateTestDevice();
-            MP4SinkWriter writer;
+            WindowsMFMP4SinkWriter writer;
             
             wchar_t tempPath[MAX_PATH];
             GetTempPathW(MAX_PATH, tempPath);
@@ -246,7 +246,7 @@ namespace CaptureInteropTests
         TEST_METHOD(WriteAudioSample_WithoutAudioStream_Fails)
         {
             auto device = CreateTestDevice();
-            MP4SinkWriter writer;
+            WindowsMFMP4SinkWriter writer;
             
             wchar_t tempPath[MAX_PATH];
             GetTempPathW(MAX_PATH, tempPath);
@@ -267,7 +267,7 @@ namespace CaptureInteropTests
         TEST_METHOD(Finalize_CanBeCalledMultipleTimes)
         {
             auto device = CreateTestDevice();
-            MP4SinkWriter writer;
+            WindowsMFMP4SinkWriter writer;
             
             wchar_t tempPath[MAX_PATH];
             GetTempPathW(MAX_PATH, tempPath);
@@ -286,7 +286,7 @@ namespace CaptureInteropTests
         TEST_METHOD(WriteMultipleFrames_MaintainsTimestamps)
         {
             auto device = CreateTestDevice();
-            MP4SinkWriter writer;
+            WindowsMFMP4SinkWriter writer;
             
             wchar_t tempPath[MAX_PATH];
             GetTempPathW(MAX_PATH, tempPath);

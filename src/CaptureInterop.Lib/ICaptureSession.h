@@ -1,5 +1,4 @@
 #pragma once
-#include "CaptureSessionConfig.h"
 
 /// <summary>
 /// Interface for a capture session that manages audio and video recording.
