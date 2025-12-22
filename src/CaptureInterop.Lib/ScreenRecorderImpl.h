@@ -76,6 +76,4 @@ public:
 private:
     std::unique_ptr<ICaptureSession> m_captureSession;
     std::unique_ptr<ICaptureSessionFactory> m_factory;
-    VideoFrameCallback m_videoFrameCallback = nullptr;
-    AudioSampleCallback m_audioSampleCallback = nullptr;
 };

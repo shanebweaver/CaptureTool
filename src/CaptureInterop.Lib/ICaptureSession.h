@@ -1,6 +1,12 @@
 #pragma once
 #include <Windows.h>
 
+// Forward declarations for callback types
+struct VideoFrameData;
+struct AudioSampleData;
+using VideoFrameCallback = void(__stdcall*)(const VideoFrameData* pFrameData);
+using AudioSampleCallback = void(__stdcall*)(const AudioSampleData* pSampleData);
+
 /// <summary>
 /// Interface for a capture session that manages audio and video recording.
 /// Provides operations for controlling the lifecycle of a recording session.
@@ -49,4 +55,18 @@ public:
     /// </summary>
     /// <returns>True if session is running, false otherwise.</returns>
     virtual bool IsActive() const = 0;
+
+    /// <summary>
+    /// Set the callback to be invoked when a video frame is ready.
+    /// Can be called at any time, even during recording.
+    /// </summary>
+    /// <param name="callback">Callback function to receive video frames, or nullptr to clear.</param>
+    virtual void SetVideoFrameCallback(VideoFrameCallback callback) = 0;
+
+    /// <summary>
+    /// Set the callback to be invoked when an audio sample is ready.
+    /// Can be called at any time, even during recording.
+    /// </summary>
+    /// <param name="callback">Callback function to receive audio samples, or nullptr to clear.</param>
+    virtual void SetAudioSampleCallback(AudioSampleCallback callback) = 0;
 };

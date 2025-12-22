@@ -2,7 +2,6 @@
 #include "pch.h"
 #include <Windows.h>
 #include <cstdint>
-#include "CallbackTypes.h"
 
 /// <summary>
 /// Configuration settings for a capture session.
@@ -41,16 +40,6 @@ struct CaptureSessionConfig
     uint32_t audioBitrate;
 
     /// <summary>
-    /// Optional callback for video frames. If set, video frames will be forwarded to managed layer.
-    /// </summary>
-    VideoFrameCallback videoFrameCallback;
-
-    /// <summary>
-    /// Optional callback for audio samples. If set, audio samples will be forwarded to managed layer.
-    /// </summary>
-    AudioSampleCallback audioSampleCallback;
-
-    /// <summary>
     /// Constructor with required parameters and default values for optional parameters.
     /// </summary>
     CaptureSessionConfig(
@@ -66,8 +55,6 @@ struct CaptureSessionConfig
         , frameRate(fps)
         , videoBitrate(vidBitrate)
         , audioBitrate(audBitrate)
-        , videoFrameCallback(nullptr)
-        , audioSampleCallback(nullptr)
     {
     }
 
@@ -81,8 +68,6 @@ struct CaptureSessionConfig
         , frameRate(30)
         , videoBitrate(5000000)
         , audioBitrate(128000)
-        , videoFrameCallback(nullptr)
-        , audioSampleCallback(nullptr)
     {
     }
 };

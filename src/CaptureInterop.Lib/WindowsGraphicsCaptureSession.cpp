@@ -8,6 +8,7 @@
 #include "WindowsDesktopVideoCaptureSource.h"
 #include "IAudioCaptureSource.h"
 #include "IVideoCaptureSource.h"
+#include "CallbackTypes.h"
 
 #include <mmreg.h>
 #include <strsafe.h>
@@ -29,12 +30,16 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     , m_videoCaptureSource(nullptr)
     , m_sinkWriter(nullptr)
     , m_isActive(false)
+    , m_videoFrameCallback(nullptr)
+    , m_audioSampleCallback(nullptr)
 {
+    InitializeCriticalSection(&m_callbackCriticalSection);
 }
 
 WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
 {
     Stop();
+    DeleteCriticalSection(&m_callbackCriticalSection);
 }
 
 bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
@@ -126,9 +131,13 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
             }
 
             // Forward to managed layer if callback is set
-            if (m_config.audioSampleCallback && args.pFormat)
+            EnterCriticalSection(&m_callbackCriticalSection);
+            AudioSampleCallback callback = m_audioSampleCallback;
+            LeaveCriticalSection(&m_callbackCriticalSection);
+            
+            if (callback && args.pFormat)
             {
-                AudioSampleData sampleData;
+                AudioSampleData sampleData{};
                 sampleData.pData = args.pData;
                 sampleData.numFrames = args.numFrames;
                 sampleData.timestamp = args.timestamp;
@@ -136,7 +145,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
                 sampleData.channels = args.pFormat->nChannels;
                 sampleData.bitsPerSample = args.pFormat->wBitsPerSample;
                 
-                m_config.audioSampleCallback(&sampleData);
+                callback(&sampleData);
             }
         }
     );
@@ -156,15 +165,19 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
             }
 
             // Forward to managed layer if callback is set
-            if (m_config.videoFrameCallback)
+            EnterCriticalSection(&m_callbackCriticalSection);
+            VideoFrameCallback callback = m_videoFrameCallback;
+            LeaveCriticalSection(&m_callbackCriticalSection);
+            
+            if (callback)
             {
-                VideoFrameData frameData;
+                VideoFrameData frameData{};
                 frameData.pTexture = args.pTexture;
                 frameData.timestamp = args.timestamp;
                 frameData.width = m_videoCaptureSource->GetWidth();
                 frameData.height = m_videoCaptureSource->GetHeight();
                 
-                m_config.videoFrameCallback(&frameData);
+                callback(&frameData);
             }
         }
     );
@@ -330,4 +343,18 @@ void WindowsGraphicsCaptureSession::ToggleAudioCapture(bool enabled)
     {
         m_audioCaptureSource->SetEnabled(enabled);
     }
+}
+
+void WindowsGraphicsCaptureSession::SetVideoFrameCallback(VideoFrameCallback callback)
+{
+    EnterCriticalSection(&m_callbackCriticalSection);
+    m_videoFrameCallback = callback;
+    LeaveCriticalSection(&m_callbackCriticalSection);
+}
+
+void WindowsGraphicsCaptureSession::SetAudioSampleCallback(AudioSampleCallback callback)
+{
+    EnterCriticalSection(&m_callbackCriticalSection);
+    m_audioSampleCallback = callback;
+    LeaveCriticalSection(&m_callbackCriticalSection);
 }

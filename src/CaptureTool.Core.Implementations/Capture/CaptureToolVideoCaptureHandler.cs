@@ -50,13 +50,13 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             fileName
         );
 
+        _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled);
+
         _audioSampleCallback = OnAudioSampleCallback;
         _screenRecorder.SetAudioSampleCallback(_audioSampleCallback);
 
         _videoFrameCallback = OnVideoFrameCallback;
         _screenRecorder.SetVideoFrameCallback(_videoFrameCallback);
-
-        _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled);
     }
 
     private void OnVideoFrameCallback(ref VideoFrameData frameData)

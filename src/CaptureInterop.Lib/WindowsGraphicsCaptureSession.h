@@ -16,6 +16,12 @@ class IAudioCaptureSourceFactory;
 class IVideoCaptureSourceFactory;
 class IMediaClock;
 
+// Callback data structures
+struct VideoFrameData;
+struct AudioSampleData;
+using VideoFrameCallback = void(__stdcall*)(const VideoFrameData* pFrameData);
+using AudioSampleCallback = void(__stdcall*)(const AudioSampleData* pSampleData);
+
 /// <summary>
 /// Windows Graphics Capture API implementation of ICaptureSession.
 /// Uses Windows.Graphics.Capture for screen recording with hardware acceleration.
@@ -46,6 +52,10 @@ public:
     void ToggleAudioCapture(bool enabled) override;
     bool IsActive() const override { return m_isActive; }
 
+    // Callback management - can be called at any time, even during recording
+    void SetVideoFrameCallback(VideoFrameCallback callback);
+    void SetAudioSampleCallback(AudioSampleCallback callback);
+
 private:
     // Helper methods for initialization
     bool InitializeSinkWriter(HRESULT* outHr);
@@ -74,4 +84,11 @@ private:
     
     // Session state
     bool m_isActive;
+    
+    // Callbacks stored as member variables for dynamic updates
+    VideoFrameCallback m_videoFrameCallback;
+    AudioSampleCallback m_audioSampleCallback;
+    
+    // Mutex for thread-safe callback access
+    CRITICAL_SECTION m_callbackCriticalSection;
 };
