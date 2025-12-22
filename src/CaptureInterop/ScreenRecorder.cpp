@@ -31,4 +31,14 @@ extern "C"
     {
         g_recorder.ToggleAudioCapture(enabled);
     }
+
+    __declspec(dllexport) void SetVideoFrameCallback(VideoFrameCallback callback)
+    {
+        g_recorder.SetVideoFrameCallback(callback);
+    }
+
+    __declspec(dllexport) void SetAudioSampleCallback(AudioSampleCallback callback)
+    {
+        g_recorder.SetAudioSampleCallback(callback);
+    }
 }

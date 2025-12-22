@@ -1,4 +1,5 @@
 ﻿using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Services.Interfaces.Logging;
 using CaptureTool.Services.Interfaces.Storage;
 
 namespace CaptureTool.Core.Implementations.Capture;
@@ -7,8 +8,11 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 {
     private readonly IScreenRecorder _screenRecorder;
     private readonly IStorageService _storageService;
+    private readonly ILogService _logService;
     
     private string? _tempVideoPath;
+    private AudioSampleCallback? _audioSampleCallback;
+    private VideoFrameCallback? _videoFrameCallback;
 
     public bool IsDesktopAudioEnabled { get; private set; }
     public bool IsRecording { get; private set; }
@@ -20,10 +24,12 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public CaptureToolVideoCaptureHandler(
         IScreenRecorder screenRecorder,
-        IStorageService storageService)
+        IStorageService storageService,
+        ILogService logService)
     {
         _screenRecorder = screenRecorder;
         _storageService = storageService;
+        _logService = logService;
 
         IsDesktopAudioEnabled = true;
     }
@@ -45,6 +51,22 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         );
 
         _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled);
+
+        _audioSampleCallback = OnAudioSampleCallback;
+        _screenRecorder.SetAudioSampleCallback(_audioSampleCallback);
+
+        _videoFrameCallback = OnVideoFrameCallback;
+        _screenRecorder.SetVideoFrameCallback(_videoFrameCallback);
+    }
+
+    private void OnVideoFrameCallback(ref VideoFrameData frameData)
+    {
+        _logService.LogInformation($"VIDEO FRAME: {frameData.Timestamp}");
+    }
+
+    private void OnAudioSampleCallback(ref AudioSampleData sampleData)
+    {
+        _logService.LogInformation($"AUDIO SAMPLE: {sampleData.Timestamp}");
     }
 
     public PendingVideoFile StopVideoCapture()
@@ -66,6 +88,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         {
             try
             {
+                _screenRecorder.SetAudioSampleCallback(null);
+                _screenRecorder.SetVideoFrameCallback(null);
                 _screenRecorder.StopRecording();
                 
                 var videoFile = new VideoFile(filePath);
@@ -77,6 +101,11 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             {
                 pendingVideo.Fail(ex);
                 throw;
+            }
+            finally
+            {
+                _audioSampleCallback = null;
+                _videoFrameCallback = null;
             }
         });
 
@@ -92,11 +121,15 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
                 return;
             }
 
+            _screenRecorder.SetAudioSampleCallback(null);
+            _screenRecorder.SetVideoFrameCallback(null);
             _screenRecorder.StopRecording();
         }
         finally
         {
-           _tempVideoPath = null;
+            _audioSampleCallback = null;
+            _videoFrameCallback = null;
+            _tempVideoPath = null;
             IsRecording = false;
             IsPaused = false;
         }

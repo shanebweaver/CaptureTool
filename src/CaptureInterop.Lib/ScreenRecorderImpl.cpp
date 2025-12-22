@@ -40,7 +40,7 @@ bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
 
     // Create a new capture session using the factory with the config
     m_captureSession = m_factory->CreateSession(config);
-       
+
     // Start the session
     HRESULT hr = S_OK;
     if (!m_captureSession->Start(&hr))
@@ -89,5 +89,21 @@ void ScreenRecorderImpl::ToggleAudioCapture(bool enabled)
     if (m_captureSession && m_captureSession->IsActive())
     {
         m_captureSession->ToggleAudioCapture(enabled);
+    }
+}
+
+void ScreenRecorderImpl::SetVideoFrameCallback(VideoFrameCallback callback)
+{
+    if (m_captureSession)
+    {
+        m_captureSession->SetVideoFrameCallback(callback);
+    }
+}
+
+void ScreenRecorderImpl::SetAudioSampleCallback(AudioSampleCallback callback)
+{
+    if (m_captureSession)
+    {
+        m_captureSession->SetAudioSampleCallback(callback);
     }
 }

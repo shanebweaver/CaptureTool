@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using CaptureTool.Domains.Capture.Interfaces;
+using System.Runtime.InteropServices;
 
 namespace CaptureTool.Domains.Capture.Implementations.Windows;
 
@@ -18,4 +19,10 @@ internal static partial class CaptureInterop
 
     [DllImport("CaptureInterop.dll")]
     internal static extern void TryToggleAudioCapture(bool enabled);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void SetVideoFrameCallback(VideoFrameCallback? callback);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void SetAudioSampleCallback(AudioSampleCallback? callback);
 }

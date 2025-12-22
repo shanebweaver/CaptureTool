@@ -8,6 +8,7 @@
 #include "WindowsDesktopVideoCaptureSource.h"
 #include "IAudioCaptureSource.h"
 #include "IVideoCaptureSource.h"
+#include "CallbackTypes.h"
 
 #include <mmreg.h>
 #include <strsafe.h>
@@ -29,12 +30,16 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     , m_videoCaptureSource(nullptr)
     , m_sinkWriter(nullptr)
     , m_isActive(false)
+    , m_videoFrameCallback(nullptr)
+    , m_audioSampleCallback(nullptr)
 {
+    InitializeCriticalSection(&m_callbackCriticalSection);
 }
 
 WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
 {
     Stop();
+    DeleteCriticalSection(&m_callbackCriticalSection);
 }
 
 bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
@@ -113,7 +118,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         return false;
     }
     
-    // Set up audio sample callback to write to sink writer
+    // Set up audio sample callback to write to sink writer and forward to managed layer
     m_audioCaptureSource->SetAudioSampleReadyCallback(
         [this](const AudioSampleReadyEventArgs& args) {
             // Write audio sample to sink writer
@@ -124,10 +129,28 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
             {
                 m_audioCaptureSource->SetEnabled(false);
             }
+
+            // Forward to managed layer if callback is set
+            EnterCriticalSection(&m_callbackCriticalSection);
+            AudioSampleCallback callback = m_audioSampleCallback;
+            LeaveCriticalSection(&m_callbackCriticalSection);
+            
+            if (callback && args.pFormat)
+            {
+                AudioSampleData sampleData{};
+                sampleData.pData = args.pData;
+                sampleData.numFrames = args.numFrames;
+                sampleData.timestamp = args.timestamp;
+                sampleData.sampleRate = args.pFormat->nSamplesPerSec;
+                sampleData.channels = args.pFormat->nChannels;
+                sampleData.bitsPerSample = args.pFormat->wBitsPerSample;
+                
+                callback(&sampleData);
+            }
         }
     );
     
-    // Set up video frame callback to write to sink writer
+    // Set up video frame callback to write to sink writer and forward to managed layer
     m_videoCaptureSource->SetVideoFrameReadyCallback(
         [this](const VideoFrameReadyEventArgs& args) {
             // Write video frame to sink writer
@@ -139,6 +162,22 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
             {
                 // Video frame write failed, but continue processing
                 // The sink writer will handle errors internally
+            }
+
+            // Forward to managed layer if callback is set
+            EnterCriticalSection(&m_callbackCriticalSection);
+            VideoFrameCallback callback = m_videoFrameCallback;
+            LeaveCriticalSection(&m_callbackCriticalSection);
+            
+            if (callback)
+            {
+                VideoFrameData frameData{};
+                frameData.pTexture = args.pTexture;
+                frameData.timestamp = args.timestamp;
+                frameData.width = m_videoCaptureSource->GetWidth();
+                frameData.height = m_videoCaptureSource->GetHeight();
+                
+                callback(&frameData);
             }
         }
     );
@@ -236,6 +275,18 @@ void WindowsGraphicsCaptureSession::Stop()
         return;
     }
 
+    // Clear callbacks FIRST to prevent any new callback invocations during shutdown
+    // This must happen before stopping capture sources
+    if (m_audioCaptureSource)
+    {
+        m_audioCaptureSource->SetAudioSampleReadyCallback(nullptr);
+    }
+    
+    if (m_videoCaptureSource)
+    {
+        m_videoCaptureSource->SetVideoFrameReadyCallback(nullptr);
+    }
+
     // Stop video capture first to prevent new frames from arriving
     if (m_videoCaptureSource)
     {
@@ -292,4 +343,18 @@ void WindowsGraphicsCaptureSession::ToggleAudioCapture(bool enabled)
     {
         m_audioCaptureSource->SetEnabled(enabled);
     }
+}
+
+void WindowsGraphicsCaptureSession::SetVideoFrameCallback(VideoFrameCallback callback)
+{
+    EnterCriticalSection(&m_callbackCriticalSection);
+    m_videoFrameCallback = callback;
+    LeaveCriticalSection(&m_callbackCriticalSection);
+}
+
+void WindowsGraphicsCaptureSession::SetAudioSampleCallback(AudioSampleCallback callback)
+{
+    EnterCriticalSection(&m_callbackCriticalSection);
+    m_audioSampleCallback = callback;
+    LeaveCriticalSection(&m_callbackCriticalSection);
 }

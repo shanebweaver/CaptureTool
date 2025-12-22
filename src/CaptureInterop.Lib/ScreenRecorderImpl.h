@@ -6,7 +6,7 @@
 
 /// <summary>
 /// Implementation class for screen recording functionality.
-/// Manages the capture session lifecycle.
+/// Manages the capture session lifecycle and callbacks to managed layer.
 /// </summary>
 class ScreenRecorderImpl
 {
@@ -60,6 +60,18 @@ public:
     /// </summary>
     /// <param name="enabled">True to enable audio, false to mute.</param>
     void ToggleAudioCapture(bool enabled);
+
+    /// <summary>
+    /// Set the callback to be invoked when a video frame is ready.
+    /// </summary>
+    /// <param name="callback">Callback function to receive video frames.</param>
+    void SetVideoFrameCallback(VideoFrameCallback callback);
+
+    /// <summary>
+    /// Set the callback to be invoked when an audio sample is ready.
+    /// </summary>
+    /// <param name="callback">Callback function to receive audio samples.</param>
+    void SetAudioSampleCallback(AudioSampleCallback callback);
 
 private:
     std::unique_ptr<ICaptureSession> m_captureSession;
