@@ -6,7 +6,6 @@ using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Implementations.Navigation;
 using CaptureTool.Services.Interfaces.Navigation;
-using CaptureTool.Services.Interfaces.Storage;
 using Moq;
 
 namespace CaptureTool.Core.Tests.Actions.CaptureOverlay;

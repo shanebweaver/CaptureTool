@@ -54,16 +54,7 @@ void FrameArrivedHandler::Stop()
     }
     
     // Log any remaining frames as a warning
-    {
-        std::lock_guard<std::mutex> lock(m_queueMutex);
-        if (!m_frameQueue.empty())
-        {
-            char msg[256];
-            sprintf_s(msg, "[FrameHandler] WARNING: %zu frames remaining in queue\n", 
-                     m_frameQueue.size());
-            OutputDebugStringA(msg);
-        }
-    }
+    std::lock_guard<std::mutex> lock(m_queueMutex);
 }
 
 HRESULT STDMETHODCALLTYPE FrameArrivedHandler::QueryInterface(REFIID riid, void** ppvObject)
@@ -161,16 +152,6 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
             // Queue full - drop frame to prevent memory buildup
             // Explicitly reset texture to encourage immediate GPU memory release
             texture.reset();
-            
-            static std::atomic<int> dropCount{0};
-            int dropped = dropCount.fetch_add(1);
-            
-            if (dropped % 100 == 0)
-            {
-                char msg[256];
-                sprintf_s(msg, "[FrameHandler] Dropped %d frames - encoder falling behind\n", dropped);
-                OutputDebugStringA(msg);
-            }
         }
     }
 
@@ -242,10 +223,6 @@ void FrameArrivedHandler::ProcessingThreadProc()
             processedCount++;
         }
     }
-    
-    char msg[256];
-    sprintf_s(msg, "[FrameHandler] Processing complete. Total frames: %d\n", processedCount);
-    OutputDebugStringA(msg);
 }
 
 EventRegistrationToken RegisterFrameArrivedHandler(

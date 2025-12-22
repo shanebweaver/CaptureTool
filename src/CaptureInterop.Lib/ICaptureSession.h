@@ -1,4 +1,5 @@
 #pragma once
+#include <Windows.h>
 
 /// <summary>
 /// Interface for a capture session that manages audio and video recording.

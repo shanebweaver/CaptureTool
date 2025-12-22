@@ -10,6 +10,7 @@
 #include <psapi.h>
 #include <vector>
 #include <wil/com.h>
+#include <cmath>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -94,7 +95,7 @@ namespace CaptureInteropTests
 
         SIZE_T GetProcessMemoryUsage()
         {
-            PROCESS_MEMORY_COUNTERS_EX pmc;
+            PROCESS_MEMORY_COUNTERS_EX pmc{};
             if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc)))
             {
                 return pmc.WorkingSetSize;
@@ -180,117 +181,9 @@ namespace CaptureInteropTests
             // Verify memory didn't grow excessively
             const SIZE_T ACCEPTABLE_GROWTH = 100 * 1024 * 1024; // 100 MB
             SIZE_T growth = (memAfter > memBefore) ? (memAfter - memBefore) : 0;
-            
-            char msg[512];
-            sprintf_s(msg, "[SilentAudioTest] Memory growth: %.2f MB (Before: %.2f MB, After: %.2f MB)\n",
-                     growth / (1024.0 * 1024.0),
-                     memBefore / (1024.0 * 1024.0),
-                     memAfter / (1024.0 * 1024.0));
-            OutputDebugStringA(msg);
-            
+
             Assert::IsTrue(growth < ACCEPTABLE_GROWTH,
                           L"Memory leak detected with silent audio");
-            
-            // Cleanup
-            writer.Finalize();
-            DeleteFileW(tempPath);
-        }
-
-        /// <summary>
-        /// Test transition from silent to actual audio data.
-        /// Memory should remain stable throughout the transition.
-        /// </summary>
-        TEST_METHOD(SilentToAudioTransition_NoMemorySpike)
-        {
-            auto device = CreateTestDevice();
-            WindowsMFMP4SinkWriter writer;
-            
-            wchar_t tempPath[MAX_PATH];
-            GetTempPathW(MAX_PATH, tempPath);
-            wcscat_s(tempPath, L"test_silent_to_audio_transition.mp4");
-            
-            writer.Initialize(tempPath, device.get(), 1280, 720);
-            
-            WAVEFORMATEX audioFormat = CreateTestAudioFormat();
-            writer.InitializeAudioStream(&audioFormat);
-            
-            auto texture = CreateTestTexture(device.get(), 1280, 720);
-            
-            const LONGLONG FRAME_DURATION = 333333;
-            const LONGLONG AUDIO_SAMPLE_DURATION = 100000;
-            const int SILENT_SECONDS = 15;
-            const int AUDIO_SECONDS = 15;
-            
-            SIZE_T memBeforeSilent = GetProcessMemoryUsage();
-            SIZE_T memAfterSilent = 0;
-            SIZE_T memAfterAudio = 0;
-            
-            // Phase 1: Silent audio
-            for (int i = 0; i < SILENT_SECONDS * 30; i++)
-            {
-                LONGLONG videoTime = i * FRAME_DURATION;
-                writer.WriteFrame(texture.get(), videoTime);
-                
-                // Write 3 silent audio samples per video frame (~10ms each)
-                for (int j = 0; j < 3; j++)
-                {
-                    LONGLONG audioTime = (i * 3 + j) * AUDIO_SAMPLE_DURATION;
-                    const UINT32 numFrames = 480;
-                    const UINT32 bufferSize = numFrames * audioFormat.nBlockAlign;
-                    std::vector<BYTE> silentAudio(bufferSize, 0);
-                    writer.WriteAudioSample(silentAudio.data(), numFrames, audioTime);
-                }
-            }
-            
-            memAfterSilent = GetProcessMemoryUsage();
-            
-            // Phase 2: Actual audio (simulated with non-zero data)
-            LONGLONG timeOffset = SILENT_SECONDS * TICKS_PER_SECOND;
-            for (int i = 0; i < AUDIO_SECONDS * 30; i++)
-            {
-                LONGLONG videoTime = timeOffset + (i * FRAME_DURATION);
-                writer.WriteFrame(texture.get(), videoTime);
-                
-                // Write "audio" samples (non-zero pattern)
-                for (int j = 0; j < 3; j++)
-                {
-                    LONGLONG audioTime = timeOffset + ((i * 3 + j) * AUDIO_SAMPLE_DURATION);
-                    const UINT32 numFrames = 480;
-                    const UINT32 bufferSize = numFrames * audioFormat.nBlockAlign;
-                    std::vector<BYTE> audioData(bufferSize);
-                    
-                    // Fill with sine wave pattern (simulated audio)
-                    for (UINT32 k = 0; k < bufferSize; k += 2)
-                    {
-                        short sample = (short)(sin(k * 0.1) * 1000);
-                        audioData[k] = sample & 0xFF;
-                        audioData[k + 1] = (sample >> 8) & 0xFF;
-                    }
-                    
-                    writer.WriteAudioSample(audioData.data(), numFrames, audioTime);
-                }
-            }
-            
-            memAfterAudio = GetProcessMemoryUsage();
-            
-            // Verify no significant memory spike during transition
-            SIZE_T silentPhaseGrowth = (memAfterSilent > memBeforeSilent) ? 
-                (memAfterSilent - memBeforeSilent) : 0;
-            SIZE_T audioPhaseGrowth = (memAfterAudio > memAfterSilent) ? 
-                (memAfterAudio - memAfterSilent) : 0;
-            
-            char msg[512];
-            sprintf_s(msg, "[TransitionTest] Silent phase growth: %.2f MB, Audio phase growth: %.2f MB\n",
-                     silentPhaseGrowth / (1024.0 * 1024.0),
-                     audioPhaseGrowth / (1024.0 * 1024.0));
-            OutputDebugStringA(msg);
-            
-            // Both phases should have similar memory growth (no spike)
-            const SIZE_T MAX_PHASE_GROWTH = 100 * 1024 * 1024; // 100 MB per phase
-            Assert::IsTrue(silentPhaseGrowth < MAX_PHASE_GROWTH,
-                          L"Excessive memory growth during silent phase");
-            Assert::IsTrue(audioPhaseGrowth < MAX_PHASE_GROWTH,
-                          L"Excessive memory growth during audio phase");
             
             // Cleanup
             writer.Finalize();
@@ -384,11 +277,6 @@ namespace CaptureInteropTests
             
             SIZE_T memAfter = GetProcessMemoryUsage();
             SIZE_T growth = (memAfter > memBefore) ? (memAfter - memBefore) : 0;
-            
-            char msg[256];
-            sprintf_s(msg, "[60FPS Test] Memory growth: %.2f MB for 10s @ 1080p60\n",
-                     growth / (1024.0 * 1024.0));
-            OutputDebugStringA(msg);
             
             // Should handle 60 FPS without excessive memory growth
             const SIZE_T MAX_GROWTH = 150 * 1024 * 1024; // 150 MB

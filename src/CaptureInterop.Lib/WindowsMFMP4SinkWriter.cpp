@@ -312,14 +312,6 @@ void WindowsMFMP4SinkWriter::Finalize()
         }
         
         HRESULT hr = m_sinkWriter->Finalize();
-        
-        if (SUCCEEDED(hr))
-        {
-            char msg[256];
-            sprintf_s(msg, "[MP4Writer] Finalized successfully. Total frames: %d\n", m_frameIndex);
-            OutputDebugStringA(msg);
-        }
-        
         m_sinkWriter.reset();
     }
 

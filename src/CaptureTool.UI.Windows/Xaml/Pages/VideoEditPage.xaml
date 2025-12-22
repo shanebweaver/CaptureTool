@@ -43,9 +43,11 @@
 
         <!--  Content  -->
         <Grid Grid.Row="1" Padding="8,0,8,8">
-            <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" 
-                                Visibility="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}" />
-            
+            <MediaPlayerElement
+                x:Name="VideoPlayer"
+                AreTransportControlsEnabled="True"
+                Visibility="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}" />
+
             <!--  Loading indicator for video finalization  -->
             <Grid Visibility="{x:Bind ViewModel.IsFinalizingVideo, Mode=OneWay}">
                 <StackPanel

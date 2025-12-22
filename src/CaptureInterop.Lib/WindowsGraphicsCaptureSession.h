@@ -4,7 +4,6 @@
 #include "IMP4SinkWriterFactory.h"
 #include "CaptureSessionConfig.h"
 #include "IMP4SinkWriter.h"
-
 #include <Windows.h>
 #include <memory>
 
