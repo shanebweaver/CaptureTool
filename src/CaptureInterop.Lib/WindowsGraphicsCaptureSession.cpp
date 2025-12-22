@@ -126,25 +126,15 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
             }
 
             // Forward to managed layer if callback is set
-            if (m_config.audioSampleCallback)
+            if (m_config.audioSampleCallback && args.pFormat)
             {
                 AudioSampleData sampleData;
                 sampleData.pData = args.pData;
                 sampleData.numFrames = args.numFrames;
                 sampleData.timestamp = args.timestamp;
-                
-                if (args.pFormat)
-                {
-                    sampleData.sampleRate = args.pFormat->nSamplesPerSec;
-                    sampleData.channels = args.pFormat->nChannels;
-                    sampleData.bitsPerSample = args.pFormat->wBitsPerSample;
-                }
-                else
-                {
-                    sampleData.sampleRate = 0;
-                    sampleData.channels = 0;
-                    sampleData.bitsPerSample = 0;
-                }
+                sampleData.sampleRate = args.pFormat->nSamplesPerSec;
+                sampleData.channels = args.pFormat->nChannels;
+                sampleData.bitsPerSample = args.pFormat->wBitsPerSample;
                 
                 m_config.audioSampleCallback(&sampleData);
             }

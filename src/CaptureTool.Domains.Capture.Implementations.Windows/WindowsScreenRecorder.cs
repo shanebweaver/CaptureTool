@@ -17,13 +17,13 @@ public partial class WindowsScreenRecorder : IScreenRecorder
     /// Set a callback to be invoked when a video frame is captured.
     /// </summary>
     /// <param name="callback">Callback to receive video frame data, or null to unregister.</param>
-    public void SetVideoFrameCallback(VideoFrameCallback? callback)
+    public void SetVideoFrameCallback(CaptureInterop.VideoFrameCallback? callback)
         => CaptureInterop.SetVideoFrameCallback(callback);
 
     /// <summary>
     /// Set a callback to be invoked when an audio sample is captured.
     /// </summary>
     /// <param name="callback">Callback to receive audio sample data, or null to unregister.</param>
-    public void SetAudioSampleCallback(AudioSampleCallback? callback)
+    public void SetAudioSampleCallback(CaptureInterop.AudioSampleCallback? callback)
         => CaptureInterop.SetAudioSampleCallback(callback);
 }
