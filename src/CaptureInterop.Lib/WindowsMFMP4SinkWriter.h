@@ -40,4 +40,7 @@ private:
     ID3D11DeviceContext* m_context = nullptr;
     int64_t m_prevVideoTimestamp = 0;
     WAVEFORMATEX m_audioFormat = {};
+
+    // Cached staging texture to prevent memory leak from repeated allocations
+    wil::com_ptr<ID3D11Texture2D> m_stagingTexture;
 };

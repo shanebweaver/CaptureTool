@@ -200,19 +200,64 @@ void AudioCaptureHandler::CaptureThreadProc()
         }
         else
         {
-            // No audio data available immediately
-            // Check if we've been waiting too long and need to advance the clock
+            // No audio data available from WASAPI
+            // This happens during silence - generate silent audio to maintain A/V sync
             QueryPerformanceCounter(&currentQpc);
             LONGLONG qpcElapsed = currentQpc.QuadPart - lastAdvanceQpc.QuadPart;
             LONGLONG ticksElapsed = (qpcElapsed * TICKS_PER_SECOND) / qpcFreq.QuadPart;
             
-            // If more than 10ms has elapsed since last advancement, advance the clock
+            // If more than 10ms has elapsed since last advancement, generate silent audio
             if (ticksElapsed >= 100000LL) // 10ms in 100ns ticks
             {
                 // Calculate frames equivalent to elapsed time
                 UINT32 virtualFrames = (UINT32)((ticksElapsed * m_sampleRate) / TICKS_PER_SECOND);
+                
                 if (virtualFrames > 0)
                 {
+                    // Generate and write silent audio samples to maintain A/V sync
+                    // This prevents video frame backpressure during silence
+                    if (m_audioSampleReadyCallback)
+                    {
+                        WAVEFORMATEX* format = m_device.GetFormat();
+                        if (format)
+                        {
+                            UINT32 bufferSize = virtualFrames * format->nBlockAlign;
+                            
+                            // Prepare silent buffer
+                            if (m_silentBuffer.size() < bufferSize)
+                            {
+                                m_silentBuffer.resize(bufferSize, 0);
+                            }
+                            else
+                            {
+                                memset(m_silentBuffer.data(), 0, bufferSize);
+                            }
+                            
+                            // Calculate timestamp
+                            LONGLONG timestamp = 0;
+                            if (m_clockReader && m_clockReader->IsRunning())
+                            {
+                                timestamp = m_clockReader->GetCurrentTime();
+                            }
+                            else
+                            {
+                                LONGLONG duration = (virtualFrames * TICKS_PER_SECOND) / m_sampleRate;
+                                timestamp = lastTimestamp + duration;
+                            }
+                            
+                            // Write silent audio to encoder
+                            AudioSampleReadyEventArgs args{};
+                            args.pData = m_silentBuffer.data();
+                            args.numFrames = virtualFrames;
+                            args.timestamp = timestamp;
+                            args.pFormat = format;
+                            
+                            m_audioSampleReadyCallback(args);
+                            lastTimestamp = timestamp;
+                        }
+                    }
+                    
+                    // Advance the clock
                     m_clockWriter->AdvanceByAudioSamples(virtualFrames, m_sampleRate);
                     lastAdvanceQpc = currentQpc;
                 }

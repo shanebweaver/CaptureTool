@@ -182,23 +182,25 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
     D3D11_TEXTURE2D_DESC desc{};
     texture->GetDesc(&desc);
 
-    D3D11_TEXTURE2D_DESC stagingDesc = desc;
-    stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    stagingDesc.Usage = D3D11_USAGE_STAGING;
-    stagingDesc.BindFlags = 0;
-    stagingDesc.MiscFlags = 0;
+    // Create staging texture only once and reuse it to prevent memory leak
+    if (!m_stagingTexture)
+    {
+        D3D11_TEXTURE2D_DESC stagingDesc = desc;
+        stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+        stagingDesc.Usage = D3D11_USAGE_STAGING;
+        stagingDesc.BindFlags = 0;
+        stagingDesc.MiscFlags = 0;
 
-    wil::com_ptr<ID3D11Texture2D> staging;
-    HRESULT hr = m_device->CreateTexture2D(&stagingDesc, nullptr, staging.put());
-    if (FAILED(hr)) return hr;
+        HRESULT hr = m_device->CreateTexture2D(&stagingDesc, nullptr, m_stagingTexture.put());
+        if (FAILED(hr)) return hr;
+    }
 
-    m_context->CopyResource(staging.get(), texture);
+    m_context->CopyResource(m_stagingTexture.get(), texture);
 
     D3D11_MAPPED_SUBRESOURCE mapped{};
-    hr = m_context->Map(staging.get(), 0, D3D11_MAP_READ, 0, &mapped);
+    HRESULT hr = m_context->Map(m_stagingTexture.get(), 0, D3D11_MAP_READ, 0, &mapped);
     if (FAILED(hr)) 
     {
-        staging.reset();
         return hr;
     }
 
@@ -210,8 +212,7 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
     hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
     if (FAILED(hr)) 
     { 
-        m_context->Unmap(staging.get(), 0); 
-        staging.reset();
+        m_context->Unmap(m_stagingTexture.get(), 0); 
         return hr; 
     }
 
@@ -220,8 +221,7 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
     hr = buffer->Lock(&pData, &maxLen, &curLen);
     if (FAILED(hr)) 
     { 
-        m_context->Unmap(staging.get(), 0); 
-        staging.reset();
+        m_context->Unmap(m_stagingTexture.get(), 0); 
         return hr; 
     }
 
@@ -235,8 +235,7 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
     buffer->SetCurrentLength(bufferSize);
     buffer->Unlock();
     
-    m_context->Unmap(staging.get(), 0);
-    staging.reset();
+    m_context->Unmap(m_stagingTexture.get(), 0);
 
     wil::com_ptr<IMFSample> sample;
     hr = MFCreateSample(sample.put());
@@ -323,6 +322,9 @@ void WindowsMFMP4SinkWriter::Finalize()
         
         m_sinkWriter.reset();
     }
+
+    // Release cached staging texture
+    m_stagingTexture.reset();
 
     if (m_context)
     {

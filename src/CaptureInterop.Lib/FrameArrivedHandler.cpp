@@ -146,8 +146,9 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
     {
         std::lock_guard<std::mutex> lock(m_queueMutex);
         
-        // Keep queue size at 6 frames to reduce memory pressure while providing buffering
-        if (m_frameQueue.size() < 6)
+        // Keep queue size at 3 frames to reduce memory pressure while providing minimal buffering
+        // Reduced from 6 to minimize memory accumulation during encoding delays
+        if (m_frameQueue.size() < 3)
         {
             QueuedFrame queuedFrame;
             queuedFrame.texture = texture;
@@ -158,6 +159,9 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         else
         {
             // Queue full - drop frame to prevent memory buildup
+            // Explicitly reset texture to encourage immediate GPU memory release
+            texture.reset();
+            
             static std::atomic<int> dropCount{0};
             int dropped = dropCount.fetch_add(1);
             
