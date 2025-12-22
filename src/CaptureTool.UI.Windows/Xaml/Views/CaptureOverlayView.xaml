@@ -16,6 +16,7 @@
             <Grid x:Name="ToolbarHost" />
             <controls:CaptureOverlayToolbar
                 x:Name="Toolbar"
+                CaptureTime="{x:Bind ViewModel.CaptureTime, Mode=OneWay}"
                 CloseCommand="{x:Bind ViewModel.CloseOverlayCommand}"
                 GoBackCommand="{x:Bind ViewModel.GoBackCommand}"
                 IsLocalAudioEnabled="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=OneWay}"

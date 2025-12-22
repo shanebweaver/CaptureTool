@@ -60,6 +60,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(DependencyProperty.UnsetValue));
 
+    public static readonly DependencyProperty CaptureTimeProperty = DependencyProperty.Register(
+        nameof(CaptureTime),
+        typeof(TimeSpan),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(TimeSpan.Zero));
+
     public CaptureOverlayToolbar()
     {
         InitializeComponent();
@@ -132,5 +138,11 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     {
         get => Get<ICommand>(TogglePauseResumeCommandProperty);
         set => Set(TogglePauseResumeCommandProperty, value);
+    }
+
+    public TimeSpan CaptureTime
+    {
+        get => Get<TimeSpan>(CaptureTimeProperty);
+        set => Set(CaptureTimeProperty, value);
     }
 }
