@@ -37,6 +37,10 @@ bool AudioCaptureHandler::Initialize(bool loopback, HRESULT* outHr)
     if (format)
     {
         m_sampleRate = format->nSamplesPerSec;
+        
+        // Pre-allocate silent buffer for 1 second of audio
+        UINT32 maxBufferSize = m_sampleRate * format->nBlockAlign;
+        m_silentBuffer.resize(maxBufferSize);
     }
     
     return true;
@@ -84,6 +88,30 @@ void AudioCaptureHandler::Stop()
 WAVEFORMATEX* AudioCaptureHandler::GetFormat() const
 {
     return m_device.GetFormat();
+}
+
+// ============================================================================
+// Thread-Safe Silent Buffer Management
+// ============================================================================
+
+BYTE* AudioCaptureHandler::GetSilentBuffer(UINT32 requiredSize)
+{
+    static constexpr size_t BUFFER_GROWTH_FACTOR = 2;
+    
+    std::lock_guard<std::mutex> lock(m_silentBufferMutex);
+    
+    if (m_silentBuffer.size() < requiredSize)
+    {
+        // Resize with growth factor to reduce future reallocations
+        m_silentBuffer.resize(requiredSize * BUFFER_GROWTH_FACTOR, 0);
+    }
+    else
+    {
+        // Just zero the needed portion
+        memset(m_silentBuffer.data(), 0, requiredSize);
+    }
+    
+    return m_silentBuffer.data();
 }
 
 // ============================================================================
@@ -171,15 +199,7 @@ void AudioCaptureHandler::CaptureThreadProc()
                 if (!m_isEnabled || (flags & AUDCLNT_BUFFERFLAGS_SILENT))
                 {
                     UINT32 bufferSize = framesRead * format->nBlockAlign;
-                    if (m_silentBuffer.size() < bufferSize)
-                    {
-                        m_silentBuffer.resize(bufferSize, 0);
-                    }
-                    else
-                    {
-                        memset(m_silentBuffer.data(), 0, bufferSize);
-                    }
-                    pAudioData = m_silentBuffer.data();
+                    pAudioData = GetSilentBuffer(bufferSize);
                 }
                 
                 AudioSampleReadyEventArgs args{};
@@ -224,16 +244,7 @@ void AudioCaptureHandler::CaptureThreadProc()
                         if (format)
                         {
                             UINT32 bufferSize = virtualFrames * format->nBlockAlign;
-                            
-                            // Prepare silent buffer
-                            if (m_silentBuffer.size() < bufferSize)
-                            {
-                                m_silentBuffer.resize(bufferSize, 0);
-                            }
-                            else
-                            {
-                                memset(m_silentBuffer.data(), 0, bufferSize);
-                            }
+                            BYTE* pSilentData = GetSilentBuffer(bufferSize);
                             
                             // Calculate timestamp
                             LONGLONG timestamp = 0;
@@ -249,7 +260,7 @@ void AudioCaptureHandler::CaptureThreadProc()
                             
                             // Write silent audio to encoder
                             AudioSampleReadyEventArgs args{};
-                            args.pData = m_silentBuffer.data();
+                            args.pData = pSilentData;
                             args.numFrames = virtualFrames;
                             args.timestamp = timestamp;
                             args.pFormat = format;
