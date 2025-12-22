@@ -27,7 +27,7 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     , m_mp4SinkWriterFactory(mp4SinkWriterFactory)
     , m_audioCaptureSource(nullptr)
     , m_videoCaptureSource(nullptr)
-	, m_sinkWriter(nullptr)
+    , m_sinkWriter(nullptr)
     , m_isActive(false)
 {
 }
@@ -101,8 +101,8 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     }
 
     // Initialize sink writer with video and audio streams
-	m_sinkWriter = m_mp4SinkWriterFactory->CreateSinkWriter();
-	if (!m_sinkWriter)
+    m_sinkWriter = m_mp4SinkWriterFactory->CreateSinkWriter();
+    if (!m_sinkWriter)
     {
         if (outHr) *outHr = E_FAIL;
         return false;

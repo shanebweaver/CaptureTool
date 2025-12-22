@@ -56,7 +56,7 @@ private:
     IMediaClockFactory* m_mediaClockFactory;
     IAudioCaptureSourceFactory* m_audioCaptureSourceFactory;
     IVideoCaptureSourceFactory* m_videoCaptureSourceFactory;
-	IMP4SinkWriterFactory* m_mp4SinkWriterFactory;
+    IMP4SinkWriterFactory* m_mp4SinkWriterFactory;
     
     // Media output
     std::unique_ptr<IMP4SinkWriter> m_sinkWriter;

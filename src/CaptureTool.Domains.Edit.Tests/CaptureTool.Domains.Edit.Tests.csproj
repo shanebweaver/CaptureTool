@@ -10,7 +10,7 @@
   <!-- Package references -->
   <ItemGroup>
     <PackageReference Include="System.Drawing.Common" />
-	<PackageReference Update="MSTest.Analyzers">
+    <PackageReference Update="MSTest.Analyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
