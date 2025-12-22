@@ -10,11 +10,7 @@ AudioCaptureDevice::AudioCaptureDevice() = default;
 AudioCaptureDevice::~AudioCaptureDevice()
 {
     Stop();
-    if (m_waveFormat)
-    {
-        CoTaskMemFree(m_waveFormat);
-        m_waveFormat = nullptr;
-    }
+    // m_waveFormat cleans up automatically
 }
 
 // ============================================================================
@@ -72,12 +68,14 @@ bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr)
     }
 
     // Get the audio format
-    hr = m_audioClient->GetMixFormat(&m_waveFormat);
+    WAVEFORMATEX* pFormat = nullptr;
+    hr = m_audioClient->GetMixFormat(&pFormat);
     if (FAILED(hr))
     {
         if (outHr) *outHr = hr;
         return false;
     }
+    m_waveFormat.reset(pFormat);
 
     // Initialize audio client for loopback or capture
     DWORD streamFlags = loopback ? AUDCLNT_STREAMFLAGS_LOOPBACK : 0;
@@ -86,7 +84,7 @@ bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr)
         streamFlags,
         10000000, // 1 second buffer
         0,
-        m_waveFormat,
+        m_waveFormat.get(),
         nullptr
     );
     if (FAILED(hr))
