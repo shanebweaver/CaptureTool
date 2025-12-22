@@ -11,8 +11,8 @@ using CaptureTool.Domains.Capture.Implementations.Windows;
 // Import the callback types from CaptureInterop (internal to the implementation assembly)
 using VideoFrameCallback = CaptureTool.Domains.Capture.Implementations.Windows.CaptureInterop.VideoFrameCallback;
 using AudioSampleCallback = CaptureTool.Domains.Capture.Implementations.Windows.CaptureInterop.AudioSampleCallback;
-using VideoFrameData = CaptureTool.Domains.Capture.Implementations.Windows.VideoFrameData;
-using AudioSampleData = CaptureTool.Domains.Capture.Implementations.Windows.AudioSampleData;
+using VideoFrameData = CaptureTool.Domains.Capture.Implementations.Windows.CaptureInterop.VideoFrameData;
+using AudioSampleData = CaptureTool.Domains.Capture.Implementations.Windows.CaptureInterop.AudioSampleData;
 
 namespace CaptureTool.Examples;
 
