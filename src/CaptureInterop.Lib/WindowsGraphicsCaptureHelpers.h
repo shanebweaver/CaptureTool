@@ -1,5 +1,23 @@
 #pragma once
 #include "pch.h"
+#include <dxgi.h>
+#include <strsafe.h>
+#include <wchar.h>
+#include <d3d11.h>
+#include <d3dcommon.h>
+#include <Windows.Graphics.Capture.Interop.h>
+#include <windows.graphics.directx.direct3d11.interop.h>
+#include <Windows.h>
+#include <hstring.h>
+#include <inspectable.h>
+#include <roapi.h>
+#include <windows.graphics.capture.h>
+#include <windows.graphics.directx.direct3d11.h>
+#include <windows.graphics.directx.h>
+#include <windows.graphics.h>
+#include <winstring.h>
+#include <utility>
+#include <wil/com.h>
 
 using namespace ABI::Windows::Graphics;
 using namespace ABI::Windows::Graphics::Capture;

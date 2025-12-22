@@ -1,11 +1,11 @@
 #pragma once
-#include <cstdint>
-#include "CaptureSessionConfig.h"
+#include <Windows.h>
 
 /// <summary>
 /// Interface for a capture session that manages audio and video recording.
 /// Provides operations for controlling the lifecycle of a recording session.
 /// Implementations should handle platform-specific capture mechanisms.
+/// Configuration is provided via constructor when the session is created.
 /// </summary>
 class ICaptureSession
 {
@@ -13,22 +13,11 @@ public:
     virtual ~ICaptureSession() = default;
 
     /// <summary>
-    /// Initialize and start the capture session with configuration.
+    /// Initialize and start the capture session with the configuration provided at construction.
     /// </summary>
-    /// <param name="config">Configuration settings for the capture session.</param>
     /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
     /// <returns>True if session started successfully, false otherwise.</returns>
-    virtual bool Start(const CaptureSessionConfig& config, HRESULT* outHr = nullptr) = 0;
-
-    /// <summary>
-    /// Initialize and start the capture session.
-    /// </summary>
-    /// <param name="hMonitor">Handle to the monitor to capture.</param>
-    /// <param name="outputPath">Path to the output MP4 file.</param>
-    /// <param name="captureAudio">Whether to capture system audio.</param>
-    /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
-    /// <returns>True if session started successfully, false otherwise.</returns>
-    virtual bool Start(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio, HRESULT* outHr = nullptr) = 0;
+    virtual bool Start(HRESULT* outHr = nullptr) = 0;
 
     /// <summary>
     /// Stop the capture session and finalize the output file.

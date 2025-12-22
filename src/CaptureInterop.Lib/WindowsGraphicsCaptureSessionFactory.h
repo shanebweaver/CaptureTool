@@ -2,6 +2,12 @@
 #include "pch.h"
 #include "ICaptureSessionFactory.h"
 
+// Forward declarations
+class IMediaClockFactory;
+class IAudioCaptureSourceFactory;
+class IVideoCaptureSourceFactory;
+class IMP4SinkWriterFactory;
+
 /// <summary>
 /// Factory implementation for creating Windows Graphics Capture sessions.
 /// Creates WindowsGraphicsCaptureSession instances for screen recording.
@@ -9,7 +15,11 @@
 class WindowsGraphicsCaptureSessionFactory : public ICaptureSessionFactory
 {
 public:
-    WindowsGraphicsCaptureSessionFactory() = default;
+    WindowsGraphicsCaptureSessionFactory(
+        IMediaClockFactory* mediaClockFactory,
+        IAudioCaptureSourceFactory* audioCaptureSourceFactory,
+        IVideoCaptureSourceFactory* videoCaptureSourceFactory,
+        IMP4SinkWriterFactory* mp4SinkWriterFactory);
     ~WindowsGraphicsCaptureSessionFactory() override = default;
 
     // Delete copy and move operations
@@ -25,9 +35,9 @@ public:
     /// <returns>A unique pointer to a new WindowsGraphicsCaptureSession.</returns>
     std::unique_ptr<ICaptureSession> CreateSession(const CaptureSessionConfig& config) override;
 
-    /// <summary>
-    /// Create a new Windows Graphics Capture session.
-    /// </summary>
-    /// <returns>A unique pointer to a new WindowsGraphicsCaptureSession.</returns>
-    std::unique_ptr<ICaptureSession> CreateSession() override;
+private:
+    IMediaClockFactory* m_mediaClockFactory;
+    IAudioCaptureSourceFactory* m_audioCaptureSourceFactory;
+    IVideoCaptureSourceFactory* m_videoCaptureSourceFactory;
+    IMP4SinkWriterFactory* m_mp4SinkWriterFactory;
 };

@@ -1,12 +1,20 @@
 #pragma once
 #include "pch.h"
 #include "ICaptureSession.h"
-#include "MP4SinkWriter.h"
+#include "IMP4SinkWriterFactory.h"
+#include "CaptureSessionConfig.h"
+#include "IMP4SinkWriter.h"
+#include <Windows.h>
+#include <memory>
 
 // Forward declarations
 class FrameArrivedHandler;
-class IAudioInputSource;
-class MediaClock;
+class IAudioCaptureSource;
+class IVideoCaptureSource;
+class IMediaClockFactory;
+class IAudioCaptureSourceFactory;
+class IVideoCaptureSourceFactory;
+class IMediaClock;
 
 /// <summary>
 /// Windows Graphics Capture API implementation of ICaptureSession.
@@ -16,7 +24,12 @@ class MediaClock;
 class WindowsGraphicsCaptureSession : public ICaptureSession
 {
 public:
-    WindowsGraphicsCaptureSession();
+    WindowsGraphicsCaptureSession(
+        const CaptureSessionConfig& config,
+        IMediaClockFactory* mediaClockFactory,
+        IAudioCaptureSourceFactory* audioCaptureSourceFactory,
+        IVideoCaptureSourceFactory* videoCaptureSourceFactory,
+        IMP4SinkWriterFactory* mp4SinkWriterFactory);
     ~WindowsGraphicsCaptureSession() override;
 
     // Delete copy and move operations
@@ -26,29 +39,36 @@ public:
     WindowsGraphicsCaptureSession& operator=(WindowsGraphicsCaptureSession&&) = delete;
 
     // ICaptureSession implementation
-    bool Start(const CaptureSessionConfig& config, HRESULT* outHr = nullptr) override;
-    bool Start(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio, HRESULT* outHr = nullptr) override;
+    bool Start(HRESULT* outHr = nullptr) override;
     void Stop() override;
     void ToggleAudioCapture(bool enabled) override;
     bool IsActive() const override { return m_isActive; }
 
 private:
-    // Windows Graphics Capture resources
-    wil::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession> m_captureSession;
-    wil::com_ptr<ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool> m_framePool;
-    EventRegistrationToken m_frameArrivedEventToken;
+    // Helper methods for initialization
+    bool InitializeSinkWriter(HRESULT* outHr);
+    bool StartAudioCapture(HRESULT* outHr);
+
+    // Configuration
+    CaptureSessionConfig m_config;
     
-    // Frame processing handler
-    FrameArrivedHandler* m_frameHandler;
+    // Factories
+    IMediaClockFactory* m_mediaClockFactory;
+    IAudioCaptureSourceFactory* m_audioCaptureSourceFactory;
+    IVideoCaptureSourceFactory* m_videoCaptureSourceFactory;
+    IMP4SinkWriterFactory* m_mp4SinkWriterFactory;
     
     // Media output
-    MP4SinkWriter m_sinkWriter;
+    std::unique_ptr<IMP4SinkWriter> m_sinkWriter;
     
     // Audio capture
-    std::unique_ptr<IAudioInputSource> m_audioInputSource;
+    std::unique_ptr<IAudioCaptureSource> m_audioCaptureSource;
     
-    // Media clock for A/V synchronization (TODO: integrate properly)
-    // std::unique_ptr<MediaClock> m_mediaClock;
+    // Video capture
+    std::unique_ptr<IVideoCaptureSource> m_videoCaptureSource;
+    
+    // Media clock for A/V synchronization
+    std::unique_ptr<IMediaClock> m_mediaClock;
     
     // Session state
     bool m_isActive;

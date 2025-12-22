@@ -1,16 +1,33 @@
-#pragma once
+# pragma once
+#include "IMediaClockAdvancer.h"
+#include <functional>
 
-// Forward declaration
-class MP4SinkWriter;
+/// <summary>
+/// Event arguments for audio sample ready event.
+/// Contains the audio sample data and timing information.
+/// </summary>
+struct AudioSampleReadyEventArgs
+{
+    const BYTE* pData;          // Pointer to audio sample data
+    UINT32 numFrames;           // Number of audio frames in the sample
+    LONGLONG timestamp;         // Timestamp for this sample (100ns ticks)
+    WAVEFORMATEX* pFormat;      // Audio format for this sample
+};
+
+/// <summary>
+/// Callback function type for audio sample ready events.
+/// </summary>
+using AudioSampleReadyCallback = std::function<void(const AudioSampleReadyEventArgs&)>;
 
 /// <summary>
 /// Interface for audio input sources that can be captured and written to an output stream.
 /// Implementations provide different audio sources (system audio, microphone, etc.)
+/// Extends IMediaClockAdvancer to drive the media clock timeline based on audio samples.
 /// </summary>
-class IAudioInputSource
+class IAudioCaptureSource : public IMediaClockAdvancer
 {
 public:
-    virtual ~IAudioInputSource() = default;
+    virtual ~IAudioCaptureSource() = default;
 
     /// <summary>
     /// Initialize the audio input source.
@@ -38,11 +55,11 @@ public:
     virtual WAVEFORMATEX* GetFormat() const = 0;
 
     /// <summary>
-    /// Set the MP4 sink writer to receive captured audio samples.
-    /// Must be called before Start() to enable audio/video synchronization.
+    /// Set the callback to be invoked when an audio sample is ready.
+    /// The callback is invoked on the audio capture thread.
     /// </summary>
-    /// <param name="sinkWriter">Pointer to the MP4SinkWriter instance.</param>
-    virtual void SetSinkWriter(MP4SinkWriter* sinkWriter) = 0;
+    /// <param name="callback">Callback function to receive audio samples.</param>
+    virtual void SetAudioSampleReadyCallback(AudioSampleReadyCallback callback) = 0;
 
     /// <summary>
     /// Enable or disable audio writing to the output.

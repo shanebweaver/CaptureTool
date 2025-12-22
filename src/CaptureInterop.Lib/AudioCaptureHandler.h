@@ -1,18 +1,34 @@
 #pragma once
 #include "AudioCaptureDevice.h"
+#include <functional>
+#include <thread>
+#include <atomic>
+#include <vector>
 
-// Forward declaration
-class MP4SinkWriter;
+// Forward declarations
+class IMediaClockWriter;
+class IMediaClockReader;
+
+/// <summary>
+/// Event arguments for audio sample ready event.
+/// Contains the audio sample data and timing information.
+/// </summary>
+struct AudioSampleReadyEventArgs;
+
+/// <summary>
+/// Callback function type for audio sample ready events.
+/// </summary>
+using AudioSampleReadyCallback = std::function<void(const AudioSampleReadyEventArgs&)>;
 
 /// <summary>
 /// Manages audio capture in a dedicated thread with synchronized timestamps.
-/// Captures audio samples from WASAPI and writes them to an MP4 sink writer.
-/// Uses accumulated timestamps to ensure proper audio playback speed.
+/// Captures audio samples from WASAPI and fires an event when samples are ready.
+/// Uses the media clock reader to get synchronized timestamps.
 /// </summary>
 class AudioCaptureHandler
 {
 public:
-    AudioCaptureHandler();
+    AudioCaptureHandler(IMediaClockReader* clockReader);
     ~AudioCaptureHandler();
 
     /// <summary>
@@ -25,7 +41,6 @@ public:
     
     /// <summary>
     /// Start the audio capture thread.
-    /// Synchronizes start time with video capture if MP4SinkWriter is set.
     /// </summary>
     /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
     /// <returns>True if capture started successfully, false otherwise.</returns>
@@ -42,13 +57,22 @@ public:
     /// </summary>
     /// <returns>Pointer to WAVEFORMATEX structure, or nullptr if not initialized.</returns>
     WAVEFORMATEX* GetFormat() const;
-    
+
     /// <summary>
-    /// Set the MP4 sink writer to receive captured audio samples.
-    /// Must be called before Start() to enable audio/video synchronization.
+    /// Set the callback to be invoked when an audio sample is ready.
+    /// The callback is invoked on the audio capture thread.
     /// </summary>
-    /// <param name="sinkWriter">Pointer to the MP4SinkWriter instance.</param>
-    void SetSinkWriter(MP4SinkWriter* sinkWriter) { m_sinkWriter = sinkWriter; }
+    /// <param name="callback">Callback function to receive audio samples.</param>
+    void SetAudioSampleReadyCallback(AudioSampleReadyCallback callback) { m_audioSampleReadyCallback = callback; }
+
+    /// <summary>
+    /// Set the media clock writer to advance as audio samples are captured.
+    /// The handler advances the clock with each audio sample to maintain
+    /// accurate timeline synchronization for A/V sync.
+    /// Must be called before Start() to enable clock advancement.
+    /// </summary>
+    /// <param name="clockWriter">Pointer to the IMediaClockWriter instance.</param>
+    void SetClockWriter(IMediaClockWriter* clockWriter) { m_clockWriter = clockWriter; }
 
     /// <summary>
     /// Enable or disable audio capture writing.
@@ -73,12 +97,14 @@ private:
     /// <summary>
     /// Audio capture thread procedure.
     /// Runs at ABOVE_NORMAL priority to ensure responsive capture without starving UI.
-    /// Uses accumulated timestamps to prevent audio speedup from overlapping samples.
+    /// Uses the media clock reader to get synchronized timestamps.
     /// </summary>
     void CaptureThreadProc();
     
     AudioCaptureDevice m_device;
-    MP4SinkWriter* m_sinkWriter = nullptr;
+    AudioSampleReadyCallback m_audioSampleReadyCallback;
+    IMediaClockWriter* m_clockWriter = nullptr;
+    IMediaClockReader* m_clockReader = nullptr;
     
     std::thread m_captureThread;
     std::atomic<bool> m_isRunning{false};
@@ -88,7 +114,6 @@ private:
     
     std::vector<BYTE> m_silentBuffer;           // Reusable buffer for silent audio samples
     
-    LONGLONG m_startQpc = 0;                    // QPC value at recording start (for synchronization)
+    UINT32 m_sampleRate = 0;                    // Cached sample rate from audio format
     LARGE_INTEGER m_qpcFrequency{};             // QPC frequency for time calculations
-    LONGLONG m_nextAudioTimestamp = 0;          // Accumulated timestamp (prevents overlapping samples)
 };

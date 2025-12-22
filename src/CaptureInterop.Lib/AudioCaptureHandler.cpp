@@ -1,8 +1,17 @@
 #include "pch.h"
 #include "AudioCaptureHandler.h"
-#include "MP4SinkWriter.h"
+#include "IAudioCaptureSource.h"
+#include "IMediaClockWriter.h"
+#include "IMediaClockReader.h"
 
-AudioCaptureHandler::AudioCaptureHandler()
+#include <mmreg.h>
+#include <strsafe.h>
+#include <Audioclient.h>
+#include <Windows.h>
+#include <thread>
+
+AudioCaptureHandler::AudioCaptureHandler(IMediaClockReader* clockReader)
+    : m_clockReader(clockReader)
 {
     QueryPerformanceFrequency(&m_qpcFrequency);
 }
@@ -18,7 +27,19 @@ AudioCaptureHandler::~AudioCaptureHandler()
 
 bool AudioCaptureHandler::Initialize(bool loopback, HRESULT* outHr)
 {
-    return m_device.Initialize(loopback, outHr);
+    if (!m_device.Initialize(loopback, outHr))
+    {
+        return false;
+    }
+    
+    // Cache the sample rate for efficient access during capture
+    WAVEFORMATEX* format = m_device.GetFormat();
+    if (format)
+    {
+        m_sampleRate = format->nSamplesPerSec;
+    }
+    
+    return true;
 }
 
 bool AudioCaptureHandler::Start(HRESULT* outHr)
@@ -33,35 +54,6 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
     {
         return false;
     }
-
-    // Synchronize start time with video capture if available
-    if (m_sinkWriter)
-    {
-        LONGLONG sinkStartTime = m_sinkWriter->GetRecordingStartTime();
-        if (sinkStartTime != 0)
-        {
-            // Use existing recording start time from sink writer (video started first)
-            m_startQpc = sinkStartTime;
-        }
-        else
-        {
-            // Set the recording start time on the sink writer (audio starting first)
-            LARGE_INTEGER qpc;
-            QueryPerformanceCounter(&qpc);
-            m_startQpc = qpc.QuadPart;
-            m_sinkWriter->SetRecordingStartTime(m_startQpc);
-        }
-    }
-    else
-    {
-        // No sink writer, use local start time (audio-only mode)
-        LARGE_INTEGER qpc;
-        QueryPerformanceCounter(&qpc);
-        m_startQpc = qpc.QuadPart;
-    }
-
-    // Reset audio timestamp counter
-    m_nextAudioTimestamp = 0;
 
     m_isRunning = true;
     m_captureThread = std::thread(&AudioCaptureHandler::CaptureThreadProc, this);
@@ -100,9 +92,23 @@ WAVEFORMATEX* AudioCaptureHandler::GetFormat() const
 
 void AudioCaptureHandler::CaptureThreadProc()
 {
-    // Set thread priority to above normal (not TIME_CRITICAL to avoid starving UI)
-    // This provides responsive audio capture while keeping the UI responsive
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+    
+    // Validate that we have the required components before starting
+    if (!m_clockWriter || m_sampleRate == 0)
+    {
+        return;
+    }
+    
+    LONGLONG lastTimestamp = 0;
+    const LONGLONG TICKS_PER_SECOND = 10000000LL;
+    const UINT32 SLEEP_DURATION_MS = 10;
+    const UINT32 VIRTUAL_FRAMES_PER_SLEEP = (m_sampleRate * SLEEP_DURATION_MS) / 1000;
+    
+    // Track last clock advancement time for more accurate timing
+    LARGE_INTEGER qpcFreq, lastAdvanceQpc, currentQpc;
+    QueryPerformanceFrequency(&qpcFreq);
+    QueryPerformanceCounter(&lastAdvanceQpc);
     
     while (m_isRunning)
     {
@@ -122,62 +128,47 @@ void AudioCaptureHandler::CaptureThreadProc()
 
         if (framesRead > 0)
         {
-            // Get audio format for duration calculation
             WAVEFORMATEX* format = m_device.GetFormat();
             if (!format)
             {
-                // No format available, skip this sample and release buffer
                 m_device.ReleaseBuffer(framesRead);
                 continue;
             }
             
-            const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
+            LONGLONG duration = (framesRead * TICKS_PER_SECOND) / m_sampleRate;
             
-            // Always process audio samples to maintain timeline continuity
-            // Process even when AUDCLNT_BUFFERFLAGS_SILENT is set to prevent tight loop that freezes UI
-            if (m_sinkWriter)
+            if (m_audioSampleReadyCallback)
             {
-                // If this is the first write after being disabled, sync timestamp to current recording time
-                // and prepare to skip several samples to drain any stale buffer data
-                if (m_nextAudioTimestamp == 0 || m_wasDisabled)
+                LONGLONG timestamp = 0;
+                if (m_clockReader && m_clockReader->IsRunning())
                 {
-                    LARGE_INTEGER qpc;
-                    QueryPerformanceCounter(&qpc);
-                    LONGLONG currentQpc = qpc.QuadPart;
-                    LONGLONG elapsedQpc = currentQpc - m_startQpc;
-                    
-                    // Convert QPC ticks to 100ns units (Media Foundation time)
-                    m_nextAudioTimestamp = (elapsedQpc * TICKS_PER_SECOND) / m_qpcFrequency.QuadPart;
+                    timestamp = m_clockReader->GetCurrentTime();
+                }
+                else
+                {
+                    timestamp = lastTimestamp + duration;
+                }
+                
+                if (m_wasDisabled)
+                {
                     m_wasDisabled = false;
-                    
-                    // Skip next few samples to fully drain stale buffer data
-                    // WASAPI typically buffers 10-30ms of audio, which is 3-5 samples at 10ms per sample
                     m_samplesToSkip = 5;
                 }
                 
-                // Skip samples if we're draining stale buffer data
                 if (m_samplesToSkip > 0)
                 {
                     m_samplesToSkip--;
                     m_device.ReleaseBuffer(framesRead);
+                    
+                    // Still advance clock even when skipping samples
+                    m_clockWriter->AdvanceByAudioSamples(framesRead, m_sampleRate);
+                    QueryPerformanceCounter(&lastAdvanceQpc);
                     continue;
                 }
                 
-                // Use accumulated timestamp to prevent overlapping samples
-                // This is crucial: using wall clock time would create overlaps since
-                // the capture loop runs faster (1-2ms) than audio buffer duration (10ms)
-                LONGLONG timestamp = m_nextAudioTimestamp;
-                
-                // Calculate duration based on actual audio frame count
-                // This gives the exact playback duration of this sample
-                LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
-                
-                // When audio is disabled or silent, write silent samples to maintain timeline continuity
-                // This prevents video from skipping ahead and prevents UI freeze from tight loops
                 BYTE* pAudioData = pData;
                 if (!m_isEnabled || (flags & AUDCLNT_BUFFERFLAGS_SILENT))
                 {
-                    // Reuse or resize silent buffer for efficiency
                     UINT32 bufferSize = framesRead * format->nBlockAlign;
                     if (m_silentBuffer.size() < bufferSize)
                     {
@@ -185,34 +176,95 @@ void AudioCaptureHandler::CaptureThreadProc()
                     }
                     else
                     {
-                        // Zero out the buffer for reuse
                         memset(m_silentBuffer.data(), 0, bufferSize);
                     }
                     pAudioData = m_silentBuffer.data();
                 }
                 
-                HRESULT hr = m_sinkWriter->WriteAudioSample(pAudioData, framesRead, timestamp);
+                AudioSampleReadyEventArgs args{};
+                args.pData = pAudioData;
+                args.numFrames = framesRead;
+                args.timestamp = timestamp;
+                args.pFormat = format;
                 
-                // If write fails, stop trying to write more samples to prevent blocking
-                if (FAILED(hr))
-                {
-                    // Disable audio writing to prevent further blocking
-                    m_isEnabled = false;
-                    m_wasDisabled = true;
-                }
+                m_audioSampleReadyCallback(args);
                 
-                // Always advance timestamp to maintain continuous timeline
-                m_nextAudioTimestamp += duration;
+                lastTimestamp = timestamp;
             }
+
+            // Always advance the clock when frames are processed
+            m_clockWriter->AdvanceByAudioSamples(framesRead, m_sampleRate);
+            QueryPerformanceCounter(&lastAdvanceQpc);
 
             m_device.ReleaseBuffer(framesRead);
         }
         else
         {
-            // No audio data available - sleep to avoid busy-waiting
-            // Longer sleep (10ms) prevents CPU spinning and allows UI thread to run
-            // This prevents memory buildup and UI freezes
-            Sleep(10);
+            // No audio data available from WASAPI
+            // This happens during silence - generate silent audio to maintain A/V sync
+            QueryPerformanceCounter(&currentQpc);
+            LONGLONG qpcElapsed = currentQpc.QuadPart - lastAdvanceQpc.QuadPart;
+            LONGLONG ticksElapsed = (qpcElapsed * TICKS_PER_SECOND) / qpcFreq.QuadPart;
+            
+            // If more than 10ms has elapsed since last advancement, generate silent audio
+            if (ticksElapsed >= 100000LL) // 10ms in 100ns ticks
+            {
+                // Calculate frames equivalent to elapsed time
+                UINT32 virtualFrames = (UINT32)((ticksElapsed * m_sampleRate) / TICKS_PER_SECOND);
+                
+                if (virtualFrames > 0)
+                {
+                    // Generate and write silent audio samples to maintain A/V sync
+                    // This prevents video frame backpressure during silence
+                    if (m_audioSampleReadyCallback)
+                    {
+                        WAVEFORMATEX* format = m_device.GetFormat();
+                        if (format)
+                        {
+                            UINT32 bufferSize = virtualFrames * format->nBlockAlign;
+                            
+                            // Prepare silent buffer
+                            if (m_silentBuffer.size() < bufferSize)
+                            {
+                                m_silentBuffer.resize(bufferSize, 0);
+                            }
+                            else
+                            {
+                                memset(m_silentBuffer.data(), 0, bufferSize);
+                            }
+                            
+                            // Calculate timestamp
+                            LONGLONG timestamp = 0;
+                            if (m_clockReader && m_clockReader->IsRunning())
+                            {
+                                timestamp = m_clockReader->GetCurrentTime();
+                            }
+                            else
+                            {
+                                LONGLONG duration = (virtualFrames * TICKS_PER_SECOND) / m_sampleRate;
+                                timestamp = lastTimestamp + duration;
+                            }
+                            
+                            // Write silent audio to encoder
+                            AudioSampleReadyEventArgs args{};
+                            args.pData = m_silentBuffer.data();
+                            args.numFrames = virtualFrames;
+                            args.timestamp = timestamp;
+                            args.pFormat = format;
+                            
+                            m_audioSampleReadyCallback(args);
+                            lastTimestamp = timestamp;
+                        }
+                    }
+                    
+                    // Advance the clock
+                    m_clockWriter->AdvanceByAudioSamples(virtualFrames, m_sampleRate);
+                    lastAdvanceQpc = currentQpc;
+                }
+            }
+            
+            // Sleep briefly to avoid busy-waiting
+            Sleep(1); // Shorter sleep to check more frequently
         }
     }
 }

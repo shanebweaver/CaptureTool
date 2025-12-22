@@ -1,6 +1,17 @@
 #include "pch.h"
 #include "ScreenRecorderImpl.h"
 #include "WindowsGraphicsCaptureSessionFactory.h"
+#include "WindowsLocalAudioCaptureSourceFactory.h"
+#include "WindowsDesktopVideoCaptureSourceFactory.h"
+#include "WindowsMFMP4SinkWriterFactory.h"
+#include "SimpleMediaClockFactory.h"
+#include "CaptureSessionConfig.h"
+#include "ICaptureSessionFactory.h"
+
+#include <strsafe.h>
+#include <Windows.h>
+#include <memory>
+#include <utility>
 
 ScreenRecorderImpl::ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> factory)
     : m_factory(std::move(factory))
@@ -9,7 +20,11 @@ ScreenRecorderImpl::ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> f
 }
 
 ScreenRecorderImpl::ScreenRecorderImpl()
-    : ScreenRecorderImpl(std::make_unique<WindowsGraphicsCaptureSessionFactory>())
+    : ScreenRecorderImpl(std::make_unique<WindowsGraphicsCaptureSessionFactory>(
+        new SimpleMediaClockFactory(),
+        new WindowsLocalAudioCaptureSourceFactory(),
+        new WindowsDesktopVideoCaptureSourceFactory(),
+        new WindowsMFMP4SinkWriterFactory()))
 {
 }
 
@@ -23,12 +38,12 @@ bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
     // Stop any existing session
     StopRecording();
 
-    // Create a new capture session using the factory
-    m_captureSession = m_factory->CreateSession();
+    // Create a new capture session using the factory with the config
+    m_captureSession = m_factory->CreateSession(config);
        
-    // Start the session with config
+    // Start the session
     HRESULT hr = S_OK;
-    if (!m_captureSession->Start(config, &hr))
+    if (!m_captureSession->Start(&hr))
     {
         m_captureSession.reset();
         return false;

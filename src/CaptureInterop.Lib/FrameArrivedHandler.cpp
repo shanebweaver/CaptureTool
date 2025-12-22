@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "FrameArrivedHandler.h"
+#include "IVideoCaptureSource.h"
+#include "IMediaClockReader.h"
 
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Graphics::DirectX;
@@ -7,8 +9,9 @@ using namespace ABI::Windows::Graphics::DirectX::Direct3D11;
 using namespace ABI::Windows::Graphics;
 using namespace ABI::Windows::Graphics::Capture;
 
-FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter) noexcept
-    : m_sinkWriter(std::move(sinkWriter)),
+FrameArrivedHandler::FrameArrivedHandler(VideoFrameReadyCallback callback, IMediaClockReader* clockReader) noexcept
+    : m_callback(std::move(callback)),
+    m_clockReader(clockReader),
     m_ref(1),
     m_running(true),
     m_stopped(false),
@@ -36,11 +39,9 @@ FrameArrivedHandler::~FrameArrivedHandler()
 
 void FrameArrivedHandler::Stop()
 {
-    // Make Stop() idempotent and thread-safe
     bool expected = false;
     if (!m_stopped.compare_exchange_strong(expected, true))
     {
-        // Already stopped
         return;
     }
     
@@ -51,6 +52,9 @@ void FrameArrivedHandler::Stop()
     {
         m_processingThread.join();
     }
+    
+    // Log any remaining frames as a warning
+    std::lock_guard<std::mutex> lock(m_queueMutex);
 }
 
 HRESULT STDMETHODCALLTYPE FrameArrivedHandler::QueryInterface(REFIID riid, void** ppvObject)
@@ -91,7 +95,7 @@ ULONG STDMETHODCALLTYPE FrameArrivedHandler::Release()
 
 HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePool* sender, IInspectable* /*args*/) noexcept
 {
-    if (!m_sinkWriter)
+    if (!m_callback)
     {
         return E_POINTER;
     }
@@ -99,13 +103,6 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
     wil::com_ptr<IDirect3D11CaptureFrame> frame;
     HRESULT hr = sender->TryGetNextFrame(frame.put());
     if (FAILED(hr) || !frame)
-    {
-        return hr;
-    }
-
-    TimeSpan timestamp{};
-    hr = frame->get_SystemRelativeTime(&timestamp);
-    if (FAILED(hr))
     {
         return hr;
     }
@@ -131,51 +128,30 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
-    // First frame - establish the time base
-    LONGLONG firstFrameTime = m_firstFrameSystemTime.load();
-    if (firstFrameTime == 0)
+    LONGLONG timestamp = 0;
+    if (m_clockReader && m_clockReader->IsRunning())
     {
-        // Try to set it atomically
-        LONGLONG expected = 0;
-        if (m_firstFrameSystemTime.compare_exchange_strong(expected, timestamp.Duration))
-        {
-            // We successfully set it - also set recording start time
-            // Only set recording start time if we won the race to set first frame time
-            LARGE_INTEGER qpc;
-            QueryPerformanceCounter(&qpc);
-            m_sinkWriter->SetRecordingStartTime(qpc.QuadPart);
-            firstFrameTime = timestamp.Duration;
-        }
-        else
-        {
-            // Another thread won the race, use their value
-            firstFrameTime = m_firstFrameSystemTime.load();
-        }
+        timestamp = m_clockReader->GetCurrentTime();
     }
     
-    // Calculate relative timestamp
-    LONGLONG relativeTimestamp = timestamp.Duration - firstFrameTime;
-
-    // Queue the frame for background processing instead of processing synchronously
-    // This prevents blocking the event callback thread
     {
         std::lock_guard<std::mutex> lock(m_queueMutex);
         
-        // Increased queue size to 30 frames (~1 second at 30fps) to match the 6 frame pool buffers
-        // This provides sufficient buffering when encoder falls behind
-        if (m_frameQueue.size() < 30)
+        // Keep queue size at 3 frames to reduce memory pressure while providing minimal buffering
+        // Reduced from 6 to minimize memory accumulation during encoding delays
+        if (m_frameQueue.size() < 3)
         {
             QueuedFrame queuedFrame;
             queuedFrame.texture = texture;
-            queuedFrame.relativeTimestamp = relativeTimestamp;
+            queuedFrame.relativeTimestamp = timestamp;
             m_frameQueue.push(std::move(queuedFrame));
             m_queueCV.notify_one();
         }
         else
         {
-            // Queue is full - drop this frame to prevent blocking
-            // This can happen when encoder is significantly slower than capture rate
-            // Consider adding telemetry here if frame drops become problematic
+            // Queue full - drop frame to prevent memory buildup
+            // Explicitly reset texture to encourage immediate GPU memory release
+            texture.reset();
         }
     }
 
@@ -184,12 +160,12 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
 
 void FrameArrivedHandler::ProcessingThreadProc()
 {
+    int processedCount = 0;
+    
     while (m_running)
     {
         QueuedFrame frame;
-        wil::com_ptr<MP4SinkWriter> sinkWriter;
         
-        // Wait for a frame to process
         {
             std::unique_lock<std::mutex> lock(m_queueMutex);
             m_queueCV.wait(lock, [this] { return !m_frameQueue.empty() || !m_running; });
@@ -203,12 +179,6 @@ void FrameArrivedHandler::ProcessingThreadProc()
             {
                 frame = std::move(m_frameQueue.front());
                 m_frameQueue.pop();
-                
-                // Capture a reference to sink writer while holding the lock
-                // This ensures thread-safe access to m_sinkWriter
-                // Note: m_sinkWriter lifetime is managed by the owner (ScreenRecorder)
-                // and is guaranteed to outlive this handler's processing thread
-                sinkWriter = m_sinkWriter;
             }
             else
             {
@@ -216,29 +186,54 @@ void FrameArrivedHandler::ProcessingThreadProc()
             }
         }
         
-        // Process the frame outside the lock
-        if (frame.texture && sinkWriter)
+        if (frame.texture && m_callback)
         {
-            HRESULT hr = sinkWriter->WriteFrame(frame.texture.get(), frame.relativeTimestamp);
-            // If write fails, continue processing (don't stop the thread)
-            // The sink writer will handle errors internally
-            if (FAILED(hr))
+            VideoFrameReadyEventArgs args;
+            args.pTexture = frame.texture.get();
+            args.timestamp = frame.relativeTimestamp;
+            
+            m_callback(args);
+            processedCount++;
+        }
+    }
+    
+    // Drain remaining frames after m_running becomes false to prevent frame loss
+    while (true)
+    {
+        QueuedFrame frame;
+        
+        {
+            std::lock_guard<std::mutex> lock(m_queueMutex);
+            if (m_frameQueue.empty())
             {
-                // Frame write failed, but continue processing queue
-                // This prevents one bad frame from stopping the entire recording
+                break;
             }
+            
+            frame = std::move(m_frameQueue.front());
+            m_frameQueue.pop();
+        }
+        
+        if (frame.texture && m_callback)
+        {
+            VideoFrameReadyEventArgs args;
+            args.pTexture = frame.texture.get();
+            args.timestamp = frame.relativeTimestamp;
+            
+            m_callback(args);
+            processedCount++;
         }
     }
 }
 
 EventRegistrationToken RegisterFrameArrivedHandler(
     wil::com_ptr<IDirect3D11CaptureFramePool> framePool,
-    wil::com_ptr<MP4SinkWriter> sinkWriter,
+    VideoFrameReadyCallback callback,
+    IMediaClockReader* clockReader,
     FrameArrivedHandler** outHandler,
     HRESULT* outHr)
 {
     EventRegistrationToken token{};
-    auto handler = new FrameArrivedHandler(sinkWriter);
+    auto handler = new FrameArrivedHandler(callback, clockReader);
     
     // Start the processing thread after object is fully constructed
     handler->StartProcessing();

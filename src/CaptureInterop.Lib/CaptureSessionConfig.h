@@ -1,5 +1,7 @@
 #pragma once
 #include "pch.h"
+#include <Windows.h>
+#include <cstdint>
 
 /// <summary>
 /// Configuration settings for a capture session.

@@ -1,6 +1,9 @@
 #pragma once
 #include <cstdint>
 
+// Forward declaration
+class IMediaClockAdvancer;
+
 /// <summary>
 /// Control interface for the MediaClock lifecycle and state management.
 /// Allows controllers to manage clock state (start, stop, pause, resume) without advancing time.
@@ -35,4 +38,14 @@ public:
     /// Future feature for supporting pause/resume functionality.
     /// </summary>
     virtual void Resume() = 0;
+
+    /// <summary>
+    /// Set the component that will drive clock advancement.
+    /// The clock provides its IMediaClockWriter interface to the advancer,
+    /// allowing the advancer to update the timeline as media is processed.
+    /// This establishes the master timing source for accurate A/V synchronization.
+    /// Typically, audio is used as the clock advancer for sample-accurate timing.
+    /// </summary>
+    /// <param name="advancer">Component that will advance the clock timeline.</param>
+    virtual void SetClockAdvancer(IMediaClockAdvancer* advancer) = 0;
 };

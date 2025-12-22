@@ -16,7 +16,7 @@ public partial interface IVideoCaptureHandler
     void ToggleDesktopAudioCapture(bool enabled);
 
     void StartVideoCapture(NewCaptureArgs args);
-    IVideoFile StopVideoCapture();
+    PendingVideoFile StopVideoCapture();
     void CancelVideoCapture();
     void ToggleIsPaused(bool isPaused);
 }

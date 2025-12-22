@@ -94,28 +94,39 @@
     <ClInclude Include="CaptureSessionConfig.h" />
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="IAudioInputSource.h" />
+    <ClInclude Include="IAudioCaptureSource.h" />
+    <ClInclude Include="IAudioCaptureSourceFactory.h" />
     <ClInclude Include="ICaptureSession.h" />
     <ClInclude Include="ICaptureSessionFactory.h" />
+    <ClInclude Include="IMediaClock.h" />
+    <ClInclude Include="IMediaClockAdvancer.h" />
     <ClInclude Include="IMediaClockController.h" />
+    <ClInclude Include="IMediaClockFactory.h" />
     <ClInclude Include="IMediaClockReader.h" />
     <ClInclude Include="IMediaClockWriter.h" />
-    <ClInclude Include="MediaClock.h" />
-    <ClInclude Include="MP4SinkWriter.h" />
+    <ClInclude Include="IMP4SinkWriter.h" />
+    <ClInclude Include="IMP4SinkWriterFactory.h" />
+    <ClInclude Include="IVideoCaptureSource.h" />
+    <ClInclude Include="IVideoCaptureSourceFactory.h" />
+    <ClInclude Include="SimpleMediaClock.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ScreenRecorderImpl.h" />
-    <ClInclude Include="SystemAudioInputSource.h" />
-    <ClInclude Include="WindowsCaptureSessionFactory.h" />
+    <ClInclude Include="SimpleMediaClockFactory.h" />
+    <ClInclude Include="WindowsDesktopVideoCaptureSource.h" />
+    <ClInclude Include="WindowsDesktopVideoCaptureSourceFactory.h" />
+    <ClInclude Include="WindowsLocalAudioCaptureSource.h" />
     <ClInclude Include="WindowsGraphicsCaptureSessionFactory.h" />
     <ClInclude Include="WindowsGraphicsCaptureHelpers.h" />
     <ClInclude Include="WindowsGraphicsCaptureSession.h" />
+    <ClInclude Include="WindowsLocalAudioCaptureSourceFactory.h" />
+    <ClInclude Include="WindowsMFMP4SinkWriter.h" />
+    <ClInclude Include="WindowsMFMP4SinkWriterFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AudioCaptureDevice.cpp" />
     <ClCompile Include="AudioCaptureHandler.cpp" />
     <ClCompile Include="FrameArrivedHandler.cpp" />
-    <ClCompile Include="MediaClock.cpp" />
-    <ClCompile Include="MP4SinkWriter.cpp" />
+    <ClCompile Include="SimpleMediaClock.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Create</PrecompiledHeader>
@@ -123,9 +134,15 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ScreenRecorderImpl.cpp" />
-    <ClCompile Include="SystemAudioInputSource.cpp" />
+    <ClCompile Include="SimpleMediaClockFactory.cpp" />
+    <ClCompile Include="WindowsDesktopVideoCaptureSource.cpp" />
+    <ClCompile Include="WindowsDesktopVideoCaptureSourceFactory.cpp" />
+    <ClCompile Include="WindowsLocalAudioCaptureSource.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSession.cpp" />
+    <ClCompile Include="WindowsLocalAudioCaptureSourceFactory.cpp" />
+    <ClCompile Include="WindowsMFMP4SinkWriter.cpp" />
+    <ClCompile Include="WindowsMFMP4SinkWriterFactory.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

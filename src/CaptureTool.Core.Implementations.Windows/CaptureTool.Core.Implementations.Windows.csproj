@@ -15,7 +15,7 @@
     <ProjectReference Include="..\CaptureTool.Services.Implementations.Windows\CaptureTool.Services.Implementations.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
   </ItemGroup>
-	
+    
   <!-- Package references -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />

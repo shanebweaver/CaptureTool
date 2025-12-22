@@ -2,11 +2,12 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.VideoEdit;
 using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.ViewModels.Helpers;
 
 namespace CaptureTool.ViewModels;
-public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<VideoFile>
+public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVideoFile>
 {
     public readonly struct ActivityIds
     {
@@ -24,6 +25,18 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         private set => Set(ref field, value);
     }
 
+    public bool IsVideoReady
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsFinalizingVideo
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     private readonly IVideoEditActions _videoEditActions;
     private readonly ITelemetryService _telemetryService;
 
@@ -36,9 +49,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
         SaveCommand = new(SaveAsync);
         CopyCommand = new(CopyAsync);
+
+        IsVideoReady = false;
+        IsFinalizingVideo = false;
     }
 
-    public override void Load(VideoFile video)
+    public override void Load(IVideoFile video)
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
         {
@@ -47,8 +63,34 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
             VideoPath = video.FilePath;
 
+            if (video is PendingVideoFile pendingVideo)
+            {
+                IsVideoReady = false;
+                IsFinalizingVideo = true;
+                _ = WaitForVideoFinalizationAsync(pendingVideo);
+            }
+            else
+            {
+                IsVideoReady = true;
+                IsFinalizingVideo = false;
+            }
+
             base.Load(video);
         });
+    }
+
+    private async Task WaitForVideoFinalizationAsync(PendingVideoFile pendingVideo)
+    {
+        try
+        {
+            await pendingVideo.WhenReadyAsync();
+            IsVideoReady = true;
+            IsFinalizingVideo = false;
+        }
+        catch (Exception)
+        {
+            IsFinalizingVideo = false;
+        }
     }
 
     private Task SaveAsync()
