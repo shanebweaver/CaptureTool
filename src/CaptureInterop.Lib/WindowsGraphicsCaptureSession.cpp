@@ -113,7 +113,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         return false;
     }
     
-    // Set up audio sample callback to write to sink writer
+    // Set up audio sample callback to write to sink writer and forward to managed layer
     m_audioCaptureSource->SetAudioSampleReadyCallback(
         [this](const AudioSampleReadyEventArgs& args) {
             // Write audio sample to sink writer
@@ -124,10 +124,34 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
             {
                 m_audioCaptureSource->SetEnabled(false);
             }
+
+            // Forward to managed layer if callback is set
+            if (m_config.audioSampleCallback)
+            {
+                AudioSampleData sampleData;
+                sampleData.pData = args.pData;
+                sampleData.numFrames = args.numFrames;
+                sampleData.timestamp = args.timestamp;
+                
+                if (args.pFormat)
+                {
+                    sampleData.sampleRate = args.pFormat->nSamplesPerSec;
+                    sampleData.channels = args.pFormat->nChannels;
+                    sampleData.bitsPerSample = args.pFormat->wBitsPerSample;
+                }
+                else
+                {
+                    sampleData.sampleRate = 0;
+                    sampleData.channels = 0;
+                    sampleData.bitsPerSample = 0;
+                }
+                
+                m_config.audioSampleCallback(&sampleData);
+            }
         }
     );
     
-    // Set up video frame callback to write to sink writer
+    // Set up video frame callback to write to sink writer and forward to managed layer
     m_videoCaptureSource->SetVideoFrameReadyCallback(
         [this](const VideoFrameReadyEventArgs& args) {
             // Write video frame to sink writer
@@ -139,6 +163,18 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
             {
                 // Video frame write failed, but continue processing
                 // The sink writer will handle errors internally
+            }
+
+            // Forward to managed layer if callback is set
+            if (m_config.videoFrameCallback)
+            {
+                VideoFrameData frameData;
+                frameData.pTexture = args.pTexture;
+                frameData.timestamp = args.timestamp;
+                frameData.width = m_videoCaptureSource->GetWidth();
+                frameData.height = m_videoCaptureSource->GetHeight();
+                
+                m_config.videoFrameCallback(&frameData);
             }
         }
     );

@@ -4,9 +4,15 @@
 #include "ICaptureSessionFactory.h"
 #include "CaptureSessionConfig.h"
 
+// Forward declarations for callback types from ScreenRecorder.h
+struct VideoFrameData;
+struct AudioSampleData;
+using VideoFrameCallback = void(__stdcall*)(const VideoFrameData* pFrameData);
+using AudioSampleCallback = void(__stdcall*)(const AudioSampleData* pSampleData);
+
 /// <summary>
 /// Implementation class for screen recording functionality.
-/// Manages the capture session lifecycle.
+/// Manages the capture session lifecycle and callbacks to managed layer.
 /// </summary>
 class ScreenRecorderImpl
 {
@@ -61,7 +67,21 @@ public:
     /// <param name="enabled">True to enable audio, false to mute.</param>
     void ToggleAudioCapture(bool enabled);
 
+    /// <summary>
+    /// Set the callback to be invoked when a video frame is ready.
+    /// </summary>
+    /// <param name="callback">Callback function to receive video frames.</param>
+    void SetVideoFrameCallback(VideoFrameCallback callback);
+
+    /// <summary>
+    /// Set the callback to be invoked when an audio sample is ready.
+    /// </summary>
+    /// <param name="callback">Callback function to receive audio samples.</param>
+    void SetAudioSampleCallback(AudioSampleCallback callback);
+
 private:
     std::unique_ptr<ICaptureSession> m_captureSession;
     std::unique_ptr<ICaptureSessionFactory> m_factory;
+    VideoFrameCallback m_videoFrameCallback = nullptr;
+    AudioSampleCallback m_audioSampleCallback = nullptr;
 };

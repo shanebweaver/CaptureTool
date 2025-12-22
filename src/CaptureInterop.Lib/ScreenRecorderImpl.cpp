@@ -16,6 +16,8 @@
 ScreenRecorderImpl::ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> factory)
     : m_factory(std::move(factory))
     , m_captureSession(nullptr)
+    , m_videoFrameCallback(nullptr)
+    , m_audioSampleCallback(nullptr)
 {
 }
 
@@ -38,8 +40,13 @@ bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
     // Stop any existing session
     StopRecording();
 
+    // Create a copy of config and set the callbacks
+    CaptureSessionConfig configWithCallbacks = config;
+    configWithCallbacks.videoFrameCallback = m_videoFrameCallback;
+    configWithCallbacks.audioSampleCallback = m_audioSampleCallback;
+
     // Create a new capture session using the factory with the config
-    m_captureSession = m_factory->CreateSession(config);
+    m_captureSession = m_factory->CreateSession(configWithCallbacks);
        
     // Start the session
     HRESULT hr = S_OK;
@@ -90,4 +97,14 @@ void ScreenRecorderImpl::ToggleAudioCapture(bool enabled)
     {
         m_captureSession->ToggleAudioCapture(enabled);
     }
+}
+
+void ScreenRecorderImpl::SetVideoFrameCallback(VideoFrameCallback callback)
+{
+    m_videoFrameCallback = callback;
+}
+
+void ScreenRecorderImpl::SetAudioSampleCallback(AudioSampleCallback callback)
+{
+    m_audioSampleCallback = callback;
 }
