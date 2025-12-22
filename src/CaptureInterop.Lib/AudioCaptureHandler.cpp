@@ -40,7 +40,7 @@ bool AudioCaptureHandler::Initialize(bool loopback, HRESULT* outHr)
         
         // Pre-allocate silent buffer for 1 second of audio
         UINT32 maxBufferSize = m_sampleRate * format->nBlockAlign;
-        m_silentBuffer.resize(maxBufferSize);
+        m_silentBuffer.resize(maxBufferSize, 0);
     }
     
     return true;
