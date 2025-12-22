@@ -121,6 +121,12 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     // Set up audio sample callback to write to sink writer and forward to managed layer
     m_audioCaptureSource->SetAudioSampleReadyCallback(
         [this](const AudioSampleReadyEventArgs& args) {
+            // Check if shutting down
+            if (m_isShuttingDown.load(std::memory_order_acquire))
+            {
+                return;  // Abort callback invocation
+            }
+
             // Write audio sample to sink writer
             HRESULT hr = m_sinkWriter->WriteAudioSample(args.pData, args.numFrames, args.timestamp);
                 
@@ -153,6 +159,12 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     // Set up video frame callback to write to sink writer and forward to managed layer
     m_videoCaptureSource->SetVideoFrameReadyCallback(
         [this](const VideoFrameReadyEventArgs& args) {
+            // Check if shutting down
+            if (m_isShuttingDown.load(std::memory_order_acquire))
+            {
+                return;  // Abort callback invocation
+            }
+
             // Write video frame to sink writer
             HRESULT hr = m_sinkWriter->WriteFrame(args.pTexture, args.timestamp);
             
@@ -275,17 +287,8 @@ void WindowsGraphicsCaptureSession::Stop()
         return;
     }
 
-    // Clear callbacks FIRST to prevent any new callback invocations during shutdown
-    // This must happen before stopping capture sources
-    if (m_audioCaptureSource)
-    {
-        m_audioCaptureSource->SetAudioSampleReadyCallback(nullptr);
-    }
-    
-    if (m_videoCaptureSource)
-    {
-        m_videoCaptureSource->SetVideoFrameReadyCallback(nullptr);
-    }
+    // Set shutdown flag FIRST (atomic operation)
+    m_isShuttingDown.store(true, std::memory_order_release);
 
     // Stop video capture first to prevent new frames from arriving
     if (m_videoCaptureSource)
@@ -305,6 +308,17 @@ void WindowsGraphicsCaptureSession::Stop()
         m_mediaClock->Pause();
     }
 
+    // NOW it's safe to clear callbacks - no threads can invoke them
+    if (m_audioCaptureSource)
+    {
+        m_audioCaptureSource->SetAudioSampleReadyCallback(nullptr);
+    }
+    
+    if (m_videoCaptureSource)
+    {
+        m_videoCaptureSource->SetVideoFrameReadyCallback(nullptr);
+    }
+
     // Allow encoder time to process remaining queued frames (200ms for 6 frames at 30fps)
     Sleep(200);
 
@@ -318,6 +332,7 @@ void WindowsGraphicsCaptureSession::Stop()
     }
 
     m_isActive = false;
+    m_isShuttingDown.store(false, std::memory_order_release);
 }
 
 void WindowsGraphicsCaptureSession::Pause()

@@ -6,6 +6,7 @@
 #include "IMP4SinkWriter.h"
 #include <Windows.h>
 #include <memory>
+#include <atomic>
 
 // Forward declarations
 class FrameArrivedHandler;
@@ -84,6 +85,7 @@ private:
     
     // Session state
     bool m_isActive;
+    std::atomic<bool> m_isShuttingDown{false};
     
     // Callbacks stored as member variables for dynamic updates
     VideoFrameCallback m_videoFrameCallback;
