@@ -56,7 +56,7 @@ private:
     MP4SinkWriter m_sinkWriter;
     
     // Audio capture
-    std::unique_ptr<IAudioCaptureSource> m_audioInputSource;
+    std::unique_ptr<IAudioCaptureSource> m_audioCaptureSource;
     
     // Video capture
     std::unique_ptr<IVideoCaptureSource> m_videoCaptureSource;

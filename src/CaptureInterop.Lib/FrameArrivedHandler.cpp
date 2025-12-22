@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "FrameArrivedHandler.h"
+#include "IVideoCaptureSource.h"
 #include "IMediaClockReader.h"
 
 using namespace ABI::Windows::Foundation;
@@ -8,8 +9,8 @@ using namespace ABI::Windows::Graphics::DirectX::Direct3D11;
 using namespace ABI::Windows::Graphics;
 using namespace ABI::Windows::Graphics::Capture;
 
-FrameArrivedHandler::FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter, IMediaClockReader* clockReader) noexcept
-    : m_sinkWriter(std::move(sinkWriter)),
+FrameArrivedHandler::FrameArrivedHandler(VideoFrameReadyCallback callback, IMediaClockReader* clockReader) noexcept
+    : m_callback(std::move(callback)),
     m_clockReader(clockReader),
     m_ref(1),
     m_running(true),
@@ -93,7 +94,7 @@ ULONG STDMETHODCALLTYPE FrameArrivedHandler::Release()
 
 HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePool* sender, IInspectable* /*args*/) noexcept
 {
-    if (!m_sinkWriter)
+    if (!m_callback)
     {
         return E_POINTER;
     }
@@ -164,7 +165,6 @@ void FrameArrivedHandler::ProcessingThreadProc()
     while (m_running)
     {
         QueuedFrame frame;
-        wil::com_ptr<MP4SinkWriter> sinkWriter;
         
         // Wait for a frame to process
         {
@@ -180,12 +180,6 @@ void FrameArrivedHandler::ProcessingThreadProc()
             {
                 frame = std::move(m_frameQueue.front());
                 m_frameQueue.pop();
-                
-                // Capture a reference to sink writer while holding the lock
-                // This ensures thread-safe access to m_sinkWriter
-                // Note: m_sinkWriter lifetime is managed by the owner (ScreenRecorder)
-                // and is guaranteed to outlive this handler's processing thread
-                sinkWriter = m_sinkWriter;
             }
             else
             {
@@ -194,29 +188,27 @@ void FrameArrivedHandler::ProcessingThreadProc()
         }
         
         // Process the frame outside the lock
-        if (frame.texture && sinkWriter)
+        if (frame.texture && m_callback)
         {
-            HRESULT hr = sinkWriter->WriteFrame(frame.texture.get(), frame.relativeTimestamp);
-            // If write fails, continue processing (don't stop the thread)
-            // The sink writer will handle errors internally
-            if (FAILED(hr))
-            {
-                // Frame write failed, but continue processing queue
-                // This prevents one bad frame from stopping the entire recording
-            }
+            // Fire the video frame ready event
+            VideoFrameReadyEventArgs args;
+            args.pTexture = frame.texture.get();
+            args.timestamp = frame.relativeTimestamp;
+            
+            m_callback(args);
         }
     }
 }
 
 EventRegistrationToken RegisterFrameArrivedHandler(
     wil::com_ptr<IDirect3D11CaptureFramePool> framePool,
-    wil::com_ptr<MP4SinkWriter> sinkWriter,
+    VideoFrameReadyCallback callback,
     IMediaClockReader* clockReader,
     FrameArrivedHandler** outHandler,
     HRESULT* outHr)
 {
     EventRegistrationToken token{};
-    auto handler = new FrameArrivedHandler(sinkWriter, clockReader);
+    auto handler = new FrameArrivedHandler(callback, clockReader);
     
     // Start the processing thread after object is fully constructed
     handler->StartProcessing();

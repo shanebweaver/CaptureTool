@@ -1,10 +1,22 @@
 #include "MP4SinkWriter.h"
-
-using namespace ABI::Windows::Foundation;
-using namespace ABI::Windows::Graphics::Capture;
+#include <functional>
 
 // Forward declaration
 class IMediaClockReader;
+
+/// <summary>
+/// Event arguments for video frame ready event.
+/// Contains the video frame data and timing information.
+/// </summary>
+struct VideoFrameReadyEventArgs;
+
+/// <summary>
+/// Callback function type for video frame ready events.
+/// </summary>
+using VideoFrameReadyCallback = std::function<void(const VideoFrameReadyEventArgs&)>;
+
+using namespace ABI::Windows::Foundation;
+using namespace ABI::Windows::Graphics::Capture;
 
 // Structure to hold frame data for processing
 struct QueuedFrame
@@ -13,13 +25,13 @@ struct QueuedFrame
     LONGLONG relativeTimestamp;
 };
 
-// FrameArrivedHandler handles new capture frames and forwards them to the MP4SinkWriter.
+// FrameArrivedHandler handles new capture frames and forwards them via callback.
 // Uses a background thread to avoid blocking the event callback thread.
 class FrameArrivedHandler final
     : public ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>
 {
 public:
-    explicit FrameArrivedHandler(wil::com_ptr<MP4SinkWriter> sinkWriter, IMediaClockReader* clockReader) noexcept;
+    explicit FrameArrivedHandler(VideoFrameReadyCallback callback, IMediaClockReader* clockReader) noexcept;
     ~FrameArrivedHandler();
 
     // IUnknown
@@ -40,7 +52,7 @@ private:
     void ProcessingThreadProc();
 
     volatile long m_ref;
-    wil::com_ptr<MP4SinkWriter> m_sinkWriter;
+    VideoFrameReadyCallback m_callback;
     IMediaClockReader* m_clockReader;
     
     // Background processing
@@ -54,4 +66,4 @@ private:
 };
 
 // Helper to register the frame-arrived event.
-EventRegistrationToken RegisterFrameArrivedHandler(wil::com_ptr<IDirect3D11CaptureFramePool> framePool, wil::com_ptr<MP4SinkWriter> sinkWriter, IMediaClockReader* clockReader, FrameArrivedHandler** outHandler = nullptr, HRESULT* outHr = nullptr);
+EventRegistrationToken RegisterFrameArrivedHandler(wil::com_ptr<IDirect3D11CaptureFramePool> framePool, VideoFrameReadyCallback callback, IMediaClockReader* clockReader, FrameArrivedHandler** outHandler = nullptr, HRESULT* outHr = nullptr);

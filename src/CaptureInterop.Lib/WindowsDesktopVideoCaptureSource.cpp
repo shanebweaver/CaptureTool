@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "WindowsDesktopVideoCaptureSource.h"
 #include "FrameArrivedHandler.h"
-#include "MP4SinkWriter.h"
 #include "WindowsGraphicsCaptureHelpers.h"
 
 using namespace WindowsGraphicsCaptureHelpers;
@@ -9,7 +8,6 @@ using namespace WindowsGraphicsCaptureHelpers;
 WindowsDesktopVideoCaptureSource::WindowsDesktopVideoCaptureSource(const CaptureSessionConfig& config, IMediaClockReader* clockReader)
     : m_config(config)
     , m_frameHandler(nullptr)
-    , m_sinkWriter(nullptr)
     , m_clockReader(clockReader)
     , m_width(0)
     , m_height(0)
@@ -96,7 +94,7 @@ bool WindowsDesktopVideoCaptureSource::Start(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
 
-    if (!m_sinkWriter)
+    if (!m_callback)
     {
         if (outHr) *outHr = E_POINTER;
         return false;
@@ -108,9 +106,8 @@ bool WindowsDesktopVideoCaptureSource::Start(HRESULT* outHr)
         return false;
     }
 
-    // Register frame arrived handler with clock reader for timestamps
-    wil::com_ptr<MP4SinkWriter> sinkWriterPtr(m_sinkWriter);
-    m_frameArrivedEventToken = RegisterFrameArrivedHandler(m_framePool, sinkWriterPtr, m_clockReader, &m_frameHandler, &hr);
+    // Register frame arrived handler with callback and clock reader for timestamps
+    m_frameArrivedEventToken = RegisterFrameArrivedHandler(m_framePool, m_callback, m_clockReader, &m_frameHandler, &hr);
     if (FAILED(hr))
     {
         if (outHr) *outHr = hr;

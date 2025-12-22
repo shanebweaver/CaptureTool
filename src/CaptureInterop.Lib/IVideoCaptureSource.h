@@ -1,7 +1,20 @@
 #pragma once
+#include <functional>
 
-// Forward declarations
-class MP4SinkWriter;
+/// <summary>
+/// Event arguments for video frame ready event.
+/// Contains the video frame data and timing information.
+/// </summary>
+struct VideoFrameReadyEventArgs
+{
+    ID3D11Texture2D* pTexture;  // Pointer to the D3D11 texture containing the frame
+    LONGLONG timestamp;         // Timestamp for this frame (100ns ticks)
+};
+
+/// <summary>
+/// Callback function type for video frame ready events.
+/// </summary>
+using VideoFrameReadyCallback = std::function<void(const VideoFrameReadyEventArgs&)>;
 
 /// <summary>
 /// Interface for video capture sources that can be captured and written to an output stream.
@@ -44,11 +57,11 @@ public:
     virtual UINT32 GetHeight() const = 0;
 
     /// <summary>
-    /// Set the MP4 sink writer to receive captured video frames.
-    /// Must be called before Start() to enable audio/video synchronization.
+    /// Set the callback to be invoked when a video frame is ready.
+    /// The callback is invoked on a background processing thread.
     /// </summary>
-    /// <param name="sinkWriter">Pointer to the MP4SinkWriter instance.</param>
-    virtual void SetSinkWriter(MP4SinkWriter* sinkWriter) = 0;
+    /// <param name="callback">Callback function to receive video frames.</param>
+    virtual void SetVideoFrameReadyCallback(VideoFrameReadyCallback callback) = 0;
 
     /// <summary>
     /// Check if the video capture source is currently running.

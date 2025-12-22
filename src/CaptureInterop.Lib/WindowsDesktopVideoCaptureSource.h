@@ -5,7 +5,6 @@
 
 // Forward declarations
 class FrameArrivedHandler;
-class MP4SinkWriter;
 class IMediaClockReader;
 
 /// <summary>
@@ -30,7 +29,7 @@ public:
     void Stop() override;
     UINT32 GetWidth() const override { return m_width; }
     UINT32 GetHeight() const override { return m_height; }
-    void SetSinkWriter(MP4SinkWriter* sinkWriter) override { m_sinkWriter = sinkWriter; }
+    void SetVideoFrameReadyCallback(VideoFrameReadyCallback callback) override { m_callback = callback; }
     bool IsRunning() const override { return m_isRunning; }
 
     /// <summary>
@@ -55,8 +54,8 @@ private:
     // Frame processing handler
     FrameArrivedHandler* m_frameHandler;
     
-    // Output
-    MP4SinkWriter* m_sinkWriter;
+    // Callback
+    VideoFrameReadyCallback m_callback;
     IMediaClockReader* m_clockReader;
     
     // Video dimensions

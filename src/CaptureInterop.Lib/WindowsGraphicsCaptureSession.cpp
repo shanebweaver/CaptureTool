@@ -6,6 +6,12 @@
 #include "IAudioCaptureSource.h"
 #include "WindowsDesktopVideoCaptureSource.h"
 #include "IMediaClockFactory.h"
+#include "CaptureSessionConfig.h"
+
+#include <mmreg.h>
+#include <strsafe.h>
+#include <d3d11.h>
+#include <Windows.h>
 
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     const CaptureSessionConfig& config,
@@ -16,7 +22,7 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     , m_mediaClockFactory(mediaClockFactory)
     , m_audioCaptureSourceFactory(audioCaptureSourceFactory)
     , m_videoCaptureSourceFactory(videoCaptureSourceFactory)
-    , m_audioInputSource(nullptr)
+    , m_audioCaptureSource(nullptr)
     , m_videoCaptureSource(nullptr)
     , m_isActive(false)
 {
@@ -45,16 +51,16 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     // Create audio input source with clock reader
     if (m_audioCaptureSourceFactory)
     {
-        m_audioInputSource = m_audioCaptureSourceFactory->CreateAudioCaptureSource(m_mediaClock.get());
+        m_audioCaptureSource = m_audioCaptureSourceFactory->CreateAudioCaptureSource(m_mediaClock.get());
     }
-    if (!m_audioInputSource)
+    if (!m_audioCaptureSource)
     {
         if (outHr) *outHr = E_FAIL;
         return false;
     }
 
     // Connect the audio source as the clock advancer so it drives the timeline
-    m_mediaClock->SetClockAdvancer(m_audioInputSource.get());
+    m_mediaClock->SetClockAdvancer(m_audioCaptureSource.get());
 
     // Start the media clock early
     LARGE_INTEGER qpc;
@@ -84,7 +90,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     }
 
     // Initialize audio capture source
-    if (!m_audioInputSource->Initialize(&hr))
+    if (!m_audioCaptureSource->Initialize(&hr))
     {
         if (outHr) *outHr = hr;
         return false;
@@ -98,21 +104,34 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     }
     
     // Set up audio sample callback to write to sink writer
-    if (m_audioInputSource)
-    {
-        m_audioInputSource->SetAudioSampleReadyCallback(
-            [this](const AudioSampleReadyEventArgs& args) {
-                // Write audio sample to sink writer
-                HRESULT hr = m_sinkWriter.WriteAudioSample(args.pData, args.numFrames, args.timestamp);
+    m_audioCaptureSource->SetAudioSampleReadyCallback(
+        [this](const AudioSampleReadyEventArgs& args) {
+            // Write audio sample to sink writer
+            HRESULT hr = m_sinkWriter.WriteAudioSample(args.pData, args.numFrames, args.timestamp);
                 
-                // If write fails, disable audio to prevent further blocking
-                if (FAILED(hr))
-                {
-                    m_audioInputSource->SetEnabled(false);
-                }
+            // If write fails, disable audio to prevent further blocking
+            if (FAILED(hr))
+            {
+                m_audioCaptureSource->SetEnabled(false);
             }
-        );
-    }
+        }
+    );
+    
+    // Set up video frame callback to write to sink writer
+    m_videoCaptureSource->SetVideoFrameReadyCallback(
+        [this](const VideoFrameReadyEventArgs& args) {
+            // Write video frame to sink writer
+            HRESULT hr = m_sinkWriter.WriteFrame(args.pTexture, args.timestamp);
+            
+            // If write fails, log or handle error
+            // Note: We don't stop video capture on write failure to maintain stability
+            if (FAILED(hr))
+            {
+                // Video frame write failed, but continue processing
+                // The sink writer will handle errors internally
+            }
+        }
+    );
     
     // Start audio capture
     if (!StartAudioCapture(&hr))
@@ -120,17 +139,14 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         if (outHr) *outHr = hr;
         return false;
     }
-    
-    // Set the sink writer on video capture source
-    m_videoCaptureSource->SetSinkWriter(&m_sinkWriter);
 
     // Start video capture
     if (!m_videoCaptureSource->Start(&hr))
     {
         // If video capture fails, stop audio if it was started
-        if (m_audioInputSource && m_audioInputSource->IsRunning())
+        if (m_audioCaptureSource && m_audioCaptureSource->IsRunning())
         {
-            m_audioInputSource->Stop();
+            m_audioCaptureSource->Stop();
         }
         if (outHr) *outHr = hr;
         return false;
@@ -145,6 +161,12 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
     
+    if (!m_audioCaptureSource || !m_videoCaptureSource)
+    {
+        if (outHr) *outHr = hr;
+        return false;
+    }
+
     // Get video dimensions and device
     UINT32 width = m_videoCaptureSource->GetWidth();
     UINT32 height = m_videoCaptureSource->GetHeight();
@@ -159,16 +181,13 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
     }
     
     // Initialize audio stream if audio source is available
-    if (m_audioInputSource)
+    WAVEFORMATEX* audioFormat = m_audioCaptureSource->GetFormat();
+    if (audioFormat)
     {
-        WAVEFORMATEX* audioFormat = m_audioInputSource->GetFormat();
-        if (audioFormat)
+        if (!m_sinkWriter.InitializeAudioStream(audioFormat, &hr))
         {
-            if (!m_sinkWriter.InitializeAudioStream(audioFormat, &hr))
-            {
-                if (outHr) *outHr = hr;
-                return false;
-            }
+            if (outHr) *outHr = hr;
+            return false;
         }
     }
     
@@ -179,18 +198,18 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
 bool WindowsGraphicsCaptureSession::StartAudioCapture(HRESULT* outHr)
 {
     // Only start if audio source exists and has a format (meaning it was initialized)
-    if (!m_audioInputSource || !m_audioInputSource->GetFormat())
+    if (!m_audioCaptureSource || !m_audioCaptureSource->GetFormat())
     {
         if (outHr) *outHr = S_OK;
         return true;
     }
     
     // Enable/disable audio based on config
-    m_audioInputSource->SetEnabled(m_config.audioEnabled);
+    m_audioCaptureSource->SetEnabled(m_config.audioEnabled);
     
     // Start audio capture
     HRESULT hr = S_OK;
-    if (!m_audioInputSource->Start(&hr))
+    if (!m_audioCaptureSource->Start(&hr))
     {
         if (outHr) *outHr = hr;
         return false;
@@ -220,9 +239,9 @@ void WindowsGraphicsCaptureSession::Stop()
     }
 
     // Stop audio capture
-    if (m_audioInputSource)
+    if (m_audioCaptureSource)
     {
-        m_audioInputSource->Stop();
+        m_audioCaptureSource->Stop();
     }
 
     // Finalize MP4 file after both streams have stopped
@@ -240,8 +259,8 @@ void WindowsGraphicsCaptureSession::Stop()
 void WindowsGraphicsCaptureSession::ToggleAudioCapture(bool enabled)
 {
     // Only toggle if audio capture is currently running
-    if (m_audioInputSource && m_audioInputSource->IsRunning())
+    if (m_audioCaptureSource && m_audioCaptureSource->IsRunning())
     {
-        m_audioInputSource->SetEnabled(enabled);
+        m_audioCaptureSource->SetEnabled(enabled);
     }
 }
