@@ -262,6 +262,18 @@ void WindowsGraphicsCaptureSession::Stop()
         return;
     }
 
+    // Clear callbacks FIRST to prevent any new callback invocations during shutdown
+    // This must happen before stopping capture sources
+    if (m_audioCaptureSource)
+    {
+        m_audioCaptureSource->SetAudioSampleReadyCallback(nullptr);
+    }
+    
+    if (m_videoCaptureSource)
+    {
+        m_videoCaptureSource->SetVideoFrameReadyCallback(nullptr);
+    }
+
     // Stop video capture first to prevent new frames from arriving
     if (m_videoCaptureSource)
     {

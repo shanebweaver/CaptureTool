@@ -137,7 +137,8 @@ void AudioCaptureHandler::CaptureThreadProc()
             
             LONGLONG duration = (framesRead * TICKS_PER_SECOND) / m_sampleRate;
             
-            if (m_audioSampleReadyCallback)
+            // Check if callback is still valid and we're still running before invoking
+            if (m_audioSampleReadyCallback && m_isRunning)
             {
                 LONGLONG timestamp = 0;
                 if (m_clockReader && m_clockReader->IsRunning())
@@ -216,7 +217,8 @@ void AudioCaptureHandler::CaptureThreadProc()
                 {
                     // Generate and write silent audio samples to maintain A/V sync
                     // This prevents video frame backpressure during silence
-                    if (m_audioSampleReadyCallback)
+                    // Check if callback is still valid and we're still running before invoking
+                    if (m_audioSampleReadyCallback && m_isRunning)
                     {
                         WAVEFORMATEX* format = m_device.GetFormat();
                         if (format)

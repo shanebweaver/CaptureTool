@@ -186,7 +186,8 @@ void FrameArrivedHandler::ProcessingThreadProc()
             }
         }
         
-        if (frame.texture && m_callback)
+        // Check if callback is still valid and we're still running before invoking
+        if (frame.texture && m_callback && m_running)
         {
             VideoFrameReadyEventArgs args;
             args.pTexture = frame.texture.get();
@@ -197,32 +198,8 @@ void FrameArrivedHandler::ProcessingThreadProc()
         }
     }
     
-    // Drain remaining frames after m_running becomes false to prevent frame loss
-    while (true)
-    {
-        QueuedFrame frame;
-        
-        {
-            std::lock_guard<std::mutex> lock(m_queueMutex);
-            if (m_frameQueue.empty())
-            {
-                break;
-            }
-            
-            frame = std::move(m_frameQueue.front());
-            m_frameQueue.pop();
-        }
-        
-        if (frame.texture && m_callback)
-        {
-            VideoFrameReadyEventArgs args;
-            args.pTexture = frame.texture.get();
-            args.timestamp = frame.relativeTimestamp;
-            
-            m_callback(args);
-            processedCount++;
-        }
-    }
+    // Don't drain remaining frames after stopping to prevent callbacks after shutdown
+    // Frames in the queue will be automatically cleaned up when the queue is destroyed
 }
 
 EventRegistrationToken RegisterFrameArrivedHandler(
