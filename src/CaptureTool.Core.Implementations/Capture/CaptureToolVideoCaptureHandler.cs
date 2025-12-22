@@ -47,20 +47,39 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled);
     }
 
-    public IVideoFile StopVideoCapture()
+    public PendingVideoFile StopVideoCapture()
     {
         if (!IsRecording || string.IsNullOrEmpty(_tempVideoPath))
         {
             throw new InvalidOperationException("Cannot stop, no video is recording.");
         }
 
-        _screenRecorder.StopRecording();
-
-        VideoFile videoFile = new(_tempVideoPath);
+        IsRecording = false;
+        string filePath = _tempVideoPath;
         _tempVideoPath = null;
 
-        NewVideoCaptured?.Invoke(this, videoFile);
-        return videoFile;
+        var pendingVideo = new PendingVideoFile(filePath);
+
+        // Finalize video on a background thread to avoid blocking the UI
+        Task.Run(() =>
+        {
+            try
+            {
+                _screenRecorder.StopRecording();
+                
+                var videoFile = new VideoFile(filePath);
+                pendingVideo.Complete(videoFile);
+                
+                NewVideoCaptured?.Invoke(this, videoFile);
+            }
+            catch (Exception ex)
+            {
+                pendingVideo.Fail(ex);
+                throw;
+            }
+        });
+
+        return pendingVideo;
     }
 
     public void CancelVideoCapture()

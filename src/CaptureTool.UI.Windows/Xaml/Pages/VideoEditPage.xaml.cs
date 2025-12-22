@@ -31,7 +31,8 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(VideoEditPageViewModel.VideoPath))
+        if (e.PropertyName == nameof(VideoEditPageViewModel.VideoPath) ||
+            e.PropertyName == nameof(VideoEditPageViewModel.IsVideoReady))
         {
             TryInitializeVideo();
         }
@@ -39,7 +40,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private bool TryInitializeVideo()
     {
-        if (!string.IsNullOrEmpty(ViewModel.VideoPath))
+        if (!string.IsNullOrEmpty(ViewModel.VideoPath) && ViewModel.IsVideoReady)
         {
             _ = InitializeVideoAsync(ViewModel.VideoPath);
             return true;
@@ -50,8 +51,15 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private async Task InitializeVideoAsync(string filePath)
     {
-        StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
-        var mediaSource = MediaSource.CreateFromStorageFile(file);
-        VideoPlayer.MediaPlayer.Source = mediaSource;
+        try
+        {
+            StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
+            var mediaSource = MediaSource.CreateFromStorageFile(file);
+            VideoPlayer.MediaPlayer.Source = mediaSource;
+        }
+        catch (Exception)
+        {
+            // Video not ready yet or file doesn't exist
+        }
     }
 }

@@ -49,13 +49,13 @@ public class CaptureOverlayStopVideoCaptureActionTests
     {
         var appNav = Fixture.Freeze<Mock<IAppNavigation>>();
         var video = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
-        var file = new Mock<IVideoFile>().Object;
-        video.Setup(v => v.StopVideoCapture()).Returns(file);
+        var pendingFile = new PendingVideoFile("test.mp4");
+        video.Setup(v => v.StopVideoCapture()).Returns(pendingFile);
 
         var action = Fixture.Create<CaptureOverlayStopVideoCaptureAction>();
         action.Execute();
 
         video.Verify(v => v.StopVideoCapture(), Times.Once);
-        appNav.Verify(a => a.GoToVideoEdit(file), Times.Once);
+        appNav.Verify(a => a.GoToVideoEdit(pendingFile), Times.Once);
     }
 }

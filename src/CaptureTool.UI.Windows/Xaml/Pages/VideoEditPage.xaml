@@ -22,7 +22,8 @@
             <AppBarButton
                 x:Uid="VideoEdit_CopyButton"
                 Command="{x:Bind ViewModel.CopyCommand}"
-                Icon="Copy">
+                Icon="Copy"
+                IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="C" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
@@ -32,7 +33,8 @@
             <AppBarButton
                 x:Uid="VideoEdit_SaveButton"
                 Command="{x:Bind ViewModel.SaveCommand}"
-                Icon="Save">
+                Icon="Save"
+                IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
@@ -41,7 +43,27 @@
 
         <!--  Content  -->
         <Grid Grid.Row="1" Padding="8,0,8,8">
-            <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" />
+            <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" 
+                                Visibility="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}" />
+            
+            <!--  Loading indicator for video finalization  -->
+            <Grid Visibility="{x:Bind ViewModel.IsFinalizingVideo, Mode=OneWay}">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="16">
+                    <ProgressRing
+                        Width="48"
+                        Height="48"
+                        IsActive="True" />
+                    <TextBlock
+                        x:Uid="VideoEdit_FinalizingText"
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        Opacity="0.7"
+                        Text="Finalizing video..." />
+                </StackPanel>
+            </Grid>
         </Grid>
     </Grid>
 </local:VideoEditPageBase>

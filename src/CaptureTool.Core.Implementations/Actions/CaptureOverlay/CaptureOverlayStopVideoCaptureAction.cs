@@ -35,7 +35,7 @@ public sealed partial class CaptureOverlayStopVideoCaptureAction : ActionCommand
 
     public override void Execute()
     {
-        var video = _videoCaptureHandler.StopVideoCapture();
-        _appNavigation.GoToVideoEdit(video);
+        var pendingVideo = _videoCaptureHandler.StopVideoCapture();
+        _appNavigation.GoToVideoEdit(pendingVideo);
     }
 }
