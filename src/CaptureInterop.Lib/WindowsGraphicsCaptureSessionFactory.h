@@ -1,12 +1,14 @@
 #pragma once
 #include "pch.h"
 #include "ICaptureSessionFactory.h"
+#include "IMediaClockFactory.h"
+#include "IVideoCaptureSourceFactory.h"
+#include "IAudioCaptureSourceFactory.h"
+#include "IMP4SinkWriterFactory.h"
+#include "CaptureSessionConfig.h"
+#include "ICaptureSession.h"
 
-// Forward declarations
-class IMediaClockFactory;
-class IAudioCaptureSourceFactory;
-class IVideoCaptureSourceFactory;
-class IMP4SinkWriterFactory;
+#include <memory>
 
 /// <summary>
 /// Factory implementation for creating Windows Graphics Capture sessions.
