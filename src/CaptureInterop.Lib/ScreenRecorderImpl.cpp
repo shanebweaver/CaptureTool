@@ -5,6 +5,13 @@
 #include "WindowsDesktopVideoCaptureSourceFactory.h"
 #include "WindowsMFMP4SinkWriterFactory.h"
 #include "SimpleMediaClockFactory.h"
+#include "CaptureSessionConfig.h"
+#include "ICaptureSessionFactory.h"
+
+#include <strsafe.h>
+#include <Windows.h>
+#include <memory>
+#include <utility>
 
 ScreenRecorderImpl::ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> factory)
     : m_factory(std::move(factory))

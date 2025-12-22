@@ -39,11 +39,9 @@ FrameArrivedHandler::~FrameArrivedHandler()
 
 void FrameArrivedHandler::Stop()
 {
-    // Make Stop() idempotent and thread-safe
     bool expected = false;
     if (!m_stopped.compare_exchange_strong(expected, true))
     {
-        // Already stopped
         return;
     }
     
@@ -53,6 +51,18 @@ void FrameArrivedHandler::Stop()
     if (m_processingThread.joinable())
     {
         m_processingThread.join();
+    }
+    
+    // Log any remaining frames as a warning
+    {
+        std::lock_guard<std::mutex> lock(m_queueMutex);
+        if (!m_frameQueue.empty())
+        {
+            char msg[256];
+            sprintf_s(msg, "[FrameHandler] WARNING: %zu frames remaining in queue\n", 
+                     m_frameQueue.size());
+            OutputDebugStringA(msg);
+        }
     }
 }
 
@@ -127,21 +137,17 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
-    // Get timestamp from media clock
     LONGLONG timestamp = 0;
     if (m_clockReader && m_clockReader->IsRunning())
     {
         timestamp = m_clockReader->GetCurrentTime();
     }
-
-    // Queue the frame for background processing instead of processing synchronously
-    // This prevents blocking the event callback thread
+    
     {
         std::lock_guard<std::mutex> lock(m_queueMutex);
         
-        // Increased queue size to 30 frames (~1 second at 30fps) to match the 6 frame pool buffers
-        // This provides sufficient buffering when encoder falls behind
-        if (m_frameQueue.size() < 30)
+        // Keep queue size at 6 frames to reduce memory pressure while providing buffering
+        if (m_frameQueue.size() < 6)
         {
             QueuedFrame queuedFrame;
             queuedFrame.texture = texture;
@@ -151,9 +157,16 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         }
         else
         {
-            // Queue is full - drop this frame to prevent blocking
-            // This can happen when encoder is significantly slower than capture rate
-            // Consider adding telemetry here if frame drops become problematic
+            // Queue full - drop frame to prevent memory buildup
+            static std::atomic<int> dropCount{0};
+            int dropped = dropCount.fetch_add(1);
+            
+            if (dropped % 100 == 0)
+            {
+                char msg[256];
+                sprintf_s(msg, "[FrameHandler] Dropped %d frames - encoder falling behind\n", dropped);
+                OutputDebugStringA(msg);
+            }
         }
     }
 
@@ -162,11 +175,12 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
 
 void FrameArrivedHandler::ProcessingThreadProc()
 {
+    int processedCount = 0;
+    
     while (m_running)
     {
         QueuedFrame frame;
         
-        // Wait for a frame to process
         {
             std::unique_lock<std::mutex> lock(m_queueMutex);
             m_queueCV.wait(lock, [this] { return !m_frameQueue.empty() || !m_running; });
@@ -187,17 +201,47 @@ void FrameArrivedHandler::ProcessingThreadProc()
             }
         }
         
-        // Process the frame outside the lock
         if (frame.texture && m_callback)
         {
-            // Fire the video frame ready event
             VideoFrameReadyEventArgs args;
             args.pTexture = frame.texture.get();
             args.timestamp = frame.relativeTimestamp;
             
             m_callback(args);
+            processedCount++;
         }
     }
+    
+    // Drain remaining frames after m_running becomes false to prevent frame loss
+    while (true)
+    {
+        QueuedFrame frame;
+        
+        {
+            std::lock_guard<std::mutex> lock(m_queueMutex);
+            if (m_frameQueue.empty())
+            {
+                break;
+            }
+            
+            frame = std::move(m_frameQueue.front());
+            m_frameQueue.pop();
+        }
+        
+        if (frame.texture && m_callback)
+        {
+            VideoFrameReadyEventArgs args;
+            args.pTexture = frame.texture.get();
+            args.timestamp = frame.relativeTimestamp;
+            
+            m_callback(args);
+            processedCount++;
+        }
+    }
+    
+    char msg[256];
+    sprintf_s(msg, "[FrameHandler] Processing complete. Total frames: %d\n", processedCount);
+    OutputDebugStringA(msg);
 }
 
 EventRegistrationToken RegisterFrameArrivedHandler(

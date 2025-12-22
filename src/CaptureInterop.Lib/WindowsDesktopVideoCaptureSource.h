@@ -3,6 +3,12 @@
 #include "CaptureSessionConfig.h"
 #include "pch.h"
 
+#include <d3d11.h>
+#include <Windows.h>
+#include <EventToken.h>
+#include <windows.graphics.capture.h>
+#include <wil/com.h>
+
 // Forward declarations
 class FrameArrivedHandler;
 class IMediaClockReader;

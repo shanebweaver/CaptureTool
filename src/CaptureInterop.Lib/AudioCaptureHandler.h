@@ -1,6 +1,9 @@
 #pragma once
 #include "AudioCaptureDevice.h"
 #include <functional>
+#include <thread>
+#include <atomic>
+#include <vector>
 
 // Forward declarations
 class IMediaClockWriter;
@@ -111,5 +114,6 @@ private:
     
     std::vector<BYTE> m_silentBuffer;           // Reusable buffer for silent audio samples
     
+    UINT32 m_sampleRate = 0;                    // Cached sample rate from audio format
     LARGE_INTEGER m_qpcFrequency{};             // QPC frequency for time calculations
 };

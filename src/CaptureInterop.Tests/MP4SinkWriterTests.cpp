@@ -2,6 +2,15 @@
 #include "CppUnitTest.h"
 #include "WindowsMFMP4SinkWriter.h"
 
+#include <dxgiformat.h>
+#include <strsafe.h>
+#include <wchar.h>
+#include <d3d11.h>
+#include <d3dcommon.h>
+#include <Windows.h>
+#include <vector>
+#include <wil/com.h>
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace CaptureInteropTests

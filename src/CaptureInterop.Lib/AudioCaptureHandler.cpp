@@ -4,6 +4,12 @@
 #include "IMediaClockWriter.h"
 #include "IMediaClockReader.h"
 
+#include <mmreg.h>
+#include <strsafe.h>
+#include <Audioclient.h>
+#include <Windows.h>
+#include <thread>
+
 AudioCaptureHandler::AudioCaptureHandler(IMediaClockReader* clockReader)
     : m_clockReader(clockReader)
 {
@@ -21,7 +27,19 @@ AudioCaptureHandler::~AudioCaptureHandler()
 
 bool AudioCaptureHandler::Initialize(bool loopback, HRESULT* outHr)
 {
-    return m_device.Initialize(loopback, outHr);
+    if (!m_device.Initialize(loopback, outHr))
+    {
+        return false;
+    }
+    
+    // Cache the sample rate for efficient access during capture
+    WAVEFORMATEX* format = m_device.GetFormat();
+    if (format)
+    {
+        m_sampleRate = format->nSamplesPerSec;
+    }
+    
+    return true;
 }
 
 bool AudioCaptureHandler::Start(HRESULT* outHr)
@@ -74,11 +92,23 @@ WAVEFORMATEX* AudioCaptureHandler::GetFormat() const
 
 void AudioCaptureHandler::CaptureThreadProc()
 {
-    // Set thread priority to above normal (not TIME_CRITICAL to avoid starving UI)
-    // This provides responsive audio capture while keeping the UI responsive
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
     
+    // Validate that we have the required components before starting
+    if (!m_clockWriter || m_sampleRate == 0)
+    {
+        return;
+    }
+    
     LONGLONG lastTimestamp = 0;
+    const LONGLONG TICKS_PER_SECOND = 10000000LL;
+    const UINT32 SLEEP_DURATION_MS = 10;
+    const UINT32 VIRTUAL_FRAMES_PER_SLEEP = (m_sampleRate * SLEEP_DURATION_MS) / 1000;
+    
+    // Track last clock advancement time for more accurate timing
+    LARGE_INTEGER qpcFreq, lastAdvanceQpc, currentQpc;
+    QueryPerformanceFrequency(&qpcFreq);
+    QueryPerformanceCounter(&lastAdvanceQpc);
     
     while (m_isRunning)
     {
@@ -98,24 +128,17 @@ void AudioCaptureHandler::CaptureThreadProc()
 
         if (framesRead > 0)
         {
-            // Get audio format for duration calculation
             WAVEFORMATEX* format = m_device.GetFormat();
             if (!format)
             {
-                // No format available, skip this sample and release buffer
                 m_device.ReleaseBuffer(framesRead);
                 continue;
             }
             
-            const LONGLONG TICKS_PER_SECOND = 10000000LL;  // 100ns ticks per second
+            LONGLONG duration = (framesRead * TICKS_PER_SECOND) / m_sampleRate;
             
-            // Calculate duration based on actual audio frame count
-            LONGLONG duration = (framesRead * TICKS_PER_SECOND) / format->nSamplesPerSec;
-            
-            // Always process audio samples to maintain timeline continuity
             if (m_audioSampleReadyCallback)
             {
-                // Get current timestamp from media clock
                 LONGLONG timestamp = 0;
                 if (m_clockReader && m_clockReader->IsRunning())
                 {
@@ -123,35 +146,29 @@ void AudioCaptureHandler::CaptureThreadProc()
                 }
                 else
                 {
-                    // Fallback: use last timestamp + duration if clock not available
                     timestamp = lastTimestamp + duration;
                 }
                 
-                // If this is the first write after being disabled, prepare to skip several samples
-                // to drain any stale buffer data
                 if (m_wasDisabled)
                 {
                     m_wasDisabled = false;
-                    
-                    // Skip next few samples to fully drain stale buffer data
-                    // WASAPI typically buffers 10-30ms of audio, which is 3-5 samples at 10ms per sample
                     m_samplesToSkip = 5;
                 }
                 
-                // Skip samples if we're draining stale buffer data
                 if (m_samplesToSkip > 0)
                 {
                     m_samplesToSkip--;
                     m_device.ReleaseBuffer(framesRead);
+                    
+                    // Still advance clock even when skipping samples
+                    m_clockWriter->AdvanceByAudioSamples(framesRead, m_sampleRate);
+                    QueryPerformanceCounter(&lastAdvanceQpc);
                     continue;
                 }
                 
-                // When audio is disabled or silent, write silent samples to maintain timeline continuity
-                // This prevents video from skipping ahead and prevents UI freeze from tight loops
                 BYTE* pAudioData = pData;
                 if (!m_isEnabled || (flags & AUDCLNT_BUFFERFLAGS_SILENT))
                 {
-                    // Reuse or resize silent buffer for efficiency
                     UINT32 bufferSize = framesRead * format->nBlockAlign;
                     if (m_silentBuffer.size() < bufferSize)
                     {
@@ -159,14 +176,12 @@ void AudioCaptureHandler::CaptureThreadProc()
                     }
                     else
                     {
-                        // Zero out the buffer for reuse
                         memset(m_silentBuffer.data(), 0, bufferSize);
                     }
                     pAudioData = m_silentBuffer.data();
                 }
                 
-                // Fire the audio sample ready event
-                AudioSampleReadyEventArgs args;
+                AudioSampleReadyEventArgs args{};
                 args.pData = pAudioData;
                 args.numFrames = framesRead;
                 args.timestamp = timestamp;
@@ -177,21 +192,34 @@ void AudioCaptureHandler::CaptureThreadProc()
                 lastTimestamp = timestamp;
             }
 
-            // Advance the media clock based on audio samples processed
-            // This is done regardless of whether audio is written to maintain accurate timeline
-            if (m_clockWriter && format)
-            {
-                m_clockWriter->AdvanceByAudioSamples(framesRead, format->nSamplesPerSec);
-            }
+            // Always advance the clock when frames are processed
+            m_clockWriter->AdvanceByAudioSamples(framesRead, m_sampleRate);
+            QueryPerformanceCounter(&lastAdvanceQpc);
 
             m_device.ReleaseBuffer(framesRead);
         }
         else
         {
-            // No audio data available - sleep to avoid busy-waiting
-            // Longer sleep (10ms) prevents CPU spinning and allows UI thread to run
-            // This prevents memory buildup and UI freezes
-            Sleep(10);
+            // No audio data available immediately
+            // Check if we've been waiting too long and need to advance the clock
+            QueryPerformanceCounter(&currentQpc);
+            LONGLONG qpcElapsed = currentQpc.QuadPart - lastAdvanceQpc.QuadPart;
+            LONGLONG ticksElapsed = (qpcElapsed * TICKS_PER_SECOND) / qpcFreq.QuadPart;
+            
+            // If more than 10ms has elapsed since last advancement, advance the clock
+            if (ticksElapsed >= 100000LL) // 10ms in 100ns ticks
+            {
+                // Calculate frames equivalent to elapsed time
+                UINT32 virtualFrames = (UINT32)((ticksElapsed * m_sampleRate) / TICKS_PER_SECOND);
+                if (virtualFrames > 0)
+                {
+                    m_clockWriter->AdvanceByAudioSamples(virtualFrames, m_sampleRate);
+                    lastAdvanceQpc = currentQpc;
+                }
+            }
+            
+            // Sleep briefly to avoid busy-waiting
+            Sleep(1); // Shorter sleep to check more frequently
         }
     }
 }

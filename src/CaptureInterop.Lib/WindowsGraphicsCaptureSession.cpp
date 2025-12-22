@@ -4,13 +4,15 @@
 #include "IVideoCaptureSourceFactory.h"
 #include "IMediaClockFactory.h"
 #include "CaptureSessionConfig.h"
+#include "IMP4SinkWriterFactory.h"
+#include "WindowsDesktopVideoCaptureSource.h"
+#include "IAudioCaptureSource.h"
+#include "IVideoCaptureSource.h"
 
 #include <mmreg.h>
 #include <strsafe.h>
 #include <d3d11.h>
 #include <Windows.h>
-#include "IMP4SinkWriterFactory.h"
-#include "WindowsDesktopVideoCaptureSource.h"
 
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     const CaptureSessionConfig& config,
@@ -234,13 +236,7 @@ void WindowsGraphicsCaptureSession::Stop()
         return;
     }
 
-    // Stop the clock
-    if (m_mediaClock)
-    {
-        m_mediaClock->Pause();
-    }
-
-    // Stop video capture first
+    // Stop video capture first to prevent new frames from arriving
     if (m_videoCaptureSource)
     {
         m_videoCaptureSource->Stop();
@@ -252,7 +248,16 @@ void WindowsGraphicsCaptureSession::Stop()
         m_audioCaptureSource->Stop();
     }
 
-    // Finalize MP4 file after both streams have stopped
+    // Stop the clock after capture sources are stopped
+    if (m_mediaClock)
+    {
+        m_mediaClock->Pause();
+    }
+
+    // Allow encoder time to process remaining queued frames (200ms for 6 frames at 30fps)
+    Sleep(200);
+
+    // Finalize MP4 file after queue is drained
     m_sinkWriter->Finalize();
 
     // Reset the clock

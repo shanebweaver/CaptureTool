@@ -196,20 +196,34 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
 
     D3D11_MAPPED_SUBRESOURCE mapped{};
     hr = m_context->Map(staging.get(), 0, D3D11_MAP_READ, 0, &mapped);
-    if (FAILED(hr)) return hr;
+    if (FAILED(hr)) 
+    {
+        staging.reset();
+        return hr;
+    }
 
     const UINT32 bytesPerPixel = 4;
     const UINT32 canonicalStride = m_width * bytesPerPixel;
     const UINT32 bufferSize = canonicalStride * m_height;
 
     wil::com_ptr<IMFMediaBuffer> buffer;
-    hr = MFCreateMemoryBuffer(mapped.RowPitch * m_height, buffer.put());
-    if (FAILED(hr)) { m_context->Unmap(staging.get(), 0); return hr; }
+    hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
+    if (FAILED(hr)) 
+    { 
+        m_context->Unmap(staging.get(), 0); 
+        staging.reset();
+        return hr; 
+    }
 
     BYTE* pData = nullptr;
     DWORD maxLen = 0, curLen = 0;
     hr = buffer->Lock(&pData, &maxLen, &curLen);
-    if (FAILED(hr)) { m_context->Unmap(staging.get(), 0); return hr; }
+    if (FAILED(hr)) 
+    { 
+        m_context->Unmap(staging.get(), 0); 
+        staging.reset();
+        return hr; 
+    }
 
     for (UINT row = 0; row < m_height; ++row)
     {
@@ -220,7 +234,9 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
 
     buffer->SetCurrentLength(bufferSize);
     buffer->Unlock();
+    
     m_context->Unmap(staging.get(), 0);
+    staging.reset();
 
     wil::com_ptr<IMFSample> sample;
     hr = MFCreateSample(sample.put());
@@ -285,7 +301,26 @@ void WindowsMFMP4SinkWriter::Finalize()
 {
     if (m_sinkWriter)
     {
-        m_sinkWriter->Finalize();
+        if (m_hasBegunWriting)
+        {
+            // Flush encoder by sending stream ticks
+            HRESULT hr = m_sinkWriter->SendStreamTick(m_videoStreamIndex, m_prevVideoTimestamp);
+            
+            if (m_hasAudioStream)
+            {
+                m_sinkWriter->SendStreamTick(m_audioStreamIndex, m_prevVideoTimestamp);
+            }
+        }
+        
+        HRESULT hr = m_sinkWriter->Finalize();
+        
+        if (SUCCEEDED(hr))
+        {
+            char msg[256];
+            sprintf_s(msg, "[MP4Writer] Finalized successfully. Total frames: %d\n", m_frameIndex);
+            OutputDebugStringA(msg);
+        }
+        
         m_sinkWriter.reset();
     }
 
