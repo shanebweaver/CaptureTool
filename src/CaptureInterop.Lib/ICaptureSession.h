@@ -26,6 +26,18 @@ public:
     virtual void Stop() = 0;
 
     /// <summary>
+    /// Pause the capture session without stopping.
+    /// The media clock stops advancing, effectively pausing the recording.
+    /// </summary>
+    virtual void Pause() = 0;
+
+    /// <summary>
+    /// Resume the capture session from a paused state.
+    /// The media clock continues advancing from where it was paused.
+    /// </summary>
+    virtual void Resume() = 0;
+
+    /// <summary>
     /// Toggle audio capture on/off during recording.
     /// Allows muting/unmuting without stopping the entire session.
     /// </summary>

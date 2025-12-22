@@ -41,6 +41,8 @@ public:
     // ICaptureSession implementation
     bool Start(HRESULT* outHr = nullptr) override;
     void Stop() override;
+    void Pause() override;
+    void Resume() override;
     void ToggleAudioCapture(bool enabled) override;
     bool IsActive() const override { return m_isActive; }
 

@@ -116,4 +116,74 @@ public class CaptureToolVideoCaptureHandlerTests
         screenRecorder.Verify(s => s.PauseRecording(), Times.Never);
         screenRecorder.Verify(s => s.ResumeRecording(), Times.Never);
     }
+
+    [TestMethod]
+    public void StopVideoCapture_ShouldResetIsPausedToFalse()
+    {
+        // Arrange
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        var storageService = Fixture.Freeze<Mock<CaptureTool.Services.Interfaces.Storage.IStorageService>>();
+        storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
+        
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+        
+        var args = new NewCaptureArgs(
+            new MonitorCaptureResult(
+                IntPtr.Zero,
+                new byte[0],
+                96,
+                new System.Drawing.Rectangle(0, 0, 1920, 1080),
+                new System.Drawing.Rectangle(0, 0, 1920, 1080),
+                true
+            ),
+            new System.Drawing.Rectangle(0, 0, 1920, 1080)
+        );
+        
+        handler.StartVideoCapture(args);
+        handler.ToggleIsPaused(true);
+        
+        // Verify paused state is set
+        handler.IsPaused.Should().BeTrue();
+
+        // Act
+        handler.StopVideoCapture();
+
+        // Assert
+        handler.IsPaused.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void CancelVideoCapture_ShouldResetIsPausedToFalse()
+    {
+        // Arrange
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        var storageService = Fixture.Freeze<Mock<CaptureTool.Services.Interfaces.Storage.IStorageService>>();
+        storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
+        
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+        
+        var args = new NewCaptureArgs(
+            new MonitorCaptureResult(
+                IntPtr.Zero,
+                new byte[0],
+                96,
+                new System.Drawing.Rectangle(0, 0, 1920, 1080),
+                new System.Drawing.Rectangle(0, 0, 1920, 1080),
+                true
+            ),
+            new System.Drawing.Rectangle(0, 0, 1920, 1080)
+        );
+        
+        handler.StartVideoCapture(args);
+        handler.ToggleIsPaused(true);
+        
+        // Verify paused state is set
+        handler.IsPaused.Should().BeTrue();
+
+        // Act
+        handler.CancelVideoCapture();
+
+        // Assert
+        handler.IsPaused.Should().BeFalse();
+    }
 }

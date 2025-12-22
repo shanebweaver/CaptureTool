@@ -70,6 +70,8 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         }
     }
 
+    public bool IsRunning => IsRecording && !IsPaused;
+
     public bool IsLocalAudioEnabled
     {
         get => Get<bool>(IsLocalAudioEnabledProperty);
@@ -79,13 +81,21 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     public bool IsRecording
     {
         get => Get<bool>(IsRecordingProperty);
-        set => Set(IsRecordingProperty, value);
+        set
+        {
+            Set(IsRecordingProperty, value);
+            RaisePropertyChanged(nameof(IsRunning));
+        }
     }
 
     public bool IsPaused
     {
         get => Get<bool>(IsPausedProperty);
-        set => Set(IsPausedProperty, value);
+        set
+        {
+            Set(IsPausedProperty, value);
+            RaisePropertyChanged(nameof(IsRunning));
+        }
     }
 
     public ICommand CloseCommand
