@@ -36,8 +36,8 @@ private:
     uint64_t m_frameIndex = 0;
     uint32_t m_width = 0;
     uint32_t m_height = 0;
-    ID3D11Device* m_device = nullptr;
-    ID3D11DeviceContext* m_context = nullptr;
+    wil::com_ptr<ID3D11Device> m_device;
+    wil::com_ptr<ID3D11DeviceContext> m_context;
     int64_t m_prevVideoTimestamp = 0;
     WAVEFORMATEX m_audioFormat = {};
 

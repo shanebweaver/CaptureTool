@@ -34,7 +34,7 @@ public:
     /// Get the audio format (sample rate, channels, bit depth) of the capture device.
     /// </summary>
     /// <returns>Pointer to WAVEFORMATEX structure, or nullptr if not initialized.</returns>
-    WAVEFORMATEX* GetFormat() const { return m_waveFormat; }
+    WAVEFORMATEX* GetFormat() const { return m_waveFormat.get(); }
     
     /// <summary>
     /// Read available audio samples from the WASAPI buffer.
@@ -54,6 +54,6 @@ private:
     wil::com_ptr<IMMDevice> m_device;
     wil::com_ptr<IAudioClient> m_audioClient;
     wil::com_ptr<IAudioCaptureClient> m_captureClient;
-    WAVEFORMATEX* m_waveFormat = nullptr;
+    wil::unique_cotaskmem_ptr<WAVEFORMATEX> m_waveFormat;
     bool m_isCapturing = false;
 };

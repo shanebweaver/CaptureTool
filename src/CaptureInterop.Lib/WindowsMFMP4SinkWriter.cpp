@@ -11,12 +11,13 @@ WindowsMFMP4SinkWriter::~WindowsMFMP4SinkWriter()
 bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, uint32_t width, uint32_t height, long* outHr)
 {
     if (outHr) *outHr = S_OK;
+    
+    // Smart pointer handles AddRef automatically
     m_device = device;
-    m_device->AddRef();
-
-    m_device->GetImmediateContext(&m_context);
-    m_context->AddRef();
-
+    
+    // Get context through com_ptr
+    m_device->GetImmediateContext(m_context.put());
+    
     m_width = width;
     m_height = height;
     m_frameIndex = 0;
@@ -318,17 +319,9 @@ void WindowsMFMP4SinkWriter::Finalize()
     // Release cached staging texture
     m_stagingTexture.reset();
 
-    if (m_context)
-    {
-        m_context->Release();
-        m_context = nullptr;
-    }
-
-    if (m_device)
-    {
-        m_device->Release();
-        m_device = nullptr;
-    }
+    // Smart pointers clean up automatically
+    m_context.reset();
+    m_device.reset();
 
     MFShutdown();
 }
