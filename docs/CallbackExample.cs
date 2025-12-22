@@ -2,17 +2,11 @@ using System;
 using System.Runtime.InteropServices;
 using CaptureTool.Domains.Capture.Implementations.Windows;
 
-// Note: The callback types are internal to the Windows implementation assembly.
-// In your own application, you would need to:
-// 1. Reference CaptureTool.Domains.Capture.Implementations.Windows
-// 2. Add InternalsVisibleTo attribute if accessing from another assembly
-// 3. Use the fully qualified type names as shown below
-
-// Import the callback types from CaptureInterop (internal to the implementation assembly)
-using VideoFrameCallback = CaptureTool.Domains.Capture.Implementations.Windows.CaptureInterop.VideoFrameCallback;
-using AudioSampleCallback = CaptureTool.Domains.Capture.Implementations.Windows.CaptureInterop.AudioSampleCallback;
-using VideoFrameData = CaptureTool.Domains.Capture.Implementations.Windows.CaptureInterop.VideoFrameData;
-using AudioSampleData = CaptureTool.Domains.Capture.Implementations.Windows.CaptureInterop.AudioSampleData;
+// Note: The callback types are now public and accessible directly from the namespace
+using VideoFrameCallback = CaptureTool.Domains.Capture.Implementations.Windows.VideoFrameCallback;
+using AudioSampleCallback = CaptureTool.Domains.Capture.Implementations.Windows.AudioSampleCallback;
+using VideoFrameData = CaptureTool.Domains.Capture.Implementations.Windows.VideoFrameData;
+using AudioSampleData = CaptureTool.Domains.Capture.Implementations.Windows.AudioSampleData;
 
 namespace CaptureTool.Examples;
 

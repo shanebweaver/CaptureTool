@@ -78,6 +78,9 @@
     <ClInclude Include="CaptureSessionConfig.h">
       <Filter>Header Files\CaptureSession</Filter>
     </ClInclude>
+    <ClInclude Include="CallbackTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="ICaptureSession.h">
       <Filter>Header Files\CaptureSession</Filter>
     </ClInclude>

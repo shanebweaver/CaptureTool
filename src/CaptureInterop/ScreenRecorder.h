@@ -1,8 +1,8 @@
 #pragma once
 #include <windows.h>
-#include "CaptureSessionConfig.h"
+#include "CallbackTypes.h"
 
-// Export the callback types and structures from CaptureSessionConfig.h
+// Export the callback types and structures from CallbackTypes.h
 // These are used at the managed/native boundary
 
 extern "C"

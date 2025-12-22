@@ -2,7 +2,7 @@
 #include "CppUnitTest.h"
 #include "ScreenRecorderImpl.h"
 #include "CaptureSessionConfig.h"
-#include "../CaptureInterop/ScreenRecorder.h"
+#include "CallbackTypes.h"
 
 #include <atomic>
 #include <thread>
@@ -40,7 +40,8 @@ namespace CaptureInteropTests
             s_videoCallbackReceived = false;
 
             // Set up the callback before starting recording
-            SetVideoFrameCallback(&CallbackTests::VideoFrameCallbackHandler);
+            ScreenRecorderImpl recorder;
+            recorder.SetVideoFrameCallback(&CallbackTests::VideoFrameCallbackHandler);
 
             // Note: This test requires a valid monitor and output path
             // In a real test environment, we would need to set this up properly
@@ -49,7 +50,7 @@ namespace CaptureInteropTests
             Logger::WriteMessage("[Callback] Video frame callback function registered successfully");
             
             // Clean up
-            SetVideoFrameCallback(nullptr);
+            recorder.SetVideoFrameCallback(nullptr);
         }
 
         TEST_METHOD(Callback_AudioSampleCallback_IsInvoked)
@@ -62,12 +63,13 @@ namespace CaptureInteropTests
             s_audioCallbackReceived = false;
 
             // Set up the callback before starting recording
-            SetAudioSampleCallback(&CallbackTests::AudioSampleCallbackHandler);
+            ScreenRecorderImpl recorder;
+            recorder.SetAudioSampleCallback(&CallbackTests::AudioSampleCallbackHandler);
 
             Logger::WriteMessage("[Callback] Audio sample callback function registered successfully");
             
             // Clean up
-            SetAudioSampleCallback(nullptr);
+            recorder.SetAudioSampleCallback(nullptr);
         }
 
         TEST_METHOD(Callback_DataStructures_HaveCorrectLayout)
