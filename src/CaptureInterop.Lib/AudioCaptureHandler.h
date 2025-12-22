@@ -101,6 +101,12 @@ private:
     /// </summary>
     void CaptureThreadProc();
     
+    /// <summary>
+    /// Thread-safe helper to get silent audio buffer of required size. 
+    /// Returns pointer to zeroed buffer that's valid until next call.
+    /// </summary>
+    BYTE* GetSilentBuffer(UINT32 requiredSize);
+    
     AudioCaptureDevice m_device;
     AudioSampleReadyCallback m_audioSampleReadyCallback;
     IMediaClockWriter* m_clockWriter = nullptr;
@@ -113,6 +119,7 @@ private:
     std::atomic<int> m_samplesToSkip{0};        // Number of samples to skip after re-enabling
     
     std::vector<BYTE> m_silentBuffer;           // Reusable buffer for silent audio samples
+    std::mutex m_silentBufferMutex;             // Protects m_silentBuffer access
     
     UINT32 m_sampleRate = 0;                    // Cached sample rate from audio format
     LARGE_INTEGER m_qpcFrequency{};             // QPC frequency for time calculations
