@@ -3,9 +3,26 @@
 #include <Windows.h>
 #include <cstdint>
 
-// Forward declarations for callback types
-struct VideoFrameData;
-struct AudioSampleData;
+// Callback data structures for managed layer
+struct VideoFrameData
+{
+    void* pTexture;         // Pointer to ID3D11Texture2D
+    LONGLONG timestamp;     // Timestamp in 100ns ticks
+    UINT32 width;           // Frame width in pixels
+    UINT32 height;          // Frame height in pixels
+};
+
+struct AudioSampleData
+{
+    const BYTE* pData;      // Pointer to audio sample data
+    UINT32 numFrames;       // Number of audio frames
+    LONGLONG timestamp;     // Timestamp in 100ns ticks
+    UINT32 sampleRate;      // Sample rate in Hz
+    UINT16 channels;        // Number of channels
+    UINT16 bitsPerSample;   // Bits per sample
+};
+
+// Callback function types for managed layer
 using VideoFrameCallback = void(__stdcall*)(const VideoFrameData* pFrameData);
 using AudioSampleCallback = void(__stdcall*)(const AudioSampleData* pSampleData);
 

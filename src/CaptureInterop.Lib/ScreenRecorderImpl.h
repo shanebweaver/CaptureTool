@@ -4,12 +4,6 @@
 #include "ICaptureSessionFactory.h"
 #include "CaptureSessionConfig.h"
 
-// Forward declarations for callback types from ScreenRecorder.h
-struct VideoFrameData;
-struct AudioSampleData;
-using VideoFrameCallback = void(__stdcall*)(const VideoFrameData* pFrameData);
-using AudioSampleCallback = void(__stdcall*)(const AudioSampleData* pSampleData);
-
 /// <summary>
 /// Implementation class for screen recording functionality.
 /// Manages the capture session lifecycle and callbacks to managed layer.
