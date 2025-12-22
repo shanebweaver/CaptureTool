@@ -21,10 +21,10 @@ ScreenRecorderImpl::ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> f
 
 ScreenRecorderImpl::ScreenRecorderImpl()
     : ScreenRecorderImpl(std::make_unique<WindowsGraphicsCaptureSessionFactory>(
-        new SimpleMediaClockFactory(),
-        new WindowsLocalAudioCaptureSourceFactory(),
-        new WindowsDesktopVideoCaptureSourceFactory(),
-        new WindowsMFMP4SinkWriterFactory()))
+        std::make_unique<SimpleMediaClockFactory>(),
+        std::make_unique<WindowsLocalAudioCaptureSourceFactory>(),
+        std::make_unique<WindowsDesktopVideoCaptureSourceFactory>(),
+        std::make_unique<WindowsMFMP4SinkWriterFactory>()))
 {
 }
 

@@ -9,6 +9,7 @@
 #include "IAudioCaptureSource.h"
 #include "IVideoCaptureSource.h"
 #include "CallbackTypes.h"
+#include "ICaptureSession.h"
 
 #include <mmreg.h>
 #include <strsafe.h>
