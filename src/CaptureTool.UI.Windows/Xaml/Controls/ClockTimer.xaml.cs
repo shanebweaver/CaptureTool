@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using System.Globalization;
-using System.Threading;
 
 namespace CaptureTool.UI.Windows.Xaml.Controls;
 
@@ -11,8 +10,8 @@ public sealed partial class ClockTimer : UserControlBase
     private static readonly FontFamily DefaultFontFamily = FontFamily.XamlAutoFontFamily;
     private static readonly double DefaultDigitWidth = 9d;
 
-    public static readonly DependencyProperty IsActiveProperty = DependencyProperty.Register(
-        nameof(IsActive), typeof(bool), typeof(ClockTimer), new PropertyMetadata(false, OnIsActiveChanged));
+    public static readonly DependencyProperty TimeProperty = DependencyProperty.Register(
+        nameof(Time), typeof(TimeSpan), typeof(ClockTimer), new PropertyMetadata(TimeSpan.Zero, OnTimeChanged));
 
     public static readonly DependencyProperty DigitFontSizeProperty = DependencyProperty.Register(
         nameof(DigitFontSize), typeof(double), typeof(ClockTimer), new PropertyMetadata(DefaultFontSize));
@@ -29,10 +28,10 @@ public sealed partial class ClockTimer : UserControlBase
     public static readonly DependencyProperty DigitWidthProperty = DependencyProperty.Register(
         nameof(DigitWidth), typeof(double), typeof(ClockTimer), new PropertyMetadata(DefaultDigitWidth));
 
-    public bool IsActive
+    public TimeSpan Time
     {
-        get => Get<bool>(IsActiveProperty);
-        set => Set(IsActiveProperty, value);
+        get => Get<TimeSpan>(TimeProperty);
+        set => Set(TimeProperty, value);
     }
 
     public double DigitFontSize
@@ -65,75 +64,33 @@ public sealed partial class ClockTimer : UserControlBase
         set => Set(DigitWidthProperty, value);
     }
 
-    private int _hours;
-    private int _minutes;
-    private int _seconds;
-    private Timer? _timer;
-
     public ClockTimer()
     {
         InitializeComponent();
-        UpdateDisplay();
+        UpdateDisplay(TimeSpan.Zero);
     }
 
-    private static void OnIsActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnTimeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is ClockTimer timer)
+        if (d is ClockTimer timer && e.NewValue is TimeSpan timeSpan)
         {
-            if ((bool)e.NewValue)
-                timer.StartTimer();
-            else
-                timer.StopTimer();
+            timer.UpdateDisplay(timeSpan);
         }
     }
 
-    private void StartTimer()
-    {
-        _timer = new Timer(OnTimerTick, null, 1000, 1000);
-    }
-
-    private void StopTimer()
-    {
-        _timer?.Dispose();
-        _timer = null;
-    }
-
-    private void OnTimerTick(object? state)
-    {
-        _ = DispatcherQueue.TryEnqueue(() =>
-        {
-            _seconds++;
-            if (_seconds >= 60)
-            {
-                _seconds = 0;
-                _minutes++;
-                if (_minutes >= 60)
-                {
-                    _minutes = 0;
-                    _hours++;
-                }
-            }
-            UpdateDisplay();
-        });
-    }
-
-    public void Reset()
-    {
-        _hours = 0;
-        _minutes = 0;
-        _seconds = 0;
-        UpdateDisplay();
-    }
-
-    private void UpdateDisplay()
+    private void UpdateDisplay(TimeSpan time)
     {
         var separator = CultureInfo.CurrentCulture.DateTimeFormat.TimeSeparator;
-        HoursTensText.Text = (_hours / 10).ToString();
-        HoursOnesText.Text = (_hours % 10).ToString();
-        MinutesTensText.Text = (_minutes / 10).ToString();
-        MinutesOnesText.Text = (_minutes % 10).ToString();
-        SecondsTensText.Text = (_seconds / 10).ToString();
-        SecondsOnesText.Text = (_seconds % 10).ToString();
+        int hours = (int)time.TotalHours;
+        int minutes = time.Minutes;
+        int seconds = time.Seconds;
+
+        HoursTensText.Text = (hours / 10).ToString();
+        HoursOnesText.Text = (hours % 10).ToString();
+        MinutesTensText.Text = (minutes / 10).ToString();
+        MinutesOnesText.Text = (minutes % 10).ToString();
+        SecondsTensText.Text = (seconds / 10).ToString();
+        SecondsOnesText.Text = (seconds % 10).ToString();
         Separator1.Text = separator;
         Separator2.Text = separator;
     }

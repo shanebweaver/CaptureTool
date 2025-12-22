@@ -39,6 +39,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private static readonly TimeSpan TimerInterval = TimeSpan.FromMilliseconds(100);
     private Timer? _timer;
     private DateTime _captureStartTime;
+    private TimeSpan _pausedDuration;
+    private DateTime? _pauseStartTime;
 
     public bool IsRecording
     {
@@ -177,6 +179,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
                 IsRecording = true;
                 CaptureTime = TimeSpan.Zero;
                 _captureStartTime = DateTime.UtcNow;
+                _pausedDuration = TimeSpan.Zero;
+                _pauseStartTime = null;
                 StartTimer();
                 NewCaptureArgs args = new(_monitorCaptureResult.Value, _captureArea.Value);
 
@@ -219,6 +223,17 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.TogglePauseResume, () =>
         {
             IsPaused = !IsPaused;
+
+            if (IsPaused)
+            {
+                _pauseStartTime = DateTime.UtcNow;
+            }
+            else if (_pauseStartTime.HasValue)
+            {
+                _pausedDuration += DateTime.UtcNow - _pauseStartTime.Value;
+                _pauseStartTime = null;
+            }
+
             _captureOverlayActions.TogglePauseResume();
         });
     }
@@ -241,6 +256,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void Timer_Elapsed(object? sender, ElapsedEventArgs e)
     {
-        CaptureTime = DateTime.UtcNow - _captureStartTime;
+        _taskEnvironment.TryExecute(() =>
+        {
+            if (IsRecording && !IsPaused)
+            {
+                CaptureTime = DateTime.UtcNow - _captureStartTime - _pausedDuration;
+            }
+        });
     }
 }

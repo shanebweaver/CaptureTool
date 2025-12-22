@@ -269,6 +269,22 @@ void WindowsGraphicsCaptureSession::Stop()
     m_isActive = false;
 }
 
+void WindowsGraphicsCaptureSession::Pause()
+{
+    if (m_isActive && m_mediaClock)
+    {
+        m_mediaClock->Pause();
+    }
+}
+
+void WindowsGraphicsCaptureSession::Resume()
+{
+    if (m_isActive && m_mediaClock)
+    {
+        m_mediaClock->Resume();
+    }
+}
+
 void WindowsGraphicsCaptureSession::ToggleAudioCapture(bool enabled)
 {
     // Only toggle if audio capture is currently running

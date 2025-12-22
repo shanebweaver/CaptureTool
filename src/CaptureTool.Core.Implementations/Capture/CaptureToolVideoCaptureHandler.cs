@@ -55,6 +55,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         }
 
         IsRecording = false;
+        IsPaused = false;
         string filePath = _tempVideoPath;
         _tempVideoPath = null;
 
@@ -97,6 +98,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         {
            _tempVideoPath = null;
             IsRecording = false;
+            IsPaused = false;
         }
     }
 

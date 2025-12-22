@@ -61,12 +61,18 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
 
 void ScreenRecorderImpl::PauseRecording()
 {
-    // Not implemented yet
+    if (m_captureSession && m_captureSession->IsActive())
+    {
+        m_captureSession->Pause();
+    }
 }
 
 void ScreenRecorderImpl::ResumeRecording()
 {
-    // Not implemented yet
+    if (m_captureSession && m_captureSession->IsActive())
+    {
+        m_captureSession->Resume();
+    }
 }
 
 void ScreenRecorderImpl::StopRecording()
