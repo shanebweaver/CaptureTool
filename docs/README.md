@@ -1,85 +1,49 @@
 # CaptureTool Documentation
 
-This directory contains documentation for CaptureTool's architecture, design patterns, and implementation details.
-
-## Architecture Documentation
+## Active Documentation
 
 ### [SESSION_ARCHITECTURE.md](SESSION_ARCHITECTURE.md)
-**Capture session architecture and design patterns.**
-- Core components (session, sources, clock, sink)
-- Architectural patterns (dependency injection, RAII, separation of concerns)
-- Lifecycle and data flow diagrams
+Capture session architecture and design patterns.
+- Core components and responsibilities
+- Architectural patterns (DI, RAII, separation of concerns)
+- Lifecycle and data flow
 - Shutdown sequence and thread safety
-- Key design decisions
-
-## Implementation Documentation
-
-### [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)
-**Start here!** High-level overview of the design, architecture, and key decisions.
-- Problem statement and solution approach
-- Architecture components and data flow
-- Key features and design decisions
-- Files changed and testing strategy
 
 ### [CALLBACK_PATTERN.md](CALLBACK_PATTERN.md)
-Complete usage guide and API reference.
-- Architecture diagram
-- C# usage examples
-- Data structure specifications
+API reference for real-time video/audio callback pattern.
+- Usage examples and data structures
 - Thread safety considerations
 - Performance characteristics
-- Extension points
 
-### [CALLBACK_FLOW.md](CALLBACK_FLOW.md)
-Visual flow diagrams and sequence diagrams.
-- High-level component diagram
-- Detailed sequence diagram
-- Thread context visualization
-- Key interaction points
+### [NEXT_IMPROVEMENTS.md](NEXT_IMPROVEMENTS.md) 🆕
+**Start here for new development!** Focused roadmap of remaining improvements.
+- Test doubles for unit testing
+- Clock pause/resume implementation
+- Dependency injection audit
+- Architecture polish
 
-### [CallbackExample.cs](CallbackExample.cs)
-Complete, working example code.
-- Full implementation showing callback usage
-- Proper lifetime management
-- Thread marshaling examples
-- Error handling patterns
-- Console application entry point
+## Archive
 
-### [SECURITY_CONSIDERATIONS.md](SECURITY_CONSIDERATIONS.md)
-Security analysis and best practices.
-- Potential security concerns identified
-- Mitigations implemented
-- Safe usage patterns
-- Security checklist
-- Recommendations for users
+Historical documentation from previous PRs has been moved to `docs/archive/`:
+- Implementation summaries (PRs #157, #162, #163)
+- Detailed recommendations (superseded by NEXT_IMPROVEMENTS.md)
+- Callback implementation details
 
-### [CAPTURE_SESSION_RECOMMENDATIONS.md](CAPTURE_SESSION_RECOMMENDATIONS.md)
-Comprehensive recommendations for improving capture session code.
-- Error handling with modern Result types
-- Testability improvements with mock implementations
-- State machine pattern for lifecycle management
-- Callback safety with RAII handle pattern
-- Modern C++ features (C++20/23)
-- Logging and observability
-- Configuration validation
-- Code organization best practices
+See [archive/README.md](archive/README.md) for details.
 
-**Quick Start**: See [RECOMMENDATIONS_SUMMARY.md](RECOMMENDATIONS_SUMMARY.md) for executive summary and implementation guide.
+---
 
 ## Quick Start
 
 ### For Understanding Architecture
 1. Read [SESSION_ARCHITECTURE.md](SESSION_ARCHITECTURE.md) for architectural overview
-2. Read [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) for implementation details
-3. Study [CallbackExample.cs](CallbackExample.cs) for usage patterns
-4. Review [CALLBACK_PATTERN.md](CALLBACK_PATTERN.md) for detailed API reference
-5. Check [SECURITY_CONSIDERATIONS.md](SECURITY_CONSIDERATIONS.md) for safety guidelines
+2. Review [CALLBACK_PATTERN.md](CALLBACK_PATTERN.md) for API reference
 
-### For Code Improvements
-1. Read [CAPTURE_SESSION_RECOMMENDATIONS.md](CAPTURE_SESSION_RECOMMENDATIONS.md) for modernization recommendations
-   - Focuses on testability, SOLID principles, and modern C++ features
-   - Includes code examples and prioritization
-   - Addresses error handling, state management, and callback safety
+### For New Development
+1. Read [NEXT_IMPROVEMENTS.md](NEXT_IMPROVEMENTS.md) for the roadmap
+   - See what's already been completed
+   - Understand remaining improvements and priorities
+   - Follow the implementation roadmap
 
 ## Key Concepts
 
@@ -176,8 +140,8 @@ When extending the callback pattern:
 
 ## Questions?
 
-For questions or issues with the callback pattern:
-1. Check the documentation in this directory
-2. Review the example code
-3. Examine the flow diagrams
-4. Consult the security considerations
+For questions or issues:
+1. Check [CALLBACK_PATTERN.md](CALLBACK_PATTERN.md) for API reference
+2. Check [SESSION_ARCHITECTURE.md](SESSION_ARCHITECTURE.md) for architecture
+3. Check [NEXT_IMPROVEMENTS.md](NEXT_IMPROVEMENTS.md) for development roadmap
+4. Check [archive/](archive/) for historical context and implementation details
