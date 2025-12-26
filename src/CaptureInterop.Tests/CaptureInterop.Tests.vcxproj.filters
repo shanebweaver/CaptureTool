@@ -45,9 +45,6 @@
     <ClCompile Include="ShutdownRaceConditionTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SilentAudioTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CaptureSessionStateTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
