@@ -198,7 +198,7 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
     
     // Initialize video stream
     // TODO: Use m_config.frameRate, m_config.videoBitrate, and m_config.audioBitrate when implementing encoder settings
-    if (!m_sinkWriter->Initialize(m_config.outputPath, device, width, height, &hr))
+    if (!m_sinkWriter->Initialize(m_config.outputPath.c_str(), device, width, height, &hr))
     {
         if (outHr) *outHr = hr;
         return false;

@@ -16,6 +16,12 @@ WindowsGraphicsCaptureSessionFactory::WindowsGraphicsCaptureSessionFactory(
 
 std::unique_ptr<ICaptureSession> WindowsGraphicsCaptureSessionFactory::CreateSession(const CaptureSessionConfig& config)
 {
+    // Validate configuration first (Guard pattern)
+    if (!config.IsValid())
+    {
+        return nullptr;
+    }
+
     // Create the media clock first
     auto mediaClock = m_mediaClockFactory->CreateClock();
     if (!mediaClock)
