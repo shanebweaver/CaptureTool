@@ -1,6 +1,7 @@
 # pragma once
 #include "IMediaClockAdvancer.h"
 #include <functional>
+#include <span>
 
 /// <summary>
 /// Event arguments for audio sample ready event.
@@ -8,10 +9,9 @@
 /// </summary>
 struct AudioSampleReadyEventArgs
 {
-    const BYTE* pData;          // Pointer to audio sample data
-    UINT32 numFrames;           // Number of audio frames in the sample
-    LONGLONG timestamp;         // Timestamp for this sample (100ns ticks)
-    WAVEFORMATEX* pFormat;      // Audio format for this sample
+    std::span<const uint8_t> data;  // Audio sample data (size = numFrames * nBlockAlign)
+    LONGLONG timestamp;             // Timestamp for this sample (100ns ticks)
+    WAVEFORMATEX* pFormat;          // Audio format for this sample
 };
 
 /// <summary>

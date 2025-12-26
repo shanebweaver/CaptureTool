@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "WindowsMFMP4SinkWriter.h"
+#include "MediaTimeConstants.h"
 
 WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter() = default;
 
@@ -248,8 +249,7 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
     if (m_prevVideoTimestamp == 0)
         m_prevVideoTimestamp = relativeTicks;
 
-    const LONGLONG TICKS_PER_SECOND = 10000000LL;
-    const LONGLONG frameDuration = TICKS_PER_SECOND / 30;
+    const LONGLONG frameDuration = MediaTimeConstants::TicksPerSecond() / 30;
 
     LONGLONG duration = relativeTicks - m_prevVideoTimestamp;
     if (duration <= 0) duration = frameDuration;
@@ -260,14 +260,14 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
     return m_sinkWriter->WriteSample(m_videoStreamIndex, sample.get());
 }
 
-long WindowsMFMP4SinkWriter::WriteAudioSample(const uint8_t* pData, uint32_t numFrames, int64_t timestamp)
+long WindowsMFMP4SinkWriter::WriteAudioSample(std::span<const uint8_t> data, int64_t timestamp)
 {
-    if (!m_sinkWriter || !m_hasAudioStream || !pData || numFrames == 0)
+    if (!m_sinkWriter || !m_hasAudioStream || data.empty())
     {
         return E_FAIL;
     }
 
-    UINT32 bufferSize = numFrames * m_audioFormat.nBlockAlign;
+    UINT32 bufferSize = static_cast<UINT32>(data.size());
 
     wil::com_ptr<IMFMediaBuffer> buffer;
     HRESULT hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
@@ -278,7 +278,7 @@ long WindowsMFMP4SinkWriter::WriteAudioSample(const uint8_t* pData, uint32_t num
     hr = buffer->Lock(&pBufferData, &maxLen, &curLen);
     if (FAILED(hr)) return hr;
 
-    memcpy(pBufferData, pData, bufferSize);
+    memcpy(pBufferData, data.data(), bufferSize);
     buffer->SetCurrentLength(bufferSize);
     buffer->Unlock();
 
@@ -289,8 +289,15 @@ long WindowsMFMP4SinkWriter::WriteAudioSample(const uint8_t* pData, uint32_t num
     sample->AddBuffer(buffer.get());
     sample->SetSampleTime(timestamp);
 
-    const LONGLONG TICKS_PER_SECOND = 10000000LL;
-    LONGLONG duration = (numFrames * TICKS_PER_SECOND) / m_audioFormat.nSamplesPerSec;
+    // Validate audio format to prevent division by zero
+    if (m_audioFormat.nBlockAlign == 0 || m_audioFormat.nSamplesPerSec == 0)
+    {
+        return E_FAIL;
+    }
+
+    // Calculate number of frames from buffer size
+    UINT32 numFrames = bufferSize / m_audioFormat.nBlockAlign;
+    LONGLONG duration = MediaTimeConstants::TicksFromAudioFrames(numFrames, m_audioFormat.nSamplesPerSec);
     
     sample->SetSampleDuration(duration);
 

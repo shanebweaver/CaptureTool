@@ -49,6 +49,19 @@ struct ConfigValidationResult
 /// 
 /// The configuration owns all its data (including the output path string),
 /// ensuring clear lifetime semantics and safe copying/moving.
+/// 
+/// Supports C++20 designated initializers for cleaner initialization:
+/// <code>
+/// CaptureSessionConfig config
+/// {
+///     .hMonitor = hMonitor,
+///     .outputPath = L"output.mp4",
+///     .audioEnabled = true,
+///     .frameRate = 30,
+///     .videoBitrate = 5'000'000,
+///     .audioBitrate = 128'000
+/// };
+/// </code>
 /// </summary>
 struct CaptureSessionConfig
 {
@@ -74,12 +87,12 @@ struct CaptureSessionConfig
     uint32_t frameRate;
 
     /// <summary>
-    /// Target video bitrate in bits per second. Default is 5000000 (5 Mbps).
+    /// Target video bitrate in bits per second. Default is 5'000'000 (5 Mbps).
     /// </summary>
     uint32_t videoBitrate;
 
     /// <summary>
-    /// Target audio bitrate in bits per second. Default is 128000 (128 kbps).
+    /// Target audio bitrate in bits per second. Default is 128'000 (128 kbps).
     /// </summary>
     uint32_t audioBitrate;
 
@@ -91,8 +104,8 @@ struct CaptureSessionConfig
         const wchar_t* path,
         bool audio = false,
         uint32_t fps = 30,
-        uint32_t vidBitrate = 5000000,
-        uint32_t audBitrate = 128000)
+        uint32_t vidBitrate = 5'000'000,
+        uint32_t audBitrate = 128'000)
         : hMonitor(monitor)
         , outputPath(path ? path : L"")
         , audioEnabled(audio)
@@ -110,8 +123,8 @@ struct CaptureSessionConfig
         std::wstring path,
         bool audio = false,
         uint32_t fps = 30,
-        uint32_t vidBitrate = 5000000,
-        uint32_t audBitrate = 128000)
+        uint32_t vidBitrate = 5'000'000,
+        uint32_t audBitrate = 128'000)
         : hMonitor(monitor)
         , outputPath(std::move(path))
         , audioEnabled(audio)
@@ -129,8 +142,8 @@ struct CaptureSessionConfig
         , outputPath(L"")
         , audioEnabled(false)
         , frameRate(30)
-        , videoBitrate(5000000)
-        , audioBitrate(128000)
+        , videoBitrate(5'000'000)
+        , audioBitrate(128'000)
     {
     }
 

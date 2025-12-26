@@ -115,9 +115,8 @@ void SimpleMediaClock::AdvanceByAudioSamples(UINT32 numFrames, UINT32 sampleRate
         return;
     }
 
-    // Calculate duration of audio samples in 100ns ticks
-    // Duration = (numFrames * TICKS_PER_SECOND) / sampleRate
-    LONGLONG duration = (static_cast<LONGLONG>(numFrames) * TICKS_PER_SECOND) / sampleRate;
+    // Calculate duration of audio samples in 100ns ticks using constexpr function
+    LONGLONG duration = MediaTimeConstants::TicksFromAudioFrames(numFrames, sampleRate);
 
     // Atomically advance the current time
     m_currentTime.fetch_add(duration);
@@ -130,6 +129,5 @@ void SimpleMediaClock::AdvanceByAudioSamples(UINT32 numFrames, UINT32 sampleRate
 LONGLONG SimpleMediaClock::QpcToTicks(LONGLONG qpcDelta) const
 {
     // Convert QPC ticks to 100ns units (REFERENCE_TIME)
-    // ticks = (qpcDelta * TICKS_PER_SECOND) / qpcFrequency
-    return (qpcDelta * TICKS_PER_SECOND) / m_qpcFrequency;
+    return (qpcDelta * MediaTimeConstants::TicksPerSecond()) / m_qpcFrequency;
 }

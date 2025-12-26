@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <span>
 #include <mmreg.h>
 
 // Forward declarations
@@ -48,11 +49,11 @@ public:
     /// Write an audio sample to the MP4 file.
     /// Audio is automatically encoded to AAC format by Media Foundation.
     /// </summary>
-    /// <param name="pData">Pointer to raw audio data (PCM or Float from WASAPI).</param>
-    /// <param name="numFrames">Number of audio frames (one sample per channel).</param>
+    /// <param name="data">Span of raw audio data (PCM or Float from WASAPI).
+    /// Size should be numFrames * bytesPerFrame, where bytesPerFrame = nBlockAlign from WAVEFORMATEX.</param>
     /// <param name="timestamp">Timestamp in 100-nanosecond units (from media clock).</param>
     /// <returns>S_OK on success, or error HRESULT.</returns>
-    virtual long WriteAudioSample(const uint8_t* pData, uint32_t numFrames, int64_t timestamp) = 0;
+    virtual long WriteAudioSample(std::span<const uint8_t> data, int64_t timestamp) = 0;
 
     /// <summary>
     /// Finalize and close the MP4 file.
