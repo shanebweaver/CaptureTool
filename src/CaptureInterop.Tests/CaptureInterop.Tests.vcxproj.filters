@@ -42,10 +42,10 @@
     <ClCompile Include="ResultTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SilentAudioTests.cpp">
+    <ClCompile Include="ShutdownRaceConditionTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ShutdownRaceConditionTests.cpp">
+    <ClCompile Include="CaptureSessionStateTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
