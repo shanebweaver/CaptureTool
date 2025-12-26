@@ -54,6 +54,11 @@ public:
     void ToggleAudioCapture(bool enabled) override;
     bool IsActive() const override { return m_isActive; }
 
+    // Initialization - must be called after construction and before Start()
+    // The factory calls this to initialize all sources and sink writer
+    // Returns true if initialization succeeded, false otherwise
+    bool Initialize(HRESULT* outHr = nullptr);
+
     // Callback management - can be called at any time, even during recording
     void SetVideoFrameCallback(VideoFrameCallback callback);
     void SetAudioSampleCallback(AudioSampleCallback callback);
@@ -62,6 +67,7 @@ private:
     // Helper methods for initialization
     bool InitializeSinkWriter(HRESULT* outHr);
     bool StartAudioCapture(HRESULT* outHr);
+    void SetupCallbacks();  // New helper to set up source callbacks
 
     // Configuration
     CaptureSessionConfig m_config;
@@ -80,6 +86,7 @@ private:
     
     // Session state
     bool m_isActive;
+    bool m_isInitialized;
     std::atomic<bool> m_isShuttingDown{false};
     
     // Callbacks stored as member variables for dynamic updates

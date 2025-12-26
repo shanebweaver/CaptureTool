@@ -28,6 +28,7 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     , m_videoCaptureSource(std::move(videoCaptureSource))
     , m_sinkWriter(std::move(sinkWriter))
     , m_isActive(false)
+    , m_isInitialized(false)
     , m_videoFrameCallback(nullptr)
     , m_audioSampleCallback(nullptr)
 {
@@ -40,25 +41,26 @@ WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
     DeleteCriticalSection(&m_callbackCriticalSection);
 }
 
-bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
+bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
 
-    // Validate that all required dependencies were provided
+    // Guard: Validate that all required dependencies were provided
     if (!m_mediaClock || !m_audioCaptureSource || !m_videoCaptureSource || !m_sinkWriter)
     {
         if (outHr) *outHr = E_FAIL;
         return false;
     }
 
+    // Guard: Prevent double initialization
+    if (m_isInitialized)
+    {
+        if (outHr) *outHr = S_OK;
+        return true;
+    }
+
     // Connect the audio source as the clock advancer so it drives the timeline
     m_mediaClock->SetClockAdvancer(m_audioCaptureSource.get());
-
-    // Start the media clock early
-    LARGE_INTEGER qpc;
-    QueryPerformanceCounter(&qpc);
-    LONGLONG startQpc = qpc.QuadPart;
-    m_mediaClock->Start(startQpc);
 
     // Initialize video capture source
     if (!m_videoCaptureSource->Initialize(&hr))
@@ -80,7 +82,17 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         if (outHr) *outHr = hr;
         return false;
     }
-    
+
+    // Set up callbacks for audio and video sources
+    SetupCallbacks();
+
+    m_isInitialized = true;
+    if (outHr) *outHr = S_OK;
+    return true;
+}
+
+void WindowsGraphicsCaptureSession::SetupCallbacks()
+{
     // Set up audio sample callback to write to sink writer and forward to managed layer
     m_audioCaptureSource->SetAudioSampleReadyCallback(
         [this](const AudioSampleReadyEventArgs& args) {
@@ -156,7 +168,32 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
             }
         }
     );
-    
+}
+
+bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
+{
+    HRESULT hr = S_OK;
+
+    // Guard: Session must be initialized before starting
+    if (!m_isInitialized)
+    {
+        if (outHr) *outHr = E_FAIL;
+        return false;
+    }
+
+    // Guard: Prevent starting if already active
+    if (m_isActive)
+    {
+        if (outHr) *outHr = S_OK;
+        return true;
+    }
+
+    // Start the media clock
+    LARGE_INTEGER qpc;
+    QueryPerformanceCounter(&qpc);
+    LONGLONG startQpc = qpc.QuadPart;
+    m_mediaClock->Start(startQpc);
+
     // Start audio capture
     if (!StartAudioCapture(&hr))
     {

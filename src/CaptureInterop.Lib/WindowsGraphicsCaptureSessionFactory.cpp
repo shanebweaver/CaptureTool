@@ -51,10 +51,20 @@ std::unique_ptr<ICaptureSession> WindowsGraphicsCaptureSessionFactory::CreateSes
     }
 
     // Create session with all dependencies - ownership is transferred to the session
-    return std::make_unique<WindowsGraphicsCaptureSession>(
+    auto session = std::make_unique<WindowsGraphicsCaptureSession>(
         config,
         std::move(mediaClock),
         std::move(audioCaptureSource),
         std::move(videoCaptureSource),
         std::move(sinkWriter));
+
+    // Initialize the session - this sets up all sources and sink writer
+    // If initialization fails, return nullptr (fail-fast)
+    HRESULT hr = S_OK;
+    if (!session->Initialize(&hr))
+    {
+        return nullptr;
+    }
+
+    return session;
 }
