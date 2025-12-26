@@ -15,6 +15,7 @@
 #include <strsafe.h>
 #include <d3d11.h>
 #include <Windows.h>
+#include <cassert>
 
 namespace {
     /// <summary>
@@ -65,7 +66,9 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
     // Validate dependencies
     if (!m_mediaClock || !m_audioCaptureSource || !m_videoCaptureSource || !m_sinkWriter)
     {
-        m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        // Transition should always succeed from Created to Failed
+        assert(transitioned && "Transition to Failed should always succeed from Created state");
         if (outHr) *outHr = E_FAIL;
         return false;
     }
@@ -76,14 +79,16 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
     // Initialize sources
     if (!m_videoCaptureSource->Initialize(&hr))
     {
-        m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Created state");
         if (outHr) *outHr = hr;
         return false;
     }
 
     if (!m_audioCaptureSource->Initialize(&hr))
     {
-        m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Created state");
         if (outHr) *outHr = hr;
         return false;
     }
@@ -91,7 +96,8 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
     // Initialize sink writer
     if (!InitializeSinkWriter(&hr))
     {
-        m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Created state");
         if (outHr) *outHr = hr;
         return false;
     }
@@ -195,7 +201,8 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     // Start audio capture
     if (!StartAudioCapture(&hr))
     {
-        m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Initialized state");
         if (outHr) *outHr = hr;
         return false;
     }
@@ -207,7 +214,8 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         {
             m_audioCaptureSource->Stop();
         }
-        m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Initialized state");
         if (outHr) *outHr = hr;
         return false;
     }

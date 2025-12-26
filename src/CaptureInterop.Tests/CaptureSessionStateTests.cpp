@@ -20,7 +20,7 @@ namespace CaptureInteropTests
             CaptureSessionStateMachine stateMachine;
             
             // Assert
-            Assert::IsTrue(stateMachine.GetState() == CaptureSessionState::Created, 
+            Assert::AreEqual(CaptureSessionState::Created, stateMachine.GetState(), 
                           L"Initial state should be Created");
             Assert::IsFalse(stateMachine.IsInitialized(), 
                            L"Should not be initialized in Created state");
@@ -40,7 +40,7 @@ namespace CaptureInteropTests
             // Assert
             Assert::IsTrue(canTransition, L"Should be able to transition from Created to Initialized");
             Assert::IsTrue(transitionSucceeded, L"Transition should succeed");
-            Assert::IsTrue(stateMachine.GetState() == CaptureSessionState::Initialized, 
+            Assert::AreEqual(CaptureSessionState::Initialized, stateMachine.GetState(), 
                           L"State should be Initialized");
             Assert::IsTrue(stateMachine.IsInitialized(), 
                           L"Should be initialized after transition");
@@ -59,7 +59,7 @@ namespace CaptureInteropTests
             // Assert
             Assert::IsTrue(canTransition, L"Should be able to transition from Initialized to Active");
             Assert::IsTrue(transitionSucceeded, L"Transition should succeed");
-            Assert::IsTrue(stateMachine.GetState() == CaptureSessionState::Active, 
+            Assert::AreEqual(CaptureSessionState::Active, stateMachine.GetState(), 
                           L"State should be Active");
             Assert::IsTrue(stateMachine.IsActive(), L"Should be active after transition");
         }
@@ -78,7 +78,7 @@ namespace CaptureInteropTests
             // Assert
             Assert::IsTrue(canTransition, L"Should be able to transition from Active to Paused");
             Assert::IsTrue(transitionSucceeded, L"Transition should succeed");
-            Assert::IsTrue(stateMachine.GetState() == CaptureSessionState::Paused, 
+            Assert::AreEqual(CaptureSessionState::Paused, stateMachine.GetState(), 
                           L"State should be Paused");
             Assert::IsTrue(stateMachine.IsActive(), 
                           L"Should still be considered active (can stop) when paused");
@@ -99,7 +99,7 @@ namespace CaptureInteropTests
             // Assert
             Assert::IsTrue(canTransition, L"Should be able to transition from Paused to Active");
             Assert::IsTrue(transitionSucceeded, L"Transition should succeed");
-            Assert::IsTrue(stateMachine.GetState() == CaptureSessionState::Active, 
+            Assert::AreEqual(CaptureSessionState::Active, stateMachine.GetState(), 
                           L"State should be Active");
         }
         
@@ -117,7 +117,7 @@ namespace CaptureInteropTests
             // Assert
             Assert::IsTrue(canTransition, L"Should be able to transition from Active to Stopped");
             Assert::IsTrue(transitionSucceeded, L"Transition should succeed");
-            Assert::IsTrue(stateMachine.GetState() == CaptureSessionState::Stopped, 
+            Assert::AreEqual(CaptureSessionState::Stopped, stateMachine.GetState(), 
                           L"State should be Stopped");
             Assert::IsFalse(stateMachine.IsActive(), L"Should not be active after stopping");
         }
@@ -135,7 +135,7 @@ namespace CaptureInteropTests
             
             // Assert
             Assert::IsTrue(transitionSucceeded, L"Should be able to transition from Paused to Stopped");
-            Assert::IsTrue(stateMachine.GetState() == CaptureSessionState::Stopped, 
+            Assert::AreEqual(CaptureSessionState::Stopped, stateMachine.GetState(), 
                           L"State should be Stopped");
         }
         
@@ -182,7 +182,7 @@ namespace CaptureInteropTests
             // Assert
             Assert::IsFalse(canTransition, L"Should not be able to skip Initialized state");
             Assert::IsFalse(transitionSucceeded, L"Transition should fail");
-            Assert::IsTrue(stateMachine.GetState() == CaptureSessionState::Created, 
+            Assert::AreEqual(CaptureSessionState::Created, stateMachine.GetState(), 
                           L"State should remain Created");
         }
         
@@ -199,7 +199,7 @@ namespace CaptureInteropTests
             // Assert
             Assert::IsFalse(canTransition, L"Cannot pause before activating");
             Assert::IsFalse(transitionSucceeded, L"Transition should fail");
-            Assert::IsTrue(stateMachine.GetState() == CaptureSessionState::Initialized, 
+            Assert::AreEqual(CaptureSessionState::Initialized, stateMachine.GetState(), 
                           L"State should remain Initialized");
         }
         
@@ -223,7 +223,7 @@ namespace CaptureInteropTests
             Assert::IsFalse(stateMachine.TryTransitionTo(CaptureSessionState::Failed), 
                            L"Cannot transition from Stopped to Failed");
             
-            Assert::IsTrue(stateMachine.GetState() == CaptureSessionState::Stopped, 
+            Assert::AreEqual(CaptureSessionState::Stopped, stateMachine.GetState(), 
                           L"State should remain Stopped");
         }
         
@@ -245,7 +245,7 @@ namespace CaptureInteropTests
             Assert::IsFalse(stateMachine.TryTransitionTo(CaptureSessionState::Stopped), 
                            L"Cannot transition from Failed to Stopped");
             
-            Assert::IsTrue(stateMachine.GetState() == CaptureSessionState::Failed, 
+            Assert::AreEqual(CaptureSessionState::Failed, stateMachine.GetState(), 
                           L"State should remain Failed");
         }
         
@@ -377,7 +377,7 @@ namespace CaptureInteropTests
             // Verify all machines ended in Stopped state
             for (const auto& machine : machines)
             {
-                Assert::IsTrue(machine->GetState() == CaptureSessionState::Stopped,
+                Assert::AreEqual(CaptureSessionState::Stopped, machine->GetState(),
                              L"All machines should be in Stopped state");
             }
         }

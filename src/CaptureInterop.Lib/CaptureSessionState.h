@@ -95,17 +95,27 @@ public:
     
     /// <summary>
     /// Attempt to transition to the specified state.
-    /// Uses release memory ordering to ensure all prior writes are visible.
+    /// Uses compare-and-swap to ensure atomic state transitions without race conditions.
     /// </summary>
-    /// <returns>True if transition succeeded, false if invalid transition.</returns>
+    /// <returns>True if transition succeeded, false if invalid transition or state changed concurrently.</returns>
     bool TryTransitionTo(CaptureSessionState newState)
     {
-        auto currentState = m_state.load(std::memory_order_acquire);
+        // Use compare-exchange loop to handle concurrent state changes
+        CaptureSessionState currentState = m_state.load(std::memory_order_acquire);
         
-        if (!IsValidTransition(currentState, newState))
-            return false;
+        do
+        {
+            // Check if transition is valid from current state
+            if (!IsValidTransition(currentState, newState))
+                return false;
             
-        m_state.store(newState, std::memory_order_release);
+            // Attempt to atomically update state if it hasn't changed
+            // If another thread changed the state, compare_exchange_weak will update currentState
+            // and we'll retry with the new current state
+        } while (!m_state.compare_exchange_weak(currentState, newState,
+                                                std::memory_order_release,
+                                                std::memory_order_acquire));
+        
         return true;
     }
     
