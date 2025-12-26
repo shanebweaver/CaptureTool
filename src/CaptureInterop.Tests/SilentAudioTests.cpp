@@ -2,6 +2,7 @@
 #include "CppUnitTest.h"
 #include "WindowsMFMP4SinkWriter.h"
 #include <dxgiformat.h>
+#include <span>
 #include <strsafe.h>
 #include <wchar.h>
 #include <d3d11.h>

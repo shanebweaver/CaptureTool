@@ -6,6 +6,7 @@
 #include "MediaTimeConstants.h"
 
 #include <mmreg.h>
+#include <span>
 #include <strsafe.h>
 #include <Audioclient.h>
 #include <Windows.h>
@@ -199,13 +200,12 @@ void AudioCaptureHandler::CaptureThreadProc()
                 }
                 
                 BYTE* pAudioData = pData;
+                UINT32 bufferSize = framesRead * format->nBlockAlign;
                 if (!m_isEnabled || (flags & AUDCLNT_BUFFERFLAGS_SILENT))
                 {
-                    UINT32 bufferSize = framesRead * format->nBlockAlign;
                     pAudioData = GetSilentBuffer(bufferSize);
                 }
                 
-                UINT32 bufferSize = framesRead * format->nBlockAlign;
                 AudioSampleReadyEventArgs args{};
                 args.data = std::span<const uint8_t>(pAudioData, bufferSize);
                 args.timestamp = timestamp;
