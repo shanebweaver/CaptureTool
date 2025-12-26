@@ -275,7 +275,8 @@ public:
     {
         if (!m_isPaused)
         {
-            LONGLONG delta = (numFrames * 10000000LL) / sampleRate;
+            constexpr LONGLONG TICKS_PER_SECOND = 10'000'000;
+            LONGLONG delta = (numFrames * TICKS_PER_SECOND) / sampleRate;
             m_currentTime += delta;
         }
     }
@@ -358,7 +359,16 @@ private:
     bool m_enabled = true;
     AudioSampleReadyCallback m_callback;
     IMediaClockWriter* m_clockWriter = nullptr;
-    WAVEFORMATEX m_format{ WAVE_FORMAT_PCM, 2, 48000, 192000, 4, 16, 0 };
+    // Default format: 16-bit stereo PCM at 48kHz
+    WAVEFORMATEX m_format{ 
+        WAVE_FORMAT_PCM,  // wFormatTag
+        2,                // nChannels (stereo)
+        48000,            // nSamplesPerSec
+        192000,           // nAvgBytesPerSec (48000 * 2 * 2)
+        4,                // nBlockAlign (2 channels * 2 bytes)
+        16,               // wBitsPerSample
+        0                 // cbSize
+    };
 };
 ```
 
@@ -1055,8 +1065,9 @@ public:
         if (m_logger)
         {
             auto metrics = GetMetrics();
-            m_logger->Info("Capture session started successfully - " +
-                          std::to_string(metrics.framesProcessed) + " frames processed", "Start");
+            std::string message = "Capture session started successfully - " +
+                                std::to_string(metrics.framesProcessed) + " frames processed";
+            m_logger->Info(message, "Start");
         }
         
         return true;

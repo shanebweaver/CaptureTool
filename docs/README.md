@@ -74,7 +74,7 @@ Comprehensive recommendations for improving capture session code.
 5. Check [SECURITY_CONSIDERATIONS.md](SECURITY_CONSIDERATIONS.md) for safety guidelines
 
 ### For Code Improvements
-6. Read [CAPTURE_SESSION_RECOMMENDATIONS.md](CAPTURE_SESSION_RECOMMENDATIONS.md) for modernization recommendations
+1. Read [CAPTURE_SESSION_RECOMMENDATIONS.md](CAPTURE_SESSION_RECOMMENDATIONS.md) for modernization recommendations
    - Focuses on testability, SOLID principles, and modern C++ features
    - Includes code examples and prioritization
    - Addresses error handling, state management, and callback safety
