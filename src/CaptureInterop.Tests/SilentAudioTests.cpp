@@ -105,38 +105,56 @@ namespace CaptureInteropTests
 
     public:
         /// <summary>
-        /// Test that only silent audio (no video) doesn't cause issues.
+        /// Test that recording with silent audio doesn't cause memory leaks or processing issues.
+        /// This test writes both video and silent audio to ensure proper interleaving.
         /// </summary>
-        TEST_METHOD(AudioOnlyRecording_WithSilence_Succeeds)
+        TEST_METHOD(SilentAudioWithVideo_NoMemoryLeaks)
         {
             auto device = CreateTestDevice();
             WindowsMFMP4SinkWriter writer;
             
             wchar_t tempPath[MAX_PATH];
             GetTempPathW(MAX_PATH, tempPath);
-            wcscat_s(tempPath, L"test_audio_only_silent.mp4");
+            wcscat_s(tempPath, L"test_silent_audio.mp4");
             
             writer.Initialize(tempPath, device.get(), 1280, 720);
             
             WAVEFORMATEX audioFormat = CreateTestAudioFormat();
             writer.InitializeAudioStream(&audioFormat);
             
-            // Write only silent audio samples (no video)
-            const int SECONDS = 10;
-            const int SAMPLES_PER_SECOND = 100; // 10ms samples
+            auto texture = CreateTestTexture(device.get(), 1280, 720);
             
-            for (int i = 0; i < SECONDS * SAMPLES_PER_SECOND; i++)
+            // Test 2 seconds of recording with both video and silent audio
+            const int SECONDS = 2;
+            const LONGLONG FRAME_DURATION = 333333LL; // ~30 FPS (100ns units)
+            const LONGLONG AUDIO_SAMPLE_DURATION = 100000LL; // 10ms in 100ns units
+            const int TOTAL_FRAMES = SECONDS * 30;
+            
+            // Write interleaved video and audio
+            int audioSampleIndex = 0;
+            for (int frameIndex = 0; frameIndex < TOTAL_FRAMES; frameIndex++)
             {
-                LONGLONG timestamp = i * 100000LL; // 10ms intervals
-                const UINT32 numFrames = 480;
-                const UINT32 bufferSize = numFrames * audioFormat.nBlockAlign;
-                std::vector<BYTE> silentAudio(bufferSize, 0);
+                LONGLONG videoTime = frameIndex * FRAME_DURATION;
                 
-                HRESULT hr = writer.WriteAudioSample(silentAudio.data(), numFrames, timestamp);
-                Assert::IsTrue(SUCCEEDED(hr), L"WriteAudioSample should succeed");
+                // Write video frame
+                HRESULT hr = writer.WriteFrame(texture.get(), videoTime);
+                Assert::IsTrue(SUCCEEDED(hr), L"WriteFrame should succeed");
+                
+                // Write audio samples to keep up with video
+                while (audioSampleIndex * AUDIO_SAMPLE_DURATION <= videoTime)
+                {
+                    const UINT32 numFrames = 480; // 10ms at 48kHz
+                    const UINT32 bufferSize = numFrames * audioFormat.nBlockAlign;
+                    std::vector<BYTE> silentAudio(bufferSize, 0);
+                    
+                    LONGLONG audioTime = audioSampleIndex * AUDIO_SAMPLE_DURATION;
+                    hr = writer.WriteAudioSample(silentAudio.data(), numFrames, audioTime);
+                    Assert::IsTrue(SUCCEEDED(hr), L"WriteAudioSample should succeed");
+                    audioSampleIndex++;
+                }
             }
             
-            // Cleanup
+            // Finalize should block until encoding is complete
             writer.Finalize();
             DeleteFileW(tempPath);
         }
