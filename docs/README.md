@@ -13,6 +13,14 @@ This directory contains comprehensive documentation for CaptureTool's architectu
 - Error handling and threading strategies
 - Evolution strategy and future considerations
 
+### [SESSION_ARCHITECTURE_ANALYSIS.md](SESSION_ARCHITECTURE_ANALYSIS.md)
+**Analysis of current capture session implementation against architectural goals.**
+- Current architecture overview and component analysis
+- Strengths: what's already aligned with goals
+- Areas for improvement: ownership, configuration, error handling, RAII
+- Detailed recommendations for each improvement area
+- Phased refactoring plan (low-risk to higher-risk changes)
+
 ## Implementation Documentation
 
 ### [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)
