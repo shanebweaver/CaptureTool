@@ -60,8 +60,7 @@ std::unique_ptr<ICaptureSession> WindowsGraphicsCaptureSessionFactory::CreateSes
 
     // Initialize the session - this sets up all sources and sink writer
     // If initialization fails, return nullptr (fail-fast)
-    HRESULT hr = S_OK;
-    if (!session->Initialize(&hr))
+    if (!session->Initialize())
     {
         return nullptr;
     }
