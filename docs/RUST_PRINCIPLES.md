@@ -166,4 +166,4 @@ This refactoring applies principles #3, #5, #6, and #9 to the session and clock 
 
 - [The Rust Programming Language Book](https://doc.rust-lang.org/book/)
 - [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/)
-- [Modern C++ Design Patterns](https://en.cppreference.com/w/cpp)
+- [C++ Reference](https://en.cppreference.com/w/cpp)

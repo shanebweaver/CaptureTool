@@ -67,6 +67,8 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
 void ScreenRecorderImpl::PauseRecording()
 {
     // Principle #3: Use HasActiveSession() for explicit null checking
+    // Note: Direct access to m_captureSession after check is safe because this class
+    // is documented to require single-threaded access (see class documentation).
     if (HasActiveSession() && m_captureSession->IsActive())
     {
         m_captureSession->Pause();

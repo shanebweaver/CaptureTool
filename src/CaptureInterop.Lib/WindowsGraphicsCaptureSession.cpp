@@ -45,9 +45,6 @@ WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
     // Principle #5 (RAII Everything): Destructor ensures all resources are cleaned up
     // automatically via the following chain:
     //
-    // NOTE: This is a snapshot of the cleanup chain as of this implementation.
-    // See individual component destructors for canonical behavior.
-    //
     // 1. Stop() explicitly releases runtime state:
     //    - Stops capture sources (calls source->Stop())
     //    - Clears callbacks
