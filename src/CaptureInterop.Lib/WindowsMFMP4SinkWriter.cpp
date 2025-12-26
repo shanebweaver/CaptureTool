@@ -289,6 +289,12 @@ long WindowsMFMP4SinkWriter::WriteAudioSample(std::span<const uint8_t> data, int
     sample->AddBuffer(buffer.get());
     sample->SetSampleTime(timestamp);
 
+    // Validate audio format to prevent division by zero
+    if (m_audioFormat.nBlockAlign == 0 || m_audioFormat.nSamplesPerSec == 0)
+    {
+        return E_FAIL;
+    }
+
     // Calculate number of frames from buffer size
     UINT32 numFrames = bufferSize / m_audioFormat.nBlockAlign;
     LONGLONG duration = MediaTimeConstants::TicksFromAudioFrames(numFrames, m_audioFormat.nSamplesPerSec);

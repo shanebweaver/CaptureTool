@@ -120,6 +120,13 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
                 return;
             }
 
+            // Validate audio format before processing
+            if (args.pFormat && (args.pFormat->nBlockAlign == 0 || args.pFormat->nSamplesPerSec == 0))
+            {
+                // Invalid audio format - skip this sample
+                return;
+            }
+
             // Write to sink writer
             HRESULT hr = m_sinkWriter->WriteAudioSample(args.data, args.timestamp);
                 
@@ -132,12 +139,6 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
             // Forward to registered callbacks if any exist
             if (args.pFormat && m_audioCallbackRegistry.HasCallbacks())
             {
-                // Guard against invalid audio format
-                if (args.pFormat->nBlockAlign == 0)
-                {
-                    return;
-                }
-                
                 AudioSampleData sampleData{};
                 sampleData.pData = args.data.data();
                 sampleData.numFrames = static_cast<UINT32>(args.data.size()) / args.pFormat->nBlockAlign;

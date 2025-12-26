@@ -108,6 +108,7 @@
     </ClCompile>
     <ClCompile Include="ResultTests.cpp" />
     <ClCompile Include="ShutdownRaceConditionTests.cpp" />
+    <ClCompile Include="SilentAudioTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

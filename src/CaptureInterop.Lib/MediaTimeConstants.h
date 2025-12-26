@@ -44,6 +44,7 @@ namespace MediaTimeConstants
 
     /// <summary>
     /// Calculate duration in ticks for a given number of audio frames at a sample rate.
+    /// Precondition: sampleRate must be greater than zero.
     /// </summary>
     constexpr int64_t TicksFromAudioFrames(uint32_t numFrames, uint32_t sampleRate) 
     { 
