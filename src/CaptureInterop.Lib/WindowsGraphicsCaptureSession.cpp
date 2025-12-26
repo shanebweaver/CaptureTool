@@ -1,13 +1,11 @@
 #include "pch.h"
 #include "WindowsGraphicsCaptureSession.h"
-#include "IAudioCaptureSourceFactory.h"
-#include "IVideoCaptureSourceFactory.h"
-#include "IMediaClockFactory.h"
-#include "CaptureSessionConfig.h"
-#include "IMP4SinkWriterFactory.h"
-#include "WindowsDesktopVideoCaptureSource.h"
 #include "IAudioCaptureSource.h"
 #include "IVideoCaptureSource.h"
+#include "IMediaClock.h"
+#include "CaptureSessionConfig.h"
+#include "IMP4SinkWriter.h"
+#include "WindowsDesktopVideoCaptureSource.h"
 #include "CallbackTypes.h"
 #include "ICaptureSession.h"
 
@@ -15,6 +13,7 @@
 #include <strsafe.h>
 #include <d3d11.h>
 #include <Windows.h>
+#include <cassert>
 
 namespace {
     /// <summary>
@@ -36,8 +35,7 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     , m_audioCaptureSource(std::move(audioCaptureSource))
     , m_videoCaptureSource(std::move(videoCaptureSource))
     , m_sinkWriter(std::move(sinkWriter))
-    , m_isActive(false)
-    , m_isInitialized(false)
+    , m_stateMachine() // Initializes in Created state
 {
 }
 
@@ -50,18 +48,27 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
 
-    // Validate dependencies
-    if (!m_mediaClock || !m_audioCaptureSource || !m_videoCaptureSource || !m_sinkWriter)
+    // Validate state - must be in Created state to initialize
+    if (m_stateMachine.GetState() != CaptureSessionState::Created)
     {
-        if (outHr) *outHr = E_FAIL;
+        // Already initialized or in invalid state
+        if (m_stateMachine.GetState() == CaptureSessionState::Initialized)
+        {
+            if (outHr) *outHr = S_OK;
+            return true;
+        }
+        if (outHr) *outHr = E_ILLEGAL_STATE_CHANGE;
         return false;
     }
 
-    // Prevent double initialization
-    if (m_isInitialized)
+    // Validate dependencies
+    if (!m_mediaClock || !m_audioCaptureSource || !m_videoCaptureSource || !m_sinkWriter)
     {
-        if (outHr) *outHr = S_OK;
-        return true;
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        // Transition should always succeed from Created to Failed
+        assert(transitioned && "Transition to Failed should always succeed from Created state");
+        if (outHr) *outHr = E_FAIL;
+        return false;
     }
 
     // Connect audio source as clock advancer
@@ -70,12 +77,16 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
     // Initialize sources
     if (!m_videoCaptureSource->Initialize(&hr))
     {
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Created state");
         if (outHr) *outHr = hr;
         return false;
     }
 
     if (!m_audioCaptureSource->Initialize(&hr))
     {
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Created state");
         if (outHr) *outHr = hr;
         return false;
     }
@@ -83,6 +94,8 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
     // Initialize sink writer
     if (!InitializeSinkWriter(&hr))
     {
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Created state");
         if (outHr) *outHr = hr;
         return false;
     }
@@ -90,7 +103,8 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
     // Setup callbacks
     SetupCallbacks();
 
-    m_isInitialized = true;
+    // Transition to Initialized state on success
+    m_stateMachine.TryTransitionTo(CaptureSessionState::Initialized);
     if (outHr) *outHr = S_OK;
     return true;
 }
@@ -164,17 +178,17 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
 
-    // Validate state
-    if (!m_isInitialized)
+    // Validate state - can only start from Initialized state
+    if (!m_stateMachine.CanTransitionTo(CaptureSessionState::Active))
     {
-        if (outHr) *outHr = E_FAIL;
+        // If already active, return success
+        if (m_stateMachine.GetState() == CaptureSessionState::Active)
+        {
+            if (outHr) *outHr = S_OK;
+            return true;
+        }
+        if (outHr) *outHr = E_ILLEGAL_STATE_CHANGE;
         return false;
-    }
-
-    if (m_isActive)
-    {
-        if (outHr) *outHr = S_OK;
-        return true;
     }
 
     // Start clock
@@ -185,6 +199,8 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     // Start audio capture
     if (!StartAudioCapture(&hr))
     {
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Initialized state");
         if (outHr) *outHr = hr;
         return false;
     }
@@ -196,11 +212,14 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
         {
             m_audioCaptureSource->Stop();
         }
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Initialized state");
         if (outHr) *outHr = hr;
         return false;
     }
 
-    m_isActive = true;
+    // Transition to Active state on success
+    m_stateMachine.TryTransitionTo(CaptureSessionState::Active);
     if (outHr) *outHr = S_OK;
     return true;
 }
@@ -268,7 +287,8 @@ bool WindowsGraphicsCaptureSession::StartAudioCapture(HRESULT* outHr)
 
 void WindowsGraphicsCaptureSession::Stop()
 {
-    if (!m_isActive)
+    // Check if session is active (Active or Paused state)
+    if (!m_stateMachine.IsActive())
     {
         return;
     }
@@ -319,23 +339,28 @@ void WindowsGraphicsCaptureSession::Stop()
         m_mediaClock->Reset();
     }
 
-    m_isActive = false;
+    // Transition to Stopped state
+    m_stateMachine.TryTransitionTo(CaptureSessionState::Stopped);
     m_isShuttingDown.store(false, std::memory_order_release);
 }
 
 void WindowsGraphicsCaptureSession::Pause()
 {
-    if (m_isActive && m_mediaClock)
+    // Can only pause from Active state
+    if (m_stateMachine.GetState() == CaptureSessionState::Active && m_mediaClock)
     {
         m_mediaClock->Pause();
+        m_stateMachine.TryTransitionTo(CaptureSessionState::Paused);
     }
 }
 
 void WindowsGraphicsCaptureSession::Resume()
 {
-    if (m_isActive && m_mediaClock)
+    // Can only resume from Paused state
+    if (m_stateMachine.GetState() == CaptureSessionState::Paused && m_mediaClock)
     {
         m_mediaClock->Resume();
+        m_stateMachine.TryTransitionTo(CaptureSessionState::Active);
     }
 }
 

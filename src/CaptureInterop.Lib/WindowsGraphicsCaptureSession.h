@@ -5,6 +5,7 @@
 #include "CaptureSessionConfig.h"
 #include "IMP4SinkWriter.h"
 #include "CallbackRegistry.h"
+#include "CaptureSessionState.h"
 #include <Windows.h>
 #include <memory>
 #include <atomic>
@@ -49,7 +50,7 @@ public:
     void Pause() override;
     void Resume() override;
     void ToggleAudioCapture(bool enabled) override;
-    bool IsActive() const override { return m_isActive; }
+    bool IsActive() const override { return m_stateMachine.IsActive(); }
 
     // Initialize sources and sink writer (called by factory after construction)
     bool Initialize(HRESULT* outHr = nullptr);
@@ -79,10 +80,9 @@ private:
     std::unique_ptr<IVideoCaptureSource> m_videoCaptureSource;
     std::unique_ptr<IMediaClock> m_mediaClock;
     
-    // State
-    bool m_isActive;
-    bool m_isInitialized;
-    std::atomic<bool> m_isShuttingDown{false};
+    // State management
+    CaptureSessionStateMachine m_stateMachine;
+    std::atomic<bool> m_isShuttingDown{false}; // For thread coordination during shutdown
     
     // Callbacks - using registry for safer lifetime management
     CaptureInterop::CallbackRegistry<VideoFrameData> m_videoCallbackRegistry;

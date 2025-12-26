@@ -96,6 +96,7 @@
     <ClCompile Include="CallbackRegistryTests.cpp" />
     <ClCompile Include="CallbackTests.cpp" />
     <ClCompile Include="CaptureSessionIntegrationTests.cpp" />
+    <ClCompile Include="CaptureSessionStateTests.cpp" />
     <ClCompile Include="ConfigValidationTests.cpp" />
     <ClCompile Include="MediaClockTests.cpp" />
     <ClCompile Include="MP4SinkWriterTests.cpp" />
