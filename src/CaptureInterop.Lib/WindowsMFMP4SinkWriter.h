@@ -1,5 +1,6 @@
 #pragma once
 #include "IMP4SinkWriter.h"
+#include <span>
 #include <wil/com.h>
 
 // Forward declarations
@@ -19,7 +20,7 @@ public:
     bool Initialize(const wchar_t* outputPath, ID3D11Device* device, uint32_t width, uint32_t height, long* outHr = nullptr) override;
     bool InitializeAudioStream(WAVEFORMATEX* audioFormat, long* outHr = nullptr) override;
     long WriteFrame(ID3D11Texture2D* texture, int64_t relativeTicks) override;
-    long WriteAudioSample(const uint8_t* pData, uint32_t numFrames, int64_t timestamp) override;
+    long WriteAudioSample(std::span<const uint8_t> data, int64_t timestamp) override;
     void Finalize() override;
 
     // Reference counting for COM-style usage

@@ -66,6 +66,9 @@
     <ClInclude Include="IMediaClock.h">
       <Filter>Header Files\MediaClock</Filter>
     </ClInclude>
+    <ClInclude Include="MediaTimeConstants.h">
+      <Filter>Header Files\MediaClock</Filter>
+    </ClInclude>
     <ClInclude Include="SimpleMediaClock.h">
       <Filter>Header Files\MediaClock</Filter>
     </ClInclude>

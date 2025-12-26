@@ -148,7 +148,7 @@ namespace CaptureInteropTests
                     std::vector<BYTE> silentAudio(bufferSize, 0);
                     
                     LONGLONG audioTime = audioSampleIndex * AUDIO_SAMPLE_DURATION;
-                    hr = writer.WriteAudioSample(silentAudio.data(), numFrames, audioTime);
+                    hr = writer.WriteAudioSample(std::span<const uint8_t>(silentAudio.data(), bufferSize), audioTime);
                     Assert::IsTrue(SUCCEEDED(hr), L"WriteAudioSample should succeed");
                     audioSampleIndex++;
                 }
@@ -201,7 +201,7 @@ namespace CaptureInteropTests
                     std::vector<BYTE> silentAudio(bufferSize, 0);
                     
                     LONGLONG audioTime = audioSampleIndex * AUDIO_SAMPLE_DURATION;
-                    hr = writer.WriteAudioSample(silentAudio.data(), numFrames, audioTime);
+                    hr = writer.WriteAudioSample(std::span<const uint8_t>(silentAudio.data(), bufferSize), audioTime);
                     Assert::IsTrue(SUCCEEDED(hr), L"WriteAudioSample should succeed");
                     audioSampleIndex++;
                 }

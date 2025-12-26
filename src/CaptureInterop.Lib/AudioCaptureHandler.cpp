@@ -3,6 +3,7 @@
 #include "IAudioCaptureSource.h"
 #include "IMediaClockWriter.h"
 #include "IMediaClockReader.h"
+#include "MediaTimeConstants.h"
 
 #include <mmreg.h>
 #include <strsafe.h>
@@ -96,14 +97,17 @@ WAVEFORMATEX* AudioCaptureHandler::GetFormat() const
 
 BYTE* AudioCaptureHandler::GetSilentBuffer(UINT32 requiredSize)
 {
-    static constexpr size_t BUFFER_GROWTH_FACTOR = 2;
+    namespace BufferConstants
+    {
+        constexpr size_t GrowthFactor() { return 2; }
+    }
     
     std::lock_guard<std::mutex> lock(m_silentBufferMutex);
     
     if (m_silentBuffer.size() < requiredSize)
     {
         // Resize with growth factor to reduce future reallocations
-        m_silentBuffer.resize(requiredSize * BUFFER_GROWTH_FACTOR, 0);
+        m_silentBuffer.resize(requiredSize * BufferConstants::GrowthFactor(), 0);
     }
     else
     {
@@ -129,8 +133,7 @@ void AudioCaptureHandler::CaptureThreadProc()
     }
     
     LONGLONG lastTimestamp = 0;
-    const LONGLONG TICKS_PER_SECOND = 10000000LL;
-    const UINT32 SLEEP_DURATION_MS = 10;
+    constexpr UINT32 SLEEP_DURATION_MS = 10;
     const UINT32 VIRTUAL_FRAMES_PER_SLEEP = (m_sampleRate * SLEEP_DURATION_MS) / 1000;
     
     // Track last clock advancement time for more accurate timing
@@ -163,7 +166,7 @@ void AudioCaptureHandler::CaptureThreadProc()
                 continue;
             }
             
-            LONGLONG duration = (framesRead * TICKS_PER_SECOND) / m_sampleRate;
+            LONGLONG duration = MediaTimeConstants::TicksFromAudioFrames(framesRead, m_sampleRate);
             
             // Check if callback is still valid and we're still running before invoking
             if (m_audioSampleReadyCallback && m_isRunning)
@@ -202,9 +205,9 @@ void AudioCaptureHandler::CaptureThreadProc()
                     pAudioData = GetSilentBuffer(bufferSize);
                 }
                 
+                UINT32 bufferSize = framesRead * format->nBlockAlign;
                 AudioSampleReadyEventArgs args{};
-                args.pData = pAudioData;
-                args.numFrames = framesRead;
+                args.data = std::span<const uint8_t>(pAudioData, bufferSize);
                 args.timestamp = timestamp;
                 args.pFormat = format;
                 
@@ -225,13 +228,14 @@ void AudioCaptureHandler::CaptureThreadProc()
             // This happens during silence - generate silent audio to maintain A/V sync
             QueryPerformanceCounter(&currentQpc);
             LONGLONG qpcElapsed = currentQpc.QuadPart - lastAdvanceQpc.QuadPart;
-            LONGLONG ticksElapsed = (qpcElapsed * TICKS_PER_SECOND) / qpcFreq.QuadPart;
+            LONGLONG ticksElapsed = (qpcElapsed * MediaTimeConstants::TicksPerSecond()) / qpcFreq.QuadPart;
             
             // If more than 10ms has elapsed since last advancement, generate silent audio
-            if (ticksElapsed >= 100000LL) // 10ms in 100ns ticks
+            constexpr LONGLONG TEN_MS_TICKS = MediaTimeConstants::TicksFromMilliseconds(10);
+            if (ticksElapsed >= TEN_MS_TICKS)
             {
                 // Calculate frames equivalent to elapsed time
-                UINT32 virtualFrames = (UINT32)((ticksElapsed * m_sampleRate) / TICKS_PER_SECOND);
+                UINT32 virtualFrames = (UINT32)((ticksElapsed * m_sampleRate) / MediaTimeConstants::TicksPerSecond());
                 
                 if (virtualFrames > 0)
                 {
@@ -254,14 +258,13 @@ void AudioCaptureHandler::CaptureThreadProc()
                             }
                             else
                             {
-                                LONGLONG duration = (virtualFrames * TICKS_PER_SECOND) / m_sampleRate;
+                                LONGLONG duration = MediaTimeConstants::TicksFromAudioFrames(virtualFrames, m_sampleRate);
                                 timestamp = lastTimestamp + duration;
                             }
                             
                             // Write silent audio to encoder
                             AudioSampleReadyEventArgs args{};
-                            args.pData = pSilentData;
-                            args.numFrames = virtualFrames;
+                            args.data = std::span<const uint8_t>(pSilentData, bufferSize);
                             args.timestamp = timestamp;
                             args.pFormat = format;
                             

@@ -1,5 +1,6 @@
 #pragma once
 #include "IMediaClock.h"
+#include "MediaTimeConstants.h"
 #include <atomic>
 #include <mutex>
 
@@ -71,9 +72,6 @@ private:
 
     // Mutex for thread-safe state transitions
     mutable std::mutex m_mutex;
-
-    // Constants
-    static constexpr LONGLONG TICKS_PER_SECOND = 10000000LL; // 100ns ticks per second
 
     // Helper methods
     LONGLONG QpcToTicks(LONGLONG qpcDelta) const;

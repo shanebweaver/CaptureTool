@@ -121,7 +121,7 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
             }
 
             // Write to sink writer
-            HRESULT hr = m_sinkWriter->WriteAudioSample(args.pData, args.numFrames, args.timestamp);
+            HRESULT hr = m_sinkWriter->WriteAudioSample(args.data, args.timestamp);
                 
             // Disable audio on write failure
             if (FAILED(hr))
@@ -133,8 +133,8 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
             if (args.pFormat && m_audioCallbackRegistry.HasCallbacks())
             {
                 AudioSampleData sampleData{};
-                sampleData.pData = args.pData;
-                sampleData.numFrames = args.numFrames;
+                sampleData.pData = args.data.data();
+                sampleData.numFrames = static_cast<UINT32>(args.data.size()) / args.pFormat->nBlockAlign;
                 sampleData.timestamp = args.timestamp;
                 sampleData.sampleRate = args.pFormat->nSamplesPerSec;
                 sampleData.channels = args.pFormat->nChannels;

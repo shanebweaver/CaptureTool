@@ -243,7 +243,7 @@ namespace CaptureInteropTests
             const UINT32 bufferSize = numFrames * audioFormat.nBlockAlign;
             std::vector<BYTE> audioData(bufferSize, 0);
             
-            HRESULT hr = writer.WriteAudioSample(audioData.data(), numFrames, 0);
+            HRESULT hr = writer.WriteAudioSample(std::span<const uint8_t>(audioData.data(), bufferSize), 0);
             
             Assert::IsTrue(SUCCEEDED(hr), L"WriteAudioSample should succeed");
             
@@ -264,7 +264,7 @@ namespace CaptureInteropTests
             writer.Initialize(tempPath, device.get(), 1280, 720);
             
             BYTE dummyData[100] = {};
-            HRESULT hr = writer.WriteAudioSample(dummyData, 10, 0);
+            HRESULT hr = writer.WriteAudioSample(std::span<const uint8_t>(dummyData, 100), 0);
             
             Assert::AreEqual(E_FAIL, hr);
             

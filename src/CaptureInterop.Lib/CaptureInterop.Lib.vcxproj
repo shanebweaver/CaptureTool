@@ -113,6 +113,7 @@
     <ClInclude Include="IMP4SinkWriterFactory.h" />
     <ClInclude Include="IVideoCaptureSource.h" />
     <ClInclude Include="IVideoCaptureSourceFactory.h" />
+    <ClInclude Include="MediaTimeConstants.h" />
     <ClInclude Include="Result.h" />
     <ClInclude Include="SimpleMediaClock.h" />
     <ClInclude Include="pch.h" />
