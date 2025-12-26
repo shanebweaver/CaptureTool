@@ -64,6 +64,8 @@ Comprehensive recommendations for improving capture session code.
 - Configuration validation
 - Code organization best practices
 
+**Quick Start**: See [RECOMMENDATIONS_SUMMARY.md](RECOMMENDATIONS_SUMMARY.md) for executive summary and implementation guide.
+
 ## Quick Start
 
 ### For Understanding Architecture
