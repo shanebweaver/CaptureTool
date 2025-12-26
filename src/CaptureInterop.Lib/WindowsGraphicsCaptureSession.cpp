@@ -94,12 +94,19 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
 void WindowsGraphicsCaptureSession::SetupCallbacks()
 {
     // Set up audio sample callback to write to sink writer and forward to managed layer
+    // 
+    // Lifetime Safety:
+    // - Lambda captures 'this' by value
+    // - 'm_isShuttingDown' flag ensures callbacks abort during shutdown
+    // - Stop() sequence: (1) set shutdown flag, (2) stop sources, (3) clear callbacks
+    // - Sources guarantee no callbacks after Stop() returns
+    // - Therefore, 'this' is always valid when callback executes
     m_audioCaptureSource->SetAudioSampleReadyCallback(
         [this](const AudioSampleReadyEventArgs& args) {
-            // Check if shutting down
+            // Check if shutting down (acquire memory order ensures visibility of Stop() changes)
             if (m_isShuttingDown.load(std::memory_order_acquire))
             {
-                return;  // Abort callback invocation
+                return;  // Abort callback invocation - session is shutting down
             }
 
             // Write audio sample to sink writer
@@ -134,12 +141,19 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
     );
     
     // Set up video frame callback to write to sink writer and forward to managed layer
+    // 
+    // Lifetime Safety:
+    // - Lambda captures 'this' by value
+    // - 'm_isShuttingDown' flag ensures callbacks abort during shutdown
+    // - Stop() sequence: (1) set shutdown flag, (2) stop sources, (3) clear callbacks
+    // - Sources guarantee no callbacks after Stop() returns
+    // - Therefore, 'this' is always valid when callback executes
     m_videoCaptureSource->SetVideoFrameReadyCallback(
         [this](const VideoFrameReadyEventArgs& args) {
-            // Check if shutting down
+            // Check if shutting down (acquire memory order ensures visibility of Stop() changes)
             if (m_isShuttingDown.load(std::memory_order_acquire))
             {
-                return;  // Abort callback invocation
+                return;  // Abort callback invocation - session is shutting down
             }
 
             // Write video frame to sink writer
@@ -291,9 +305,31 @@ void WindowsGraphicsCaptureSession::Stop()
         return;
     }
 
-    // Set shutdown flag FIRST (atomic operation)
+    // Shutdown Sequence (carefully ordered to ensure thread safety):
+    // 
+    // 1. Set shutdown flag FIRST (atomic operation with release semantics)
+    //    - All subsequent callback invocations will see this flag and abort immediately
+    //    - Memory order release ensures all writes before this are visible to other threads
+    //
+    // 2. Stop capture sources
+    //    - Sources stop generating new callbacks
+    //    - Wait for in-flight callbacks to complete
+    //
+    // 3. Clear callbacks
+    //    - Safe to clear because sources guarantee no more callbacks after Stop() returns
+    //
+    // 4. Finalize resources
+    //    - Flush encoder and finalize output file
+    //
+    // This sequence ensures:
+    // - No use-after-free: callbacks see shutdown flag before accessing member variables
+    // - No dangling callbacks: sources stopped before callbacks cleared
+    // - Thread safety: atomic flag with proper memory ordering
+    
+    // Step 1: Set shutdown flag (atomic store with release memory order)
     m_isShuttingDown.store(true, std::memory_order_release);
 
+    // Step 2: Stop capture sources (they wait for in-flight callbacks to complete)
     // Stop video capture first to prevent new frames from arriving
     if (m_videoCaptureSource)
     {
@@ -312,6 +348,7 @@ void WindowsGraphicsCaptureSession::Stop()
         m_mediaClock->Pause();
     }
 
+    // Step 3: Clear callbacks - safe now because sources have stopped and no more callbacks will fire
     // NOW it's safe to clear callbacks - no threads can invoke them
     if (m_audioCaptureSource)
     {
@@ -323,6 +360,7 @@ void WindowsGraphicsCaptureSession::Stop()
         m_videoCaptureSource->SetVideoFrameReadyCallback(nullptr);
     }
 
+    // Step 4: Finalize resources
     // Allow encoder time to process remaining queued frames (200ms for 6 frames at 30fps)
     Sleep(200);
 

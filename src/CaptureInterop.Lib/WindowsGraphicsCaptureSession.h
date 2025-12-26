@@ -60,8 +60,46 @@ public:
     // Returns true if initialization succeeded, false otherwise
     bool Initialize(HRESULT* outHr = nullptr);
 
-    // Callback management - can be called at any time, even during recording
+    /// <summary>
+    /// Set callback for video frame notifications.
+    /// 
+    /// Lifetime Contract:
+    /// - The callback will not be invoked after Stop() returns
+    /// - The callback may be invoked on any thread
+    /// - The callback must not block or take locks that could cause deadlock
+    /// - The session guarantees that `this` remains valid during callback execution
+    /// 
+    /// Thread Safety:
+    /// - This method is thread-safe and can be called at any time, even during recording
+    /// - The callback is protected by internal synchronization
+    /// 
+    /// Shutdown Behavior:
+    /// - Stop() sets shutdown flag, stops sources, then clears callbacks
+    /// - Callbacks check shutdown flag and abort if set
+    /// - No callbacks execute after Stop() returns
+    /// </summary>
+    /// <param name="callback">Function pointer to receive video frame data, or nullptr to clear</param>
     void SetVideoFrameCallback(VideoFrameCallback callback);
+
+    /// <summary>
+    /// Set callback for audio sample notifications.
+    /// 
+    /// Lifetime Contract:
+    /// - The callback will not be invoked after Stop() returns
+    /// - The callback may be invoked on any thread
+    /// - The callback must not block or take locks that could cause deadlock
+    /// - The session guarantees that `this` remains valid during callback execution
+    /// 
+    /// Thread Safety:
+    /// - This method is thread-safe and can be called at any time, even during recording
+    /// - The callback is protected by internal synchronization
+    /// 
+    /// Shutdown Behavior:
+    /// - Stop() sets shutdown flag, stops sources, then clears callbacks
+    /// - Callbacks check shutdown flag and abort if set
+    /// - No callbacks execute after Stop() returns
+    /// </summary>
+    /// <param name="callback">Function pointer to receive audio sample data, or nullptr to clear</param>
     void SetAudioSampleCallback(AudioSampleCallback callback);
 
 private:
