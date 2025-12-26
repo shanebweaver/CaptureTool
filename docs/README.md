@@ -53,13 +53,33 @@ Security analysis and best practices.
 - Security checklist
 - Recommendations for users
 
+### [CAPTURE_SESSION_RECOMMENDATIONS.md](CAPTURE_SESSION_RECOMMENDATIONS.md)
+Comprehensive recommendations for improving capture session code.
+- Error handling with modern Result types
+- Testability improvements with mock implementations
+- State machine pattern for lifecycle management
+- Callback safety with RAII handle pattern
+- Modern C++ features (C++20/23)
+- Logging and observability
+- Configuration validation
+- Code organization best practices
+
+**Quick Start**: See [RECOMMENDATIONS_SUMMARY.md](RECOMMENDATIONS_SUMMARY.md) for executive summary and implementation guide.
+
 ## Quick Start
 
+### For Understanding Architecture
 1. Read [SESSION_ARCHITECTURE.md](SESSION_ARCHITECTURE.md) for architectural overview
 2. Read [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) for implementation details
 3. Study [CallbackExample.cs](CallbackExample.cs) for usage patterns
 4. Review [CALLBACK_PATTERN.md](CALLBACK_PATTERN.md) for detailed API reference
 5. Check [SECURITY_CONSIDERATIONS.md](SECURITY_CONSIDERATIONS.md) for safety guidelines
+
+### For Code Improvements
+1. Read [CAPTURE_SESSION_RECOMMENDATIONS.md](CAPTURE_SESSION_RECOMMENDATIONS.md) for modernization recommendations
+   - Focuses on testability, SOLID principles, and modern C++ features
+   - Includes code examples and prioritization
+   - Addresses error handling, state management, and callback safety
 
 ## Key Concepts
 

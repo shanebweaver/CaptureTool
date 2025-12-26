@@ -27,10 +27,19 @@
     <ClCompile Include="AudioCaptureHandlerTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CallbackRegistryTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="CallbackTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CaptureSessionIntegrationTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigValidationTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ResultTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SilentAudioTests.cpp">

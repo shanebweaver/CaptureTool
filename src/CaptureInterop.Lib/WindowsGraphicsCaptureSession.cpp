@@ -38,8 +38,6 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     , m_sinkWriter(std::move(sinkWriter))
     , m_isActive(false)
     , m_isInitialized(false)
-    , m_videoFrameCallback(nullptr)
-    , m_audioSampleCallback(nullptr)
 {
 }
 
@@ -99,7 +97,7 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
 
 void WindowsGraphicsCaptureSession::SetupCallbacks()
 {
-    // Setup audio callback - writes to sink and forwards to managed layer
+    // Setup audio callback - writes to sink and forwards to registered callbacks
     m_audioCaptureSource->SetAudioSampleReadyCallback(
         [this](const AudioSampleReadyEventArgs& args) {
             // Abort if shutting down
@@ -117,14 +115,8 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
                 m_audioCaptureSource->SetEnabled(false);
             }
 
-            // Forward to managed layer
-            AudioSampleCallback callback;
-            {
-                std::lock_guard<std::mutex> lock(m_callbackMutex);
-                callback = m_audioSampleCallback;
-            }
-            
-            if (callback && args.pFormat)
+            // Forward to registered callbacks if any exist
+            if (args.pFormat && m_audioCallbackRegistry.HasCallbacks())
             {
                 AudioSampleData sampleData{};
                 sampleData.pData = args.pData;
@@ -134,12 +126,13 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
                 sampleData.channels = args.pFormat->nChannels;
                 sampleData.bitsPerSample = args.pFormat->wBitsPerSample;
                 
-                callback(&sampleData);
+                // Invoke all registered callbacks through registry
+                m_audioCallbackRegistry.Invoke(sampleData);
             }
         }
     );
     
-    // Setup video callback - writes to sink and forwards to managed layer
+    // Setup video callback - writes to sink and forwards to registered callbacks
     m_videoCaptureSource->SetVideoFrameReadyCallback(
         [this](const VideoFrameReadyEventArgs& args) {
             // Abort if shutting down
@@ -151,14 +144,8 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
             // Write to sink writer
             HRESULT hr = m_sinkWriter->WriteFrame(args.pTexture, args.timestamp);
 
-            // Forward to managed layer
-            VideoFrameCallback callback;
-            {
-                std::lock_guard<std::mutex> lock(m_callbackMutex);
-                callback = m_videoFrameCallback;
-            }
-            
-            if (callback)
+            // Forward to registered callbacks if any exist
+            if (m_videoCallbackRegistry.HasCallbacks())
             {
                 VideoFrameData frameData{};
                 frameData.pTexture = args.pTexture;
@@ -166,7 +153,8 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
                 frameData.width = m_videoCaptureSource->GetWidth();
                 frameData.height = m_videoCaptureSource->GetHeight();
                 
-                callback(&frameData);
+                // Invoke all registered callbacks through registry
+                m_videoCallbackRegistry.Invoke(frameData);
             }
         }
     );
@@ -304,7 +292,7 @@ void WindowsGraphicsCaptureSession::Stop()
         m_mediaClock->Pause();
     }
 
-    // Clear callbacks
+    // Clear callbacks from sources to stop invocations
     if (m_audioCaptureSource)
     {
         m_audioCaptureSource->SetAudioSampleReadyCallback(nullptr);
@@ -314,6 +302,12 @@ void WindowsGraphicsCaptureSession::Stop()
     {
         m_videoCaptureSource->SetVideoFrameReadyCallback(nullptr);
     }
+    
+    // Clear all registered callbacks through registry
+    // Note: The m_isShuttingDown flag ensures no callbacks are invoked after Stop() is called.
+    // Sources are stopped first, then callbacks are cleared, ensuring synchronization.
+    m_videoCallbackRegistry.Clear();
+    m_audioCallbackRegistry.Clear();
 
     // Finalize sink writer
     Sleep(ENCODER_DRAIN_TIMEOUT_MS);
@@ -355,12 +349,32 @@ void WindowsGraphicsCaptureSession::ToggleAudioCapture(bool enabled)
 
 void WindowsGraphicsCaptureSession::SetVideoFrameCallback(VideoFrameCallback callback)
 {
-    std::lock_guard<std::mutex> lock(m_callbackMutex);
-    m_videoFrameCallback = callback;
+    // Clear existing P/Invoke callbacks
+    m_videoCallbackRegistry.Clear();
+    
+    // Register new callback if provided
+    if (callback)
+    {
+        // Store handle to keep callback registered
+        // Note: Using a static ID since P/Invoke expects only one callback at a time
+        m_videoCallbackRegistry.Register([callback](const VideoFrameData& data) {
+            callback(const_cast<VideoFrameData*>(&data));
+        });
+    }
 }
 
 void WindowsGraphicsCaptureSession::SetAudioSampleCallback(AudioSampleCallback callback)
 {
-    std::lock_guard<std::mutex> lock(m_callbackMutex);
-    m_audioSampleCallback = callback;
+    // Clear existing P/Invoke callbacks
+    m_audioCallbackRegistry.Clear();
+    
+    // Register new callback if provided
+    if (callback)
+    {
+        // Store handle to keep callback registered
+        // Note: Using a static ID since P/Invoke expects only one callback at a time
+        m_audioCallbackRegistry.Register([callback](const AudioSampleData& data) {
+            callback(const_cast<AudioSampleData*>(&data));
+        });
+    }
 }
