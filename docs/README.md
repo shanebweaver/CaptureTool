@@ -1,8 +1,19 @@
-# Callback Pattern Documentation
+# CaptureTool Documentation
 
-This directory contains comprehensive documentation for the callback pattern implementation that exposes video frames and audio samples at the managed/native boundary.
+This directory contains comprehensive documentation for CaptureTool's architecture, design patterns, and implementation details.
 
-## Documents
+## Architecture Documentation
+
+### [ARCHITECTURE_GOALS.md](ARCHITECTURE_GOALS.md)
+**Architectural principles and design patterns for the capture pipeline.**
+- Core architectural principles (Separation of Concerns, Dependency Inversion, etc.)
+- Pattern catalog (RAII, Factory, Strategy, Observer, etc.)
+- Clean Architecture guidelines inspired by Rust patterns
+- Explicit ownership and lifetime management
+- Error handling and threading strategies
+- Evolution strategy and future considerations
+
+## Implementation Documentation
 
 ### [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)
 **Start here!** High-level overview of the design, architecture, and key decisions.
