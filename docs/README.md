@@ -1,25 +1,16 @@
 # CaptureTool Documentation
 
-This directory contains comprehensive documentation for CaptureTool's architecture, design patterns, and implementation details.
+This directory contains documentation for CaptureTool's architecture, design patterns, and implementation details.
 
 ## Architecture Documentation
 
-### [ARCHITECTURE_GOALS.md](ARCHITECTURE_GOALS.md)
-**Architectural principles and design patterns for the capture pipeline.**
-- Core architectural principles (Separation of Concerns, Dependency Inversion, etc.)
-- Pattern catalog (RAII, Factory, Strategy, Observer, etc.)
-- Clean Architecture guidelines inspired by Rust patterns
-- Explicit ownership and lifetime management
-- Error handling and threading strategies
-- Evolution strategy and future considerations
-
-### [SESSION_ARCHITECTURE_ANALYSIS.md](SESSION_ARCHITECTURE_ANALYSIS.md)
-**Analysis of current capture session implementation against architectural goals.**
-- Current architecture overview and component analysis
-- Strengths: what's already aligned with goals
-- Areas for improvement: ownership, configuration, error handling, RAII
-- Detailed recommendations for each improvement area
-- Phased refactoring plan (low-risk to higher-risk changes)
+### [SESSION_ARCHITECTURE.md](SESSION_ARCHITECTURE.md)
+**Capture session architecture and design patterns.**
+- Core components (session, sources, clock, sink)
+- Architectural patterns (dependency injection, RAII, separation of concerns)
+- Lifecycle and data flow diagrams
+- Shutdown sequence and thread safety
+- Key design decisions
 
 ## Implementation Documentation
 
@@ -64,10 +55,11 @@ Security analysis and best practices.
 
 ## Quick Start
 
-1. Read [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) for an overview
-2. Study [CallbackExample.cs](CallbackExample.cs) for usage patterns
-3. Review [CALLBACK_PATTERN.md](CALLBACK_PATTERN.md) for detailed API reference
-4. Check [SECURITY_CONSIDERATIONS.md](SECURITY_CONSIDERATIONS.md) for safety guidelines
+1. Read [SESSION_ARCHITECTURE.md](SESSION_ARCHITECTURE.md) for architectural overview
+2. Read [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) for implementation details
+3. Study [CallbackExample.cs](CallbackExample.cs) for usage patterns
+4. Review [CALLBACK_PATTERN.md](CALLBACK_PATTERN.md) for detailed API reference
+5. Check [SECURITY_CONSIDERATIONS.md](SECURITY_CONSIDERATIONS.md) for safety guidelines
 
 ## Key Concepts
 

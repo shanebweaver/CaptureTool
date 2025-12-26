@@ -41,58 +41,55 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     , m_videoFrameCallback(nullptr)
     , m_audioSampleCallback(nullptr)
 {
-    // std::mutex constructor handles initialization (RAII)
 }
 
 WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
 {
     Stop();
-    // std::mutex destructor handles cleanup (RAII)
 }
 
 bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
 
-    // Guard: Validate that all required dependencies were provided
+    // Validate dependencies
     if (!m_mediaClock || !m_audioCaptureSource || !m_videoCaptureSource || !m_sinkWriter)
     {
         if (outHr) *outHr = E_FAIL;
         return false;
     }
 
-    // Guard: Prevent double initialization
+    // Prevent double initialization
     if (m_isInitialized)
     {
         if (outHr) *outHr = S_OK;
         return true;
     }
 
-    // Connect the audio source as the clock advancer so it drives the timeline
+    // Connect audio source as clock advancer
     m_mediaClock->SetClockAdvancer(m_audioCaptureSource.get());
 
-    // Initialize video capture source
+    // Initialize sources
     if (!m_videoCaptureSource->Initialize(&hr))
     {
         if (outHr) *outHr = hr;
         return false;
     }
 
-    // Initialize audio capture source
     if (!m_audioCaptureSource->Initialize(&hr))
     {
         if (outHr) *outHr = hr;
         return false;
     }
 
-    // Initialize sink writer with video and audio streams
+    // Initialize sink writer
     if (!InitializeSinkWriter(&hr))
     {
         if (outHr) *outHr = hr;
         return false;
     }
 
-    // Set up callbacks for audio and video sources
+    // Setup callbacks
     SetupCallbacks();
 
     m_isInitialized = true;
@@ -102,32 +99,25 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
 
 void WindowsGraphicsCaptureSession::SetupCallbacks()
 {
-    // Set up audio sample callback to write to sink writer and forward to managed layer
-    // 
-    // Lifetime Safety:
-    // - Lambda captures 'this' by value
-    // - 'm_isShuttingDown' flag ensures callbacks abort during shutdown
-    // - Stop() sequence: (1) set shutdown flag, (2) stop sources, (3) clear callbacks
-    // - Sources guarantee no callbacks after Stop() returns
-    // - Therefore, 'this' is always valid when callback executes
+    // Setup audio callback - writes to sink and forwards to managed layer
     m_audioCaptureSource->SetAudioSampleReadyCallback(
         [this](const AudioSampleReadyEventArgs& args) {
-            // Check if shutting down (acquire memory order ensures visibility of Stop() changes)
+            // Abort if shutting down
             if (m_isShuttingDown.load(std::memory_order_acquire))
             {
-                return;  // Abort callback invocation - session is shutting down
+                return;
             }
 
-            // Write audio sample to sink writer
+            // Write to sink writer
             HRESULT hr = m_sinkWriter->WriteAudioSample(args.pData, args.numFrames, args.timestamp);
                 
-            // If write fails, disable audio to prevent further blocking
+            // Disable audio on write failure
             if (FAILED(hr))
             {
                 m_audioCaptureSource->SetEnabled(false);
             }
 
-            // Forward to managed layer if callback is set
+            // Forward to managed layer
             AudioSampleCallback callback;
             {
                 std::lock_guard<std::mutex> lock(m_callbackMutex);
@@ -149,34 +139,19 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
         }
     );
     
-    // Set up video frame callback to write to sink writer and forward to managed layer
-    // 
-    // Lifetime Safety:
-    // - Lambda captures 'this' by value
-    // - 'm_isShuttingDown' flag ensures callbacks abort during shutdown
-    // - Stop() sequence: (1) set shutdown flag, (2) stop sources, (3) clear callbacks
-    // - Sources guarantee no callbacks after Stop() returns
-    // - Therefore, 'this' is always valid when callback executes
+    // Setup video callback - writes to sink and forwards to managed layer
     m_videoCaptureSource->SetVideoFrameReadyCallback(
         [this](const VideoFrameReadyEventArgs& args) {
-            // Check if shutting down (acquire memory order ensures visibility of Stop() changes)
+            // Abort if shutting down
             if (m_isShuttingDown.load(std::memory_order_acquire))
             {
-                return;  // Abort callback invocation - session is shutting down
+                return;
             }
 
-            // Write video frame to sink writer
+            // Write to sink writer
             HRESULT hr = m_sinkWriter->WriteFrame(args.pTexture, args.timestamp);
-            
-            // If write fails, log or handle error
-            // Note: We don't stop video capture on write failure to maintain stability
-            if (FAILED(hr))
-            {
-                // Video frame write failed, but continue processing
-                // The sink writer will handle errors internally
-            }
 
-            // Forward to managed layer if callback is set
+            // Forward to managed layer
             VideoFrameCallback callback;
             {
                 std::lock_guard<std::mutex> lock(m_callbackMutex);
@@ -201,25 +176,23 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
 
-    // Guard: Session must be initialized before starting
+    // Validate state
     if (!m_isInitialized)
     {
         if (outHr) *outHr = E_FAIL;
         return false;
     }
 
-    // Guard: Prevent starting if already active
     if (m_isActive)
     {
         if (outHr) *outHr = S_OK;
         return true;
     }
 
-    // Start the media clock
+    // Start clock
     LARGE_INTEGER qpc;
     QueryPerformanceCounter(&qpc);
-    LONGLONG startQpc = qpc.QuadPart;
-    m_mediaClock->Start(startQpc);
+    m_mediaClock->Start(qpc.QuadPart);
 
     // Start audio capture
     if (!StartAudioCapture(&hr))
@@ -231,7 +204,6 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     // Start video capture
     if (!m_videoCaptureSource->Start(&hr))
     {
-        // If video capture fails, stop audio if it was started
         if (m_audioCaptureSource && m_audioCaptureSource->IsRunning())
         {
             m_audioCaptureSource->Stop();
@@ -255,20 +227,19 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
         return false;
     }
 
-    // Get video dimensions and device
+    // Get video properties
     UINT32 width = m_videoCaptureSource->GetWidth();
     UINT32 height = m_videoCaptureSource->GetHeight();
     ID3D11Device* device = static_cast<WindowsDesktopVideoCaptureSource*>(m_videoCaptureSource.get())->GetDevice();
     
     // Initialize video stream
-    // TODO: Use m_config.frameRate, m_config.videoBitrate, and m_config.audioBitrate when implementing encoder settings
     if (!m_sinkWriter->Initialize(m_config.outputPath.c_str(), device, width, height, &hr))
     {
         if (outHr) *outHr = hr;
         return false;
     }
     
-    // Initialize audio stream if audio source is available
+    // Initialize audio stream
     WAVEFORMATEX* audioFormat = m_audioCaptureSource->GetFormat();
     if (audioFormat)
     {
@@ -285,17 +256,17 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
 
 bool WindowsGraphicsCaptureSession::StartAudioCapture(HRESULT* outHr)
 {
-    // Only start if audio source exists and has a format (meaning it was initialized)
+    // Check if audio is available
     if (!m_audioCaptureSource || !m_audioCaptureSource->GetFormat())
     {
         if (outHr) *outHr = S_OK;
         return true;
     }
     
-    // Enable/disable audio based on config
+    // Apply audio enabled setting
     m_audioCaptureSource->SetEnabled(m_config.audioEnabled);
     
-    // Start audio capture
+    // Start audio
     HRESULT hr = S_OK;
     if (!m_audioCaptureSource->Start(&hr))
     {
@@ -314,51 +285,26 @@ void WindowsGraphicsCaptureSession::Stop()
         return;
     }
 
-    // Shutdown Sequence (carefully ordered to ensure thread safety):
-    // 
-    // 1. Set shutdown flag FIRST (atomic operation with release semantics)
-    //    - All subsequent callback invocations will see this flag and abort immediately
-    //    - Memory order release ensures all writes before this are visible to other threads
-    //
-    // 2. Stop capture sources
-    //    - Sources stop generating new callbacks
-    //    - Wait for in-flight callbacks to complete
-    //
-    // 3. Clear callbacks
-    //    - Safe to clear because sources guarantee no more callbacks after Stop() returns
-    //
-    // 4. Finalize resources
-    //    - Flush encoder and finalize output file
-    //
-    // This sequence ensures:
-    // - No use-after-free: callbacks see shutdown flag before accessing member variables
-    // - No dangling callbacks: sources stopped before callbacks cleared
-    // - Thread safety: atomic flag with proper memory ordering
-    
-    // Step 1: Set shutdown flag (atomic store with release memory order)
+    // Shutdown sequence: set flag, stop sources, clear callbacks, finalize
     m_isShuttingDown.store(true, std::memory_order_release);
 
-    // Step 2: Stop capture sources (they wait for in-flight callbacks to complete)
-    // Stop video capture first to prevent new frames from arriving
+    // Stop sources
     if (m_videoCaptureSource)
     {
         m_videoCaptureSource->Stop();
     }
 
-    // Stop audio capture
     if (m_audioCaptureSource)
     {
         m_audioCaptureSource->Stop();
     }
 
-    // Stop the clock after capture sources are stopped
     if (m_mediaClock)
     {
         m_mediaClock->Pause();
     }
 
-    // Step 3: Clear callbacks - safe now because sources have stopped and no more callbacks will fire
-    // NOW it's safe to clear callbacks - no threads can invoke them
+    // Clear callbacks
     if (m_audioCaptureSource)
     {
         m_audioCaptureSource->SetAudioSampleReadyCallback(nullptr);
@@ -369,14 +315,11 @@ void WindowsGraphicsCaptureSession::Stop()
         m_videoCaptureSource->SetVideoFrameReadyCallback(nullptr);
     }
 
-    // Step 4: Finalize resources
-    // Allow encoder time to process remaining queued frames
+    // Finalize sink writer
     Sleep(ENCODER_DRAIN_TIMEOUT_MS);
-
-    // Finalize MP4 file after queue is drained
     m_sinkWriter->Finalize();
 
-    // Reset the clock
+    // Reset clock
     if (m_mediaClock)
     {
         m_mediaClock->Reset();
@@ -404,7 +347,6 @@ void WindowsGraphicsCaptureSession::Resume()
 
 void WindowsGraphicsCaptureSession::ToggleAudioCapture(bool enabled)
 {
-    // Only toggle if audio capture is currently running
     if (m_audioCaptureSource && m_audioCaptureSource->IsRunning())
     {
         m_audioCaptureSource->SetEnabled(enabled);
