@@ -220,7 +220,5 @@ namespace CaptureInteropTests
             writer.Finalize();
             DeleteFileW(tempPath);
         }
-
-    private:
     };
 }
