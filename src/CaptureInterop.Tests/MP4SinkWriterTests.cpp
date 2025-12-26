@@ -265,7 +265,7 @@ namespace CaptureInteropTests
             writer.Initialize(tempPath, device.get(), 1280, 720);
             
             BYTE dummyData[100] = {};
-            HRESULT hr = writer.WriteAudioSample(std::span<const uint8_t>(dummyData, 100), 0);
+            HRESULT hr = writer.WriteAudioSample(std::span<const uint8_t>(dummyData, sizeof(dummyData)), 0);
             
             Assert::AreEqual(E_FAIL, hr);
             
