@@ -91,6 +91,8 @@
   <ItemGroup>
     <ClInclude Include="AudioCaptureDevice.h" />
     <ClInclude Include="AudioCaptureHandler.h" />
+    <ClInclude Include="CallbackHandle.h" />
+    <ClInclude Include="CallbackRegistry.h" />
     <ClInclude Include="CallbackTypes.h" />
     <ClInclude Include="CaptureSessionConfig.h" />
     <ClInclude Include="FrameArrivedHandler.h" />

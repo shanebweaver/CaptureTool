@@ -78,6 +78,12 @@
     <ClInclude Include="CaptureSessionConfig.h">
       <Filter>Header Files\CaptureSession</Filter>
     </ClInclude>
+    <ClInclude Include="CallbackHandle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CallbackRegistry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="CallbackTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -93,6 +93,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AudioCaptureHandlerTests.cpp" />
+    <ClCompile Include="CallbackRegistryTests.cpp" />
     <ClCompile Include="CallbackTests.cpp" />
     <ClCompile Include="CaptureSessionIntegrationTests.cpp" />
     <ClCompile Include="ConfigValidationTests.cpp" />

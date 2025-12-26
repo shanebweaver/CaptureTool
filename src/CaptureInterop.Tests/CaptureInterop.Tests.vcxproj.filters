@@ -27,6 +27,9 @@
     <ClCompile Include="AudioCaptureHandlerTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CallbackRegistryTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="CallbackTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

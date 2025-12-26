@@ -4,6 +4,7 @@
 #include "IMP4SinkWriterFactory.h"
 #include "CaptureSessionConfig.h"
 #include "IMP4SinkWriter.h"
+#include "CallbackRegistry.h"
 #include <Windows.h>
 #include <memory>
 #include <atomic>
@@ -83,8 +84,12 @@ private:
     bool m_isInitialized;
     std::atomic<bool> m_isShuttingDown{false};
     
-    // Callbacks
-    VideoFrameCallback m_videoFrameCallback;
-    AudioSampleCallback m_audioSampleCallback;
-    std::mutex m_callbackMutex;
+    // Callbacks - using registry for safer lifetime management
+    CaptureInterop::CallbackRegistry<VideoFrameData> m_videoCallbackRegistry;
+    CaptureInterop::CallbackRegistry<AudioSampleData> m_audioCallbackRegistry;
+    
+    // Legacy callback support for P/Invoke compatibility
+    VideoFrameCallback m_legacyVideoCallback;
+    AudioSampleCallback m_legacyAudioCallback;
+    std::mutex m_legacyCallbackMutex;
 };
