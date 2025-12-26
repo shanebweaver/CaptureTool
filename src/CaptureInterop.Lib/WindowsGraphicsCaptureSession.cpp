@@ -32,13 +32,13 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     , m_videoFrameCallback(nullptr)
     , m_audioSampleCallback(nullptr)
 {
-    InitializeCriticalSection(&m_callbackCriticalSection);
+    // std::mutex constructor handles initialization (RAII)
 }
 
 WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
 {
     Stop();
-    DeleteCriticalSection(&m_callbackCriticalSection);
+    // std::mutex destructor handles cleanup (RAII)
 }
 
 bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
@@ -112,9 +112,11 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
             }
 
             // Forward to managed layer if callback is set
-            EnterCriticalSection(&m_callbackCriticalSection);
-            AudioSampleCallback callback = m_audioSampleCallback;
-            LeaveCriticalSection(&m_callbackCriticalSection);
+            AudioSampleCallback callback;
+            {
+                std::lock_guard<std::mutex> lock(m_callbackMutex);
+                callback = m_audioSampleCallback;
+            }
             
             if (callback && args.pFormat)
             {
@@ -152,9 +154,11 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
             }
 
             // Forward to managed layer if callback is set
-            EnterCriticalSection(&m_callbackCriticalSection);
-            VideoFrameCallback callback = m_videoFrameCallback;
-            LeaveCriticalSection(&m_callbackCriticalSection);
+            VideoFrameCallback callback;
+            {
+                std::lock_guard<std::mutex> lock(m_callbackMutex);
+                callback = m_videoFrameCallback;
+            }
             
             if (callback)
             {
@@ -362,14 +366,13 @@ void WindowsGraphicsCaptureSession::ToggleAudioCapture(bool enabled)
 
 void WindowsGraphicsCaptureSession::SetVideoFrameCallback(VideoFrameCallback callback)
 {
-    EnterCriticalSection(&m_callbackCriticalSection);
+    std::lock_guard<std::mutex> lock(m_callbackMutex);
     m_videoFrameCallback = callback;
-    LeaveCriticalSection(&m_callbackCriticalSection);
 }
 
 void WindowsGraphicsCaptureSession::SetAudioSampleCallback(AudioSampleCallback callback)
 {
-    EnterCriticalSection(&m_callbackCriticalSection);
+    std::lock_guard<std::mutex> lock(m_callbackMutex);
     m_audioSampleCallback = callback;
-    LeaveCriticalSection(&m_callbackCriticalSection);
+}
 }

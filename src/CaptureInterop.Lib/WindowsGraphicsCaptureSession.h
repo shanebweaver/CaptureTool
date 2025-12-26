@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <memory>
 #include <atomic>
+#include <mutex>
 
 // Forward declarations
 class FrameArrivedHandler;
@@ -93,6 +94,6 @@ private:
     VideoFrameCallback m_videoFrameCallback;
     AudioSampleCallback m_audioSampleCallback;
     
-    // Mutex for thread-safe callback access
-    CRITICAL_SECTION m_callbackCriticalSection;
+    // Mutex for thread-safe callback access (RAII)
+    std::mutex m_callbackMutex;
 };
