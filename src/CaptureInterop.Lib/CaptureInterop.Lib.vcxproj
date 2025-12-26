@@ -95,6 +95,7 @@
     <ClInclude Include="CallbackRegistry.h" />
     <ClInclude Include="CallbackTypes.h" />
     <ClInclude Include="CaptureSessionConfig.h" />
+    <ClInclude Include="CaptureSessionState.h" />
     <ClInclude Include="ErrorInfo.h" />
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
