@@ -8,6 +8,38 @@
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
+// Add ToString specialization for CaptureSessionState to enable assertion output
+namespace Microsoft
+{
+    namespace VisualStudio
+    {
+        namespace CppUnitTestFramework
+        {
+            template<>
+            static std::wstring ToString<CaptureSessionState>(const CaptureSessionState& state)
+            {
+                switch (state)
+                {
+                case CaptureSessionState::Created:
+                    return L"Created";
+                case CaptureSessionState::Initialized:
+                    return L"Initialized";
+                case CaptureSessionState::Active:
+                    return L"Active";
+                case CaptureSessionState::Paused:
+                    return L"Paused";
+                case CaptureSessionState::Stopped:
+                    return L"Stopped";
+                case CaptureSessionState::Failed:
+                    return L"Failed";
+                default:
+                    return L"Unknown";
+                }
+            }
+        }
+    }
+}
+
 namespace CaptureInteropTests
 {
     TEST_CLASS(CaptureSessionStateTests)
