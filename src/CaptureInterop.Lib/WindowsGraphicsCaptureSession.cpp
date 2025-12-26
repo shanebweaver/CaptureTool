@@ -78,6 +78,8 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
 
     if (!m_audioCaptureSource->Initialize(&hr))
     {
+        // Cleanup video source on failure
+        m_videoCaptureSource->Shutdown();
         if (outHr) *outHr = hr;
         return false;
     }
@@ -85,6 +87,9 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
     // Initialize sink writer
     if (!InitializeSinkWriter(&hr))
     {
+        // Cleanup sources on failure
+        m_audioCaptureSource->Shutdown();
+        m_videoCaptureSource->Shutdown();
         if (outHr) *outHr = hr;
         return false;
     }
@@ -363,5 +368,4 @@ void WindowsGraphicsCaptureSession::SetAudioSampleCallback(AudioSampleCallback c
 {
     std::lock_guard<std::mutex> lock(m_callbackMutex);
     m_audioSampleCallback = callback;
-}
 }
