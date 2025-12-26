@@ -26,6 +26,19 @@ using AudioSampleCallback = void(__stdcall*)(const AudioSampleData* pSampleData)
 /// <summary>
 /// Windows Graphics Capture API implementation for screen recording with hardware acceleration.
 /// Dependencies are injected via constructor for clear ownership semantics.
+/// 
+/// Implements Rust Principles:
+/// - Principle #3 (No Nullable Pointers): Uses std::unique_ptr for all dependencies,
+///   ensuring resources are always valid after construction. No null checks needed
+///   in most methods because ownership guarantees validity.
+/// - Principle #5 (RAII Everything): Destructor automatically cleans up all resources
+///   (calls Stop() to release capture devices, buffers, and file handles).
+/// - Principle #6 (No Globals): All dependencies injected through constructor,
+///   no global session state. Each instance is independent.
+/// - Principle #9 (State Machine in Types): Uses CaptureSessionStateMachine to
+///   enforce valid state transitions and prevent misuse.
+/// 
+/// See docs/RUST_PRINCIPLES.md for more details on these principles.
 /// </summary>
 class WindowsGraphicsCaptureSession : public ICaptureSession
 {

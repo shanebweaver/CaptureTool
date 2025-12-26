@@ -17,6 +17,8 @@ ScreenRecorderImpl::ScreenRecorderImpl(std::unique_ptr<ICaptureSessionFactory> f
     : m_factory(std::move(factory))
     , m_captureSession(nullptr)
 {
+    // Principle #6 (No Globals): Factory is injected, not accessed as a singleton
+    // Principle #3 (No Nullable Pointers): Session starts as nullptr, will be created on demand
 }
 
 ScreenRecorderImpl::ScreenRecorderImpl()
@@ -26,11 +28,14 @@ ScreenRecorderImpl::ScreenRecorderImpl()
         std::make_unique<WindowsDesktopVideoCaptureSourceFactory>(),
         std::make_unique<WindowsMFMP4SinkWriterFactory>()))
 {
+    // Default constructor creates standard factory chain
+    // All dependencies are explicitly created and owned (Principle #6: No Globals)
 }
 
 ScreenRecorderImpl::~ScreenRecorderImpl()
 {
     StopRecording();
+    // Principle #5 (RAII Everything): Destructor ensures cleanup even if caller forgets
 }
 
 bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
@@ -61,7 +66,8 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
 
 void ScreenRecorderImpl::PauseRecording()
 {
-    if (m_captureSession && m_captureSession->IsActive())
+    // Principle #3: Use HasActiveSession() for explicit null checking
+    if (HasActiveSession() && m_captureSession->IsActive())
     {
         m_captureSession->Pause();
     }
@@ -69,7 +75,8 @@ void ScreenRecorderImpl::PauseRecording()
 
 void ScreenRecorderImpl::ResumeRecording()
 {
-    if (m_captureSession && m_captureSession->IsActive())
+    // Principle #3: Use HasActiveSession() for explicit null checking
+    if (HasActiveSession() && m_captureSession->IsActive())
     {
         m_captureSession->Resume();
     }
@@ -77,16 +84,19 @@ void ScreenRecorderImpl::ResumeRecording()
 
 void ScreenRecorderImpl::StopRecording()
 {
-    if (m_captureSession)
+    // Principle #3: Use HasActiveSession() for explicit null checking
+    if (HasActiveSession())
     {
         m_captureSession->Stop();
         m_captureSession.reset();
+        // Principle #5 (RAII): Session cleanup happens automatically via unique_ptr
     }
 }
 
 void ScreenRecorderImpl::ToggleAudioCapture(bool enabled)
 {
-    if (m_captureSession && m_captureSession->IsActive())
+    // Principle #3: Use HasActiveSession() for explicit null checking
+    if (HasActiveSession() && m_captureSession->IsActive())
     {
         m_captureSession->ToggleAudioCapture(enabled);
     }
@@ -94,7 +104,8 @@ void ScreenRecorderImpl::ToggleAudioCapture(bool enabled)
 
 void ScreenRecorderImpl::SetVideoFrameCallback(VideoFrameCallback callback)
 {
-    if (m_captureSession)
+    // Principle #3: Use HasActiveSession() for explicit null checking
+    if (HasActiveSession())
     {
         m_captureSession->SetVideoFrameCallback(callback);
     }
@@ -102,7 +113,8 @@ void ScreenRecorderImpl::SetVideoFrameCallback(VideoFrameCallback callback)
 
 void ScreenRecorderImpl::SetAudioSampleCallback(AudioSampleCallback callback)
 {
-    if (m_captureSession)
+    // Principle #3: Use HasActiveSession() for explicit null checking
+    if (HasActiveSession())
     {
         m_captureSession->SetAudioSampleCallback(callback);
     }

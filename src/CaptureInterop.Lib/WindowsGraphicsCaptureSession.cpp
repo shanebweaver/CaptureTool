@@ -42,6 +42,14 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
 WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
 {
     Stop();
+    // Principle #5 (RAII Everything): Destructor ensures all resources are cleaned up
+    // Stop() releases:
+    // - Capture device handles (video and audio sources)
+    // - Frame buffers
+    // - File handles (via sink writer finalization)
+    // - Clock state
+    // All dependencies (m_mediaClock, m_audioCaptureSource, etc.) are automatically
+    // cleaned up by their own destructors via std::unique_ptr
 }
 
 bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
@@ -64,6 +72,10 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
     // Validate dependencies
     if (!m_mediaClock || !m_audioCaptureSource || !m_videoCaptureSource || !m_sinkWriter)
     {
+        // Principle #3 (No Nullable Pointers): This check should never fail if the factory
+        // properly initialized all dependencies. After construction, we rely on the type
+        // system (std::unique_ptr) to guarantee these are non-null. This check is defensive
+        // programming for factory implementation errors.
         [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
         // Transition should always succeed from Created to Failed
         assert(transitioned && "Transition to Failed should always succeed from Created state");

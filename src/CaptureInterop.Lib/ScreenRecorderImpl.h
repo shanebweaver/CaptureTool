@@ -7,6 +7,23 @@
 /// <summary>
 /// Implementation class for screen recording functionality.
 /// Manages the capture session lifecycle and callbacks to managed layer.
+/// 
+/// Implements Rust Principles:
+/// - Principle #3 (No Nullable Pointers): Uses std::unique_ptr for session ownership.
+///   The session pointer is nullable by design (session only exists when recording),
+///   but we provide HasActiveSession() to make checks explicit rather than testing
+///   raw pointers.
+/// - Principle #5 (RAII Everything): Destructor calls StopRecording() to ensure
+///   proper cleanup even if caller forgets.
+/// - Principle #6 (No Globals): Session factory injected via constructor, no global
+///   recorder instance.
+/// 
+/// Ownership model:
+/// - ScreenRecorderImpl owns the ICaptureSessionFactory (lifetime of recorder)
+/// - ScreenRecorderImpl owns the ICaptureSession (lifetime of current recording)
+/// - Session is created in StartRecording() and destroyed in StopRecording()
+/// 
+/// See docs/RUST_PRINCIPLES.md for more details.
 /// </summary>
 class ScreenRecorderImpl
 {
@@ -72,6 +89,14 @@ public:
     /// </summary>
     /// <param name="callback">Callback function to receive audio samples.</param>
     void SetAudioSampleCallback(AudioSampleCallback callback);
+
+    /// <summary>
+    /// Check if there is an active recording session.
+    /// Provides explicit alternative to checking m_captureSession pointer.
+    /// Implements Principle #3: Make nullable states explicit.
+    /// </summary>
+    /// <returns>True if a session exists, false otherwise.</returns>
+    bool HasActiveSession() const { return m_captureSession != nullptr; }
 
 private:
     std::unique_ptr<ICaptureSession> m_captureSession;
