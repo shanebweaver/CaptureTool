@@ -45,6 +45,9 @@ WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
     // Principle #5 (RAII Everything): Destructor ensures all resources are cleaned up
     // automatically via the following chain:
     //
+    // NOTE: This is a snapshot of the cleanup chain as of this implementation.
+    // See individual component destructors for canonical behavior.
+    //
     // 1. Stop() explicitly releases runtime state:
     //    - Stops capture sources (calls source->Stop())
     //    - Clears callbacks
@@ -52,20 +55,12 @@ WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
     //    - Resets clock state
     //
     // 2. std::unique_ptr destructors automatically clean up owned objects:
-    //    - m_mediaClock destructor (no OS resources, just in-memory state)
-    //    - m_audioCaptureSource destructor:
-    //      * Calls WindowsLocalAudioCaptureSource::~WindowsLocalAudioCaptureSource()
-    //      * Which calls Stop() to release WASAPI audio client handles
-    //      * AudioCaptureHandler is unique_ptr, so its destructor auto-runs
-    //    - m_videoCaptureSource destructor:
-    //      * Calls WindowsDesktopVideoCaptureSource::~WindowsDesktopVideoCaptureSource()
-    //      * Which calls Stop() to release Windows Graphics Capture session
-    //      * wil::com_ptr auto-releases all COM objects (frame pool, capture session, D3D device)
-    //    - m_sinkWriter destructor:
-    //      * Calls WindowsMFMP4SinkWriter::~WindowsMFMP4SinkWriter()
-    //      * Which calls Finalize() to release Media Foundation sink writer
-    //      * wil::com_ptr auto-releases COM objects
+    //    - m_mediaClock: No OS resources, just in-memory state
+    //    - m_audioCaptureSource: Calls Stop() to release WASAPI handles
+    //    - m_videoCaptureSource: Calls Stop() to release Graphics Capture session
+    //    - m_sinkWriter: Calls Finalize() to release Media Foundation resources
     //
+    // All COM objects use wil::com_ptr for automatic reference counting.
     // No manual delete, free(), or Release() calls needed - the type system guarantees
     // proper cleanup through RAII. See docs/RUST_PRINCIPLES.md principle #5.
 }

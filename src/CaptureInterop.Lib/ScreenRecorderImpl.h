@@ -8,6 +8,10 @@
 /// Implementation class for screen recording functionality.
 /// Manages the capture session lifecycle and callbacks to managed layer.
 /// 
+/// Threading model: This class is NOT thread-safe. All public methods must be called
+/// from the same thread (typically the UI thread). The session is only modified through
+/// public methods and is never accessed concurrently.
+/// 
 /// Implements Rust Principles:
 /// - Principle #3 (No Nullable Pointers): Uses std::unique_ptr for session ownership.
 ///   The session pointer is nullable by design (session only exists when recording),
