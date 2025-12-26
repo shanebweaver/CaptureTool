@@ -7,14 +7,12 @@
 #include <Windows.h>
 #include <memory>
 #include <atomic>
+#include <mutex>
 
 // Forward declarations
 class FrameArrivedHandler;
 class IAudioCaptureSource;
 class IVideoCaptureSource;
-class IMediaClockFactory;
-class IAudioCaptureSourceFactory;
-class IVideoCaptureSourceFactory;
 class IMediaClock;
 
 // Callback data structures
@@ -24,19 +22,18 @@ using VideoFrameCallback = void(__stdcall*)(const VideoFrameData* pFrameData);
 using AudioSampleCallback = void(__stdcall*)(const AudioSampleData* pSampleData);
 
 /// <summary>
-/// Windows Graphics Capture API implementation of ICaptureSession.
-/// Uses Windows.Graphics.Capture for screen recording with hardware acceleration.
-/// Supports both video and audio capture with synchronized media streams.
+/// Windows Graphics Capture API implementation for screen recording with hardware acceleration.
+/// Dependencies are injected via constructor for clear ownership semantics.
 /// </summary>
 class WindowsGraphicsCaptureSession : public ICaptureSession
 {
 public:
     WindowsGraphicsCaptureSession(
         const CaptureSessionConfig& config,
-        IMediaClockFactory* mediaClockFactory,
-        IAudioCaptureSourceFactory* audioCaptureSourceFactory,
-        IVideoCaptureSourceFactory* videoCaptureSourceFactory,
-        IMP4SinkWriterFactory* mp4SinkWriterFactory);
+        std::unique_ptr<IMediaClock> mediaClock,
+        std::unique_ptr<IAudioCaptureSource> audioCaptureSource,
+        std::unique_ptr<IVideoCaptureSource> videoCaptureSource,
+        std::unique_ptr<IMP4SinkWriter> sinkWriter);
     ~WindowsGraphicsCaptureSession() override;
 
     // Delete copy and move operations
@@ -53,44 +50,41 @@ public:
     void ToggleAudioCapture(bool enabled) override;
     bool IsActive() const override { return m_isActive; }
 
-    // Callback management - can be called at any time, even during recording
+    // Initialize sources and sink writer (called by factory after construction)
+    bool Initialize(HRESULT* outHr = nullptr);
+
+    /// <summary>
+    /// Set callback for video frame notifications.
+    /// Thread-safe. Callback will not be invoked after Stop() returns.
+    /// </summary>
     void SetVideoFrameCallback(VideoFrameCallback callback);
+
+    /// <summary>
+    /// Set callback for audio sample notifications.
+    /// Thread-safe. Callback will not be invoked after Stop() returns.
+    /// </summary>
     void SetAudioSampleCallback(AudioSampleCallback callback);
 
 private:
-    // Helper methods for initialization
+    // Helper methods
     bool InitializeSinkWriter(HRESULT* outHr);
     bool StartAudioCapture(HRESULT* outHr);
+    void SetupCallbacks();
 
-    // Configuration
+    // Configuration and dependencies
     CaptureSessionConfig m_config;
-    
-    // Factories
-    IMediaClockFactory* m_mediaClockFactory;
-    IAudioCaptureSourceFactory* m_audioCaptureSourceFactory;
-    IVideoCaptureSourceFactory* m_videoCaptureSourceFactory;
-    IMP4SinkWriterFactory* m_mp4SinkWriterFactory;
-    
-    // Media output
     std::unique_ptr<IMP4SinkWriter> m_sinkWriter;
-    
-    // Audio capture
     std::unique_ptr<IAudioCaptureSource> m_audioCaptureSource;
-    
-    // Video capture
     std::unique_ptr<IVideoCaptureSource> m_videoCaptureSource;
-    
-    // Media clock for A/V synchronization
     std::unique_ptr<IMediaClock> m_mediaClock;
     
-    // Session state
+    // State
     bool m_isActive;
+    bool m_isInitialized;
     std::atomic<bool> m_isShuttingDown{false};
     
-    // Callbacks stored as member variables for dynamic updates
+    // Callbacks
     VideoFrameCallback m_videoFrameCallback;
     AudioSampleCallback m_audioSampleCallback;
-    
-    // Mutex for thread-safe callback access
-    CRITICAL_SECTION m_callbackCriticalSection;
+    std::mutex m_callbackMutex;
 };

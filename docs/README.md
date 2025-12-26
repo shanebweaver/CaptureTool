@@ -1,8 +1,18 @@
-# Callback Pattern Documentation
+# CaptureTool Documentation
 
-This directory contains comprehensive documentation for the callback pattern implementation that exposes video frames and audio samples at the managed/native boundary.
+This directory contains documentation for CaptureTool's architecture, design patterns, and implementation details.
 
-## Documents
+## Architecture Documentation
+
+### [SESSION_ARCHITECTURE.md](SESSION_ARCHITECTURE.md)
+**Capture session architecture and design patterns.**
+- Core components (session, sources, clock, sink)
+- Architectural patterns (dependency injection, RAII, separation of concerns)
+- Lifecycle and data flow diagrams
+- Shutdown sequence and thread safety
+- Key design decisions
+
+## Implementation Documentation
 
 ### [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)
 **Start here!** High-level overview of the design, architecture, and key decisions.
@@ -45,10 +55,11 @@ Security analysis and best practices.
 
 ## Quick Start
 
-1. Read [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) for an overview
-2. Study [CallbackExample.cs](CallbackExample.cs) for usage patterns
-3. Review [CALLBACK_PATTERN.md](CALLBACK_PATTERN.md) for detailed API reference
-4. Check [SECURITY_CONSIDERATIONS.md](SECURITY_CONSIDERATIONS.md) for safety guidelines
+1. Read [SESSION_ARCHITECTURE.md](SESSION_ARCHITECTURE.md) for architectural overview
+2. Read [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) for implementation details
+3. Study [CallbackExample.cs](CallbackExample.cs) for usage patterns
+4. Review [CALLBACK_PATTERN.md](CALLBACK_PATTERN.md) for detailed API reference
+5. Check [SECURITY_CONSIDERATIONS.md](SECURITY_CONSIDERATIONS.md) for safety guidelines
 
 ## Key Concepts
 

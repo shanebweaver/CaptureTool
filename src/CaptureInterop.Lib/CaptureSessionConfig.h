@@ -2,10 +2,14 @@
 #include "pch.h"
 #include <Windows.h>
 #include <cstdint>
+#include <string>
 
 /// <summary>
 /// Configuration settings for a capture session.
 /// Contains all parameters needed to initialize and configure screen recording.
+/// 
+/// The configuration owns all its data (including the output path string),
+/// ensuring clear lifetime semantics and safe copying/moving.
 /// </summary>
 struct CaptureSessionConfig
 {
@@ -16,8 +20,9 @@ struct CaptureSessionConfig
 
     /// <summary>
     /// Path to the output MP4 file.
+    /// The config owns this string, ensuring clear lifetime semantics.
     /// </summary>
-    const wchar_t* outputPath;
+    std::wstring outputPath;
 
     /// <summary>
     /// Whether to capture system audio.
@@ -50,7 +55,26 @@ struct CaptureSessionConfig
         uint32_t vidBitrate = 5000000,
         uint32_t audBitrate = 128000)
         : hMonitor(monitor)
-        , outputPath(path)
+        , outputPath(path ? path : L"")
+        , audioEnabled(audio)
+        , frameRate(fps)
+        , videoBitrate(vidBitrate)
+        , audioBitrate(audBitrate)
+    {
+    }
+
+    /// <summary>
+    /// Constructor with std::wstring path for better ownership semantics.
+    /// </summary>
+    CaptureSessionConfig(
+        HMONITOR monitor,
+        std::wstring path,
+        bool audio = false,
+        uint32_t fps = 30,
+        uint32_t vidBitrate = 5000000,
+        uint32_t audBitrate = 128000)
+        : hMonitor(monitor)
+        , outputPath(std::move(path))
         , audioEnabled(audio)
         , frameRate(fps)
         , videoBitrate(vidBitrate)
@@ -63,11 +87,20 @@ struct CaptureSessionConfig
     /// </summary>
     CaptureSessionConfig()
         : hMonitor(nullptr)
-        , outputPath(nullptr)
+        , outputPath(L"")
         , audioEnabled(false)
         , frameRate(30)
         , videoBitrate(5000000)
         , audioBitrate(128000)
     {
+    }
+
+    /// <summary>
+    /// Validate that the configuration has valid values.
+    /// </summary>
+    /// <returns>True if configuration is valid, false otherwise.</returns>
+    bool IsValid() const
+    {
+        return hMonitor != nullptr && !outputPath.empty();
     }
 };

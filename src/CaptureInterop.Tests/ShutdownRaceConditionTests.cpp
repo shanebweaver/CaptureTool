@@ -25,6 +25,13 @@ namespace CaptureInteropTests
         static std::atomic<int> s_callbacksDuringShutdown;
         static std::atomic<bool> s_crashDetected;
 
+        // Helper function to get primary monitor
+        static HMONITOR GetPrimaryMonitor()
+        {
+            POINT pt = { 0, 0 };
+            return MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
+        }
+
     public:
         TEST_CLASS_INITIALIZE(ClassInitialize)
         {
@@ -47,30 +54,37 @@ namespace CaptureInteropTests
             {
                 try
                 {
-                    // Create a minimal capture session
-                    CaptureSessionConfig config;
-                    config.outputPath = L"test_output.mp4";
-                    config.audioEnabled = true;
-                    config.frameRate = 30;
-                    config.videoBitrate = 5000000;
-                    config.audioBitrate = 192000;
-
-                    SimpleMediaClockFactory clockFactory;
-                    WindowsLocalAudioCaptureSourceFactory audioFactory;
-                    WindowsDesktopVideoCaptureSourceFactory videoFactory;
-                    WindowsMFMP4SinkWriterFactory sinkFactory;
-
-                    WindowsGraphicsCaptureSession session(
-                        config,
-                        &clockFactory,
-                        &audioFactory,
-                        &videoFactory,
-                        &sinkFactory
+                    // Create a minimal capture session using the constructor
+                    CaptureSessionConfig config(
+                        GetPrimaryMonitor(),
+                        L"test_output.mp4",
+                        true,   // audioEnabled
+                        30,     // frameRate
+                        5000000, // videoBitrate
+                        192000  // audioBitrate
                     );
+
+                    // Create factory and use it to create session
+                    WindowsGraphicsCaptureSessionFactory factory(
+                        std::make_unique<SimpleMediaClockFactory>(),
+                        std::make_unique<WindowsLocalAudioCaptureSourceFactory>(),
+                        std::make_unique<WindowsDesktopVideoCaptureSourceFactory>(),
+                        std::make_unique<WindowsMFMP4SinkWriterFactory>()
+                    );
+
+                    auto session = factory.CreateSession(config);
+                    if (!session)
+                    {
+                        // Session creation failed (likely invalid config)
+                        char msg[256];
+                        sprintf_s(msg, "[ShutdownRace] Cycle %d: Cannot create session - skipping test", i + 1);
+                        Logger::WriteMessage(msg);
+                        return;
+                    }
 
                     // Start the session
                     HRESULT hr;
-                    bool started = session.Start(&hr);
+                    bool started = session->Start(&hr);
                     
                     if (!started)
                     {
@@ -86,7 +100,7 @@ namespace CaptureInteropTests
                     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
                     // Stop immediately - this is where the race condition would occur
-                    session.Stop();
+                    session->Stop();
 
                     successfulCycles++;
                     
@@ -123,28 +137,33 @@ namespace CaptureInteropTests
             s_callbackInvocations = 0;
             s_callbacksDuringShutdown = 0;
 
-            CaptureSessionConfig config;
-            config.outputPath = L"test_output2.mp4";
-            config.audioEnabled = true;
-            config.frameRate = 30;
-            config.videoBitrate = 5000000;
-            config.audioBitrate = 192000;
-
-            SimpleMediaClockFactory clockFactory;
-            WindowsLocalAudioCaptureSourceFactory audioFactory;
-            WindowsDesktopVideoCaptureSourceFactory videoFactory;
-            WindowsMFMP4SinkWriterFactory sinkFactory;
-
-            WindowsGraphicsCaptureSession session(
-                config,
-                &clockFactory,
-                &audioFactory,
-                &videoFactory,
-                &sinkFactory
+            // Create config using constructor
+            CaptureSessionConfig config(
+                GetPrimaryMonitor(),
+                L"test_output2.mp4",
+                true,   // audioEnabled
+                30,     // frameRate
+                5000000, // videoBitrate
+                192000  // audioBitrate
             );
 
+            // Create factory and use it to create session
+            WindowsGraphicsCaptureSessionFactory factory(
+                std::make_unique<SimpleMediaClockFactory>(),
+                std::make_unique<WindowsLocalAudioCaptureSourceFactory>(),
+                std::make_unique<WindowsDesktopVideoCaptureSourceFactory>(),
+                std::make_unique<WindowsMFMP4SinkWriterFactory>()
+            );
+
+            auto session = factory.CreateSession(config);
+            if (!session)
+            {
+                Logger::WriteMessage("[ShutdownRace] Cannot create session - skipping test");
+                return;
+            }
+
             HRESULT hr;
-            bool started = session.Start(&hr);
+            bool started = session->Start(&hr);
             
             if (!started)
             {
@@ -156,7 +175,7 @@ namespace CaptureInteropTests
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
             // Stop the session
-            session.Stop();
+            session->Stop();
 
             int callbacksBeforeStop = s_callbackInvocations.load();
             
@@ -184,28 +203,33 @@ namespace CaptureInteropTests
             
             Logger::WriteMessage("[ShutdownRace] Testing shutdown ordering...");
 
-            CaptureSessionConfig config;
-            config.outputPath = L"test_output3.mp4";
-            config.audioEnabled = true;
-            config.frameRate = 30;
-            config.videoBitrate = 5000000;
-            config.audioBitrate = 192000;
-
-            SimpleMediaClockFactory clockFactory;
-            WindowsLocalAudioCaptureSourceFactory audioFactory;
-            WindowsDesktopVideoCaptureSourceFactory videoFactory;
-            WindowsMFMP4SinkWriterFactory sinkFactory;
-
-            WindowsGraphicsCaptureSession session(
-                config,
-                &clockFactory,
-                &audioFactory,
-                &videoFactory,
-                &sinkFactory
+            // Create config using constructor
+            CaptureSessionConfig config(
+                GetPrimaryMonitor(),
+                L"test_output3.mp4",
+                true,   // audioEnabled
+                30,     // frameRate
+                5000000, // videoBitrate
+                192000  // audioBitrate
             );
 
+            // Create factory and use it to create session
+            WindowsGraphicsCaptureSessionFactory factory(
+                std::make_unique<SimpleMediaClockFactory>(),
+                std::make_unique<WindowsLocalAudioCaptureSourceFactory>(),
+                std::make_unique<WindowsDesktopVideoCaptureSourceFactory>(),
+                std::make_unique<WindowsMFMP4SinkWriterFactory>()
+            );
+
+            auto session = factory.CreateSession(config);
+            if (!session)
+            {
+                Logger::WriteMessage("[ShutdownRace] Cannot create session - skipping test");
+                return;
+            }
+
             HRESULT hr;
-            bool started = session.Start(&hr);
+            bool started = session->Start(&hr);
             
             if (!started)
             {
@@ -217,7 +241,7 @@ namespace CaptureInteropTests
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
             // Stop should not crash - this tests the correct ordering
-            session.Stop();
+            session->Stop();
 
             Logger::WriteMessage("[ShutdownRace] Shutdown completed without crash - ordering is correct");
             
