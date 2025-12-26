@@ -210,6 +210,14 @@ public:
     ScopedHandle(ScopedHandle&& other) noexcept 
         : m_handle(std::exchange(other.m_handle, nullptr)) {}
     
+    ScopedHandle& operator=(ScopedHandle&& other) noexcept {
+        if (this != &other) {
+            if (m_handle) CloseHandle(m_handle);
+            m_handle = std::exchange(other.m_handle, nullptr);
+        }
+        return *this;
+    }
+    
     HANDLE get() const { return m_handle; }
     
 private:
@@ -338,12 +346,14 @@ public:
 **Example**:
 ```cpp
 bool StartRecording(const char* path) {
-    if (!path || path[0] == '\0') {
-        return false; // Invalid input
+    // Validate input parameters
+    if (!path || *path == '\0') {
+        return false; // Invalid input - null or empty string
     }
     
+    // Validate state
     if (m_isRecording) {
-        return false; // Invalid state
+        return false; // Invalid state - already recording
     }
     
     // Proceed with recording...
