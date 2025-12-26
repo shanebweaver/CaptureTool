@@ -227,18 +227,19 @@ private:
         }
         
         // Check if path contains invalid characters
+        // Note: ':' is only valid at position 1 for drive separator (e.g., "C:")
         const std::wstring invalidChars = L"<>:\"|?*";
         for (wchar_t c : invalidChars)
         {
-            // Skip ':' if it's the drive separator (second character)
-            if (c == L':' && path.length() >= 2 && path[1] == L':')
-            {
-                continue;
-            }
-            
             size_t pos = path.find(c);
-            if (pos != std::wstring::npos && !(c == L':' && pos == 1))
+            if (pos != std::wstring::npos)
             {
+                // Allow ':' only at position 1 for drive separator
+                if (c == L':' && pos == 1)
+                {
+                    continue;
+                }
+                // All other occurrences of invalid chars (including ':' elsewhere) are invalid
                 return false;
             }
         }

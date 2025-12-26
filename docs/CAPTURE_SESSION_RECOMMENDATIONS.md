@@ -314,17 +314,17 @@ public:
         }
     }
     
-    // IAudioCaptureSource implementation
-    bool Initialize(HRESULT* outHr = nullptr) override 
+    // IAudioCaptureSource implementation using Result types
+    Result<void> Initialize() override 
     { 
         m_initialized = true; 
-        return true; 
+        return Result<void>::Ok(); 
     }
     
-    bool Start(HRESULT* outHr = nullptr) override 
+    Result<void> Start() override 
     { 
         m_running = true; 
-        return true; 
+        return Result<void>::Ok(); 
     }
     
     void Stop() override { m_running = false; }
@@ -398,10 +398,10 @@ TEST_METHOD(Session_Initialize_ConfiguresAllDependencies)
         std::move(mockSink));
     
     // Act
-    bool result = session.Initialize();
+    auto result = session.Initialize();
     
     // Assert
-    Assert::IsTrue(result);
+    Assert::IsTrue(result.IsOk());
     Assert::IsTrue(audioPtr->WasInitialized());
     Assert::IsTrue(videoPtr->WasInitialized());
     Assert::IsTrue(sinkPtr->WasInitialized());

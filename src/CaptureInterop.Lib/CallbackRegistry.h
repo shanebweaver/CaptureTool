@@ -48,6 +48,10 @@ public:
     /// Invoke all registered callbacks with the given arguments.
     /// Thread-safe and guarantees callbacks exist for duration of invocation.
     /// Callbacks are invoked without holding the lock to prevent deadlocks.
+    /// 
+    /// Note: This method copies all callback functions to a local vector before invoking them.
+    /// If callbacks are heavyweight (large captured state), this copy could be expensive.
+    /// Callbacks should generally be lightweight lambdas or function pointers.
     /// </summary>
     void Invoke(const TArgs& args)
     {
@@ -105,6 +109,9 @@ private:
     
     mutable std::mutex m_mutex;
     std::unordered_map<CallbackId, CallbackFn> m_callbacks;
+    // Note: m_nextId is a monotonically increasing 64-bit counter.
+    // Overflow protection is not explicitly implemented as reaching the limit would require
+    // over 18 quintillion registrations, which is not feasible in practice.
     std::atomic<CallbackId> m_nextId{1};
 };
 

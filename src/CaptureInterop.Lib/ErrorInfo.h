@@ -2,6 +2,8 @@
 #include <string>
 #include <Windows.h>
 #include <comdef.h>
+#include <sstream>
+#include <iomanip>
 
 /// <summary>
 /// Structured error information providing richer diagnostics than HRESULT alone.
@@ -108,8 +110,9 @@ private:
     /// </summary>
     static std::string ToHexString(HRESULT hr)
     {
-        char buffer[16];
-        sprintf_s(buffer, sizeof(buffer), "%08X", static_cast<unsigned int>(hr));
-        return std::string(buffer);
+        std::ostringstream stream;
+        stream << std::uppercase << std::hex << std::setw(8) << std::setfill('0') 
+               << static_cast<unsigned int>(hr);
+        return stream.str();
     }
 };

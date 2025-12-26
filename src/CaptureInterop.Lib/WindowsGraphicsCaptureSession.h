@@ -87,9 +87,4 @@ private:
     // Callbacks - using registry for safer lifetime management
     CaptureInterop::CallbackRegistry<VideoFrameData> m_videoCallbackRegistry;
     CaptureInterop::CallbackRegistry<AudioSampleData> m_audioCallbackRegistry;
-    
-    // Legacy callback support for P/Invoke compatibility
-    VideoFrameCallback m_legacyVideoCallback;
-    AudioSampleCallback m_legacyAudioCallback;
-    std::mutex m_legacyCallbackMutex;
 };

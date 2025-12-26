@@ -252,8 +252,8 @@ namespace CaptureInteropTests
                             totalCallbacks++;
                         });
                         
-                        // Small delay
-                        std::this_thread::sleep_for(std::chrono::microseconds(1));
+                        // Yield to allow better thread interleaving
+                        std::this_thread::yield();
                         
                         // Handle will unregister on destruction
                     }
