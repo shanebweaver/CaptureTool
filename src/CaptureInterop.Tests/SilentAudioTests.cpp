@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "WindowsMFMP4SinkWriter.h"
+#include "MediaTimeConstants.h"
 #include <dxgiformat.h>
 #include <span>
 #include <strsafe.h>
@@ -127,8 +128,8 @@ namespace CaptureInteropTests
             
             // Test 2 seconds of recording with both video and silent audio
             const int SECONDS = 2;
-            const LONGLONG FRAME_DURATION = 333333LL; // ~30 FPS (100ns units)
-            const LONGLONG AUDIO_SAMPLE_DURATION = 100000LL; // 10ms in 100ns units
+            const LONGLONG FRAME_DURATION = MediaTimeConstants::TicksPerSecond() / 30; // ~30 FPS
+            const LONGLONG AUDIO_SAMPLE_DURATION = MediaTimeConstants::TicksFromMilliseconds(10); // 10ms
             const int TOTAL_FRAMES = SECONDS * 30;
             
             // Write interleaved video and audio
@@ -180,8 +181,8 @@ namespace CaptureInteropTests
             
             auto texture = CreateTestTexture(device.get(), 1920, 1080);
             
-            const LONGLONG FRAME_DURATION = 166666; // ~60 FPS
-            const LONGLONG AUDIO_SAMPLE_DURATION = 100000; // 10ms
+            const LONGLONG FRAME_DURATION = MediaTimeConstants::TicksPerSecond() / 60; // ~60 FPS
+            const LONGLONG AUDIO_SAMPLE_DURATION = MediaTimeConstants::TicksFromMilliseconds(10); // 10ms
             const int SECONDS = 10;
             
             SIZE_T memBefore = GetProcessMemoryUsage();
@@ -221,6 +222,5 @@ namespace CaptureInteropTests
         }
 
     private:
-        static const LONGLONG TICKS_PER_SECOND = 10000000LL;
     };
 }
