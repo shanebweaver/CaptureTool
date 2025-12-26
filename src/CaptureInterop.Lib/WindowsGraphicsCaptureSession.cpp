@@ -43,13 +43,31 @@ WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
 {
     Stop();
     // Principle #5 (RAII Everything): Destructor ensures all resources are cleaned up
-    // Stop() releases:
-    // - Capture device handles (video and audio sources)
-    // - Frame buffers
-    // - File handles (via sink writer finalization)
-    // - Clock state
-    // All dependencies (m_mediaClock, m_audioCaptureSource, etc.) are automatically
-    // cleaned up by their own destructors via std::unique_ptr
+    // automatically via the following chain:
+    //
+    // 1. Stop() explicitly releases runtime state:
+    //    - Stops capture sources (calls source->Stop())
+    //    - Clears callbacks
+    //    - Finalizes sink writer (flushes buffers and closes file)
+    //    - Resets clock state
+    //
+    // 2. std::unique_ptr destructors automatically clean up owned objects:
+    //    - m_mediaClock destructor (no OS resources, just in-memory state)
+    //    - m_audioCaptureSource destructor:
+    //      * Calls WindowsLocalAudioCaptureSource::~WindowsLocalAudioCaptureSource()
+    //      * Which calls Stop() to release WASAPI audio client handles
+    //      * AudioCaptureHandler is unique_ptr, so its destructor auto-runs
+    //    - m_videoCaptureSource destructor:
+    //      * Calls WindowsDesktopVideoCaptureSource::~WindowsDesktopVideoCaptureSource()
+    //      * Which calls Stop() to release Windows Graphics Capture session
+    //      * wil::com_ptr auto-releases all COM objects (frame pool, capture session, D3D device)
+    //    - m_sinkWriter destructor:
+    //      * Calls WindowsMFMP4SinkWriter::~WindowsMFMP4SinkWriter()
+    //      * Which calls Finalize() to release Media Foundation sink writer
+    //      * wil::com_ptr auto-releases COM objects
+    //
+    // No manual delete, free(), or Release() calls needed - the type system guarantees
+    // proper cleanup through RAII. See docs/RUST_PRINCIPLES.md principle #5.
 }
 
 bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
