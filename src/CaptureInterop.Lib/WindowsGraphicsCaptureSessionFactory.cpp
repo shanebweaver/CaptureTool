@@ -16,12 +16,39 @@ WindowsGraphicsCaptureSessionFactory::WindowsGraphicsCaptureSessionFactory(
 
 std::unique_ptr<ICaptureSession> WindowsGraphicsCaptureSessionFactory::CreateSession(const CaptureSessionConfig& config)
 {
-    // Create session and configure it
-    // For now, we just create the session. The config will be used when Start() is called.
+    // Create the media clock first
+    auto mediaClock = m_mediaClockFactory->CreateClock();
+    if (!mediaClock)
+    {
+        return nullptr;
+    }
+
+    // Create audio capture source with clock reader
+    auto audioCaptureSource = m_audioCaptureSourceFactory->CreateAudioCaptureSource(mediaClock.get());
+    if (!audioCaptureSource)
+    {
+        return nullptr;
+    }
+
+    // Create video capture source with clock reader
+    auto videoCaptureSource = m_videoCaptureSourceFactory->CreateVideoCaptureSource(config, mediaClock.get());
+    if (!videoCaptureSource)
+    {
+        return nullptr;
+    }
+
+    // Create sink writer
+    auto sinkWriter = m_mp4SinkWriterFactory->CreateSinkWriter();
+    if (!sinkWriter)
+    {
+        return nullptr;
+    }
+
+    // Create session with all dependencies - ownership is transferred to the session
     return std::make_unique<WindowsGraphicsCaptureSession>(
         config,
-        m_mediaClockFactory.get(),
-        m_audioCaptureSourceFactory.get(),
-        m_videoCaptureSourceFactory.get(),
-        m_mp4SinkWriterFactory.get());
+        std::move(mediaClock),
+        std::move(audioCaptureSource),
+        std::move(videoCaptureSource),
+        std::move(sinkWriter));
 }

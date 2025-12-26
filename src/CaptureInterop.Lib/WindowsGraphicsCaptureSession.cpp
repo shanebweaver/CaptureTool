@@ -18,18 +18,15 @@
 
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     const CaptureSessionConfig& config,
-    IMediaClockFactory* mediaClockFactory,
-    IAudioCaptureSourceFactory* audioCaptureSourceFactory,
-    IVideoCaptureSourceFactory* videoCaptureSourceFactory,
-    IMP4SinkWriterFactory* mp4SinkWriterFactory)
+    std::unique_ptr<IMediaClock> mediaClock,
+    std::unique_ptr<IAudioCaptureSource> audioCaptureSource,
+    std::unique_ptr<IVideoCaptureSource> videoCaptureSource,
+    std::unique_ptr<IMP4SinkWriter> sinkWriter)
     : m_config(config)
-    , m_mediaClockFactory(mediaClockFactory)
-    , m_audioCaptureSourceFactory(audioCaptureSourceFactory)
-    , m_videoCaptureSourceFactory(videoCaptureSourceFactory)
-    , m_mp4SinkWriterFactory(mp4SinkWriterFactory)
-    , m_audioCaptureSource(nullptr)
-    , m_videoCaptureSource(nullptr)
-    , m_sinkWriter(nullptr)
+    , m_mediaClock(std::move(mediaClock))
+    , m_audioCaptureSource(std::move(audioCaptureSource))
+    , m_videoCaptureSource(std::move(videoCaptureSource))
+    , m_sinkWriter(std::move(sinkWriter))
     , m_isActive(false)
     , m_videoFrameCallback(nullptr)
     , m_audioSampleCallback(nullptr)
@@ -47,23 +44,8 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
 
-    // Create clock
-    if (m_mediaClockFactory)
-    {
-        m_mediaClock = m_mediaClockFactory->CreateClock();
-    }
-    if (!m_mediaClock)
-    {
-        if (outHr) *outHr = E_FAIL;
-        return false;
-    }
-
-    // Create audio input source with clock reader
-    if (m_audioCaptureSourceFactory)
-    {
-        m_audioCaptureSource = m_audioCaptureSourceFactory->CreateAudioCaptureSource(m_mediaClock.get());
-    }
-    if (!m_audioCaptureSource)
+    // Validate that all required dependencies were provided
+    if (!m_mediaClock || !m_audioCaptureSource || !m_videoCaptureSource || !m_sinkWriter)
     {
         if (outHr) *outHr = E_FAIL;
         return false;
@@ -76,21 +58,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     LARGE_INTEGER qpc;
     QueryPerformanceCounter(&qpc);
     LONGLONG startQpc = qpc.QuadPart;
-    if (m_mediaClock)
-    {
-        m_mediaClock->Start(startQpc);
-    }
-
-    // Create video capture source with clock reader
-    if (m_videoCaptureSourceFactory)
-    {
-        m_videoCaptureSource = m_videoCaptureSourceFactory->CreateVideoCaptureSource(m_config, m_mediaClock.get());
-    }
-    if (!m_videoCaptureSource)
-    {
-        if (outHr) *outHr = E_FAIL;
-        return false;
-    }
+    m_mediaClock->Start(startQpc);
 
     // Initialize video capture source
     if (!m_videoCaptureSource->Initialize(&hr))
@@ -107,12 +75,6 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     }
 
     // Initialize sink writer with video and audio streams
-    m_sinkWriter = m_mp4SinkWriterFactory->CreateSinkWriter();
-    if (!m_sinkWriter)
-    {
-        if (outHr) *outHr = E_FAIL;
-        return false;
-    }
     if (!InitializeSinkWriter(&hr))
     {
         if (outHr) *outHr = hr;

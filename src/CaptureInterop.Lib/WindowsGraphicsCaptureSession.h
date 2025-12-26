@@ -12,9 +12,6 @@
 class FrameArrivedHandler;
 class IAudioCaptureSource;
 class IVideoCaptureSource;
-class IMediaClockFactory;
-class IAudioCaptureSourceFactory;
-class IVideoCaptureSourceFactory;
 class IMediaClock;
 
 // Callback data structures
@@ -27,16 +24,20 @@ using AudioSampleCallback = void(__stdcall*)(const AudioSampleData* pSampleData)
 /// Windows Graphics Capture API implementation of ICaptureSession.
 /// Uses Windows.Graphics.Capture for screen recording with hardware acceleration.
 /// Supports both video and audio capture with synchronized media streams.
+/// 
+/// The session receives fully-initialized dependencies (clock, sources, sink writer)
+/// from the factory, ensuring clear ownership semantics and eliminating the need
+/// to store factory references.
 /// </summary>
 class WindowsGraphicsCaptureSession : public ICaptureSession
 {
 public:
     WindowsGraphicsCaptureSession(
         const CaptureSessionConfig& config,
-        IMediaClockFactory* mediaClockFactory,
-        IAudioCaptureSourceFactory* audioCaptureSourceFactory,
-        IVideoCaptureSourceFactory* videoCaptureSourceFactory,
-        IMP4SinkWriterFactory* mp4SinkWriterFactory);
+        std::unique_ptr<IMediaClock> mediaClock,
+        std::unique_ptr<IAudioCaptureSource> audioCaptureSource,
+        std::unique_ptr<IVideoCaptureSource> videoCaptureSource,
+        std::unique_ptr<IMP4SinkWriter> sinkWriter);
     ~WindowsGraphicsCaptureSession() override;
 
     // Delete copy and move operations
@@ -64,12 +65,6 @@ private:
 
     // Configuration
     CaptureSessionConfig m_config;
-    
-    // Factories
-    IMediaClockFactory* m_mediaClockFactory;
-    IAudioCaptureSourceFactory* m_audioCaptureSourceFactory;
-    IVideoCaptureSourceFactory* m_videoCaptureSourceFactory;
-    IMP4SinkWriterFactory* m_mp4SinkWriterFactory;
     
     // Media output
     std::unique_ptr<IMP4SinkWriter> m_sinkWriter;
