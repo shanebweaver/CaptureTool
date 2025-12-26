@@ -16,6 +16,15 @@
 #include <d3d11.h>
 #include <Windows.h>
 
+namespace {
+    /// <summary>
+    /// Time to wait for encoder to drain its queue before finalizing.
+    /// Allows the encoder to process remaining queued frames.
+    /// 200ms is sufficient for approximately 6 frames at 30fps.
+    /// </summary>
+    constexpr DWORD ENCODER_DRAIN_TIMEOUT_MS = 200;
+}
+
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     const CaptureSessionConfig& config,
     std::unique_ptr<IMediaClock> mediaClock,
@@ -361,8 +370,8 @@ void WindowsGraphicsCaptureSession::Stop()
     }
 
     // Step 4: Finalize resources
-    // Allow encoder time to process remaining queued frames (200ms for 6 frames at 30fps)
-    Sleep(200);
+    // Allow encoder time to process remaining queued frames
+    Sleep(ENCODER_DRAIN_TIMEOUT_MS);
 
     // Finalize MP4 file after queue is drained
     m_sinkWriter->Finalize();
