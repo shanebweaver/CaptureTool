@@ -43,6 +43,12 @@
     <Filter Include="Header Files\SinkWriter">
       <UniqueIdentifier>{4905f059-ba5f-4c8f-ab0e-e2ee71df8abf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Callbacks">
+      <UniqueIdentifier>{6db32879-9f30-4778-9c96-48b5193d3773}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Results">
+      <UniqueIdentifier>{1343b2e8-f9b9-43fa-b02e-af61dd15d895}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -80,21 +86,6 @@
     </ClInclude>
     <ClInclude Include="CaptureSessionConfig.h">
       <Filter>Header Files\CaptureSession</Filter>
-    </ClInclude>
-    <ClInclude Include="CallbackHandle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CallbackRegistry.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CallbackTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ErrorInfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Result.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ICaptureSession.h">
       <Filter>Header Files\CaptureSession</Filter>
@@ -158,6 +149,24 @@
     </ClInclude>
     <ClInclude Include="IMP4SinkWriter.h">
       <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureSessionState.h">
+      <Filter>Source Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="CallbackHandle.h">
+      <Filter>Header Files\Callbacks</Filter>
+    </ClInclude>
+    <ClInclude Include="CallbackRegistry.h">
+      <Filter>Header Files\Callbacks</Filter>
+    </ClInclude>
+    <ClInclude Include="CallbackTypes.h">
+      <Filter>Header Files\Callbacks</Filter>
+    </ClInclude>
+    <ClInclude Include="ErrorInfo.h">
+      <Filter>Header Files\Results</Filter>
+    </ClInclude>
+    <ClInclude Include="Result.h">
+      <Filter>Header Files\Results</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
