@@ -95,6 +95,7 @@
     <ClCompile Include="AudioCaptureHandlerTests.cpp" />
     <ClCompile Include="CallbackTests.cpp" />
     <ClCompile Include="CaptureSessionIntegrationTests.cpp" />
+    <ClCompile Include="ConfigValidationTests.cpp" />
     <ClCompile Include="MediaClockTests.cpp" />
     <ClCompile Include="MP4SinkWriterTests.cpp" />
     <ClCompile Include="pch.cpp">

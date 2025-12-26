@@ -33,6 +33,9 @@
     <ClCompile Include="CaptureSessionIntegrationTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ConfigValidationTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="SilentAudioTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
