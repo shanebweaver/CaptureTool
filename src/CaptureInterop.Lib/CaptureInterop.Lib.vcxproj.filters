@@ -87,6 +87,12 @@
     <ClInclude Include="CallbackTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ErrorInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Result.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="ICaptureSession.h">
       <Filter>Header Files\CaptureSession</Filter>
     </ClInclude>

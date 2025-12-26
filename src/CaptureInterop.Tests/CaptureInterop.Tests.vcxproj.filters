@@ -39,6 +39,9 @@
     <ClCompile Include="ConfigValidationTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ResultTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="SilentAudioTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
