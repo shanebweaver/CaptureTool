@@ -18,12 +18,18 @@
     <ClInclude Include="ScreenRecorder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ScreenshotExports.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ScreenRecorder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenshotExports.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

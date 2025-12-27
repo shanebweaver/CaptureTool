@@ -106,11 +106,13 @@
 
   <ItemGroup>
     <ClInclude Include="ScreenRecorder.h" />
+    <ClInclude Include="ScreenshotExports.h" />
   </ItemGroup>
 
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="ScreenRecorder.cpp" />
+    <ClCompile Include="ScreenshotExports.cpp" />
   </ItemGroup>
 
   <ItemGroup>

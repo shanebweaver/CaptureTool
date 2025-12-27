@@ -49,6 +49,12 @@
     <Filter Include="Header Files\Results">
       <UniqueIdentifier>{1343b2e8-f9b9-43fa-b02e-af61dd15d895}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Screenshot">
+      <UniqueIdentifier>{a8b7c6d5-e4f3-2a1b-0c9d-8e7f6a5b4c3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Screenshot">
+      <UniqueIdentifier>{b9c8d7e6-f5a4-3b2c-1d0e-9f8a7b6c5d4e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -216,6 +222,12 @@
     <ClInclude Include="Result.h">
       <Filter>Header Files\Results</Filter>
     </ClInclude>
+    <ClInclude Include="IScreenshotCapture.h">
+      <Filter>Header Files\Screenshot</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsScreenshotCapture.h">
+      <Filter>Header Files\Screenshot</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -289,6 +301,9 @@
     </ClCompile>
     <ClCompile Include="TextureProcessorFactory.cpp">
       <Filter>Source Files\SinkWriter</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsScreenshotCapture.cpp">
+      <Filter>Source Files\Screenshot</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
