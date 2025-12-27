@@ -99,6 +99,7 @@
     <ClCompile Include="CaptureSessionStateTests.cpp" />
     <ClCompile Include="ConfigValidationTests.cpp" />
     <ClCompile Include="MediaClockTests.cpp" />
+    <ClCompile Include="MP4ComponentTests.cpp" />
     <ClCompile Include="MP4SinkWriterTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
