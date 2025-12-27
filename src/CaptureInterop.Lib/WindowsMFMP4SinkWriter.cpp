@@ -274,10 +274,12 @@ void WindowsMFMP4SinkWriter::Finalize()
     
     if (m_sinkWriter)
     {
+        HRESULT hr = S_OK;
+        
         if (m_hasBegunWriting)
         {
             // Flush encoder by sending stream ticks
-            HRESULT hr = m_sinkWriter->SendStreamTick(m_videoStreamIndex, m_prevVideoTimestamp);
+            hr = m_sinkWriter->SendStreamTick(m_videoStreamIndex, m_prevVideoTimestamp);
             if (FAILED(hr))
             {
                 m_lastFinalizationError = hr;
