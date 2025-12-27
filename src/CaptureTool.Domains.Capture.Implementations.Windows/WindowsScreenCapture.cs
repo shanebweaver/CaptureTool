@@ -55,7 +55,7 @@ public class WindowsScreenCapture : IScreenCapture
         return bmp;
     }
 
-    public unsafe MonitorCaptureResult[] CaptureAllMonitors()
+    public MonitorCaptureResult[] CaptureAllMonitors()
     {
         var results = new List<MonitorCaptureResult>();
 
