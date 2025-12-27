@@ -160,6 +160,9 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         else
         {
             // Queue full - drop frame to prevent memory buildup
+            // Increment dropped frame counter
+            m_droppedFrameCount.fetch_add(1, std::memory_order_relaxed);
+            
             // Explicitly reset texture to encourage immediate GPU memory release
             texture.reset();
         }

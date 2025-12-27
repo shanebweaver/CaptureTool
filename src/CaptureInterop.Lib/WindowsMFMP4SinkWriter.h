@@ -25,6 +25,12 @@ struct IMFSinkWriter;
 /// Note: TextureProcessor is created during Initialize() rather than via constructor
 /// injection because it requires runtime parameters (D3D11 device, context, dimensions)
 /// that are not available at construction time.
+/// 
+/// Lifetime Management:
+/// This class uses RAII with std::unique_ptr ownership. Unlike FrameArrivedHandler
+/// (which uses COM reference counting), this class does NOT implement COM-style
+/// AddRef/Release. Lifetime is managed by the owning unique_ptr, typically created
+/// via WindowsMFMP4SinkWriterFactory::CreateSinkWriter().
 /// </summary>
 class WindowsMFMP4SinkWriter : public IMP4SinkWriter
 {
@@ -70,12 +76,11 @@ public:
     long WriteAudioSample(std::span<const uint8_t> data, int64_t timestamp) override;
     void Finalize() override;
 
-    // Reference counting for COM-style usage
-    unsigned long AddRef();
-    unsigned long Release();
+    // Finalization error tracking
+    long GetLastFinalizationError() const { return m_lastFinalizationError; }
 
 private:
-    volatile long m_ref = 1;
+    long m_lastFinalizationError = S_OK;
     
     // Core components (single-responsibility)
     std::unique_ptr<IMediaFoundationLifecycleManager> m_mfLifecycle;

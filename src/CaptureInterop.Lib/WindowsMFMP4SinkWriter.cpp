@@ -270,20 +270,37 @@ long WindowsMFMP4SinkWriter::WriteAudioSample(std::span<const uint8_t> data, int
 
 void WindowsMFMP4SinkWriter::Finalize()
 {
+    m_lastFinalizationError = S_OK;
+    
     if (m_sinkWriter)
     {
+        HRESULT hr = S_OK;
+        
         if (m_hasBegunWriting)
         {
             // Flush encoder by sending stream ticks
-            HRESULT hr = m_sinkWriter->SendStreamTick(m_videoStreamIndex, m_prevVideoTimestamp);
+            hr = m_sinkWriter->SendStreamTick(m_videoStreamIndex, m_prevVideoTimestamp);
+            if (FAILED(hr))
+            {
+                m_lastFinalizationError = hr;
+            }
             
             if (m_hasAudioStream)
             {
-                m_sinkWriter->SendStreamTick(m_audioStreamIndex, m_prevVideoTimestamp);
+                hr = m_sinkWriter->SendStreamTick(m_audioStreamIndex, m_prevVideoTimestamp);
+                if (FAILED(hr) && SUCCEEDED(m_lastFinalizationError))
+                {
+                    m_lastFinalizationError = hr;
+                }
             }
         }
         
-        HRESULT hr = m_sinkWriter->Finalize();
+        hr = m_sinkWriter->Finalize();
+        if (FAILED(hr) && SUCCEEDED(m_lastFinalizationError))
+        {
+            m_lastFinalizationError = hr;
+        }
+        
         m_sinkWriter.reset();
     }
 
@@ -291,19 +308,4 @@ void WindowsMFMP4SinkWriter::Finalize()
     m_textureProcessor.reset();
     
     // MediaFoundationLifecycleManager handles MFShutdown in its destructor
-}
-
-unsigned long WindowsMFMP4SinkWriter::AddRef()
-{
-    return InterlockedIncrement(&m_ref);
-}
-
-unsigned long WindowsMFMP4SinkWriter::Release()
-{
-    ULONG ref = InterlockedDecrement(&m_ref);
-    if (ref == 0)
-    {
-        delete this;
-    }
-    return ref;
 }

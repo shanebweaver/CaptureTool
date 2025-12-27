@@ -10,6 +10,7 @@
 #include <d3dcommon.h>
 #include <Windows.h>
 #include <vector>
+#include <memory>
 #include <wil/com.h>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -92,28 +93,8 @@ namespace CaptureInteropTests
     public:
         TEST_METHOD(Constructor_CreatesInstance)
         {
-            WindowsMFMP4SinkWriter* writer = new WindowsMFMP4SinkWriter();
-            Assert::IsNotNull(writer);
-            delete writer;
-        }
-
-        TEST_METHOD(AddRef_Release_ManagesReferenceCount)
-        {
-            WindowsMFMP4SinkWriter* writer = new WindowsMFMP4SinkWriter();
-            
-            ULONG ref1 = writer->AddRef();
-            Assert::AreEqual(2UL, ref1);
-            
-            ULONG ref2 = writer->AddRef();
-            Assert::AreEqual(3UL, ref2);
-            
-            ULONG ref3 = writer->Release();
-            Assert::AreEqual(2UL, ref3);
-            
-            ULONG ref4 = writer->Release();
-            Assert::AreEqual(1UL, ref4);
-            
-            writer->Release(); // Final release deletes the object
+            auto writer = std::make_unique<WindowsMFMP4SinkWriter>();
+            Assert::IsNotNull(writer.get());
         }
 
         TEST_METHOD(Initialize_WithValidParameters_Succeeds)
