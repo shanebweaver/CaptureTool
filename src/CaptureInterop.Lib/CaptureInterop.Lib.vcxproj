@@ -115,6 +115,7 @@
     <ClInclude Include="IMP4SinkWriterFactory.h" />
     <ClInclude Include="ISampleBuilder.h" />
     <ClInclude Include="ISampleBuilderFactory.h" />
+    <ClInclude Include="IScreenshotCapture.h" />
     <ClInclude Include="IStreamConfigurationBuilder.h" />
     <ClInclude Include="IStreamConfigurationBuilderFactory.h" />
     <ClInclude Include="ITextureProcessor.h" />
@@ -144,6 +145,7 @@
     <ClInclude Include="WindowsLocalAudioCaptureSourceFactory.h" />
     <ClInclude Include="WindowsMFMP4SinkWriter.h" />
     <ClInclude Include="WindowsMFMP4SinkWriterFactory.h" />
+    <ClInclude Include="WindowsScreenshotCapture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AudioCaptureDevice.cpp" />
@@ -175,6 +177,7 @@
     <ClCompile Include="WindowsLocalAudioCaptureSourceFactory.cpp" />
     <ClCompile Include="WindowsMFMP4SinkWriter.cpp" />
     <ClCompile Include="WindowsMFMP4SinkWriterFactory.cpp" />
+    <ClCompile Include="WindowsScreenshotCapture.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

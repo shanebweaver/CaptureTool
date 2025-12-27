@@ -25,4 +25,41 @@ internal static partial class CaptureInterop
 
     [DllImport("CaptureInterop.dll")]
     internal static extern void SetAudioSampleCallback(AudioSampleCallback? callback);
+
+    // Screenshot capture functions
+    [DllImport("CaptureInterop.dll")]
+    internal static extern IntPtr CaptureMonitorScreenshot(IntPtr hMonitor);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern IntPtr CaptureAllMonitorsScreenshot();
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void GetScreenshotInfo(
+        IntPtr handle,
+        out int width,
+        out int height,
+        out int left,
+        out int top,
+        out uint dpiX,
+        out uint dpiY,
+        out bool isPrimary);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern bool CopyScreenshotPixels(
+        IntPtr handle,
+        byte[] buffer,
+        int bufferSize);
+
+    [DllImport("CaptureInterop.dll", CharSet = CharSet.Unicode)]
+    internal static extern bool SaveScreenshotToPng(
+        IntPtr handle,
+        string filePath);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern void FreeScreenshot(IntPtr handle);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern IntPtr CombineScreenshots(
+        IntPtr[] handles,
+        int count);
 }
