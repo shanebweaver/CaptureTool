@@ -125,7 +125,11 @@ bool WindowsDesktopVideoCaptureSource::Start(HRESULT* outHr)
     }
     
     // Transfer ownership to wil::com_ptr (takes over the AddRef from RegisterFrameArrivedHandler)
-    m_frameHandler.attach(rawHandler);
+    // Only attach if registration succeeded (rawHandler will be non-null)
+    if (rawHandler)
+    {
+        m_frameHandler.attach(rawHandler);
+    }
 
     // Start video capture
     hr = m_captureSession->StartCapture();
