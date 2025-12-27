@@ -230,6 +230,6 @@ All new components include:
 
 ## Related Documents
 
-- [RUST_PRINCIPLES.md](../../docs/RUST_PRINCIPLES.md) - Core principles applied in this refactoring
-- [IMP4SinkWriter.h](IMP4SinkWriter.h) - Public interface (unchanged)
-- [WindowsMFMP4SinkWriter.h](WindowsMFMP4SinkWriter.h) - Refactored implementation
+- [RUST_PRINCIPLES.md](./RUST_PRINCIPLES.md) - Core principles applied in this refactoring
+- [IMP4SinkWriter.h](../src/CaptureInterop.Lib/IMP4SinkWriter.h) - Public interface (unchanged)
+- [WindowsMFMP4SinkWriter.h](../src/CaptureInterop.Lib/WindowsMFMP4SinkWriter.h) - Refactored implementation

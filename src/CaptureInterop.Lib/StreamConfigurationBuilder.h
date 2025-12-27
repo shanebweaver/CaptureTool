@@ -8,26 +8,17 @@
 struct IMFMediaType;
 
 /// <summary>
-/// Builder for creating Media Foundation media type configurations for video and audio streams.
-/// Encapsulates the complex process of configuring H.264 video and AAC audio encoding parameters.
-/// 
-/// Implements Rust Principles:
-/// - Principle #1 (Ownership): Returns unique_ptr to transfer ownership
-/// - Principle #4 (Explicit Error Handling): Uses Result<T> for error handling
-/// - Principle #7 (Const Correctness): All parameters are const
+/// Creates Media Foundation media types for H.264 video and AAC audio streams.
 /// </summary>
 class StreamConfigurationBuilder
 {
 public:
-    /// <summary>
-    /// Configuration for H.264 video encoding.
-    /// </summary>
     struct VideoConfig
     {
         uint32_t width;
         uint32_t height;
-        uint32_t frameRate;         // Frames per second (e.g., 30)
-        uint32_t bitrate;           // Bits per second (e.g., 5000000 = 5 Mbps)
+        uint32_t frameRate;
+        uint32_t bitrate;
         
         static constexpr uint32_t DEFAULT_FRAME_RATE = 30;
         static constexpr uint32_t DEFAULT_VIDEO_BITRATE = 5000000;  // 5 Mbps
@@ -38,19 +29,15 @@ public:
         }
     };
 
-    /// <summary>
-    /// Configuration for AAC audio encoding.
-    /// </summary>
     struct AudioConfig
     {
-        uint32_t sampleRate;        // Samples per second (e.g., 48000)
-        uint32_t channels;          // Number of channels (e.g., 2 for stereo)
-        uint32_t bitsPerSample;     // Bits per sample (e.g., 16)
-        uint32_t bitrate;           // BYTES per second (used with MF_MT_AUDIO_AVG_BYTES_PER_SECOND)
-        bool isFloatFormat;         // True for IEEE float, false for PCM
+        uint32_t sampleRate;
+        uint32_t channels;
+        uint32_t bitsPerSample;
+        uint32_t bitrate;  // BYTES per second for MF_MT_AUDIO_AVG_BYTES_PER_SECOND
+        bool isFloatFormat;
         
-        // Default AAC bitrate: 20000 bytes/second (= 160000 bits/second = 160 kbps)
-        static constexpr uint32_t DEFAULT_AAC_BITRATE = 20000;
+        static constexpr uint32_t DEFAULT_AAC_BITRATE = 20000;  // 20000 bytes/s = 160 kbps
         
         static AudioConfig FromWaveFormat(const WAVEFORMATEX& format);
     };
@@ -58,27 +45,15 @@ public:
     StreamConfigurationBuilder() = default;
     ~StreamConfigurationBuilder() = default;
 
-    // Delete copy operations
     StreamConfigurationBuilder(const StreamConfigurationBuilder&) = delete;
     StreamConfigurationBuilder& operator=(const StreamConfigurationBuilder&) = delete;
 
-    /// <summary>
-    /// Create H.264 output media type for the video stream.
-    /// </summary>
     Result<wil::com_ptr<IMFMediaType>> CreateVideoOutputType(const VideoConfig& config) const;
-
-    /// <summary>
-    /// Create RGB32 input media type for the video stream.
-    /// </summary>
     Result<wil::com_ptr<IMFMediaType>> CreateVideoInputType(const VideoConfig& config) const;
-
-    /// <summary>
-    /// Create AAC output media type for the audio stream.
-    /// </summary>
     Result<wil::com_ptr<IMFMediaType>> CreateAudioOutputType(const AudioConfig& config) const;
-
-    /// <summary>
-    /// Create PCM/Float input media type for the audio stream.
-    /// </summary>
     Result<wil::com_ptr<IMFMediaType>> CreateAudioInputType(const AudioConfig& config) const;
+
+private:
+    static constexpr uint32_t BYTES_PER_PIXEL_RGB32 = 4;
+    static constexpr uint32_t AAC_OUTPUT_BITS_PER_SAMPLE = 16;
 };

@@ -135,7 +135,7 @@ Result<wil::com_ptr<IMFMediaType>> StreamConfigurationBuilder::CreateVideoInputT
             ErrorInfo::FromHResult(hr, "CreateVideoInputType: MFSetAttributeRatio pixel aspect ratio failed"));
     }
 
-    LONG defaultStride = static_cast<LONG>(config.width * 4);
+    LONG defaultStride = static_cast<LONG>(config.width * BYTES_PER_PIXEL_RGB32);
     hr = mediaType->SetUINT32(MF_MT_DEFAULT_STRIDE, static_cast<UINT32>(defaultStride));
     if (FAILED(hr))
     {
@@ -192,7 +192,7 @@ Result<wil::com_ptr<IMFMediaType>> StreamConfigurationBuilder::CreateAudioOutput
     }
 
     // AAC output is always 16-bit, regardless of input format
-    hr = mediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
+    hr = mediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, AAC_OUTPUT_BITS_PER_SAMPLE);
     if (FAILED(hr))
     {
         return Result<wil::com_ptr<IMFMediaType>>::Error(
