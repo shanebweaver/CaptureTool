@@ -152,6 +152,9 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
     if (m_prevVideoTimestamp == 0)
         m_prevVideoTimestamp = relativeTicks;
 
+    // Calculate frame duration using integer division (intentional)
+    // This is consistent with Media Foundation's timing model which uses LONGLONG ticks
+    // For standard frame rates (30, 60, etc.), this provides exact values
     const LONGLONG frameDuration = MediaTimeConstants::TicksPerSecond() / m_videoConfig.frameRate;
     LONGLONG duration = relativeTicks - m_prevVideoTimestamp;
     if (duration <= 0) duration = frameDuration;

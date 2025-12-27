@@ -47,7 +47,7 @@ public:
     /// <summary>
     /// Get the expected buffer size for a frame with current dimensions.
     /// </summary>
-    uint32_t GetRequiredBufferSize() const { return m_width * m_height * 4; }
+    uint32_t GetRequiredBufferSize() const { return m_width * m_height * BYTES_PER_PIXEL_RGB32; }
 
     /// <summary>
     /// Get the frame width.
@@ -60,6 +60,8 @@ public:
     uint32_t GetHeight() const { return m_height; }
 
 private:
+    static constexpr uint32_t BYTES_PER_PIXEL_RGB32 = 4;  // RGB32 format = 4 bytes per pixel
+    
     wil::com_ptr<ID3D11Device> m_device;
     wil::com_ptr<ID3D11DeviceContext> m_context;
     wil::com_ptr<ID3D11Texture2D> m_stagingTexture;

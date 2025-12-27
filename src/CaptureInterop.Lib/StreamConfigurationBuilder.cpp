@@ -7,7 +7,7 @@ StreamConfigurationBuilder::AudioConfig StreamConfigurationBuilder::AudioConfig:
     config.sampleRate = format.nSamplesPerSec;
     config.channels = format.nChannels;
     config.bitsPerSample = format.wBitsPerSample;
-    config.bitrate = 20000; // 160 kbps for AAC
+    config.bitrate = DEFAULT_AAC_BITRATE;
     
     // Detect if this is a float format
     config.isFloatFormat = false;

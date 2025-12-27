@@ -29,9 +29,12 @@ public:
         uint32_t frameRate;         // Frames per second (e.g., 30)
         uint32_t bitrate;           // Bits per second (e.g., 5000000 = 5 Mbps)
         
+        static constexpr uint32_t DEFAULT_FRAME_RATE = 30;
+        static constexpr uint32_t DEFAULT_VIDEO_BITRATE = 5000000;  // 5 Mbps
+        
         static VideoConfig Default(uint32_t w, uint32_t h)
         {
-            return VideoConfig{ w, h, 30, 5000000 };
+            return VideoConfig{ w, h, DEFAULT_FRAME_RATE, DEFAULT_VIDEO_BITRATE };
         }
     };
 
@@ -45,6 +48,8 @@ public:
         uint32_t bitsPerSample;     // Bits per sample (e.g., 16)
         uint32_t bitrate;           // Bits per second (e.g., 20000 = 160 kbps)
         bool isFloatFormat;         // True for IEEE float, false for PCM
+        
+        static constexpr uint32_t DEFAULT_AAC_BITRATE = 20000;  // 160 kbps
         
         static AudioConfig FromWaveFormat(const WAVEFORMATEX& format);
     };

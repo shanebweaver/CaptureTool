@@ -68,8 +68,7 @@ Result<void> TextureProcessor::CopyTextureToBuffer(ID3D11Texture2D* texture, std
     }
 
     // Ensure buffer is correctly sized
-    const uint32_t bytesPerPixel = 4;
-    const uint32_t canonicalStride = m_width * bytesPerPixel;
+    const uint32_t canonicalStride = m_width * BYTES_PER_PIXEL_RGB32;
     const uint32_t bufferSize = canonicalStride * m_height;
     outBuffer.resize(bufferSize);
 

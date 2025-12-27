@@ -8,8 +8,9 @@ MediaFoundationLifecycleManager::MediaFoundationLifecycleManager()
     : m_initialized(false)
     , m_initHr(S_OK)
 {
-    // Increment reference count
-    int prevCount = s_refCount.fetch_add(1, std::memory_order_relaxed);
+    // Increment reference count with acquire-release semantics
+    // This ensures proper synchronization of MF initialization state across threads
+    int prevCount = s_refCount.fetch_add(1, std::memory_order_acq_rel);
     
     // Only initialize MF if this is the first instance
     if (prevCount == 0)
@@ -30,8 +31,9 @@ MediaFoundationLifecycleManager::~MediaFoundationLifecycleManager()
     // Only shutdown if we were successfully initialized
     if (m_initialized)
     {
-        // Decrement reference count
-        int prevCount = s_refCount.fetch_sub(1, std::memory_order_relaxed);
+        // Decrement reference count with acquire-release semantics
+        // This ensures proper synchronization when determining if MFShutdown should be called
+        int prevCount = s_refCount.fetch_sub(1, std::memory_order_acq_rel);
         
         // Only shutdown MF if this is the last instance
         if (prevCount == 1)
@@ -56,7 +58,7 @@ MediaFoundationLifecycleManager& MediaFoundationLifecycleManager::operator=(Medi
         // Clean up current state
         if (m_initialized)
         {
-            int prevCount = s_refCount.fetch_sub(1, std::memory_order_relaxed);
+            int prevCount = s_refCount.fetch_sub(1, std::memory_order_acq_rel);
             if (prevCount == 1)
             {
                 MFShutdown();
