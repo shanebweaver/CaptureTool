@@ -13,22 +13,26 @@ bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device*
 {
     if (outHr) *outHr = S_OK;
     
-    // Smart pointer handles AddRef automatically
-    m_device = device;
+    // Check if MF was successfully initialized
+    if (!m_mfLifecycle.IsInitialized())
+    {
+        if (outHr) *outHr = m_mfLifecycle.GetInitializationResult();
+        return false;
+    }
     
-    // Get context through com_ptr
-    m_device->GetImmediateContext(m_context.put());
+    // Store video configuration
+    m_videoConfig = StreamConfigurationBuilder::VideoConfig::Default(width, height);
     
-    m_width = width;
-    m_height = height;
+    // Create texture processor for video frame handling
+    wil::com_ptr<ID3D11DeviceContext> context;
+    device->GetImmediateContext(context.put());
+    m_textureProcessor = std::make_unique<TextureProcessor>(device, context.get(), width, height);
+    
     m_frameIndex = 0;
-
-    HRESULT hr = MFStartup(MF_VERSION);
-    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     // Create attributes to enable hardware acceleration and improve performance
     wil::com_ptr<IMFAttributes> attributes;
-    hr = MFCreateAttributes(attributes.put(), 3);
+    HRESULT hr = MFCreateAttributes(attributes.put(), 3);
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
     
     // Enable hardware transforms (GPU encoding) for better performance
@@ -44,38 +48,27 @@ bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device*
     hr = MFCreateSinkWriterFromURL(outputPath, nullptr, attributes.get(), sinkWriter.put());
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
-    // Output type: H.264
-    wil::com_ptr<IMFMediaType> mediaTypeOut;
-    hr = MFCreateMediaType(mediaTypeOut.put());
-    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
-
-    mediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-    mediaTypeOut->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_H264);
-    mediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, 5000000);
-    mediaTypeOut->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
-    MFSetAttributeSize(mediaTypeOut.get(), MF_MT_FRAME_SIZE, width, height);
-    MFSetAttributeRatio(mediaTypeOut.get(), MF_MT_FRAME_RATE, 30, 1);
-    MFSetAttributeRatio(mediaTypeOut.get(), MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
-
-    DWORD streamIndex = 0;
-    hr = sinkWriter->AddStream(mediaTypeOut.get(), &streamIndex);
-    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
-
-    // Input type: RGB32
-    wil::com_ptr<IMFMediaType> mediaTypeIn;
-    hr = MFCreateMediaType(mediaTypeIn.put());
-    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
+    // Create video output media type using builder
+    auto outputTypeResult = m_configBuilder.CreateVideoOutputType(m_videoConfig);
+    if (outputTypeResult.IsError())
+    {
+        if (outHr) *outHr = outputTypeResult.Error().hr;
+        return false;
+    }
     
-    mediaTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-    mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_RGB32);
-    MFSetAttributeSize(mediaTypeIn.get(), MF_MT_FRAME_SIZE, width, height);
-    MFSetAttributeRatio(mediaTypeIn.get(), MF_MT_FRAME_RATE, 30, 1);
-    MFSetAttributeRatio(mediaTypeIn.get(), MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
+    DWORD streamIndex = 0;
+    hr = sinkWriter->AddStream(outputTypeResult.Value().get(), &streamIndex);
+    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
-    LONG defaultStride = static_cast<LONG>(width * 4);
-    mediaTypeIn->SetUINT32(MF_MT_DEFAULT_STRIDE, static_cast<UINT32>(defaultStride));
+    // Create video input media type using builder
+    auto inputTypeResult = m_configBuilder.CreateVideoInputType(m_videoConfig);
+    if (inputTypeResult.IsError())
+    {
+        if (outHr) *outHr = inputTypeResult.Error().hr;
+        return false;
+    }
 
-    hr = sinkWriter->SetInputMediaType(streamIndex, mediaTypeIn.get(), nullptr);
+    hr = sinkWriter->SetInputMediaType(streamIndex, inputTypeResult.Value().get(), nullptr);
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     m_sinkWriter = std::move(sinkWriter);
@@ -97,65 +90,31 @@ bool WindowsMFMP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, lo
         if (outHr) *outHr = E_NOT_VALID_STATE;
         return false;
     }
-
-    // Detect audio format type before storing
-    bool isFloatFormat = false;
     
-    if (audioFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT)
-    {
-        isFloatFormat = true;
-    }
-    else if (audioFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
-    {
-        WAVEFORMATEXTENSIBLE* pFormatEx = reinterpret_cast<WAVEFORMATEXTENSIBLE*>(audioFormat);
-        if (IsEqualGUID(pFormatEx->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT))
-        {
-            isFloatFormat = true;
-        }
-    }
-    
-    memcpy(&m_audioFormat, audioFormat, sizeof(WAVEFORMATEX));
+    // Create audio configuration from wave format
+    m_audioConfig = StreamConfigurationBuilder::AudioConfig::FromWaveFormat(*audioFormat);
 
-    // Configure output audio stream: AAC at 160 kbps
-    const UINT32 AAC_BITRATE = 20000;
-    wil::com_ptr<IMFMediaType> mediaTypeOut;
-    HRESULT hr = MFCreateMediaType(mediaTypeOut.put());
-    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
-
-    mediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-    mediaTypeOut->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_AAC);
-    mediaTypeOut->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
-    mediaTypeOut->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
-    mediaTypeOut->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, AAC_BITRATE);
-    mediaTypeOut->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
+    // Create audio output media type using builder
+    auto outputTypeResult = m_configBuilder.CreateAudioOutputType(m_audioConfig);
+    if (outputTypeResult.IsError())
+    {
+        if (outHr) *outHr = outputTypeResult.Error().hr;
+        return false;
+    }
 
     DWORD audioStreamIndex = 0;
-    hr = m_sinkWriter->AddStream(mediaTypeOut.get(), &audioStreamIndex);
+    HRESULT hr = m_sinkWriter->AddStream(outputTypeResult.Value().get(), &audioStreamIndex);
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
-    // Configure input audio format
-    wil::com_ptr<IMFMediaType> mediaTypeIn;
-    hr = MFCreateMediaType(mediaTypeIn.put());
-    if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
-
-    mediaTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-    
-    if (isFloatFormat)
+    // Create audio input media type using builder
+    auto inputTypeResult = m_configBuilder.CreateAudioInputType(m_audioConfig);
+    if (inputTypeResult.IsError())
     {
-        mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
+        if (outHr) *outHr = inputTypeResult.Error().hr;
+        return false;
     }
-    else
-    {
-        mediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
-    }
-    
-    mediaTypeIn->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, audioFormat->nSamplesPerSec);
-    mediaTypeIn->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioFormat->nChannels);
-    mediaTypeIn->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, audioFormat->wBitsPerSample);
-    mediaTypeIn->SetUINT32(MF_MT_AUDIO_BLOCK_ALIGNMENT, audioFormat->nBlockAlign);
-    mediaTypeIn->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, audioFormat->nAvgBytesPerSec);
 
-    hr = m_sinkWriter->SetInputMediaType(audioStreamIndex, mediaTypeIn.get(), nullptr);
+    hr = m_sinkWriter->SetInputMediaType(audioStreamIndex, inputTypeResult.Value().get(), nullptr);
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     m_audioStreamIndex = audioStreamIndex;
@@ -181,83 +140,39 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
         m_hasBegunWriting = true;
     }
 
-    D3D11_TEXTURE2D_DESC desc{};
-    texture->GetDesc(&desc);
-
-    // Create staging texture only once and reuse it to prevent memory leak
-    if (!m_stagingTexture)
+    // Use texture processor to copy texture to buffer
+    std::vector<uint8_t> frameBuffer;
+    auto copyResult = m_textureProcessor->CopyTextureToBuffer(texture, frameBuffer);
+    if (copyResult.IsError())
     {
-        D3D11_TEXTURE2D_DESC stagingDesc = desc;
-        stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-        stagingDesc.Usage = D3D11_USAGE_STAGING;
-        stagingDesc.BindFlags = 0;
-        stagingDesc.MiscFlags = 0;
-
-        HRESULT hr = m_device->CreateTexture2D(&stagingDesc, nullptr, m_stagingTexture.put());
-        if (FAILED(hr)) return hr;
+        return copyResult.Error().hr;
     }
 
-    m_context->CopyResource(m_stagingTexture.get(), texture);
-
-    D3D11_MAPPED_SUBRESOURCE mapped{};
-    HRESULT hr = m_context->Map(m_stagingTexture.get(), 0, D3D11_MAP_READ, 0, &mapped);
-    if (FAILED(hr)) 
-    {
-        return hr;
-    }
-
-    const UINT32 bytesPerPixel = 4;
-    const UINT32 canonicalStride = m_width * bytesPerPixel;
-    const UINT32 bufferSize = canonicalStride * m_height;
-
-    wil::com_ptr<IMFMediaBuffer> buffer;
-    hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
-    if (FAILED(hr)) 
-    { 
-        m_context->Unmap(m_stagingTexture.get(), 0); 
-        return hr; 
-    }
-
-    BYTE* pData = nullptr;
-    DWORD maxLen = 0, curLen = 0;
-    hr = buffer->Lock(&pData, &maxLen, &curLen);
-    if (FAILED(hr)) 
-    { 
-        m_context->Unmap(m_stagingTexture.get(), 0); 
-        return hr; 
-    }
-
-    for (UINT row = 0; row < m_height; ++row)
-    {
-        BYTE* destRow = pData + row * canonicalStride;
-        BYTE* srcRow = (BYTE*)mapped.pData + row * mapped.RowPitch;
-        memcpy(destRow, srcRow, canonicalStride);
-    }
-
-    buffer->SetCurrentLength(bufferSize);
-    buffer->Unlock();
-    
-    m_context->Unmap(m_stagingTexture.get(), 0);
-
-    wil::com_ptr<IMFSample> sample;
-    hr = MFCreateSample(sample.put());
-    if (FAILED(hr)) return hr;
-
-    sample->AddBuffer(buffer.get());
-    sample->SetSampleTime(relativeTicks);
-
+    // Calculate frame duration
     if (m_prevVideoTimestamp == 0)
         m_prevVideoTimestamp = relativeTicks;
 
-    const LONGLONG frameDuration = MediaTimeConstants::TicksPerSecond() / 30;
-
+    // Calculate frame duration using integer division
+    // For standard frame rates (30, 60, etc.) that evenly divide TicksPerSecond(),
+    // this provides exact values. For non-standard rates, this is an approximation.
+    const LONGLONG frameDuration = MediaTimeConstants::TicksPerSecond() / m_videoConfig.frameRate;
     LONGLONG duration = relativeTicks - m_prevVideoTimestamp;
     if (duration <= 0) duration = frameDuration;
-    sample->SetSampleDuration(duration);
     m_prevVideoTimestamp = relativeTicks;
 
+    // Use sample builder to create video sample
+    auto sampleResult = m_sampleBuilder.CreateVideoSample(
+        std::span<const uint8_t>(frameBuffer.data(), frameBuffer.size()),
+        relativeTicks,
+        duration);
+    
+    if (sampleResult.IsError())
+    {
+        return sampleResult.Error().hr;
+    }
+
     m_frameIndex++;
-    return m_sinkWriter->WriteSample(m_videoStreamIndex, sample.get());
+    return m_sinkWriter->WriteSample(m_videoStreamIndex, sampleResult.Value().get());
 }
 
 long WindowsMFMP4SinkWriter::WriteAudioSample(std::span<const uint8_t> data, int64_t timestamp)
@@ -267,41 +182,25 @@ long WindowsMFMP4SinkWriter::WriteAudioSample(std::span<const uint8_t> data, int
         return E_FAIL;
     }
 
-    UINT32 bufferSize = static_cast<UINT32>(data.size());
-
-    wil::com_ptr<IMFMediaBuffer> buffer;
-    HRESULT hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
-    if (FAILED(hr)) return hr;
-
-    BYTE* pBufferData = nullptr;
-    DWORD maxLen = 0, curLen = 0;
-    hr = buffer->Lock(&pBufferData, &maxLen, &curLen);
-    if (FAILED(hr)) return hr;
-
-    memcpy(pBufferData, data.data(), bufferSize);
-    buffer->SetCurrentLength(bufferSize);
-    buffer->Unlock();
-
-    wil::com_ptr<IMFSample> sample;
-    hr = MFCreateSample(sample.put());
-    if (FAILED(hr)) return hr;
-
-    sample->AddBuffer(buffer.get());
-    sample->SetSampleTime(timestamp);
-
     // Validate audio format to prevent division by zero
-    if (m_audioFormat.nBlockAlign == 0 || m_audioFormat.nSamplesPerSec == 0)
+    uint32_t blockAlign = (m_audioConfig.channels * m_audioConfig.bitsPerSample) / 8;
+    if (blockAlign == 0 || m_audioConfig.sampleRate == 0)
     {
         return E_FAIL;
     }
 
     // Calculate number of frames from buffer size
-    UINT32 numFrames = bufferSize / m_audioFormat.nBlockAlign;
-    LONGLONG duration = MediaTimeConstants::TicksFromAudioFrames(numFrames, m_audioFormat.nSamplesPerSec);
+    UINT32 numFrames = static_cast<UINT32>(data.size()) / blockAlign;
+    LONGLONG duration = MediaTimeConstants::TicksFromAudioFrames(numFrames, m_audioConfig.sampleRate);
     
-    sample->SetSampleDuration(duration);
+    // Use sample builder to create audio sample
+    auto sampleResult = m_sampleBuilder.CreateAudioSample(data, timestamp, duration);
+    if (sampleResult.IsError())
+    {
+        return sampleResult.Error().hr;
+    }
 
-    return m_sinkWriter->WriteSample(m_audioStreamIndex, sample.get());
+    return m_sinkWriter->WriteSample(m_audioStreamIndex, sampleResult.Value().get());
 }
 
 void WindowsMFMP4SinkWriter::Finalize()
@@ -323,14 +222,10 @@ void WindowsMFMP4SinkWriter::Finalize()
         m_sinkWriter.reset();
     }
 
-    // Release cached staging texture
-    m_stagingTexture.reset();
-
-    // Smart pointers clean up automatically
-    m_context.reset();
-    m_device.reset();
-
-    MFShutdown();
+    // TextureProcessor and other components clean up automatically via RAII
+    m_textureProcessor.reset();
+    
+    // MediaFoundationLifecycleManager handles MFShutdown in its destructor
 }
 
 unsigned long WindowsMFMP4SinkWriter::AddRef()

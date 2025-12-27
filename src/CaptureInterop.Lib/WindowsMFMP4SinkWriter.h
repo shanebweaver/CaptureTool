@@ -1,7 +1,12 @@
 #pragma once
 #include "IMP4SinkWriter.h"
+#include "MediaFoundationLifecycleManager.h"
+#include "StreamConfigurationBuilder.h"
+#include "TextureProcessor.h"
+#include "SampleBuilder.h"
 #include <span>
 #include <wil/com.h>
+#include <memory>
 
 // Forward declarations
 struct IMFSinkWriter;
@@ -9,6 +14,12 @@ struct IMFSinkWriter;
 /// <summary>
 /// Windows Media Foundation implementation of MP4 file writer.
 /// Supports H.264 video and optional AAC audio streams with hardware acceleration.
+/// 
+/// Refactored to follow SOLID principles with single-responsibility components:
+/// - MediaFoundationLifecycleManager: MF initialization/shutdown
+/// - StreamConfigurationBuilder: Media type configuration
+/// - TextureProcessor: D3D11 texture handling
+/// - SampleBuilder: IMFSample creation
 /// </summary>
 class WindowsMFMP4SinkWriter : public IMP4SinkWriter
 {
@@ -29,19 +40,23 @@ public:
 
 private:
     volatile long m_ref = 1;
+    
+    // Core components (single-responsibility)
+    MediaFoundationLifecycleManager m_mfLifecycle;
+    StreamConfigurationBuilder m_configBuilder;
+    std::unique_ptr<TextureProcessor> m_textureProcessor;
+    SampleBuilder m_sampleBuilder;
+    
+    // Sink writer state
     wil::com_ptr<IMFSinkWriter> m_sinkWriter;
     unsigned long m_videoStreamIndex = 0;
     unsigned long m_audioStreamIndex = 0;
     bool m_hasAudioStream = false;
     bool m_hasBegunWriting = false;
     uint64_t m_frameIndex = 0;
-    uint32_t m_width = 0;
-    uint32_t m_height = 0;
-    wil::com_ptr<ID3D11Device> m_device;
-    wil::com_ptr<ID3D11DeviceContext> m_context;
     int64_t m_prevVideoTimestamp = 0;
-    WAVEFORMATEX m_audioFormat = {};
-
-    // Cached staging texture to prevent memory leak from repeated allocations
-    wil::com_ptr<ID3D11Texture2D> m_stagingTexture;
+    
+    // Configuration
+    StreamConfigurationBuilder::VideoConfig m_videoConfig;
+    StreamConfigurationBuilder::AudioConfig m_audioConfig;
 };
