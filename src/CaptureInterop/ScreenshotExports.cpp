@@ -16,6 +16,10 @@ struct ScreenshotHandle
 };
 
 // Global screenshot capture instance
+// NOTE: This instance is not thread-safe. The exported functions should not be called
+// concurrently from multiple threads without external synchronization. The WindowsScreenshotCapture
+// class uses local variables and temporary GDI objects which are thread-safe per call, but
+// concurrent calls could lead to race conditions in error handling and COM initialization.
 static WindowsScreenshotCapture g_screenshotCapture;
 
 extern "C"
@@ -185,7 +189,8 @@ extern "C"
                 // Can only combine monitor screenshots, not already-combined ones
                 return nullptr;
             }
-            monitors.push_back(handles[i]->monitorData);
+            // Use move semantics to avoid copying large pixel buffers
+            monitors.push_back(std::move(handles[i]->monitorData));
         }
         
         auto result = g_screenshotCapture.CombineMonitors(monitors);

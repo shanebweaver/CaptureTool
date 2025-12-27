@@ -106,6 +106,15 @@ Result<MonitorScreenshot> WindowsScreenshotCapture::CaptureMonitor(HMONITOR hMon
 
 Result<std::vector<uint8_t>> WindowsScreenshotCapture::GetBitmapPixels(HDC hdc, HBITMAP hBitmap, int width, int height)
 {
+    // Check for potential integer overflow in buffer size calculation
+    size_t bufferSize = static_cast<size_t>(width) * static_cast<size_t>(height) * 4;
+    const size_t MAX_BUFFER_SIZE = 4294967296;  // 4GB limit
+    if (bufferSize > MAX_BUFFER_SIZE)
+    {
+        return Result<std::vector<uint8_t>>::Error(
+            ErrorInfo::FromMessage(E_FAIL, "Buffer size calculation overflow", "GetBitmapPixels"));
+    }
+    
     // Prepare BITMAPINFO for 32bpp top-down DIB
     BITMAPINFO bmi = {};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -114,9 +123,9 @@ Result<std::vector<uint8_t>> WindowsScreenshotCapture::GetBitmapPixels(HDC hdc, 
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
-    bmi.bmiHeader.biSizeImage = width * height * 4;
+    bmi.bmiHeader.biSizeImage = static_cast<DWORD>(bufferSize);
     
-    std::vector<uint8_t> pixels(width * height * 4);
+    std::vector<uint8_t> pixels(bufferSize);
     
     int lines = GetDIBits(hdc, hBitmap, 0, height, pixels.data(), &bmi, DIB_RGB_COLORS);
     if (lines == 0)
@@ -272,7 +281,8 @@ Result<void> WindowsScreenshotCapture::SaveToPng(const uint8_t* pixelData, int w
         ComInitializer() : initialized(false)
         {
             HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-            initialized = (hr == S_OK);
+            // Track if we successfully initialized COM (S_OK or S_FALSE means already initialized)
+            initialized = SUCCEEDED(hr) && (hr != S_FALSE);
         }
         ~ComInitializer()
         {

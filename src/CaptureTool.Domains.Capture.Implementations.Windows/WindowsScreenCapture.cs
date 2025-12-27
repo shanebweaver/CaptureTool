@@ -87,7 +87,15 @@ public class WindowsScreenCapture : IScreenCapture
                         out bool isPrimary);
 
                     // Allocate buffer and copy pixels
-                    byte[] pixels = new byte[width * height * 4];
+                    // Check for potential integer overflow in buffer size calculation
+                    long totalBytes = (long)width * height * 4;
+                    if (totalBytes <= 0 || totalBytes > int.MaxValue)
+                    {
+                        // Continue enumeration even if buffer size is invalid
+                        return true;
+                    }
+                    
+                    byte[] pixels = new byte[(int)totalBytes];
                     if (!CaptureInterop.CopyScreenshotPixels(screenshotHandle, pixels, pixels.Length))
                     {
                         // Continue enumeration even if pixel copy fails - we want to capture as many as possible

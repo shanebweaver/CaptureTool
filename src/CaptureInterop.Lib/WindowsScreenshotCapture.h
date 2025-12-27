@@ -36,6 +36,7 @@ public:
     GdiDcHandle(GdiDcHandle&& other) noexcept
         : m_hwnd(other.m_hwnd), m_hdc(other.m_hdc), m_needsDeleteDC(other.m_needsDeleteDC)
     {
+        other.m_hwnd = nullptr;
         other.m_hdc = nullptr;
     }
     
@@ -47,6 +48,7 @@ public:
             m_hwnd = other.m_hwnd;
             m_hdc = other.m_hdc;
             m_needsDeleteDC = other.m_needsDeleteDC;
+            other.m_hwnd = nullptr;
             other.m_hdc = nullptr;
         }
         return *this;
