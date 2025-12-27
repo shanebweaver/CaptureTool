@@ -3,6 +3,7 @@
 #include "IMediaFoundationLifecycleManager.h"
 #include "IStreamConfigurationBuilder.h"
 #include "ITextureProcessor.h"
+#include "ITextureProcessorFactory.h"
 #include "ISampleBuilder.h"
 #include <span>
 #include <wil/com.h>
@@ -18,17 +19,39 @@ struct IMFSinkWriter;
 /// Refactored to follow SOLID principles with single-responsibility components:
 /// - IMediaFoundationLifecycleManager: MF initialization/shutdown
 /// - IStreamConfigurationBuilder: Media type configuration
-/// - ITextureProcessor: D3D11 texture handling
+/// - ITextureProcessor: D3D11 texture handling (created during Initialize)
 /// - ISampleBuilder: IMFSample creation
+/// 
+/// Note: TextureProcessor is created during Initialize() rather than via constructor
+/// injection because it requires runtime parameters (D3D11 device, context, dimensions)
+/// that are not available at construction time.
 /// </summary>
 class WindowsMFMP4SinkWriter : public IMP4SinkWriter
 {
 public:
     WindowsMFMP4SinkWriter();
+    
+    /// <summary>
+    /// Constructor with dependency injection for testability.
+    /// Note: TextureProcessor is not injected here as it requires runtime parameters
+    /// (D3D11 device, context, dimensions) provided during Initialize().
+    /// To inject TextureProcessor creation logic, use the overload that accepts
+    /// ITextureProcessorFactory.
+    /// </summary>
     WindowsMFMP4SinkWriter(
         std::unique_ptr<IMediaFoundationLifecycleManager> lifecycleManager,
         std::unique_ptr<IStreamConfigurationBuilder> configBuilder,
         std::unique_ptr<ISampleBuilder> sampleBuilder);
+    
+    /// <summary>
+    /// Constructor with full dependency injection including TextureProcessor factory.
+    /// This allows complete control over TextureProcessor creation for advanced testing scenarios.
+    /// </summary>
+    WindowsMFMP4SinkWriter(
+        std::unique_ptr<IMediaFoundationLifecycleManager> lifecycleManager,
+        std::unique_ptr<IStreamConfigurationBuilder> configBuilder,
+        std::unique_ptr<ISampleBuilder> sampleBuilder,
+        std::unique_ptr<ITextureProcessorFactory> textureProcessorFactory);
     ~WindowsMFMP4SinkWriter() override;
 
     // IMP4SinkWriter implementation
@@ -50,6 +73,7 @@ private:
     std::unique_ptr<IStreamConfigurationBuilder> m_configBuilder;
     std::unique_ptr<ITextureProcessor> m_textureProcessor;
     std::unique_ptr<ISampleBuilder> m_sampleBuilder;
+    std::unique_ptr<ITextureProcessorFactory> m_textureProcessorFactory;  // Optional factory for TextureProcessor creation
     
     // Sink writer state
     wil::com_ptr<IMFSinkWriter> m_sinkWriter;

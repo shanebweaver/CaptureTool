@@ -4,6 +4,9 @@
 #include <ks.h>
 #include <ksmedia.h>
 
+// Note: This implementation is in a separate file because AudioConfig::FromWaveFormat
+// is a static factory method that needs to be accessible through the interface.
+// This allows both interface and implementation users to access this utility method.
 IStreamConfigurationBuilder::AudioConfig IStreamConfigurationBuilder::AudioConfig::FromWaveFormat(const WAVEFORMATEX& format)
 {
     AudioConfig config{};

@@ -4,12 +4,14 @@
 #include "StreamConfigurationBuilder.h"
 #include "SampleBuilder.h"
 #include "TextureProcessor.h"
+#include "TextureProcessorFactory.h"
 #include "MediaTimeConstants.h"
 
 WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter()
     : m_mfLifecycle(std::make_unique<MediaFoundationLifecycleManager>())
     , m_configBuilder(std::make_unique<StreamConfigurationBuilder>())
     , m_sampleBuilder(std::make_unique<SampleBuilder>())
+    , m_textureProcessorFactory(std::make_unique<TextureProcessorFactory>())
 {
 }
 
@@ -20,6 +22,19 @@ WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter(
     : m_mfLifecycle(std::move(lifecycleManager))
     , m_configBuilder(std::move(configBuilder))
     , m_sampleBuilder(std::move(sampleBuilder))
+    , m_textureProcessorFactory(std::make_unique<TextureProcessorFactory>())
+{
+}
+
+WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter(
+    std::unique_ptr<IMediaFoundationLifecycleManager> lifecycleManager,
+    std::unique_ptr<IStreamConfigurationBuilder> configBuilder,
+    std::unique_ptr<ISampleBuilder> sampleBuilder,
+    std::unique_ptr<ITextureProcessorFactory> textureProcessorFactory)
+    : m_mfLifecycle(std::move(lifecycleManager))
+    , m_configBuilder(std::move(configBuilder))
+    , m_sampleBuilder(std::move(sampleBuilder))
+    , m_textureProcessorFactory(std::move(textureProcessorFactory))
 {
 }
 
@@ -42,10 +57,10 @@ bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device*
     // Store video configuration
     m_videoConfig = IStreamConfigurationBuilder::VideoConfig::Default(width, height);
     
-    // Create texture processor for video frame handling
+    // Create texture processor for video frame handling using factory
     wil::com_ptr<ID3D11DeviceContext> context;
     device->GetImmediateContext(context.put());
-    m_textureProcessor = std::make_unique<TextureProcessor>(device, context.get(), width, height);
+    m_textureProcessor = m_textureProcessorFactory->CreateTextureProcessor(device, context.get(), width, height);
     
     m_frameIndex = 0;
 
