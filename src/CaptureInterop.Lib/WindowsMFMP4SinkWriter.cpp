@@ -6,6 +6,7 @@
 #include "TextureProcessor.h"
 #include "TextureProcessorFactory.h"
 #include "MediaTimeConstants.h"
+#include <stdexcept>
 
 WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter()
     : m_mfLifecycle(std::make_unique<MediaFoundationLifecycleManager>())
@@ -24,6 +25,19 @@ WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter(
     , m_sampleBuilder(std::move(sampleBuilder))
     , m_textureProcessorFactory(std::make_unique<TextureProcessorFactory>())
 {
+    // Validate dependencies - fail fast if null pointers are provided
+    if (!m_mfLifecycle)
+    {
+        throw std::invalid_argument("lifecycleManager cannot be null");
+    }
+    if (!m_configBuilder)
+    {
+        throw std::invalid_argument("configBuilder cannot be null");
+    }
+    if (!m_sampleBuilder)
+    {
+        throw std::invalid_argument("sampleBuilder cannot be null");
+    }
 }
 
 WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter(
@@ -36,6 +50,23 @@ WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter(
     , m_sampleBuilder(std::move(sampleBuilder))
     , m_textureProcessorFactory(std::move(textureProcessorFactory))
 {
+    // Validate dependencies - fail fast if null pointers are provided
+    if (!m_mfLifecycle)
+    {
+        throw std::invalid_argument("lifecycleManager cannot be null");
+    }
+    if (!m_configBuilder)
+    {
+        throw std::invalid_argument("configBuilder cannot be null");
+    }
+    if (!m_sampleBuilder)
+    {
+        throw std::invalid_argument("sampleBuilder cannot be null");
+    }
+    if (!m_textureProcessorFactory)
+    {
+        throw std::invalid_argument("textureProcessorFactory cannot be null");
+    }
 }
 
 WindowsMFMP4SinkWriter::~WindowsMFMP4SinkWriter()

@@ -38,6 +38,10 @@ public:
     /// To inject TextureProcessor creation logic, use the overload that accepts
     /// ITextureProcessorFactory.
     /// </summary>
+    /// <param name="lifecycleManager">Media Foundation lifecycle manager. Must not be null.</param>
+    /// <param name="configBuilder">Stream configuration builder. Must not be null.</param>
+    /// <param name="sampleBuilder">Sample builder. Must not be null.</param>
+    /// <exception cref="std::invalid_argument">Thrown if any parameter is null.</exception>
     WindowsMFMP4SinkWriter(
         std::unique_ptr<IMediaFoundationLifecycleManager> lifecycleManager,
         std::unique_ptr<IStreamConfigurationBuilder> configBuilder,
@@ -47,6 +51,11 @@ public:
     /// Constructor with full dependency injection including TextureProcessor factory.
     /// This allows complete control over TextureProcessor creation for advanced testing scenarios.
     /// </summary>
+    /// <param name="lifecycleManager">Media Foundation lifecycle manager. Must not be null.</param>
+    /// <param name="configBuilder">Stream configuration builder. Must not be null.</param>
+    /// <param name="sampleBuilder">Sample builder. Must not be null.</param>
+    /// <param name="textureProcessorFactory">Texture processor factory. Must not be null.</param>
+    /// <exception cref="std::invalid_argument">Thrown if any parameter is null.</exception>
     WindowsMFMP4SinkWriter(
         std::unique_ptr<IMediaFoundationLifecycleManager> lifecycleManager,
         std::unique_ptr<IStreamConfigurationBuilder> configBuilder,

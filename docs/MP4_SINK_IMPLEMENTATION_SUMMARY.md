@@ -15,7 +15,7 @@ Implemented the Interface Segregation Principle and Factory Pattern to provide:
 
 ## Files Created
 
-### Interface Files (8)
+### Interface Files (9)
 1. `IMediaFoundationLifecycleManager.h` - Lifecycle management interface
 2. `IMediaFoundationLifecycleManagerFactory.h` - Factory interface
 3. `IStreamConfigurationBuilder.h` - Configuration builder interface
