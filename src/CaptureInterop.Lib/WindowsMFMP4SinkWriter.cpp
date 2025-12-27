@@ -1,8 +1,27 @@
 #include "pch.h"
 #include "WindowsMFMP4SinkWriter.h"
+#include "MediaFoundationLifecycleManager.h"
+#include "StreamConfigurationBuilder.h"
+#include "SampleBuilder.h"
+#include "TextureProcessor.h"
 #include "MediaTimeConstants.h"
 
-WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter() = default;
+WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter()
+    : m_mfLifecycle(std::make_unique<MediaFoundationLifecycleManager>())
+    , m_configBuilder(std::make_unique<StreamConfigurationBuilder>())
+    , m_sampleBuilder(std::make_unique<SampleBuilder>())
+{
+}
+
+WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter(
+    std::unique_ptr<IMediaFoundationLifecycleManager> lifecycleManager,
+    std::unique_ptr<IStreamConfigurationBuilder> configBuilder,
+    std::unique_ptr<ISampleBuilder> sampleBuilder)
+    : m_mfLifecycle(std::move(lifecycleManager))
+    , m_configBuilder(std::move(configBuilder))
+    , m_sampleBuilder(std::move(sampleBuilder))
+{
+}
 
 WindowsMFMP4SinkWriter::~WindowsMFMP4SinkWriter()
 {
@@ -14,14 +33,14 @@ bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device*
     if (outHr) *outHr = S_OK;
     
     // Check if MF was successfully initialized
-    if (!m_mfLifecycle.IsInitialized())
+    if (!m_mfLifecycle->IsInitialized())
     {
-        if (outHr) *outHr = m_mfLifecycle.GetInitializationResult();
+        if (outHr) *outHr = m_mfLifecycle->GetInitializationResult();
         return false;
     }
     
     // Store video configuration
-    m_videoConfig = StreamConfigurationBuilder::VideoConfig::Default(width, height);
+    m_videoConfig = IStreamConfigurationBuilder::VideoConfig::Default(width, height);
     
     // Create texture processor for video frame handling
     wil::com_ptr<ID3D11DeviceContext> context;
@@ -49,7 +68,7 @@ bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device*
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     // Create video output media type using builder
-    auto outputTypeResult = m_configBuilder.CreateVideoOutputType(m_videoConfig);
+    auto outputTypeResult = m_configBuilder->CreateVideoOutputType(m_videoConfig);
     if (outputTypeResult.IsError())
     {
         if (outHr) *outHr = outputTypeResult.Error().hr;
@@ -61,7 +80,7 @@ bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device*
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     // Create video input media type using builder
-    auto inputTypeResult = m_configBuilder.CreateVideoInputType(m_videoConfig);
+    auto inputTypeResult = m_configBuilder->CreateVideoInputType(m_videoConfig);
     if (inputTypeResult.IsError())
     {
         if (outHr) *outHr = inputTypeResult.Error().hr;
@@ -92,10 +111,10 @@ bool WindowsMFMP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, lo
     }
     
     // Create audio configuration from wave format
-    m_audioConfig = StreamConfigurationBuilder::AudioConfig::FromWaveFormat(*audioFormat);
+    m_audioConfig = IStreamConfigurationBuilder::AudioConfig::FromWaveFormat(*audioFormat);
 
     // Create audio output media type using builder
-    auto outputTypeResult = m_configBuilder.CreateAudioOutputType(m_audioConfig);
+    auto outputTypeResult = m_configBuilder->CreateAudioOutputType(m_audioConfig);
     if (outputTypeResult.IsError())
     {
         if (outHr) *outHr = outputTypeResult.Error().hr;
@@ -107,7 +126,7 @@ bool WindowsMFMP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, lo
     if (FAILED(hr)) { if (outHr) *outHr = hr; return false; }
 
     // Create audio input media type using builder
-    auto inputTypeResult = m_configBuilder.CreateAudioInputType(m_audioConfig);
+    auto inputTypeResult = m_configBuilder->CreateAudioInputType(m_audioConfig);
     if (inputTypeResult.IsError())
     {
         if (outHr) *outHr = inputTypeResult.Error().hr;
@@ -161,7 +180,7 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
     m_prevVideoTimestamp = relativeTicks;
 
     // Use sample builder to create video sample
-    auto sampleResult = m_sampleBuilder.CreateVideoSample(
+    auto sampleResult = m_sampleBuilder->CreateVideoSample(
         std::span<const uint8_t>(frameBuffer.data(), frameBuffer.size()),
         relativeTicks,
         duration);
@@ -194,7 +213,7 @@ long WindowsMFMP4SinkWriter::WriteAudioSample(std::span<const uint8_t> data, int
     LONGLONG duration = MediaTimeConstants::TicksFromAudioFrames(numFrames, m_audioConfig.sampleRate);
     
     // Use sample builder to create audio sample
-    auto sampleResult = m_sampleBuilder.CreateAudioSample(data, timestamp, duration);
+    auto sampleResult = m_sampleBuilder->CreateAudioSample(data, timestamp, duration);
     if (sampleResult.IsError())
     {
         return sampleResult.Error().hr;

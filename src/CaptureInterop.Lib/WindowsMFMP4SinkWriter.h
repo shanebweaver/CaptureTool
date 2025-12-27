@@ -1,9 +1,9 @@
 #pragma once
 #include "IMP4SinkWriter.h"
-#include "MediaFoundationLifecycleManager.h"
-#include "StreamConfigurationBuilder.h"
-#include "TextureProcessor.h"
-#include "SampleBuilder.h"
+#include "IMediaFoundationLifecycleManager.h"
+#include "IStreamConfigurationBuilder.h"
+#include "ITextureProcessor.h"
+#include "ISampleBuilder.h"
 #include <span>
 #include <wil/com.h>
 #include <memory>
@@ -16,15 +16,19 @@ struct IMFSinkWriter;
 /// Supports H.264 video and optional AAC audio streams with hardware acceleration.
 /// 
 /// Refactored to follow SOLID principles with single-responsibility components:
-/// - MediaFoundationLifecycleManager: MF initialization/shutdown
-/// - StreamConfigurationBuilder: Media type configuration
-/// - TextureProcessor: D3D11 texture handling
-/// - SampleBuilder: IMFSample creation
+/// - IMediaFoundationLifecycleManager: MF initialization/shutdown
+/// - IStreamConfigurationBuilder: Media type configuration
+/// - ITextureProcessor: D3D11 texture handling
+/// - ISampleBuilder: IMFSample creation
 /// </summary>
 class WindowsMFMP4SinkWriter : public IMP4SinkWriter
 {
 public:
     WindowsMFMP4SinkWriter();
+    WindowsMFMP4SinkWriter(
+        std::unique_ptr<IMediaFoundationLifecycleManager> lifecycleManager,
+        std::unique_ptr<IStreamConfigurationBuilder> configBuilder,
+        std::unique_ptr<ISampleBuilder> sampleBuilder);
     ~WindowsMFMP4SinkWriter() override;
 
     // IMP4SinkWriter implementation
@@ -42,10 +46,10 @@ private:
     volatile long m_ref = 1;
     
     // Core components (single-responsibility)
-    MediaFoundationLifecycleManager m_mfLifecycle;
-    StreamConfigurationBuilder m_configBuilder;
-    std::unique_ptr<TextureProcessor> m_textureProcessor;
-    SampleBuilder m_sampleBuilder;
+    std::unique_ptr<IMediaFoundationLifecycleManager> m_mfLifecycle;
+    std::unique_ptr<IStreamConfigurationBuilder> m_configBuilder;
+    std::unique_ptr<ITextureProcessor> m_textureProcessor;
+    std::unique_ptr<ISampleBuilder> m_sampleBuilder;
     
     // Sink writer state
     wil::com_ptr<IMFSinkWriter> m_sinkWriter;
@@ -57,6 +61,6 @@ private:
     int64_t m_prevVideoTimestamp = 0;
     
     // Configuration
-    StreamConfigurationBuilder::VideoConfig m_videoConfig;
-    StreamConfigurationBuilder::AudioConfig m_audioConfig;
+    IStreamConfigurationBuilder::VideoConfig m_videoConfig;
+    IStreamConfigurationBuilder::AudioConfig m_audioConfig;
 };
