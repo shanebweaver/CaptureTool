@@ -30,6 +30,14 @@ Result<MonitorScreenshot> WindowsScreenshotCapture::CaptureMonitor(HMONITOR hMon
     int width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
     int height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
     
+    // Validate dimensions
+    const int MAX_DIMENSION = 32768;
+    if (width <= 0 || height <= 0 || width > MAX_DIMENSION || height > MAX_DIMENSION)
+    {
+        return Result<MonitorScreenshot>::Error(
+            ErrorInfo::FromMessage(E_FAIL, "Invalid monitor dimensions", "CaptureMonitor"));
+    }
+    
     // Get DPI
     UINT dpiX = 96, dpiY = 96;
     HRESULT hr = GetDpiForMonitor(hMonitor, MDT_DEFAULT, &dpiX, &dpiY);
@@ -191,14 +199,41 @@ Result<CombinedScreenshot> WindowsScreenshotCapture::CombineMonitors(const std::
     int finalWidth = maxX - minX;
     int finalHeight = maxY - minY;
     
+    // Sanity checks to prevent integer overflow and excessive memory allocation
+    const int MAX_DIMENSION = 32768;  // Reasonable maximum for screen dimensions
+    if (finalWidth <= 0 || finalHeight <= 0 ||
+        finalWidth > MAX_DIMENSION || finalHeight > MAX_DIMENSION)
+    {
+        return Result<CombinedScreenshot>::Error(
+            ErrorInfo::FromMessage(E_FAIL, "Combined screenshot dimensions are invalid or too large", "CombineMonitors"));
+    }
+    
+    // Check for potential integer overflow in buffer size calculation
+    size_t bufferSize = static_cast<size_t>(finalWidth) * static_cast<size_t>(finalHeight) * 4;
+    const size_t MAX_BUFFER_SIZE = 4294967296;  // 4GB limit
+    if (bufferSize > MAX_BUFFER_SIZE)
+    {
+        return Result<CombinedScreenshot>::Error(
+            ErrorInfo::FromMessage(E_FAIL, "Combined screenshot buffer size exceeds maximum", "CombineMonitors"));
+    }
+    
     // Create combined pixel buffer (initialize to black)
-    std::vector<uint8_t> finalBuffer(finalWidth * finalHeight * 4, 0);
+    std::vector<uint8_t> finalBuffer(bufferSize, 0);
     
     // Copy each monitor's pixels to correct position
     for (const auto& monitor : monitors)
     {
         int offsetX = monitor.left - minX;
         int offsetY = monitor.top - minY;
+        
+        // Bounds check to prevent buffer overflow
+        if (offsetX < 0 || offsetY < 0 || 
+            offsetX + monitor.width > finalWidth || 
+            offsetY + monitor.height > finalHeight)
+        {
+            return Result<CombinedScreenshot>::Error(
+                ErrorInfo::FromMessage(E_FAIL, "Monitor bounds exceed combined buffer", "CombineMonitors"));
+        }
         
         for (int y = 0; y < monitor.height; y++)
         {
