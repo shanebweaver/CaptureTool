@@ -1,4 +1,5 @@
 #pragma once
+#include "ISampleBuilder.h"
 #include "Result.h"
 #include <wil/com.h>
 #include <span>
@@ -10,24 +11,25 @@ struct IMFSample;
 /// <summary>
 /// Creates Media Foundation samples from raw video or audio data.
 /// </summary>
-class SampleBuilder
+class SampleBuilder : public ISampleBuilder
 {
 public:
     SampleBuilder() = default;
-    ~SampleBuilder() = default;
+    ~SampleBuilder() override = default;
 
     SampleBuilder(const SampleBuilder&) = delete;
     SampleBuilder& operator=(const SampleBuilder&) = delete;
 
+    // ISampleBuilder implementation
     Result<wil::com_ptr<IMFSample>> CreateVideoSample(
         std::span<const uint8_t> data,
         int64_t timestamp,
-        int64_t duration) const;
+        int64_t duration) const override;
 
     Result<wil::com_ptr<IMFSample>> CreateAudioSample(
         std::span<const uint8_t> data,
         int64_t timestamp,
-        int64_t duration) const;
+        int64_t duration) const override;
 
 private:
     Result<wil::com_ptr<IMFSample>> CreateSampleFromData(

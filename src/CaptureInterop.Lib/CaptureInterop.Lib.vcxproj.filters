@@ -150,16 +150,52 @@
     <ClInclude Include="IMP4SinkWriter.h">
       <Filter>Header Files\SinkWriter</Filter>
     </ClInclude>
+    <ClInclude Include="IMediaFoundationLifecycleManager.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IMediaFoundationLifecycleManagerFactory.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="ISampleBuilder.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="ISampleBuilderFactory.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IStreamConfigurationBuilder.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IStreamConfigurationBuilderFactory.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="ITextureProcessor.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="ITextureProcessorFactory.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
     <ClInclude Include="MediaFoundationLifecycleManager.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="MediaFoundationLifecycleManagerFactory.h">
       <Filter>Header Files\SinkWriter</Filter>
     </ClInclude>
     <ClInclude Include="SampleBuilder.h">
       <Filter>Header Files\SinkWriter</Filter>
     </ClInclude>
+    <ClInclude Include="SampleBuilderFactory.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
     <ClInclude Include="StreamConfigurationBuilder.h">
       <Filter>Header Files\SinkWriter</Filter>
     </ClInclude>
+    <ClInclude Include="StreamConfigurationBuilderFactory.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
     <ClInclude Include="TextureProcessor.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureProcessorFactory.h">
       <Filter>Header Files\SinkWriter</Filter>
     </ClInclude>
     <ClInclude Include="CaptureSessionState.h">
@@ -227,16 +263,31 @@
     <ClCompile Include="WindowsMFMP4SinkWriterFactory.cpp">
       <Filter>Source Files\SinkWriter</Filter>
     </ClCompile>
+    <ClCompile Include="IStreamConfigurationBuilder.cpp">
+      <Filter>Source Files\SinkWriter</Filter>
+    </ClCompile>
     <ClCompile Include="MediaFoundationLifecycleManager.cpp">
+      <Filter>Source Files\SinkWriter</Filter>
+    </ClCompile>
+    <ClCompile Include="MediaFoundationLifecycleManagerFactory.cpp">
       <Filter>Source Files\SinkWriter</Filter>
     </ClCompile>
     <ClCompile Include="SampleBuilder.cpp">
       <Filter>Source Files\SinkWriter</Filter>
     </ClCompile>
+    <ClCompile Include="SampleBuilderFactory.cpp">
+      <Filter>Source Files\SinkWriter</Filter>
+    </ClCompile>
     <ClCompile Include="StreamConfigurationBuilder.cpp">
       <Filter>Source Files\SinkWriter</Filter>
     </ClCompile>
+    <ClCompile Include="StreamConfigurationBuilderFactory.cpp">
+      <Filter>Source Files\SinkWriter</Filter>
+    </ClCompile>
     <ClCompile Include="TextureProcessor.cpp">
+      <Filter>Source Files\SinkWriter</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureProcessorFactory.cpp">
       <Filter>Source Files\SinkWriter</Filter>
     </ClCompile>
   </ItemGroup>

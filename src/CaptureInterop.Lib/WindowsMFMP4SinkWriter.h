@@ -1,9 +1,10 @@
 #pragma once
 #include "IMP4SinkWriter.h"
-#include "MediaFoundationLifecycleManager.h"
-#include "StreamConfigurationBuilder.h"
-#include "TextureProcessor.h"
-#include "SampleBuilder.h"
+#include "IMediaFoundationLifecycleManager.h"
+#include "IStreamConfigurationBuilder.h"
+#include "ITextureProcessor.h"
+#include "ITextureProcessorFactory.h"
+#include "ISampleBuilder.h"
 #include <span>
 #include <wil/com.h>
 #include <memory>
@@ -16,15 +17,50 @@ struct IMFSinkWriter;
 /// Supports H.264 video and optional AAC audio streams with hardware acceleration.
 /// 
 /// Refactored to follow SOLID principles with single-responsibility components:
-/// - MediaFoundationLifecycleManager: MF initialization/shutdown
-/// - StreamConfigurationBuilder: Media type configuration
-/// - TextureProcessor: D3D11 texture handling
-/// - SampleBuilder: IMFSample creation
+/// - IMediaFoundationLifecycleManager: MF initialization/shutdown
+/// - IStreamConfigurationBuilder: Media type configuration
+/// - ITextureProcessor: D3D11 texture handling (created during Initialize)
+/// - ISampleBuilder: IMFSample creation
+/// 
+/// Note: TextureProcessor is created during Initialize() rather than via constructor
+/// injection because it requires runtime parameters (D3D11 device, context, dimensions)
+/// that are not available at construction time.
 /// </summary>
 class WindowsMFMP4SinkWriter : public IMP4SinkWriter
 {
 public:
     WindowsMFMP4SinkWriter();
+    
+    /// <summary>
+    /// Constructor with dependency injection for testability.
+    /// Note: TextureProcessor is not injected here as it requires runtime parameters
+    /// (D3D11 device, context, dimensions) provided during Initialize().
+    /// To inject TextureProcessor creation logic, use the overload that accepts
+    /// ITextureProcessorFactory.
+    /// </summary>
+    /// <param name="lifecycleManager">Media Foundation lifecycle manager. Must not be null.</param>
+    /// <param name="configBuilder">Stream configuration builder. Must not be null.</param>
+    /// <param name="sampleBuilder">Sample builder. Must not be null.</param>
+    /// <exception cref="std::invalid_argument">Thrown if any parameter is null.</exception>
+    WindowsMFMP4SinkWriter(
+        std::unique_ptr<IMediaFoundationLifecycleManager> lifecycleManager,
+        std::unique_ptr<IStreamConfigurationBuilder> configBuilder,
+        std::unique_ptr<ISampleBuilder> sampleBuilder);
+    
+    /// <summary>
+    /// Constructor with full dependency injection including TextureProcessor factory.
+    /// This allows complete control over TextureProcessor creation for advanced testing scenarios.
+    /// </summary>
+    /// <param name="lifecycleManager">Media Foundation lifecycle manager. Must not be null.</param>
+    /// <param name="configBuilder">Stream configuration builder. Must not be null.</param>
+    /// <param name="sampleBuilder">Sample builder. Must not be null.</param>
+    /// <param name="textureProcessorFactory">Texture processor factory. Must not be null.</param>
+    /// <exception cref="std::invalid_argument">Thrown if any parameter is null.</exception>
+    WindowsMFMP4SinkWriter(
+        std::unique_ptr<IMediaFoundationLifecycleManager> lifecycleManager,
+        std::unique_ptr<IStreamConfigurationBuilder> configBuilder,
+        std::unique_ptr<ISampleBuilder> sampleBuilder,
+        std::unique_ptr<ITextureProcessorFactory> textureProcessorFactory);
     ~WindowsMFMP4SinkWriter() override;
 
     // IMP4SinkWriter implementation
@@ -42,10 +78,11 @@ private:
     volatile long m_ref = 1;
     
     // Core components (single-responsibility)
-    MediaFoundationLifecycleManager m_mfLifecycle;
-    StreamConfigurationBuilder m_configBuilder;
-    std::unique_ptr<TextureProcessor> m_textureProcessor;
-    SampleBuilder m_sampleBuilder;
+    std::unique_ptr<IMediaFoundationLifecycleManager> m_mfLifecycle;
+    std::unique_ptr<IStreamConfigurationBuilder> m_configBuilder;
+    std::unique_ptr<ITextureProcessor> m_textureProcessor;
+    std::unique_ptr<ISampleBuilder> m_sampleBuilder;
+    std::unique_ptr<ITextureProcessorFactory> m_textureProcessorFactory;  // Optional factory for TextureProcessor creation
     
     // Sink writer state
     wil::com_ptr<IMFSinkWriter> m_sinkWriter;
@@ -57,6 +94,6 @@ private:
     int64_t m_prevVideoTimestamp = 0;
     
     // Configuration
-    StreamConfigurationBuilder::VideoConfig m_videoConfig;
-    StreamConfigurationBuilder::AudioConfig m_audioConfig;
+    IStreamConfigurationBuilder::VideoConfig m_videoConfig;
+    IStreamConfigurationBuilder::AudioConfig m_audioConfig;
 };

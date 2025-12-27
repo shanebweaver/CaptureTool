@@ -220,6 +220,103 @@ The refactored architecture enables future improvements:
 
 Existing `MP4SinkWriterTests.cpp` tests verify the refactored `WindowsMFMP4SinkWriter` works correctly end-to-end.
 
+## Interfaces and Factory Pattern
+
+To enable testability and dependency injection, all MP4 sink writer components now have corresponding interfaces and factory classes.
+
+### Interface Hierarchy
+
+```
+IMP4SinkWriter
+├── WindowsMFMP4SinkWriter (uses)
+    ├── IMediaFoundationLifecycleManager
+    │   └── MediaFoundationLifecycleManager
+    ├── IStreamConfigurationBuilder
+    │   └── StreamConfigurationBuilder
+    ├── ITextureProcessor
+    │   └── TextureProcessor
+    └── ISampleBuilder
+        └── SampleBuilder
+```
+
+### Factory Pattern Implementation
+
+Each component has a corresponding factory interface and implementation:
+
+1. **IMediaFoundationLifecycleManagerFactory** / **MediaFoundationLifecycleManagerFactory**
+   - Creates `IMediaFoundationLifecycleManager` instances
+   - Enables injection of mock lifecycle managers for testing
+
+2. **IStreamConfigurationBuilderFactory** / **StreamConfigurationBuilderFactory**
+   - Creates `IStreamConfigurationBuilder` instances
+   - Allows testing with custom media type configurations
+
+3. **ITextureProcessorFactory** / **TextureProcessorFactory**
+   - Creates `ITextureProcessor` instances
+   - Facilitates testing texture processing without D3D11 dependencies
+
+4. **ISampleBuilderFactory** / **SampleBuilderFactory**
+   - Creates `ISampleBuilder` instances
+   - Enables testing sample creation independently
+
+### Dependency Injection Support
+
+The `WindowsMFMP4SinkWriter` class now supports two construction modes:
+
+1. **Default Constructor**: Creates default implementations of all dependencies
+   ```cpp
+   auto writer = std::make_unique<WindowsMFMP4SinkWriter>();
+   ```
+
+2. **Constructor with Dependency Injection**: Accepts pre-configured dependencies
+   ```cpp
+   auto writer = std::make_unique<WindowsMFMP4SinkWriter>(
+       std::move(lifecycleManager),
+       std::move(configBuilder),
+       std::move(sampleBuilder)
+   );
+   ```
+
+### Benefits for Testing
+
+1. **Mockability**: All dependencies can be replaced with mock implementations
+2. **Isolation**: Each component can be tested independently
+3. **Flexibility**: Different configurations can be injected for different test scenarios
+4. **Maintainability**: Changes to one component don't require changes to unrelated tests
+
+### Example: Testing with Mock Dependencies
+
+```cpp
+// Create mock implementations
+auto mockLifecycle = std::make_unique<MockMediaFoundationLifecycleManager>();
+auto mockConfigBuilder = std::make_unique<MockStreamConfigurationBuilder>();
+auto mockSampleBuilder = std::make_unique<MockSampleBuilder>();
+
+// Inject mocks into the sink writer
+auto writer = std::make_unique<WindowsMFMP4SinkWriter>(
+    std::move(mockLifecycle),
+    std::move(mockConfigBuilder),
+    std::move(mockSampleBuilder)
+);
+
+// Test specific behavior without real Media Foundation dependencies
+```
+
+### Interface Segregation Principle
+
+Interfaces are designed to be minimal and focused:
+- Each interface defines only the methods needed for its specific responsibility
+- No "fat interfaces" with many unrelated methods
+- Easy to implement mock versions for testing
+
+### Clean Architecture Compliance
+
+The refactoring follows clean architecture principles:
+- **Dependency Inversion**: High-level `WindowsMFMP4SinkWriter` depends on abstractions (interfaces), not concrete implementations
+- **Separation of Concerns**: Each component has a single, well-defined responsibility
+- **Testability**: All dependencies can be injected and mocked
+- **Maintainability**: Changes to implementations don't affect interfaces
+
 ## Documentation Updates
 
 All new components include:
@@ -227,9 +324,14 @@ All new components include:
 - Clear explanation of RUST principles applied
 - Usage examples in header comments
 - Error handling guidelines
+- Interface and factory documentation
 
 ## Related Documents
 
 - [RUST_PRINCIPLES.md](./RUST_PRINCIPLES.md) - Core principles applied in this refactoring
 - [IMP4SinkWriter.h](../src/CaptureInterop.Lib/IMP4SinkWriter.h) - Public interface (unchanged)
 - [WindowsMFMP4SinkWriter.h](../src/CaptureInterop.Lib/WindowsMFMP4SinkWriter.h) - Refactored implementation
+- [IMediaFoundationLifecycleManager.h](../src/CaptureInterop.Lib/IMediaFoundationLifecycleManager.h) - Lifecycle manager interface
+- [IStreamConfigurationBuilder.h](../src/CaptureInterop.Lib/IStreamConfigurationBuilder.h) - Configuration builder interface
+- [ITextureProcessor.h](../src/CaptureInterop.Lib/ITextureProcessor.h) - Texture processor interface
+- [ISampleBuilder.h](../src/CaptureInterop.Lib/ISampleBuilder.h) - Sample builder interface

@@ -1,15 +1,16 @@
 #pragma once
+#include "IMediaFoundationLifecycleManager.h"
 #include <atomic>
 
 /// <summary>
 /// Manages Media Foundation initialization and shutdown with thread-safe reference counting.
 /// RAII pattern ensures MFStartup is called in constructor and MFShutdown in destructor.
 /// </summary>
-class MediaFoundationLifecycleManager
+class MediaFoundationLifecycleManager : public IMediaFoundationLifecycleManager
 {
 public:
     MediaFoundationLifecycleManager();
-    ~MediaFoundationLifecycleManager();
+    ~MediaFoundationLifecycleManager() override;
 
     // Non-copyable, non-movable (shares global MF state)
     MediaFoundationLifecycleManager(const MediaFoundationLifecycleManager&) = delete;
@@ -17,8 +18,9 @@ public:
     MediaFoundationLifecycleManager(MediaFoundationLifecycleManager&&) = delete;
     MediaFoundationLifecycleManager& operator=(MediaFoundationLifecycleManager&&) = delete;
 
-    bool IsInitialized() const { return m_initialized; }
-    long GetInitializationResult() const { return m_initHr; }
+    // IMediaFoundationLifecycleManager implementation
+    bool IsInitialized() const override { return m_initialized; }
+    long GetInitializationResult() const override { return m_initHr; }
 
 private:
     bool m_initialized;
