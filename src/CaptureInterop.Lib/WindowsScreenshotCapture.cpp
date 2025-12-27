@@ -19,7 +19,7 @@ Result<MonitorScreenshot> WindowsScreenshotCapture::CaptureMonitor(HMONITOR hMon
     // Get monitor info
     MONITORINFOEXW monitorInfo = {};
     monitorInfo.cbSize = sizeof(MONITORINFOEXW);
-    if (!GetMonitorInfoW(hMonitor, &monitorInfo))
+    if (!GetMonitorInfoW(hMonitor, (LPMONITORINFO)&monitorInfo))
     {
         return Result<MonitorScreenshot>::Error(
             ErrorInfo::FromHResult(HRESULT_FROM_WIN32(GetLastError()), "GetMonitorInfoW"));
