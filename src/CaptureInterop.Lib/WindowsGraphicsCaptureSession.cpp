@@ -42,6 +42,24 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
 WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
 {
     Stop();
+    // Principle #5 (RAII Everything): Destructor ensures all resources are cleaned up
+    // automatically via the following chain:
+    //
+    // 1. Stop() explicitly releases runtime state:
+    //    - Stops capture sources (calls source->Stop())
+    //    - Clears callbacks
+    //    - Finalizes sink writer (flushes buffers and closes file)
+    //    - Resets clock state
+    //
+    // 2. std::unique_ptr destructors automatically clean up owned objects:
+    //    - m_mediaClock: No OS resources, just in-memory state
+    //    - m_audioCaptureSource: Calls Stop() to release WASAPI handles
+    //    - m_videoCaptureSource: Calls Stop() to release Graphics Capture session
+    //    - m_sinkWriter: Calls Finalize() to release Media Foundation resources
+    //
+    // All COM objects use wil::com_ptr for automatic reference counting.
+    // No manual delete, free(), or Release() calls needed - the type system guarantees
+    // proper cleanup through RAII. See docs/RUST_PRINCIPLES.md principle #5.
 }
 
 bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
@@ -64,6 +82,10 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
     // Validate dependencies
     if (!m_mediaClock || !m_audioCaptureSource || !m_videoCaptureSource || !m_sinkWriter)
     {
+        // Principle #3 (No Nullable Pointers): This check should never fail if the factory
+        // properly initialized all dependencies. After construction, we rely on the type
+        // system (std::unique_ptr) to guarantee these are non-null. This check is defensive
+        // programming for factory implementation errors.
         [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
         // Transition should always succeed from Created to Failed
         assert(transitioned && "Transition to Failed should always succeed from Created state");

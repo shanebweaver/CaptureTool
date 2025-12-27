@@ -27,6 +27,27 @@ using AudioSampleReadyCallback = std::function<void(const AudioSampleReadyEventA
 /// Manages audio capture in a dedicated thread with synchronized timestamps.
 /// Captures audio samples from WASAPI and fires an event when samples are ready.
 /// Uses the media clock reader to get synchronized timestamps.
+/// 
+/// Implements Rust Principles:
+/// - Principle #5 (RAII Everything): Destructor calls Stop() to ensure thread is joined
+///   and audio device is released. AudioCaptureDevice cleanup is automatic.
+/// - Principle #6 (No Globals): All dependencies (clock reader/writer) are passed via
+///   constructor or setters, not accessed as singletons.
+/// - Principle #8 (Thread Safety by Design): Uses std::atomic for flags, std::mutex for
+///   buffer protection. Designed for concurrent access from control and capture threads.
+/// 
+/// Threading model:
+/// - Audio capture runs in dedicated thread at ABOVE_NORMAL priority
+/// - Control methods (Start, Stop, SetEnabled) are thread-safe via atomics
+/// - Callback is invoked on the capture thread
+/// - Silent buffer access is protected by mutex
+/// 
+/// Design notes:
+/// - Advances media clock as audio samples are captured (authoritative time source)
+/// - Generates silent frames when system audio is silent to maintain timing
+/// - SetEnabled() allows runtime muting without stopping capture thread
+/// 
+/// See docs/RUST_PRINCIPLES.md for more details.
 /// </summary>
 class AudioCaptureHandler
 {

@@ -19,6 +19,18 @@ using VideoFrameReadyCallback = std::function<void(const VideoFrameReadyEventArg
 /// <summary>
 /// Interface for video capture sources that can be captured and written to an output stream.
 /// Implementations provide different video sources (screen capture, window capture, etc.)
+/// 
+/// Implements Rust Principles:
+/// - Principle #7 (Const Correctness): Read-only methods are const (GetWidth, GetHeight, IsRunning)
+/// - Principle #8 (Thread Safety by Design): Implementations handle thread-safe callback
+///   invocation from background processing threads
+/// 
+/// Design notes:
+/// - Video frames are captured asynchronously and delivered via callback
+/// - Callbacks are invoked on a background thread, not the calling thread
+/// - Frame timestamps are synchronized with the media clock for A/V sync
+/// 
+/// See docs/RUST_PRINCIPLES.md for more details on these principles.
 /// </summary>
 class IVideoCaptureSource
 {

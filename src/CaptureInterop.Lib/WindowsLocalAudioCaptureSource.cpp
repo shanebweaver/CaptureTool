@@ -4,11 +4,15 @@
 WindowsLocalAudioCaptureSource::WindowsLocalAudioCaptureSource(IMediaClockReader* clockReader)
     : m_handler(std::make_unique<AudioCaptureHandler>(clockReader))
 {
+    // Principle #6 (No Globals): Clock reader passed via constructor, not accessed globally
+    // Principle #3 (No Nullable Pointers): Handler is always valid after construction
 }
 
 WindowsLocalAudioCaptureSource::~WindowsLocalAudioCaptureSource()
 {
     Stop();
+    // Principle #5 (RAII Everything): Stop() releases audio resources, then m_handler
+    // is automatically cleaned up via std::unique_ptr destructor
 }
 
 bool WindowsLocalAudioCaptureSource::Initialize(HRESULT* outHr)

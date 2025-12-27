@@ -4,6 +4,14 @@
 /// <summary>
 /// Explicit state machine for capture session lifecycle.
 /// Defines valid states and transitions for compile-time safety.
+/// 
+/// Implements Rust Principle #9: Encode State Machines in Types
+/// See docs/RUST_PRINCIPLES.md for details.
+/// 
+/// This design prevents invalid state transitions at runtime by validating
+/// all transitions through TryTransitionTo(). Terminal states (Stopped, Failed)
+/// cannot transition to any other state, making it impossible to reuse a
+/// completed or failed session.
 /// </summary>
 enum class CaptureSessionState
 {
@@ -47,6 +55,16 @@ enum class CaptureSessionState
 /// <summary>
 /// State machine that validates transitions and provides query methods.
 /// Thread-safe using atomic operations with appropriate memory ordering.
+/// 
+/// Implements:
+/// - Rust Principle #9: State machine encoded in types with validated transitions
+/// - Rust Principle #8: Thread-safe by design using std::atomic with memory ordering
+/// 
+/// Design rationale:
+/// - Invalid transitions return false, preventing bugs at runtime
+/// - Terminal states cannot transition, enforcing single-use semantics
+/// - Atomic operations ensure thread-safe state reads and updates
+/// - Compare-exchange loop prevents race conditions during transitions
 /// </summary>
 class CaptureSessionStateMachine
 {

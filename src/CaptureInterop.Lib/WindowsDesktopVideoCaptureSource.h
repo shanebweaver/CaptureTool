@@ -16,6 +16,26 @@ class IMediaClockReader;
 /// <summary>
 /// Windows Graphics Capture API implementation of IVideoCaptureSource.
 /// Captures screen content using the Windows.Graphics.Capture API with hardware acceleration.
+/// 
+/// Implements Rust Principles:
+/// - Principle #3 (No Nullable Pointers): Uses wil::com_ptr for all COM object lifetime management,
+///   including m_frameHandler. No raw pointers that need manual Release() calls.
+/// - Principle #5 (RAII Everything): Destructor calls Stop() to release all resources.
+///   All COM objects use wil::com_ptr for automatic Release() on destruction.
+/// - Principle #6 (No Globals): Clock reader passed via constructor, config is a value type
+/// - Principle #8 (Thread Safety by Design): Frame callbacks are invoked on background thread
+/// 
+/// Ownership model:
+/// - Owns D3D device and context via wil::com_ptr
+/// - Owns capture session and frame pool via wil::com_ptr
+/// - Owns frame handler via wil::com_ptr (improved from raw pointer with manual ref counting)
+/// 
+/// Threading model:
+/// - Initialize/Start/Stop called from session thread
+/// - Frame callbacks invoked from FrameArrivedHandler's background processing thread
+/// - m_isRunning flag is not atomic (single-threaded control access assumed)
+/// 
+/// See docs/RUST_PRINCIPLES.md for more details.
 /// </summary>
 class WindowsDesktopVideoCaptureSource : public IVideoCaptureSource
 {
@@ -58,7 +78,7 @@ private:
     wil::com_ptr<ID3D11DeviceContext> m_context;
     
     // Frame processing handler
-    FrameArrivedHandler* m_frameHandler;
+    wil::com_ptr<FrameArrivedHandler> m_frameHandler;
     
     // Callback
     VideoFrameReadyCallback m_callback;
