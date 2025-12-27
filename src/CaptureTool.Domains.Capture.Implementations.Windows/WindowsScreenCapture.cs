@@ -69,7 +69,8 @@ public class WindowsScreenCapture : IScreenCapture
                 IntPtr screenshotHandle = CaptureInterop.CaptureMonitorScreenshot(hMonitor);
                 if (screenshotHandle == IntPtr.Zero)
                 {
-                    return true; // Continue enumeration even if one fails
+                    // Continue enumeration even if one monitor fails - we want to capture as many as possible
+                    return true;
                 }
 
                 try
@@ -89,7 +90,8 @@ public class WindowsScreenCapture : IScreenCapture
                     byte[] pixels = new byte[width * height * 4];
                     if (!CaptureInterop.CopyScreenshotPixels(screenshotHandle, pixels, pixels.Length))
                     {
-                        return true; // Continue enumeration
+                        // Continue enumeration even if pixel copy fails - we want to capture as many as possible
+                        return true;
                     }
 
                     // Get monitor info for work area

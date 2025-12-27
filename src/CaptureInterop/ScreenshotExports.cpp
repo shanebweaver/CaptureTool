@@ -2,6 +2,9 @@
 #include "WindowsScreenshotCapture.h"
 #include <memory>
 
+// Constants
+constexpr uint32_t DEFAULT_DPI = 96;
+
 // Opaque handle implementation
 struct ScreenshotHandle
 {
@@ -82,8 +85,8 @@ extern "C"
             if (height) *height = handle->combinedData.height;
             if (left) *left = handle->combinedData.left;
             if (top) *top = handle->combinedData.top;
-            if (dpiX) *dpiX = 96;
-            if (dpiY) *dpiY = 96;
+            if (dpiX) *dpiX = DEFAULT_DPI;
+            if (dpiY) *dpiY = DEFAULT_DPI;
             if (isPrimary) *isPrimary = false;
         }
         else

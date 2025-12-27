@@ -230,20 +230,31 @@ Result<void> WindowsScreenshotCapture::SaveToPng(const uint8_t* pixelData, int w
             ErrorInfo::FromMessage(E_INVALIDARG, "Invalid parameters", "SaveToPng"));
     }
     
-    // Initialize COM if not already initialized
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-    bool comInitialized = SUCCEEDED(hr);
-    if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
+    // RAII wrapper for COM initialization
+    struct ComInitializer
     {
-        return Result<void>::Error(ErrorInfo::FromHResult(hr, "CoInitializeEx"));
-    }
+        bool initialized;
+        ComInitializer() : initialized(false)
+        {
+            HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+            initialized = (hr == S_OK);
+        }
+        ~ComInitializer()
+        {
+            if (initialized)
+            {
+                CoUninitialize();
+            }
+        }
+    };
+    
+    ComInitializer comInit;
     
     // Create WIC factory
     wil::com_ptr<IWICImagingFactory> pFactory;
-    hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFactory));
+    HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFactory));
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "CoCreateInstance(WICImagingFactory)"));
     }
     
@@ -252,14 +263,12 @@ Result<void> WindowsScreenshotCapture::SaveToPng(const uint8_t* pixelData, int w
     hr = pFactory->CreateStream(&pStream);
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "CreateStream"));
     }
     
     hr = pStream->InitializeFromFilename(filePath, GENERIC_WRITE);
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "InitializeFromFilename"));
     }
     
@@ -268,14 +277,12 @@ Result<void> WindowsScreenshotCapture::SaveToPng(const uint8_t* pixelData, int w
     hr = pFactory->CreateEncoder(GUID_ContainerFormatPng, nullptr, &pEncoder);
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "CreateEncoder"));
     }
     
     hr = pEncoder->Initialize(pStream.get(), WICBitmapEncoderNoCache);
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "Initialize encoder"));
     }
     
@@ -284,21 +291,18 @@ Result<void> WindowsScreenshotCapture::SaveToPng(const uint8_t* pixelData, int w
     hr = pEncoder->CreateNewFrame(&pFrame, nullptr);
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "CreateNewFrame"));
     }
     
     hr = pFrame->Initialize(nullptr);
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "Initialize frame"));
     }
     
     hr = pFrame->SetSize(width, height);
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "SetSize"));
     }
     
@@ -307,7 +311,6 @@ Result<void> WindowsScreenshotCapture::SaveToPng(const uint8_t* pixelData, int w
     hr = pFrame->SetPixelFormat(&pixelFormat);
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "SetPixelFormat"));
     }
     
@@ -317,24 +320,20 @@ Result<void> WindowsScreenshotCapture::SaveToPng(const uint8_t* pixelData, int w
     hr = pFrame->WritePixels(height, stride, bufferSize, const_cast<BYTE*>(pixelData));
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "WritePixels"));
     }
     
     hr = pFrame->Commit();
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "Commit frame"));
     }
     
     hr = pEncoder->Commit();
     if (FAILED(hr))
     {
-        if (comInitialized) CoUninitialize();
         return Result<void>::Error(ErrorInfo::FromHResult(hr, "Commit encoder"));
     }
     
-    if (comInitialized) CoUninitialize();
     return Result<void>::Ok();
 }
