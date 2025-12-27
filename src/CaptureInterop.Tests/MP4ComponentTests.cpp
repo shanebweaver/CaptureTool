@@ -291,7 +291,7 @@ namespace CaptureInteropTests
         TEST_METHOD(CreateAudioSample_WithValidData_Succeeds)
         {
             SampleBuilder builder;
-            std::vector<uint8_t> data(4800, 0); // 100ms of 48kHz stereo 16-bit audio
+            std::vector<uint8_t> data(4800, 0); // 25ms of 48kHz stereo 16-bit audio
 
             auto result = builder.CreateAudioSample(data, 1000000, 1000000);
 
