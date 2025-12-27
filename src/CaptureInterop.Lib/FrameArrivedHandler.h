@@ -71,6 +71,9 @@ public:
     // Stop the background processing thread
     void Stop();
 
+    // Get the count of dropped frames
+    uint64_t GetDroppedFrameCount() const { return m_droppedFrameCount.load(); }
+
 private:
     void ProcessingThreadProc();
 
@@ -86,6 +89,7 @@ private:
     std::atomic<bool> m_running{true};
     std::atomic<bool> m_stopped{false};  // Guard for idempotent Stop()
     std::atomic<bool> m_processingStarted{false};  // Guard for StartProcessing()
+    std::atomic<uint64_t> m_droppedFrameCount{0};  // Count of frames dropped due to full queue
 };
 
 // Helper to register the frame-arrived event.
