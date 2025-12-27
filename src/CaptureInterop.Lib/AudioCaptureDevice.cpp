@@ -10,7 +10,10 @@ AudioCaptureDevice::AudioCaptureDevice() = default;
 AudioCaptureDevice::~AudioCaptureDevice()
 {
     Stop();
-    // m_waveFormat cleans up automatically
+    // Principle #5 (RAII Everything): All COM objects automatically released via wil::com_ptr
+    // - m_captureClient, m_audioClient, m_device, m_deviceEnumerator: wil::com_ptr handles Release()
+    // - m_waveFormat: wil::unique_cotaskmem_ptr calls CoTaskMemFree()
+    // No manual Release() or free() calls needed.
 }
 
 // ============================================================================

@@ -23,6 +23,18 @@ using AudioSampleReadyCallback = std::function<void(const AudioSampleReadyEventA
 /// Interface for audio input sources that can be captured and written to an output stream.
 /// Implementations provide different audio sources (system audio, microphone, etc.)
 /// Extends IMediaClockAdvancer to drive the media clock timeline based on audio samples.
+/// 
+/// Implements Rust Principles:
+/// - Principle #7 (Const Correctness): Read-only methods are const (GetFormat, IsEnabled, IsRunning)
+/// - Principle #8 (Thread Safety by Design): Implementations use threading primitives to ensure
+///   safe concurrent access from capture thread and control thread
+/// 
+/// Design notes:
+/// - Audio capture sources are the authoritative time source for A/V synchronization
+/// - Implementations drive the media clock by calling IMediaClockWriter::AdvanceByAudioSamples()
+/// - SetAudioSampleReadyCallback() is invoked on the capture thread, not the calling thread
+/// 
+/// See docs/RUST_PRINCIPLES.md for more details on these principles.
 /// </summary>
 class IAudioCaptureSource : public IMediaClockAdvancer
 {

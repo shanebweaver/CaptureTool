@@ -16,11 +16,17 @@ AudioCaptureHandler::AudioCaptureHandler(IMediaClockReader* clockReader)
     : m_clockReader(clockReader)
 {
     QueryPerformanceFrequency(&m_qpcFrequency);
+    // Principle #6 (No Globals): Clock reader passed via constructor
 }
 
 AudioCaptureHandler::~AudioCaptureHandler()
 {
     Stop();
+    // Principle #5 (RAII Everything): Destructor ensures cleanup via following chain:
+    // 1. Stop() joins capture thread and releases audio device
+    // 2. m_device destructor releases WASAPI COM objects via wil::com_ptr
+    // 3. m_silentBuffer memory is automatically freed via std::vector destructor
+    // No manual delete/free calls needed - type system guarantees cleanup.
 }
 
 // ============================================================================
