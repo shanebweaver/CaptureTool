@@ -13,7 +13,7 @@ struct ID3D11Texture2D;
 /// Handles D3D11 texture processing for video frame capture.
 /// Manages staging texture creation, texture copying, and pixel data extraction.
 /// 
-/// Implements RUST Principles:
+/// Implements Rust Principles:
 /// - Principle #4 (Explicit Error Handling): Uses Result<T> for error handling
 /// - Principle #5 (RAII Everything): Automatic cleanup of staging texture
 /// - Principle #7 (Const Correctness): Read-only methods marked const

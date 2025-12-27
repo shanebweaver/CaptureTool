@@ -6,7 +6,7 @@
 /// Ensures MFStartup is called before any MF operations and MFShutdown on cleanup.
 /// Thread-safe reference counting allows multiple components to share MF resources.
 /// 
-/// Implements RUST Principles:
+/// Implements Rust Principles:
 /// - Principle #5 (RAII Everything): MFStartup in constructor, MFShutdown in destructor
 /// - Principle #6 (No Globals): Instance-based lifecycle management
 /// - Principle #8 (Thread Safety): Atomic reference counting

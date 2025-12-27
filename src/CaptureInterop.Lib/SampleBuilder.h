@@ -11,7 +11,7 @@ struct IMFSample;
 /// Builder for creating Media Foundation samples from raw data.
 /// Encapsulates the process of creating IMFSample objects with proper timing information.
 /// 
-/// Implements RUST Principles:
+/// Implements Rust Principles:
 /// - Principle #1 (Ownership): Returns com_ptr with clear ownership
 /// - Principle #4 (Explicit Error Handling): Uses Result<T> for error handling
 /// - Principle #7 (Const Correctness): Methods are const

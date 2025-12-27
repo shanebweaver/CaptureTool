@@ -42,7 +42,7 @@ WindowsMFMP4SinkWriter (Coordinator)
 - Multiple instances can safely coexist
 - Only the first instance initializes MF, only the last shuts it down
 
-**RUST Principles Applied**:
+**Rust Principles Applied**:
 - Principle #5 (RAII Everything): MFStartup in constructor, MFShutdown in destructor
 - Principle #6 (No Globals): Instance-based lifecycle management
 - Principle #8 (Thread Safety): Atomic reference counting
@@ -67,7 +67,7 @@ if (!mfLifecycle.IsInitialized()) {
 - Provides separate methods for input and output types
 - Returns `Result<T>` for explicit error handling
 
-**RUST Principles Applied**:
+**Rust Principles Applied**:
 - Principle #1 (Ownership): Returns com_ptr with clear ownership
 - Principle #4 (Explicit Error Handling): Uses Result<T> for error handling
 - Principle #7 (Const Correctness): All methods are const
@@ -95,7 +95,7 @@ auto mediaType = outputTypeResult.Value();
 - Automatic cleanup via RAII
 - Returns `Result<void>` for error handling
 
-**RUST Principles Applied**:
+**Rust Principles Applied**:
 - Principle #4 (Explicit Error Handling): Uses Result<T> for error handling
 - Principle #5 (RAII Everything): Automatic cleanup of staging texture
 - Principle #7 (Const Correctness): Read-only methods marked const
@@ -121,7 +121,7 @@ if (result.IsError()) {
 - Returns `Result<T>` for error handling
 - Proper memory management
 
-**RUST Principles Applied**:
+**Rust Principles Applied**:
 - Principle #1 (Ownership): Returns com_ptr with clear ownership
 - Principle #4 (Explicit Error Handling): Uses Result<T> for error handling
 - Principle #7 (Const Correctness): Methods are const

@@ -11,7 +11,7 @@ struct IMFMediaType;
 /// Builder for creating Media Foundation media type configurations for video and audio streams.
 /// Encapsulates the complex process of configuring H.264 video and AAC audio encoding parameters.
 /// 
-/// Implements RUST Principles:
+/// Implements Rust Principles:
 /// - Principle #1 (Ownership): Returns unique_ptr to transfer ownership
 /// - Principle #4 (Explicit Error Handling): Uses Result<T> for error handling
 /// - Principle #7 (Const Correctness): All parameters are const
@@ -46,10 +46,11 @@ public:
         uint32_t sampleRate;        // Samples per second (e.g., 48000)
         uint32_t channels;          // Number of channels (e.g., 2 for stereo)
         uint32_t bitsPerSample;     // Bits per sample (e.g., 16)
-        uint32_t bitrate;           // Bits per second (e.g., 20000 = 160 kbps)
+        uint32_t bitrate;           // BYTES per second (e.g., 20000 bytes/s = 160 kbps)
         bool isFloatFormat;         // True for IEEE float, false for PCM
         
-        static constexpr uint32_t DEFAULT_AAC_BITRATE = 20000;  // 160 kbps
+        // Default AAC bitrate: 20000 bytes/second = 160 kbps
+        static constexpr uint32_t DEFAULT_AAC_BITRATE = 20000;
         
         static AudioConfig FromWaveFormat(const WAVEFORMATEX& format);
     };
