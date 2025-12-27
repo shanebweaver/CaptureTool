@@ -30,7 +30,7 @@ Result<wil::com_ptr<IMFSample>> SampleBuilder::CreateSampleFromData(
             ErrorInfo::FromMessage(E_INVALIDARG, "Data is empty", context));
     }
 
-    if (data.size() > std::numeric_limits<UINT32>::max())
+    if (data.size() > (std::numeric_limits<UINT32>::max)())
     {
         return Result<wil::com_ptr<IMFSample>>::Error(
             ErrorInfo::FromMessage(E_INVALIDARG, "Data size exceeds UINT32 limit", context));
