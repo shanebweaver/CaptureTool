@@ -191,6 +191,7 @@ Result<wil::com_ptr<IMFMediaType>> StreamConfigurationBuilder::CreateAudioOutput
             ErrorInfo::FromHResult(hr, "CreateAudioOutputType: SetUINT32 bitrate failed"));
     }
 
+    // AAC output is always 16-bit, regardless of input format
     hr = mediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
     if (FAILED(hr))
     {
