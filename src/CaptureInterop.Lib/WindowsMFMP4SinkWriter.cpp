@@ -293,7 +293,7 @@ void WindowsMFMP4SinkWriter::Finalize()
             }
         }
         
-        HRESULT hr = m_sinkWriter->Finalize();
+        hr = m_sinkWriter->Finalize();
         if (FAILED(hr) && SUCCEEDED(m_lastFinalizationError))
         {
             m_lastFinalizationError = hr;
