@@ -14,11 +14,19 @@ WindowsDesktopVideoCaptureSource::WindowsDesktopVideoCaptureSource(const Capture
     , m_isRunning(false)
 {
     m_frameArrivedEventToken.value = 0;
+    // Principle #6 (No Globals): Config and clock reader passed via constructor
 }
 
 WindowsDesktopVideoCaptureSource::~WindowsDesktopVideoCaptureSource()
 {
     Stop();
+    // Principle #5 (RAII Everything): Destructor ensures cleanup via following chain:
+    // 1. Stop() unregisters event handler, stops frame processing, releases resources
+    // 2. wil::com_ptr members automatically Release() COM objects:
+    //    - m_frameHandler (if any)
+    //    - m_context, m_device (D3D resources)
+    //    - m_framePool, m_captureSession (Windows Graphics Capture resources)
+    // No manual Release() calls needed - type system guarantees cleanup.
 }
 
 bool WindowsDesktopVideoCaptureSource::Initialize(HRESULT* outHr)
@@ -107,12 +115,17 @@ bool WindowsDesktopVideoCaptureSource::Start(HRESULT* outHr)
     }
 
     // Register frame arrived handler with callback and clock reader for timestamps
-    m_frameArrivedEventToken = RegisterFrameArrivedHandler(m_framePool, m_callback, m_clockReader, &m_frameHandler, &hr);
+    // Principle #3 (No Nullable Pointers): Use wil::com_ptr to manage handler lifetime
+    FrameArrivedHandler* rawHandler = nullptr;
+    m_frameArrivedEventToken = RegisterFrameArrivedHandler(m_framePool, m_callback, m_clockReader, &rawHandler, &hr);
     if (FAILED(hr))
     {
         if (outHr) *outHr = hr;
         return false;
     }
+    
+    // Transfer ownership to wil::com_ptr (takes over the AddRef from RegisterFrameArrivedHandler)
+    m_frameHandler.attach(rawHandler);
 
     // Start video capture
     hr = m_captureSession->StartCapture();
@@ -142,15 +155,16 @@ void WindowsDesktopVideoCaptureSource::Stop()
 
     m_frameArrivedEventToken.value = 0;
 
-    // Stop the frame handler and release our reference
+    // Stop the frame handler
+    // Principle #5 (RAII Everything): wil::com_ptr automatically calls Release()
     if (m_frameHandler)
     {
         m_frameHandler->Stop();
-        m_frameHandler->Release();
-        m_frameHandler = nullptr;
+        m_frameHandler.reset(); // Explicit reset for clarity, calls Release() automatically
     }
 
     // Release capture session
+    // Principle #3 (No Nullable Pointers): wil::com_ptr handles Release() automatically
     if (m_captureSession)
     {
         m_captureSession.reset();

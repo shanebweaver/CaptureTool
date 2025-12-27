@@ -17,6 +17,7 @@ FrameArrivedHandler::FrameArrivedHandler(VideoFrameReadyCallback callback, IMedi
     m_stopped(false),
     m_processingStarted(false)
 {
+    // Principle #6 (No Globals): Callback and clock reader passed via constructor
     // Note: Thread is started after object is fully constructed
     // This prevents accessing uninitialized members in ProcessingThreadProc
 }
@@ -35,6 +36,12 @@ void FrameArrivedHandler::StartProcessing()
 FrameArrivedHandler::~FrameArrivedHandler()
 {
     Stop();
+    // Principle #5 (RAII Everything): Destructor ensures cleanup:
+    // 1. Stop() joins background thread
+    // 2. m_frameQueue cleanup: wil::com_ptr in QueuedFrame automatically Release() textures
+    // 3. m_processingThread destructor (after join)
+    // NOTE: We use manual ref counting (COM pattern) rather than smart pointers
+    // because this is a COM event handler that must implement IUnknown.
 }
 
 void FrameArrivedHandler::Stop()
@@ -88,6 +95,9 @@ ULONG STDMETHODCALLTYPE FrameArrivedHandler::Release()
     if (ref == 0)
     {
         delete this;
+        // COM pattern: Manual delete when ref count reaches 0
+        // This is an exception to Principle #5 (RAII) due to COM requirements
+        // The object manages its own lifetime through reference counting
     }
 
     return ref;
