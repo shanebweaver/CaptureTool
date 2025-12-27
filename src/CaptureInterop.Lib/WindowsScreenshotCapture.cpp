@@ -108,7 +108,7 @@ Result<std::vector<uint8_t>> WindowsScreenshotCapture::GetBitmapPixels(HDC hdc, 
 {
     // Check for potential integer overflow in buffer size calculation
     size_t bufferSize = static_cast<size_t>(width) * static_cast<size_t>(height) * 4;
-    const size_t MAX_BUFFER_SIZE = 4294967296;  // 4GB limit
+    const size_t MAX_BUFFER_SIZE = 0xFFFFFFFF;  // DWORD max (4GB - 1)
     if (bufferSize > MAX_BUFFER_SIZE)
     {
         return Result<std::vector<uint8_t>>::Error(
