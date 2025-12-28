@@ -2,6 +2,7 @@ using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Capture.Interfaces.Metadata;
 using CaptureTool.Domains.Capture.Implementations.Windows.Metadata;
 using CaptureTool.Domains.Capture.Implementations.Windows.Metadata.Scanners;
+using CaptureTool.Services.Interfaces.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Domains.Capture.Implementations.Windows.DependencyInjection;
@@ -31,19 +32,36 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
     public static IServiceProvider RegisterMetadataScanners(this IServiceProvider serviceProvider)
     {
         var registry = serviceProvider.GetRequiredService<IMetadataScannerRegistry>();
+        var logService = serviceProvider.GetService<ILogService>();
         
         // Register all video scanners
         var videoScanners = serviceProvider.GetServices<IVideoMetadataScanner>();
         foreach (var scanner in videoScanners)
         {
-            registry.RegisterVideoScanner(scanner);
+            try
+            {
+                registry.RegisterVideoScanner(scanner);
+                logService?.LogInformation($"Registered video metadata scanner: {scanner.Name} ({scanner.ScannerId})");
+            }
+            catch (InvalidOperationException ex)
+            {
+                logService?.LogWarning($"Failed to register video scanner '{scanner.ScannerId}': {ex.Message}");
+            }
         }
         
         // Register all audio scanners
         var audioScanners = serviceProvider.GetServices<IAudioMetadataScanner>();
         foreach (var scanner in audioScanners)
         {
-            registry.RegisterAudioScanner(scanner);
+            try
+            {
+                registry.RegisterAudioScanner(scanner);
+                logService?.LogInformation($"Registered audio metadata scanner: {scanner.Name} ({scanner.ScannerId})");
+            }
+            catch (InvalidOperationException ex)
+            {
+                logService?.LogWarning($"Failed to register audio scanner '{scanner.ScannerId}': {ex.Message}");
+            }
         }
         
         return serviceProvider;

@@ -17,6 +17,11 @@ public sealed class MetadataScannerRegistry : IMetadataScannerRegistry
 
         lock (_lock)
         {
+            if (_videoScanners.ContainsKey(scanner.ScannerId))
+            {
+                throw new InvalidOperationException(
+                    $"A video scanner with ID '{scanner.ScannerId}' is already registered.");
+            }
             _videoScanners[scanner.ScannerId] = scanner;
         }
     }
@@ -27,6 +32,11 @@ public sealed class MetadataScannerRegistry : IMetadataScannerRegistry
 
         lock (_lock)
         {
+            if (_audioScanners.ContainsKey(scanner.ScannerId))
+            {
+                throw new InvalidOperationException(
+                    $"An audio scanner with ID '{scanner.ScannerId}' is already registered.");
+            }
             _audioScanners[scanner.ScannerId] = scanner;
         }
     }
