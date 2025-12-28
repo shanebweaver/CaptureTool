@@ -20,6 +20,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private SelectionOverlayHostViewModel? _viewModel;
     private DispatcherTimer? _foregroundTimer;
     private Window? _primaryWindow;
+    private bool _disposed;
 
     public event EventHandler? LostFocus;
 
@@ -109,13 +110,25 @@ internal sealed partial class SelectionOverlayHost : IDisposable
 
     public void Close()
     {
-        StopForegroundMonitor();
-        _windowHandles.Clear();
-        _monitors.Clear();
+        if (_disposed)
+        {
+            return;
+        }
 
-        _viewModel?.AllScreensCaptureRequested -= OnAllScreensCaptureRequested;
-        _viewModel?.Dispose();
-        _viewModel = null;
+        StopForegroundMonitor();
+
+        if (_primaryWindow != null)
+        {
+            _primaryWindow.Activated -= OnPrimaryWindowActivated;
+            _primaryWindow = null;
+        }
+
+        if (_viewModel != null)
+        {
+            _viewModel.AllScreensCaptureRequested -= OnAllScreensCaptureRequested;
+            _viewModel.Dispose();
+            _viewModel = null;
+        }
 
         foreach (SelectionOverlayWindow window in _windows)
         {
@@ -130,7 +143,8 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         }
 
         _windows.Clear();
-        GC.Collect();
+        _windowHandles.Clear();
+        _monitors.Clear();
     }
 
     private void OnPrimaryWindowActivated(object sender, WindowActivatedEventArgs args)
@@ -161,37 +175,40 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             Interval = TimeSpan.FromMilliseconds(200)
         };
 
-        _foregroundTimer.Tick += (_, _) =>
-        {
-            var foregroundHwnd = PInvoke.GetForegroundWindow();
-            if (!_windowHandles.Contains(foregroundHwnd))
-            {
-                LostFocus?.Invoke(this, EventArgs.Empty);
-                Close();
-            }
-        };
-
+        _foregroundTimer.Tick += OnForegroundTimerTick;
         _foregroundTimer.Start();
+    }
+
+    private void OnForegroundTimerTick(object? sender, object e)
+    {
+        var foregroundHwnd = PInvoke.GetForegroundWindow();
+        if (!_windowHandles.Contains(foregroundHwnd))
+        {
+            LostFocus?.Invoke(this, EventArgs.Empty);
+            Close();
+        }
     }
 
     private void StopForegroundMonitor()
     {
-        _foregroundTimer?.Stop();
-        _foregroundTimer = null;
+        if (_foregroundTimer != null)
+        {
+            _foregroundTimer.Tick -= OnForegroundTimerTick;
+            _foregroundTimer.Stop();
+            _foregroundTimer = null;
+        }
     }
 
     public void Dispose()
     {
-        _foregroundTimer?.Stop();
-        _foregroundTimer = null;
+        if (_disposed)
+        {
+            return;
+        }
 
-        _windowHandles.Clear();
-        _monitors.Clear();
+        _disposed = true;
 
-        _viewModel?.Dispose();
-        _viewModel = null;
-
-        _primaryWindow = null;
-        _windows.Clear();
+        Close();
+        GC.SuppressFinalize(this);
     }
 }

@@ -14,6 +14,8 @@ namespace CaptureTool.UI.Windows.Xaml.Views;
 
 public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowViewBase
 {
+    private WriteableBitmap? _backgroundBitmap;
+
     public SelectionOverlayWindowView()
     {
         InitializeComponent();
@@ -25,12 +27,6 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         {
             UpdateRequestedAppTheme();
         });
-    }
-
-    ~SelectionOverlayWindowView()
-    {
-        Loaded -= OnLoaded;
-        Unloaded -= OnUnloaded;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -67,9 +63,25 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        Loaded -= OnLoaded;
+        Unloaded -= OnUnloaded;
+
         ViewModel.CaptureOptionsUpdated -= ViewModel_CaptureOptionsUpdated;
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;
+
+        CleanupBackgroundImage();
+    }
+
+    private void CleanupBackgroundImage()
+    {
+        if (RootPanel != null && RootPanel.Background is Microsoft.UI.Xaml.Media.ImageBrush imageBrush)
+        {
+            imageBrush.ImageSource = null;
+            RootPanel.Background = null;
+        }
+
+        _backgroundBitmap = null;
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -97,19 +109,21 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
     private void LoadBackgroundImage()
     {
+        CleanupBackgroundImage();
+
         if (ViewModel.Monitor is MonitorCaptureResult monitor && RootPanel is not null)
         {
             var monitorBounds = monitor.MonitorBounds;
 
-            var writeableBitmap = new WriteableBitmap(monitorBounds.Width, monitorBounds.Height);
-            using (var stream = writeableBitmap.PixelBuffer.AsStream())
+            _backgroundBitmap = new WriteableBitmap(monitorBounds.Width, monitorBounds.Height);
+            using (var stream = _backgroundBitmap.PixelBuffer.AsStream())
             {
                 stream.Write(monitor.PixelBuffer, 0, monitor.PixelBuffer.Length);
             }
 
             RootPanel.Background = new Microsoft.UI.Xaml.Media.ImageBrush
             {
-                ImageSource = writeableBitmap,
+                ImageSource = _backgroundBitmap,
                 Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
             };
         }

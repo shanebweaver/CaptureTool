@@ -285,4 +285,17 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             }
         });
     }
+
+    public override void Dispose()
+    {
+        // Explicitly null Monitor to release the ~100MB PixelBuffer reference
+        Monitor = null;
+        MonitorWindows = [];
+        
+        // Clear collections to release any remaining references
+        SupportedCaptureTypes.Clear();
+        SupportedCaptureModes.Clear();
+        
+        base.Dispose();
+    }
 }

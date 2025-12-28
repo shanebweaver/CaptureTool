@@ -55,9 +55,22 @@ public sealed partial class SelectionOverlayWindow : Window
         Activated -= OnActivated;
         Closed -= OnClosed;
 
-        ViewModel.Dispose();
+        try
+        {
+            ViewModel.Dispose();
+        }
+        catch { }
 
-        Content = null;
+        try
+        {
+            if (Content is FrameworkElement rootView)
+            {
+                rootView.DataContext = null;
+            }
+            Content = null;
+        }
+        catch { }
+
         IsClosed = true;
     }
 
