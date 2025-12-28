@@ -30,18 +30,28 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
 
         _queueManager = new PersistentJobQueueManager(storageService, logService);
 
-        // Load any pending jobs from previous session
-        LoadPendingJobs();
+        // Load any pending jobs from previous session (async without blocking constructor)
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await LoadPendingJobsAsync();
+            }
+            catch (Exception ex)
+            {
+                _logService.LogError($"Error loading pending jobs during startup: {ex.Message}", ex);
+            }
+        });
 
         // Start background processing
         _processingTask = Task.Run(ProcessJobsAsync);
     }
 
-    private void LoadPendingJobs()
+    private async Task LoadPendingJobsAsync()
     {
         try
         {
-            var pendingRequests = _queueManager.LoadPendingJobsAsync().GetAwaiter().GetResult();
+            var pendingRequests = await _queueManager.LoadPendingJobsAsync();
             
             _logService.LogInformation($"Loading {pendingRequests.Count} pending job(s) from previous session");
 
@@ -80,18 +90,20 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
         var jobId = Guid.NewGuid();
         var request = new ScanJobRequest(jobId, filePath);
 
-        // Save job request to disk first
-        try
+        // Save job request to disk first (async without blocking)
+        _ = Task.Run(async () =>
         {
-            _queueManager.SaveJobRequestAsync(request).GetAwaiter().GetResult();
-        }
-        catch (Exception ex)
-        {
-            _logService.LogError($"Failed to save job request for {filePath}: {ex.Message}", ex);
-            throw new InvalidOperationException("Failed to queue scan job", ex);
-        }
+            try
+            {
+                await _queueManager.SaveJobRequestAsync(request);
+            }
+            catch (Exception ex)
+            {
+                _logService.LogError($"Failed to save job request for {filePath}: {ex.Message}", ex);
+            }
+        });
 
-        // Create and queue the job
+        // Create and queue the job immediately
         var job = new MetadataScanJob(jobId, filePath);
         _activeJobs[job.JobId] = job;
         _jobQueue.Add(job);
