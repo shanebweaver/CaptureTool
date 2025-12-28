@@ -13,7 +13,6 @@ internal sealed class PersistentJobQueueManager
 {
     private readonly string _queueFolderPath;
     private readonly ILogService _logService;
-    private readonly JsonSerializerOptions _jsonOptions;
 
     public PersistentJobQueueManager(IStorageService storageService, ILogService logService)
     {
@@ -25,12 +24,6 @@ internal sealed class PersistentJobQueueManager
             storageService.GetApplicationTemporaryFolderPath(),
             "ScanJobQueue"
         );
-
-        _jsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
 
         EnsureQueueFolderExists();
     }
@@ -57,12 +50,12 @@ internal sealed class PersistentJobQueueManager
         try
         {
             using var stream = File.Create(filePath);
-            await JsonSerializer.SerializeAsync(stream, request, _jsonOptions, cancellationToken);
+            await JsonSerializer.SerializeAsync(stream, request, MetadataJsonContext.Default.ScanJobRequest, cancellationToken);
             _logService.LogInformation($"Saved job request {request.JobId} to queue: {filePath}");
         }
         catch (Exception ex)
         {
-            _logService.LogError($"Failed to save job request {request.JobId}: {ex.Message}", ex);
+            _logService.LogException(ex, $"Failed to save job request {request.JobId}: {ex.Message}");
             throw;
         }
     }
@@ -86,7 +79,7 @@ internal sealed class PersistentJobQueueManager
                 try
                 {
                     using var stream = File.OpenRead(filePath);
-                    var request = await JsonSerializer.DeserializeAsync<ScanJobRequest>(stream, _jsonOptions, cancellationToken);
+                    var request = await JsonSerializer.DeserializeAsync(stream, MetadataJsonContext.Default.ScanJobRequest, cancellationToken);
                     
                     if (request != null)
                     {
@@ -102,7 +95,7 @@ internal sealed class PersistentJobQueueManager
         }
         catch (Exception ex)
         {
-            _logService.LogError($"Error loading pending jobs: {ex.Message}", ex);
+            _logService.LogException(ex, $"Error loading pending jobs: {ex.Message}");
         }
 
         return jobs;

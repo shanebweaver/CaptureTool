@@ -249,30 +249,26 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
 
     private async Task SaveMetadataFileAsync(MetadataFile metadataFile, string path, CancellationToken cancellationToken)
     {
-        var options = new JsonSerializerOptions
+        // Convert to DTO for serialization
+        var dto = new MetadataFileDto
         {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
-        // Create a serializable representation
-        var data = new
-        {
-            sourceFilePath = metadataFile.SourceFilePath,
-            scanTimestamp = metadataFile.ScanTimestamp,
-            scannerInfo = metadataFile.ScannerInfo,
-            entries = metadataFile.Entries.Select(e => new
+            SourceFilePath = metadataFile.SourceFilePath,
+            ScanTimestamp = metadataFile.ScanTimestamp,
+            ScannerInfo = new Dictionary<string, string>(metadataFile.ScannerInfo),
+            Entries = metadataFile.Entries.Select(e => new MetadataEntryDto
             {
-                timestamp = e.Timestamp,
-                scannerId = e.ScannerId,
-                key = e.Key,
-                value = e.Value,
-                additionalData = e.AdditionalData
-            })
+                Timestamp = e.Timestamp,
+                ScannerId = e.ScannerId,
+                Key = e.Key,
+                Value = e.Value?.ToString(),
+                AdditionalData = e.AdditionalData?.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value?.ToString() ?? string.Empty)
+            }).ToList()
         };
 
         using var stream = File.Create(path);
-        await JsonSerializer.SerializeAsync(stream, data, options, cancellationToken);
+        await JsonSerializer.SerializeAsync(stream, dto, MetadataJsonContext.Default.MetadataFileDto, cancellationToken);
     }
 
     public void Dispose()
