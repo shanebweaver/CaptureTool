@@ -61,6 +61,9 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddAppWindowsServices();
 
         _serviceProvider = collection.BuildServiceProvider();
+        
+        // Register metadata scanners with the registry
+        _serviceProvider.RegisterMetadataScanners();
     }
 
     public T GetService<T>() where T : notnull => _serviceProvider.GetRequiredService<T>();

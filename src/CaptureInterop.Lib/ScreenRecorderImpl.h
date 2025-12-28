@@ -84,12 +84,14 @@ public:
 
     /// <summary>
     /// Set the callback to be invoked when a video frame is ready.
+    /// Callback is stored and automatically applied to new sessions.
     /// </summary>
     /// <param name="callback">Callback function to receive video frames.</param>
     void SetVideoFrameCallback(VideoFrameCallback callback);
 
     /// <summary>
     /// Set the callback to be invoked when an audio sample is ready.
+    /// Callback is stored and automatically applied to new sessions.
     /// </summary>
     /// <param name="callback">Callback function to receive audio samples.</param>
     void SetAudioSampleCallback(AudioSampleCallback callback);
@@ -105,4 +107,8 @@ public:
 private:
     std::unique_ptr<ICaptureSession> m_captureSession;
     std::unique_ptr<ICaptureSessionFactory> m_factory;
+    
+    // Store callbacks so they persist across session recreation
+    VideoFrameCallback m_videoFrameCallback = nullptr;
+    AudioSampleCallback m_audioSampleCallback = nullptr;
 };

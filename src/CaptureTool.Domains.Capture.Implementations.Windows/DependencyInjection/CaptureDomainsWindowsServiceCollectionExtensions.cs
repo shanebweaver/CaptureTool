@@ -1,3 +1,4 @@
+using CaptureTool.Core.Interfaces;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Capture.Interfaces.Metadata;
 using CaptureTool.Domains.Capture.Implementations.Windows.Metadata;
@@ -17,6 +18,7 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
         // Metadata scanning services
         services.AddSingleton<IMetadataScannerRegistry, MetadataScannerRegistry>();
         services.AddSingleton<IMetadataScanningService, MetadataScanningService>();
+        services.AddSingleton<IRealTimeMetadataScanJobFactory, RealTimeMetadataScanJobFactory>();
         
         // Example scanners
         services.AddSingleton<IVideoMetadataScanner, BasicVideoFrameScanner>();

@@ -5,6 +5,7 @@
 #include "CaptureSessionConfig.h"
 #include "IMP4SinkWriter.h"
 #include "CallbackRegistry.h"
+#include "CallbackHandle.h"
 #include "CaptureSessionState.h"
 #include <Windows.h>
 #include <memory>
@@ -100,4 +101,8 @@ private:
     // Callbacks - using registry for safer lifetime management
     CaptureInterop::CallbackRegistry<VideoFrameData> m_videoCallbackRegistry;
     CaptureInterop::CallbackRegistry<AudioSampleData> m_audioCallbackRegistry;
+    
+    // Callback handles - must be stored to keep callbacks registered!
+    CaptureInterop::CallbackHandle m_videoCallbackHandle;
+    CaptureInterop::CallbackHandle m_audioCallbackHandle;
 };

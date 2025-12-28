@@ -46,6 +46,16 @@ bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
     // Create a new capture session using the factory with the config
     m_captureSession = m_factory->CreateSession(config);
 
+    // Apply stored callbacks to the new session
+    if (m_videoFrameCallback)
+    {
+        m_captureSession->SetVideoFrameCallback(m_videoFrameCallback);
+    }
+    if (m_audioSampleCallback)
+    {
+        m_captureSession->SetAudioSampleCallback(m_audioSampleCallback);
+    }
+
     // Start the session
     HRESULT hr = S_OK;
     if (!m_captureSession->Start(&hr))
@@ -106,7 +116,10 @@ void ScreenRecorderImpl::ToggleAudioCapture(bool enabled)
 
 void ScreenRecorderImpl::SetVideoFrameCallback(VideoFrameCallback callback)
 {
-    // Principle #3: Use HasActiveSession() for explicit null checking
+    // Store callback so it persists across session recreation
+    m_videoFrameCallback = callback;
+    
+    // Also apply to current session if one exists
     if (HasActiveSession())
     {
         m_captureSession->SetVideoFrameCallback(callback);
@@ -115,7 +128,10 @@ void ScreenRecorderImpl::SetVideoFrameCallback(VideoFrameCallback callback)
 
 void ScreenRecorderImpl::SetAudioSampleCallback(AudioSampleCallback callback)
 {
-    // Principle #3: Use HasActiveSession() for explicit null checking
+    // Store callback so it persists across session recreation
+    m_audioSampleCallback = callback;
+    
+    // Also apply to current session if one exists
     if (HasActiveSession())
     {
         m_captureSession->SetAudioSampleCallback(callback);
