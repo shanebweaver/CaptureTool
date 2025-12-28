@@ -70,25 +70,60 @@ Tracks progress of a scanning job:
 
 ## Implementation Details
 
+### Persistent Job Queue
+
+The service uses a **persistent file-based queue** to handle scan jobs:
+
+1. **Job Persistence**: When a scan is queued, a JSON file is created in the app's temporary folder (`ScanJobQueue/job-{guid}.json`)
+2. **Startup Recovery**: On app startup, all pending jobs from the queue folder are automatically loaded and resumed
+3. **Job Processing**: A background task continuously processes jobs from the queue
+4. **Completion**: When a job completes successfully:
+   - Metadata is saved as `{videofile}.metadata.json` next to the media file
+   - The job queue file is deleted
+5. **Cancellation**: When a job is cancelled, its queue file is deleted
+6. **Failure Handling**: Failed jobs keep their queue files for retry on next startup
+
+### Job Queue File Format
+
+Each job request file contains:
+```json
+{
+  "jobId": "guid",
+  "mediaFilePath": "/path/to/video.mp4",
+  "createdAt": "2025-12-28T16:00:00Z",
+  "scanCriteria": {
+    "optional": "scanner-specific-criteria"
+  }
+}
+```
+
 ### MetadataScanningService
 
-The service uses a background processing queue to handle scan jobs asynchronously:
+The service manages the persistent queue:
 
-1. Jobs are added to a `BlockingCollection<MetadataScanJob>` queue
-2. A background task continuously processes jobs from the queue
-3. For each job:
-   - Iterate through video frames/audio samples
-   - Call all registered scanners
-   - Collect metadata entries
-   - Generate JSON output file
-4. Progress is reported via events
-5. Jobs can be cancelled via cancellation tokens
+1. Jobs are saved to disk as JSON files in `{AppTemp}/ScanJobQueue/`
+2. On startup, pending jobs are loaded and queued for processing
+3. Jobs are processed asynchronously without blocking the UI thread
+4. Processing can take as long as needed (no artificial timeouts)
+5. Progress is reported via events
+6. Jobs can be cancelled via cancellation tokens
+7. Completed jobs are removed from active tracking after 5 minutes
+8. Job queue files are deleted when jobs complete or are cancelled
+
+### Benefits of Persistent Queue
+
+- **Survives app restarts**: Jobs continue after app is closed and reopened
+- **No data loss**: Media files can be scanned even if app crashes during recording
+- **Flexible timing**: Scanning can happen later when system resources are available
+- **No background service needed**: Simpler app lifecycle management
+- **Observable**: Queue folder contents show pending work
 
 ### Thread Safety
 
 - `MetadataScannerRegistry` uses locks for thread-safe scanner registration
 - `MetadataScanningService` uses concurrent collections for job management
 - Each job has its own `CancellationTokenSource` for independent cancellation
+- File I/O is properly synchronized
 
 ### Output Format
 

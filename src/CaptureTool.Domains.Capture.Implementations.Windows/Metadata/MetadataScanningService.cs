@@ -2,31 +2,70 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using CaptureTool.Domains.Capture.Interfaces.Metadata;
 using CaptureTool.Services.Interfaces.Logging;
+using CaptureTool.Services.Interfaces.Storage;
 
 namespace CaptureTool.Domains.Capture.Implementations.Windows.Metadata;
 
 /// <summary>
-/// Service for managing metadata scanning jobs with async queue processing.
+/// Service for managing metadata scanning jobs with persistent queue.
+/// Jobs are saved to disk and can be resumed after app restart.
 /// </summary>
 public sealed class MetadataScanningService : IMetadataScanningService, IDisposable
 {
     private readonly IMetadataScannerRegistry _registry;
     private readonly ILogService _logService;
-    private readonly ConcurrentDictionary<Guid, MetadataScanJob> _jobs = new();
+    private readonly PersistentJobQueueManager _queueManager;
+    private readonly ConcurrentDictionary<Guid, MetadataScanJob> _activeJobs = new();
     private readonly BlockingCollection<MetadataScanJob> _jobQueue = new();
     private readonly CancellationTokenSource _serviceCancellation = new();
     private readonly Task _processingTask;
-    private const int MaxCompletedJobsRetained = 100;
 
     public MetadataScanningService(
         IMetadataScannerRegistry registry,
+        IStorageService storageService,
         ILogService logService)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _logService = logService ?? throw new ArgumentNullException(nameof(logService));
 
+        _queueManager = new PersistentJobQueueManager(storageService, logService);
+
+        // Load any pending jobs from previous session
+        LoadPendingJobs();
+
         // Start background processing
         _processingTask = Task.Run(ProcessJobsAsync);
+    }
+
+    private void LoadPendingJobs()
+    {
+        try
+        {
+            var pendingRequests = _queueManager.LoadPendingJobsAsync().GetAwaiter().GetResult();
+            
+            _logService.LogInformation($"Loading {pendingRequests.Count} pending job(s) from previous session");
+
+            foreach (var request in pendingRequests)
+            {
+                // Verify the media file still exists
+                if (!File.Exists(request.MediaFilePath))
+                {
+                    _logService.LogWarning($"Media file not found for job {request.JobId}, skipping: {request.MediaFilePath}");
+                    _queueManager.DeleteJobRequest(request.JobId);
+                    continue;
+                }
+
+                var job = new MetadataScanJob(request.JobId, request.MediaFilePath);
+                _activeJobs[job.JobId] = job;
+                _jobQueue.Add(job);
+
+                _logService.LogInformation($"Restored job {request.JobId} for file: {request.MediaFilePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError($"Error loading pending jobs: {ex.Message}", ex);
+        }
     }
 
     public IMetadataScanJob QueueScan(string filePath)
@@ -38,8 +77,23 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
             throw new FileNotFoundException("File not found", filePath);
         }
 
-        var job = new MetadataScanJob(Guid.NewGuid(), filePath);
-        _jobs[job.JobId] = job;
+        var jobId = Guid.NewGuid();
+        var request = new ScanJobRequest(jobId, filePath);
+
+        // Save job request to disk first
+        try
+        {
+            _queueManager.SaveJobRequestAsync(request).GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError($"Failed to save job request for {filePath}: {ex.Message}", ex);
+            throw new InvalidOperationException("Failed to queue scan job", ex);
+        }
+
+        // Create and queue the job
+        var job = new MetadataScanJob(jobId, filePath);
+        _activeJobs[job.JobId] = job;
         _jobQueue.Add(job);
 
         _logService.LogInformation($"Queued metadata scan job {job.JobId} for file: {filePath}");
@@ -49,7 +103,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
 
     public IReadOnlyList<IMetadataScanJob> GetActiveJobs()
     {
-        return _jobs.Values
+        return _activeJobs.Values
             .Where(j => j.Status == MetadataScanJobStatus.Queued || 
                        j.Status == MetadataScanJobStatus.Processing)
             .Cast<IMetadataScanJob>()
@@ -58,12 +112,12 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
 
     public IMetadataScanJob? GetJob(Guid jobId)
     {
-        return _jobs.TryGetValue(jobId, out var job) ? job : null;
+        return _activeJobs.TryGetValue(jobId, out var job) ? job : null;
     }
 
     public void CancelAllJobs()
     {
-        foreach (var job in _jobs.Values)
+        foreach (var job in _activeJobs.Values)
         {
             job.Cancel();
         }
@@ -143,25 +197,41 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
                 scannerInfo
             );
 
-            // Save to JSON file
+            // Save metadata file next to the media file
             string metadataPath = Path.ChangeExtension(job.FilePath, ".metadata.json");
             await SaveMetadataFileAsync(metadataFile, metadataPath, job.CancellationToken);
 
             job.Complete(metadataPath);
             _logService.LogInformation($"Completed metadata scan job {job.JobId}. Output: {metadataPath}");
             
-            // Clean up old completed jobs to prevent memory leak
-            CleanupOldJobs();
+            // Delete the job request file from queue now that it's complete
+            _queueManager.DeleteJobRequest(job.JobId);
+            
+            // Clean up completed job from active jobs after a delay
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromMinutes(5));
+                if (_activeJobs.TryRemove(job.JobId, out var removedJob))
+                {
+                    removedJob.Dispose();
+                }
+            });
         }
         catch (OperationCanceledException)
         {
-            // Job was already cancelled, no need to call Cancel() again
+            // Job was cancelled
             _logService.LogInformation($"Metadata scan job {job.JobId} was cancelled");
+            
+            // Delete the job request file when cancelled
+            _queueManager.DeleteJobRequest(job.JobId);
         }
         catch (Exception ex)
         {
             job.SetError(ex.Message);
             _logService.LogError($"Failed to process metadata scan job {job.JobId}: {ex.Message}", ex);
+            
+            // Keep the job request file so it can be retried on next startup
+            // Optionally, delete it after multiple failures
         }
     }
 
@@ -193,29 +263,6 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
         await JsonSerializer.SerializeAsync(stream, data, options, cancellationToken);
     }
 
-    private void CleanupOldJobs()
-    {
-        // Remove old completed/failed/cancelled jobs if we exceed the retention limit
-        var completedJobs = _jobs.Values
-            .Where(j => j.Status == MetadataScanJobStatus.Completed ||
-                       j.Status == MetadataScanJobStatus.Failed ||
-                       j.Status == MetadataScanJobStatus.Cancelled)
-            .OrderBy(j => j.Status == MetadataScanJobStatus.Completed ? 1 : 0) // Keep completed jobs longer
-            .ToList();
-
-        if (completedJobs.Count > MaxCompletedJobsRetained)
-        {
-            var jobsToRemove = completedJobs.Take(completedJobs.Count - MaxCompletedJobsRetained);
-            foreach (var job in jobsToRemove)
-            {
-                if (_jobs.TryRemove(job.JobId, out var removedJob))
-                {
-                    removedJob.Dispose();
-                }
-            }
-        }
-    }
-
     public void Dispose()
     {
         _serviceCancellation.Cancel();
@@ -223,9 +270,10 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
 
         try
         {
-            if (!_processingTask.Wait(TimeSpan.FromSeconds(5)))
+            // Give jobs more time to complete gracefully since scans can take a while
+            if (!_processingTask.Wait(TimeSpan.FromSeconds(30)))
             {
-                _logService.LogWarning("Metadata scanning service background task did not complete within timeout");
+                _logService.LogWarning("Metadata scanning service background task did not complete within 30 seconds");
             }
         }
         catch (Exception ex)
@@ -233,12 +281,12 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
             _logService.LogError($"Error waiting for metadata scanning service to complete: {ex.Message}", ex);
         }
 
-        // Dispose all remaining jobs
-        foreach (var job in _jobs.Values)
+        // Dispose all remaining active jobs
+        foreach (var job in _activeJobs.Values)
         {
             job.Dispose();
         }
-        _jobs.Clear();
+        _activeJobs.Clear();
 
         _serviceCancellation.Dispose();
         _jobQueue.Dispose();
