@@ -39,7 +39,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
             }
             catch (Exception ex)
             {
-                _logService.LogError($"Error loading pending jobs during startup: {ex.Message}", ex);
+                _logService.LogException(ex, $"Error loading pending jobs during startup: {ex.Message}");
             }
         });
 
@@ -74,7 +74,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
         }
         catch (Exception ex)
         {
-            _logService.LogError($"Error loading pending jobs: {ex.Message}", ex);
+            _logService.LogException(ex, $"Error loading pending jobs: {ex.Message}");
         }
     }
 
@@ -99,7 +99,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
             }
             catch (Exception ex)
             {
-                _logService.LogError($"Failed to save job request for {filePath}: {ex.Message}", ex);
+                _logService.LogException(ex, $"Failed to save job request for {filePath}: {ex.Message}");
             }
         });
 
@@ -158,13 +158,13 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
                     {
                         job.SetError($"Unexpected error: {ex.Message}");
                     }
-                    _logService.LogError($"Error processing metadata scan job: {ex.Message}", ex);
+                    _logService.LogException(ex, $"Error processing metadata scan job: {ex.Message}");
                 }
             }
         }
         catch (Exception ex)
         {
-            _logService.LogError($"Fatal error in metadata scanning service: {ex.Message}", ex);
+            _logService.LogException(ex, $"Fatal error in metadata scanning service: {ex.Message}");
         }
     }
 
@@ -240,7 +240,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
         catch (Exception ex)
         {
             job.SetError(ex.Message);
-            _logService.LogError($"Failed to process metadata scan job {job.JobId}: {ex.Message}", ex);
+            _logService.LogException(ex, $"Failed to process metadata scan job {job.JobId}: {ex.Message}");
             
             // Keep the job request file so it can be retried on next startup
             // Optionally, delete it after multiple failures
@@ -290,7 +290,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
         }
         catch (Exception ex)
         {
-            _logService.LogError($"Error waiting for metadata scanning service to complete: {ex.Message}", ex);
+            _logService.LogException(ex, $"Error waiting for metadata scanning service to complete: {ex.Message}");
         }
 
         // Dispose all remaining active jobs
