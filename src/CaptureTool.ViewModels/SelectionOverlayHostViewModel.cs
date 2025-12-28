@@ -35,6 +35,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 
     public override void Dispose()
     {
+        // Unregister event handlers first
         foreach (var windowViewModel in _windowViewModels)
         {
             if (windowViewModel.IsPrimary)
@@ -45,8 +46,14 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
             {
                 windowViewModel.PropertyChanged -= OnSecondaryWindowViewModelPropertyChanged;
             }
+            
+            // Dispose each ViewModel to release their Monitor references
+            windowViewModel.Dispose();
         }
+        
         _windowViewModels.Clear();
+        
+        base.Dispose();
     }
 
     private void OnPrimaryWindowViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

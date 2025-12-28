@@ -150,7 +150,21 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         _videoCaptureHandler.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
         _videoCaptureHandler.PausedStateChanged -= OnPausedStateChanged;
+        
         StopTimer();
+        
+        // Dispose timer if it exists
+        if (_timer != null)
+        {
+            _timer.Elapsed -= Timer_Elapsed;
+            _timer.Dispose();
+            _timer = null;
+        }
+        
+        // Explicitly null the MonitorCaptureResult to release the PixelBuffer
+        _monitorCaptureResult = null;
+        _captureArea = null;
+        
         base.Dispose();
     }
 

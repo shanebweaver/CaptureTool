@@ -31,8 +31,12 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
     private HWND? _hwnd;
     private HWND? _borderHwnd;
+    private DesktopWindowXamlSource? _xamlSource;
+    private DesktopWindowXamlSource? _borderXamlSource;
+    private CaptureOverlayView? _overlayView;
+    private CaptureOverlayBorder? _borderControl;
 
-    private static HWND CreateCaptureOverlayWindow(MonitorCaptureResult monitor, Rectangle area)
+    private static (HWND hwnd, DesktopWindowXamlSource xamlSource, CaptureOverlayView view) CreateCaptureOverlayWindow(MonitorCaptureResult monitor, Rectangle area)
     {
         unsafe
         {
@@ -77,15 +81,17 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             DesktopWindowXamlSource xamlSource = new();
             WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             xamlSource.Initialize(windowId);
-            xamlSource.Content = new CaptureOverlayView(monitor, area);
+            
+            CaptureOverlayView view = new(monitor, area);
+            xamlSource.Content = view;
 
             Win32WindowHelpers.HorizontalCenterOnScreen(hwnd);
 
-            return hwnd;
+            return (hwnd, xamlSource, view);
         }
     }
 
-    private static HWND CreateCaptureOverlayBorderWindow(MonitorCaptureResult monitor, Rectangle area)
+    private static (HWND hwnd, DesktopWindowXamlSource xamlSource, CaptureOverlayBorder border) CreateCaptureOverlayBorderWindow(MonitorCaptureResult monitor, Rectangle area)
     {
         unsafe
         {
@@ -136,9 +142,11 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             DesktopWindowXamlSource xamlSource = new();
             WindowId windowId = Win32Interop.GetWindowIdFromWindow(borderHwnd);
             xamlSource.Initialize(windowId);
-            xamlSource.Content = new CaptureOverlayBorder();
+            
+            CaptureOverlayBorder border = new();
+            xamlSource.Content = border;
 
-            return borderHwnd;
+            return (borderHwnd, xamlSource, border);
         }
     }
 
@@ -151,8 +159,16 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
         var monitor = args.Monitor;
         var area = args.Area;
-        _hwnd = CreateCaptureOverlayWindow(monitor, area);
-        _borderHwnd = CreateCaptureOverlayBorderWindow(monitor, area);
+        
+        var overlayResult = CreateCaptureOverlayWindow(monitor, area);
+        _hwnd = overlayResult.hwnd;
+        _xamlSource = overlayResult.xamlSource;
+        _overlayView = overlayResult.view;
+        
+        var borderResult = CreateCaptureOverlayBorderWindow(monitor, area);
+        _borderHwnd = borderResult.hwnd;
+        _borderXamlSource = borderResult.xamlSource;
+        _borderControl = borderResult.border;
     }
 
     public void Activate()
@@ -169,7 +185,6 @@ internal sealed partial class CaptureOverlayHost : IDisposable
     {
         DestroyBorderWindow();
         DestroyOverlayWindow();
-        GC.Collect();
     }
 
     public void HideBorder()
@@ -179,18 +194,63 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
     private void DestroyOverlayWindow()
     {
+        if (_overlayView != null)
+        {
+            try
+            {
+                _overlayView.ViewModel?.Dispose();
+            }
+            catch { }
+            _overlayView = null;
+        }
+
+        if (_xamlSource != null)
+        {
+            try
+            {
+                _xamlSource.Content = null;
+                (_xamlSource as IDisposable)?.Dispose();
+                _xamlSource = null;
+            }
+            catch { }
+        }
+
         if (_hwnd != null)
         {
-            PInvoke.DestroyWindow(_hwnd.Value);
+            try
+            {
+                PInvoke.DestroyWindow(_hwnd.Value);
+            }
+            catch { }
             _hwnd = null;
         }
     }
 
     private void DestroyBorderWindow()
     {
+        if (_borderControl != null)
+        {
+            _borderControl = null;
+        }
+
+        if (_borderXamlSource != null)
+        {
+            try
+            {
+                _borderXamlSource.Content = null;
+                (_borderXamlSource as IDisposable)?.Dispose();
+                _borderXamlSource = null;
+            }
+            catch { }
+        }
+
         if (_borderHwnd != null)
         {
-            PInvoke.DestroyWindow(_borderHwnd.Value);
+            try
+            {
+                PInvoke.DestroyWindow(_borderHwnd.Value);
+            }
+            catch { }
             _borderHwnd = null;
         }
     }
@@ -210,5 +270,6 @@ internal sealed partial class CaptureOverlayHost : IDisposable
     public void Dispose()
     {
         Close();
+        GC.SuppressFinalize(this);
     }
 }

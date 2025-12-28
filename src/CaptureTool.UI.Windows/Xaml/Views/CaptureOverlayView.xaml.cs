@@ -13,6 +13,8 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
 {
     private readonly MonitorCaptureResult _monitor;
     private readonly System.Drawing.Rectangle _area;
+    private SpriteVisual? _shadowVisual;
+    private DropShadow? _shadow;
 
     public CaptureOverlayView(MonitorCaptureResult monitor, System.Drawing.Rectangle area)
     {
@@ -31,12 +33,6 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
         });
     }
 
-    ~CaptureOverlayView()
-    {
-        Loaded -= OnLoaded;
-        Unloaded -= OnUnloaded;
-    }
-
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         ViewModel.Load(new CaptureOverlayViewModelOptions(_monitor, _area));
@@ -44,29 +40,63 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        Loaded -= OnLoaded;
+        Unloaded -= OnUnloaded;
+
         ViewModel.Dispose();
+
+        CleanupCompositionResources();
+    }
+
+    private void CleanupCompositionResources()
+    {
+        try
+        {
+            if (_shadowVisual != null)
+            {
+                _shadowVisual.Shadow = null;
+                _shadowVisual.Dispose();
+                _shadowVisual = null;
+            }
+
+            if (_shadow != null)
+            {
+                _shadow.Dispose();
+                _shadow = null;
+            }
+        }
+        catch { }
     }
 
     private void AddToolbarShadow()
     {
-        Compositor? compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
-
-        DropShadow? shadow = compositor.CreateDropShadow();
-        shadow.Color = Colors.Black;
-        shadow.BlurRadius = 12;
-        shadow.Opacity = 0.3f;
-        shadow.Offset = new Vector3(0, 4, 0);
-
-        SpriteVisual shadowVisual = compositor.CreateSpriteVisual();
-        shadowVisual.Shadow = shadow;
-        shadowVisual.Size = new Vector2((float)Toolbar.ActualWidth, (float)Toolbar.ActualHeight);
-
-        ElementCompositionPreview.SetElementChildVisual(ToolbarHost, shadowVisual);
-
-        Toolbar.SizeChanged += (s, e) =>
+        try
         {
-            shadowVisual.Size = new Vector2((float)e.NewSize.Width, (float)e.NewSize.Height);
-        };
+            Compositor? compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
+
+            _shadow = compositor.CreateDropShadow();
+            _shadow.Color = Colors.Black;
+            _shadow.BlurRadius = 12;
+            _shadow.Opacity = 0.3f;
+            _shadow.Offset = new Vector3(0, 4, 0);
+
+            _shadowVisual = compositor.CreateSpriteVisual();
+            _shadowVisual.Shadow = _shadow;
+            _shadowVisual.Size = new Vector2((float)Toolbar.ActualWidth, (float)Toolbar.ActualHeight);
+
+            ElementCompositionPreview.SetElementChildVisual(ToolbarHost, _shadowVisual);
+
+            Toolbar.SizeChanged += Toolbar_SizeChanged;
+        }
+        catch { }
+    }
+
+    private void Toolbar_SizeChanged(object s, SizeChangedEventArgs e)
+    {
+        if (_shadowVisual != null)
+        {
+            _shadowVisual.Size = new Vector2((float)e.NewSize.Width, (float)e.NewSize.Height);
+        }
     }
 
     private void UpdateRequestedAppTheme()

@@ -23,8 +23,8 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
     private readonly IVideoCaptureHandler _videoCaptureHandler;
 
     private readonly SemaphoreSlim _semaphoreNavigation = new(1, 1);
-    private readonly SelectionOverlayHost _selectionOverlayHost = new();
-    private readonly CaptureOverlayHost _captureOverlayHost = new();
+    private SelectionOverlayHost? _selectionOverlayHost;
+    private CaptureOverlayHost? _captureOverlayHost;
     private readonly MainWindowHost _mainWindowHost = new();
 
     private UXHost _activeHost;
@@ -53,15 +53,14 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                         break;
 
                     case UXHost.SelectionOverlay:
-                        _selectionOverlayHost.LostFocus -= OnSelectionOverlayHostLostFocus;
+                        await DisposeSelectionOverlayHostAsync();
                         _mainWindowHost.ExcludeWindowFromCapture(false);
-                        _selectionOverlayHost.Close();
                         break;
 
                     case UXHost.CaptureOverlay:
                         _videoCaptureHandler.CancelVideoCapture();
+                        await DisposeCaptureOverlayHostAsync();
                         _mainWindowHost.ExcludeWindowFromCapture(false);
-                        _captureOverlayHost.Close();
                         break;
                 }
 
@@ -85,18 +84,17 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                         break;
 
                     case UXHost.SelectionOverlay:
-                        _selectionOverlayHost.UpdateOptions(options);
+                        _selectionOverlayHost?.UpdateOptions(options);
                         return;
 
                     case UXHost.CaptureOverlay:
                         _videoCaptureHandler.CancelVideoCapture();
-                        _captureOverlayHost.Close();
+                        await DisposeCaptureOverlayHostAsync();
                         break;
                 }
 
-                _selectionOverlayHost.LostFocus += OnSelectionOverlayHostLostFocus;
-                _selectionOverlayHost.Initialize(options);
-                _selectionOverlayHost.Activate();
+                // Create fresh instance using factory pattern
+                await CreateSelectionOverlayHostAsync(options);
                 _activeHost = UXHost.SelectionOverlay;
             }
             else if (request.Route is CaptureToolNavigationRoute videoRoute && videoRoute == CaptureToolNavigationRoute.VideoCapture)
@@ -115,16 +113,15 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                         break;
 
                     case UXHost.SelectionOverlay:
-                        _selectionOverlayHost.LostFocus -= OnSelectionOverlayHostLostFocus;
-                        _selectionOverlayHost.Close();
+                        await DisposeSelectionOverlayHostAsync();
                         break;
 
                     case UXHost.CaptureOverlay:
                         return;
                 }
 
-                _captureOverlayHost.Initialize(args);
-                _captureOverlayHost.Activate();
+                // Create fresh instance using factory pattern
+                await CreateCaptureOverlayHostAsync(args);
                 _activeHost = UXHost.CaptureOverlay;
             }
             else
@@ -136,6 +133,84 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
         {
             _semaphoreNavigation.Release();
         }
+    }
+
+    private async Task CreateSelectionOverlayHostAsync(CaptureOptions options)
+    {
+        // Dispose previous instance if it exists
+        await DisposeSelectionOverlayHostAsync();
+
+        // Create fresh instance
+        _selectionOverlayHost = new SelectionOverlayHost();
+        _selectionOverlayHost.LostFocus += OnSelectionOverlayHostLostFocus;
+        _selectionOverlayHost.Initialize(options);
+        _selectionOverlayHost.Activate();
+    }
+
+    private async Task DisposeSelectionOverlayHostAsync()
+    {
+        if (_selectionOverlayHost == null)
+        {
+            return;
+        }
+
+        try
+        {
+            _selectionOverlayHost.LostFocus -= OnSelectionOverlayHostLostFocus;
+            _selectionOverlayHost.Close();
+            _selectionOverlayHost.Dispose();
+        }
+        catch { }
+        finally
+        {
+            _selectionOverlayHost = null;
+        }
+
+        // Force garbage collection to release large pixel buffers
+        await Task.Run(() =>
+        {
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        });
+    }
+
+    private async Task CreateCaptureOverlayHostAsync(NewCaptureArgs args)
+    {
+        // Dispose previous instance if it exists
+        await DisposeCaptureOverlayHostAsync();
+
+        // Create fresh instance
+        _captureOverlayHost = new CaptureOverlayHost();
+        _captureOverlayHost.Initialize(args);
+        _captureOverlayHost.Activate();
+    }
+
+    private async Task DisposeCaptureOverlayHostAsync()
+    {
+        if (_captureOverlayHost == null)
+        {
+            return;
+        }
+
+        try
+        {
+            _captureOverlayHost.Close();
+            _captureOverlayHost.Dispose();
+        }
+        catch { }
+        finally
+        {
+            _captureOverlayHost = null;
+        }
+
+        // Force garbage collection
+        await Task.Run(() =>
+        {
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        });
     }
 
     private void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
