@@ -5,11 +5,13 @@
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <Platforms>x64;ARM64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj" />
+    <ProjectReference Include="..\CaptureTool.Core.Interfaces\CaptureTool.Core.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Domains.Capture.Interfaces\CaptureTool.Domains.Capture.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
   </ItemGroup>

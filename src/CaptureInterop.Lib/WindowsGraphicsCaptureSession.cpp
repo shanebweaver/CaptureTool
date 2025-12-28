@@ -36,6 +36,10 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     , m_videoCaptureSource(std::move(videoCaptureSource))
     , m_sinkWriter(std::move(sinkWriter))
     , m_stateMachine() // Initializes in Created state
+    , m_videoCallbackRegistry()
+    , m_audioCallbackRegistry()
+    , m_videoCallbackHandle()
+    , m_audioCallbackHandle()
 {
 }
 
@@ -403,32 +407,56 @@ void WindowsGraphicsCaptureSession::ToggleAudioCapture(bool enabled)
 
 void WindowsGraphicsCaptureSession::SetVideoFrameCallback(VideoFrameCallback callback)
 {
-    // Clear existing P/Invoke callbacks
-    m_videoCallbackRegistry.Clear();
-    
-    // Register new callback if provided
-    if (callback)
+    try
     {
-        // Store handle to keep callback registered
-        // Note: Using a static ID since P/Invoke expects only one callback at a time
-        m_videoCallbackRegistry.Register([callback](const VideoFrameData& data) {
-            callback(const_cast<VideoFrameData*>(&data));
-        });
+        // Unregister existing callback if any
+        if (m_videoCallbackHandle.IsValid())
+        {
+            m_videoCallbackHandle.Unregister();
+        }
+        
+        // Register new callback if provided and STORE THE HANDLE
+        if (callback)
+        {
+            m_videoCallbackHandle = m_videoCallbackRegistry.Register([callback](const VideoFrameData& data) {
+                if (callback)  // Extra safety check
+                {
+                    callback(const_cast<VideoFrameData*>(&data));
+                }
+            });
+        }
+    }
+    catch (...)
+    {
+        // Swallow any exceptions to prevent crash
+        // Callback registration failure is not fatal
     }
 }
 
 void WindowsGraphicsCaptureSession::SetAudioSampleCallback(AudioSampleCallback callback)
 {
-    // Clear existing P/Invoke callbacks
-    m_audioCallbackRegistry.Clear();
-    
-    // Register new callback if provided
-    if (callback)
+    try
     {
-        // Store handle to keep callback registered
-        // Note: Using a static ID since P/Invoke expects only one callback at a time
-        m_audioCallbackRegistry.Register([callback](const AudioSampleData& data) {
-            callback(const_cast<AudioSampleData*>(&data));
-        });
+        // Unregister existing callback if any
+        if (m_audioCallbackHandle.IsValid())
+        {
+            m_audioCallbackHandle.Unregister();
+        }
+        
+        // Register new callback if provided and STORE THE HANDLE
+        if (callback)
+        {
+            m_audioCallbackHandle = m_audioCallbackRegistry.Register([callback](const AudioSampleData& data) {
+                if (callback)  // Extra safety check
+                {
+                    callback(const_cast<AudioSampleData*>(&data));
+                }
+            });
+        }
+    }
+    catch (...)
+    {
+        // Swallow any exceptions to prevent crash
+        // Callback registration failure is not fatal
     }
 }
