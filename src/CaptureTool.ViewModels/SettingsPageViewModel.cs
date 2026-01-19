@@ -226,7 +226,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
             ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
 
-            var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
+            var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
             if (string.IsNullOrWhiteSpace(screenshotsFolder))
             {
                 screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
@@ -351,7 +351,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
             ScreenshotsFolderPath = folder.FolderPath;
 
-            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder, folder.FolderPath);
+            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder, folder.FolderPath);
             await _settingsService.TrySaveAsync(CancellationToken.None);
         });
     }
@@ -434,7 +434,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
             ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
 
-            var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
+            var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
             ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _storageService.GetSystemDefaultScreenshotsFolderPath();
 
             SelectedAppLanguageIndex = AppLanguages.Count - 1;

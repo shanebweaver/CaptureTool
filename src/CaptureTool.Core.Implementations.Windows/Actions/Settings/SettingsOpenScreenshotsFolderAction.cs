@@ -20,7 +20,7 @@ public sealed partial class SettingsOpenScreenshotsFolderAction : ActionCommand,
 
     public override void Execute()
     {
-        var path = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
+        var path = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
         if (string.IsNullOrWhiteSpace(path))
         {
             path = _storageService.GetSystemDefaultScreenshotsFolderPath();

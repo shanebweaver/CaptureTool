@@ -27,7 +27,7 @@ public sealed partial class SettingsChangeScreenshotsFolderAction : AsyncActionC
     {
         var hwnd = _windowing.GetMainWindowHandle();
         var folder = await _picker.PickFolderAsync(hwnd, UserFolder.Pictures) ?? throw new OperationCanceledException("No folder was selected.");
-        _settings.Set(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder, folder.FolderPath);
+        _settings.Set(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder, folder.FolderPath);
         await _settings.TrySaveAsync(CancellationToken.None);
     }
 }

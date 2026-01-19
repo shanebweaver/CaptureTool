@@ -6,30 +6,28 @@ namespace CaptureTool.Domains.Capture.Interfaces;
 /// Represents a video file that is still being finalized after recording stops.
 /// Provides async notification when the file is ready for playback.
 /// </summary>
-public sealed class PendingVideoFile : IVideoFile
+public sealed class PendingVideoFile : VideoFile
 {
-    private readonly TaskCompletionSource<VideoFile> _finalizationTask = new();
+    private readonly TaskCompletionSource _finalizationTask = new();
 
-    public string FilePath { get; }
     public string FileName => Path.GetFileName(FilePath);
-    public FilePickerType FilePickerType => FilePickerType.Video;
+    public static FilePickerType FilePickerType => FilePickerType.Video;
 
-    public PendingVideoFile(string path)
+    public PendingVideoFile(string path) : base(path)
     {
-        FilePath = path ?? throw new ArgumentNullException(nameof(path));
     }
 
     /// <summary>
     /// Gets a task that completes when the video file is fully finalized and ready for playback.
     /// </summary>
-    public Task<VideoFile> WhenReadyAsync() => _finalizationTask.Task;
+    public Task WhenReadyAsync() => _finalizationTask.Task;
 
     /// <summary>
     /// Signals that the video finalization is complete.
     /// </summary>
-    public void Complete(VideoFile videoFile)
+    public void Complete()
     {
-        _finalizationTask.TrySetResult(videoFile);
+        _finalizationTask.TrySetResult();
     }
 
     /// <summary>

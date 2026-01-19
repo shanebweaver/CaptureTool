@@ -78,7 +78,6 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         return imageFile;
     }
 
-
     private async Task<bool> TryAutoCopyImageAsync(ImageFile imageFile)
     {
         try
@@ -110,7 +109,7 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
                 return false;
             }
 
-            string screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_ScreenshotsFolder);
+            string screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
             if (string.IsNullOrWhiteSpace(screenshotsFolder))
             {
                 screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
