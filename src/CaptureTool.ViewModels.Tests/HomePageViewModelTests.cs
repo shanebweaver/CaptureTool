@@ -34,13 +34,14 @@ public sealed class HomePageViewModelTests
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
         var newImageCaptureAction = Fixture.Freeze<Mock<IHomeNewImageCaptureAction>>();
+        newImageCaptureAction.Setup(a => a.CanExecute()).Returns(true);
         var vm = Create();
 
-        vm.NewImageCaptureCommand.Execute(null);
+        vm.NewImageCaptureCommand.Execute();
 
         newImageCaptureAction.Verify(a => a.Execute(), Times.Once);
-        telemetry.Verify(t => t.ActivityInitiated(HomePageViewModel.ActivityIds.NewImageCapture), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(HomePageViewModel.ActivityIds.NewImageCapture), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(HomePageViewModel.ActivityIds.NewImageCapture, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(HomePageViewModel.ActivityIds.NewImageCapture, It.IsAny<string>()), Times.Once);
     }
 
     [TestMethod]
@@ -53,10 +54,10 @@ public sealed class HomePageViewModelTests
         var newVideoCaptureAction = Fixture.Freeze<Mock<IHomeNewVideoCaptureAction>>();
         var vm = Create();
 
-        vm.NewVideoCaptureCommand.Execute(null);
+        vm.NewVideoCaptureCommand.Execute();
 
         newVideoCaptureAction.Verify(a => a.Execute(), Times.Once);
-        telemetry.Verify(t => t.ActivityInitiated(HomePageViewModel.ActivityIds.NewVideoCapture), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(HomePageViewModel.ActivityIds.NewVideoCapture), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(HomePageViewModel.ActivityIds.NewVideoCapture, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(HomePageViewModel.ActivityIds.NewVideoCapture, It.IsAny<string>()), Times.Once);
     }
 }

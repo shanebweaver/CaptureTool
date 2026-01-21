@@ -42,8 +42,8 @@ public class VideoEditPageViewModelTests
 
         // Assert
         saveAction.Verify(a => a.ExecuteAsync("test.mp4", It.IsAny<CancellationToken>()), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(VideoEditPageViewModel.ActivityIds.Save), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(VideoEditPageViewModel.ActivityIds.Save), Times.Once);
+        telemetryService.Verify(t => t.ActivityInitiated(VideoEditPageViewModel.ActivityIds.Save, It.IsAny<string>()), Times.Once);
+        telemetryService.Verify(t => t.ActivityCompleted(VideoEditPageViewModel.ActivityIds.Save, It.IsAny<string>()), Times.Once);
     }
 
     [TestMethod]
@@ -63,8 +63,8 @@ public class VideoEditPageViewModelTests
 
         // Assert
         copyAction.Verify(a => a.ExecuteAsync("test.mp4", It.IsAny<CancellationToken>()), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(VideoEditPageViewModel.ActivityIds.Copy), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(VideoEditPageViewModel.ActivityIds.Copy), Times.Once);
+        telemetryService.Verify(t => t.ActivityInitiated(VideoEditPageViewModel.ActivityIds.Copy, It.IsAny<string>()), Times.Once);
+        telemetryService.Verify(t => t.ActivityCompleted(VideoEditPageViewModel.ActivityIds.Copy, It.IsAny<string>()), Times.Once);
     }
 
     [TestMethod]

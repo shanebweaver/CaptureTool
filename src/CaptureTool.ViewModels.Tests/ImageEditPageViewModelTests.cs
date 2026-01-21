@@ -94,8 +94,8 @@ public sealed class ImageEditPageViewModelTests
         vm.Drawables.Should()
             .ContainSingle("only the image drawable should be present after load");
 
-        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Load), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Load), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Load, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Load, It.IsAny<string>()), Times.Once);
         telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 
@@ -115,8 +115,8 @@ public sealed class ImageEditPageViewModelTests
         // Assert
         vm.IsInCropMode.Should().BeTrue("Crop mode should be enabled after first toggle");
 
-        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.ToggleCropMode), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.ToggleCropMode), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.ToggleCropMode, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.ToggleCropMode, It.IsAny<string>()), Times.Once);
         telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 
@@ -134,7 +134,7 @@ public sealed class ImageEditPageViewModelTests
         vm.Drawables.Add(Fixture.Create<IDrawable>());
 
         // Act
-        await vm.CopyCommand.ExecuteAsync(null);
+        await vm.CopyCommand.ExecuteAsync();
 
         // Assert: exporter called
         exporter.Verify(e =>
@@ -144,8 +144,8 @@ public sealed class ImageEditPageViewModelTests
             Times.Once);
 
         // Assert telemetry
-        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Copy), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Copy), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Copy, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Copy, It.IsAny<string>()), Times.Once);
         telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 
@@ -160,10 +160,10 @@ public sealed class ImageEditPageViewModelTests
         var vm = Create();
 
         // Act
-        await vm.ShareCommand.ExecuteAsync(null);
+        await vm.ShareCommand.ExecuteAsync();
 
         // Assert telemetry
-        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Share), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Share, It.IsAny<string>()), Times.Once);
 
         telemetry.Verify(
             t => t.ActivityError(
@@ -176,7 +176,7 @@ public sealed class ImageEditPageViewModelTests
                 It.IsAny<string?>()),
             Times.Once);
 
-        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Share), Times.Never);
+        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Share, It.IsAny<string>()), Times.Never);
     }
 
     // ------------------------------------------------------------------
@@ -190,7 +190,7 @@ public sealed class ImageEditPageViewModelTests
         var vm = Create();
 
         // Act
-        vm.UndoCommand.Execute(null);
+        vm.UndoCommand.Execute();
 
         // Assert telemetry
         telemetry.Verify(
@@ -218,15 +218,15 @@ public sealed class ImageEditPageViewModelTests
         var oldOrientation = vm.Orientation;
 
         // Act
-        vm.RotateCommand.Execute(null);
+        vm.RotateCommand.Execute();
 
         // Assert
         vm.Orientation.Should().NotBe(oldOrientation, "Oriention should change after rotation");
         vm.HasUndoStack.Should().BeTrue("Undo stack should have an entry after rotation");
         vm.HasRedoStack.Should().BeFalse("Redo stack should be empty after new action");
 
-        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Rotate), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Rotate), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Rotate, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Rotate, It.IsAny<string>()), Times.Once);
         telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
 }

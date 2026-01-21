@@ -44,7 +44,7 @@ public class AddOnsPageViewModelTests
 
         // Assert
         goBackAction.Verify(a => a.Execute(), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(AddOnsPageViewModel.ActivityIds.GoBack), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(AddOnsPageViewModel.ActivityIds.GoBack), Times.Once);
+        telemetryService.Verify(t => t.ActivityInitiated(AddOnsPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
+        telemetryService.Verify(t => t.ActivityCompleted(AddOnsPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
     }
 }

@@ -48,8 +48,8 @@ public sealed class SettingsPageViewModelTests
         vm.GoBackCommand.Execute(null);
 
         goBackAction.Verify(a => a.Execute(), Times.Once);
-        telemetry.Verify(t => t.ActivityInitiated(SettingsPageViewModel.ActivityIds.GoBack), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(SettingsPageViewModel.ActivityIds.GoBack), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(SettingsPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(SettingsPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
     }
 
     [TestMethod]
@@ -62,7 +62,7 @@ public sealed class SettingsPageViewModelTests
         vm.RestartAppCommand.Execute(null);
 
         restartAppAction.Verify(a => a.Execute(), Times.Once);
-        telemetry.Verify(t => t.ActivityInitiated(SettingsPageViewModel.ActivityIds.RestartApp), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(SettingsPageViewModel.ActivityIds.RestartApp), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(SettingsPageViewModel.ActivityIds.RestartApp, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(SettingsPageViewModel.ActivityIds.RestartApp, It.IsAny<string>()), Times.Once);
     }
 }

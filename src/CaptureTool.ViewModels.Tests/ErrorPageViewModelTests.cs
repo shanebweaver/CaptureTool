@@ -36,7 +36,7 @@ public class ErrorPageViewModelTests
 
         // Assert
         restartAppAction.Verify(a => a.Execute(), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(ErrorPageViewModel.ActivityIds.RestartApp), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(ErrorPageViewModel.ActivityIds.RestartApp), Times.Once);
+        telemetryService.Verify(t => t.ActivityInitiated(ErrorPageViewModel.ActivityIds.RestartApp, It.IsAny<string>()), Times.Once);
+        telemetryService.Verify(t => t.ActivityCompleted(ErrorPageViewModel.ActivityIds.RestartApp, It.IsAny<string>()), Times.Once);
     }
 }

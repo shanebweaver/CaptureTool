@@ -33,7 +33,7 @@ public sealed class LoadingPageViewModelTests
         vm.GoBackCommand.Execute(null);
 
         goBackAction.Verify(a => a.Execute(), Times.Once);
-        telemetry.Verify(t => t.ActivityInitiated(LoadingPageViewModel.ActivityIds.GoBack), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(LoadingPageViewModel.ActivityIds.GoBack), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(LoadingPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(LoadingPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
     }
 }
