@@ -9,10 +9,14 @@ public sealed partial class SettingsActions : ISettingsActions
     private readonly ISettingsRestartAppAction _restart;
     private readonly ISettingsUpdateImageAutoCopyAction _updateImageAutoCopy;
     private readonly ISettingsUpdateImageAutoSaveAction _updateImageAutoSave;
+    private readonly ISettingsUpdateVideoCaptureAutoCopyAction _updateVideoCaptureAutoCopy;
+    private readonly ISettingsUpdateVideoCaptureAutoSaveAction _updateVideoCaptureAutoSave;
     private readonly ISettingsUpdateAppLanguageAction _updateLanguage;
     private readonly ISettingsUpdateAppThemeAction _updateTheme;
     private readonly ISettingsChangeScreenshotsFolderAction _changeScreenshotsFolder;
     private readonly ISettingsOpenScreenshotsFolderAction _openScreenshotsFolder;
+    private readonly ISettingsChangeVideosFolderAction _changeVideosFolder;
+    private readonly ISettingsOpenVideosFolderAction _openVideosFolder;
     private readonly ISettingsOpenTempFolderAction _openTempFolder;
     private readonly ISettingsClearTempFilesAction _clearTempFiles;
     private readonly ISettingsRestoreDefaultsAction _restoreDefaults;
@@ -22,10 +26,14 @@ public sealed partial class SettingsActions : ISettingsActions
         ISettingsRestartAppAction restart,
         ISettingsUpdateImageAutoCopyAction updateImageAutoCopy,
         ISettingsUpdateImageAutoSaveAction updateImageAutoSave,
+        ISettingsUpdateVideoCaptureAutoCopyAction updateVideoCaptureAutoCopy,
+        ISettingsUpdateVideoCaptureAutoSaveAction updateVideoCaptureAutoSave,
         ISettingsUpdateAppLanguageAction updateLanguage,
         ISettingsUpdateAppThemeAction updateTheme,
         ISettingsChangeScreenshotsFolderAction changeScreenshotsFolder,
         ISettingsOpenScreenshotsFolderAction openScreenshotsFolder,
+        ISettingsChangeVideosFolderAction changeVideosFolder,
+        ISettingsOpenVideosFolderAction openVideosFolder,
         ISettingsOpenTempFolderAction openTempFolder,
         ISettingsClearTempFilesAction clearTempFiles,
         ISettingsRestoreDefaultsAction restoreDefaults)
@@ -34,10 +42,14 @@ public sealed partial class SettingsActions : ISettingsActions
         _restart = restart;
         _updateImageAutoCopy = updateImageAutoCopy;
         _updateImageAutoSave = updateImageAutoSave;
+        _updateVideoCaptureAutoCopy = updateVideoCaptureAutoCopy;
+        _updateVideoCaptureAutoSave = updateVideoCaptureAutoSave;
         _updateLanguage = updateLanguage;
         _updateTheme = updateTheme;
         _changeScreenshotsFolder = changeScreenshotsFolder;
         _openScreenshotsFolder = openScreenshotsFolder;
+        _changeVideosFolder = changeVideosFolder;
+        _openVideosFolder = openVideosFolder;
         _openTempFolder = openTempFolder;
         _clearTempFiles = clearTempFiles;
         _restoreDefaults = restoreDefaults;
@@ -50,11 +62,17 @@ public sealed partial class SettingsActions : ISettingsActions
     public Task UpdateImageAutoCopyAsync(bool value, CancellationToken ct) => _updateImageAutoCopy.ExecuteCommandAsync(value);
     public Task UpdateImageAutoSaveAsync(bool value, CancellationToken ct) => _updateImageAutoSave.ExecuteCommandAsync(value);
 
+    public Task UpdateVideoCaptureAutoCopyAsync(bool value, CancellationToken ct) => _updateVideoCaptureAutoCopy.ExecuteCommandAsync(value);
+    public Task UpdateVideoCaptureAutoSaveAsync(bool value, CancellationToken ct) => _updateVideoCaptureAutoSave.ExecuteCommandAsync(value);
+
     public Task UpdateAppLanguageAsync(int index, CancellationToken ct) => _updateLanguage.ExecuteCommandAsync(index);
     public void UpdateAppTheme(int index) => _updateTheme.ExecuteCommand(index);
 
     public Task ChangeScreenshotsFolderAsync(CancellationToken ct) => _changeScreenshotsFolder.ExecuteCommandAsync();
     public void OpenScreenshotsFolder() => _openScreenshotsFolder.ExecuteCommand();
+
+    public Task ChangeVideosFolderAsync(CancellationToken ct) => _changeVideosFolder.ExecuteCommandAsync();
+    public void OpenVideosFolder() => _openVideosFolder.ExecuteCommand();
 
     public void OpenTemporaryFilesFolder() => _openTempFolder.ExecuteCommand();
     public void ClearTemporaryFiles(string tempFolderPath) => _clearTempFiles.ExecuteCommand(tempFolderPath);

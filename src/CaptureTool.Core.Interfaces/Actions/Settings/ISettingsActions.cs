@@ -10,6 +10,10 @@ public interface ISettingsActions
     Task UpdateImageAutoCopyAsync(bool value, CancellationToken ct);
     Task UpdateImageAutoSaveAsync(bool value, CancellationToken ct);
 
+    // Video capture settings
+    Task UpdateVideoCaptureAutoCopyAsync(bool value, CancellationToken ct);
+    Task UpdateVideoCaptureAutoSaveAsync(bool value, CancellationToken ct);
+
     // Language and theme
     Task UpdateAppLanguageAsync(int index, CancellationToken ct);
     void UpdateAppTheme(int index);
@@ -17,6 +21,10 @@ public interface ISettingsActions
     // Screenshots folder
     Task ChangeScreenshotsFolderAsync(CancellationToken ct);
     void OpenScreenshotsFolder();
+
+    // Videos folder
+    Task ChangeVideosFolderAsync(CancellationToken ct);
+    void OpenVideosFolder();
 
     // Temp files
     void OpenTemporaryFilesFolder();

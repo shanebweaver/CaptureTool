@@ -24,10 +24,14 @@ public class SettingsActionsTests
         var restart = Fixture.Freeze<Mock<ISettingsRestartAppAction>>();
         var updateCopy = Fixture.Freeze<Mock<ISettingsUpdateImageAutoCopyAction>>();
         var updateSave = Fixture.Freeze<Mock<ISettingsUpdateImageAutoSaveAction>>();
+        var updateVideoCopy = Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoCopyAction>>();
+        var updateVideoSave = Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoSaveAction>>();
         var updateLang = Fixture.Freeze<Mock<ISettingsUpdateAppLanguageAction>>();
         var updateTheme = Fixture.Freeze<Mock<ISettingsUpdateAppThemeAction>>();
         var changeFolder = Fixture.Freeze<Mock<ISettingsChangeScreenshotsFolderAction>>();
         var openShots = Fixture.Freeze<Mock<ISettingsOpenScreenshotsFolderAction>>();
+        var changeVideos = Fixture.Freeze<Mock<ISettingsChangeVideosFolderAction>>();
+        var openVideos = Fixture.Freeze<Mock<ISettingsOpenVideosFolderAction>>();
         var openTemp = Fixture.Freeze<Mock<ISettingsOpenTempFolderAction>>();
         var clearTemp = Fixture.Freeze<Mock<ISettingsClearTempFilesAction>>();
         var restore = Fixture.Freeze<Mock<ISettingsRestoreDefaultsAction>>();
@@ -39,10 +43,14 @@ public class SettingsActionsTests
             restart.Object,
             updateCopy.Object,
             updateSave.Object,
+            updateVideoCopy.Object,
+            updateVideoSave.Object,
             updateLang.Object,
             updateTheme.Object,
             changeFolder.Object,
             openShots.Object,
+            changeVideos.Object,
+            openVideos.Object,
             openTemp.Object,
             clearTemp.Object,
             restore.Object);
@@ -60,10 +68,14 @@ public class SettingsActionsTests
         var restart = Fixture.Freeze<Mock<ISettingsRestartAppAction>>();
         var updateCopy = Fixture.Freeze<Mock<ISettingsUpdateImageAutoCopyAction>>();
         var updateSave = Fixture.Freeze<Mock<ISettingsUpdateImageAutoSaveAction>>();
+        var updateVideoCopy = Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoCopyAction>>();
+        var updateVideoSave = Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoSaveAction>>();
         var updateLang = Fixture.Freeze<Mock<ISettingsUpdateAppLanguageAction>>();
         var updateTheme = Fixture.Freeze<Mock<ISettingsUpdateAppThemeAction>>();
         var changeFolder = Fixture.Freeze<Mock<ISettingsChangeScreenshotsFolderAction>>();
         var openShots = Fixture.Freeze<Mock<ISettingsOpenScreenshotsFolderAction>>();
+        var changeVideos = Fixture.Freeze<Mock<ISettingsChangeVideosFolderAction>>();
+        var openVideos = Fixture.Freeze<Mock<ISettingsOpenVideosFolderAction>>();
         var openTemp = Fixture.Freeze<Mock<ISettingsOpenTempFolderAction>>();
         var clearTemp = Fixture.Freeze<Mock<ISettingsClearTempFilesAction>>();
         var restore = Fixture.Freeze<Mock<ISettingsRestoreDefaultsAction>>();
@@ -75,10 +87,14 @@ public class SettingsActionsTests
             restart.Object,
             updateCopy.Object,
             updateSave.Object,
+            updateVideoCopy.Object,
+            updateVideoSave.Object,
             updateLang.Object,
             updateTheme.Object,
             changeFolder.Object,
             openShots.Object,
+            changeVideos.Object,
+            openVideos.Object,
             openTemp.Object,
             clearTemp.Object,
             restore.Object);
@@ -96,10 +112,14 @@ public class SettingsActionsTests
         var restart = Fixture.Freeze<Mock<ISettingsRestartAppAction>>();
         var updateCopy = Fixture.Freeze<Mock<ISettingsUpdateImageAutoCopyAction>>();
         var updateSave = Fixture.Freeze<Mock<ISettingsUpdateImageAutoSaveAction>>();
+        var updateVideoCopy = Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoCopyAction>>();
+        var updateVideoSave = Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoSaveAction>>();
         var updateLang = Fixture.Freeze<Mock<ISettingsUpdateAppLanguageAction>>();
         var updateTheme = Fixture.Freeze<Mock<ISettingsUpdateAppThemeAction>>();
         var changeFolder = Fixture.Freeze<Mock<ISettingsChangeScreenshotsFolderAction>>();
         var openShots = Fixture.Freeze<Mock<ISettingsOpenScreenshotsFolderAction>>();
+        var changeVideos = Fixture.Freeze<Mock<ISettingsChangeVideosFolderAction>>();
+        var openVideos = Fixture.Freeze<Mock<ISettingsOpenVideosFolderAction>>();
         var openTemp = Fixture.Freeze<Mock<ISettingsOpenTempFolderAction>>();
         var clearTemp = Fixture.Freeze<Mock<ISettingsClearTempFilesAction>>();
         var restore = Fixture.Freeze<Mock<ISettingsRestoreDefaultsAction>>();
@@ -112,10 +132,14 @@ public class SettingsActionsTests
             restart.Object,
             updateCopy.Object,
             updateSave.Object,
+            updateVideoCopy.Object,
+            updateVideoSave.Object,
             updateLang.Object,
             updateTheme.Object,
             changeFolder.Object,
             openShots.Object,
+            changeVideos.Object,
+            openVideos.Object,
             openTemp.Object,
             clearTemp.Object,
             restore.Object);
@@ -133,10 +157,14 @@ public class SettingsActionsTests
         var restart = Fixture.Freeze<Mock<ISettingsRestartAppAction>>();
         var updateCopy = Fixture.Freeze<Mock<ISettingsUpdateImageAutoCopyAction>>();
         var updateSave = Fixture.Freeze<Mock<ISettingsUpdateImageAutoSaveAction>>();
+        var updateVideoCopy = Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoCopyAction>>();
+        var updateVideoSave = Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoSaveAction>>();
         var updateLang = Fixture.Freeze<Mock<ISettingsUpdateAppLanguageAction>>();
         var updateTheme = Fixture.Freeze<Mock<ISettingsUpdateAppThemeAction>>();
         var changeFolder = Fixture.Freeze<Mock<ISettingsChangeScreenshotsFolderAction>>();
         var openShots = Fixture.Freeze<Mock<ISettingsOpenScreenshotsFolderAction>>();
+        var changeVideos = Fixture.Freeze<Mock<ISettingsChangeVideosFolderAction>>();
+        var openVideos = Fixture.Freeze<Mock<ISettingsOpenVideosFolderAction>>();
         var openTemp = Fixture.Freeze<Mock<ISettingsOpenTempFolderAction>>();
         var clearTemp = Fixture.Freeze<Mock<ISettingsClearTempFilesAction>>();
         var restore = Fixture.Freeze<Mock<ISettingsRestoreDefaultsAction>>();
@@ -149,10 +177,14 @@ public class SettingsActionsTests
             restart.Object,
             updateCopy.Object,
             updateSave.Object,
+            updateVideoCopy.Object,
+            updateVideoSave.Object,
             updateLang.Object,
             updateTheme.Object,
             changeFolder.Object,
             openShots.Object,
+            changeVideos.Object,
+            openVideos.Object,
             openTemp.Object,
             clearTemp.Object,
             restore.Object);

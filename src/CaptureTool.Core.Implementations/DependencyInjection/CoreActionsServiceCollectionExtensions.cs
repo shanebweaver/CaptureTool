@@ -88,9 +88,12 @@ public static class CoreActionsServiceCollectionExtensions
         services.AddTransient<ISettingsRestartAppAction, SettingsRestartAppAction>();
         services.AddTransient<ISettingsUpdateImageAutoCopyAction, SettingsUpdateImageAutoCopyAction>();
         services.AddTransient<ISettingsUpdateImageAutoSaveAction, SettingsUpdateImageAutoSaveAction>();
+        services.AddTransient<ISettingsUpdateVideoCaptureAutoCopyAction, SettingsUpdateVideoCaptureAutoCopyAction>();
+        services.AddTransient<ISettingsUpdateVideoCaptureAutoSaveAction, SettingsUpdateVideoCaptureAutoSaveAction>();
         services.AddTransient<ISettingsUpdateAppLanguageAction, SettingsUpdateAppLanguageAction>();
         services.AddTransient<ISettingsUpdateAppThemeAction, SettingsUpdateAppThemeAction>();
         services.AddTransient<ISettingsChangeScreenshotsFolderAction, SettingsChangeScreenshotsFolderAction>();
+        services.AddTransient<ISettingsChangeVideosFolderAction, SettingsChangeVideosFolderAction>();
         services.AddTransient<ISettingsClearTempFilesAction, SettingsClearTempFilesAction>();
         services.AddTransient<ISettingsRestoreDefaultsAction, SettingsRestoreDefaultsAction>();
         services.AddTransient<ISettingsActions, SettingsActions>();

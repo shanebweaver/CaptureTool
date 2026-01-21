@@ -9,6 +9,7 @@ public static class CoreWindowsActionsServiceCollectionExtensions
     public static IServiceCollection AddCoreWindowsSettingsActions(this IServiceCollection services)
     {
         services.AddTransient<ISettingsOpenScreenshotsFolderAction, SettingsOpenScreenshotsFolderAction>();
+        services.AddTransient<ISettingsOpenVideosFolderAction, SettingsOpenVideosFolderAction>();
         services.AddTransient<ISettingsOpenTempFolderAction, SettingsOpenTempFolderAction>();
         return services;
     }
