@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Domains.Edit.Interfaces;
 using System.Drawing;
 
-namespace CaptureTool.Domains.Edit.Tests;
+namespace CaptureTool.Domains.Edit.Tests.Windows;
 
 [TestClass]
 public sealed class ImageOrientationHelperTests
