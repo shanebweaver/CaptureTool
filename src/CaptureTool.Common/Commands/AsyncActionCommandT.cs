@@ -4,22 +4,12 @@ public abstract partial class AsyncActionCommand<T> : ActionCommandBase, IAsyncA
 {
     public override bool CanExecute(object? parameter)
     {
-        if (parameter is not T typedParameter)
-        {
-            throw new ArgumentException("Unexpected parameter type.");
-        }
-
-        return CanExecute(typedParameter);
+        throw new NotImplementedException();
     }
 
     public override void Execute(object? parameter)
     {
-        if (parameter is not T typedParameter)
-        {
-            throw new ArgumentException("Unexpected parameter type.");
-        }
-
-        ExecuteAsync(typedParameter);
+        throw new NotImplementedException();
     }
 
     public virtual bool CanExecute(T parameter)
@@ -27,5 +17,5 @@ public abstract partial class AsyncActionCommand<T> : ActionCommandBase, IAsyncA
         return true;
     }
 
-    public abstract Task ExecuteAsync(T parameter);
+    public abstract Task ExecuteAsync(T parameter, CancellationToken cancellationToken = default);
 }

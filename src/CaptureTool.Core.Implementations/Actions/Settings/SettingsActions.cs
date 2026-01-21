@@ -59,23 +59,23 @@ public sealed partial class SettingsActions : ISettingsActions
     public void GoBack() => _goBack.ExecuteCommand();
     public void RestartApp() => _restart.ExecuteCommand();
 
-    public Task UpdateImageAutoCopyAsync(bool value, CancellationToken ct) => _updateImageAutoCopy.ExecuteCommandAsync(value);
-    public Task UpdateImageAutoSaveAsync(bool value, CancellationToken ct) => _updateImageAutoSave.ExecuteCommandAsync(value);
+    public Task UpdateImageAutoCopyAsync(bool value, CancellationToken ct) => _updateImageAutoCopy.ExecuteCommandAsync(value, ct);
+    public Task UpdateImageAutoSaveAsync(bool value, CancellationToken ct) => _updateImageAutoSave.ExecuteCommandAsync(value, ct);
 
-    public Task UpdateVideoCaptureAutoCopyAsync(bool value, CancellationToken ct) => _updateVideoCaptureAutoCopy.ExecuteCommandAsync(value);
-    public Task UpdateVideoCaptureAutoSaveAsync(bool value, CancellationToken ct) => _updateVideoCaptureAutoSave.ExecuteCommandAsync(value);
+    public Task UpdateVideoCaptureAutoCopyAsync(bool value, CancellationToken ct) => _updateVideoCaptureAutoCopy.ExecuteCommandAsync(value, ct);
+    public Task UpdateVideoCaptureAutoSaveAsync(bool value, CancellationToken ct) => _updateVideoCaptureAutoSave.ExecuteCommandAsync(value, ct);
 
-    public Task UpdateAppLanguageAsync(int index, CancellationToken ct) => _updateLanguage.ExecuteCommandAsync(index);
+    public Task UpdateAppLanguageAsync(int index, CancellationToken ct) => _updateLanguage.ExecuteCommandAsync(index, ct);
     public void UpdateAppTheme(int index) => _updateTheme.ExecuteCommand(index);
 
-    public Task ChangeScreenshotsFolderAsync(CancellationToken ct) => _changeScreenshotsFolder.ExecuteCommandAsync();
+    public Task ChangeScreenshotsFolderAsync(CancellationToken ct) => _changeScreenshotsFolder.ExecuteCommandAsync(ct);
     public void OpenScreenshotsFolder() => _openScreenshotsFolder.ExecuteCommand();
 
-    public Task ChangeVideosFolderAsync(CancellationToken ct) => _changeVideosFolder.ExecuteCommandAsync();
+    public Task ChangeVideosFolderAsync(CancellationToken ct) => _changeVideosFolder.ExecuteCommandAsync(ct);
     public void OpenVideosFolder() => _openVideosFolder.ExecuteCommand();
 
     public void OpenTemporaryFilesFolder() => _openTempFolder.ExecuteCommand();
     public void ClearTemporaryFiles(string tempFolderPath) => _clearTempFiles.ExecuteCommand(tempFolderPath);
 
-    public Task RestoreDefaultSettingsAsync(CancellationToken ct) => _restoreDefaults.ExecuteCommandAsync();
+    public Task RestoreDefaultSettingsAsync(CancellationToken ct) => _restoreDefaults.ExecuteCommandAsync(ct);
 }

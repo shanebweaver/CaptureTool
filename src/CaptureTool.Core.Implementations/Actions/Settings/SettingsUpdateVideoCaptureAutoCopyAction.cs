@@ -14,9 +14,9 @@ public sealed partial class SettingsUpdateVideoCaptureAutoCopyAction : AsyncActi
         _settingsService = settingsService;
     }
 
-    public override async Task ExecuteAsync(bool parameter)
+    public override async Task ExecuteAsync(bool parameter, CancellationToken cancellationToken = default)
     {
         _settingsService.Set(CaptureToolSettings.Settings_VideoCapture_AutoCopy, parameter);
-        await _settingsService.TrySaveAsync(CancellationToken.None);
+        await _settingsService.TrySaveAsync(cancellationToken);
     }
 }

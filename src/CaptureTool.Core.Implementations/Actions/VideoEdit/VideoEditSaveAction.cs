@@ -20,7 +20,7 @@ public sealed partial class VideoEditSaveAction : AsyncActionCommand<string>, IV
     }
 
 
-    public override async Task ExecuteAsync(string videoPath)
+    public override async Task ExecuteAsync(string videoPath, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(videoPath))
         {

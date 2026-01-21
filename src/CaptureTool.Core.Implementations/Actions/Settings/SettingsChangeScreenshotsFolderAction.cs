@@ -23,11 +23,11 @@ public sealed partial class SettingsChangeScreenshotsFolderAction : AsyncActionC
         _settings = settings;
     }
 
-    public override async Task ExecuteAsync()
+    public override async Task ExecuteAsync(CancellationToken cancellationToken = default)
     {
         var hwnd = _windowing.GetMainWindowHandle();
         var folder = await _picker.PickFolderAsync(hwnd, UserFolder.Pictures) ?? throw new OperationCanceledException("No folder was selected.");
         _settings.Set(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder, folder.FolderPath);
-        await _settings.TrySaveAsync(CancellationToken.None);
+        await _settings.TrySaveAsync(cancellationToken);
     }
 }

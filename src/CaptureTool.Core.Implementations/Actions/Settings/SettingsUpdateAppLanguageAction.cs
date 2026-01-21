@@ -17,7 +17,7 @@ public sealed partial class SettingsUpdateAppLanguageAction : AsyncActionCommand
         _settings = settings;
     }
 
-    public override async Task ExecuteAsync(int parameter)
+    public override async Task ExecuteAsync(int parameter, CancellationToken cancellationToken = default)
     {
         var languages = _localization.SupportedLanguages;
         if (parameter < 0 || parameter > languages.Length)
@@ -37,6 +37,6 @@ public sealed partial class SettingsUpdateAppLanguageAction : AsyncActionCommand
             _settings.Unset(CaptureToolSettings.Settings_LanguageOverride);
         }
 
-        await _settings.TrySaveAsync(CancellationToken.None);
+        await _settings.TrySaveAsync(cancellationToken);
     }
 }
