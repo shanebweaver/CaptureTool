@@ -27,6 +27,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         public static readonly string TogglePauseResume = "TogglePauseResume";
     }
 
+    private const string TelemetryContext = "CaptureOverlay";
+
     private readonly IAppNavigation _appNavigation;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ITelemetryService _telemetryService;
@@ -112,7 +114,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     public override void Load(CaptureOverlayViewModelOptions options)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.Load, () =>
         {
             ThrowIfNotReadyToLoad();
             StartLoading();
@@ -170,7 +172,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void CloseOverlay()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.CloseOverlay, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.CloseOverlay, () =>
         {
             _captureOverlayActions.Close();
         });
@@ -178,7 +180,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void GoBack()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.GoBack, () =>
         {
             _captureOverlayActions.GoBack();
         });
@@ -186,7 +188,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void StartVideoCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.StartVideoCapture, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.StartVideoCapture, () =>
         {
             if (!IsRecording && _monitorCaptureResult != null && _captureArea != null)
             {
@@ -209,7 +211,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void StopVideoCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.StopVideoCapture, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.StopVideoCapture, () =>
         {
             if (IsRecording)
             {
@@ -226,7 +228,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void ToggleDesktopAudio()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleDesktopAudio, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.ToggleDesktopAudio, () =>
         {
             _captureOverlayActions.ToggleDesktopAudio();
         });
@@ -234,7 +236,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void TogglePauseResume()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.TogglePauseResume, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.TogglePauseResume, () =>
         {
             IsPaused = !IsPaused;
 

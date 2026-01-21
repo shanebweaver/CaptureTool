@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
+using CaptureTool.Common.Commands.Extensions;
 using CaptureTool.Core.Interfaces.Actions.AddOns;
 using CaptureTool.Services.Interfaces.Cancellation;
 using CaptureTool.Services.Interfaces.Localization;
@@ -20,7 +21,9 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         public static readonly string GoBack = "GoBack";
     }
 
-    private readonly IAddOnsActions _addOnsActions;
+    private const string TelemetryContext = "AddOnsPage";
+
+    private readonly IAddOnsGoBackAction _goBackAction;
     private readonly IWindowHandleProvider _windowingService;
     private readonly IStoreService _storeService;
     private readonly ILocalizationService _localizationService;
@@ -55,14 +58,14 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public AddOnsPageViewModel(
-        IAddOnsActions addOnsActions,
+        IAddOnsGoBackAction goBackAction,
         IWindowHandleProvider windowingService,
         ILocalizationService localizationService,
         IStoreService storeService,
         ITelemetryService telemetryService,
         ICancellationService cancellationService)
     {
-        _addOnsActions = addOnsActions;
+        _goBackAction = goBackAction;
         _windowingService = windowingService;
         _localizationService = localizationService;
         _storeService = storeService;
@@ -72,12 +75,12 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         ChromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
 
         GetChromaKeyAddOnCommand = new(GetChromaKeyAddOnAsync, () => IsChromaKeyAddOnAvailable);
-        GoBackCommand = new(GoBack, () => _addOnsActions.CanGoBack());
+        GoBackCommand = new(GoBack, () => _goBackAction.CanExecute());
     }
 
     public override Task LoadAsync(CancellationToken cancellationToken)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Load, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.Load, async () =>
         {
             ThrowIfNotReadyToLoad();
             StartLoading();
@@ -113,7 +116,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 
     private Task GetChromaKeyAddOnAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.GetChromaKeyAddOn, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.GetChromaKeyAddOn, async () =>
         {
             if (!IsChromaKeyAddOnOwned)
             {
@@ -131,9 +134,9 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 
     private void GoBack()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.GoBack, () =>
         {
-            _addOnsActions.GoBack();
+            _goBackAction.ExecuteCommand();
         });
     }
 }

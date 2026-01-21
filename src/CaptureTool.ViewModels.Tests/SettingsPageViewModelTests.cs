@@ -20,34 +20,48 @@ public sealed class SettingsPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<ISettingsActions>>();
+        Fixture.Freeze<Mock<ISettingsGoBackAction>>();
+        Fixture.Freeze<Mock<ISettingsRestartAppAction>>();
+        Fixture.Freeze<Mock<ISettingsUpdateImageAutoCopyAction>>();
+        Fixture.Freeze<Mock<ISettingsUpdateImageAutoSaveAction>>();
+        Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoCopyAction>>();
+        Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoSaveAction>>();
+        Fixture.Freeze<Mock<ISettingsUpdateAppLanguageAction>>();
+        Fixture.Freeze<Mock<ISettingsUpdateAppThemeAction>>();
+        Fixture.Freeze<Mock<ISettingsChangeScreenshotsFolderAction>>();
+        Fixture.Freeze<Mock<ISettingsOpenScreenshotsFolderAction>>();
+        Fixture.Freeze<Mock<ISettingsChangeVideosFolderAction>>();
+        Fixture.Freeze<Mock<ISettingsOpenVideosFolderAction>>();
+        Fixture.Freeze<Mock<ISettingsOpenTempFolderAction>>();
+        Fixture.Freeze<Mock<ISettingsClearTempFilesAction>>();
+        Fixture.Freeze<Mock<ISettingsRestoreDefaultsAction>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
 
     [TestMethod]
-    public void GoBackCommand_ShouldDelegateToActions_AndTrackTelemetry()
+    public void GoBackCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var actions = Fixture.Freeze<Mock<ISettingsActions>>();
+        var goBackAction = Fixture.Freeze<Mock<ISettingsGoBackAction>>();
         var vm = Create();
 
         vm.GoBackCommand.Execute(null);
 
-        actions.Verify(a => a.GoBack(), Times.Once);
+        goBackAction.Verify(a => a.Execute(), Times.Once);
         telemetry.Verify(t => t.ActivityInitiated(SettingsPageViewModel.ActivityIds.GoBack), Times.Once);
         telemetry.Verify(t => t.ActivityCompleted(SettingsPageViewModel.ActivityIds.GoBack), Times.Once);
     }
 
     [TestMethod]
-    public void RestartAppCommand_ShouldDelegateToActions_AndTrackTelemetry()
+    public void RestartAppCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var actions = Fixture.Freeze<Mock<ISettingsActions>>();
+        var restartAppAction = Fixture.Freeze<Mock<ISettingsRestartAppAction>>();
         var vm = Create();
 
         vm.RestartAppCommand.Execute(null);
 
-        actions.Verify(a => a.RestartApp(), Times.Once);
+        restartAppAction.Verify(a => a.Execute(), Times.Once);
         telemetry.Verify(t => t.ActivityInitiated(SettingsPageViewModel.ActivityIds.RestartApp), Times.Once);
         telemetry.Verify(t => t.ActivityCompleted(SettingsPageViewModel.ActivityIds.RestartApp), Times.Once);
     }

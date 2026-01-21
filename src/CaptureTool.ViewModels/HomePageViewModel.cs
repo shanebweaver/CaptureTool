@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
+using CaptureTool.Common.Commands.Extensions;
 using CaptureTool.Core.Interfaces.Actions.Home;
 using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.FeatureManagement;
@@ -16,7 +17,10 @@ public sealed partial class HomePageViewModel : ViewModelBase
         public static readonly string NewVideoCapture = "NewVideoCapture";
     }
 
-    private readonly IHomeActions _homeActions;
+    private const string TelemetryContext = "HomePage";
+
+    private readonly IHomeNewImageCaptureAction _newImageCaptureAction;
+    private readonly IHomeNewVideoCaptureAction _newVideoCaptureAction;
     private readonly ITelemetryService _telemetryService;
 
     public RelayCommand NewImageCaptureCommand { get; }
@@ -25,11 +29,13 @@ public sealed partial class HomePageViewModel : ViewModelBase
     public bool IsVideoCaptureEnabled { get; }
 
     public HomePageViewModel(
-        IHomeActions homeActions,
+        IHomeNewImageCaptureAction newImageCaptureAction,
+        IHomeNewVideoCaptureAction newVideoCaptureAction,
         IFeatureManager featureManager,
         ITelemetryService telemetryService)
     {
-        _homeActions = homeActions;
+        _newImageCaptureAction = newImageCaptureAction;
+        _newVideoCaptureAction = newVideoCaptureAction;
         _telemetryService = telemetryService;
 
         NewImageCaptureCommand = new(NewImageCapture);
@@ -40,17 +46,17 @@ public sealed partial class HomePageViewModel : ViewModelBase
 
     private void NewImageCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewImageCapture, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.NewImageCapture, () =>
         {
-            _homeActions.NewImageCapture();
+            _newImageCaptureAction.ExecuteCommand();
         });
     }
 
     private void NewVideoCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewVideoCapture, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.NewVideoCapture, () =>
         {
-            _homeActions.NewVideoCapture();
+            _newVideoCaptureAction.ExecuteCommand();
         });
     }
 }

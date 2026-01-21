@@ -27,6 +27,8 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         public static readonly string OpenRecentCapture = "OpenRecentCapture";
     }
 
+    private const string TelemetryContext = "AppMenu";
+
     private readonly IAppMenuActions _appMenuActions;
     private readonly ITelemetryService _telemetryService;
     private readonly IImageCaptureHandler _imageCaptureHandler;
@@ -110,7 +112,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private void NewImageCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NewImageCapture, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.NewImageCapture, () =>
         {
             _appMenuActions.NewImageCapture();
         });
@@ -118,7 +120,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private Task OpenFileAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.OpenFile, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.OpenFile, async () =>
         {
             await _appMenuActions.OpenFileAsync(CancellationToken.None);
         });
@@ -126,7 +128,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private void NavigateToSettings()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.NavigateToSettings, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.NavigateToSettings, () =>
         {
             _appMenuActions.NavigateToSettings();
         });
@@ -134,7 +136,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private void ShowAboutApp()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ShowAboutApp, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.ShowAboutApp, () =>
         {
             _appMenuActions.ShowAboutApp();
         });
@@ -142,7 +144,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private void ShowAddOns()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ShowAddOns, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.ShowAddOns, () =>
         {
             _appMenuActions.ShowAddOns();
         });
@@ -150,7 +152,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private void ExitApplication()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ExitApplication, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.ExitApplication, () =>
         {
             _appMenuActions.ExitApplication();
         });
@@ -158,7 +160,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private void OpenRecentCapture(RecentCaptureViewModel? model)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenRecentCapture, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.OpenRecentCapture, () =>
         {
             if (model != null)
             {

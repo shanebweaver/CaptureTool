@@ -1,5 +1,6 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Commands;
+using CaptureTool.Common.Commands.Extensions;
 using CaptureTool.Core.Interfaces.Actions.VideoEdit;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Services.Interfaces.Storage;
@@ -15,6 +16,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         public static readonly string Save = $"Save";
         public static readonly string Copy = $"Copy";
     }
+
+    private const string TelemetryContext = "VideoEditPage";
 
     public AsyncRelayCommand SaveCommand { get; }
     public AsyncRelayCommand CopyCommand { get; }
@@ -37,14 +40,17 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         private set => Set(ref field, value);
     }
 
-    private readonly IVideoEditActions _videoEditActions;
+    private readonly IVideoEditSaveAction _saveAction;
+    private readonly IVideoEditCopyAction _copyAction;
     private readonly ITelemetryService _telemetryService;
 
     public VideoEditPageViewModel(
-        IVideoEditActions videoEditActions,
+        IVideoEditSaveAction saveAction,
+        IVideoEditCopyAction copyAction,
         ITelemetryService telemetryService)
     {
-        _videoEditActions = videoEditActions;
+        _saveAction = saveAction;
+        _copyAction = copyAction;
         _telemetryService = telemetryService;
 
         SaveCommand = new(SaveAsync);
@@ -56,7 +62,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     public override void Load(IVideoFile video)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.Load, () =>
         {
             ThrowIfNotReadyToLoad();
             StartLoading();
@@ -95,27 +101,27 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     private Task SaveAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Save, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.Save, async () =>
         {
             if (string.IsNullOrEmpty(VideoPath))
             {
                 throw new InvalidOperationException("Cannot save video without a valid filepath.");
             }
 
-            await _videoEditActions.SaveAsync(VideoPath, CancellationToken.None);
+            await _saveAction.ExecuteCommandAsync(VideoPath, CancellationToken.None);
         });
     }
 
     private Task CopyAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Copy, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.Copy, async () =>
         {
             if (string.IsNullOrEmpty(VideoPath))
             {
                 throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
             }
 
-            await _videoEditActions.CopyAsync(VideoPath, CancellationToken.None);
+            await _copyAction.ExecuteCommandAsync(VideoPath, CancellationToken.None);
         });
     }
 }

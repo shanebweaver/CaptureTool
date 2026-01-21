@@ -1,5 +1,6 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
+using CaptureTool.Common.Commands.Extensions;
 using CaptureTool.Core.Interfaces.Actions.Settings;
 using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Core.Interfaces.Settings;
@@ -39,7 +40,23 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         public static readonly string RestoreDefaultSettings = "RestoreDefaultSettings";
     }
 
-    private readonly ISettingsActions _settingsActions;
+    private const string TelemetryContext = "SettingsPage";
+
+    private readonly ISettingsGoBackAction _goBackAction;
+    private readonly ISettingsRestartAppAction _restartAppAction;
+    private readonly ISettingsUpdateImageAutoCopyAction _updateImageAutoCopyAction;
+    private readonly ISettingsUpdateImageAutoSaveAction _updateImageAutoSaveAction;
+    private readonly ISettingsUpdateVideoCaptureAutoCopyAction _updateVideoCaptureAutoCopyAction;
+    private readonly ISettingsUpdateVideoCaptureAutoSaveAction _updateVideoCaptureAutoSaveAction;
+    private readonly ISettingsUpdateAppLanguageAction _updateAppLanguageAction;
+    private readonly ISettingsUpdateAppThemeAction _updateAppThemeAction;
+    private readonly ISettingsChangeScreenshotsFolderAction _changeScreenshotsFolderAction;
+    private readonly ISettingsOpenScreenshotsFolderAction _openScreenshotsFolderAction;
+    private readonly ISettingsChangeVideosFolderAction _changeVideosFolderAction;
+    private readonly ISettingsOpenVideosFolderAction _openVideosFolderAction;
+    private readonly ISettingsOpenTempFolderAction _openTempFolderAction;
+    private readonly ISettingsClearTempFilesAction _clearTempFilesAction;
+    private readonly ISettingsRestoreDefaultsAction _restoreDefaultsAction;
     private readonly ITelemetryService _telemetryService;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
@@ -156,7 +173,21 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public SettingsPageViewModel(
-        ISettingsActions settingsActions,
+        ISettingsGoBackAction goBackAction,
+        ISettingsRestartAppAction restartAppAction,
+        ISettingsUpdateImageAutoCopyAction updateImageAutoCopyAction,
+        ISettingsUpdateImageAutoSaveAction updateImageAutoSaveAction,
+        ISettingsUpdateVideoCaptureAutoCopyAction updateVideoCaptureAutoCopyAction,
+        ISettingsUpdateVideoCaptureAutoSaveAction updateVideoCaptureAutoSaveAction,
+        ISettingsUpdateAppLanguageAction updateAppLanguageAction,
+        ISettingsUpdateAppThemeAction updateAppThemeAction,
+        ISettingsChangeScreenshotsFolderAction changeScreenshotsFolderAction,
+        ISettingsOpenScreenshotsFolderAction openScreenshotsFolderAction,
+        ISettingsChangeVideosFolderAction changeVideosFolderAction,
+        ISettingsOpenVideosFolderAction openVideosFolderAction,
+        ISettingsOpenTempFolderAction openTempFolderAction,
+        ISettingsClearTempFilesAction clearTempFilesAction,
+        ISettingsRestoreDefaultsAction restoreDefaultsAction,
         ITelemetryService telemetryService,
         ILocalizationService localizationService,
         IThemeService themeService,
@@ -166,7 +197,21 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
         IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
-        _settingsActions = settingsActions;
+        _goBackAction = goBackAction;
+        _restartAppAction = restartAppAction;
+        _updateImageAutoCopyAction = updateImageAutoCopyAction;
+        _updateImageAutoSaveAction = updateImageAutoSaveAction;
+        _updateVideoCaptureAutoCopyAction = updateVideoCaptureAutoCopyAction;
+        _updateVideoCaptureAutoSaveAction = updateVideoCaptureAutoSaveAction;
+        _updateAppLanguageAction = updateAppLanguageAction;
+        _updateAppThemeAction = updateAppThemeAction;
+        _changeScreenshotsFolderAction = changeScreenshotsFolderAction;
+        _openScreenshotsFolderAction = openScreenshotsFolderAction;
+        _changeVideosFolderAction = changeVideosFolderAction;
+        _openVideosFolderAction = openVideosFolderAction;
+        _openTempFolderAction = openTempFolderAction;
+        _clearTempFilesAction = clearTempFilesAction;
+        _restoreDefaultsAction = restoreDefaultsAction;
         _telemetryService = telemetryService;
         _localizationService = localizationService;
         _themeService = themeService;
@@ -201,7 +246,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     public override Task LoadAsync(CancellationToken cancellationToken)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.Load, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.Load, async () =>
         {
             ThrowIfNotReadyToLoad();
             StartLoading();
@@ -287,7 +332,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private Task UpdateAppLanguageAsync(int index)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateAppLanguage, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.UpdateAppLanguage, async () =>
         {
             SelectedAppLanguageIndex = index;
             if (SelectedAppLanguageIndex == -1)
@@ -301,14 +346,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
                 return;
             }
 
-            await _settingsActions.UpdateAppLanguageAsync(index, CancellationToken.None);
+            await _updateAppLanguageAction.ExecuteCommandAsync(index, CancellationToken.None);
             UpdateShowAppLanguageRestartMessage();
         });
     }
 
     private void UpdateShowAppLanguageRestartMessage()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateShowAppLanguageRestartMessage, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.UpdateShowAppLanguageRestartMessage, () =>
         {
             ShowAppLanguageRestartMessage = 
                 _localizationService.RequestedLanguage != _localizationService.StartupLanguage || 
@@ -318,7 +363,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void UpdateAppTheme(int index)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateAppTheme, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.UpdateAppTheme, () =>
         {
             SelectedAppThemeIndex = index;
             if (SelectedAppThemeIndex == -1)
@@ -326,14 +371,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
                 return;
             }
 
-            _settingsActions.UpdateAppTheme(index);
+            _updateAppThemeAction.ExecuteCommand(index);
             UpdateShowAppThemeRestartMessage();
         });
     }
 
     private void UpdateShowAppThemeRestartMessage()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.UpdateShowAppThemeRestartMessage, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.UpdateShowAppThemeRestartMessage, () =>
         {
             var defaultTheme = _themeService.DefaultTheme;
             var startupTheme = _themeService.StartupTheme;
@@ -357,45 +402,45 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private Task UpdateImageCaptureAutoSaveAsync(bool value)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoSave, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.UpdateImageCaptureAutoSave, async () =>
         {
             ImageCaptureAutoSave = value;
-            await _settingsActions.UpdateImageAutoSaveAsync(value, CancellationToken.None);
+            await _updateImageAutoSaveAction.ExecuteCommandAsync(value, CancellationToken.None);
         });
     }
 
     private Task UpdateImageCaptureAutoCopyAsync(bool value)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
         {
             ImageCaptureAutoCopy = value;
-            await _settingsActions.UpdateImageAutoCopyAsync(value, CancellationToken.None);
+            await _updateImageAutoCopyAction.ExecuteCommandAsync(value, CancellationToken.None);
         });
     }
 
     private Task UpdateVideoCaptureAutoSaveAsync(bool value)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateVideoCaptureAutoSave, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.UpdateVideoCaptureAutoSave, async () =>
         {
             VideoCaptureAutoSave = value;
-            await _settingsActions.UpdateVideoCaptureAutoSaveAsync(value, CancellationToken.None);
+            await _updateVideoCaptureAutoSaveAction.ExecuteCommandAsync(value, CancellationToken.None);
         });
     }
 
     private Task UpdateVideoCaptureAutoCopyAsync(bool value)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateVideoCaptureAutoCopy, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.UpdateVideoCaptureAutoCopy, async () =>
         {
             VideoCaptureAutoCopy = value;
-            await _settingsActions.UpdateVideoCaptureAutoCopyAsync(value, CancellationToken.None);
+            await _updateVideoCaptureAutoCopyAction.ExecuteCommandAsync(value, CancellationToken.None);
         });
     }
 
     private Task ChangeScreenshotsFolderAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.ChangeScreenshotsFolder, async () =>
         {
-            await _settingsActions.ChangeScreenshotsFolderAsync(CancellationToken.None);
+            await _changeScreenshotsFolderAction.ExecuteCommandAsync(CancellationToken.None);
             
             var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
             if (string.IsNullOrWhiteSpace(screenshotsFolder))
@@ -408,9 +453,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private Task ChangeVideosFolderAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.ChangeVideosFolder, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.ChangeVideosFolder, async () =>
         {
-            await _settingsActions.ChangeVideosFolderAsync(CancellationToken.None);
+            await _changeVideosFolderAction.ExecuteCommandAsync(CancellationToken.None);
             
             var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
             if (string.IsNullOrWhiteSpace(videosFolder))
@@ -423,42 +468,42 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void OpenScreenshotsFolder()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenScreenshotsFolder, () => _settingsActions.OpenScreenshotsFolder());
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.OpenScreenshotsFolder, () => _openScreenshotsFolderAction.ExecuteCommand());
     }
 
     private void OpenVideosFolder()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenVideosFolder, () => _settingsActions.OpenVideosFolder());
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.OpenVideosFolder, () => _openVideosFolderAction.ExecuteCommand());
     }
 
     private void RestartApp()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RestartApp, () => _settingsActions.RestartApp());
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.RestartApp, () => _restartAppAction.ExecuteCommand());
     }
 
     private void GoBack()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () => 
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.GoBack, () => 
         {
-            _settingsActions.GoBack();
+            _goBackAction.ExecuteCommand();
         });
     }
 
     private void ClearTemporaryFiles()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ClearTemporaryFiles, () => _settingsActions.ClearTemporaryFiles(TemporaryFilesFolderPath));
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.ClearTemporaryFiles, () => _clearTempFilesAction.ExecuteCommand(TemporaryFilesFolderPath));
     }
 
     private void OpenTemporaryFilesFolder()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenTemporaryFilesFolder, () => _settingsActions.OpenTemporaryFilesFolder());
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.OpenTemporaryFilesFolder, () => _openTempFolderAction.ExecuteCommand());
     }
 
     private Task RestoreDefaultSettingsAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.RestoreDefaultSettings, async () =>
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.RestoreDefaultSettings, async () =>
         {
-            await _settingsActions.RestoreDefaultSettingsAsync(CancellationToken.None);
+            await _restoreDefaultsAction.ExecuteCommandAsync(CancellationToken.None);
 
             ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
             ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);

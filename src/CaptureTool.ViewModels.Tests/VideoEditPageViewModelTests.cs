@@ -20,16 +20,17 @@ public class VideoEditPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<IVideoEditActions>>();
+        Fixture.Freeze<Mock<IVideoEditSaveAction>>();
+        Fixture.Freeze<Mock<IVideoEditCopyAction>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
 
     [TestMethod]
-    public async Task SaveCommand_ShouldInvokeVideoEditActions_AndTrackTelemetry()
+    public async Task SaveCommand_ShouldInvokeSaveAction_AndTrackTelemetry()
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var videoEditActions = Fixture.Freeze<Mock<IVideoEditActions>>();
+        var saveAction = Fixture.Freeze<Mock<IVideoEditSaveAction>>();
         var vm = Create();
         
         // Set up a video file
@@ -40,17 +41,17 @@ public class VideoEditPageViewModelTests
         await vm.SaveCommand.ExecuteAsync(null);
 
         // Assert
-        videoEditActions.Verify(a => a.SaveAsync("test.mp4", It.IsAny<CancellationToken>()), Times.Once);
+        saveAction.Verify(a => a.ExecuteAsync("test.mp4", It.IsAny<CancellationToken>()), Times.Once);
         telemetryService.Verify(t => t.ActivityInitiated(VideoEditPageViewModel.ActivityIds.Save), Times.Once);
         telemetryService.Verify(t => t.ActivityCompleted(VideoEditPageViewModel.ActivityIds.Save), Times.Once);
     }
 
     [TestMethod]
-    public async Task CopyCommand_ShouldInvokeVideoEditActions_AndTrackTelemetry()
+    public async Task CopyCommand_ShouldInvokeCopyAction_AndTrackTelemetry()
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var videoEditActions = Fixture.Freeze<Mock<IVideoEditActions>>();
+        var copyAction = Fixture.Freeze<Mock<IVideoEditCopyAction>>();
         var vm = Create();
         
         // Set up a video file
@@ -61,7 +62,7 @@ public class VideoEditPageViewModelTests
         await vm.CopyCommand.ExecuteAsync(null);
 
         // Assert
-        videoEditActions.Verify(a => a.CopyAsync("test.mp4", It.IsAny<CancellationToken>()), Times.Once);
+        copyAction.Verify(a => a.ExecuteAsync("test.mp4", It.IsAny<CancellationToken>()), Times.Once);
         telemetryService.Verify(t => t.ActivityInitiated(VideoEditPageViewModel.ActivityIds.Copy), Times.Once);
         telemetryService.Verify(t => t.ActivityCompleted(VideoEditPageViewModel.ActivityIds.Copy), Times.Once);
     }

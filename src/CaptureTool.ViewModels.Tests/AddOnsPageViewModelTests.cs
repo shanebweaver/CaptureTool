@@ -23,7 +23,7 @@ public class AddOnsPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<IAddOnsActions>>();
+        Fixture.Freeze<Mock<IAddOnsGoBackAction>>();
         Fixture.Freeze<Mock<IWindowHandleProvider>>();
         Fixture.Freeze<Mock<IStoreService>>();
         Fixture.Freeze<Mock<ILocalizationService>>();
@@ -32,18 +32,18 @@ public class AddOnsPageViewModelTests
     }
 
     [TestMethod]
-    public void GoBackCommand_ShouldInvokeAddOnsActions_AndTrackTelemetry()
+    public void GoBackCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var addOnsActions = Fixture.Freeze<Mock<IAddOnsActions>>();
+        var goBackAction = Fixture.Freeze<Mock<IAddOnsGoBackAction>>();
         var vm = Create();
 
         // Act
         vm.GoBackCommand.Execute(null);
 
         // Assert
-        addOnsActions.Verify(a => a.GoBack(), Times.Once);
+        goBackAction.Verify(a => a.Execute(), Times.Once);
         telemetryService.Verify(t => t.ActivityInitiated(AddOnsPageViewModel.ActivityIds.GoBack), Times.Once);
         telemetryService.Verify(t => t.ActivityCompleted(AddOnsPageViewModel.ActivityIds.GoBack), Times.Once);
     }

@@ -23,6 +23,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         public static readonly string CloseOverlay = "CloseOverlay";
     }
 
+    private const string TelemetryContext = "SelectionOverlayWindow";
+
     private readonly ITelemetryService _telemetryService;
     private readonly IAppNavigation _appNavigation;
     private readonly IShutdownHandler _shutdownHandler;
@@ -174,7 +176,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public override void Load(SelectionOverlayWindowOptions options)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.Load, () =>
         {
             ThrowIfNotReadyToLoad();
             StartLoading();
@@ -196,7 +198,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void CloseOverlay()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.CloseOverlay, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.CloseOverlay, () =>
         {
             if (_appNavigation.CanGoBack)
             {
@@ -266,7 +268,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void RequestCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.RequestCapture, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.RequestCapture, () =>
         {
             if (Monitor != null && CaptureArea != Rectangle.Empty)
             {

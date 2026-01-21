@@ -19,23 +19,23 @@ public class ErrorPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<IErrorActions>>();
+        Fixture.Freeze<Mock<IErrorRestartAppAction>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
 
     [TestMethod]
-    public void RestartAppCommand_ShouldInvokeErrorActions_AndTrackTelemetry()
+    public void RestartAppCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var errorActions = Fixture.Freeze<Mock<IErrorActions>>();
+        var restartAppAction = Fixture.Freeze<Mock<IErrorRestartAppAction>>();
         var vm = Create();
 
         // Act
         vm.RestartAppCommand.Execute(null);
 
         // Assert
-        errorActions.Verify(a => a.RestartApp(), Times.Once);
+        restartAppAction.Verify(a => a.Execute(), Times.Once);
         telemetryService.Verify(t => t.ActivityInitiated(ErrorPageViewModel.ActivityIds.RestartApp), Times.Once);
         telemetryService.Verify(t => t.ActivityCompleted(ErrorPageViewModel.ActivityIds.RestartApp), Times.Once);
     }
