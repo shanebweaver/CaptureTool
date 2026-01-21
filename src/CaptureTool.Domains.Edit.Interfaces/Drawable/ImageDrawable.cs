@@ -1,4 +1,4 @@
-﻿using CaptureTool.Services.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Storage;
 using System.Drawing;
 using System.Numerics;
 

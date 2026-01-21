@@ -4,7 +4,7 @@ using CaptureTool.Core.Implementations.Actions.Home;
 using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.FeatureManagement;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using Moq;
 
 namespace CaptureTool.Core.Tests.Actions.Home;

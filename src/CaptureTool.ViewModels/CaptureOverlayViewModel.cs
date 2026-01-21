@@ -1,11 +1,11 @@
-﻿using CaptureTool.Common;
+using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.TaskEnvironment;
-using CaptureTool.Services.Interfaces.Telemetry;
-using CaptureTool.Services.Interfaces.Themes;
+using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Interfaces.Themes;
 using CaptureTool.ViewModels.Helpers;
 using System.Drawing;
 using System.Timers;

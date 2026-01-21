@@ -1,9 +1,9 @@
-﻿using CaptureTool.Core.Implementations.DependencyInjection;
+using CaptureTool.Core.Implementations.DependencyInjection;
 using CaptureTool.Domains.Capture.Implementations.Windows.DependencyInjection;
 using CaptureTool.Domains.Edit.Implementations.Windows.DependencyInjection;
-using CaptureTool.Services.Implementations.DependencyInjection;
-using CaptureTool.Services.Implementations.FeatureManagement.DependencyInjection;
-using CaptureTool.Services.Implementations.Windows.DependencyInjection;
+using CaptureTool.Infrastructure.Implementations.DependencyInjection;
+using CaptureTool.Infrastructure.Implementations.FeatureManagement.DependencyInjection;
+using CaptureTool.Infrastructure.Implementations.Windows.DependencyInjection;
 using CaptureTool.UI.Windows.DependencyInjection;
 using CaptureTool.ViewModels.DependencyInjection;
 using CaptureTool.ViewModels.Factories.DependencyInjection;

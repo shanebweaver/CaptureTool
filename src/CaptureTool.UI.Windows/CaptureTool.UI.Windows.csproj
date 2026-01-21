@@ -42,10 +42,10 @@
     <ProjectReference Include="..\CaptureTool.Domains.Edit.Interfaces\CaptureTool.Domains.Edit.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Domains.Capture.Implementations.Windows\CaptureTool.Domains.Capture.Implementations.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Domains.Capture.Interfaces\CaptureTool.Domains.Capture.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Implementations.FeatureManagement\CaptureTool.Services.Implementations.FeatureManagement.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Implementations.Windows\CaptureTool.Services.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Implementations\CaptureTool.Services.Implementations.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations.FeatureManagement\CaptureTool.Infrastructure.Implementations.FeatureManagement.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations.Windows\CaptureTool.Infrastructure.Implementations.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations\CaptureTool.Infrastructure.Implementations.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Interfaces\CaptureTool.Infrastructure.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.ViewModels\CaptureTool.ViewModels.csproj" />
   </ItemGroup>
 

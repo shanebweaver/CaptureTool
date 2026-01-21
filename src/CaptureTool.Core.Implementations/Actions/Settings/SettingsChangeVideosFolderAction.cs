@@ -1,9 +1,9 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.Settings;
 using CaptureTool.Core.Interfaces.Settings;
-using CaptureTool.Services.Interfaces.Settings;
-using CaptureTool.Services.Interfaces.Storage;
-using CaptureTool.Services.Interfaces.Windowing;
+using CaptureTool.Infrastructure.Interfaces.Settings;
+using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Windowing;
 
 namespace CaptureTool.Core.Implementations.Actions.Settings;
 

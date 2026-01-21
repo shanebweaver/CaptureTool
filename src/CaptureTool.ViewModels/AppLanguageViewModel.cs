@@ -1,5 +1,5 @@
-﻿using CaptureTool.Common;
-using CaptureTool.Services.Interfaces.Localization;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Localization;
 using System.Globalization;
 
 namespace CaptureTool.ViewModels;

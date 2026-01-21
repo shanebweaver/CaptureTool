@@ -3,7 +3,7 @@ using CaptureTool.Core.Implementations.Services.Navigation;
 using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Interfaces.Navigation;
 
 namespace CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 

@@ -1,8 +1,8 @@
-﻿using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.FeatureManagement;
-using CaptureTool.Services.Interfaces.Logging;
-using CaptureTool.Services.Interfaces.Shutdown;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
+using CaptureTool.Infrastructure.Interfaces.Logging;
+using CaptureTool.Infrastructure.Interfaces.Shutdown;
 
 namespace CaptureTool.UI.Windows;
 

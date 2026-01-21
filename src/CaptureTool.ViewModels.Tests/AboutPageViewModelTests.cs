@@ -1,8 +1,8 @@
-﻿using AutoFixture;
+using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Core.Interfaces.Actions.About;
-using CaptureTool.Services.Interfaces.Localization;
-using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Interfaces.Localization;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
 using System.Windows.Input;
 

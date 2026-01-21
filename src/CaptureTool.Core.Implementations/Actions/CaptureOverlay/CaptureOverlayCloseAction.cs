@@ -1,10 +1,10 @@
-﻿using CaptureTool.Common.Commands;
+using CaptureTool.Common.Commands;
 using CaptureTool.Core.Implementations.Services.Navigation;
 using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Navigation;
-using CaptureTool.Services.Interfaces.Shutdown;
+using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Interfaces.Shutdown;
 
 namespace CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 

@@ -1,5 +1,5 @@
-using CaptureTool.Services.Interfaces.Navigation;
-using CaptureTool.Services.Interfaces.Windowing;
+using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Interfaces.Windowing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.UI.Windows.DependencyInjection;

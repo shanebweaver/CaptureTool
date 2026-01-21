@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Core.Implementations.Actions.VideoEdit;
-using CaptureTool.Services.Interfaces.Clipboard;
+using CaptureTool.Infrastructure.Interfaces.Clipboard;
 using Moq;
 
 namespace CaptureTool.Core.Tests.Actions.VideoEdit;

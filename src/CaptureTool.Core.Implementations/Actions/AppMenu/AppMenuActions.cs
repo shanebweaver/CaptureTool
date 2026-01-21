@@ -2,10 +2,10 @@ using CaptureTool.Core.Interfaces;
 using CaptureTool.Core.Interfaces.Actions.AppMenu;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces;
-using CaptureTool.Services.Interfaces.Shutdown;
-using CaptureTool.Services.Interfaces.Storage;
-using CaptureTool.Services.Interfaces.Windowing;
+using CaptureTool.Infrastructure.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.Shutdown;
+using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Windowing;
 
 namespace CaptureTool.Core.Implementations.Actions.AppMenu;
 

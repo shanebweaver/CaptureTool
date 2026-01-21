@@ -1,6 +1,6 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.Settings;
-using CaptureTool.Services.Interfaces.Themes;
+using CaptureTool.Infrastructure.Interfaces.Themes;
 
 namespace CaptureTool.Core.Implementations.Actions.Settings;
 

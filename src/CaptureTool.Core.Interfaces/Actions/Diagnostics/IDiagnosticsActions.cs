@@ -1,4 +1,4 @@
-using CaptureTool.Services.Interfaces.Logging;
+using CaptureTool.Infrastructure.Interfaces.Logging;
 
 namespace CaptureTool.Core.Interfaces.Actions.Diagnostics;
 

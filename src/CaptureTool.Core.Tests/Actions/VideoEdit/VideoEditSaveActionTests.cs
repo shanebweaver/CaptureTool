@@ -2,8 +2,8 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Core.Implementations.Actions.VideoEdit;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Storage;
-using CaptureTool.Services.Interfaces.Windowing;
+using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Windowing;
 using Moq;
 
 namespace CaptureTool.Core.Tests.Actions.VideoEdit;

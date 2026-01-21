@@ -1,6 +1,6 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.Settings;
-using CaptureTool.Services.Interfaces.Shutdown;
+using CaptureTool.Infrastructure.Interfaces.Shutdown;
 
 namespace CaptureTool.Core.Implementations.Actions.Settings;
 

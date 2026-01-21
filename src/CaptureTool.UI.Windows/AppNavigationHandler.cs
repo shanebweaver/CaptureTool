@@ -1,9 +1,9 @@
-﻿using CaptureTool.Core.Implementations.Services.Navigation;
+using CaptureTool.Core.Implementations.Services.Navigation;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Navigation;
-using CaptureTool.Services.Interfaces.Shutdown;
-using CaptureTool.Services.Interfaces.Windowing;
+using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Interfaces.Shutdown;
+using CaptureTool.Infrastructure.Interfaces.Windowing;
 using CaptureTool.UI.Windows.Xaml.Windows;
 
 namespace CaptureTool.UI.Windows;

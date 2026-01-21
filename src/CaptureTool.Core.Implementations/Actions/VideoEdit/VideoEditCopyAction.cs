@@ -1,6 +1,6 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.VideoEdit;
-using CaptureTool.Services.Interfaces.Clipboard;
+using CaptureTool.Infrastructure.Interfaces.Clipboard;
 
 namespace CaptureTool.Core.Implementations.Actions.VideoEdit;
 

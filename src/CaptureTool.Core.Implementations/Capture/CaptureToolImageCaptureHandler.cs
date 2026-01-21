@@ -1,8 +1,8 @@
-﻿using CaptureTool.Core.Interfaces.Settings;
+using CaptureTool.Core.Interfaces.Settings;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Clipboard;
-using CaptureTool.Services.Interfaces.Settings;
-using CaptureTool.Services.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Clipboard;
+using CaptureTool.Infrastructure.Interfaces.Settings;
+using CaptureTool.Infrastructure.Interfaces.Storage;
 using System.Drawing;
 
 namespace CaptureTool.Core.Implementations.Capture;

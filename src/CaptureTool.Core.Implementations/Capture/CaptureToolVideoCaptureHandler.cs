@@ -1,13 +1,13 @@
-﻿using CaptureTool.Core.Interfaces;
+using CaptureTool.Core.Interfaces;
 using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Core.Interfaces.Settings;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Capture.Interfaces.Metadata;
-using CaptureTool.Services.Interfaces.Clipboard;
-using CaptureTool.Services.Interfaces.FeatureManagement;
-using CaptureTool.Services.Interfaces.Logging;
-using CaptureTool.Services.Interfaces.Settings;
-using CaptureTool.Services.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Clipboard;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
+using CaptureTool.Infrastructure.Interfaces.Logging;
+using CaptureTool.Infrastructure.Interfaces.Settings;
+using CaptureTool.Infrastructure.Interfaces.Storage;
 
 namespace CaptureTool.Core.Implementations.Capture;
 

@@ -3,7 +3,7 @@ using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Capture.Interfaces.Metadata;
 using CaptureTool.Domains.Capture.Implementations.Windows.Metadata;
 using CaptureTool.Domains.Capture.Implementations.Windows.Metadata.Scanners;
-using CaptureTool.Services.Interfaces.Logging;
+using CaptureTool.Infrastructure.Interfaces.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Domains.Capture.Implementations.Windows.DependencyInjection;

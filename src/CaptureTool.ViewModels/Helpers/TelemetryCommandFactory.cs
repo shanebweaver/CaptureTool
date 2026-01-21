@@ -1,5 +1,5 @@
 using CaptureTool.Common.Commands;
-using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
 
 namespace CaptureTool.ViewModels.Helpers;
 

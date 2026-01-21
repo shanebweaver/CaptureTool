@@ -1,4 +1,4 @@
-ï»¿using CaptureTool.Common;
+using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Core.Interfaces.Store;
@@ -7,14 +7,14 @@ using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domains.Edit.Interfaces.Drawable;
 using CaptureTool.Domains.Edit.Interfaces.Operations;
-using CaptureTool.Services.Interfaces.Cancellation;
-using CaptureTool.Services.Interfaces.FeatureManagement;
-using CaptureTool.Services.Interfaces.Localization;
-using CaptureTool.Services.Interfaces.Share;
-using CaptureTool.Services.Interfaces.Storage;
-using CaptureTool.Services.Interfaces.Store;
-using CaptureTool.Services.Interfaces.Telemetry;
-using CaptureTool.Services.Interfaces.Windowing;
+using CaptureTool.Infrastructure.Interfaces.Cancellation;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
+using CaptureTool.Infrastructure.Interfaces.Localization;
+using CaptureTool.Infrastructure.Interfaces.Share;
+using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Store;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Interfaces.Windowing;
 using CaptureTool.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 using System.Drawing;
@@ -527,10 +527,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         return orientation switch
         {
-            ImageOrientation.RotateNoneFlipNone or ImageOrientation.RotateNoneFlipX => "0Â°",
-            ImageOrientation.Rotate90FlipNone or ImageOrientation.Rotate90FlipX => "90Â°",
-            ImageOrientation.Rotate180FlipNone or ImageOrientation.Rotate180FlipX => "180Â°",
-            ImageOrientation.Rotate270FlipNone or ImageOrientation.Rotate270FlipX => "270Â°",
+            ImageOrientation.RotateNoneFlipNone or ImageOrientation.RotateNoneFlipX => "0°",
+            ImageOrientation.Rotate90FlipNone or ImageOrientation.Rotate90FlipX => "90°",
+            ImageOrientation.Rotate180FlipNone or ImageOrientation.Rotate180FlipX => "180°",
+            ImageOrientation.Rotate270FlipNone or ImageOrientation.Rotate270FlipX => "270°",
             _ => string.Empty,
         };
     }

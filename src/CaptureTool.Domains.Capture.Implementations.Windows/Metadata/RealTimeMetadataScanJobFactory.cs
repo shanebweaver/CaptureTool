@@ -1,6 +1,6 @@
 using CaptureTool.Core.Interfaces;
 using CaptureTool.Domains.Capture.Interfaces.Metadata;
-using CaptureTool.Services.Interfaces.Logging;
+using CaptureTool.Infrastructure.Interfaces.Logging;
 
 namespace CaptureTool.Domains.Capture.Implementations.Windows.Metadata;
 

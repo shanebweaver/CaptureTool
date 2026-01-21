@@ -4,7 +4,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Domains.Capture.Interfaces\CaptureTool.Domains.Capture.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Domains.Edit.Interfaces\CaptureTool.Domains.Edit.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Interfaces\CaptureTool.Infrastructure.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>

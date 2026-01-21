@@ -1,6 +1,6 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.Settings;
-using CaptureTool.Services.Interfaces.Logging;
+using CaptureTool.Infrastructure.Interfaces.Logging;
 
 namespace CaptureTool.Core.Implementations.Actions.Settings;
 

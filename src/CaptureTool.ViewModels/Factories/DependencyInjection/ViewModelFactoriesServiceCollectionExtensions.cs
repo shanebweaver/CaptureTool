@@ -1,6 +1,6 @@
-using CaptureTool.Services.Interfaces;
-using CaptureTool.Services.Interfaces.Localization;
-using CaptureTool.Services.Interfaces.Themes;
+using CaptureTool.Infrastructure.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.Localization;
+using CaptureTool.Infrastructure.Interfaces.Themes;
 using CaptureTool.Domains.Capture.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 

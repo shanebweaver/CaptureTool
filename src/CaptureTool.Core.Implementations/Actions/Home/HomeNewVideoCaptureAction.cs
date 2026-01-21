@@ -3,7 +3,7 @@ using CaptureTool.Core.Interfaces.Actions.Home;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.FeatureManagement;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 
 namespace CaptureTool.Core.Implementations.Actions.Home;
 

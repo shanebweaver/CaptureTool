@@ -1,17 +1,17 @@
-ï»¿using AutoFixture;
+using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domains.Edit.Interfaces.Drawable;
-using CaptureTool.Services.Interfaces.Cancellation;
-using CaptureTool.Services.Interfaces.FeatureManagement;
-using CaptureTool.Services.Interfaces.Share;
-using CaptureTool.Services.Interfaces.Shutdown;
-using CaptureTool.Services.Interfaces.Storage;
-using CaptureTool.Services.Interfaces.Store;
-using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Interfaces.Cancellation;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
+using CaptureTool.Infrastructure.Interfaces.Share;
+using CaptureTool.Infrastructure.Interfaces.Shutdown;
+using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Store;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using FluentAssertions;
 using Moq;
 using System.Drawing;
@@ -52,7 +52,7 @@ public sealed class ImageEditPageViewModelTests
     }
 
     // ------------------------------------------------------------------
-    // TEST: LoadAsync â€” happy path
+    // TEST: LoadAsync — happy path
     // ------------------------------------------------------------------
     [TestMethod]
     public async Task LoadAsync_ShouldInitializeProperties_AndLogTelemetry()
@@ -180,7 +180,7 @@ public sealed class ImageEditPageViewModelTests
     }
 
     // ------------------------------------------------------------------
-    // TEST: Undo â€” empty stack should raise error
+    // TEST: Undo — empty stack should raise error
     // ------------------------------------------------------------------
     [TestMethod]
     public void UndoCommand_ShouldLogError_WhenStackIsEmpty()

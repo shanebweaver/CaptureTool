@@ -122,7 +122,7 @@ public class CaptureToolVideoCaptureHandlerTests
     {
         // Arrange
         var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
-        var storageService = Fixture.Freeze<Mock<CaptureTool.Services.Interfaces.Storage.IStorageService>>();
+        var storageService = Fixture.Freeze<Mock<CaptureTool.Infrastructure.Interfaces.Storage.IStorageService>>();
         storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
         
         var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
@@ -157,7 +157,7 @@ public class CaptureToolVideoCaptureHandlerTests
     {
         // Arrange
         var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
-        var storageService = Fixture.Freeze<Mock<CaptureTool.Services.Interfaces.Storage.IStorageService>>();
+        var storageService = Fixture.Freeze<Mock<CaptureTool.Infrastructure.Interfaces.Storage.IStorageService>>();
         storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
         
         var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();

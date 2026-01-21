@@ -1,12 +1,12 @@
-﻿using CaptureTool.Common;
+using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
 using CaptureTool.Core.Interfaces.Actions.AddOns;
-using CaptureTool.Services.Interfaces.Cancellation;
-using CaptureTool.Services.Interfaces.Localization;
-using CaptureTool.Services.Interfaces.Store;
-using CaptureTool.Services.Interfaces.Telemetry;
-using CaptureTool.Services.Interfaces.Windowing;
+using CaptureTool.Infrastructure.Interfaces.Cancellation;
+using CaptureTool.Infrastructure.Interfaces.Localization;
+using CaptureTool.Infrastructure.Interfaces.Store;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Interfaces.Windowing;
 using CaptureTool.ViewModels.Helpers;
 using static CaptureTool.Core.Interfaces.Store.CaptureToolStoreProducts;
 

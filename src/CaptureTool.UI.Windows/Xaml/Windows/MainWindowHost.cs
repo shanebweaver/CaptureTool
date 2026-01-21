@@ -1,4 +1,4 @@
-﻿using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Interfaces.Navigation;
 using CaptureTool.UI.Windows.Utils;
 
 namespace CaptureTool.UI.Windows.Xaml.Windows;
