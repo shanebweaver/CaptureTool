@@ -432,6 +432,39 @@
   <data name="Settings_AutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Автоматически сохранять изображения в папку скриншотов после захвата.</value>
   </data>
+  <data name="Settings_VideoCaptureHeaderLabel.Text" xml:space="preserve">
+    <value>Захват видео</value>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>Вкл</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OffContent" xml:space="preserve">
+    <value>Выкл</value>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>Выкл</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OnContent" xml:space="preserve">
+    <value>Вкл</value>
+  </data>
+  <data name="Settings_VideoAutoSave_ChangeButton.Text" xml:space="preserve">
+    <value>Изменить папку</value>
+  </data>
+  <data name="Settings_VideoAutoSave_VideosFolderLabel.Text" xml:space="preserve">
+    <value>Папка сохранённых видео:</value>
+  </data>
+  <data name="Settings_VideoAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>Автосохранение видео</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_HeaderLabel.Text" xml:space="preserve">
+    <value>Автокопирование видео</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_SubtitleLabel.Text" xml:space="preserve">
+    <value>Автоматически копировать видео в буфер обмена после захвата.</value>
+  </data>
+  <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>Автоматически сохранять видео в папку видео после захвата.</value>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Изолируйте объект на фоне зелёного или синего экрана.</value>
   </data>

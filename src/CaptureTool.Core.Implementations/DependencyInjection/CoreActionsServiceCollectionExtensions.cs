@@ -40,28 +40,24 @@ public static class CoreActionsServiceCollectionExtensions
     public static IServiceCollection AddAboutActions(this IServiceCollection services)
     {
         services.AddTransient<IAboutGoBackAction, AboutGoBackAction>();
-        services.AddTransient<IAboutActions, AboutActions>();
         return services;
     }
 
     public static IServiceCollection AddAddOnsActions(this IServiceCollection services)
     {
         services.AddTransient<IAddOnsGoBackAction, AddOnsGoBackAction>();
-        services.AddTransient<IAddOnsActions, AddOnsActions>();
         return services;
     }
 
     public static IServiceCollection AddErrorActions(this IServiceCollection services)
     {
         services.AddTransient<IErrorRestartAppAction, ErrorRestartAppAction>();
-        services.AddTransient<IErrorActions, ErrorActions>();
         return services;
     }
 
     public static IServiceCollection AddLoadingActions(this IServiceCollection services)
     {
         services.AddTransient<ILoadingGoBackAction, LoadingGoBackAction>();
-        services.AddTransient<ILoadingActions, LoadingActions>();
         return services;
     }
 
@@ -69,7 +65,6 @@ public static class CoreActionsServiceCollectionExtensions
     {
         services.AddTransient<IHomeNewImageCaptureAction, HomeNewImageCaptureAction>();
         services.AddTransient<IHomeNewVideoCaptureAction, HomeNewVideoCaptureAction>();
-        services.AddTransient<IHomeActions, HomeActions>();
         return services;
     }
 
@@ -77,23 +72,23 @@ public static class CoreActionsServiceCollectionExtensions
     {
         services.AddTransient<IVideoEditSaveAction, VideoEditSaveAction>();
         services.AddTransient<IVideoEditCopyAction, VideoEditCopyAction>();
-        services.AddTransient<IVideoEditActions, VideoEditActions>();
         return services;
     }
 
     public static IServiceCollection AddSettingsActions(this IServiceCollection services)
     {
-        // Core settings actions
         services.AddTransient<ISettingsGoBackAction, SettingsGoBackAction>();
         services.AddTransient<ISettingsRestartAppAction, SettingsRestartAppAction>();
         services.AddTransient<ISettingsUpdateImageAutoCopyAction, SettingsUpdateImageAutoCopyAction>();
         services.AddTransient<ISettingsUpdateImageAutoSaveAction, SettingsUpdateImageAutoSaveAction>();
+        services.AddTransient<ISettingsUpdateVideoCaptureAutoCopyAction, SettingsUpdateVideoCaptureAutoCopyAction>();
+        services.AddTransient<ISettingsUpdateVideoCaptureAutoSaveAction, SettingsUpdateVideoCaptureAutoSaveAction>();
         services.AddTransient<ISettingsUpdateAppLanguageAction, SettingsUpdateAppLanguageAction>();
         services.AddTransient<ISettingsUpdateAppThemeAction, SettingsUpdateAppThemeAction>();
         services.AddTransient<ISettingsChangeScreenshotsFolderAction, SettingsChangeScreenshotsFolderAction>();
+        services.AddTransient<ISettingsChangeVideosFolderAction, SettingsChangeVideosFolderAction>();
         services.AddTransient<ISettingsClearTempFilesAction, SettingsClearTempFilesAction>();
         services.AddTransient<ISettingsRestoreDefaultsAction, SettingsRestoreDefaultsAction>();
-        services.AddTransient<ISettingsActions, SettingsActions>();
         return services;
     }
 

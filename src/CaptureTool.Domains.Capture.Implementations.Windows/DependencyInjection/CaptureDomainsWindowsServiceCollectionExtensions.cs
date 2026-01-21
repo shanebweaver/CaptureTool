@@ -21,8 +21,11 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
         services.AddSingleton<IRealTimeMetadataScanJobFactory, RealTimeMetadataScanJobFactory>();
         
         // Example scanners
-        services.AddSingleton<IVideoMetadataScanner, BasicVideoFrameScanner>();
-        services.AddSingleton<IAudioMetadataScanner, BasicAudioSampleScanner>();
+        //services.AddSingleton<IVideoMetadataScanner, BasicVideoFrameScanner>();
+        //services.AddSingleton<IAudioMetadataScanner, BasicAudioSampleScanner>();
+        
+        // OCR scanner
+        services.AddSingleton<IVideoMetadataScanner, WindowsMediaOcrVideoMetadataScanner>();
         
         return services;
     }

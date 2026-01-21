@@ -4,12 +4,12 @@ public abstract partial class AsyncActionCommand : ActionCommandBase, IAsyncActi
 {
     public override bool CanExecute(object? _)
     {
-        return CanExecute();
+        throw new NotImplementedException();
     }
 
     public override void Execute(object? _)
     {
-        ExecuteAsync();
+        throw new NotImplementedException();
     }
 
     public virtual bool CanExecute()
@@ -17,5 +17,5 @@ public abstract partial class AsyncActionCommand : ActionCommandBase, IAsyncActi
         return true;
     }
 
-    public abstract Task ExecuteAsync();
+    public abstract Task ExecuteAsync(CancellationToken cancellationToken = default);
 }

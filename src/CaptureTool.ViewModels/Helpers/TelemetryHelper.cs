@@ -7,7 +7,8 @@ namespace CaptureTool.ViewModels.Helpers;
 public static class TelemetryHelper
 {
     public static void ExecuteActivity(
-        ITelemetryService telemetryService, 
+        ITelemetryService telemetryService,
+        string context,
         string activityId, 
         Action activityAction,
         [CallerMemberName] string? caller = null,
@@ -15,16 +16,17 @@ public static class TelemetryHelper
         [CallerLineNumber] int line = 0,
         [CallerArgumentExpression(nameof(activityAction))] string? actionExpr = null)
     {
-        telemetryService.ActivityInitiated(activityId);
+        var contextMessage = $"Context: {context}";
+        telemetryService.ActivityInitiated(activityId, contextMessage);
 
         try
         {
             activityAction();
-            telemetryService.ActivityCompleted(activityId);
+            telemetryService.ActivityCompleted(activityId, contextMessage);
         }
         catch (OperationCanceledException)
         {
-            telemetryService.ActivityCanceled(activityId);
+            telemetryService.ActivityCanceled(activityId, contextMessage);
         }
         catch (Exception e)
         {
@@ -33,7 +35,7 @@ public static class TelemetryHelper
             telemetryService.ActivityError(
                 activityId, 
                 e,
-                $"Thrown in: {frame.method} ({frame.file}:{frame.line})", 
+                $"Thrown in: {frame.method} ({frame.file}:{frame.line}) | Context: {context}", 
                 caller, 
                 file, 
                 line,
@@ -42,7 +44,8 @@ public static class TelemetryHelper
     }
 
     public static async Task ExecuteActivityAsync(
-        ITelemetryService telemetryService, 
+        ITelemetryService telemetryService,
+        string context,
         string activityId, 
         Func<Task> action,
         [CallerMemberName] string? caller = null,
@@ -50,16 +53,17 @@ public static class TelemetryHelper
         [CallerLineNumber] int line = 0,
         [CallerArgumentExpression(nameof(action))] string? actionExpr = null)
     {
-        telemetryService.ActivityInitiated(activityId);
+        var contextMessage = $"Context: {context}";
+        telemetryService.ActivityInitiated(activityId, contextMessage);
 
         try
         {
             await action();
-            telemetryService.ActivityCompleted(activityId);
+            telemetryService.ActivityCompleted(activityId, contextMessage);
         }
         catch (OperationCanceledException)
         {
-            telemetryService.ActivityCanceled(activityId);
+            telemetryService.ActivityCanceled(activityId, contextMessage);
         }
         catch (Exception e)
         {
@@ -68,7 +72,7 @@ public static class TelemetryHelper
             telemetryService.ActivityError(
                 activityId,
                 e,
-                $"Thrown in: {frame.method} ({frame.file}:{frame.line})",
+                $"Thrown in: {frame.method} ({frame.file}:{frame.line}) | Context: {context}",
                 caller,
                 file,
                 line,

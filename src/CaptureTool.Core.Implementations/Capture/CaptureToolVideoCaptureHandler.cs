@@ -1,16 +1,24 @@
 ﻿using CaptureTool.Core.Interfaces;
+using CaptureTool.Core.Interfaces.FeatureManagement;
+using CaptureTool.Core.Interfaces.Settings;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Capture.Interfaces.Metadata;
+using CaptureTool.Services.Interfaces.Clipboard;
+using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Logging;
+using CaptureTool.Services.Interfaces.Settings;
 using CaptureTool.Services.Interfaces.Storage;
 
 namespace CaptureTool.Core.Implementations.Capture;
 
 public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 {
+    private readonly IClipboardService _clipboardService;
     private readonly IScreenRecorder _screenRecorder;
+    private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
     private readonly ILogService _logService;
+    private readonly IFeatureManager _featureManager;
     private readonly IMetadataScannerRegistry? _metadataScannerRegistry;
     private readonly IRealTimeMetadataScanJobFactory? _scanJobFactory;
     
@@ -28,15 +36,21 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     public event EventHandler<bool>? PausedStateChanged;
 
     public CaptureToolVideoCaptureHandler(
+        IClipboardService clipboardService,
         IScreenRecorder screenRecorder,
+        ISettingsService settingsService,
         IStorageService storageService,
         ILogService logService,
+        IFeatureManager featureManager,
         IMetadataScannerRegistry? metadataScannerRegistry = null,
         IRealTimeMetadataScanJobFactory? scanJobFactory = null)
     {
+        _clipboardService = clipboardService;
         _screenRecorder = screenRecorder;
+        _settingsService = settingsService;
         _storageService = storageService;
         _logService = logService;
+        _featureManager = featureManager;
         _metadataScannerRegistry = metadataScannerRegistry;
         _scanJobFactory = scanJobFactory;
 
@@ -59,8 +73,10 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             fileName
         );
 
-        // Start metadata collection if factory and registry are available
-        if (_scanJobFactory != null && _metadataScannerRegistry != null)
+        // Start metadata collection if feature is enabled and factory/registry are available
+        if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MetadataCollection) &&
+            _scanJobFactory != null && 
+            _metadataScannerRegistry != null)
         {
             _currentScanJob = _scanJobFactory.CreateJob(Guid.NewGuid(), _tempVideoPath, _metadataScannerRegistry);
         }
@@ -101,6 +117,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         _tempVideoPath = null;
 
         var pendingVideo = new PendingVideoFile(filePath);
+        NewVideoCaptured?.Invoke(this, pendingVideo);
+
         var currentScanJob = _currentScanJob;
         _currentScanJob = null;
 
@@ -112,10 +130,9 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
                 _screenRecorder.SetAudioSampleCallback(null);
                 _screenRecorder.SetVideoFrameCallback(null);
                 _screenRecorder.StopRecording();
-                
-                var videoFile = new VideoFile(filePath);
-                pendingVideo.Complete(videoFile);
-                
+
+                pendingVideo.Complete();
+
                 // Save metadata if collection was active
                 if (currentScanJob != null)
                 {
@@ -129,8 +146,11 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
                         _logService.LogException(ex, $"Failed to save metadata for video: {filePath}");
                     }
                 }
-                
-                NewVideoCaptured?.Invoke(this, videoFile);
+
+                TryAutoSaveVideo(pendingVideo);
+                _ = TryAutoCopyVideoAsync(pendingVideo);
+                // TODO: Also auto save the metadata file.
+                // TODO: Create auto save and auto copy options in the settings page.
             }
             catch (Exception ex)
             {
@@ -200,6 +220,57 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             {
                 _screenRecorder.ResumeRecording();
             }
+        }
+    }
+
+    private async Task<bool> TryAutoCopyVideoAsync(VideoFile videoFile)
+    {
+        try
+        {
+            bool autoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
+            if (!autoCopy)
+            {
+                //return false;
+            }
+
+            ClipboardFile clipboardFile = new(videoFile.FilePath);
+            await _clipboardService.CopyFileAsync(clipboardFile);
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private bool TryAutoSaveVideo(VideoFile videoFile)
+    {
+        try
+        {
+            bool autoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
+            if (!autoSave)
+            {
+                //return false;
+            }
+
+            string videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
+            if (string.IsNullOrWhiteSpace(videosFolder))
+            {
+                videosFolder = _storageService.GetSystemDefaultVideosFolderPath();
+            }
+
+            string tempFilePath = videoFile.FilePath;
+            string fileName = Path.GetFileName(tempFilePath);
+            string newFilePath = Path.Combine(videosFolder, $"capture_{Guid.NewGuid()}.mp4");
+
+            File.Copy(tempFilePath, newFilePath, true);
+
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 }

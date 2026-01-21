@@ -18,10 +18,6 @@
   <Project Path="src/CaptureInterop.Tests/CaptureInterop.Tests.vcxproj" />
   <Project Path="src/CaptureInterop/CaptureInterop.vcxproj" Id="e576bd23-e4b5-4a1e-a385-87cb932e6d32" />
   <Project Path="src/CaptureTool.Common/CaptureTool.Common.csproj" />
-  <Project Path="src/CaptureTool.Core.Implementations.Windows/CaptureTool.Core.Implementations.Windows.csproj">
-    <Platform Solution="*|ARM64" Project="ARM64" />
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
   <Project Path="src/CaptureTool.Core.Implementations/CaptureTool.Core.Implementations.csproj" />
   <Project Path="src/CaptureTool.Core.Interfaces/CaptureTool.Core.Interfaces.csproj" />
   <Project Path="src/CaptureTool.Core.Tests/CaptureTool.Core.Tests.csproj" />

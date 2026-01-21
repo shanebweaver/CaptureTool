@@ -30,6 +30,22 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
+    private void VideoAutoCopyToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggleSwitch)
+        {
+            _ = ViewModel.UpdateVideoCaptureAutoCopyCommand.ExecuteAsync(toggleSwitch.IsOn);
+        }
+    }
+
+    private void VideoAutoSaveToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggleSwitch)
+        {
+            _ = ViewModel.UpdateVideoCaptureAutoSaveCommand.ExecuteAsync(toggleSwitch.IsOn);
+        }
+    }
+
     private void AppThemeRadioButtons_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (sender is RadioButtons radioButtons)

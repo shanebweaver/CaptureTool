@@ -62,4 +62,14 @@ internal static partial class CaptureInterop
     internal static extern IntPtr CombineScreenshots(
         IntPtr[] handles,
         int count);
+
+    // Texture conversion for metadata scanners
+    [DllImport("CaptureInterop.dll")]
+    internal static extern bool ConvertTextureToPixelBuffer(
+        IntPtr pTexture,
+        IntPtr pDevice,
+        IntPtr pContext,
+        byte[] outBuffer,
+        uint bufferSize,
+        out uint outRowPitch);
 }

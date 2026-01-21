@@ -43,12 +43,12 @@ public sealed class AppMenuViewModelTests
         var vm = Create();
 
         // Act
-        vm.ExitApplicationCommand.Execute(null);
+        vm.ExitApplicationCommand.Execute();
 
         // Assert
         appMenuActions.Verify(a => a.ExitApplication(), Times.Once, "ExitApplication() should be called when user clicks Exit in menu");
-        telemetry.Verify(t => t.ActivityInitiated(AppMenuViewModel.ActivityIds.ExitApplication), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(AppMenuViewModel.ActivityIds.ExitApplication), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(AppMenuViewModel.ActivityIds.ExitApplication, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(AppMenuViewModel.ActivityIds.ExitApplication, It.IsAny<string>()), Times.Once);
     }
 
     [TestMethod]
@@ -60,11 +60,11 @@ public sealed class AppMenuViewModelTests
         var vm = Create();
 
         // Act
-        vm.NavigateToSettingsCommand.Execute(null);
+        vm.NavigateToSettingsCommand.Execute();
 
         // Assert
         appMenuActions.Verify(a => a.NavigateToSettings(), Times.Once);
-        telemetry.Verify(t => t.ActivityInitiated(AppMenuViewModel.ActivityIds.NavigateToSettings), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(AppMenuViewModel.ActivityIds.NavigateToSettings), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(AppMenuViewModel.ActivityIds.NavigateToSettings, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(AppMenuViewModel.ActivityIds.NavigateToSettings, It.IsAny<string>()), Times.Once);
     }
 }

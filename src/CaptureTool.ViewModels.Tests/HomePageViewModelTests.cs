@@ -4,8 +4,6 @@ using CaptureTool.Core.Interfaces.Actions.Home;
 using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Telemetry;
-using CaptureTool.ViewModels;
-using CaptureTool.ViewModels.Helpers;
 using Moq;
 
 namespace CaptureTool.ViewModels.Tests;
@@ -23,39 +21,41 @@ public sealed class HomePageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<IHomeActions>>();
+        Fixture.Freeze<Mock<IHomeNewImageCaptureAction>>();
+        Fixture.Freeze<Mock<IHomeNewVideoCaptureAction>>();
         Fixture.Freeze<Mock<IFeatureManager>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
 
     [TestMethod]
-    public void NewImageCaptureCommand_ShouldInvokeHomeActions_AndTrackTelemetry()
+    public void NewImageCaptureCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var homeActions = Fixture.Freeze<Mock<IHomeActions>>();
+        var newImageCaptureAction = Fixture.Freeze<Mock<IHomeNewImageCaptureAction>>();
+        newImageCaptureAction.Setup(a => a.CanExecute()).Returns(true);
         var vm = Create();
 
-        vm.NewImageCaptureCommand.Execute(null);
+        vm.NewImageCaptureCommand.Execute();
 
-        homeActions.Verify(h => h.NewImageCapture(), Times.Once);
-        telemetry.Verify(t => t.ActivityInitiated(HomePageViewModel.ActivityIds.NewImageCapture), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(HomePageViewModel.ActivityIds.NewImageCapture), Times.Once);
+        newImageCaptureAction.Verify(a => a.Execute(), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(HomePageViewModel.ActivityIds.NewImageCapture, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(HomePageViewModel.ActivityIds.NewImageCapture, It.IsAny<string>()), Times.Once);
     }
 
     [TestMethod]
-    public void NewVideoCaptureCommand_ShouldInvokeHomeActions_AndTrackTelemetry_WhenEnabled()
+    public void NewVideoCaptureCommand_ShouldInvokeAction_AndTrackTelemetry_WhenEnabled()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
         var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
         featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(true);
 
-        var homeActions = Fixture.Freeze<Mock<IHomeActions>>();
+        var newVideoCaptureAction = Fixture.Freeze<Mock<IHomeNewVideoCaptureAction>>();
         var vm = Create();
 
-        vm.NewVideoCaptureCommand.Execute(null);
+        vm.NewVideoCaptureCommand.Execute();
 
-        homeActions.Verify(h => h.NewVideoCapture(), Times.Once);
-        telemetry.Verify(t => t.ActivityInitiated(HomePageViewModel.ActivityIds.NewVideoCapture), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(HomePageViewModel.ActivityIds.NewVideoCapture), Times.Once);
+        newVideoCaptureAction.Verify(a => a.Execute(), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(HomePageViewModel.ActivityIds.NewVideoCapture, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(HomePageViewModel.ActivityIds.NewVideoCapture, It.IsAny<string>()), Times.Once);
     }
 }

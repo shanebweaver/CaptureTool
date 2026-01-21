@@ -432,6 +432,39 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="Settings_AutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Bilder nach der Aufnahme automatisch im Screenshot-Ordner speichern.</value>
   </data>
+  <data name="Settings_VideoCaptureHeaderLabel.Text" xml:space="preserve">
+    <value>Videoaufnahme</value>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>Ein</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OffContent" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OnContent" xml:space="preserve">
+    <value>Ein</value>
+  </data>
+  <data name="Settings_VideoAutoSave_ChangeButton.Text" xml:space="preserve">
+    <value>Ordner ändern</value>
+  </data>
+  <data name="Settings_VideoAutoSave_VideosFolderLabel.Text" xml:space="preserve">
+    <value>Gespeicherter Videoordner:</value>
+  </data>
+  <data name="Settings_VideoAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>Videos automatisch speichern</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_HeaderLabel.Text" xml:space="preserve">
+    <value>Videos automatisch kopieren</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_SubtitleLabel.Text" xml:space="preserve">
+    <value>Videos nach der Aufnahme automatisch in die Zwischenablage kopieren.</value>
+  </data>
+  <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>Videos nach der Aufnahme automatisch im Videoordner speichern.</value>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Isolieren Sie ein Objekt vor einem grünen oder blauen Hintergrund.</value>
   </data>

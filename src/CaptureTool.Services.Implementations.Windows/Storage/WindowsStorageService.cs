@@ -12,7 +12,12 @@ public sealed partial class WindowsStorageService : IStorageService
 
     public string GetSystemDefaultScreenshotsFolderPath()
     {
-        return global::Windows.Storage.KnownFolders.SavedPictures.Path;
+        return Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+    }
+
+    public string GetSystemDefaultVideosFolderPath()
+    {
+        return Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
     }
 
     public string GetTemporaryFileName()

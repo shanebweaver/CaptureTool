@@ -7,13 +7,13 @@ using CaptureTool.Services.Interfaces.Windowing;
 
 namespace CaptureTool.Core.Implementations.Actions.Settings;
 
-public sealed partial class SettingsChangeScreenshotsFolderAction : AsyncActionCommand, ISettingsChangeScreenshotsFolderAction
+public sealed partial class SettingsChangeVideosFolderAction : AsyncActionCommand, ISettingsChangeVideosFolderAction
 {
     private readonly IWindowHandleProvider _windowing;
     private readonly IFilePickerService _picker;
     private readonly ISettingsService _settings;
 
-    public SettingsChangeScreenshotsFolderAction(
+    public SettingsChangeVideosFolderAction(
         IWindowHandleProvider windowing,
         IFilePickerService picker,
         ISettingsService settings)
@@ -26,8 +26,8 @@ public sealed partial class SettingsChangeScreenshotsFolderAction : AsyncActionC
     public override async Task ExecuteAsync(CancellationToken cancellationToken = default)
     {
         var hwnd = _windowing.GetMainWindowHandle();
-        var folder = await _picker.PickFolderAsync(hwnd, UserFolder.Pictures) ?? throw new OperationCanceledException("No folder was selected.");
-        _settings.Set(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder, folder.FolderPath);
+        var folder = await _picker.PickFolderAsync(hwnd, UserFolder.Videos) ?? throw new OperationCanceledException("No folder was selected.");
+        _settings.Set(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder, folder.FolderPath);
         await _settings.TrySaveAsync(cancellationToken);
     }
 }

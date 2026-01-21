@@ -19,21 +19,21 @@ public sealed class LoadingPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<ILoadingActions>>();
+        Fixture.Freeze<Mock<ILoadingGoBackAction>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
 
     [TestMethod]
-    public void GoBackCommand_ShouldDelegateToActions_AndTrackTelemetry()
+    public void GoBackCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var actions = Fixture.Freeze<Mock<ILoadingActions>>();
+        var goBackAction = Fixture.Freeze<Mock<ILoadingGoBackAction>>();
         var vm = Create();
 
         vm.GoBackCommand.Execute(null);
 
-        actions.Verify(a => a.GoBack(), Times.Once);
-        telemetry.Verify(t => t.ActivityInitiated(LoadingPageViewModel.ActivityIds.GoBack), Times.Once);
-        telemetry.Verify(t => t.ActivityCompleted(LoadingPageViewModel.ActivityIds.GoBack), Times.Once);
+        goBackAction.Verify(a => a.Execute(), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(LoadingPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(LoadingPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
     }
 }

@@ -16,10 +16,10 @@ public sealed partial class SettingsRestoreDefaultsAction : AsyncActionCommand, 
         _localizationService = localizationService;
     }
 
-    public override async Task ExecuteAsync()
+    public override async Task ExecuteAsync(CancellationToken cancellationToken = default)
     {
         _settingsService.ClearAllSettings();
         _localizationService.OverrideLanguage(null);
-        await _settingsService.TrySaveAsync(CancellationToken.None);
+        await _settingsService.TrySaveAsync(cancellationToken);
     }
 }

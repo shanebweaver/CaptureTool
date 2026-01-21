@@ -3,7 +3,6 @@ using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Storage;
 using CaptureTool.Services.Interfaces.TaskEnvironment;
 using CaptureTool.Services.Interfaces.Telemetry;
 using CaptureTool.Services.Interfaces.Themes;
@@ -26,6 +25,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         public static readonly string ToggleDesktopAudio = "ToggleDesktopAudio";
         public static readonly string TogglePauseResume = "TogglePauseResume";
     }
+
+    private const string TelemetryContext = "CaptureOverlay";
 
     private readonly IAppNavigation _appNavigation;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
@@ -102,17 +103,18 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
 
-        CloseOverlayCommand = new(CloseOverlay);
-        GoBackCommand = new(GoBack);
-        StartVideoCaptureCommand = new(StartVideoCapture);
-        StopVideoCaptureCommand = new(StopVideoCapture);
-        ToggleDesktopAudioCommand = new(ToggleDesktopAudio);
-        TogglePauseResumeCommand = new(TogglePauseResume);
+        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        CloseOverlayCommand = commandFactory.Create(ActivityIds.CloseOverlay, CloseOverlay);
+        GoBackCommand = commandFactory.Create(ActivityIds.GoBack, GoBack);
+        StartVideoCaptureCommand = commandFactory.Create(ActivityIds.StartVideoCapture, StartVideoCapture);
+        StopVideoCaptureCommand = commandFactory.Create(ActivityIds.StopVideoCapture, StopVideoCapture);
+        ToggleDesktopAudioCommand = commandFactory.Create(ActivityIds.ToggleDesktopAudio, ToggleDesktopAudio);
+        TogglePauseResumeCommand = commandFactory.Create(ActivityIds.TogglePauseResume, TogglePauseResume);
     }
 
     public override void Load(CaptureOverlayViewModelOptions options)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.Load, () =>
+        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.Load, () =>
         {
             ThrowIfNotReadyToLoad();
             StartLoading();
@@ -170,86 +172,68 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void CloseOverlay()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.CloseOverlay, () =>
-        {
-            _captureOverlayActions.Close();
-        });
+        _captureOverlayActions.Close();
     }
 
     private void GoBack()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.GoBack, () =>
-        {
-            _captureOverlayActions.GoBack();
-        });
+        _captureOverlayActions.GoBack();
     }
 
     private void StartVideoCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.StartVideoCapture, () =>
+        if (!IsRecording && _monitorCaptureResult != null && _captureArea != null)
         {
-            if (!IsRecording && _monitorCaptureResult != null && _captureArea != null)
-            {
-                IsRecording = true;
-                CaptureTime = TimeSpan.Zero;
-                _captureStartTime = DateTime.UtcNow;
-                _pausedDuration = TimeSpan.Zero;
-                _pauseStartTime = null;
-                StartTimer();
-                NewCaptureArgs args = new(_monitorCaptureResult.Value, _captureArea.Value);
+            IsRecording = true;
+            CaptureTime = TimeSpan.Zero;
+            _captureStartTime = DateTime.UtcNow;
+            _pausedDuration = TimeSpan.Zero;
+            _pauseStartTime = null;
+            StartTimer();
+            NewCaptureArgs args = new(_monitorCaptureResult.Value, _captureArea.Value);
 
-                _captureOverlayActions.StartVideoCapture(args);
-            }
-            else
-            {
-                throw new InvalidOperationException("Cannot start video capture. Monitor or capture area is not set.");
-            }
-        });
+            _captureOverlayActions.StartVideoCapture(args);
+        }
+        else
+        {
+            throw new InvalidOperationException("Cannot start video capture. Monitor or capture area is not set.");
+        }
     }
 
     private void StopVideoCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.StopVideoCapture, () =>
+        if (IsRecording)
         {
-            if (IsRecording)
-            {
-                IsRecording = false;
-                StopTimer();
-                _captureOverlayActions.StopVideoCapture();
-            }
-            else
-            {
-                throw new InvalidOperationException("Cannot stop video capture. No recording is in progress.");
-            }
-        });
+            IsRecording = false;
+            StopTimer();
+            _captureOverlayActions.StopVideoCapture();
+        }
+        else
+        {
+            throw new InvalidOperationException("Cannot stop video capture. No recording is in progress.");
+        }
     }
 
     private void ToggleDesktopAudio()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.ToggleDesktopAudio, () =>
-        {
-            _captureOverlayActions.ToggleDesktopAudio();
-        });
+        _captureOverlayActions.ToggleDesktopAudio();
     }
 
     private void TogglePauseResume()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.TogglePauseResume, () =>
+        IsPaused = !IsPaused;
+
+        if (IsPaused)
         {
-            IsPaused = !IsPaused;
+            _pauseStartTime = DateTime.UtcNow;
+        }
+        else if (_pauseStartTime.HasValue)
+        {
+            _pausedDuration += DateTime.UtcNow - _pauseStartTime.Value;
+            _pauseStartTime = null;
+        }
 
-            if (IsPaused)
-            {
-                _pauseStartTime = DateTime.UtcNow;
-            }
-            else if (_pauseStartTime.HasValue)
-            {
-                _pausedDuration += DateTime.UtcNow - _pauseStartTime.Value;
-                _pauseStartTime = null;
-            }
-
-            _captureOverlayActions.TogglePauseResume();
-        });
+        _captureOverlayActions.TogglePauseResume();
     }
 
     private void StartTimer()

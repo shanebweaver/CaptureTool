@@ -21,7 +21,7 @@ public class AboutPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<IAboutActions>>();
+        Fixture.Freeze<Mock<IAboutGoBackAction>>();
         Fixture.Freeze<Mock<ILocalizationService>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
@@ -63,8 +63,8 @@ public class AboutPageViewModelTests
         string capturedTitle = result.title;
         string capturedContent = result.content;
 
-        telemetryService.Verify(t => t.ActivityInitiated(expectedActivityId), Times.Exactly(1));
-        telemetryService.Verify(t => t.ActivityCompleted(expectedActivityId), Times.Exactly(1));
+        telemetryService.Verify(t => t.ActivityInitiated(expectedActivityId, It.IsAny<string>()), Times.Exactly(1));
+        telemetryService.Verify(t => t.ActivityCompleted(expectedActivityId, It.IsAny<string>()), Times.Exactly(1));
         telemetryService.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
 
         // Assert localization calls
@@ -160,19 +160,19 @@ public class AboutPageViewModelTests
     // ---------------------------------------------------------
 
     [TestMethod]
-    public void GoBackCommand_ShouldInvokeAboutActions_AndTrackTelemetry()
+    public void GoBackCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var aboutActions = Fixture.Freeze<Mock<IAboutActions>>();
+        var goBackAction = Fixture.Freeze<Mock<IAboutGoBackAction>>();
         var vm = Create();
 
         // Act
         vm.GoBackCommand.Execute(null);
 
         // Assert
-        aboutActions.Verify(a => a.GoBack(), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(AboutPageViewModel.ActivityIds.GoBack), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(AboutPageViewModel.ActivityIds.GoBack), Times.Once);
+        goBackAction.Verify(a => a.Execute(), Times.Once);
+        telemetryService.Verify(t => t.ActivityInitiated(AboutPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
+        telemetryService.Verify(t => t.ActivityCompleted(AboutPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
     }
 }

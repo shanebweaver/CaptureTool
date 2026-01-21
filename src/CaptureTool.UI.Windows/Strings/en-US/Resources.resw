@@ -537,6 +537,50 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Automatically save images to a folder after capture.</value>
     <comment>The subtitle for the auto save section on the settings page.</comment>
   </data>
+  <data name="Settings_VideoCaptureHeaderLabel.Text" xml:space="preserve">
+    <value>Video capture</value>
+    <comment>The header for the video capture section of the settings page.</comment>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+    <comment>The label for the on state of the video auto save toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+    <comment>The label for the off state of the video auto copy toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+    <comment>The label for the off state of the video auto save toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+    <comment>The label for the on state of the video auto copy toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_VideoAutoSave_ChangeButton.Text" xml:space="preserve">
+    <value>Change folder</value>
+    <comment>The label for the button that allows the user to change the videos folder from the settings page.</comment>
+  </data>
+  <data name="Settings_VideoAutoSave_VideosFolderLabel.Text" xml:space="preserve">
+    <value>Saved videos folder:</value>
+    <comment>The label for the videos folder location on the settings page.</comment>
+  </data>
+  <data name="Settings_VideoAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>Auto-save videos</value>
+    <comment>The header for the video auto save section on the settings page.</comment>
+  </data>
+  <data name="Settings_VideoAutoCopy_HeaderLabel.Text" xml:space="preserve">
+    <value>Auto-copy videos</value>
+    <comment>The header for the video auto copy section on the settings page.</comment>
+  </data>
+  <data name="Settings_VideoAutoCopy_SubtitleLabel.Text" xml:space="preserve">
+    <value>Automatically copy videos to the clipboard after capture.</value>
+    <comment>The subtitle for the video auto copy section on the settings page.</comment>
+  </data>
+  <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>Automatically save videos to a folder after capture.</value>
+    <comment>The subtitle for the video auto save section on the settings page.</comment>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Isolate a target in front of a green or blue screen.</value>
     <comment>The subtitle for the chroma key feature on the add-ons page</comment>

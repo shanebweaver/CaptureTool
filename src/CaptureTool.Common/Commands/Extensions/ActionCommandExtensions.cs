@@ -12,14 +12,14 @@ public static partial class ActionCommandExtensions
         command.Execute();
     }
 
-    public static async Task ExecuteCommandAsync(this IAsyncActionCommand asyncCommand)
+    public static async Task ExecuteCommandAsync(this IAsyncActionCommand asyncCommand, CancellationToken cancellationToken = default)
     {
         if (!asyncCommand.CanExecute())
         {
             throw new InvalidOperationException("Command cannot be invoked");
         }
 
-        await asyncCommand.ExecuteAsync();
+        await asyncCommand.ExecuteAsync(cancellationToken);
     }
 
     public static void ExecuteCommand<T>(this IActionCommand<T> command, T parameter)
@@ -32,13 +32,13 @@ public static partial class ActionCommandExtensions
         command.Execute(parameter);
     }
 
-    public static async Task ExecuteCommandAsync<T>(this IAsyncActionCommand<T> asyncCommand, T parameter)
+    public static async Task ExecuteCommandAsync<T>(this IAsyncActionCommand<T> asyncCommand, T parameter, CancellationToken cancellationToken = default)
     {
         if (!asyncCommand.CanExecute(parameter))
         {
             throw new InvalidOperationException("Command cannot be invoked");
         }
 
-        await asyncCommand.ExecuteAsync(parameter);
+        await asyncCommand.ExecuteAsync(parameter, cancellationToken);
     }
 }

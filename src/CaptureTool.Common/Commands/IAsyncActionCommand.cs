@@ -3,5 +3,5 @@
 public interface IAsyncActionCommand
 {
     bool CanExecute();
-    Task ExecuteAsync();
+    Task ExecuteAsync(CancellationToken cancellationToken = default);
 }
