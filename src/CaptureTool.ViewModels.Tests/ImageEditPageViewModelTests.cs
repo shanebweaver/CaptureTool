@@ -52,7 +52,7 @@ public sealed class ImageEditPageViewModelTests
     }
 
     // ------------------------------------------------------------------
-    // TEST: LoadAsync — happy path
+    // TEST: LoadAsync â€” happy path
     // ------------------------------------------------------------------
     [TestMethod]
     public async Task LoadAsync_ShouldInitializeProperties_AndLogTelemetry()
@@ -180,7 +180,7 @@ public sealed class ImageEditPageViewModelTests
     }
 
     // ------------------------------------------------------------------
-    // TEST: Undo — empty stack should raise error
+    // TEST: Undo â€” empty stack should raise error
     // ------------------------------------------------------------------
     [TestMethod]
     public void UndoCommand_ShouldLogError_WhenStackIsEmpty()
