@@ -5,7 +5,7 @@ using CaptureTool.Services.Interfaces.Settings;
 using CaptureTool.Services.Interfaces.Storage;
 using System.Diagnostics;
 
-namespace CaptureTool.Core.Implementations.Windows.Actions.Settings;
+namespace CaptureTool.Core.Implementations.Actions.Settings;
 
 public sealed partial class SettingsOpenScreenshotsFolderAction : ActionCommand, ISettingsOpenScreenshotsFolderAction
 {

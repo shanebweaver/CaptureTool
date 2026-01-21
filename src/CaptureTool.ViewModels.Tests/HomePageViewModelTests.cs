@@ -4,8 +4,6 @@ using CaptureTool.Core.Interfaces.Actions.Home;
 using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Telemetry;
-using CaptureTool.ViewModels;
-using CaptureTool.ViewModels.Helpers;
 using Moq;
 
 namespace CaptureTool.ViewModels.Tests;

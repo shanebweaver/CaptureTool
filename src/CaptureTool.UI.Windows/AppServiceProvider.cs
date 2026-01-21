@@ -1,5 +1,4 @@
 ﻿using CaptureTool.Core.Implementations.DependencyInjection;
-using CaptureTool.Core.Implementations.Windows.DependencyInjection;
 using CaptureTool.Domains.Capture.Implementations.Windows.DependencyInjection;
 using CaptureTool.Domains.Edit.Implementations.Windows.DependencyInjection;
 using CaptureTool.Services.Implementations.DependencyInjection;
@@ -48,8 +47,7 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
             .AddSettingsActions()
             .AddVideoEditActions()
             .AddAppMenuActions()
-            .AddDiagnosticsActions()
-            .AddCoreWindowsSettingsActions();
+            .AddDiagnosticsActions();
 
         // ViewModels
         collection.AddViewModels();
