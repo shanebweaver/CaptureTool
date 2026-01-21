@@ -1,6 +1,6 @@
-﻿using CaptureTool.Domains.Edit.Interfaces;
+using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.Drawable;
-using CaptureTool.Services.Interfaces.Clipboard;
+using CaptureTool.Infrastructure.Interfaces.Clipboard;
 using Microsoft.Graphics.Canvas;
 using Windows.Storage;
 using Windows.Storage.Provider;

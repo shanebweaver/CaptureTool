@@ -1,7 +1,7 @@
 using CaptureTool.Core.Interfaces.Actions.Diagnostics;
 using CaptureTool.Core.Interfaces.Settings;
-using CaptureTool.Services.Interfaces.Logging;
-using CaptureTool.Services.Interfaces.Settings;
+using CaptureTool.Infrastructure.Interfaces.Logging;
+using CaptureTool.Infrastructure.Interfaces.Settings;
 
 namespace CaptureTool.Core.Implementations.Actions.Diagnostics;
 

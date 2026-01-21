@@ -2,7 +2,7 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Core.Implementations.Actions.Settings;
 using CaptureTool.Core.Interfaces.Settings;
-using CaptureTool.Services.Interfaces.Settings;
+using CaptureTool.Infrastructure.Interfaces.Settings;
 using Moq;
 
 namespace CaptureTool.Core.Tests.Actions.Settings;

@@ -4,8 +4,8 @@ using CaptureTool.Core.Implementations.Actions.CaptureOverlay;
 using CaptureTool.Core.Implementations.Services.Navigation;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Implementations.Navigation;
-using CaptureTool.Services.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Implementations.Navigation;
+using CaptureTool.Infrastructure.Interfaces.Navigation;
 using Moq;
 
 namespace CaptureTool.Core.Tests.Actions.CaptureOverlay;
@@ -61,7 +61,7 @@ public class CaptureOverlayCloseActionTests
     {
         var video = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
         var appNav = Fixture.Freeze<Mock<IAppNavigation>>();
-        var shutdown = Fixture.Freeze<Mock<Services.Interfaces.Shutdown.IShutdownHandler>>();
+        var shutdown = Fixture.Freeze<Mock<Infrastructure.Interfaces.Shutdown.IShutdownHandler>>();
 
         appNav.SetupGet(a => a.CanGoBack).Returns(true);
 
@@ -79,7 +79,7 @@ public class CaptureOverlayCloseActionTests
     {
         var video = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
         var appNav = Fixture.Freeze<Mock<IAppNavigation>>();
-        var shutdown = Fixture.Freeze<Mock<Services.Interfaces.Shutdown.IShutdownHandler>>();
+        var shutdown = Fixture.Freeze<Mock<Infrastructure.Interfaces.Shutdown.IShutdownHandler>>();
 
         appNav.SetupGet(a => a.CanGoBack).Returns(false);
 

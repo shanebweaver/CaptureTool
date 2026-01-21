@@ -1,8 +1,8 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.VideoEdit;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Storage;
-using CaptureTool.Services.Interfaces.Windowing;
+using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Windowing;
 
 namespace CaptureTool.Core.Implementations.Actions.VideoEdit;
 

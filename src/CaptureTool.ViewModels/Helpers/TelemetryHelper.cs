@@ -1,4 +1,4 @@
-﻿using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -125,7 +125,7 @@ public static class TelemetryHelper
                 continue;
 
             // Example format:
-            // at CaptureTool.Services.VideoService.LoadVideo() in C:\src\...\VideoService.cs:line 73
+            // at CaptureTool.Infrastructure.VideoService.LoadVideo() in C:\src\...\VideoService.cs:line 73
 
             // Extract method
             var methodStart = trimmed.IndexOf("at ") + 3;

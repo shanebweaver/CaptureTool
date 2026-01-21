@@ -1,7 +1,7 @@
-﻿using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Navigation;
-using CaptureTool.Services.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Interfaces.Storage;
 
 namespace CaptureTool.Core.Implementations.Services.Navigation;
 

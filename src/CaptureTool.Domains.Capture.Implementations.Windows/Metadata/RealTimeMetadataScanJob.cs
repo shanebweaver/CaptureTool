@@ -3,7 +3,7 @@ using System.Text.Json;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Capture.Interfaces.Metadata;
 using CaptureTool.Core.Interfaces;
-using CaptureTool.Services.Interfaces.Logging;
+using CaptureTool.Infrastructure.Interfaces.Logging;
 
 namespace CaptureTool.Domains.Capture.Implementations.Windows.Metadata;
 

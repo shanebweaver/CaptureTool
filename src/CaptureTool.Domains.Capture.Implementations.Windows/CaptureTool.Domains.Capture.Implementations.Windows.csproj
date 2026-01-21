@@ -13,7 +13,7 @@
     <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj" />
     <ProjectReference Include="..\CaptureTool.Core.Interfaces\CaptureTool.Core.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Domains.Capture.Interfaces\CaptureTool.Domains.Capture.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Interfaces\CaptureTool.Infrastructure.Interfaces.csproj" />
   </ItemGroup>
 
   <!-- Package references -->

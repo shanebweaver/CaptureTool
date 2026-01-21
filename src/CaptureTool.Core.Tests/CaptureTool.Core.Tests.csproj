@@ -14,8 +14,8 @@
     <ProjectReference Include="..\CaptureTool.Domains.Capture.Interfaces\CaptureTool.Domains.Capture.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Core.Implementations\CaptureTool.Core.Implementations.csproj" />
     <ProjectReference Include="..\CaptureTool.Core.Interfaces\CaptureTool.Core.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Interfaces\CaptureTool.Services.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Services.Implementations\CaptureTool.Services.Implementations.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Interfaces\CaptureTool.Infrastructure.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations\CaptureTool.Infrastructure.Implementations.csproj" />
     <PackageReference Update="MSTest.Analyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

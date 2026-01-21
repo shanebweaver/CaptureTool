@@ -1,5 +1,5 @@
-﻿using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
-using CaptureTool.Services.Interfaces.Storage;
+using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
+using CaptureTool.Infrastructure.Interfaces.Storage;
 using System.Drawing;
 
 namespace CaptureTool.Domains.Edit.Implementations.Windows.ChromaKey;

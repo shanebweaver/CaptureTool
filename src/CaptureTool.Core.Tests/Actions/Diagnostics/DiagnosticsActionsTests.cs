@@ -2,8 +2,8 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Core.Implementations.Actions.Diagnostics;
 using CaptureTool.Core.Interfaces.Settings;
-using CaptureTool.Services.Interfaces.Logging;
-using CaptureTool.Services.Interfaces.Settings;
+using CaptureTool.Infrastructure.Interfaces.Logging;
+using CaptureTool.Infrastructure.Interfaces.Settings;
 using FluentAssertions;
 using Moq;
 

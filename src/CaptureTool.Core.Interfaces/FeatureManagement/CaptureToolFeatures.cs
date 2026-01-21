@@ -1,4 +1,4 @@
-﻿using CaptureTool.Services.Interfaces.FeatureManagement;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 
 namespace CaptureTool.Core.Interfaces.FeatureManagement;
 

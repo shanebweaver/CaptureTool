@@ -1,14 +1,14 @@
-﻿using CaptureTool.Core.Interfaces.FeatureManagement;
+using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Core.Interfaces.Navigation;
 using CaptureTool.Core.Interfaces.Settings;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Activation;
-using CaptureTool.Services.Interfaces.Cancellation;
-using CaptureTool.Services.Interfaces.FeatureManagement;
-using CaptureTool.Services.Interfaces.Localization;
-using CaptureTool.Services.Interfaces.Logging;
-using CaptureTool.Services.Interfaces.Navigation;
-using CaptureTool.Services.Interfaces.Settings;
+using CaptureTool.Infrastructure.Interfaces.Activation;
+using CaptureTool.Infrastructure.Interfaces.Cancellation;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
+using CaptureTool.Infrastructure.Interfaces.Localization;
+using CaptureTool.Infrastructure.Interfaces.Logging;
+using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Interfaces.Settings;
 using System.Collections.Specialized;
 using System.Web;
 

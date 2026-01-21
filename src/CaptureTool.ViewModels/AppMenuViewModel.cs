@@ -1,12 +1,12 @@
-﻿using CaptureTool.Common;
+using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.AppMenu;
 using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces;
-using CaptureTool.Services.Interfaces.FeatureManagement;
-using CaptureTool.Services.Interfaces.Storage;
-using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
+using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 

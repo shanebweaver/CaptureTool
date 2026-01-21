@@ -1,6 +1,6 @@
-﻿using CaptureTool.Common;
-using CaptureTool.Services.Interfaces.Navigation;
-using CaptureTool.Services.Interfaces.Themes;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Interfaces.Themes;
 
 namespace CaptureTool.ViewModels;
 

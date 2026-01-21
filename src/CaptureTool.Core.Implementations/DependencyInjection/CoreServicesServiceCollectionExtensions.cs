@@ -2,7 +2,7 @@ using CaptureTool.Core.Implementations.Services.Activation;
 using CaptureTool.Core.Implementations.Services.Navigation;
 using CaptureTool.Core.Interfaces;
 using CaptureTool.Core.Interfaces.Navigation;
-using CaptureTool.Services.Interfaces.Activation;
+using CaptureTool.Infrastructure.Interfaces.Activation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Core.Implementations.DependencyInjection;

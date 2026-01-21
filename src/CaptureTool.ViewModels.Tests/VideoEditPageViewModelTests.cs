@@ -2,7 +2,7 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Core.Interfaces.Actions.VideoEdit;
 using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Services.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
 
 namespace CaptureTool.ViewModels.Tests;
