@@ -527,10 +527,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         return orientation switch
         {
-            ImageOrientation.RotateNoneFlipNone or ImageOrientation.RotateNoneFlipX => "0°",
-            ImageOrientation.Rotate90FlipNone or ImageOrientation.Rotate90FlipX => "90°",
-            ImageOrientation.Rotate180FlipNone or ImageOrientation.Rotate180FlipX => "180°",
-            ImageOrientation.Rotate270FlipNone or ImageOrientation.Rotate270FlipX => "270°",
+            ImageOrientation.RotateNoneFlipNone or ImageOrientation.RotateNoneFlipX => "0Â°",
+            ImageOrientation.Rotate90FlipNone or ImageOrientation.Rotate90FlipX => "90Â°",
+            ImageOrientation.Rotate180FlipNone or ImageOrientation.Rotate180FlipX => "180Â°",
+            ImageOrientation.Rotate270FlipNone or ImageOrientation.Rotate270FlipX => "270Â°",
             _ => string.Empty,
         };
     }
