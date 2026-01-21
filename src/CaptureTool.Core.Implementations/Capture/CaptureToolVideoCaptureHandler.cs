@@ -1,8 +1,10 @@
 ﻿using CaptureTool.Core.Interfaces;
+using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Core.Interfaces.Settings;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Capture.Interfaces.Metadata;
 using CaptureTool.Services.Interfaces.Clipboard;
+using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Logging;
 using CaptureTool.Services.Interfaces.Settings;
 using CaptureTool.Services.Interfaces.Storage;
@@ -16,6 +18,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
     private readonly ILogService _logService;
+    private readonly IFeatureManager _featureManager;
     private readonly IMetadataScannerRegistry? _metadataScannerRegistry;
     private readonly IRealTimeMetadataScanJobFactory? _scanJobFactory;
     
@@ -38,6 +41,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         ISettingsService settingsService,
         IStorageService storageService,
         ILogService logService,
+        IFeatureManager featureManager,
         IMetadataScannerRegistry? metadataScannerRegistry = null,
         IRealTimeMetadataScanJobFactory? scanJobFactory = null)
     {
@@ -46,6 +50,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         _settingsService = settingsService;
         _storageService = storageService;
         _logService = logService;
+        _featureManager = featureManager;
         _metadataScannerRegistry = metadataScannerRegistry;
         _scanJobFactory = scanJobFactory;
 
@@ -68,8 +73,10 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             fileName
         );
 
-        // Start metadata collection if factory and registry are available
-        if (_scanJobFactory != null && _metadataScannerRegistry != null)
+        // Start metadata collection if feature is enabled and factory/registry are available
+        if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MetadataCollection) &&
+            _scanJobFactory != null && 
+            _metadataScannerRegistry != null)
         {
             _currentScanJob = _scanJobFactory.CreateJob(Guid.NewGuid(), _tempVideoPath, _metadataScannerRegistry);
         }
