@@ -38,25 +38,20 @@ public sealed partial class HomePageViewModel : ViewModelBase
         _newVideoCaptureAction = newVideoCaptureAction;
         _telemetryService = telemetryService;
 
-        NewImageCaptureCommand = new(NewImageCapture);
-        NewVideoCaptureCommand = new(NewVideoCapture, () => IsVideoCaptureEnabled);
-
         IsVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
+
+        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        NewImageCaptureCommand = commandFactory.Create(ActivityIds.NewImageCapture, NewImageCapture);
+        NewVideoCaptureCommand = commandFactory.Create(ActivityIds.NewVideoCapture, NewVideoCapture, () => IsVideoCaptureEnabled);
     }
 
     private void NewImageCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.NewImageCapture, () =>
-        {
-            _newImageCaptureAction.ExecuteCommand();
-        });
+        _newImageCaptureAction.ExecuteCommand();
     }
 
     private void NewVideoCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.NewVideoCapture, () =>
-        {
-            _newVideoCaptureAction.ExecuteCommand();
-        });
+        _newVideoCaptureAction.ExecuteCommand();
     }
 }

@@ -153,8 +153,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
 
-        RequestCaptureCommand = new(RequestCapture);
-        CloseOverlayCommand = new(CloseOverlay);
+        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        RequestCaptureCommand = commandFactory.Create(ActivityIds.RequestCapture, RequestCapture);
+        CloseOverlayCommand = commandFactory.Create(ActivityIds.CloseOverlay, CloseOverlay);
         UpdateSelectedCaptureModeCommand = new(UpdateSelectedCaptureMode);
         UpdateSelectedCaptureTypeCommand = new(UpdateSelectedCaptureType);
         UpdateCaptureAreaCommand = new(UpdateCaptureArea);
@@ -198,17 +199,14 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void CloseOverlay()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.CloseOverlay, () =>
+        if (_appNavigation.CanGoBack)
         {
-            if (_appNavigation.CanGoBack)
-            {
-                _appNavigation.GoBackToMainWindow();
-            }
-            else
-            {
-                _shutdownHandler.Shutdown();
-            }
-        });
+            _appNavigation.GoBackToMainWindow();
+        }
+        else
+        {
+            _shutdownHandler.Shutdown();
+        }
     }
 
     private void UpdateCaptureArea(Rectangle area)
@@ -268,24 +266,21 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void RequestCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.RequestCapture, () =>
+        if (Monitor != null && CaptureArea != Rectangle.Empty)
         {
-            if (Monitor != null && CaptureArea != Rectangle.Empty)
+            if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
             {
-                if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
-                {
-                    NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-                    ImageFile image = _imageCaptureHandler.PerformImageCapture(args);
-                    _appNavigation.GoToImageEdit(image);
+                NewCaptureArgs args = new(Monitor.Value, CaptureArea);
+                ImageFile image = _imageCaptureHandler.PerformImageCapture(args);
+                _appNavigation.GoToImageEdit(image);
 
-                }
-                else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
-                {
-                    NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-                    _appNavigation.GoToVideoCapture(args);
-                }
             }
-        });
+            else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
+            {
+                NewCaptureArgs args = new(Monitor.Value, CaptureArea);
+                _appNavigation.GoToVideoCapture(args);
+            }
+        }
     }
 
     public override void Dispose()

@@ -28,14 +28,12 @@ public sealed partial class LoadingPageViewModel : ViewModelBase
         _goBackAction = goBackAction;
         _telemetryService = telemetryService;
 
-        GoBackCommand = new(GoBack);
+        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        GoBackCommand = commandFactory.Create(ActivityIds.GoBack, GoBack);
     }
 
     private void GoBack()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.GoBack, () =>
-        {
-            _goBackAction.ExecuteCommand();
-        });
+        _goBackAction.ExecuteCommand();
     }
 }

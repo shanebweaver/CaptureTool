@@ -68,14 +68,15 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _videoCaptureHandler = videoCaptureHandler;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
 
-        NewImageCaptureCommand = new(NewImageCapture);
-        OpenFileCommand = new(OpenFileAsync);
-        NavigateToSettingsCommand = new(NavigateToSettings);
-        ShowAboutAppCommand = new(ShowAboutApp);
-        ShowAddOnsCommand = new(ShowAddOns);
-        ExitApplicationCommand = new(ExitApplication);
+        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        NewImageCaptureCommand = commandFactory.Create(ActivityIds.NewImageCapture, NewImageCapture);
+        OpenFileCommand = commandFactory.CreateAsync(ActivityIds.OpenFile, OpenFileAsync);
+        NavigateToSettingsCommand = commandFactory.Create(ActivityIds.NavigateToSettings, NavigateToSettings);
+        ShowAboutAppCommand = commandFactory.Create(ActivityIds.ShowAboutApp, ShowAboutApp);
+        ShowAddOnsCommand = commandFactory.Create(ActivityIds.ShowAddOns, ShowAddOns);
+        ExitApplicationCommand = commandFactory.Create(ActivityIds.ExitApplication, ExitApplication);
         RefreshRecentCapturesCommand = new(RefreshRecentCaptures);
-        OpenRecentCaptureCommand = new(OpenRecentCapture);
+        OpenRecentCaptureCommand = commandFactory.Create<RecentCaptureViewModel>(ActivityIds.OpenRecentCapture, OpenRecentCapture);
 
         ShowAddOnsOption = featureManager.IsEnabled(CaptureToolFeatures.Feature_AddOns_Store);
         RecentCaptures = [];
@@ -112,72 +113,51 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private void NewImageCapture()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.NewImageCapture, () =>
-        {
-            _appMenuActions.NewImageCapture();
-        });
+        _appMenuActions.NewImageCapture();
     }
 
-    private Task OpenFileAsync()
+    private async Task OpenFileAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.OpenFile, async () =>
-        {
-            await _appMenuActions.OpenFileAsync(CancellationToken.None);
-        });
+        await _appMenuActions.OpenFileAsync(CancellationToken.None);
     }
 
     private void NavigateToSettings()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.NavigateToSettings, () =>
-        {
-            _appMenuActions.NavigateToSettings();
-        });
+        _appMenuActions.NavigateToSettings();
     }
 
     private void ShowAboutApp()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.ShowAboutApp, () =>
-        {
-            _appMenuActions.ShowAboutApp();
-        });
+        _appMenuActions.ShowAboutApp();
     }
 
     private void ShowAddOns()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.ShowAddOns, () =>
-        {
-            _appMenuActions.ShowAddOns();
-        });
+        _appMenuActions.ShowAddOns();
     }
 
     private void ExitApplication()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.ExitApplication, () =>
-        {
-            _appMenuActions.ExitApplication();
-        });
+        _appMenuActions.ExitApplication();
     }
 
     private void OpenRecentCapture(RecentCaptureViewModel? model)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.OpenRecentCapture, () =>
+        if (model != null)
         {
-            if (model != null)
+            if (!File.Exists(model.FilePath))
             {
-                if (!File.Exists(model.FilePath))
-                {
-                    RefreshRecentCaptures();
-                }
-                else
-                {
-                    // Execute async operation synchronously since this is called from a command
-                    // The command infrastructure doesn't support async void
-                    // ConfigureAwait(false) helps avoid potential deadlocks
-                    _appMenuActions.OpenRecentCaptureAsync(model.FilePath, CancellationToken.None)
-                        .ConfigureAwait(false).GetAwaiter().GetResult();
-                }
+                RefreshRecentCaptures();
             }
-        });
+            else
+            {
+                // Execute async operation synchronously since this is called from a command
+                // The command infrastructure doesn't support async void
+                // ConfigureAwait(false) helps avoid potential deadlocks
+                _appMenuActions.OpenRecentCaptureAsync(model.FilePath, CancellationToken.None)
+                    .ConfigureAwait(false).GetAwaiter().GetResult();
+            }
+        }
     }
 
     public void RefreshRecentCaptures()

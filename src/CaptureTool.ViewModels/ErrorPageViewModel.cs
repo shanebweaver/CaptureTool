@@ -28,14 +28,12 @@ public sealed partial class ErrorPageViewModel : ViewModelBase
         _restartAppAction = restartAppAction;
         _telemetryService = telemetryService;
 
-        RestartAppCommand = new(RestartApp);
+        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        RestartAppCommand = commandFactory.Create(ActivityIds.RestartApp, RestartApp);
     }
 
     private void RestartApp()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.RestartApp, () =>
-        {
-            _restartAppAction.ExecuteCommand();
-        });
+        _restartAppAction.ExecuteCommand();
     }
 }

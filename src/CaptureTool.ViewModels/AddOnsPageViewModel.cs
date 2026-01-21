@@ -74,8 +74,9 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 
         ChromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
 
-        GetChromaKeyAddOnCommand = new(GetChromaKeyAddOnAsync, () => IsChromaKeyAddOnAvailable);
-        GoBackCommand = new(GoBack, () => _goBackAction.CanExecute());
+        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        GetChromaKeyAddOnCommand = commandFactory.CreateAsync(ActivityIds.GetChromaKeyAddOn, GetChromaKeyAddOnAsync, () => IsChromaKeyAddOnAvailable);
+        GoBackCommand = commandFactory.Create(ActivityIds.GoBack, GoBack, () => _goBackAction.CanExecute());
     }
 
     public override Task LoadAsync(CancellationToken cancellationToken)
@@ -114,29 +115,23 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
         });
     }
 
-    private Task GetChromaKeyAddOnAsync()
+    private async Task GetChromaKeyAddOnAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.GetChromaKeyAddOn, async () =>
+        if (!IsChromaKeyAddOnOwned)
         {
-            if (!IsChromaKeyAddOnOwned)
+            var hwnd = _windowingService.GetMainWindowHandle();
+            bool success = await _storeService.PurchaseAddonAsync(AddOns.ChromaKeyBackgroundRemoval, hwnd);
+            IsChromaKeyAddOnAvailable = !success;
+            IsChromaKeyAddOnOwned = success;
+            if (success)
             {
-                var hwnd = _windowingService.GetMainWindowHandle();
-                bool success = await _storeService.PurchaseAddonAsync(AddOns.ChromaKeyBackgroundRemoval, hwnd);
-                IsChromaKeyAddOnAvailable = !success;
-                IsChromaKeyAddOnOwned = success;
-                if (success)
-                {
-                    ChromaKeyAddOnPrice = _localizationService.GetString("AddOns_ItemOwned");
-                }
+                ChromaKeyAddOnPrice = _localizationService.GetString("AddOns_ItemOwned");
             }
-        });
+        }
     }
 
     private void GoBack()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.GoBack, () =>
-        {
-            _goBackAction.ExecuteCommand();
-        });
+        _goBackAction.ExecuteCommand();
     }
 }

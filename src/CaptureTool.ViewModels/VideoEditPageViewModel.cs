@@ -53,8 +53,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         _copyAction = copyAction;
         _telemetryService = telemetryService;
 
-        SaveCommand = new(SaveAsync);
-        CopyCommand = new(CopyAsync);
+        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        SaveCommand = commandFactory.CreateAsync(ActivityIds.Save, SaveAsync);
+        CopyCommand = commandFactory.CreateAsync(ActivityIds.Copy, CopyAsync);
 
         IsVideoReady = false;
         IsFinalizingVideo = false;
@@ -99,29 +100,23 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         }
     }
 
-    private Task SaveAsync()
+    private async Task SaveAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.Save, async () =>
+        if (string.IsNullOrEmpty(VideoPath))
         {
-            if (string.IsNullOrEmpty(VideoPath))
-            {
-                throw new InvalidOperationException("Cannot save video without a valid filepath.");
-            }
+            throw new InvalidOperationException("Cannot save video without a valid filepath.");
+        }
 
-            await _saveAction.ExecuteCommandAsync(VideoPath, CancellationToken.None);
-        });
+        await _saveAction.ExecuteCommandAsync(VideoPath, CancellationToken.None);
     }
 
-    private Task CopyAsync()
+    private async Task CopyAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.Copy, async () =>
+        if (string.IsNullOrEmpty(VideoPath))
         {
-            if (string.IsNullOrEmpty(VideoPath))
-            {
-                throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
-            }
+            throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
+        }
 
-            await _copyAction.ExecuteCommandAsync(VideoPath, CancellationToken.None);
-        });
+        await _copyAction.ExecuteCommandAsync(VideoPath, CancellationToken.None);
     }
 }

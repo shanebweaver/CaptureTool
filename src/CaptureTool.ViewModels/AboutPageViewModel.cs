@@ -42,28 +42,23 @@ public sealed partial class AboutPageViewModel : ViewModelBase
         _localizationService = localizationService;
         _telemetryService = telemetryService;
 
-        ShowThirdPartyCommand = new(() => ShowDialog("About_ThirdParty_DialogTitle", "About_ThirdParty_DialogContent", ActivityIds.ShowThirdParty));
-        ShowPrivacyPolicyCommand = new(() => ShowDialog("About_PrivacyPolicy_DialogTitle", "About_PrivacyPolicy_DialogContent", ActivityIds.ShowPrivacyPolicy));
-        ShowTermsOfUseCommand = new(() => ShowDialog("About_TermsOfUse_DialogTitle", "About_TermsOfUse_DialogContent", ActivityIds.ShowTermsOfUse));
-        ShowDisclaimerOfLiabilityCommand = new(() => ShowDialog("About_DisclaimerOfLiability_DialogTitle", "About_DisclaimerOfLiability_DialogContent", ActivityIds.ShowDisclaimerOfLiability));
-        GoBackCommand = new(GoBack, () => _goBackAction.CanExecute());
+        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        ShowThirdPartyCommand = commandFactory.Create(ActivityIds.ShowThirdParty, () => ShowDialog("About_ThirdParty_DialogTitle", "About_ThirdParty_DialogContent"));
+        ShowPrivacyPolicyCommand = commandFactory.Create(ActivityIds.ShowPrivacyPolicy, () => ShowDialog("About_PrivacyPolicy_DialogTitle", "About_PrivacyPolicy_DialogContent"));
+        ShowTermsOfUseCommand = commandFactory.Create(ActivityIds.ShowTermsOfUse, () => ShowDialog("About_TermsOfUse_DialogTitle", "About_TermsOfUse_DialogContent"));
+        ShowDisclaimerOfLiabilityCommand = commandFactory.Create(ActivityIds.ShowDisclaimerOfLiability, () => ShowDialog("About_DisclaimerOfLiability_DialogTitle", "About_DisclaimerOfLiability_DialogContent"));
+        GoBackCommand = commandFactory.Create(ActivityIds.GoBack, GoBack, () => _goBackAction.CanExecute());
     }
 
-    private void ShowDialog(string titleResourceKey, string contentResourceKey, string activityId)
+    private void ShowDialog(string titleResourceKey, string contentResourceKey)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, activityId, () =>
-        {
-            string title = _localizationService.GetString(titleResourceKey);
-            string content = _localizationService.GetString(contentResourceKey);
-            ShowDialogRequested?.Invoke(this, (title, content));
-        });
+        string title = _localizationService.GetString(titleResourceKey);
+        string content = _localizationService.GetString(contentResourceKey);
+        ShowDialogRequested?.Invoke(this, (title, content));
     }
 
     private void GoBack()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.GoBack, () =>
-        {
-            _goBackAction.ExecuteCommand();
-        });
+        _goBackAction.ExecuteCommand();
     }
 }

@@ -227,21 +227,22 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         VideosFolderPath = string.Empty;
         TemporaryFilesFolderPath = string.Empty;
 
-        ChangeScreenshotsFolderCommand = new(ChangeScreenshotsFolderAsync);
-        OpenScreenshotsFolderCommand = new(OpenScreenshotsFolder);
-        ChangeVideosFolderCommand = new(ChangeVideosFolderAsync);
-        OpenVideosFolderCommand = new(OpenVideosFolder);
-        RestartAppCommand = new(RestartApp);
-        GoBackCommand = new(GoBack);
-        UpdateImageCaptureAutoCopyCommand = new(UpdateImageCaptureAutoCopyAsync);
-        UpdateImageCaptureAutoSaveCommand = new(UpdateImageCaptureAutoSaveAsync);
-        UpdateVideoCaptureAutoCopyCommand = new(UpdateVideoCaptureAutoCopyAsync);
-        UpdateVideoCaptureAutoSaveCommand = new(UpdateVideoCaptureAutoSaveAsync);
-        UpdateAppLanguageCommand = new(UpdateAppLanguageAsync);
-        UpdateAppThemeCommand = new(UpdateAppTheme);
-        OpenTemporaryFilesFolderCommand = new(OpenTemporaryFilesFolder);
-        ClearTemporaryFilesCommand = new(ClearTemporaryFiles);
-        RestoreDefaultSettingsCommand = new(RestoreDefaultSettingsAsync);
+        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        ChangeScreenshotsFolderCommand = commandFactory.CreateAsync(ActivityIds.ChangeScreenshotsFolder, ChangeScreenshotsFolderAsync);
+        OpenScreenshotsFolderCommand = commandFactory.Create(ActivityIds.OpenScreenshotsFolder, OpenScreenshotsFolder);
+        ChangeVideosFolderCommand = commandFactory.CreateAsync(ActivityIds.ChangeVideosFolder, ChangeVideosFolderAsync);
+        OpenVideosFolderCommand = commandFactory.Create(ActivityIds.OpenVideosFolder, OpenVideosFolder);
+        RestartAppCommand = commandFactory.Create(ActivityIds.RestartApp, RestartApp);
+        GoBackCommand = commandFactory.Create(ActivityIds.GoBack, GoBack);
+        UpdateImageCaptureAutoCopyCommand = commandFactory.CreateAsync<bool>(ActivityIds.UpdateImageCaptureAutoCopy, UpdateImageCaptureAutoCopyAsync);
+        UpdateImageCaptureAutoSaveCommand = commandFactory.CreateAsync<bool>(ActivityIds.UpdateImageCaptureAutoSave, UpdateImageCaptureAutoSaveAsync);
+        UpdateVideoCaptureAutoCopyCommand = commandFactory.CreateAsync<bool>(ActivityIds.UpdateVideoCaptureAutoCopy, UpdateVideoCaptureAutoCopyAsync);
+        UpdateVideoCaptureAutoSaveCommand = commandFactory.CreateAsync<bool>(ActivityIds.UpdateVideoCaptureAutoSave, UpdateVideoCaptureAutoSaveAsync);
+        UpdateAppLanguageCommand = commandFactory.CreateAsync<int>(ActivityIds.UpdateAppLanguage, UpdateAppLanguageAsync);
+        UpdateAppThemeCommand = commandFactory.Create<int>(ActivityIds.UpdateAppTheme, UpdateAppTheme);
+        OpenTemporaryFilesFolderCommand = commandFactory.Create(ActivityIds.OpenTemporaryFilesFolder, OpenTemporaryFilesFolder);
+        ClearTemporaryFilesCommand = commandFactory.Create(ActivityIds.ClearTemporaryFiles, ClearTemporaryFiles);
+        RestoreDefaultSettingsCommand = commandFactory.CreateAsync(ActivityIds.RestoreDefaultSettings, RestoreDefaultSettingsAsync);
     }
 
     public override Task LoadAsync(CancellationToken cancellationToken)
@@ -330,198 +331,162 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         });
     }
 
-    private Task UpdateAppLanguageAsync(int index)
+    private async Task UpdateAppLanguageAsync(int index)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.UpdateAppLanguage, async () =>
+        SelectedAppLanguageIndex = index;
+        if (SelectedAppLanguageIndex == -1)
         {
-            SelectedAppLanguageIndex = index;
-            if (SelectedAppLanguageIndex == -1)
-            {
-                return;
-            }
+            return;
+        }
 
-            AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
-            if (vm.Language == _localizationService.LanguageOverride)
-            {
-                return;
-            }
+        AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
+        if (vm.Language == _localizationService.LanguageOverride)
+        {
+            return;
+        }
 
-            await _updateAppLanguageAction.ExecuteCommandAsync(index, CancellationToken.None);
-            UpdateShowAppLanguageRestartMessage();
-        });
+        await _updateAppLanguageAction.ExecuteCommandAsync(index, CancellationToken.None);
+        UpdateShowAppLanguageRestartMessage();
     }
 
     private void UpdateShowAppLanguageRestartMessage()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.UpdateShowAppLanguageRestartMessage, () =>
-        {
-            ShowAppLanguageRestartMessage = 
-                _localizationService.RequestedLanguage != _localizationService.StartupLanguage || 
-                (_localizationService.LanguageOverride == null && _localizationService.StartupLanguage != _localizationService.DefaultLanguage);
-        });
+        ShowAppLanguageRestartMessage = 
+            _localizationService.RequestedLanguage != _localizationService.StartupLanguage || 
+            (_localizationService.LanguageOverride == null && _localizationService.StartupLanguage != _localizationService.DefaultLanguage);
     }
 
     private void UpdateAppTheme(int index)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.UpdateAppTheme, () =>
+        SelectedAppThemeIndex = index;
+        if (SelectedAppThemeIndex == -1)
         {
-            SelectedAppThemeIndex = index;
-            if (SelectedAppThemeIndex == -1)
-            {
-                return;
-            }
+            return;
+        }
 
-            _updateAppThemeAction.ExecuteCommand(index);
-            UpdateShowAppThemeRestartMessage();
-        });
+        _updateAppThemeAction.ExecuteCommand(index);
+        UpdateShowAppThemeRestartMessage();
     }
 
     private void UpdateShowAppThemeRestartMessage()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.UpdateShowAppThemeRestartMessage, () =>
+        var defaultTheme = _themeService.DefaultTheme;
+        var startupTheme = _themeService.StartupTheme;
+        var currentTheme = _themeService.CurrentTheme;
+
+        // Make sure currentTheme is light or dark.
+        // defaultTheme is never "SystemDefault".
+        if (currentTheme == AppTheme.SystemDefault)
         {
-            var defaultTheme = _themeService.DefaultTheme;
-            var startupTheme = _themeService.StartupTheme;
-            var currentTheme = _themeService.CurrentTheme;
+            currentTheme = defaultTheme;
+        }
 
-            // Make sure currentTheme is light or dark.
-            // defaultTheme is never "SystemDefault".
-            if (currentTheme == AppTheme.SystemDefault)
-            {
-                currentTheme = defaultTheme;
-            }
+        if (startupTheme == AppTheme.SystemDefault)
+        {
+            startupTheme = defaultTheme;
+        }
 
-            if (startupTheme == AppTheme.SystemDefault)
-            {
-                startupTheme = defaultTheme;
-            }
-
-            ShowAppThemeRestartMessage = currentTheme != startupTheme;
-        });
+        ShowAppThemeRestartMessage = currentTheme != startupTheme;
     }
 
-    private Task UpdateImageCaptureAutoSaveAsync(bool value)
+    private async Task UpdateImageCaptureAutoSaveAsync(bool value)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.UpdateImageCaptureAutoSave, async () =>
-        {
-            ImageCaptureAutoSave = value;
-            await _updateImageAutoSaveAction.ExecuteCommandAsync(value, CancellationToken.None);
-        });
+        ImageCaptureAutoSave = value;
+        await _updateImageAutoSaveAction.ExecuteCommandAsync(value, CancellationToken.None);
     }
 
-    private Task UpdateImageCaptureAutoCopyAsync(bool value)
+    private async Task UpdateImageCaptureAutoCopyAsync(bool value)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.UpdateImageCaptureAutoCopy, async () =>
-        {
-            ImageCaptureAutoCopy = value;
-            await _updateImageAutoCopyAction.ExecuteCommandAsync(value, CancellationToken.None);
-        });
+        ImageCaptureAutoCopy = value;
+        await _updateImageAutoCopyAction.ExecuteCommandAsync(value, CancellationToken.None);
     }
 
-    private Task UpdateVideoCaptureAutoSaveAsync(bool value)
+    private async Task UpdateVideoCaptureAutoSaveAsync(bool value)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.UpdateVideoCaptureAutoSave, async () =>
-        {
-            VideoCaptureAutoSave = value;
-            await _updateVideoCaptureAutoSaveAction.ExecuteCommandAsync(value, CancellationToken.None);
-        });
+        VideoCaptureAutoSave = value;
+        await _updateVideoCaptureAutoSaveAction.ExecuteCommandAsync(value, CancellationToken.None);
     }
 
-    private Task UpdateVideoCaptureAutoCopyAsync(bool value)
+    private async Task UpdateVideoCaptureAutoCopyAsync(bool value)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.UpdateVideoCaptureAutoCopy, async () =>
-        {
-            VideoCaptureAutoCopy = value;
-            await _updateVideoCaptureAutoCopyAction.ExecuteCommandAsync(value, CancellationToken.None);
-        });
+        VideoCaptureAutoCopy = value;
+        await _updateVideoCaptureAutoCopyAction.ExecuteCommandAsync(value, CancellationToken.None);
     }
 
-    private Task ChangeScreenshotsFolderAsync()
+    private async Task ChangeScreenshotsFolderAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.ChangeScreenshotsFolder, async () =>
+        await _changeScreenshotsFolderAction.ExecuteCommandAsync(CancellationToken.None);
+        
+        var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
+        if (string.IsNullOrWhiteSpace(screenshotsFolder))
         {
-            await _changeScreenshotsFolderAction.ExecuteCommandAsync(CancellationToken.None);
-            
-            var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
-            if (string.IsNullOrWhiteSpace(screenshotsFolder))
-            {
-                screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
-            }
-            ScreenshotsFolderPath = screenshotsFolder;
-        });
+            screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
+        }
+        ScreenshotsFolderPath = screenshotsFolder;
     }
 
-    private Task ChangeVideosFolderAsync()
+    private async Task ChangeVideosFolderAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.ChangeVideosFolder, async () =>
+        await _changeVideosFolderAction.ExecuteCommandAsync(CancellationToken.None);
+        
+        var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
+        if (string.IsNullOrWhiteSpace(videosFolder))
         {
-            await _changeVideosFolderAction.ExecuteCommandAsync(CancellationToken.None);
-            
-            var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
-            if (string.IsNullOrWhiteSpace(videosFolder))
-            {
-                videosFolder = _storageService.GetSystemDefaultVideosFolderPath();
-            }
-            VideosFolderPath = videosFolder;
-        });
+            videosFolder = _storageService.GetSystemDefaultVideosFolderPath();
+        }
+        VideosFolderPath = videosFolder;
     }
 
     private void OpenScreenshotsFolder()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.OpenScreenshotsFolder, () => _openScreenshotsFolderAction.ExecuteCommand());
+        _openScreenshotsFolderAction.ExecuteCommand();
     }
 
     private void OpenVideosFolder()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.OpenVideosFolder, () => _openVideosFolderAction.ExecuteCommand());
+        _openVideosFolderAction.ExecuteCommand();
     }
 
     private void RestartApp()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.RestartApp, () => _restartAppAction.ExecuteCommand());
+        _restartAppAction.ExecuteCommand();
     }
 
     private void GoBack()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.GoBack, () => 
-        {
-            _goBackAction.ExecuteCommand();
-        });
+        _goBackAction.ExecuteCommand();
     }
 
     private void ClearTemporaryFiles()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.ClearTemporaryFiles, () => _clearTempFilesAction.ExecuteCommand(TemporaryFilesFolderPath));
+        _clearTempFilesAction.ExecuteCommand(TemporaryFilesFolderPath);
     }
 
     private void OpenTemporaryFilesFolder()
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.OpenTemporaryFilesFolder, () => _openTempFolderAction.ExecuteCommand());
+        _openTempFolderAction.ExecuteCommand();
     }
 
-    private Task RestoreDefaultSettingsAsync()
+    private async Task RestoreDefaultSettingsAsync()
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.RestoreDefaultSettings, async () =>
-        {
-            await _restoreDefaultsAction.ExecuteCommandAsync(CancellationToken.None);
+        await _restoreDefaultsAction.ExecuteCommandAsync(CancellationToken.None);
 
-            ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
-            ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
+        ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
+        ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
 
-            VideoCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
-            VideoCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
+        VideoCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
+        VideoCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
 
-            var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
-            ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _storageService.GetSystemDefaultScreenshotsFolderPath();
+        var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
+        ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _storageService.GetSystemDefaultScreenshotsFolderPath();
 
-            var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
-            VideosFolderPath = !string.IsNullOrEmpty(videosFolder) ? videosFolder : _storageService.GetSystemDefaultVideosFolderPath();
+        var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
+        VideosFolderPath = !string.IsNullOrEmpty(videosFolder) ? videosFolder : _storageService.GetSystemDefaultVideosFolderPath();
 
-            SelectedAppLanguageIndex = AppLanguages.Count - 1;
-            SelectedAppThemeIndex = AppThemes.Count - 1;
-            
-            UpdateShowAppLanguageRestartMessage();
-            UpdateShowAppThemeRestartMessage();
-        });
+        SelectedAppLanguageIndex = AppLanguages.Count - 1;
+        SelectedAppThemeIndex = AppThemes.Count - 1;
+        
+        UpdateShowAppLanguageRestartMessage();
+        UpdateShowAppThemeRestartMessage();
     }
 }
