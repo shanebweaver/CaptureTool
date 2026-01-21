@@ -1,8 +1,10 @@
-﻿using CaptureTool.Common;
+using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Core.Interfaces.Actions.Settings;
+using CaptureTool.Core.Interfaces.FeatureManagement;
 using CaptureTool.Core.Interfaces.Settings;
 using CaptureTool.Services.Interfaces;
+using CaptureTool.Services.Interfaces.FeatureManagement;
 using CaptureTool.Services.Interfaces.Localization;
 using CaptureTool.Services.Interfaces.Settings;
 using CaptureTool.Services.Interfaces.Shutdown;
@@ -25,8 +27,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         public static readonly string GoBack = "GoBack";
         public static readonly string UpdateImageCaptureAutoCopy = "UpdateImageCaptureAutoCopy";
         public static readonly string UpdateImageCaptureAutoSave = "UpdateImageCaptureAutoSave";
+        public static readonly string UpdateVideoCaptureAutoCopy = "UpdateVideoCaptureAutoCopy";
+        public static readonly string UpdateVideoCaptureAutoSave = "UpdateVideoCaptureAutoSave";
         public static readonly string ChangeScreenshotsFolder = "ChangeScreenshotsFolder";
+        public static readonly string ChangeVideosFolder = "ChangeVideosFolder";
         public static readonly string OpenScreenshotsFolder = "OpenScreenshotsFolder";
+        public static readonly string OpenVideosFolder = "OpenVideosFolder";
         public static readonly string UpdateAppLanguage = "UpdateAppLanguage";
         public static readonly string UpdateAppTheme = "UpdateAppTheme";
         public static readonly string UpdateShowAppThemeRestartMessage = "UpdateShowAppThemeRestartMessage";
@@ -44,6 +50,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IThemeService _themeService;
     private readonly IFilePickerService _filePickerService;
     private readonly IStorageService _storageService;
+    private readonly IFeatureManager _featureManager;
     private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
     private readonly IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
@@ -55,10 +62,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     public AsyncRelayCommand ChangeScreenshotsFolderCommand { get; }
     public RelayCommand OpenScreenshotsFolderCommand { get; }
+    public AsyncRelayCommand ChangeVideosFolderCommand { get; }
+    public RelayCommand OpenVideosFolderCommand { get; }
     public RelayCommand RestartAppCommand { get; }
     public RelayCommand GoBackCommand { get; }
     public AsyncRelayCommand<bool> UpdateImageCaptureAutoCopyCommand { get; }
     public AsyncRelayCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
+    public AsyncRelayCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
+    public AsyncRelayCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
     public AsyncRelayCommand<int> UpdateAppLanguageCommand { get; }
     public RelayCommand<int> UpdateAppThemeCommand { get; }
     public RelayCommand OpenTemporaryFilesFolderCommand { get; }
@@ -101,6 +112,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
+    public bool IsVideoCaptureFeatureEnabled
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public bool ImageCaptureAutoCopy
     {
         get => field;
@@ -113,7 +130,25 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
+    public bool VideoCaptureAutoCopy
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public bool VideoCaptureAutoSave
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public string ScreenshotsFolderPath
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public string VideosFolderPath
     {
         get => field;
         private set => Set(ref field, value);
@@ -134,6 +169,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IFilePickerService filePickerService,
         ISettingsService settingsService,
         IStorageService storageService,
+        IFeatureManager featureManager,
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
         IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
@@ -145,20 +181,26 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _filePickerService = filePickerService;
         _settingsService = settingsService;
         _storageService = storageService;
+        _featureManager = featureManager;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
 
         AppThemes = [];
         AppLanguages = [];
         ScreenshotsFolderPath = string.Empty;
+        VideosFolderPath = string.Empty;
         TemporaryFilesFolderPath = string.Empty;
 
         ChangeScreenshotsFolderCommand = new(ChangeScreenshotsFolderAsync);
         OpenScreenshotsFolderCommand = new(OpenScreenshotsFolder);
+        ChangeVideosFolderCommand = new(ChangeVideosFolderAsync);
+        OpenVideosFolderCommand = new(OpenVideosFolder);
         RestartAppCommand = new(RestartApp);
         GoBackCommand = new(GoBack);
         UpdateImageCaptureAutoCopyCommand = new(UpdateImageCaptureAutoCopyAsync);
         UpdateImageCaptureAutoSaveCommand = new(UpdateImageCaptureAutoSaveAsync);
+        UpdateVideoCaptureAutoCopyCommand = new(UpdateVideoCaptureAutoCopyAsync);
+        UpdateVideoCaptureAutoSaveCommand = new(UpdateVideoCaptureAutoSaveAsync);
         UpdateAppLanguageCommand = new(UpdateAppLanguageAsync);
         UpdateAppThemeCommand = new(UpdateAppTheme);
         OpenTemporaryFilesFolderCommand = new(OpenTemporaryFilesFolder);
@@ -223,8 +265,13 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             }
             UpdateShowAppThemeRestartMessage();
 
+            IsVideoCaptureFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
+
             ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
             ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
+
+            VideoCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
+            VideoCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
 
             var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
             if (string.IsNullOrWhiteSpace(screenshotsFolder))
@@ -233,6 +280,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             }
 
             ScreenshotsFolderPath = screenshotsFolder;
+
+            var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
+            if (string.IsNullOrWhiteSpace(videosFolder))
+            {
+                videosFolder = _storageService.GetSystemDefaultVideosFolderPath();
+            }
+
+            VideosFolderPath = videosFolder;
             TemporaryFilesFolderPath = _storageService.GetApplicationTemporaryFolderPath();
 
             await base.LoadAsync(cancellationToken);
@@ -341,6 +396,26 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         });
     }
 
+    private Task UpdateVideoCaptureAutoSaveAsync(bool value)
+    {
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateVideoCaptureAutoSave, async () =>
+        {
+            VideoCaptureAutoSave = value;
+            _settingsService.Set(CaptureToolSettings.Settings_VideoCapture_AutoSave, VideoCaptureAutoSave);
+            await _settingsService.TrySaveAsync(CancellationToken.None);
+        });
+    }
+
+    private Task UpdateVideoCaptureAutoCopyAsync(bool value)
+    {
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.UpdateVideoCaptureAutoCopy, async () =>
+        {
+            VideoCaptureAutoCopy = value;
+            _settingsService.Set(CaptureToolSettings.Settings_VideoCapture_AutoCopy, VideoCaptureAutoCopy);
+            await _settingsService.TrySaveAsync(CancellationToken.None);
+        });
+    }
+
     private Task ChangeScreenshotsFolderAsync()
     {
         return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.ChangeScreenshotsFolder, async () =>
@@ -356,6 +431,21 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         });
     }
 
+    private Task ChangeVideosFolderAsync()
+    {
+        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, ActivityIds.ChangeVideosFolder, async () =>
+        {
+            var hwnd = _windowingService.GetMainWindowHandle();
+            IFolder folder = await _filePickerService.PickFolderAsync(hwnd, UserFolder.Videos)
+                ?? throw new OperationCanceledException("No folder was selected.");
+
+            VideosFolderPath = folder.FolderPath;
+
+            _settingsService.Set(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder, folder.FolderPath);
+            await _settingsService.TrySaveAsync(CancellationToken.None);
+        });
+    }
+
     private void OpenScreenshotsFolder()
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenScreenshotsFolder, () =>
@@ -367,6 +457,21 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             else
             {
                 throw new DirectoryNotFoundException($"The screenshots folder path '{ScreenshotsFolderPath}' does not exist.");
+            }
+        });
+    }
+
+    private void OpenVideosFolder()
+    {
+        TelemetryHelper.ExecuteActivity(_telemetryService, ActivityIds.OpenVideosFolder, () =>
+        {
+            if (Directory.Exists(VideosFolderPath))
+            {
+                Process.Start("explorer.exe", $"/open, {VideosFolderPath}");
+            }
+            else
+            {
+                throw new DirectoryNotFoundException($"The videos folder path '{VideosFolderPath}' does not exist.");
             }
         });
     }
@@ -434,8 +539,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
             ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
 
+            VideoCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
+            VideoCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
+
             var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
             ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _storageService.GetSystemDefaultScreenshotsFolderPath();
+
+            var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
+            VideosFolderPath = !string.IsNullOrEmpty(videosFolder) ? videosFolder : _storageService.GetSystemDefaultVideosFolderPath();
 
             SelectedAppLanguageIndex = AppLanguages.Count - 1;
             SelectedAppThemeIndex = AppThemes.Count - 1;

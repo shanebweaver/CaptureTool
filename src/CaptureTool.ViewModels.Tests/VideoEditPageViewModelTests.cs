@@ -107,8 +107,7 @@ public class VideoEditPageViewModelTests
         vm.Load(pendingVideo);
         
         // Simulate completion
-        var completedVideo = new VideoFile("test.mp4");
-        pendingVideo.Complete(completedVideo);
+        pendingVideo.Complete();
         await Task.Delay(100); // Give time for async handler
 
         // Assert

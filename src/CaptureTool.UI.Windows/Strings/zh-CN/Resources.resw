@@ -432,6 +432,39 @@
   <data name="Settings_AutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>捕获后自动将图像保存到截图文件夹中。</value>
   </data>
+  <data name="Settings_VideoCaptureHeaderLabel.Text" xml:space="preserve">
+    <value>视频捕获</value>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="Settings_VideoAutoSave_ChangeButton.Text" xml:space="preserve">
+    <value>更改文件夹</value>
+  </data>
+  <data name="Settings_VideoAutoSave_VideosFolderLabel.Text" xml:space="preserve">
+    <value>已保存的视频文件夹：</value>
+  </data>
+  <data name="Settings_VideoAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>自动保存视频</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_HeaderLabel.Text" xml:space="preserve">
+    <value>自动复制视频</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_SubtitleLabel.Text" xml:space="preserve">
+    <value>捕获后自动将视频复制到剪贴板。</value>
+  </data>
+  <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>捕获后自动将视频保存到视频文件夹中。</value>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>将对象置于绿色或蓝色背景前。</value>
   </data>

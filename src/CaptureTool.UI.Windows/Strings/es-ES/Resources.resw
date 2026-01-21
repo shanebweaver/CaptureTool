@@ -432,6 +432,39 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="Settings_AutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Guardar automáticamente las imágenes en la carpeta de capturas después de capturarlas.</value>
   </data>
+  <data name="Settings_VideoCaptureHeaderLabel.Text" xml:space="preserve">
+    <value>Captura de vídeo</value>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>Activado</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OffContent" xml:space="preserve">
+    <value>Desactivado</value>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>Desactivado</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OnContent" xml:space="preserve">
+    <value>Activado</value>
+  </data>
+  <data name="Settings_VideoAutoSave_ChangeButton.Text" xml:space="preserve">
+    <value>Cambiar carpeta</value>
+  </data>
+  <data name="Settings_VideoAutoSave_VideosFolderLabel.Text" xml:space="preserve">
+    <value>Carpeta de vídeos guardados:</value>
+  </data>
+  <data name="Settings_VideoAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>Guardar vídeos automáticamente</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_HeaderLabel.Text" xml:space="preserve">
+    <value>Copiar vídeos automáticamente</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_SubtitleLabel.Text" xml:space="preserve">
+    <value>Copiar automáticamente los vídeos al portapapeles después de capturarlos.</value>
+  </data>
+  <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>Guardar automáticamente los vídeos en la carpeta de vídeos después de capturarlos.</value>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Aísle un objeto frente a un fondo verde o azul.</value>
   </data>

@@ -432,6 +432,39 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="Settings_AutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Enregistrer automatiquement les images dans le dossier des captures après la capture.</value>
   </data>
+  <data name="Settings_VideoCaptureHeaderLabel.Text" xml:space="preserve">
+    <value>Capture vidéo</value>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>Activé</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OffContent" xml:space="preserve">
+    <value>Désactivé</value>
+  </data>
+  <data name="Settings_VideoAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>Désactivé</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_Toggle.OnContent" xml:space="preserve">
+    <value>Activé</value>
+  </data>
+  <data name="Settings_VideoAutoSave_ChangeButton.Text" xml:space="preserve">
+    <value>Changer de dossier</value>
+  </data>
+  <data name="Settings_VideoAutoSave_VideosFolderLabel.Text" xml:space="preserve">
+    <value>Dossier des vidéos enregistrées :</value>
+  </data>
+  <data name="Settings_VideoAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>Enregistrer automatiquement les vidéos</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_HeaderLabel.Text" xml:space="preserve">
+    <value>Copier automatiquement les vidéos</value>
+  </data>
+  <data name="Settings_VideoAutoCopy_SubtitleLabel.Text" xml:space="preserve">
+    <value>Copier automatiquement les vidéos dans le presse-papiers après la capture.</value>
+  </data>
+  <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>Enregistrer automatiquement les vidéos dans le dossier des vidéos après la capture.</value>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Isolez un objet devant un fond vert ou bleu.</value>
   </data>
