@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:AddOnsPageBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Pages.AddOnsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:CaptureTool.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:AddOnsPageViewModel}"
+    mc:Ignorable="d">
+
+    <ScrollView>
+        <StackPanel Padding="0,24" Spacing="24">
+            <StackPanel
+                Margin="12,0"
+                Orientation="Horizontal"
+                Spacing="12">
+                <Button
+                    Width="32"
+                    Height="32"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Back"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Command="{x:Bind ViewModel.GoBackCommand}">
+                    <SymbolIcon Symbol="Back" />
+                </Button>
+                <TextBlock
+                    x:Uid="AddOns_TitleLabel"
+                    Style="{StaticResource SubtitleTextBlockStyle}"
+                    TextWrapping="WrapWholeWords" />
+            </StackPanel>
+
+            <Grid
+                x:Name="ContentPanel"
+                Margin="54,0"
+                HorizontalAlignment="Stretch">
+                <Expander
+                    MaxWidth="800"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    IsExpanded="True">
+                    <Expander.Header>
+                        <Grid Padding="0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon
+                                FontFamily="{StaticResource FluentSystemIcons}"
+                                FontSize="24"
+                                Glyph="{StaticResource Color16Regular}" />
+                            <StackPanel Grid.Column="1" Padding="16,0,0,0">
+                                <TextBlock
+                                    x:Uid="AddOns_ChromaKeyHeaderLabel"
+                                    TextTrimming="WordEllipsis"
+                                    TextWrapping="NoWrap" />
+                                <TextBlock
+                                    x:Uid="AddOns_ChromaKeySubtitleLabel"
+                                    FontSize="12"
+                                    Opacity=".8"
+                                    TextTrimming="WordEllipsis"
+                                    TextWrapping="NoWrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander.Header>
+                    <Grid HorizontalAlignment="Stretch" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid RowSpacing="12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+
+                            <Grid
+                                Width="150"
+                                Height="150"
+                                BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4">
+                                <ProgressRing
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    IsActive="True" />
+                                <Image x:Name="ChromaKeyAddOnLogoImage" HorizontalAlignment="Stretch" />
+                            </Grid>
+
+                            <Button
+                                Grid.Row="1"
+                                Padding="12,16"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Top"
+                                HorizontalContentAlignment="Stretch"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                Command="{x:Bind ViewModel.GetChromaKeyAddOnCommand}"
+                                Foreground="{ThemeResource SystemAltHighColor}"
+                                IsEnabled="{x:Bind ViewModel.IsChromaKeyAddOnAvailable, Mode=OneWay}">
+                                <Grid>
+                                    <ProgressRing
+                                        Width="16"
+                                        Height="16"
+                                        HorizontalAlignment="Center"
+                                        IsActive="True"
+                                        Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+                                    <TextBlock
+                                        HorizontalAlignment="Left"
+                                        FontWeight="SemiBold"
+                                        Text="{x:Bind ViewModel.ChromaKeyAddOnPrice, Mode=OneWay}"
+                                        Visibility="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
+                                </Grid>
+                            </Button>
+                        </Grid>
+                        <Grid
+                            Grid.Column="1"
+                            MaxHeight="202"
+                            VerticalAlignment="Top">
+                            <ScrollView>
+                                <Grid Padding="0,0,8,0">
+                                    <TextBlock
+                                        x:Uid="AddOns_ChromaKeyDescription"
+                                        TextTrimming="WordEllipsis"
+                                        TextWrapping="WrapWholeWords" />
+                                </Grid>
+                            </ScrollView>
+                        </Grid>
+                    </Grid>
+                </Expander>
+            </Grid>
+        </StackPanel>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Default">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="908" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentPanel.HorizontalAlignment" Value="Left" />
+                        <Setter Target="ContentPanel.MinWidth" Value="800" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+    </ScrollView>
+</local:AddOnsPageBase>

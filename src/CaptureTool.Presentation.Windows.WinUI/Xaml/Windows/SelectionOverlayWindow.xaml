@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Windows.SelectionOverlayWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
+    mc:Ignorable="d">
+
+    <views:SelectionOverlayWindowView x:Name="RootView" />
+
+</Window>

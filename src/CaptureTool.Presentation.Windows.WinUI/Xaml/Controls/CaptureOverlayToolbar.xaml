@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.CaptureOverlayToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:capture="using:CaptureTool.Domains.Capture.Interfaces"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:templateselectors="using:CaptureTool.Presentation.Windows.WinUI.Xaml.TemplateSelectors"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
+    d:DataContext="{d:DesignInstance Type=local:CaptureOverlayToolbar}"
+    mc:Ignorable="d">
+    <Grid
+        x:Name="ToolbarPanel"
+        Padding="8"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Top"
+        Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+        CornerRadius="4">
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Command="{x:Bind GoBackCommand, Mode=OneWay}" Style="{StaticResource IconButtonStyle}">
+                <SymbolIcon Symbol="Back" />
+            </Button>
+
+            <Button
+                Command="{x:Bind TogglePauseResumeCommand, Mode=OneWay}"
+                Style="{StaticResource IconButtonStyle}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsRecording), Mode=OneWay}">
+                <Grid>
+                    <SymbolIcon Symbol="Play" Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsPaused), Mode=OneWay}" />
+                    <SymbolIcon Symbol="Pause" Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsPaused), Mode=OneWay}" />
+                </Grid>
+            </Button>
+
+            <Grid>
+                <Button
+                    MinWidth="100"
+                    Background="#AAFF3340"
+                    Command="{x:Bind StartVideoCaptureCommand, Mode=OneWay}"
+                    Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsRecording), Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon
+                            Margin="0,0,0,-2"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            FontSize="16"
+                            Glyph="{StaticResource Record16Regular}" />
+                        <TextBlock x:Uid="StartVideoCaptureButtonTextBlock" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    MinWidth="100"
+                    Background="#AAFF3340"
+                    Command="{x:Bind StopVideoCaptureCommand, Mode=OneWay}"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsRecording), Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon
+                            Margin="0,0,0,-2"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            FontSize="16"
+                            Glyph="{StaticResource Record16Regular}" />
+                        <TextBlock x:Uid="StopVideoCaptureButtonTextBlock" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <Grid Margin="8,0" VerticalAlignment="Center">
+                <local:ClockTimer Time="{x:Bind CaptureTime, Mode=OneWay}" />
+            </Grid>
+
+            <Button
+                x:Name="LocalAudioToggleButton"
+                Command="{x:Bind ToggleLocalAudioCommand, Mode=OneWay}"
+                Style="{StaticResource IconButtonStyle}"
+                Visibility="Collapsed">
+                <Grid>
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        Glyph="{StaticResource DesktopSpeaker20Regular}"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsLocalAudioEnabled), Mode=OneWay}" />
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        Glyph="{StaticResource DesktopSpeakerOff20Regular}"
+                        Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsLocalAudioEnabled), Mode=OneWay}" />
+                </Grid>
+            </Button>
+
+            <Button
+                x:Uid="SelectionOverlay_CloseButton"
+                Command="{x:Bind CloseCommand, Mode=OneWay}"
+                Style="{StaticResource IconButtonStyle}">
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{StaticResource Cancel}" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</local:UserControlBase>
