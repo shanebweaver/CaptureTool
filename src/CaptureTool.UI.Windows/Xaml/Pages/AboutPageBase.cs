@@ -1,7 +1,7 @@
-using CaptureTool.Application.Implementations.ViewModels;
+using CaptureTool.Application.Interfaces.ViewModels;
 
 namespace CaptureTool.UI.Windows.Xaml.Pages;
 
-public abstract class AboutPageBase : PageBase<AboutPageViewModel>
+public abstract class AboutPageBase : PageBase<IAboutPageViewModel>
 {
 }

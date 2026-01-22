@@ -1,10 +1,11 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Application.Interfaces;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domains.Capture.Interfaces;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class RecentCaptureViewModel : ViewModelBase
+public sealed partial class RecentCaptureViewModel : ViewModelBase, IRecentCaptureViewModel
 {
     public string FilePath
     {

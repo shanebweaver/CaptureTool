@@ -1,10 +1,11 @@
 using CaptureTool.Common;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class CaptureTypeViewModel : ViewModelBase
+public sealed partial class CaptureTypeViewModel : ViewModelBase, ICaptureTypeViewModel
 {
     public CaptureType CaptureType { get; }
     public string DisplayName { get; }

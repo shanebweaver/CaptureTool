@@ -1,10 +1,11 @@
 using CaptureTool.Common;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class AppThemeViewModel : ViewModelBase
+public sealed partial class AppThemeViewModel : ViewModelBase, IAppThemeViewModel
 {
     public AppTheme AppTheme { get; }
     public string DisplayName { get; }

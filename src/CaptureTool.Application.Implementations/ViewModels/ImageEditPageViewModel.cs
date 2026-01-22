@@ -2,6 +2,7 @@ using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Store;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
@@ -22,7 +23,7 @@ using System.Numerics;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
+public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>, IImageEditPageViewModel
 {
     public readonly struct ActivityIds
     {

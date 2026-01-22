@@ -1,3 +1,4 @@
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.UI.Windows.Utils;
 using CaptureTool.Application.Implementations.ViewModels;
 using Microsoft.UI.Xaml;
@@ -7,7 +8,7 @@ namespace CaptureTool.UI.Windows.Xaml.Windows;
 
 public sealed partial class SelectionOverlayWindow : Window
 {
-    public SelectionOverlayWindowViewModel ViewModel => RootView.ViewModel;
+    public ISelectionOverlayWindowViewModel ViewModel => RootView.ViewModel;
 
     public Rectangle MonitorBounds { get; private set; }
     public bool IsClosed { get; private set; }

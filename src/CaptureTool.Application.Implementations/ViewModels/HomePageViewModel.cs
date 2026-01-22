@@ -3,13 +3,14 @@ using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
 using CaptureTool.Application.Interfaces.Actions.Home;
 using CaptureTool.Application.Interfaces.FeatureManagement;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class HomePageViewModel : ViewModelBase
+public sealed partial class HomePageViewModel : ViewModelBase, IHomePageViewModel
 {
     public readonly struct ActivityIds
     {

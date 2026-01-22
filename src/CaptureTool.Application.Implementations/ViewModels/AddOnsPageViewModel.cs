@@ -2,6 +2,7 @@ using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
 using CaptureTool.Application.Interfaces.Actions.AddOns;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Store;
@@ -12,7 +13,7 @@ using static CaptureTool.Application.Interfaces.Store.CaptureToolStoreProducts;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
+public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase, IAddOnsPageViewModel
 {
     public readonly struct ActivityIds
     {

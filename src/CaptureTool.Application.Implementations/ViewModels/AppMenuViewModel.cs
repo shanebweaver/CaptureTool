@@ -2,6 +2,7 @@ using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Application.Interfaces.Actions.AppMenu;
 using CaptureTool.Application.Interfaces.FeatureManagement;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
@@ -12,7 +13,7 @@ using System.Collections.ObjectModel;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class AppMenuViewModel : LoadableViewModelBase
+public sealed partial class AppMenuViewModel : LoadableViewModelBase, IAppMenuViewModel
 {
     public readonly struct ActivityIds
     {
@@ -33,7 +34,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private readonly ITelemetryService _telemetryService;
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
+    private readonly IFactoryServiceWithArgs<IRecentCaptureViewModel, string> _recentCaptureViewModelFactory;
 
     public event EventHandler? RecentCapturesUpdated;
 
@@ -44,11 +45,11 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     public RelayCommand ShowAddOnsCommand { get; }
     public RelayCommand ExitApplicationCommand { get; }
     public RelayCommand RefreshRecentCapturesCommand { get; }
-    public RelayCommand<RecentCaptureViewModel> OpenRecentCaptureCommand { get; }
+    public RelayCommand<IRecentCaptureViewModel> OpenRecentCaptureCommand { get; }
 
     public bool ShowAddOnsOption { get; }
 
-    public ObservableCollection<RecentCaptureViewModel> RecentCaptures
+    public ObservableCollection<IRecentCaptureViewModel> RecentCaptures
     {
         get => field;
         set => Set(ref field, value);
@@ -60,7 +61,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IFeatureManager featureManager,
         IImageCaptureHandler imageCaptureHandler,
         IVideoCaptureHandler videoCaptureHandler,
-        IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory)
+        IFactoryServiceWithArgs<IRecentCaptureViewModel, string> recentCaptureViewModelFactory)
     {
         _appMenuActions = appMenuActions;
         _telemetryService = telemetryService;
@@ -76,7 +77,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         ShowAddOnsCommand = commandFactory.Create(ActivityIds.ShowAddOns, ShowAddOns);
         ExitApplicationCommand = commandFactory.Create(ActivityIds.ExitApplication, ExitApplication);
         RefreshRecentCapturesCommand = new(RefreshRecentCaptures);
-        OpenRecentCaptureCommand = commandFactory.Create<RecentCaptureViewModel>(ActivityIds.OpenRecentCapture, OpenRecentCapture);
+        OpenRecentCaptureCommand = commandFactory.Create<IRecentCaptureViewModel>(ActivityIds.OpenRecentCapture, OpenRecentCapture);
 
         ShowAddOnsOption = featureManager.IsEnabled(CaptureToolFeatures.Feature_AddOns_Store);
         RecentCaptures = [];
@@ -141,7 +142,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _appMenuActions.ExitApplication();
     }
 
-    private void OpenRecentCapture(RecentCaptureViewModel? model)
+    private void OpenRecentCapture(IRecentCaptureViewModel? model)
     {
         if (model != null)
         {

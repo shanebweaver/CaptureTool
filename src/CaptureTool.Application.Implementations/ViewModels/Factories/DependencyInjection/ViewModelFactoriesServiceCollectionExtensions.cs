@@ -1,3 +1,4 @@
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Themes;
@@ -10,11 +11,11 @@ public static class ViewModelFactoriesServiceCollectionExtensions
 {
     public static IServiceCollection AddViewModelFactories(this IServiceCollection services)
     {
-        services.AddTransient<IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?>, AppLanguageViewModelFactory>();
-        services.AddTransient<IFactoryServiceWithArgs<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
-        services.AddTransient<IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode>, CaptureModeViewModelFactory>();
-        services.AddTransient<IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType>, CaptureTypeViewModelFactory>();
-        services.AddTransient<IFactoryServiceWithArgs<RecentCaptureViewModel, string>, RecentCaptureViewModelFactory>();
+        services.AddTransient<IFactoryServiceWithArgs<IAppLanguageViewModel, IAppLanguage?>, AppLanguageViewModelFactory>();
+        services.AddTransient<IFactoryServiceWithArgs<IAppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
+        services.AddTransient<IFactoryServiceWithArgs<ICaptureModeViewModel, CaptureMode>, CaptureModeViewModelFactory>();
+        services.AddTransient<IFactoryServiceWithArgs<ICaptureTypeViewModel, CaptureType>, CaptureTypeViewModelFactory>();
+        services.AddTransient<IFactoryServiceWithArgs<IRecentCaptureViewModel, string>, RecentCaptureViewModelFactory>();
         return services;
     }
 }

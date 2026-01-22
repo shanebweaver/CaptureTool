@@ -1,10 +1,11 @@
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 
 namespace CaptureTool.Application.Implementations.ViewModels.Factories;
 
-public sealed partial class AppThemeViewModelFactory : IFactoryServiceWithArgs<AppThemeViewModel, AppTheme>
+public sealed partial class AppThemeViewModelFactory : IFactoryServiceWithArgs<IAppThemeViewModel, AppTheme>
 {
     private readonly ILocalizationService _localizationService;
 
@@ -14,9 +15,9 @@ public sealed partial class AppThemeViewModelFactory : IFactoryServiceWithArgs<A
         _localizationService = localizationService;
     }
 
-    public AppThemeViewModel Create(AppTheme appTheme)
+    public IAppThemeViewModel Create(AppTheme appTheme)
     {
-        return new(
+        return new AppThemeViewModel(
             appTheme,
             _localizationService);
     }

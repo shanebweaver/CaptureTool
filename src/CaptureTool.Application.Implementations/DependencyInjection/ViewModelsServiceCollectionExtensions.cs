@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using CaptureTool.Application.Implementations.ViewModels;
+using CaptureTool.Application.Interfaces.ViewModels;
 
 namespace CaptureTool.Application.Implementations.DependencyInjection;
 
@@ -7,20 +8,20 @@ public static class ViewModelsServiceCollectionExtensions
 {
     public static IServiceCollection AddViewModels(this IServiceCollection services)
     {
-        services.AddTransient<MainWindowViewModel>();
-        services.AddTransient<SelectionOverlayWindowViewModel>();
-        services.AddTransient<ErrorPageViewModel>();
-        services.AddTransient<AboutPageViewModel>();
-        services.AddTransient<AddOnsPageViewModel>();
-        services.AddTransient<HomePageViewModel>();
-        services.AddTransient<SettingsPageViewModel>();
-        services.AddTransient<LoadingPageViewModel>();
-        services.AddTransient<ImageEditPageViewModel>();
-        services.AddTransient<VideoEditPageViewModel>();
-        services.AddTransient<AppMenuViewModel>();
-        services.AddTransient<DiagnosticsViewModel>();
-        services.AddTransient<SelectionOverlayHostViewModel>();
-        services.AddTransient<CaptureOverlayViewModel>();
+        services.AddTransient<IMainWindowViewModel, MainWindowViewModel>();
+        services.AddTransient<ISelectionOverlayWindowViewModel, SelectionOverlayWindowViewModel>();
+        services.AddTransient<IErrorPageViewModel, ErrorPageViewModel>();
+        services.AddTransient<IAboutPageViewModel, AboutPageViewModel>();
+        services.AddTransient<IAddOnsPageViewModel, AddOnsPageViewModel>();
+        services.AddTransient<IHomePageViewModel, HomePageViewModel>();
+        services.AddTransient<ISettingsPageViewModel, SettingsPageViewModel>();
+        services.AddTransient<ILoadingPageViewModel, LoadingPageViewModel>();
+        services.AddTransient<IImageEditPageViewModel, ImageEditPageViewModel>();
+        services.AddTransient<IVideoEditPageViewModel, VideoEditPageViewModel>();
+        services.AddTransient<IAppMenuViewModel, AppMenuViewModel>();
+        services.AddTransient<IDiagnosticsViewModel, DiagnosticsViewModel>();
+        services.AddTransient<ISelectionOverlayHostViewModel, SelectionOverlayHostViewModel>();
+        services.AddTransient<ICaptureOverlayViewModel, CaptureOverlayViewModel>();
         return services;
     }
 }

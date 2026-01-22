@@ -1,14 +1,15 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Sync;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domains.Capture.Interfaces;
 using System.ComponentModel;
 using System.Drawing;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
+public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISelectionOverlayHostViewModel
 {
-    private readonly List<SelectionOverlayWindowViewModel> _windowViewModels = [];
+    private readonly List<ISelectionOverlayWindowViewModel> _windowViewModels = [];
 
     public event EventHandler? AllScreensCaptureRequested;
 
@@ -20,7 +21,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
         }
     }
 
-    public void AddWindowViewModel(SelectionOverlayWindowViewModel newVM, bool isPrimary = false)
+    public void AddWindowViewModel(ISelectionOverlayWindowViewModel newVM, bool isPrimary = false)
     {
         if (isPrimary)
         {
@@ -58,19 +59,19 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 
     private void OnPrimaryWindowViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (sender is SelectionOverlayWindowViewModel windowVM)
+        if (sender is ISelectionOverlayWindowViewModel windowVM)
         {
             switch (e.PropertyName)
             {
-                case nameof(SelectionOverlayWindowViewModel.CaptureArea):
+                case nameof(ISelectionOverlayWindowViewModel.CaptureArea):
                     OnPrimaryCaptureAreaChanged(windowVM);
                     break;
 
-                case nameof(SelectionOverlayWindowViewModel.SelectedCaptureModeIndex):
+                case nameof(ISelectionOverlayWindowViewModel.SelectedCaptureModeIndex):
                     OnSelectedCaptureModeIndexChanged(windowVM);
                     break;
 
-                case nameof(SelectionOverlayWindowViewModel.SelectedCaptureTypeIndex):
+                case nameof(ISelectionOverlayWindowViewModel.SelectedCaptureTypeIndex):
                     OnSelectedCaptureTypeIndexChanged(windowVM);
                     break;
             }
@@ -79,18 +80,18 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 
     private void OnSecondaryWindowViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (sender is SelectionOverlayWindowViewModel windowVM)
+        if (sender is ISelectionOverlayWindowViewModel windowVM)
         {
             switch (e.PropertyName)
             {
-                case nameof(SelectionOverlayWindowViewModel.CaptureArea):
+                case nameof(ISelectionOverlayWindowViewModel.CaptureArea):
                     OnSecondaryCaptureAreaChanged(windowVM);
                     break;
             }
         }
     }
 
-    private void OnPrimaryCaptureAreaChanged(SelectionOverlayWindowViewModel windowVM)
+    private void OnPrimaryCaptureAreaChanged(ISelectionOverlayWindowViewModel windowVM)
     {
         if (windowVM.CaptureArea.IsEmpty || !windowVM.Monitor.HasValue)
         {
@@ -100,7 +101,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
         SyncHelper.SetProperty(windowVM, _windowViewModels, vm => vm.CaptureArea, Rectangle.Empty);
     }
 
-    private void OnSecondaryCaptureAreaChanged(SelectionOverlayWindowViewModel windowVM)
+    private void OnSecondaryCaptureAreaChanged(ISelectionOverlayWindowViewModel windowVM)
     {
         if (windowVM.CaptureArea.IsEmpty || !windowVM.Monitor.HasValue)
         {
@@ -110,12 +111,12 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
         SyncHelper.SetProperty(windowVM, _windowViewModels, vm => vm.CaptureArea, Rectangle.Empty);
     }
 
-    private void OnSelectedCaptureModeIndexChanged(SelectionOverlayWindowViewModel windowVM)
+    private void OnSelectedCaptureModeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
     {
         SyncHelper.SyncProperty(windowVM, _windowViewModels, vm => vm.SelectedCaptureModeIndex);
     }
 
-    private void OnSelectedCaptureTypeIndexChanged(SelectionOverlayWindowViewModel windowVM)
+    private void OnSelectedCaptureTypeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
     {
         SyncHelper.SyncProperty(windowVM, _windowViewModels, vm => vm.SelectedCaptureTypeIndex);
 

@@ -2,12 +2,13 @@ using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
 using CaptureTool.Application.Interfaces.Actions.Error;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class ErrorPageViewModel : ViewModelBase
+public sealed partial class ErrorPageViewModel : ViewModelBase, IErrorPageViewModel
 {
     public readonly struct ActivityIds
     {

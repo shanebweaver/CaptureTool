@@ -1,7 +1,7 @@
-using CaptureTool.Application.Implementations.ViewModels;
+using CaptureTool.Application.Interfaces.ViewModels;
 
 namespace CaptureTool.UI.Windows.Xaml.Views;
 
-public abstract partial class DiagnosticsViewBase : ViewBase<DiagnosticsViewModel>
+public abstract partial class DiagnosticsViewBase : ViewBase<IDiagnosticsViewModel>
 {
 }

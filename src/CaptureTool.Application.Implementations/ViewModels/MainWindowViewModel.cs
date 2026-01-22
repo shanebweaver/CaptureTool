@@ -1,10 +1,11 @@
 using CaptureTool.Common;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Navigation;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class MainWindowViewModel : ViewModelBase, INavigationHandler
+public sealed partial class MainWindowViewModel : ViewModelBase, IMainWindowViewModel
 {
     private readonly IThemeService _themeService;
 

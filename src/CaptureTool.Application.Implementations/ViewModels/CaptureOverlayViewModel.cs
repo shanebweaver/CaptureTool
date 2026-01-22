@@ -2,6 +2,7 @@ using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Application.Interfaces.Actions.CaptureOverlay;
 using CaptureTool.Application.Interfaces.Navigation;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
@@ -13,7 +14,7 @@ using Timer = System.Timers.Timer;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>
+public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>, ICaptureOverlayViewModel
 {
     public readonly struct ActivityIds
     {

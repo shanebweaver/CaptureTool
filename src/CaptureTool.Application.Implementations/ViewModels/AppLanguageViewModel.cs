@@ -1,10 +1,11 @@
 using CaptureTool.Common;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using System.Globalization;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class AppLanguageViewModel : ViewModelBase
+public sealed partial class AppLanguageViewModel : ViewModelBase, IAppLanguageViewModel
 {
     public IAppLanguage? Language { get; }
     public string DisplayName { get; }

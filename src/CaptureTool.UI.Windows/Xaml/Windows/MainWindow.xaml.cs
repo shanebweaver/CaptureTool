@@ -1,8 +1,8 @@
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Navigation;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 using CaptureTool.UI.Windows.Utils;
 using CaptureTool.UI.Windows.Xaml.Pages;
-using CaptureTool.Application.Implementations.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -19,7 +19,7 @@ public sealed partial class MainWindow : Window
 {
     private static readonly SizeInt32 DefaultWindowSize = new(720, 540);
 
-    public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
+    public IMainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<IMainWindowViewModel>();
 
     public MainWindow()
     {
@@ -107,7 +107,7 @@ public sealed partial class MainWindow : Window
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(MainWindowViewModel.CurrentAppTheme))
+        if (e.PropertyName == nameof(IMainWindowViewModel.CurrentAppTheme))
         {
             UpdateRequestedAppTheme();
             UpdateTitleBarColors();

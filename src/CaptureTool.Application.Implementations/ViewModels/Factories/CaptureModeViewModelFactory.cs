@@ -1,10 +1,11 @@
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 
 namespace CaptureTool.Application.Implementations.ViewModels.Factories;
 
-public sealed partial class CaptureModeViewModelFactory : IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode>
+public sealed partial class CaptureModeViewModelFactory : IFactoryServiceWithArgs<ICaptureModeViewModel, CaptureMode>
 {
     private readonly ILocalizationService _localizationService;
     public CaptureModeViewModelFactory(
@@ -13,9 +14,9 @@ public sealed partial class CaptureModeViewModelFactory : IFactoryServiceWithArg
         _localizationService = localizationService;
     }
 
-    public CaptureModeViewModel Create(CaptureMode captureMode)
+    public ICaptureModeViewModel Create(CaptureMode captureMode)
     {
-        return new(
+        return new CaptureModeViewModel(
             captureMode,
             _localizationService);
     }

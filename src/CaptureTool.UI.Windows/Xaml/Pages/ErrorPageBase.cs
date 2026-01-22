@@ -1,7 +1,7 @@
-using CaptureTool.Application.Implementations.ViewModels;
+using CaptureTool.Application.Interfaces.ViewModels;
 
 namespace CaptureTool.UI.Windows.Xaml.Pages;
 
-public abstract class ErrorPageBase : PageBase<ErrorPageViewModel>
+public abstract class ErrorPageBase : PageBase<IErrorPageViewModel>
 {
 }

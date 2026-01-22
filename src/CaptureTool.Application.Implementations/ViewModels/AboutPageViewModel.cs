@@ -2,13 +2,14 @@ using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
 using CaptureTool.Application.Interfaces.Actions.About;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class AboutPageViewModel : ViewModelBase
+public sealed partial class AboutPageViewModel : ViewModelBase, IAboutPageViewModel
 {
     public readonly struct ActivityIds
     {

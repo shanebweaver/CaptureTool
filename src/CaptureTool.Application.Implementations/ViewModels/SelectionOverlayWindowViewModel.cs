@@ -2,6 +2,7 @@ using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Navigation;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
@@ -14,7 +15,7 @@ using System.Drawing;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>
+public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>, ISelectionOverlayWindowViewModel
 {
     public readonly struct ActivityIds
     {
@@ -29,7 +30,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly IAppNavigation _appNavigation;
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IImageCaptureHandler _imageCaptureHandler;
-    private readonly IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
+    private readonly IFactoryServiceWithArgs<ICaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
     private static readonly CaptureType[] _imageCaptureTypes = [
         CaptureType.Rectangle,
@@ -53,7 +54,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
-    public ObservableCollection<CaptureTypeViewModel> SupportedCaptureTypes
+    public ObservableCollection<ICaptureTypeViewModel> SupportedCaptureTypes
     {
         get => field;
         private set => Set(ref field, value);
@@ -70,7 +71,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             ? SupportedCaptureTypes[SelectedCaptureTypeIndex].CaptureType 
             : null;
 
-    public ObservableCollection<CaptureModeViewModel> SupportedCaptureModes
+    public ObservableCollection<ICaptureModeViewModel> SupportedCaptureModes
     {
         get => field;
         private set => Set(ref field, value);
@@ -138,8 +139,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         IThemeService themeService,
         IShutdownHandler shutdownHandler,
         IImageCaptureHandler imageCaptureHandler,
-        IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
-        IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
+        IFactoryServiceWithArgs<ICaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
+        IFactoryServiceWithArgs<ICaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
     {
         _telemetryService = telemetryService;
         _appNavigation = appNavigation;
@@ -163,11 +164,11 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
         IsVideoCaptureFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
 
-        CaptureModeViewModel imageModeVM = captureModeViewModelFactory.Create(CaptureMode.Image);
+        ICaptureModeViewModel imageModeVM = captureModeViewModelFactory.Create(CaptureMode.Image);
         SupportedCaptureModes = [imageModeVM];
         if (IsVideoCaptureFeatureEnabled)
         {
-            CaptureModeViewModel videoModeVM = captureModeViewModelFactory.Create(CaptureMode.Video);
+            ICaptureModeViewModel videoModeVM = captureModeViewModelFactory.Create(CaptureMode.Video);
             SupportedCaptureModes.Add(videoModeVM);
         }
 

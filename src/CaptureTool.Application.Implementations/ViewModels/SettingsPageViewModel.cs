@@ -4,6 +4,7 @@ using CaptureTool.Common.Commands.Extensions;
 using CaptureTool.Application.Interfaces.Actions.Settings;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Settings;
+using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Localization;
@@ -16,7 +17,7 @@ using System.Collections.ObjectModel;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
-public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
+public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, ISettingsPageViewModel
 {
     public readonly struct ActivityIds
     {
@@ -63,8 +64,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IThemeService _themeService;
     private readonly IStorageService _storageService;
     private readonly IFeatureManager _featureManager;
-    private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
-    private readonly IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
+    private readonly IFactoryServiceWithArgs<IAppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
+    private readonly IFactoryServiceWithArgs<IAppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
     private readonly AppTheme[] SupportedAppThemes = [
         AppTheme.Light,
@@ -88,7 +89,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public RelayCommand ClearTemporaryFilesCommand { get; }
     public AsyncRelayCommand RestoreDefaultSettingsCommand { get; }
 
-    public ObservableCollection<AppLanguageViewModel> AppLanguages
+    public ObservableCollection<IAppLanguageViewModel> AppLanguages
     {
         get => field;
         private set => Set(ref field, value);
@@ -106,7 +107,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
-    public ObservableCollection<AppThemeViewModel> AppThemes
+    public ObservableCollection<IAppThemeViewModel> AppThemes
     {
         get => field;
         private set => Set(ref field, value);
@@ -194,8 +195,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         ISettingsService settingsService,
         IStorageService storageService,
         IFeatureManager featureManager,
-        IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
-        IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
+        IFactoryServiceWithArgs<IAppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
+        IFactoryServiceWithArgs<IAppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
         _goBackAction = goBackAction;
         _restartAppAction = restartAppAction;
@@ -258,7 +259,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             for (var i = 0; i < languages.Length; i++)
             {
                 IAppLanguage language = languages[i];
-                AppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
+                IAppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
                 AppLanguages.Add(vm);
 
                 if (language.Value == _localizationService.LanguageOverride?.Value)
@@ -284,7 +285,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             for (var i = 0; i < SupportedAppThemes.Length; i++)
             {
                 AppTheme supportedTheme = SupportedAppThemes[i];
-                AppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
+                IAppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
                 AppThemes.Add(vm);
 
                 if (supportedTheme == currentTheme)
@@ -339,7 +340,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             return;
         }
 
-        AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
+        IAppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
         if (vm.Language == _localizationService.LanguageOverride)
         {
             return;

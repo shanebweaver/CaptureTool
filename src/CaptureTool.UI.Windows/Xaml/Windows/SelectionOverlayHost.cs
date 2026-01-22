@@ -1,4 +1,5 @@
-﻿using CaptureTool.Domains.Capture.Implementations.Windows;
+﻿using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Domains.Capture.Implementations.Windows;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.UI.Windows.Utils;
 using CaptureTool.Application.Implementations.ViewModels;
@@ -17,7 +18,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private readonly HashSet<MonitorCaptureResult> _monitors = [];
     private readonly HashSet<SelectionOverlayWindow> _windows = [];
     private readonly HashSet<nint> _windowHandles = [];
-    private SelectionOverlayHostViewModel? _viewModel;
+    private ISelectionOverlayHostViewModel? _viewModel;
     private DispatcherTimer? _foregroundTimer;
     private Window? _primaryWindow;
     private bool _disposed;
@@ -40,7 +41,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         {
             return;
         }
-        _viewModel = ViewModelLocator.GetViewModel<SelectionOverlayHostViewModel>();
+        _viewModel = ViewModelLocator.GetViewModel<ISelectionOverlayHostViewModel>();
         _viewModel.AllScreensCaptureRequested += OnAllScreensCaptureRequested;
 
         var allWindows = WindowInfoHelper.GetAllWindows();
