@@ -24,9 +24,9 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         // Generic services
         collection.AddGenericServices();
 
-        // Core services
-        collection.AddCoreServices();
-        collection.AddCoreCaptureServices();
+        // Application services
+        collection.AddApplicationServices();
+        collection.AddApplicationCaptureServices();
 
         // Windows services
         collection.AddWindowsServices(App.Current.DispatcherQueue);

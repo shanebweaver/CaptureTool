@@ -23,7 +23,7 @@ using CaptureTool.Application.Implementations.UseCases.Diagnostics;
 
 namespace CaptureTool.Application.Implementations.DependencyInjection;
 
-public static class CoreUseCasesServiceCollectionExtensions
+public static class ApplicationUseCasesServiceCollectionExtensions
 {
     public static IServiceCollection AddCaptureOverlayUseCases(this IServiceCollection services)
     {

@@ -7,9 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.Implementations.DependencyInjection;
 
-public static class CoreServicesServiceCollectionExtensions
+public static class ApplicationServicesServiceCollectionExtensions
 {
-    public static IServiceCollection AddCoreServices(this IServiceCollection services)
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         // Core app services
         services.AddSingleton<IActivationHandler, CaptureToolActivationHandler>();
