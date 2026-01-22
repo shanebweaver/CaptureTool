@@ -1,13 +1,15 @@
+using CaptureTool.Application.Interfaces.ViewModels.Options;
 using CaptureTool.Common.Commands;
 using CaptureTool.Domains.Capture.Interfaces;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Drawing;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface ISelectionOverlayWindowViewModel
+public interface ISelectionOverlayWindowViewModel : INotifyPropertyChanged, IDisposable
 {
-    event EventHandler<(CaptureMode captureMode, CaptureType captureType)>? CaptureOptionsUpdated;
+    event EventHandler<CaptureOptions>? CaptureOptionsUpdated;
     
     bool IsPrimary { get; }
     ObservableCollection<ICaptureTypeViewModel> SupportedCaptureTypes { get; }
@@ -26,9 +28,9 @@ public interface ISelectionOverlayWindowViewModel
     RelayCommand<int> UpdateSelectedCaptureModeCommand { get; }
     RelayCommand<int> UpdateSelectedCaptureTypeCommand { get; }
     RelayCommand<Rectangle> UpdateCaptureAreaCommand { get; }
-    RelayCommand<(CaptureMode captureMode, CaptureType captureType)> UpdateCaptureOptionsCommand { get; }
+    RelayCommand<CaptureOptions> UpdateCaptureOptionsCommand { get; }
     
     CaptureType? GetSelectedCaptureType();
     CaptureMode? GetSelectedCaptureMode();
-    void Load(MonitorCaptureResult monitor, IList<Rectangle> monitorWindows, CaptureMode captureMode, CaptureType captureType);
+    void Load(SelectionOverlayWindowOptions options);
 }

@@ -6,6 +6,6 @@ public interface ISelectionOverlayHostViewModel
 {
     event EventHandler? AllScreensCaptureRequested;
     
-    void UpdateOptions(CaptureMode captureMode, CaptureType captureType);
+    void UpdateOptions(CaptureOptions options);
     void AddWindowViewModel(ISelectionOverlayWindowViewModel newVM, bool isPrimary = false);
 }

@@ -1,6 +1,7 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces;
+using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domains.Edit.Interfaces.Drawable;
 using System.Collections.ObjectModel;
 using System.Drawing;
@@ -43,7 +44,7 @@ public interface IImageEditPageViewModel
     int ChromaKeyTolerance { get; }
     int ChromaKeyDesaturation { get; }
     Color ChromaKeyColor { get; }
-    ObservableCollection<Color> ChromaKeyColorOptions { get; }
+    ObservableCollection<ChromaKeyColorOption> ChromaKeyColorOptions { get; }
     int SelectedChromaKeyColorOption { get; }
     bool IsChromaKeyAddOnOwned { get; }
     

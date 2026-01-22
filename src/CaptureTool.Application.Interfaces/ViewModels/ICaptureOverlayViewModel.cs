@@ -1,5 +1,5 @@
+using CaptureTool.Application.Interfaces.ViewModels.Options;
 using CaptureTool.Common.Commands;
-using CaptureTool.Domains.Capture.Interfaces;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
@@ -18,5 +18,5 @@ public interface ICaptureOverlayViewModel
     RelayCommand ToggleDesktopAudioCommand { get; }
     RelayCommand TogglePauseResumeCommand { get; }
     
-    void Load(MonitorCaptureResult monitor, System.Drawing.Rectangle area);
+    void Load(CaptureOverlayViewModelOptions options);
 }

@@ -1,5 +1,5 @@
 using CaptureTool.Common.Commands;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.Storage;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
@@ -11,5 +11,5 @@ public interface IVideoEditPageViewModel
     bool IsVideoReady { get; }
     bool IsFinalizingVideo { get; }
     
-    void Load(VideoFile videoFile);
+    void Load(IVideoFile video);
 }

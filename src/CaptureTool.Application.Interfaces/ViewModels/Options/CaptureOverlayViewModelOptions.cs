@@ -1,7 +1,7 @@
-﻿using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domains.Capture.Interfaces;
 using System.Drawing;
 
-namespace CaptureTool.Application.Implementations.ViewModels;
+namespace CaptureTool.Application.Interfaces.ViewModels.Options;
 
 public readonly partial struct CaptureOverlayViewModelOptions(MonitorCaptureResult monitor, Rectangle area)
 {

@@ -3,6 +3,7 @@ using CaptureTool.Common.Commands;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Application.Interfaces.ViewModels.Options;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
