@@ -2,7 +2,7 @@
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Implementations.Actions.CaptureOverlay;
 using CaptureTool.Application.Interfaces.Actions.CaptureOverlay;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Common.Commands;
 using FluentAssertions;
 using Moq;

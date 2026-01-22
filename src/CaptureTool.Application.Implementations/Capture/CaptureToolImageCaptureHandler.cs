@@ -1,5 +1,5 @@
 using CaptureTool.Application.Interfaces.Settings;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Clipboard;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Storage;

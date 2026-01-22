@@ -1,8 +1,8 @@
 using CaptureTool.Application.Interfaces;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Settings;
-using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Domains.Capture.Interfaces.Metadata;
+using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces.Metadata;
 using CaptureTool.Infrastructure.Interfaces.Clipboard;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Logging;

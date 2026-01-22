@@ -2,7 +2,7 @@ using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Themes;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.Implementations.ViewModels.Factories.DependencyInjection;

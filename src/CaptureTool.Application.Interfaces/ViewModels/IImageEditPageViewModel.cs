@@ -1,8 +1,8 @@
 using CaptureTool.Common.Commands;
-using CaptureTool.Domains.Capture.Interfaces;
-using CaptureTool.Domains.Edit.Interfaces;
-using CaptureTool.Domains.Edit.Interfaces.ChromaKey;
-using CaptureTool.Domains.Edit.Interfaces.Drawable;
+using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Edit.Interfaces;
+using CaptureTool.Domain.Edit.Interfaces.ChromaKey;
+using CaptureTool.Domain.Edit.Interfaces.Drawable;
 using System.Collections.ObjectModel;
 using System.Drawing;
 

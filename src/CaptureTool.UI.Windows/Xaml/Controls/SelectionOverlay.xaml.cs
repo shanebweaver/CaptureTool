@@ -1,4 +1,4 @@
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;

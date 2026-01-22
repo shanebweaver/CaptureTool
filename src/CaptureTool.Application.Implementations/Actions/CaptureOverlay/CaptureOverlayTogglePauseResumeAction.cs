@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Common.Commands;
 using CaptureTool.Application.Interfaces.Actions.CaptureOverlay;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 
 namespace CaptureTool.Application.Implementations.Actions.CaptureOverlay;
 

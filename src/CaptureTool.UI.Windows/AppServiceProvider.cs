@@ -1,6 +1,6 @@
 using CaptureTool.Application.Implementations.DependencyInjection;
-using CaptureTool.Domains.Capture.Implementations.Windows.DependencyInjection;
-using CaptureTool.Domains.Edit.Implementations.Windows.DependencyInjection;
+using CaptureTool.Domain.Capture.Implementations.Windows.DependencyInjection;
+using CaptureTool.Domain.Edit.Implementations.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.Implementations.DependencyInjection;
 using CaptureTool.Infrastructure.Implementations.FeatureManagement.DependencyInjection;
 using CaptureTool.Infrastructure.Implementations.Windows.DependencyInjection;

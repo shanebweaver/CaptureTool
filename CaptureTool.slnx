@@ -21,21 +21,21 @@
   <Project Path="src/CaptureTool.Application.Implementations/CaptureTool.Application.Implementations.csproj" />
   <Project Path="src/CaptureTool.Application.Interfaces/CaptureTool.Application.Interfaces.csproj" />
   <Project Path="src/CaptureTool.Application.Tests/CaptureTool.Application.Tests.csproj" />
-  <Project Path="src/CaptureTool.Domains.Capture.Implementations.Windows/CaptureTool.Domains.Capture.Implementations.Windows.csproj">
+  <Project Path="src/CaptureTool.Domain.Capture.Implementations.Windows/CaptureTool.Domain.Capture.Implementations.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domains.Capture.Interfaces/CaptureTool.Domains.Capture.Interfaces.csproj" />
-  <Project Path="src/CaptureTool.Domains.Capture.Tests.Windows/CaptureTool.Domains.Capture.Tests.Windows.csproj">
+  <Project Path="src/CaptureTool.Domain.Capture.Interfaces/CaptureTool.Domain.Capture.Interfaces.csproj" />
+  <Project Path="src/CaptureTool.Domain.Capture.Tests.Windows/CaptureTool.Domain.Capture.Tests.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domains.Edit.Implementations.Windows/CaptureTool.Domains.Edit.Implementations.Windows.csproj">
+  <Project Path="src/CaptureTool.Domain.Edit.Implementations.Windows/CaptureTool.Domain.Edit.Implementations.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domains.Edit.Interfaces/CaptureTool.Domains.Edit.Interfaces.csproj" />
-  <Project Path="src/CaptureTool.Domains.Edit.Tests.Windows/CaptureTool.Domains.Edit.Tests.Windows.csproj">
+  <Project Path="src/CaptureTool.Domain.Edit.Interfaces/CaptureTool.Domain.Edit.Interfaces.csproj" />
+  <Project Path="src/CaptureTool.Domain.Edit.Tests.Windows/CaptureTool.Domain.Edit.Tests.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>

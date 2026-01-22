@@ -3,7 +3,7 @@ using AutoFixture.AutoMoq;
 using CaptureTool.Application.Implementations.Actions.CaptureOverlay;
 using CaptureTool.Application.Implementations.Services.Navigation;
 using CaptureTool.Application.Interfaces.Navigation;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Implementations.Navigation;
 using CaptureTool.Infrastructure.Interfaces.Navigation;
 using Moq;

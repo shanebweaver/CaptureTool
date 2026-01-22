@@ -1,4 +1,4 @@
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 
 namespace CaptureTool.Application.Interfaces.Navigation;

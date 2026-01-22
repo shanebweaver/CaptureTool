@@ -1,4 +1,4 @@
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using System.Drawing;
 
 namespace CaptureTool.Application.Interfaces.ViewModels.Options;

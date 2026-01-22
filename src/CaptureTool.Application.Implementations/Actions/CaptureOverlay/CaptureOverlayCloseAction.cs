@@ -2,7 +2,7 @@ using CaptureTool.Common.Commands;
 using CaptureTool.Application.Implementations.Services.Navigation;
 using CaptureTool.Application.Interfaces.Actions.CaptureOverlay;
 using CaptureTool.Application.Interfaces.Navigation;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Navigation;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;
 

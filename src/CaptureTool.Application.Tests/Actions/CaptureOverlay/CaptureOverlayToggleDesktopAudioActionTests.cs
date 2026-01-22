@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Implementations.Actions.CaptureOverlay;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Actions.CaptureOverlay;

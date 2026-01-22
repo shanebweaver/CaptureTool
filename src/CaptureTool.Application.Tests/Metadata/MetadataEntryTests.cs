@@ -1,4 +1,4 @@
-using CaptureTool.Domains.Capture.Interfaces.Metadata;
+using CaptureTool.Domain.Capture.Interfaces.Metadata;
 using FluentAssertions;
 
 namespace CaptureTool.Application.Tests.Metadata;

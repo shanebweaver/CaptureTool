@@ -1,6 +1,6 @@
-using CaptureTool.Domains.Edit.Implementations.Windows;
-using CaptureTool.Domains.Edit.Interfaces;
-using CaptureTool.Domains.Edit.Interfaces.Drawable;
+using CaptureTool.Domain.Edit.Implementations.Windows;
+using CaptureTool.Domain.Edit.Interfaces;
+using CaptureTool.Domain.Edit.Interfaces.Drawable;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;

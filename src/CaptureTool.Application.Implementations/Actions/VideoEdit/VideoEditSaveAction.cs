@@ -1,6 +1,6 @@
 using CaptureTool.Common.Commands;
 using CaptureTool.Application.Interfaces.Actions.VideoEdit;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
 

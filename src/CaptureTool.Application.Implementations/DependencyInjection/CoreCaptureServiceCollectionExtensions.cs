@@ -1,5 +1,5 @@
 using CaptureTool.Application.Implementations.Capture;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.Implementations.DependencyInjection;

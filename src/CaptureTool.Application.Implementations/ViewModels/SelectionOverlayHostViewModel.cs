@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Common;
 using CaptureTool.Common.Sync;
 using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using System.ComponentModel;
 using System.Drawing;
 

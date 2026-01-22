@@ -1,4 +1,4 @@
-﻿using CaptureTool.Domains.Capture.Interfaces;
+﻿using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.UI.Windows.Utils;
 using CaptureTool.UI.Windows.Xaml.Controls;
 using CaptureTool.UI.Windows.Xaml.Views;

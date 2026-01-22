@@ -1,7 +1,7 @@
 ﻿using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Application.Interfaces.ViewModels.Options;
-using CaptureTool.Domains.Capture.Implementations.Windows;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Implementations.Windows;
+using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.UI.Windows.Utils;
 using Microsoft.UI.Xaml;
 using System.Drawing;

@@ -1,5 +1,5 @@
 using CaptureTool.Application.Interfaces.ViewModels.Options;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 using Microsoft.UI;
 using Microsoft.UI.Composition;

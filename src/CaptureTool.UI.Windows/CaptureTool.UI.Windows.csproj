@@ -38,10 +38,10 @@
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
     <ProjectReference Include="..\CaptureTool.Application.Interfaces\CaptureTool.Application.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Application.Implementations\CaptureTool.Application.Implementations.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domains.Edit.Implementations.Windows\CaptureTool.Domains.Edit.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domains.Edit.Interfaces\CaptureTool.Domains.Edit.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domains.Capture.Implementations.Windows\CaptureTool.Domains.Capture.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domains.Capture.Interfaces\CaptureTool.Domains.Capture.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit.Implementations.Windows\CaptureTool.Domain.Edit.Implementations.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit.Interfaces\CaptureTool.Domain.Edit.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture.Implementations.Windows\CaptureTool.Domain.Capture.Implementations.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture.Interfaces\CaptureTool.Domain.Capture.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations.FeatureManagement\CaptureTool.Infrastructure.Implementations.FeatureManagement.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations.Windows\CaptureTool.Infrastructure.Implementations.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations\CaptureTool.Infrastructure.Implementations.csproj" />

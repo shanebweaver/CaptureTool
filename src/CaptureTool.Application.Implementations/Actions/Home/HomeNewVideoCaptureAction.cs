@@ -2,7 +2,7 @@ using CaptureTool.Common.Commands;
 using CaptureTool.Application.Interfaces.Actions.Home;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.FeatureManagement;
-using CaptureTool.Domains.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 
 namespace CaptureTool.Application.Implementations.Actions.Home;
