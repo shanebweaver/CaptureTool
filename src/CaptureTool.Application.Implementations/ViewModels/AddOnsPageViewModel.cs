@@ -1,7 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
-using CaptureTool.Application.Interfaces.Actions.AddOns;
+using CaptureTool.Application.Interfaces.UseCases.AddOns;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
 using CaptureTool.Infrastructure.Interfaces.Localization;
@@ -24,7 +24,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase, IA
 
     private const string TelemetryContext = "AddOnsPage";
 
-    private readonly IAddOnsGoBackAction _goBackAction;
+    private readonly IAddOnsGoBackUseCase _goBackAction;
     private readonly IWindowHandleProvider _windowingService;
     private readonly IStoreService _storeService;
     private readonly ILocalizationService _localizationService;
@@ -59,7 +59,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase, IA
     }
 
     public AddOnsPageViewModel(
-        IAddOnsGoBackAction goBackAction,
+        IAddOnsGoBackUseCase goBackAction,
         IWindowHandleProvider windowingService,
         ILocalizationService localizationService,
         IStoreService storeService,

@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Interfaces.Actions.Settings;
+using CaptureTool.Application.Interfaces.UseCases.Settings;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels;
 using Moq;
@@ -20,21 +20,21 @@ public sealed class SettingsPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<ISettingsGoBackAction>>();
-        Fixture.Freeze<Mock<ISettingsRestartAppAction>>();
-        Fixture.Freeze<Mock<ISettingsUpdateImageAutoCopyAction>>();
-        Fixture.Freeze<Mock<ISettingsUpdateImageAutoSaveAction>>();
-        Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoCopyAction>>();
-        Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoSaveAction>>();
-        Fixture.Freeze<Mock<ISettingsUpdateAppLanguageAction>>();
-        Fixture.Freeze<Mock<ISettingsUpdateAppThemeAction>>();
-        Fixture.Freeze<Mock<ISettingsChangeScreenshotsFolderAction>>();
-        Fixture.Freeze<Mock<ISettingsOpenScreenshotsFolderAction>>();
-        Fixture.Freeze<Mock<ISettingsChangeVideosFolderAction>>();
-        Fixture.Freeze<Mock<ISettingsOpenVideosFolderAction>>();
-        Fixture.Freeze<Mock<ISettingsOpenTempFolderAction>>();
-        Fixture.Freeze<Mock<ISettingsClearTempFilesAction>>();
-        Fixture.Freeze<Mock<ISettingsRestoreDefaultsAction>>();
+        Fixture.Freeze<Mock<ISettingsGoBackUseCase>>();
+        Fixture.Freeze<Mock<ISettingsRestartAppUseCase>>();
+        Fixture.Freeze<Mock<ISettingsUpdateImageAutoCopyUseCase>>();
+        Fixture.Freeze<Mock<ISettingsUpdateImageAutoSaveUseCase>>();
+        Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoCopyUseCase>>();
+        Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoSaveUseCase>>();
+        Fixture.Freeze<Mock<ISettingsUpdateAppLanguageUseCase>>();
+        Fixture.Freeze<Mock<ISettingsUpdateAppThemeUseCase>>();
+        Fixture.Freeze<Mock<ISettingsChangeScreenshotsFolderUseCase>>();
+        Fixture.Freeze<Mock<ISettingsOpenScreenshotsFolderUseCase>>();
+        Fixture.Freeze<Mock<ISettingsChangeVideosFolderUseCase>>();
+        Fixture.Freeze<Mock<ISettingsOpenVideosFolderUseCase>>();
+        Fixture.Freeze<Mock<ISettingsOpenTempFolderUseCase>>();
+        Fixture.Freeze<Mock<ISettingsClearTempFilesUseCase>>();
+        Fixture.Freeze<Mock<ISettingsRestoreDefaultsUseCase>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
 
@@ -42,7 +42,7 @@ public sealed class SettingsPageViewModelTests
     public void GoBackCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var goBackAction = Fixture.Freeze<Mock<ISettingsGoBackAction>>();
+        var goBackAction = Fixture.Freeze<Mock<ISettingsGoBackUseCase>>();
         var vm = Create();
 
         vm.GoBackCommand.Execute(null);
@@ -56,7 +56,7 @@ public sealed class SettingsPageViewModelTests
     public void RestartAppCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var restartAppAction = Fixture.Freeze<Mock<ISettingsRestartAppAction>>();
+        var restartAppAction = Fixture.Freeze<Mock<ISettingsRestartAppUseCase>>();
         var vm = Create();
 
         vm.RestartAppCommand.Execute(null);

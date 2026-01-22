@@ -1,7 +1,7 @@
 using CaptureTool.Application.Implementations.ViewModels;
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Interfaces.Actions.Home;
+using CaptureTool.Application.Interfaces.UseCases.Home;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
@@ -22,8 +22,8 @@ public sealed class HomePageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<IHomeNewImageCaptureAction>>();
-        Fixture.Freeze<Mock<IHomeNewVideoCaptureAction>>();
+        Fixture.Freeze<Mock<IHomeNewImageCaptureUseCase>>();
+        Fixture.Freeze<Mock<IHomeNewVideoCaptureUseCase>>();
         Fixture.Freeze<Mock<IFeatureManager>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
@@ -32,7 +32,7 @@ public sealed class HomePageViewModelTests
     public void NewImageCaptureCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var newImageCaptureAction = Fixture.Freeze<Mock<IHomeNewImageCaptureAction>>();
+        var newImageCaptureAction = Fixture.Freeze<Mock<IHomeNewImageCaptureUseCase>>();
         newImageCaptureAction.Setup(a => a.CanExecute()).Returns(true);
         var vm = Create();
 
@@ -50,7 +50,7 @@ public sealed class HomePageViewModelTests
         var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
         featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(true);
 
-        var newVideoCaptureAction = Fixture.Freeze<Mock<IHomeNewVideoCaptureAction>>();
+        var newVideoCaptureAction = Fixture.Freeze<Mock<IHomeNewVideoCaptureUseCase>>();
         var vm = Create();
 
         vm.NewVideoCaptureCommand.Execute();

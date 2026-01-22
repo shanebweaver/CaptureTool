@@ -37,16 +37,16 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
 
         // Action handlers
         collection
-            .AddCaptureOverlayActions()
-            .AddAboutActions()
-            .AddAddOnsActions()
-            .AddErrorActions()
-            .AddLoadingActions()
-            .AddHomeActions()
-            .AddSettingsActions()
-            .AddVideoEditActions()
-            .AddAppMenuActions()
-            .AddDiagnosticsActions();
+            .AddCaptureOverlayUseCases()
+            .AddAboutUseCases()
+            .AddAddOnsUseCases()
+            .AddErrorUseCases()
+            .AddLoadingUseCases()
+            .AddHomeUseCases()
+            .AddSettingsUseCases()
+            .AddVideoEditUseCases()
+            .AddAppMenuUseCases()
+            .AddDiagnosticsUseCases();
 
         // ViewModels
         collection.AddViewModels();

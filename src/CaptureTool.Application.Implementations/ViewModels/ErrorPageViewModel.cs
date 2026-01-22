@@ -1,7 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
-using CaptureTool.Application.Interfaces.Actions.Error;
+using CaptureTool.Application.Interfaces.UseCases.Error;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
@@ -17,13 +17,13 @@ public sealed partial class ErrorPageViewModel : ViewModelBase, IErrorPageViewMo
 
     private const string TelemetryContext = "ErrorPage";
 
-    private readonly IErrorRestartAppAction _restartAppAction;
+    private readonly IErrorRestartAppUseCase _restartAppAction;
     private readonly ITelemetryService _telemetryService;
 
     public RelayCommand RestartAppCommand { get; }
 
     public ErrorPageViewModel(
-        IErrorRestartAppAction restartAppAction,
+        IErrorRestartAppUseCase restartAppAction,
         ITelemetryService telemetryService)
     {
         _restartAppAction = restartAppAction;

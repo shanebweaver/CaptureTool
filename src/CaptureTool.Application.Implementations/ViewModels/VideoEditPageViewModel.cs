@@ -1,7 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
-using CaptureTool.Application.Interfaces.Actions.VideoEdit;
+using CaptureTool.Application.Interfaces.UseCases.VideoEdit;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Storage;
@@ -41,13 +41,13 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         private set => Set(ref field, value);
     }
 
-    private readonly IVideoEditSaveAction _saveAction;
-    private readonly IVideoEditCopyAction _copyAction;
+    private readonly IVideoEditSaveUseCase _saveAction;
+    private readonly IVideoEditCopyUseCase _copyAction;
     private readonly ITelemetryService _telemetryService;
 
     public VideoEditPageViewModel(
-        IVideoEditSaveAction saveAction,
-        IVideoEditCopyAction copyAction,
+        IVideoEditSaveUseCase saveAction,
+        IVideoEditCopyUseCase copyAction,
         ITelemetryService telemetryService)
     {
         _saveAction = saveAction;

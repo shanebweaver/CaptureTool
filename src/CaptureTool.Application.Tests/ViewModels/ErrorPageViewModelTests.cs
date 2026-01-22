@@ -1,7 +1,7 @@
 using CaptureTool.Application.Implementations.ViewModels;
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Interfaces.Actions.Error;
+using CaptureTool.Application.Interfaces.UseCases.Error;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
 
@@ -20,7 +20,7 @@ public class ErrorPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<IErrorRestartAppAction>>();
+        Fixture.Freeze<Mock<IErrorRestartAppUseCase>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
 
@@ -29,7 +29,7 @@ public class ErrorPageViewModelTests
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var restartAppAction = Fixture.Freeze<Mock<IErrorRestartAppAction>>();
+        var restartAppAction = Fixture.Freeze<Mock<IErrorRestartAppUseCase>>();
         var vm = Create();
 
         // Act

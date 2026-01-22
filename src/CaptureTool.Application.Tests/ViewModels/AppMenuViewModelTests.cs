@@ -1,7 +1,7 @@
 using CaptureTool.Application.Implementations.ViewModels;
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Interfaces.Actions.AppMenu;
+using CaptureTool.Application.Interfaces.UseCases.AppMenu;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
@@ -28,7 +28,7 @@ public sealed class AppMenuViewModelTests
 
         Fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
-        Fixture.Freeze<Mock<IAppMenuActions>>();
+        Fixture.Freeze<Mock<IAppMenuUseCases>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
         Fixture.Freeze<Mock<IFeatureManager>>();
         Fixture.Freeze<Mock<IImageCaptureHandler>>();
@@ -40,7 +40,7 @@ public sealed class AppMenuViewModelTests
     {
         // Arrange
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var appMenuActions = Fixture.Freeze<Mock<IAppMenuActions>>();
+        var appMenuActions = Fixture.Freeze<Mock<IAppMenuUseCases>>();
         var vm = Create();
 
         // Act
@@ -57,7 +57,7 @@ public sealed class AppMenuViewModelTests
     {
         // Arrange
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var appMenuActions = Fixture.Freeze<Mock<IAppMenuActions>>();
+        var appMenuActions = Fixture.Freeze<Mock<IAppMenuUseCases>>();
         var vm = Create();
 
         // Act

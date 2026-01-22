@@ -1,7 +1,7 @@
 using CaptureTool.Application.Implementations.ViewModels;
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Interfaces.Actions.About;
+using CaptureTool.Application.Interfaces.UseCases.About;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
@@ -22,7 +22,7 @@ public class AboutPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<IAboutGoBackAction>>();
+        Fixture.Freeze<Mock<IAboutGoBackUseCase>>();
         Fixture.Freeze<Mock<ILocalizationService>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
@@ -165,7 +165,7 @@ public class AboutPageViewModelTests
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var goBackAction = Fixture.Freeze<Mock<IAboutGoBackAction>>();
+        var goBackAction = Fixture.Freeze<Mock<IAboutGoBackUseCase>>();
         var vm = Create();
 
         // Act

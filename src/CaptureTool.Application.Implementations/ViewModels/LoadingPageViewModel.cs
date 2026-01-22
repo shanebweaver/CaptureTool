@@ -1,7 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
-using CaptureTool.Application.Interfaces.Actions.Loading;
+using CaptureTool.Application.Interfaces.UseCases.Loading;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
@@ -17,13 +17,13 @@ public sealed partial class LoadingPageViewModel : ViewModelBase, ILoadingPageVi
 
     private const string TelemetryContext = "LoadingPage";
 
-    private readonly ILoadingGoBackAction _goBackAction;
+    private readonly ILoadingGoBackUseCase _goBackAction;
     private readonly ITelemetryService _telemetryService;
 
     public RelayCommand GoBackCommand { get; }
 
     public LoadingPageViewModel(
-        ILoadingGoBackAction goBackAction,
+        ILoadingGoBackUseCase goBackAction,
         ITelemetryService telemetryService)
     {
         _goBackAction = goBackAction;

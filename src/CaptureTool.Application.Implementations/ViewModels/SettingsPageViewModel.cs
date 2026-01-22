@@ -1,7 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
-using CaptureTool.Application.Interfaces.Actions.Settings;
+using CaptureTool.Application.Interfaces.UseCases.Settings;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Settings;
 using CaptureTool.Application.Interfaces.ViewModels;
@@ -43,21 +43,21 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
 
     private const string TelemetryContext = "SettingsPage";
 
-    private readonly ISettingsGoBackAction _goBackAction;
-    private readonly ISettingsRestartAppAction _restartAppAction;
-    private readonly ISettingsUpdateImageAutoCopyAction _updateImageAutoCopyAction;
-    private readonly ISettingsUpdateImageAutoSaveAction _updateImageAutoSaveAction;
-    private readonly ISettingsUpdateVideoCaptureAutoCopyAction _updateVideoCaptureAutoCopyAction;
-    private readonly ISettingsUpdateVideoCaptureAutoSaveAction _updateVideoCaptureAutoSaveAction;
-    private readonly ISettingsUpdateAppLanguageAction _updateAppLanguageAction;
-    private readonly ISettingsUpdateAppThemeAction _updateAppThemeAction;
-    private readonly ISettingsChangeScreenshotsFolderAction _changeScreenshotsFolderAction;
-    private readonly ISettingsOpenScreenshotsFolderAction _openScreenshotsFolderAction;
-    private readonly ISettingsChangeVideosFolderAction _changeVideosFolderAction;
-    private readonly ISettingsOpenVideosFolderAction _openVideosFolderAction;
-    private readonly ISettingsOpenTempFolderAction _openTempFolderAction;
-    private readonly ISettingsClearTempFilesAction _clearTempFilesAction;
-    private readonly ISettingsRestoreDefaultsAction _restoreDefaultsAction;
+    private readonly ISettingsGoBackUseCase _goBackAction;
+    private readonly ISettingsRestartAppUseCase _restartAppAction;
+    private readonly ISettingsUpdateImageAutoCopyUseCase _updateImageAutoCopyAction;
+    private readonly ISettingsUpdateImageAutoSaveUseCase _updateImageAutoSaveAction;
+    private readonly ISettingsUpdateVideoCaptureAutoCopyUseCase _updateVideoCaptureAutoCopyAction;
+    private readonly ISettingsUpdateVideoCaptureAutoSaveUseCase _updateVideoCaptureAutoSaveAction;
+    private readonly ISettingsUpdateAppLanguageUseCase _updateAppLanguageAction;
+    private readonly ISettingsUpdateAppThemeUseCase _updateAppThemeAction;
+    private readonly ISettingsChangeScreenshotsFolderUseCase _changeScreenshotsFolderAction;
+    private readonly ISettingsOpenScreenshotsFolderUseCase _openScreenshotsFolderAction;
+    private readonly ISettingsChangeVideosFolderUseCase _changeVideosFolderAction;
+    private readonly ISettingsOpenVideosFolderUseCase _openVideosFolderAction;
+    private readonly ISettingsOpenTempFolderUseCase _openTempFolderAction;
+    private readonly ISettingsClearTempFilesUseCase _clearTempFilesAction;
+    private readonly ISettingsRestoreDefaultsUseCase _restoreDefaultsAction;
     private readonly ITelemetryService _telemetryService;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
@@ -174,21 +174,21 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
     }
 
     public SettingsPageViewModel(
-        ISettingsGoBackAction goBackAction,
-        ISettingsRestartAppAction restartAppAction,
-        ISettingsUpdateImageAutoCopyAction updateImageAutoCopyAction,
-        ISettingsUpdateImageAutoSaveAction updateImageAutoSaveAction,
-        ISettingsUpdateVideoCaptureAutoCopyAction updateVideoCaptureAutoCopyAction,
-        ISettingsUpdateVideoCaptureAutoSaveAction updateVideoCaptureAutoSaveAction,
-        ISettingsUpdateAppLanguageAction updateAppLanguageAction,
-        ISettingsUpdateAppThemeAction updateAppThemeAction,
-        ISettingsChangeScreenshotsFolderAction changeScreenshotsFolderAction,
-        ISettingsOpenScreenshotsFolderAction openScreenshotsFolderAction,
-        ISettingsChangeVideosFolderAction changeVideosFolderAction,
-        ISettingsOpenVideosFolderAction openVideosFolderAction,
-        ISettingsOpenTempFolderAction openTempFolderAction,
-        ISettingsClearTempFilesAction clearTempFilesAction,
-        ISettingsRestoreDefaultsAction restoreDefaultsAction,
+        ISettingsGoBackUseCase goBackAction,
+        ISettingsRestartAppUseCase restartAppAction,
+        ISettingsUpdateImageAutoCopyUseCase updateImageAutoCopyAction,
+        ISettingsUpdateImageAutoSaveUseCase updateImageAutoSaveAction,
+        ISettingsUpdateVideoCaptureAutoCopyUseCase updateVideoCaptureAutoCopyAction,
+        ISettingsUpdateVideoCaptureAutoSaveUseCase updateVideoCaptureAutoSaveAction,
+        ISettingsUpdateAppLanguageUseCase updateAppLanguageAction,
+        ISettingsUpdateAppThemeUseCase updateAppThemeAction,
+        ISettingsChangeScreenshotsFolderUseCase changeScreenshotsFolderAction,
+        ISettingsOpenScreenshotsFolderUseCase openScreenshotsFolderAction,
+        ISettingsChangeVideosFolderUseCase changeVideosFolderAction,
+        ISettingsOpenVideosFolderUseCase openVideosFolderAction,
+        ISettingsOpenTempFolderUseCase openTempFolderAction,
+        ISettingsClearTempFilesUseCase clearTempFilesAction,
+        ISettingsRestoreDefaultsUseCase restoreDefaultsAction,
         ITelemetryService telemetryService,
         ILocalizationService localizationService,
         IThemeService themeService,

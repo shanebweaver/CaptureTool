@@ -1,7 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
-using CaptureTool.Application.Interfaces.Actions.About;
+using CaptureTool.Application.Interfaces.UseCases.About;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
@@ -22,7 +22,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase, IAboutPageViewMo
 
     private const string TelemetryContext = "AboutPage";
 
-    private readonly IAboutGoBackAction _goBackAction;
+    private readonly IAboutGoBackUseCase _goBackAction;
     private readonly ILocalizationService _localizationService;
     private readonly ITelemetryService _telemetryService;
 
@@ -35,7 +35,7 @@ public sealed partial class AboutPageViewModel : ViewModelBase, IAboutPageViewMo
     public RelayCommand GoBackCommand { get; }
 
     public AboutPageViewModel(
-        IAboutGoBackAction goBackAction,
+        IAboutGoBackUseCase goBackAction,
         ILocalizationService localizationService,
         ITelemetryService telemetryService)
     {

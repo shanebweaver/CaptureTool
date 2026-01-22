@@ -1,6 +1,6 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Application.Interfaces.Actions.Diagnostics;
+using CaptureTool.Application.Interfaces.UseCases.Diagnostics;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 
@@ -8,7 +8,7 @@ namespace CaptureTool.Application.Implementations.ViewModels;
 
 public sealed partial class DiagnosticsViewModel : ViewModelBase, IDiagnosticsViewModel
 {
-    private readonly IDiagnosticsActions _diagnosticsActions;
+    private readonly IDiagnosticsUseCases _diagnosticsActions;
     private readonly ILogService _logService;
 
     public RelayCommand ClearLogsCommand { get; }
@@ -27,7 +27,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase, IDiagnosticsVi
     }
 
     public DiagnosticsViewModel(
-        IDiagnosticsActions diagnosticsActions,
+        IDiagnosticsUseCases diagnosticsActions,
         ILogService logService)
     {
         _diagnosticsActions = diagnosticsActions;

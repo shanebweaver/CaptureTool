@@ -1,6 +1,6 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Application.Interfaces.Actions.CaptureOverlay;
+using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Application.Interfaces.ViewModels.Options;
@@ -34,7 +34,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ITelemetryService _telemetryService;
     private readonly ITaskEnvironment _taskEnvironment;
-    private readonly ICaptureOverlayActions _captureOverlayActions;
+    private readonly ICaptureOverlayUseCases _captureOverlayActions;
 
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
@@ -94,7 +94,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IVideoCaptureHandler videoCaptureHandler,
         ITelemetryService telemetryService,
         ITaskEnvironment taskEnvironment,
-        ICaptureOverlayActions captureOverlayActions)
+        ICaptureOverlayUseCases captureOverlayActions)
     {
         _appNavigation = appNavigation;
         _videoCaptureHandler = videoCaptureHandler;

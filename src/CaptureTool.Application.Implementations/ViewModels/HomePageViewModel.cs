@@ -1,7 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
-using CaptureTool.Application.Interfaces.Actions.Home;
+using CaptureTool.Application.Interfaces.UseCases.Home;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
@@ -20,8 +20,8 @@ public sealed partial class HomePageViewModel : ViewModelBase, IHomePageViewMode
 
     private const string TelemetryContext = "HomePage";
 
-    private readonly IHomeNewImageCaptureAction _newImageCaptureAction;
-    private readonly IHomeNewVideoCaptureAction _newVideoCaptureAction;
+    private readonly IHomeNewImageCaptureUseCase _newImageCaptureAction;
+    private readonly IHomeNewVideoCaptureUseCase _newVideoCaptureAction;
     private readonly ITelemetryService _telemetryService;
 
     public RelayCommand NewImageCaptureCommand { get; }
@@ -30,8 +30,8 @@ public sealed partial class HomePageViewModel : ViewModelBase, IHomePageViewMode
     public bool IsVideoCaptureEnabled { get; }
 
     public HomePageViewModel(
-        IHomeNewImageCaptureAction newImageCaptureAction,
-        IHomeNewVideoCaptureAction newVideoCaptureAction,
+        IHomeNewImageCaptureUseCase newImageCaptureAction,
+        IHomeNewVideoCaptureUseCase newVideoCaptureAction,
         IFeatureManager featureManager,
         ITelemetryService telemetryService)
     {

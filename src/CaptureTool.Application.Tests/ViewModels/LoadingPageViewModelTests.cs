@@ -1,7 +1,7 @@
 using CaptureTool.Application.Implementations.ViewModels;
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Interfaces.Actions.Loading;
+using CaptureTool.Application.Interfaces.UseCases.Loading;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
 
@@ -20,7 +20,7 @@ public sealed class LoadingPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<ILoadingGoBackAction>>();
+        Fixture.Freeze<Mock<ILoadingGoBackUseCase>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
 
@@ -28,7 +28,7 @@ public sealed class LoadingPageViewModelTests
     public void GoBackCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var goBackAction = Fixture.Freeze<Mock<ILoadingGoBackAction>>();
+        var goBackAction = Fixture.Freeze<Mock<ILoadingGoBackUseCase>>();
         var vm = Create();
 
         vm.GoBackCommand.Execute(null);

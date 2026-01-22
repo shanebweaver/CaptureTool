@@ -1,7 +1,7 @@
 using CaptureTool.Application.Implementations.ViewModels;
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Interfaces.Actions.VideoEdit;
+using CaptureTool.Application.Interfaces.UseCases.VideoEdit;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
@@ -21,8 +21,8 @@ public class VideoEditPageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        Fixture.Freeze<Mock<IVideoEditSaveAction>>();
-        Fixture.Freeze<Mock<IVideoEditCopyAction>>();
+        Fixture.Freeze<Mock<IVideoEditSaveUseCase>>();
+        Fixture.Freeze<Mock<IVideoEditCopyUseCase>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
 
@@ -31,7 +31,7 @@ public class VideoEditPageViewModelTests
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var saveAction = Fixture.Freeze<Mock<IVideoEditSaveAction>>();
+        var saveAction = Fixture.Freeze<Mock<IVideoEditSaveUseCase>>();
         var vm = Create();
         
         // Set up a video file
@@ -52,7 +52,7 @@ public class VideoEditPageViewModelTests
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var copyAction = Fixture.Freeze<Mock<IVideoEditCopyAction>>();
+        var copyAction = Fixture.Freeze<Mock<IVideoEditCopyUseCase>>();
         var vm = Create();
         
         // Set up a video file

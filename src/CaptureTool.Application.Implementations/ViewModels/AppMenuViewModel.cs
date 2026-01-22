@@ -1,6 +1,6 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Application.Interfaces.Actions.AppMenu;
+using CaptureTool.Application.Interfaces.UseCases.AppMenu;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domain.Capture.Interfaces;
@@ -30,7 +30,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase, IAppMenuVi
 
     private const string TelemetryContext = "AppMenu";
 
-    private readonly IAppMenuActions _appMenuActions;
+    private readonly IAppMenuUseCases _appMenuActions;
     private readonly ITelemetryService _telemetryService;
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
@@ -56,7 +56,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase, IAppMenuVi
     }
 
     public AppMenuViewModel(
-        IAppMenuActions appMenuActions,
+        IAppMenuUseCases appMenuActions,
         ITelemetryService telemetryService,
         IFeatureManager featureManager,
         IImageCaptureHandler imageCaptureHandler,
