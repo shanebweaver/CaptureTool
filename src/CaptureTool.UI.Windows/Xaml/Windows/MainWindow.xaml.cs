@@ -2,7 +2,7 @@ using CaptureTool.Infrastructure.Interfaces.Navigation;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 using CaptureTool.UI.Windows.Utils;
 using CaptureTool.UI.Windows.Xaml.Pages;
-using CaptureTool.ViewModels;
+using CaptureTool.Application.Implementations.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;

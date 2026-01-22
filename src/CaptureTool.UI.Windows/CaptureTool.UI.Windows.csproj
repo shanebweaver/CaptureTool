@@ -46,7 +46,6 @@
     <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations.Windows\CaptureTool.Infrastructure.Implementations.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations\CaptureTool.Infrastructure.Implementations.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Interfaces\CaptureTool.Infrastructure.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.ViewModels\CaptureTool.ViewModels.csproj" />
   </ItemGroup>
 
   <!-- Content files -->

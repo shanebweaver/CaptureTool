@@ -1,6 +1,6 @@
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Themes;
-using CaptureTool.ViewModels;
+using CaptureTool.Application.Implementations.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;

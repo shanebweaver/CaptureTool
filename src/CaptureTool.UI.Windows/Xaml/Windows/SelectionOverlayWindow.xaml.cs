@@ -1,5 +1,5 @@
 using CaptureTool.UI.Windows.Utils;
-using CaptureTool.ViewModels;
+using CaptureTool.Application.Implementations.ViewModels;
 using Microsoft.UI.Xaml;
 using System.Drawing;
 

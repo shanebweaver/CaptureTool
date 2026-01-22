@@ -5,8 +5,7 @@ using CaptureTool.Infrastructure.Implementations.DependencyInjection;
 using CaptureTool.Infrastructure.Implementations.FeatureManagement.DependencyInjection;
 using CaptureTool.Infrastructure.Implementations.Windows.DependencyInjection;
 using CaptureTool.UI.Windows.DependencyInjection;
-using CaptureTool.ViewModels.DependencyInjection;
-using CaptureTool.ViewModels.Factories.DependencyInjection;
+using CaptureTool.Application.Implementations.ViewModels.Factories.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.UI.Windows;

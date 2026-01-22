@@ -52,6 +52,4 @@
     <Platform Solution="*|x64" Project="x64" />
     <Deploy />
   </Project>
-  <Project Path="src/CaptureTool.ViewModels.Tests/CaptureTool.ViewModels.Tests.csproj" />
-  <Project Path="src/CaptureTool.ViewModels/CaptureTool.ViewModels.csproj" />
 </Solution>
