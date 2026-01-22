@@ -1,7 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Interfaces.FeatureManagement;
-using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Application.Interfaces.FeatureManagement;
+using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;

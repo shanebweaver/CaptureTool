@@ -36,8 +36,8 @@
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
-    <ProjectReference Include="..\CaptureTool.Core.Interfaces\CaptureTool.Core.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Core.Implementations\CaptureTool.Core.Implementations.csproj" />
+    <ProjectReference Include="..\CaptureTool.Application.Interfaces\CaptureTool.Application.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Application.Implementations\CaptureTool.Application.Implementations.csproj" />
     <ProjectReference Include="..\CaptureTool.Domains.Edit.Implementations.Windows\CaptureTool.Domains.Edit.Implementations.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Domains.Edit.Interfaces\CaptureTool.Domains.Edit.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Domains.Capture.Implementations.Windows\CaptureTool.Domains.Capture.Implementations.Windows.csproj" />

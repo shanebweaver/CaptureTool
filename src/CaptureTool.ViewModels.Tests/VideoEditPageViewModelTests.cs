@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Core.Interfaces.Actions.VideoEdit;
+using CaptureTool.Application.Interfaces.Actions.VideoEdit;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;

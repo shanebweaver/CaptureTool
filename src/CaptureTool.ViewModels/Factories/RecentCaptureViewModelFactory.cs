@@ -1,4 +1,4 @@
-using CaptureTool.Core.Interfaces;
+using CaptureTool.Application.Interfaces;
 using CaptureTool.Infrastructure.Interfaces;
 
 namespace CaptureTool.ViewModels.Factories;

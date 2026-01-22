@@ -1,9 +1,9 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
-using CaptureTool.Core.Interfaces.Actions.Settings;
-using CaptureTool.Core.Interfaces.FeatureManagement;
-using CaptureTool.Core.Interfaces.Settings;
+using CaptureTool.Application.Interfaces.Actions.Settings;
+using CaptureTool.Application.Interfaces.FeatureManagement;
+using CaptureTool.Application.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Localization;

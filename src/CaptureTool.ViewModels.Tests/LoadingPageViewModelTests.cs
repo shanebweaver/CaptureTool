@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Core.Interfaces.Actions.Loading;
+using CaptureTool.Application.Interfaces.Actions.Loading;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
 

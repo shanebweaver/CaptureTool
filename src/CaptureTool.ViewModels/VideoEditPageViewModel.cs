@@ -1,7 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
-using CaptureTool.Core.Interfaces.Actions.VideoEdit;
+using CaptureTool.Application.Interfaces.Actions.VideoEdit;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;

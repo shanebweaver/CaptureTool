@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Core.Interfaces.FeatureManagement;
+using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces;
 using CaptureTool.Domains.Edit.Interfaces.ChromaKey;

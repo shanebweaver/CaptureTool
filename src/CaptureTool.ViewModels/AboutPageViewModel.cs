@@ -1,7 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
 using CaptureTool.Common.Commands.Extensions;
-using CaptureTool.Core.Interfaces.Actions.About;
+using CaptureTool.Application.Interfaces.Actions.About;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.ViewModels.Helpers;

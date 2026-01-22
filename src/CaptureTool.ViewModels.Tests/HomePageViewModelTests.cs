@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Core.Interfaces.Actions.Home;
-using CaptureTool.Core.Interfaces.FeatureManagement;
+using CaptureTool.Application.Interfaces.Actions.Home;
+using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;

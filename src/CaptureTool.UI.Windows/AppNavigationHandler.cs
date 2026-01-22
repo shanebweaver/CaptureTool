@@ -1,5 +1,5 @@
-using CaptureTool.Core.Implementations.Services.Navigation;
-using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Application.Implementations.Services.Navigation;
+using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Navigation;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;

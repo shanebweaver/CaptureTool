@@ -1,6 +1,6 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Interfaces.Actions.Diagnostics;
+using CaptureTool.Application.Interfaces.Actions.Diagnostics;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 
 namespace CaptureTool.ViewModels;

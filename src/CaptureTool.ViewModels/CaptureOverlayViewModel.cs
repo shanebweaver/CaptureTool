@@ -1,7 +1,7 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Core.Interfaces.Actions.CaptureOverlay;
-using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Application.Interfaces.Actions.CaptureOverlay;
+using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;

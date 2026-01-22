@@ -1,4 +1,4 @@
-using CaptureTool.Core.Interfaces.Navigation;
+using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Domains.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Logging;

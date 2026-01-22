@@ -1,5 +1,5 @@
 ﻿using CaptureTool.Common;
-using CaptureTool.Core.Interfaces;
+using CaptureTool.Application.Interfaces;
 using CaptureTool.Domains.Capture.Interfaces;
 
 namespace CaptureTool.ViewModels;

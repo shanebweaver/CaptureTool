@@ -1,0 +1,25 @@
+<Project Sdk="MSTest.Sdk/3.6.4">
+
+  <!-- Project properties -->
+  <PropertyGroup>
+    <UseVSTest>true</UseVSTest>
+  </PropertyGroup>
+
+  <!-- Package references -->
+  <ItemGroup>
+    <PackageReference Include="AutoFixture.AutoMoq" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Moq" />
+    <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domains.Capture.Interfaces\CaptureTool.Domains.Capture.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Application.Implementations\CaptureTool.Application.Implementations.csproj" />
+    <ProjectReference Include="..\CaptureTool.Application.Interfaces\CaptureTool.Application.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Interfaces\CaptureTool.Infrastructure.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations\CaptureTool.Infrastructure.Implementations.csproj" />
+    <PackageReference Update="MSTest.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
