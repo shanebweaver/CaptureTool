@@ -89,6 +89,9 @@ public static class CoreUseCasesServiceCollectionExtensions
         services.AddTransient<ISettingsChangeVideosFolderUseCase, SettingsChangeVideosFolderUseCase>();
         services.AddTransient<ISettingsClearTempFilesUseCase, SettingsClearTempFilesUseCase>();
         services.AddTransient<ISettingsRestoreDefaultsUseCase, SettingsRestoreDefaultsUseCase>();
+        services.AddTransient<ISettingsOpenScreenshotsFolderUseCase, SettingsOpenScreenshotsFolderUseCase>();
+        services.AddTransient<ISettingsOpenVideosFolderUseCase, SettingsOpenVideosFolderUseCase>();
+        services.AddTransient<ISettingsOpenTempFolderUseCase, SettingsOpenTempFolderUseCase>();
         return services;
     }
 
