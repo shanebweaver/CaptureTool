@@ -6,9 +6,9 @@ using Microsoft.Windows.AppLifecycle;
 
 namespace CaptureTool.Presentation.Windows.WinUI;
 
-public partial class App : Application
+public partial class App : Microsoft.UI.Xaml.Application
 {
-    internal new static App Current => (App)Application.Current;
+    internal new static App Current => (App)Microsoft.UI.Xaml.Application.Current;
 
     internal AppServiceProvider ServiceProvider { get; }
     internal DispatcherQueue DispatcherQueue { get; }

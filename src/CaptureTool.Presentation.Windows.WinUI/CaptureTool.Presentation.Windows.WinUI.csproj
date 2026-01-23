@@ -84,6 +84,7 @@
 
   <!-- Publish profiles -->
   <ItemGroup>
+    <Folder Include="Converters\" />
     <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
 

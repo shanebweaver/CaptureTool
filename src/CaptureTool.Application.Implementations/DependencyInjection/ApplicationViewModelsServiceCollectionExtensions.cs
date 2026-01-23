@@ -4,7 +4,7 @@ using CaptureTool.Application.Interfaces.ViewModels;
 
 namespace CaptureTool.Application.Implementations.DependencyInjection;
 
-public static class ViewModelsServiceCollectionExtensions
+public static class ApplicationViewModelsServiceCollectionExtensions
 {
     public static IServiceCollection AddViewModels(this IServiceCollection services)
     {

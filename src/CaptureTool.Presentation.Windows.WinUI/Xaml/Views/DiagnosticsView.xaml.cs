@@ -10,11 +10,11 @@ public sealed partial class DiagnosticsView : DiagnosticsViewBase
         InitializeComponent();
     }
 
-    private async void ToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    private void ToggleSwitch_Toggled(object sender, RoutedEventArgs e)
     {
         if (sender is ToggleSwitch toggle)
         {
-            await ViewModel.UpdateLoggingEnablementCommand.ExecuteAsync(toggle.IsOn);
+            _ = ViewModel.UpdateLoggingEnablementCommand.ExecuteAsync(toggle.IsOn);
         }
     }
 }

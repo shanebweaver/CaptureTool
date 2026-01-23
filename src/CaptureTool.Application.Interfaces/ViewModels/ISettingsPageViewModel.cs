@@ -1,31 +1,31 @@
-using CaptureTool.Common.Commands;
-using System.Collections.Generic;
-using System.Windows.Input;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Commands;
+using System.Collections.ObjectModel;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface ISettingsPageViewModel
+public interface ISettingsPageViewModel : IViewModel
 {
-    IAsyncCommand ChangeScreenshotsFolderCommand { get; }
-    ICommand OpenScreenshotsFolderCommand { get; }
-    IAsyncCommand ChangeVideosFolderCommand { get; }
-    ICommand OpenVideosFolderCommand { get; }
-    ICommand RestartAppCommand { get; }
-    ICommand GoBackCommand { get; }
-    IAsyncCommand<bool> UpdateImageCaptureAutoCopyCommand { get; }
-    IAsyncCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
-    IAsyncCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
-    IAsyncCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
-    IAsyncCommand<int> UpdateAppLanguageCommand { get; }
-    ICommand UpdateAppThemeCommand { get; }
-    ICommand OpenTemporaryFilesFolderCommand { get; }
-    ICommand ClearTemporaryFilesCommand { get; }
-    IAsyncCommand RestoreDefaultSettingsCommand { get; }
+    IAsyncAppCommand ChangeScreenshotsFolderCommand { get; }
+    IAppCommand OpenScreenshotsFolderCommand { get; }
+    IAsyncAppCommand ChangeVideosFolderCommand { get; }
+    IAppCommand OpenVideosFolderCommand { get; }
+    IAppCommand RestartAppCommand { get; }
+    IAppCommand GoBackCommand { get; }
+    IAsyncAppCommand<bool> UpdateImageCaptureAutoCopyCommand { get; }
+    IAsyncAppCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
+    IAsyncAppCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
+    IAsyncAppCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
+    IAsyncAppCommand<int> UpdateAppLanguageCommand { get; }
+    IAppCommand<int> UpdateAppThemeCommand { get; }
+    IAppCommand OpenTemporaryFilesFolderCommand { get; }
+    IAppCommand ClearTemporaryFilesCommand { get; }
+    IAsyncAppCommand RestoreDefaultSettingsCommand { get; }
     
-    IReadOnlyList<IAppLanguageViewModel> AppLanguages { get; }
+    ObservableCollection<IAppLanguageViewModel> AppLanguages { get; }
     int SelectedAppLanguageIndex { get; }
     bool ShowAppLanguageRestartMessage { get; }
-    IReadOnlyList<IAppThemeViewModel> AppThemes { get; }
+    ObservableCollection<IAppThemeViewModel> AppThemes { get; }
     int SelectedAppThemeIndex { get; }
     bool ShowAppThemeRestartMessage { get; }
     bool IsVideoCaptureFeatureEnabled { get; }

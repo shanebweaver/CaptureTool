@@ -1,14 +1,14 @@
-using CaptureTool.Common;
-using CaptureTool.Common.Commands;
-using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
+using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.Navigation;
+using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Application.Interfaces.ViewModels.Options;
+using CaptureTool.Common;
 using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Themes;
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using System.Drawing;
 using System.Timers;
 using Timer = System.Timers.Timer;
@@ -81,12 +81,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
-    public RelayCommand CloseOverlayCommand { get; }
-    public RelayCommand GoBackCommand { get; }
-    public RelayCommand StartVideoCaptureCommand { get; }
-    public RelayCommand StopVideoCaptureCommand { get; }
-    public RelayCommand ToggleDesktopAudioCommand { get; }
-    public RelayCommand TogglePauseResumeCommand { get; }
+    public IAppCommand CloseOverlayCommand { get; }
+    public IAppCommand GoBackCommand { get; }
+    public IAppCommand StartVideoCaptureCommand { get; }
+    public IAppCommand StopVideoCaptureCommand { get; }
+    public IAppCommand ToggleDesktopAudioCommand { get; }
+    public IAppCommand TogglePauseResumeCommand { get; }
 
     public CaptureOverlayViewModel(
         IAppNavigation appNavigation,
@@ -105,7 +105,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
 
-        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         CloseOverlayCommand = commandFactory.Create(ActivityIds.CloseOverlay, CloseOverlay);
         GoBackCommand = commandFactory.Create(ActivityIds.GoBack, GoBack);
         StartVideoCaptureCommand = commandFactory.Create(ActivityIds.StartVideoCapture, StartVideoCapture);

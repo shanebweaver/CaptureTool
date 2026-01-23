@@ -1,10 +1,11 @@
-using System.Windows.Input;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface IHomePageViewModel
+public interface IHomePageViewModel : IViewModel
 {
-    ICommand NewImageCaptureCommand { get; }
-    ICommand NewVideoCaptureCommand { get; }
+    IAppCommand NewImageCaptureCommand { get; }
+    IAppCommand NewVideoCaptureCommand { get; }
     bool IsVideoCaptureEnabled { get; }
 }

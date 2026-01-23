@@ -1,18 +1,18 @@
-using CaptureTool.Common;
-using CaptureTool.Common.Commands;
-using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
-using CaptureTool.Application.Interfaces.UseCases.Settings;
+using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Settings;
+using CaptureTool.Application.Interfaces.UseCases.Settings;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 using CaptureTool.Infrastructure.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Themes;
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
@@ -73,26 +73,33 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
         AppTheme.SystemDefault,
     ];
 
-    public AsyncRelayCommand ChangeScreenshotsFolderCommand { get; }
-    public RelayCommand OpenScreenshotsFolderCommand { get; }
-    public AsyncRelayCommand ChangeVideosFolderCommand { get; }
-    public RelayCommand OpenVideosFolderCommand { get; }
-    public RelayCommand RestartAppCommand { get; }
-    public RelayCommand GoBackCommand { get; }
-    public AsyncRelayCommand<bool> UpdateImageCaptureAutoCopyCommand { get; }
-    public AsyncRelayCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
-    public AsyncRelayCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
-    public AsyncRelayCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
-    public AsyncRelayCommand<int> UpdateAppLanguageCommand { get; }
-    public RelayCommand<int> UpdateAppThemeCommand { get; }
-    public RelayCommand OpenTemporaryFilesFolderCommand { get; }
-    public RelayCommand ClearTemporaryFilesCommand { get; }
-    public AsyncRelayCommand RestoreDefaultSettingsCommand { get; }
+
+    public IAsyncAppCommand ChangeScreenshotsFolderCommand { get; }
+    public IAppCommand OpenScreenshotsFolderCommand { get; }
+    public IAsyncAppCommand ChangeVideosFolderCommand { get; }
+    public IAppCommand OpenVideosFolderCommand { get; }
+    public IAppCommand RestartAppCommand { get; }
+    public IAppCommand GoBackCommand { get; }
+    public IAsyncAppCommand<bool> UpdateImageCaptureAutoCopyCommand { get; }
+    public IAsyncAppCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
+    public IAsyncAppCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
+    public IAsyncAppCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
+    public IAsyncAppCommand<int> UpdateAppLanguageCommand { get; }
+    public IAppCommand<int> UpdateAppThemeCommand { get; }
+    public IAppCommand OpenTemporaryFilesFolderCommand { get; }
+    public IAppCommand ClearTemporaryFilesCommand { get; }
+    public IAsyncAppCommand RestoreDefaultSettingsCommand { get; }
+
+    private ObservableCollection<IAppLanguageViewModel> _appLanguages = [];
 
     public ObservableCollection<IAppLanguageViewModel> AppLanguages
     {
-        get => field;
-        private set => Set(ref field, value);
+        get => _appLanguages;
+        private set
+        {
+            _appLanguages = value;
+            RaisePropertyChanged(nameof(AppLanguages));
+        }
     }
 
     public int SelectedAppLanguageIndex
@@ -107,10 +114,16 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
         private set => Set(ref field, value);
     }
 
+    private ObservableCollection<IAppThemeViewModel> _appThemes = [];
+
     public ObservableCollection<IAppThemeViewModel> AppThemes
     {
-        get => field;
-        private set => Set(ref field, value);
+        get => _appThemes;
+        private set
+        {
+            _appThemes = value;
+            RaisePropertyChanged(nameof(AppThemes));
+        }
     }
 
     public int SelectedAppThemeIndex
@@ -228,7 +241,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
         VideosFolderPath = string.Empty;
         TemporaryFilesFolderPath = string.Empty;
 
-        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         ChangeScreenshotsFolderCommand = commandFactory.CreateAsync(ActivityIds.ChangeScreenshotsFolder, ChangeScreenshotsFolderAsync);
         OpenScreenshotsFolderCommand = commandFactory.Create(ActivityIds.OpenScreenshotsFolder, OpenScreenshotsFolder);
         ChangeVideosFolderCommand = commandFactory.CreateAsync(ActivityIds.ChangeVideosFolder, ChangeVideosFolderAsync);
@@ -260,14 +273,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
             {
                 IAppLanguage language = languages[i];
                 IAppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
-                AppLanguages.Add(vm);
+                _appLanguages.Add(vm);
 
                 if (language.Value == _localizationService.LanguageOverride?.Value)
                 {
                     appLanguageIndex = i;
                 }
             }
-            AppLanguages.Add(_appLanguageViewModelFactory.Create(null)); // Null for system default
+            _appLanguages.Add(_appLanguageViewModelFactory.Create(null)); // Null for system default
             if (appLanguageIndex != -1)
             {
                 SelectedAppLanguageIndex = appLanguageIndex;
@@ -281,12 +294,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
             // Themes
             AppTheme currentTheme = _themeService.CurrentTheme;
             int appThemeIndex = -1;
-            AppThemes.Clear();
+            _appThemes.Clear();
             for (var i = 0; i < SupportedAppThemes.Length; i++)
             {
                 AppTheme supportedTheme = SupportedAppThemes[i];
                 IAppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
-                AppThemes.Add(vm);
+                _appThemes.Add(vm);
 
                 if (supportedTheme == currentTheme)
                 {

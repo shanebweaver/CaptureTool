@@ -1,12 +1,12 @@
-using CaptureTool.Common;
-using CaptureTool.Common.Commands;
-using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
-using CaptureTool.Application.Interfaces.UseCases.Home;
+using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.FeatureManagement;
+using CaptureTool.Application.Interfaces.UseCases.Home;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -22,10 +22,9 @@ public sealed partial class HomePageViewModel : ViewModelBase, IHomePageViewMode
 
     private readonly IHomeNewImageCaptureUseCase _newImageCaptureAction;
     private readonly IHomeNewVideoCaptureUseCase _newVideoCaptureAction;
-    private readonly ITelemetryService _telemetryService;
 
-    public RelayCommand NewImageCaptureCommand { get; }
-    public RelayCommand NewVideoCaptureCommand { get; }
+    public IAppCommand NewImageCaptureCommand { get; }
+    public IAppCommand NewVideoCaptureCommand { get; }
 
     public bool IsVideoCaptureEnabled { get; }
 
@@ -37,11 +36,10 @@ public sealed partial class HomePageViewModel : ViewModelBase, IHomePageViewMode
     {
         _newImageCaptureAction = newImageCaptureAction;
         _newVideoCaptureAction = newVideoCaptureAction;
-        _telemetryService = telemetryService;
 
         IsVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
 
-        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         NewImageCaptureCommand = commandFactory.Create(ActivityIds.NewImageCapture, NewImageCapture);
         NewVideoCaptureCommand = commandFactory.Create(ActivityIds.NewVideoCapture, NewVideoCapture, () => IsVideoCaptureEnabled);
     }

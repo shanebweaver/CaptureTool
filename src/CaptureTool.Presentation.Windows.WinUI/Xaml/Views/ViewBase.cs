@@ -5,7 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 
-public abstract partial class ViewBase<VM> : UserControl where VM : ViewModelBase
+public abstract partial class ViewBase<VM> : UserControl where VM : IViewModel
 {
     private CancellationTokenSource? _loadCts;
     public VM ViewModel { get; } = App.Current.ServiceProvider.GetService<VM>();

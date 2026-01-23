@@ -1,9 +1,10 @@
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Application.Interfaces.ViewModels.Options;
-using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface ICaptureOverlayViewModel
+public interface ICaptureOverlayViewModel : IViewModel
 {
     bool IsRecording { get; }
     bool IsPaused { get; }
@@ -11,12 +12,12 @@ public interface ICaptureOverlayViewModel
     Infrastructure.Interfaces.Themes.AppTheme CurrentAppTheme { get; }
     Infrastructure.Interfaces.Themes.AppTheme DefaultAppTheme { get; }
     bool IsDesktopAudioEnabled { get; }
-    ICommand CloseOverlayCommand { get; }
-    ICommand GoBackCommand { get; }
-    ICommand StartVideoCaptureCommand { get; }
-    ICommand StopVideoCaptureCommand { get; }
-    ICommand ToggleDesktopAudioCommand { get; }
-    ICommand TogglePauseResumeCommand { get; }
+    IAppCommand CloseOverlayCommand { get; }
+    IAppCommand GoBackCommand { get; }
+    IAppCommand StartVideoCaptureCommand { get; }
+    IAppCommand StopVideoCaptureCommand { get; }
+    IAppCommand ToggleDesktopAudioCommand { get; }
+    IAppCommand TogglePauseResumeCommand { get; }
     
     void Load(CaptureOverlayViewModelOptions options);
 }

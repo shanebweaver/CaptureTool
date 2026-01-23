@@ -4,9 +4,10 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.ViewModels"
+    xmlns:viewmodels="using:CaptureTool.Application.Implementations.ViewModels"
     xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
     d:DataContext="{d:DesignInstance Type=viewmodels:SettingsPageViewModel}"
     mc:Ignorable="d">
@@ -25,7 +26,7 @@
                     AutomationProperties.Name="Back"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Command="{x:Bind ViewModel.GoBackCommand, Mode=OneWay}">
+                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.GoBackCommand), Mode=OneWay}">
                     <SymbolIcon Symbol="Back" />
                 </Button>
                 <TextBlock
@@ -138,7 +139,7 @@
                                     MaxLines="2"
                                     TextTrimming="WordEllipsis"
                                     TextWrapping="NoWrap" />
-                                <HyperlinkButton Command="{x:Bind ViewModel.OpenScreenshotsFolderCommand, Mode=OneWay}">
+                                <HyperlinkButton Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.OpenScreenshotsFolderCommand), Mode=OneWay}">
                                     <TextBlock
                                         MaxLines="2"
                                         Style="{StaticResource CaptionTextBlockStyle}"
@@ -152,7 +153,7 @@
                                 Grid.Column="1"
                                 Orientation="Horizontal"
                                 Spacing="4">
-                                <Button Command="{x:Bind ViewModel.ChangeScreenshotsFolderCommand, Mode=OneWay}">
+                                <Button Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ChangeScreenshotsFolderCommand), Mode=OneWay}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <Viewbox Height="16">
                                             <SymbolIcon Symbol="Folder" />
@@ -263,7 +264,7 @@
                                     MaxLines="2"
                                     TextTrimming="WordEllipsis"
                                     TextWrapping="NoWrap" />
-                                <HyperlinkButton Command="{x:Bind ViewModel.OpenVideosFolderCommand, Mode=OneWay}">
+                                <HyperlinkButton Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.OpenVideosFolderCommand), Mode=OneWay}">
                                     <TextBlock
                                         MaxLines="2"
                                         Style="{StaticResource CaptionTextBlockStyle}"
@@ -277,7 +278,7 @@
                                 Grid.Column="1"
                                 Orientation="Horizontal"
                                 Spacing="4">
-                                <Button Command="{x:Bind ViewModel.ChangeVideosFolderCommand, Mode=OneWay}">
+                                <Button Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ChangeVideosFolderCommand), Mode=OneWay}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <Viewbox Height="16">
                                             <SymbolIcon Symbol="Folder" />
@@ -337,10 +338,10 @@
                                 SelectionChanged="AppThemeRadioButtons_SelectionChanged">
                                 <RadioButtons.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:AppThemeViewModel">
-                                        <RadioButton AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">
+                                        <RadioButton AutomationProperties.Name="{x:Bind AutomationName}">
                                             <TextBlock
                                                 Margin="12,0,0,0"
-                                                Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                Text="{x:Bind DisplayName}"
                                                 TextTrimming="CharacterEllipsis"
                                                 TextWrapping="NoWrap" />
                                         </RadioButton>
@@ -364,7 +365,7 @@
                                 <Button
                                     x:Uid="Settings_RestartAppButton"
                                     VerticalAlignment="Center"
-                                    Command="{x:Bind ViewModel.RestartAppCommand, Mode=OneWay}">
+                                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RestartAppCommand), Mode=OneWay}">
                                     <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
                                 </Button>
                                 <TextBlock
@@ -431,10 +432,10 @@
                                 SelectionChanged="AppLanguageRadioButtons_SelectionChanged">
                                 <RadioButtons.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:AppLanguageViewModel">
-                                        <RadioButton AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">
+                                        <RadioButton AutomationProperties.Name="{x:Bind AutomationName}">
                                             <TextBlock
                                                 Margin="12,0,0,0"
-                                                Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                Text="{x:Bind DisplayName}"
                                                 TextTrimming="CharacterEllipsis"
                                                 TextWrapping="NoWrap" />
                                         </RadioButton>
@@ -458,7 +459,7 @@
                                 <Button
                                     x:Uid="Settings_RestartAppButton"
                                     VerticalAlignment="Center"
-                                    Command="{x:Bind ViewModel.RestartAppCommand, Mode=OneWay}">
+                                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RestartAppCommand), Mode=OneWay}">
                                     <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
                                 </Button>
                                 <TextBlock
@@ -524,7 +525,7 @@
                                     MaxLines="2"
                                     TextTrimming="WordEllipsis"
                                     TextWrapping="NoWrap" />
-                                <HyperlinkButton Command="{x:Bind ViewModel.OpenTemporaryFilesFolderCommand, Mode=OneWay}">
+                                <HyperlinkButton Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.OpenTemporaryFilesFolderCommand), Mode=OneWay}">
                                     <TextBlock
                                         MaxLines="2"
                                         Style="{StaticResource CaptionTextBlockStyle}"
@@ -538,7 +539,7 @@
                                 Grid.Column="1"
                                 Orientation="Horizontal"
                                 Spacing="4">
-                                <Button Command="{x:Bind ViewModel.ClearTemporaryFilesCommand, Mode=OneWay}">
+                                <Button Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ClearTemporaryFilesCommand), Mode=OneWay}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <Viewbox Height="16">
                                             <SymbolIcon Symbol="Delete" />
@@ -552,7 +553,7 @@
                 </StackPanel>
 
                 <!--  Restore defaults  -->
-                <Button Command="{x:Bind ViewModel.RestoreDefaultSettingsCommand, Mode=OneWay}">
+                <Button Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RestoreDefaultSettingsCommand), Mode=OneWay}">
                     <TextBlock x:Uid="Settings_RestoreDefaults_Button" />
                     <ToolTipService.ToolTip>
                         <ToolTip>

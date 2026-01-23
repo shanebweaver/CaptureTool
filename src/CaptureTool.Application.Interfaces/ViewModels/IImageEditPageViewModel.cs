@@ -1,35 +1,34 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domain.Edit.Interfaces.Drawable;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface IImageEditPageViewModel
+public interface IImageEditPageViewModel : IViewModel
 {
     event EventHandler? InvalidateCanvasRequested;
     
-    IAsyncCommand CopyCommand { get; }
-    ICommand ToggleCropModeCommand { get; }
-    IAsyncCommand SaveCommand { get; }
-    ICommand UndoCommand { get; }
-    ICommand RedoCommand { get; }
-    ICommand RotateCommand { get; }
-    ICommand FlipHorizontalCommand { get; }
-    ICommand FlipVerticalCommand { get; }
-    IAsyncCommand PrintCommand { get; }
-    IAsyncCommand ShareCommand { get; }
-    ICommand UpdateChromaKeyColorCommand { get; }
-    ICommand UpdateOrientationCommand { get; }
-    ICommand UpdateCropRectCommand { get; }
-    ICommand UpdateShowChromaKeyOptionsCommand { get; }
-    ICommand UpdateDesaturationCommand { get; }
-    ICommand UpdateToleranceCommand { get; }
-    ICommand UpdateSelectedColorOptionIndexCommand { get; }
+    IAsyncAppCommand CopyCommand { get; }
+    IAppCommand ToggleCropModeCommand { get; }
+    IAsyncAppCommand SaveCommand { get; }
+    IAppCommand UndoCommand { get; }
+    IAppCommand RedoCommand { get; }
+    IAppCommand RotateCommand { get; }
+    IAppCommand FlipHorizontalCommand { get; }
+    IAppCommand FlipVerticalCommand { get; }
+    IAsyncAppCommand PrintCommand { get; }
+    IAsyncAppCommand ShareCommand { get; }
+    IAppCommand<Color> UpdateChromaKeyColorCommand { get; }
+    IAppCommand<ImageOrientation> UpdateOrientationCommand { get; }
+    IAppCommand<Rectangle> UpdateCropRectCommand { get; }
+    IAppCommand<bool> UpdateShowChromaKeyOptionsCommand { get; }
+    IAppCommand<int> UpdateDesaturationCommand { get; }
+    IAppCommand<int> UpdateToleranceCommand { get; }
+    IAppCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
     
     bool HasUndoStack { get; }
     bool HasRedoStack { get; }

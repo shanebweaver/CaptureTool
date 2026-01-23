@@ -5,11 +5,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.ViewModels"
+    xmlns:viewmodels="using:CaptureTool.Application.Interfaces.ViewModels"
     xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
-    d:DataContext="{d:DesignInstance Type=viewmodels:HomePageViewModel}"
+    d:DataContext="{d:DesignInstance Type=viewmodels:IHomePageViewModel}"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -45,7 +46,7 @@
                 <Button
                     x:Name="NewImageCaptureButton"
                     x:Uid="NewCaptureButton_Image"
-                    Command="{x:Bind ViewModel.NewImageCaptureCommand}"
+                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewImageCaptureCommand)}"
                     Style="{StaticResource NewCaptureButtonStyle}">
                     <StackPanel Spacing="4">
                         <SymbolIcon Symbol="{StaticResource NewImageCaptureSymbol}" />
@@ -58,7 +59,7 @@
                 <Button
                     x:Name="NewVideoCaptureButton"
                     x:Uid="NewCaptureButton_Video"
-                    Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
+                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewVideoCaptureCommand)}"
                     Style="{StaticResource NewCaptureButtonStyle}"
                     Visibility="{x:Bind ViewModel.IsVideoCaptureEnabled}">
                     <StackPanel Spacing="4">

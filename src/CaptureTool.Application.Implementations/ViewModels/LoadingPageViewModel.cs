@@ -1,10 +1,10 @@
-using CaptureTool.Common;
-using CaptureTool.Common.Commands;
-using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
+using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.UseCases.Loading;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -20,7 +20,7 @@ public sealed partial class LoadingPageViewModel : ViewModelBase, ILoadingPageVi
     private readonly ILoadingGoBackUseCase _goBackAction;
     private readonly ITelemetryService _telemetryService;
 
-    public RelayCommand GoBackCommand { get; }
+    public IAppCommand GoBackCommand { get; }
 
     public LoadingPageViewModel(
         ILoadingGoBackUseCase goBackAction,
@@ -29,7 +29,7 @@ public sealed partial class LoadingPageViewModel : ViewModelBase, ILoadingPageVi
         _goBackAction = goBackAction;
         _telemetryService = telemetryService;
 
-        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         GoBackCommand = commandFactory.Create(ActivityIds.GoBack, GoBack);
     }
 

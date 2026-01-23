@@ -39,7 +39,7 @@ public class VideoEditPageViewModelTests
         vm.Load(videoFile);
 
         // Act
-        await vm.SaveCommand.ExecuteAsync(null);
+        await vm.SaveCommand.ExecuteAsync();
 
         // Assert
         saveAction.Verify(a => a.ExecuteAsync("test.mp4", It.IsAny<CancellationToken>()), Times.Once);
@@ -60,7 +60,7 @@ public class VideoEditPageViewModelTests
         vm.Load(videoFile);
 
         // Act
-        await vm.CopyCommand.ExecuteAsync(null);
+        await vm.CopyCommand.ExecuteAsync();
 
         // Assert
         copyAction.Verify(a => a.ExecuteAsync("test.mp4", It.IsAny<CancellationToken>()), Times.Once);

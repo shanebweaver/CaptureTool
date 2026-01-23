@@ -7,5 +7,4 @@ public interface ICaptureModeViewModel
     CaptureMode CaptureMode { get; }
     string DisplayName { get; }
     string AutomationName { get; }
-    string IconSymbolName { get; }
 }

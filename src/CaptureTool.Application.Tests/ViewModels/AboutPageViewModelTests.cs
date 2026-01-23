@@ -6,6 +6,7 @@ using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
 using System.Windows.Input;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 
 namespace CaptureTool.Application.Tests.ViewModels;
 
@@ -31,7 +32,7 @@ public class AboutPageViewModelTests
     // Generic dialog test method
     // ---------------------------------------------------------
     private async Task TestDialogCommandAsync(
-        Func<AboutPageViewModel, ICommand> getCommand,
+        Func<AboutPageViewModel, IAppCommand> getCommand,
         string expectedActivityId,
         string titleResourceKey,
         string contentResourceKey)
@@ -57,7 +58,7 @@ public class AboutPageViewModelTests
 
         // Act
         var command = getCommand(vm);
-        command.Execute(null);
+        command.Execute();
 
         // Assert telemetry
         var result = await tcs.Task;
@@ -141,7 +142,7 @@ public class AboutPageViewModelTests
         var vm = Fixture.Create<AboutPageViewModel>();
 
         // Act
-        vm.ShowThirdPartyCommand.Execute(null);
+        vm.ShowThirdPartyCommand.Execute();
 
         // Assert
         telemetryService.Verify(
@@ -169,7 +170,7 @@ public class AboutPageViewModelTests
         var vm = Create();
 
         // Act
-        vm.GoBackCommand.Execute(null);
+        vm.GoBackCommand.Execute();
 
         // Assert
         goBackAction.Verify(a => a.Execute(), Times.Once);

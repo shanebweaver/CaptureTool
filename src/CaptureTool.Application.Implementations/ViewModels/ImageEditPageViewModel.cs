@@ -1,14 +1,15 @@
-using CaptureTool.Common;
-using CaptureTool.Common.Commands;
+using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Store;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Common;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domain.Edit.Interfaces.Drawable;
 using CaptureTool.Domain.Edit.Interfaces.Operations;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Share;
@@ -16,7 +17,6 @@ using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Store;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Numerics;
@@ -38,6 +38,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         public static readonly string FlipVertical = "FlipVertical";
         public static readonly string Print = "Print";
         public static readonly string Share = "Share";
+        public static readonly string UpdateChromaKeyColor = "UpdateChromaKeyColor";
+        public static readonly string UpdateOrientation = "UpdateOrientation";
+        public static readonly string UpdateCropRect = "UpdateCropRect";
+        public static readonly string UpdateShowChromaKeyOptions = "UpdateShowChromaKeyOptions";
+        public static readonly string UpdateDesaturation = "UpdateDesaturation";
+        public static readonly string UpdateTolerance = "UpdateTolerance";
+        public static readonly string UpdateSelectedColorOptionIndex = "UpdateSelectedColorOptionIndex";
     }
 
     private const string TelemetryContext = "ImageEditPage";
@@ -60,24 +67,23 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public event EventHandler? InvalidateCanvasRequested;
 
-    public AsyncRelayCommand CopyCommand { get; }
-    public RelayCommand ToggleCropModeCommand { get; }
-    public AsyncRelayCommand SaveCommand { get; }
-    public RelayCommand UndoCommand { get; }
-    public RelayCommand RedoCommand { get; }
-    public RelayCommand RotateCommand { get; }
-    public RelayCommand FlipHorizontalCommand { get; }
-    public RelayCommand FlipVerticalCommand { get; }
-    public AsyncRelayCommand PrintCommand { get; }
-    public AsyncRelayCommand ShareCommand { get; }
-    public RelayCommand<Color> UpdateChromaKeyColorCommand { get; }
-
-    public RelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
-    public RelayCommand<Rectangle> UpdateCropRectCommand { get; }
-    public RelayCommand<bool> UpdateShowChromaKeyOptionsCommand { get; }
-    public RelayCommand<int> UpdateDesaturationCommand { get; }
-    public RelayCommand<int> UpdateToleranceCommand { get; }
-    public RelayCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
+    public IAsyncAppCommand CopyCommand { get; }
+    public IAppCommand ToggleCropModeCommand { get; }
+    public IAsyncAppCommand SaveCommand { get; }
+    public IAppCommand UndoCommand { get; }
+    public IAppCommand RedoCommand { get; }
+    public IAppCommand RotateCommand { get; }
+    public IAppCommand FlipHorizontalCommand { get; }
+    public IAppCommand FlipVerticalCommand { get; }
+    public IAsyncAppCommand PrintCommand { get; }
+    public IAsyncAppCommand ShareCommand { get; }
+    public IAppCommand<Color> UpdateChromaKeyColorCommand { get; }
+    public IAppCommand<ImageOrientation> UpdateOrientationCommand { get; }
+    public IAppCommand<Rectangle> UpdateCropRectCommand { get; }
+    public IAppCommand<bool> UpdateShowChromaKeyOptionsCommand { get; }
+    public IAppCommand<int> UpdateDesaturationCommand { get; }
+    public IAppCommand<int> UpdateToleranceCommand { get; }
+    public IAppCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
 
     public bool HasUndoStack
     {
@@ -91,10 +97,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
-    public ObservableCollection<IDrawable> Drawables
+    private ObservableCollection<IDrawable> _drawables = [];
+
+    public IReadOnlyList<IDrawable> Drawables
     {
-        get => field;
-        private set => Set(ref field, value);
+        get => _drawables;
+        private set
+        {
+            _drawables = value as ObservableCollection<IDrawable> ?? new ObservableCollection<IDrawable>(value);
+            RaisePropertyChanged(nameof(Drawables));
+        }
     }
 
     public ImageFile? ImageFile
@@ -163,10 +175,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
-    public ObservableCollection<ChromaKeyColorOption> ChromaKeyColorOptions
+    private ObservableCollection<ChromaKeyColorOption> _chromaKeyColorOptions = [];
+
+    public IReadOnlyList<ChromaKeyColorOption> ChromaKeyColorOptions
     {
-        get => field;
-        private set => Set(ref field, value);
+        get => _chromaKeyColorOptions;
+        private set
+        {
+            _chromaKeyColorOptions = value as ObservableCollection<ChromaKeyColorOption> ?? new ObservableCollection<ChromaKeyColorOption>(value);
+            RaisePropertyChanged(nameof(ChromaKeyColorOptions));
+        }
     }
 
     public int SelectedChromaKeyColorOption
@@ -219,7 +237,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _operationsUndoStack = [];
         _operationsRedoStack = [];
 
-        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         CopyCommand = commandFactory.CreateAsync(ActivityIds.Copy, CopyAsync);
         ToggleCropModeCommand = commandFactory.Create(ActivityIds.ToggleCropMode, ToggleCropMode);
         SaveCommand = commandFactory.CreateAsync(ActivityIds.Save, SaveAsync);
@@ -230,13 +248,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         FlipVerticalCommand = commandFactory.Create(ActivityIds.FlipVertical, () => Flip(FlipDirection.Vertical));
         PrintCommand = commandFactory.CreateAsync(ActivityIds.Print, PrintAsync);
         ShareCommand = commandFactory.CreateAsync(ActivityIds.Share, ShareAsync);
-        UpdateChromaKeyColorCommand = new(UpdateChromaKeyColor, (c) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
-        UpdateOrientationCommand = new(UpdateOrientation);
-        UpdateCropRectCommand = new(UpdateCropRect);
-        UpdateShowChromaKeyOptionsCommand = new(UpdateShowChromaKeyOptions);
-        UpdateDesaturationCommand = new(UpdateDesaturation);
-        UpdateToleranceCommand = new(UpdateTolerance);
-        UpdateSelectedColorOptionIndexCommand = new(UpdateSelectedColorOptionIndex);
+        UpdateChromaKeyColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateChromaKeyColor, UpdateChromaKeyColor, (c) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
+        UpdateOrientationCommand = commandFactory.Create<ImageOrientation>(ActivityIds.UpdateOrientation, UpdateOrientation);
+        UpdateCropRectCommand = commandFactory.Create<Rectangle>(ActivityIds.UpdateCropRect, UpdateCropRect);
+        UpdateShowChromaKeyOptionsCommand = commandFactory.Create<bool>(ActivityIds.UpdateShowChromaKeyOptions, UpdateShowChromaKeyOptions);
+        UpdateDesaturationCommand = commandFactory.Create<int>(ActivityIds.UpdateDesaturation, UpdateDesaturation);
+        UpdateToleranceCommand = commandFactory.Create<int>(ActivityIds.UpdateTolerance, UpdateTolerance);
+        UpdateSelectedColorOptionIndexCommand = commandFactory.Create<int>(ActivityIds.UpdateSelectedColorOptionIndex, UpdateSelectedColorOptionIndex);
     }
 
     public override Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
@@ -255,7 +273,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 CropRect = new(Point.Empty, ImageSize);
 
                 _imageDrawable = new(topLeft, imageFile, ImageSize);
-                Drawables.Add(_imageDrawable);
+                _drawables.Add(_imageDrawable);
 
                 if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
                 {
@@ -264,14 +282,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                     if (isChromaKeyAddOnOwned)
                     {
                         // Empty option disables the effect.
-                        ChromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
+                        _chromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
 
                         // Add top detected colors
                         var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 5, 4);
                         foreach (var topColor in topColors)
                         {
                             ChromaKeyColorOption colorOption = new(topColor);
-                            ChromaKeyColorOptions.Add(colorOption);
+                            _chromaKeyColorOptions.Add(colorOption);
                         }
                     }
                 }
@@ -294,7 +312,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ImageSize = Size.Empty;
         Orientation = ImageOrientation.RotateNoneFlipNone;
         MirroredDisplayName = string.Empty;
-        Drawables.Clear();
+        _drawables.Clear();
         base.Dispose();
     }
 

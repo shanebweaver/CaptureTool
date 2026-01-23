@@ -1,12 +1,12 @@
-using CaptureTool.Common;
-using CaptureTool.Common.Commands;
-using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
+using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.UseCases.VideoEdit;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Common;
 using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVideoFile>, IVideoEditPageViewModel
@@ -20,8 +20,8 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     private const string TelemetryContext = "VideoEditPage";
 
-    public AsyncRelayCommand SaveCommand { get; }
-    public AsyncRelayCommand CopyCommand { get; }
+    public IAsyncAppCommand SaveCommand { get; }
+    public IAsyncAppCommand CopyCommand { get; }
 
     public string? VideoPath
     {
@@ -54,7 +54,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         _copyAction = copyAction;
         _telemetryService = telemetryService;
 
-        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         SaveCommand = commandFactory.CreateAsync(ActivityIds.Save, SaveAsync);
         CopyCommand = commandFactory.CreateAsync(ActivityIds.Copy, CopyAsync);
 

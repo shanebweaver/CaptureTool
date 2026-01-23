@@ -1,13 +1,13 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Storage;
-using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface IVideoEditPageViewModel
+public interface IVideoEditPageViewModel : IViewModel
 {
-    IAsyncCommand SaveCommand { get; }
-    IAsyncCommand CopyCommand { get; }
+    IAsyncAppCommand SaveCommand { get; }
+    IAsyncAppCommand CopyCommand { get; }
     string? VideoPath { get; }
     bool IsVideoReady { get; }
     bool IsFinalizingVideo { get; }

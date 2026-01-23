@@ -13,7 +13,7 @@ public sealed partial class LoadingPage : LoadingPageBase
     {
         if (e.NavigationMode == NavigationMode.Back)
         {
-            ViewModel.GoBackCommand.Execute(null);
+            ViewModel.GoBackCommand.Execute();
         }
 
         base.OnNavigatedTo(e);

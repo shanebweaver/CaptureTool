@@ -1,14 +1,14 @@
-using CaptureTool.Common;
-using CaptureTool.Common.Commands;
-using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
+using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.UseCases.AddOns;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Store;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using static CaptureTool.Application.Interfaces.Store.CaptureToolStoreProducts;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
@@ -31,8 +31,8 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase, IA
     private readonly ITelemetryService _telemetryService;
     private readonly ICancellationService _cancellationService;
 
-    public AsyncRelayCommand GetChromaKeyAddOnCommand { get; }
-    public RelayCommand GoBackCommand { get; }
+    public IAsyncAppCommand GetChromaKeyAddOnCommand { get; }
+    public IAppCommand GoBackCommand { get; }
 
     public bool IsChromaKeyAddOnOwned
     {
@@ -75,7 +75,7 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase, IA
 
         ChromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
 
-        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         GetChromaKeyAddOnCommand = commandFactory.CreateAsync(ActivityIds.GetChromaKeyAddOn, GetChromaKeyAddOnAsync, () => IsChromaKeyAddOnAvailable);
         GoBackCommand = commandFactory.Create(ActivityIds.GoBack, GoBack, () => _goBackAction.CanExecute());
     }

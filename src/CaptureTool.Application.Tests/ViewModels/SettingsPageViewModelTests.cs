@@ -45,7 +45,7 @@ public sealed class SettingsPageViewModelTests
         var goBackAction = Fixture.Freeze<Mock<ISettingsGoBackUseCase>>();
         var vm = Create();
 
-        vm.GoBackCommand.Execute(null);
+        vm.GoBackCommand.Execute();
 
         goBackAction.Verify(a => a.Execute(), Times.Once);
         telemetry.Verify(t => t.ActivityInitiated(SettingsPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
@@ -59,7 +59,7 @@ public sealed class SettingsPageViewModelTests
         var restartAppAction = Fixture.Freeze<Mock<ISettingsRestartAppUseCase>>();
         var vm = Create();
 
-        vm.RestartAppCommand.Execute(null);
+        vm.RestartAppCommand.Execute();
 
         restartAppAction.Verify(a => a.Execute(), Times.Once);
         telemetry.Verify(t => t.ActivityInitiated(SettingsPageViewModel.ActivityIds.RestartApp, It.IsAny<string>()), Times.Once);

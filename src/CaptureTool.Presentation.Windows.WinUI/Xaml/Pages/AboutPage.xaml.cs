@@ -2,7 +2,6 @@ using CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.ApplicationModel.Resources;
-using System.Runtime.Intrinsics.Arm;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
@@ -41,7 +40,7 @@ public sealed partial class AboutPage : AboutPageBase
             XamlRoot = XamlRoot,
             Title = details.title,
             PrimaryButtonText = closeButtonText,
-            Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+            Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
             DefaultButton = ContentDialogButton.Primary,
             Content = contentScrollView
         };
@@ -57,7 +56,7 @@ public sealed partial class AboutPage : AboutPageBase
             XamlRoot = XamlRoot,
             Title = "Diagnostics",
             PrimaryButtonText = closeButtonText,
-            Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+            Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
             DefaultButton = ContentDialogButton.Primary,
             Content = new DiagnosticsView()
         };

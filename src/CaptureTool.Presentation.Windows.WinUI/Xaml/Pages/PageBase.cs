@@ -5,7 +5,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
-public abstract class PageBase<VM> : Page where VM : ViewModelBase
+public abstract class PageBase<VM> : Page where VM : IViewModel
 {
     private CancellationTokenSource? _loadCts;
 

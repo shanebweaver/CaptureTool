@@ -33,7 +33,7 @@ public class ErrorPageViewModelTests
         var vm = Create();
 
         // Act
-        vm.RestartAppCommand.Execute(null);
+        vm.RestartAppCommand.Execute();
 
         // Assert
         restartAppAction.Verify(a => a.Execute(), Times.Once);

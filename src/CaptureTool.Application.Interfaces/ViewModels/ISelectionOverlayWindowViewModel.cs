@@ -1,21 +1,21 @@
 using CaptureTool.Application.Interfaces.ViewModels.Options;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Themes;
-using System.Collections.Generic;
-using System.ComponentModel;
+using System.Collections.ObjectModel;
 using System.Drawing;
-using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface ISelectionOverlayWindowViewModel : INotifyPropertyChanged, IDisposable
+public interface ISelectionOverlayWindowViewModel : IViewModel
 {
     event EventHandler<CaptureOptions>? CaptureOptionsUpdated;
     
     bool IsPrimary { get; }
-    IReadOnlyList<ICaptureTypeViewModel> SupportedCaptureTypes { get; }
+    ObservableCollection<ICaptureTypeViewModel> SupportedCaptureTypes { get; }
     int SelectedCaptureTypeIndex { get; }
-    IReadOnlyList<ICaptureModeViewModel> SupportedCaptureModes { get; }
+    ObservableCollection<ICaptureModeViewModel> SupportedCaptureModes { get; }
     int SelectedCaptureModeIndex { get; }
     Rectangle CaptureArea { get; }
     MonitorCaptureResult? Monitor { get; }
@@ -24,12 +24,12 @@ public interface ISelectionOverlayWindowViewModel : INotifyPropertyChanged, IDis
     AppTheme DefaultAppTheme { get; }
     bool IsDesktopAudioEnabled { get; }
     bool IsCapturingVideo { get; }
-    ICommand RequestCaptureCommand { get; }
-    ICommand CloseOverlayCommand { get; }
-    ICommand UpdateSelectedCaptureModeCommand { get; }
-    ICommand UpdateSelectedCaptureTypeCommand { get; }
-    ICommand UpdateCaptureAreaCommand { get; }
-    ICommand UpdateCaptureOptionsCommand { get; }
+    IAppCommand RequestCaptureCommand { get; }
+    IAppCommand CloseOverlayCommand { get; }
+    IAppCommand<int> UpdateSelectedCaptureModeCommand { get; }
+    IAppCommand<int> UpdateSelectedCaptureTypeCommand { get; }
+    IAppCommand<Rectangle> UpdateCaptureAreaCommand { get; }
+    IAppCommand<CaptureOptions> UpdateCaptureOptionsCommand { get; }
     
     CaptureType? GetSelectedCaptureType();
     CaptureMode? GetSelectedCaptureMode();

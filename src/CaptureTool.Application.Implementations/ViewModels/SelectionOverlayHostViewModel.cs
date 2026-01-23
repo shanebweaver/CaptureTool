@@ -1,6 +1,5 @@
-﻿using CaptureTool.Common;
-using CaptureTool.Common.Sync;
-using CaptureTool.Application.Interfaces.ViewModels;
+﻿using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Common;
 using CaptureTool.Domain.Capture.Interfaces;
 using System.ComponentModel;
 using System.Drawing;
@@ -98,7 +97,13 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
             return;
         }
 
-        SyncHelper.SetProperty(windowVM, _windowViewModels, vm => vm.CaptureArea, Rectangle.Empty);
+        foreach (var target in _windowViewModels)
+        {
+            if (ReferenceEquals(target, windowVM))
+                continue;
+
+            target.UpdateCaptureAreaCommand.Execute(Rectangle.Empty);
+        }
     }
 
     private void OnSecondaryCaptureAreaChanged(ISelectionOverlayWindowViewModel windowVM)
@@ -108,17 +113,37 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
             return;
         }
 
-        SyncHelper.SetProperty(windowVM, _windowViewModels, vm => vm.CaptureArea, Rectangle.Empty);
+        foreach (var target in _windowViewModels)
+        {
+            if (ReferenceEquals(target, windowVM))
+                continue;
+
+            target.UpdateCaptureAreaCommand.Execute(Rectangle.Empty);
+        }
     }
 
     private void OnSelectedCaptureModeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
     {
-        SyncHelper.SyncProperty(windowVM, _windowViewModels, vm => vm.SelectedCaptureModeIndex);
+        var selectedIndex = windowVM.SelectedCaptureModeIndex;
+        foreach (var target in _windowViewModels)
+        {
+            if (ReferenceEquals(target, windowVM))
+                continue;
+
+            target.UpdateSelectedCaptureModeCommand.Execute(selectedIndex);
+        }
     }
 
     private void OnSelectedCaptureTypeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
     {
-        SyncHelper.SyncProperty(windowVM, _windowViewModels, vm => vm.SelectedCaptureTypeIndex);
+        var selectedIndex = windowVM.SelectedCaptureTypeIndex;
+        foreach (var target in _windowViewModels)
+        {
+            if (ReferenceEquals(target, windowVM))
+                continue;
+
+            target.UpdateSelectedCaptureTypeCommand.Execute(selectedIndex);
+        }
 
         if (windowVM.GetSelectedCaptureType() == CaptureType.AllScreens)
         {

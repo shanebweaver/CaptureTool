@@ -1,21 +1,20 @@
-using CaptureTool.Common.Commands;
-using System.Collections.Generic;
-using System.Windows.Input;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface IAppMenuViewModel
+public interface IAppMenuViewModel : IViewModel
 {
     event EventHandler? RecentCapturesUpdated;
     
-    ICommand NewImageCaptureCommand { get; }
-    IAsyncCommand OpenFileCommand { get; }
-    ICommand NavigateToSettingsCommand { get; }
-    ICommand ShowAboutAppCommand { get; }
-    ICommand ShowAddOnsCommand { get; }
-    ICommand ExitApplicationCommand { get; }
-    ICommand RefreshRecentCapturesCommand { get; }
-    ICommand OpenRecentCaptureCommand { get; }
+    IAppCommand NewImageCaptureCommand { get; }
+    IAsyncAppCommand OpenFileCommand { get; }
+    IAppCommand NavigateToSettingsCommand { get; }
+    IAppCommand ShowAboutAppCommand { get; }
+    IAppCommand ShowAddOnsCommand { get; }
+    IAppCommand ExitApplicationCommand { get; }
+    IAppCommand RefreshRecentCapturesCommand { get; }
+    IAppCommand<IRecentCaptureViewModel> OpenRecentCaptureCommand { get; }
     bool ShowAddOnsOption { get; }
     IReadOnlyList<IRecentCaptureViewModel> RecentCaptures { get; set; }
     

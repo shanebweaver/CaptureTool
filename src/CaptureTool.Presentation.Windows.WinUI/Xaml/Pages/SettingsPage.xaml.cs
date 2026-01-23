@@ -58,7 +58,7 @@ public sealed partial class SettingsPage : SettingsPageBase
     {
         if (sender is RadioButtons radioButtons)
         {
-            ViewModel.UpdateAppLanguageCommand.Execute(radioButtons.SelectedIndex);
+            _ = ViewModel.UpdateAppLanguageCommand.ExecuteAsync(radioButtons.SelectedIndex);
         }
     }
 }

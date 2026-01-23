@@ -1,14 +1,14 @@
-using CaptureTool.Common;
-using CaptureTool.Common.Commands;
-using CaptureTool.Application.Interfaces.UseCases.AppMenu;
+using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.FeatureManagement;
+using CaptureTool.Application.Interfaces.UseCases.AppMenu;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Common;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
@@ -25,34 +25,40 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase, IAppMenuVi
         public static readonly string ShowAddOns = "ShowAddOns";
         public static readonly string ExitApplication = "ExitApplication";
         public static readonly string SendFeedback = "SendFeedback";
+        public static readonly string RefreshRecentCaptures = "RefreshRecentCaptures";
         public static readonly string OpenRecentCapture = "OpenRecentCapture";
     }
 
     private const string TelemetryContext = "AppMenu";
 
     private readonly IAppMenuUseCases _appMenuActions;
-    private readonly ITelemetryService _telemetryService;
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly IFactoryServiceWithArgs<IRecentCaptureViewModel, string> _recentCaptureViewModelFactory;
 
     public event EventHandler? RecentCapturesUpdated;
 
-    public RelayCommand NewImageCaptureCommand { get; }
-    public AsyncRelayCommand OpenFileCommand { get; }
-    public RelayCommand NavigateToSettingsCommand { get; }
-    public RelayCommand ShowAboutAppCommand { get; }
-    public RelayCommand ShowAddOnsCommand { get; }
-    public RelayCommand ExitApplicationCommand { get; }
-    public RelayCommand RefreshRecentCapturesCommand { get; }
-    public RelayCommand<IRecentCaptureViewModel> OpenRecentCaptureCommand { get; }
+    public IAppCommand NewImageCaptureCommand { get; }
+    public IAsyncAppCommand OpenFileCommand { get; }
+    public IAppCommand NavigateToSettingsCommand { get; }
+    public IAppCommand ShowAboutAppCommand { get; }
+    public IAppCommand ShowAddOnsCommand { get; }
+    public IAppCommand ExitApplicationCommand { get; }
+    public IAppCommand RefreshRecentCapturesCommand { get; }
+    public IAppCommand<IRecentCaptureViewModel> OpenRecentCaptureCommand { get; }
 
     public bool ShowAddOnsOption { get; }
 
-    public ObservableCollection<IRecentCaptureViewModel> RecentCaptures
+    private ObservableCollection<IRecentCaptureViewModel> _recentCaptures = [];
+
+    public IReadOnlyList<IRecentCaptureViewModel> RecentCaptures
     {
-        get => field;
-        set => Set(ref field, value);
+        get => _recentCaptures;
+        set
+        {
+            _recentCaptures = value as ObservableCollection<IRecentCaptureViewModel> ?? new ObservableCollection<IRecentCaptureViewModel>(value);
+            RaisePropertyChanged(nameof(RecentCaptures));
+        }
     }
 
     public AppMenuViewModel(
@@ -64,19 +70,18 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase, IAppMenuVi
         IFactoryServiceWithArgs<IRecentCaptureViewModel, string> recentCaptureViewModelFactory)
     {
         _appMenuActions = appMenuActions;
-        _telemetryService = telemetryService;
         _imageCaptureHandler = imageCaptureHandler;
         _videoCaptureHandler = videoCaptureHandler;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
 
-        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         NewImageCaptureCommand = commandFactory.Create(ActivityIds.NewImageCapture, NewImageCapture);
         OpenFileCommand = commandFactory.CreateAsync(ActivityIds.OpenFile, OpenFileAsync);
         NavigateToSettingsCommand = commandFactory.Create(ActivityIds.NavigateToSettings, NavigateToSettings);
         ShowAboutAppCommand = commandFactory.Create(ActivityIds.ShowAboutApp, ShowAboutApp);
         ShowAddOnsCommand = commandFactory.Create(ActivityIds.ShowAddOns, ShowAddOns);
         ExitApplicationCommand = commandFactory.Create(ActivityIds.ExitApplication, ExitApplication);
-        RefreshRecentCapturesCommand = new(RefreshRecentCaptures);
+        RefreshRecentCapturesCommand = commandFactory.Create(ActivityIds.RefreshRecentCaptures, RefreshRecentCaptures);
         OpenRecentCaptureCommand = commandFactory.Create<IRecentCaptureViewModel>(ActivityIds.OpenRecentCapture, OpenRecentCapture);
 
         ShowAddOnsOption = featureManager.IsEnabled(CaptureToolFeatures.Feature_AddOns_Store);
@@ -168,11 +173,11 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase, IAppMenuVi
         var recentCaptures = _appMenuActions.LoadRecentCapturesAsync(CancellationToken.None)
             .ConfigureAwait(false).GetAwaiter().GetResult();
 
-        RecentCaptures.Clear();
+        _recentCaptures.Clear();
         foreach (var recentCapture in recentCaptures)
         {
             var recentCaptureViewModel = _recentCaptureViewModelFactory.Create(recentCapture.FilePath);
-            RecentCaptures.Add(recentCaptureViewModel);
+            _recentCaptures.Add(recentCaptureViewModel);
         }
 
         RecentCapturesUpdated?.Invoke(this, EventArgs.Empty);

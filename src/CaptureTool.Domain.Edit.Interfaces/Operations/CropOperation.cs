@@ -1,15 +1,15 @@
-﻿using System.Drawing;
-using System.Windows.Input;
+﻿using CaptureTool.Infrastructure.Interfaces.Commands;
+using System.Drawing;
 
 namespace CaptureTool.Domain.Edit.Interfaces.Operations;
 
 public sealed partial class CropOperation : CanvasOperation
 {
-    private readonly ICommand _command;
+    private readonly IAppCommand<Rectangle> _command;
     private readonly Rectangle _oldRectangle;
     private readonly Rectangle _newRectangle;
 
-    public CropOperation(ICommand command, Rectangle oldRectangle, Rectangle newRectangle)
+    public CropOperation(IAppCommand<Rectangle> command, Rectangle oldRectangle, Rectangle newRectangle)
     {
         _command = command;
         _oldRectangle = oldRectangle;

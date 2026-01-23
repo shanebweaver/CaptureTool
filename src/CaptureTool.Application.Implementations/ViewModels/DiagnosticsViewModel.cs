@@ -1,18 +1,29 @@
-using CaptureTool.Common;
-using CaptureTool.Common.Commands;
+using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.UseCases.Diagnostics;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Logging;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
 public sealed partial class DiagnosticsViewModel : ViewModelBase, IDiagnosticsViewModel
 {
+    public readonly struct ActivityIds
+    {
+        public static readonly string ClearLogs = "ClearLogs";
+        public static readonly string UpdateLoggingEnablement = "UpdateLoggingEnablement";
+    }
+
+    private const string TelemetryContext = "Diagnostics";
+
     private readonly IDiagnosticsUseCases _diagnosticsActions;
     private readonly ILogService _logService;
+    private readonly ITelemetryService _telemetryService;
 
-    public RelayCommand ClearLogsCommand { get; }
-    public AsyncRelayCommand<bool> UpdateLoggingEnablementCommand { get; }
+    public IAppCommand ClearLogsCommand { get; }
+    public IAsyncAppCommand<bool> UpdateLoggingEnablementCommand { get; }
 
     public string Logs
     {
@@ -28,15 +39,18 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase, IDiagnosticsVi
 
     public DiagnosticsViewModel(
         IDiagnosticsUseCases diagnosticsActions,
-        ILogService logService)
+        ILogService logService,
+        ITelemetryService telemetryService)
     {
         _diagnosticsActions = diagnosticsActions;
         _logService = logService;
+        _telemetryService = telemetryService;
 
         _logService.LogAdded += OnLogAdded;
 
-        ClearLogsCommand = new(ClearLogs); 
-        UpdateLoggingEnablementCommand = new(UpdateLoggingEnablementAsync);
+        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        ClearLogsCommand = commandFactory.Create(ActivityIds.ClearLogs, ClearLogs);
+        UpdateLoggingEnablementCommand = commandFactory.CreateAsync<bool>(ActivityIds.UpdateLoggingEnablement, UpdateLoggingEnablementAsync);
 
         IsLoggingEnabled = _diagnosticsActions.IsLoggingEnabled();
         Logs = string.Join(Environment.NewLine, _diagnosticsActions.GetCurrentLogs().Select(log => log.ToString()));

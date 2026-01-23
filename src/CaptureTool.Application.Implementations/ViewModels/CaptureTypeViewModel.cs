@@ -10,7 +10,6 @@ public sealed partial class CaptureTypeViewModel : ViewModelBase, ICaptureTypeVi
     public CaptureType CaptureType { get; }
     public string DisplayName { get; }
     public string AutomationName { get; }
-    public string IconGlyphName { get; }
 
     public CaptureTypeViewModel(
         CaptureType captureType,
@@ -21,14 +20,5 @@ public sealed partial class CaptureTypeViewModel : ViewModelBase, ICaptureTypeVi
         string captureTypeString = localizationService.GetString($"CaptureType_{Enum.GetName(captureType)}");
         DisplayName = captureTypeString;
         AutomationName = captureTypeString;
-
-        IconGlyphName = captureType switch
-        {
-            CaptureType.Rectangle => "RectangularClipping",
-            CaptureType.Window => "WindowSnipping",
-            CaptureType.FullScreen => "FitPage",
-            CaptureType.AllScreens => "Project",
-            _ => string.Empty,
-        };
     }
 }

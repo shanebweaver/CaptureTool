@@ -1,8 +1,9 @@
-using System.Windows.Input;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface ILoadingPageViewModel
+public interface ILoadingPageViewModel : IViewModel
 {
-    ICommand GoBackCommand { get; }
+    IAppCommand GoBackCommand { get; }
 }

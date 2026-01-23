@@ -1,12 +1,12 @@
-using CaptureTool.Common.Commands;
-using System.Windows.Input;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface IDiagnosticsViewModel
+public interface IDiagnosticsViewModel : IViewModel
 {
-    ICommand ClearLogsCommand { get; }
-    IAsyncCommand<bool> UpdateLoggingEnablementCommand { get; }
+    IAppCommand ClearLogsCommand { get; }
+    IAsyncAppCommand<bool> UpdateLoggingEnablementCommand { get; }
     string Logs { get; }
     bool IsLoggingEnabled { get; }
 }

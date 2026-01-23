@@ -111,7 +111,7 @@ public sealed class ImageEditPageViewModelTests
         var vm = Create();
 
         // Act
-        vm.ToggleCropModeCommand.Execute(null);
+        vm.ToggleCropModeCommand.Execute();
 
         // Assert
         vm.IsInCropMode.Should().BeTrue("Crop mode should be enabled after first toggle");
@@ -132,7 +132,6 @@ public sealed class ImageEditPageViewModelTests
         var exporter = Fixture.Freeze<Mock<IImageCanvasExporter>>();
 
         var vm = Create();
-        vm.Drawables.Add(Fixture.Create<IDrawable>());
 
         // Act
         await vm.CopyCommand.ExecuteAsync();

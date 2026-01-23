@@ -1,14 +1,14 @@
-﻿using System.Windows.Input;
+﻿using CaptureTool.Infrastructure.Interfaces.Commands;
 
 namespace CaptureTool.Domain.Edit.Interfaces.Operations;
 
 public sealed partial class OrientationOperation : CanvasOperation
 {
-    private readonly ICommand _command;
+    private readonly IAppCommand<ImageOrientation> _command;
     private readonly ImageOrientation _oldOrientation;
     private readonly ImageOrientation _newOrientation;
 
-    public OrientationOperation(ICommand command, ImageOrientation oldOrientation, ImageOrientation newOrientation)
+    public OrientationOperation(IAppCommand<ImageOrientation> command, ImageOrientation oldOrientation, ImageOrientation newOrientation)
     {
         _command = command;
         _oldOrientation = oldOrientation;

@@ -41,7 +41,7 @@ public class AddOnsPageViewModelTests
         var vm = Create();
 
         // Act
-        vm.GoBackCommand.Execute(null);
+        vm.GoBackCommand.Execute();
 
         // Assert
         goBackAction.Verify(a => a.Execute(), Times.Once);

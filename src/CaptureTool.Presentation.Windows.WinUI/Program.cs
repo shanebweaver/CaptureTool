@@ -32,7 +32,7 @@ public class Program
         instance.Activated += (_, e) => App.Current.Activate(e);
 
         // Start WinUI app
-        Application.Start(_ =>
+        Microsoft.UI.Xaml.Application.Start(_ =>
         {
             SynchronizationContext.SetSynchronizationContext(
                 new DispatcherQueueSynchronizationContext(

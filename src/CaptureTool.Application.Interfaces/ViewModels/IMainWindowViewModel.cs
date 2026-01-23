@@ -1,9 +1,10 @@
+using CaptureTool.Common;
 using CaptureTool.Infrastructure.Interfaces.Navigation;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface IMainWindowViewModel : INavigationHandler
+public interface IMainWindowViewModel : IViewModel, INavigationHandler
 {
     event EventHandler<INavigationRequest>? NavigationRequested;
     

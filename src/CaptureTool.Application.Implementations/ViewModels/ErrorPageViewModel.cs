@@ -1,10 +1,10 @@
-using CaptureTool.Common;
-using CaptureTool.Common.Commands;
-using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
+using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.UseCases.Error;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Common;
+using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -20,7 +20,7 @@ public sealed partial class ErrorPageViewModel : ViewModelBase, IErrorPageViewMo
     private readonly IErrorRestartAppUseCase _restartAppAction;
     private readonly ITelemetryService _telemetryService;
 
-    public RelayCommand RestartAppCommand { get; }
+    public IAppCommand RestartAppCommand { get; }
 
     public ErrorPageViewModel(
         IErrorRestartAppUseCase restartAppAction,
@@ -29,7 +29,7 @@ public sealed partial class ErrorPageViewModel : ViewModelBase, IErrorPageViewMo
         _restartAppAction = restartAppAction;
         _telemetryService = telemetryService;
 
-        TelemetryCommandFactory commandFactory = new(telemetryService, TelemetryContext);
+        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         RestartAppCommand = commandFactory.Create(ActivityIds.RestartApp, RestartApp);
     }
 

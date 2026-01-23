@@ -1,8 +1,9 @@
+using CaptureTool.Common;
 using CaptureTool.Domain.Capture.Interfaces;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
-public interface ISelectionOverlayHostViewModel
+public interface ISelectionOverlayHostViewModel : IViewModel
 {
     event EventHandler? AllScreensCaptureRequested;
     

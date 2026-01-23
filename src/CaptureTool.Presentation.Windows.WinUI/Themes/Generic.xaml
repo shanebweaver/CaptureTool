@@ -233,4 +233,13 @@
     <!--  Capture Mode Symbols  -->
     <Symbol x:Key="NewImageCaptureSymbol">Camera</Symbol>
     <Symbol x:Key="NewVideoCaptureSymbol">Video</Symbol>
+
+    <!--  Icon Glyphs  -->
+    <x:String x:Key="Glyph_CaptureMode_Image">&#xE722;</x:String>
+    <x:String x:Key="Glyph_CaptureMode_Video">&#xE714;</x:String>
+    <x:String x:Key="Glyph_CaptureType_Rectangle">&#xF407;</x:String>
+    <x:String x:Key="Glyph_CaptureType_Window">&#xF7ED;</x:String>
+    <x:String x:Key="Glyph_CaptureType_FullScreen">&#xE9A6;</x:String>
+    <x:String x:Key="Glyph_CaptureType_AllScreens">&#xEBC6;</x:String>
+
 </ResourceDictionary>

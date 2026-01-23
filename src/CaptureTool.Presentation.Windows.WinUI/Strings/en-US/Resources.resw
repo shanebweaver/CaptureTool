@@ -445,6 +445,14 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Use system default</value>
     <comment>The label for the system default language option.</comment>
   </data>
+  <data name="CaptureMode_Image" xml:space="preserve">
+    <value>Image</value>
+    <comment>The label for the Image capture mode</comment>
+  </data>
+  <data name="CaptureMode_Video" xml:space="preserve">
+    <value>Video</value>
+    <comment>The label for the Video capture mode.</comment>
+  </data>
   <data name="CaptureType_Rectangle" xml:space="preserve">
     <value>Rectangle</value>
     <comment>The label for the Rectangle capture type</comment>

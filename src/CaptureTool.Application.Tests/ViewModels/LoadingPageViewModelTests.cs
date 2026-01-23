@@ -31,7 +31,7 @@ public sealed class LoadingPageViewModelTests
         var goBackAction = Fixture.Freeze<Mock<ILoadingGoBackUseCase>>();
         var vm = Create();
 
-        vm.GoBackCommand.Execute(null);
+        vm.GoBackCommand.Execute();
 
         goBackAction.Verify(a => a.Execute(), Times.Once);
         telemetry.Verify(t => t.ActivityInitiated(LoadingPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);

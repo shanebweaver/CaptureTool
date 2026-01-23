@@ -1,5 +1,5 @@
 using CaptureTool.Application.Interfaces.FeatureManagement;
-using CaptureTool.Application.Implementations.ViewModels;
+using CaptureTool.Domain.Capture.Interfaces;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -11,40 +11,40 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
 {
     public static readonly DependencyProperty SupportedCaptureTypesProperty = DependencyProperty.Register(
         nameof(SupportedCaptureTypes),
-        typeof(IEnumerable<CaptureTypeViewModel>),
+        typeof(object),
         typeof(SelectionOverlayToolbar),
-        new PropertyMetadata(DependencyProperty.UnsetValue));
+        new PropertyMetadata(null));
 
     public static readonly DependencyProperty SelectedCaptureTypeIndexProperty = DependencyProperty.Register(
         nameof(SelectedCaptureTypeIndex),
         typeof(int),
         typeof(SelectionOverlayToolbar),
-        new PropertyMetadata(DependencyProperty.UnsetValue));
+        new PropertyMetadata(0));
 
     public static readonly DependencyProperty SupportedCaptureModesProperty = DependencyProperty.Register(
         nameof(SupportedCaptureModes),
-        typeof(IEnumerable<CaptureModeViewModel>),
+        typeof(object),
         typeof(SelectionOverlayToolbar),
-        new PropertyMetadata(DependencyProperty.UnsetValue));
+        new PropertyMetadata(null));
 
     public static readonly DependencyProperty SelectedCaptureModeIndexProperty = DependencyProperty.Register(
         nameof(SelectedCaptureModeIndex),
         typeof(int),
         typeof(SelectionOverlayToolbar),
-        new PropertyMetadata(DependencyProperty.UnsetValue));
+        new PropertyMetadata(0));
 
     public static readonly DependencyProperty CloseCommandProperty = DependencyProperty.Register(
         nameof(CloseCommand),
         typeof(ICommand),
         typeof(SelectionOverlayToolbar),
-        new PropertyMetadata(DependencyProperty.UnsetValue));
+        new PropertyMetadata(null));
 
     public event EventHandler<int>? CaptureTypeSelectionChanged;
     public event EventHandler<int>? CaptureModeSelectionChanged;
 
-    public IEnumerable<CaptureTypeViewModel> SupportedCaptureTypes
+    public object SupportedCaptureTypes
     {
-        get => Get<IEnumerable<CaptureTypeViewModel>>(SupportedCaptureTypesProperty);
+        get => Get<object>(SupportedCaptureTypesProperty);
         set => Set(SupportedCaptureTypesProperty, value);
     }
 
@@ -58,9 +58,9 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
         }
     }
 
-    public IEnumerable<CaptureModeViewModel> SupportedCaptureModes
+    public object SupportedCaptureModes
     {
-        get => Get<IEnumerable<CaptureModeViewModel>>(SupportedCaptureModesProperty);
+        get => Get<object>(SupportedCaptureModesProperty);
         set => Set(SupportedCaptureModesProperty, value);
     }
 
@@ -88,6 +88,29 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
         {
             CaptureModeSegmentedControl.Visibility = Visibility.Visible;
         }
+    }
+
+    // Function converters for {x:Bind} - maps enum to glyph resource key
+    public static string GetCaptureModeGlyph(CaptureMode mode)
+    {
+        return mode switch
+        {
+            CaptureMode.Image => Microsoft.UI.Xaml.Application.Current.Resources["Glyph_CaptureMode_Image"] as string ?? "",
+            CaptureMode.Video => Microsoft.UI.Xaml.Application.Current.Resources["Glyph_CaptureMode_Video"] as string ?? "",
+            _ => ""
+        };
+    }
+
+    public static string GetCaptureTypeGlyph(CaptureType type)
+    {
+        return type switch
+        {
+            CaptureType.Rectangle => Microsoft.UI.Xaml.Application.Current.Resources["Glyph_CaptureType_Rectangle"] as string ?? "",
+            CaptureType.Window => Microsoft.UI.Xaml.Application.Current.Resources["Glyph_CaptureType_Window"] as string ?? "",
+            CaptureType.FullScreen => Microsoft.UI.Xaml.Application.Current.Resources["Glyph_CaptureType_FullScreen"] as string ?? "",
+            CaptureType.AllScreens => Microsoft.UI.Xaml.Application.Current.Resources["Glyph_CaptureType_AllScreens"] as string ?? "",
+            _ => ""
+        };
     }
 
     private void CaptureModeSegmentedControl_SelectionChanged(object sender, SelectionChangedEventArgs e)

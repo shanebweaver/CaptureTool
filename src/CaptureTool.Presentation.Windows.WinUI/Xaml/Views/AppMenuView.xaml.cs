@@ -1,4 +1,5 @@
 using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Implementations.Windows.Commands;
 using Microsoft.UI.Xaml.Controls;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
@@ -59,7 +60,7 @@ public sealed partial class AppMenuView : AppMenuViewBase
                     {
                         Icon = new FontIcon { Glyph = iconGlyph },
                         Text = recentCapture.FileName,
-                        Command = ViewModel.OpenRecentCaptureCommand,
+                        Command = ViewModel.OpenRecentCaptureCommand.ToICommand(),
                         CommandParameter = recentCapture
                     };
 

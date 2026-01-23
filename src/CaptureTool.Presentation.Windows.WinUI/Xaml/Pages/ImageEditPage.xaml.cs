@@ -46,7 +46,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         if (sender is AppBarToggleButton toggleButton)
         {
-            ViewModel.UpdateShowChromaKeyOptionsCommand.Execute(toggleButton.IsChecked);
+            ViewModel.UpdateShowChromaKeyOptionsCommand.Execute(toggleButton.IsChecked ?? false);
         }
     }
 
