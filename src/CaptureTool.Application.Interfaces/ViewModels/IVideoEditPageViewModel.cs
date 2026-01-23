@@ -1,4 +1,4 @@
-using CaptureTool.Application.Interfaces.Commands;
+using CaptureTool.Common.Commands;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using System.Windows.Input;
 

@@ -1,4 +1,4 @@
-using CaptureTool.Application.Interfaces.Commands;
+using CaptureTool.Common.Commands;
 using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;

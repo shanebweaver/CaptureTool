@@ -1,6 +1,6 @@
 using System.Windows.Input;
 
-namespace CaptureTool.Application.Interfaces.Commands;
+namespace CaptureTool.Common.Commands;
 
 public interface IAsyncCommand : ICommand
 {

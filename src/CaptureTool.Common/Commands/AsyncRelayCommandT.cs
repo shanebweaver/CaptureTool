@@ -1,5 +1,4 @@
-﻿using CaptureTool.Application.Interfaces.Commands;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 
 namespace CaptureTool.Common.Commands;
 
