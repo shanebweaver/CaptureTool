@@ -5,6 +5,7 @@ using CaptureTool.Application.Interfaces.UseCases.Error;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -21,6 +22,9 @@ public sealed partial class ErrorPageViewModel : ViewModelBase, IErrorPageViewMo
     private readonly ITelemetryService _telemetryService;
 
     public RelayCommand RestartAppCommand { get; }
+
+    // Explicit interface implementation
+    ICommand IErrorPageViewModel.RestartAppCommand => RestartAppCommand;
 
     public ErrorPageViewModel(
         IErrorRestartAppUseCase restartAppAction,

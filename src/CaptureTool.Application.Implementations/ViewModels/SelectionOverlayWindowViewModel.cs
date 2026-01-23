@@ -11,8 +11,10 @@ using CaptureTool.Infrastructure.Interfaces.Shutdown;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -51,6 +53,14 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     public RelayCommand<Rectangle> UpdateCaptureAreaCommand { get; }
     public RelayCommand<CaptureOptions> UpdateCaptureOptionsCommand { get; }
 
+    // Explicit interface implementations
+    ICommand ISelectionOverlayWindowViewModel.RequestCaptureCommand => RequestCaptureCommand;
+    ICommand ISelectionOverlayWindowViewModel.CloseOverlayCommand => CloseOverlayCommand;
+    ICommand ISelectionOverlayWindowViewModel.UpdateSelectedCaptureModeCommand => UpdateSelectedCaptureModeCommand;
+    ICommand ISelectionOverlayWindowViewModel.UpdateSelectedCaptureTypeCommand => UpdateSelectedCaptureTypeCommand;
+    ICommand ISelectionOverlayWindowViewModel.UpdateCaptureAreaCommand => UpdateCaptureAreaCommand;
+    ICommand ISelectionOverlayWindowViewModel.UpdateCaptureOptionsCommand => UpdateCaptureOptionsCommand;
+
     public event EventHandler<CaptureOptions>? CaptureOptionsUpdated;
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
@@ -60,6 +70,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         get => field;
         private set => Set(ref field, value);
     }
+    IReadOnlyList<ICaptureTypeViewModel> ISelectionOverlayWindowViewModel.SupportedCaptureTypes => SupportedCaptureTypes;
 
     public int SelectedCaptureTypeIndex
     {
@@ -77,6 +88,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         get => field;
         private set => Set(ref field, value);
     }
+    IReadOnlyList<ICaptureModeViewModel> ISelectionOverlayWindowViewModel.SupportedCaptureModes => SupportedCaptureModes;
 
     public int SelectedCaptureModeIndex
     {

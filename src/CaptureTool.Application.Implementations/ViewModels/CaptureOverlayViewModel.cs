@@ -11,6 +11,7 @@ using CaptureTool.Infrastructure.Interfaces.Themes;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using System.Drawing;
 using System.Timers;
+using System.Windows.Input;
 using Timer = System.Timers.Timer;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
@@ -87,6 +88,14 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public RelayCommand StopVideoCaptureCommand { get; }
     public RelayCommand ToggleDesktopAudioCommand { get; }
     public RelayCommand TogglePauseResumeCommand { get; }
+
+    // Explicit interface implementations
+    ICommand ICaptureOverlayViewModel.CloseOverlayCommand => CloseOverlayCommand;
+    ICommand ICaptureOverlayViewModel.GoBackCommand => GoBackCommand;
+    ICommand ICaptureOverlayViewModel.StartVideoCaptureCommand => StartVideoCaptureCommand;
+    ICommand ICaptureOverlayViewModel.StopVideoCaptureCommand => StopVideoCaptureCommand;
+    ICommand ICaptureOverlayViewModel.ToggleDesktopAudioCommand => ToggleDesktopAudioCommand;
+    ICommand ICaptureOverlayViewModel.TogglePauseResumeCommand => TogglePauseResumeCommand;
 
     public CaptureOverlayViewModel(
         IAppNavigation appNavigation,

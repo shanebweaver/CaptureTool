@@ -7,6 +7,7 @@ using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -26,6 +27,9 @@ public sealed partial class HomePageViewModel : ViewModelBase, IHomePageViewMode
 
     public RelayCommand NewImageCaptureCommand { get; }
     public RelayCommand NewVideoCaptureCommand { get; }
+
+    ICommand IHomePageViewModel.NewImageCaptureCommand => NewImageCaptureCommand;
+    ICommand IHomePageViewModel.NewVideoCaptureCommand => NewVideoCaptureCommand;
 
     public bool IsVideoCaptureEnabled { get; }
 

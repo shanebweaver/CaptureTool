@@ -9,6 +9,7 @@ using CaptureTool.Infrastructure.Interfaces.Store;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using System.Windows.Input;
 using static CaptureTool.Application.Interfaces.Store.CaptureToolStoreProducts;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
@@ -33,6 +34,10 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase, IA
 
     public AsyncRelayCommand GetChromaKeyAddOnCommand { get; }
     public RelayCommand GoBackCommand { get; }
+
+    // Explicit interface implementations
+    IAsyncCommand IAddOnsPageViewModel.GetChromaKeyAddOnCommand => GetChromaKeyAddOnCommand;
+    ICommand IAddOnsPageViewModel.GoBackCommand => GoBackCommand;
 
     public bool IsChromaKeyAddOnOwned
     {

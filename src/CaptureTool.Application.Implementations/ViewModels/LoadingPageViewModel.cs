@@ -5,6 +5,7 @@ using CaptureTool.Application.Interfaces.UseCases.Loading;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -21,6 +22,9 @@ public sealed partial class LoadingPageViewModel : ViewModelBase, ILoadingPageVi
     private readonly ITelemetryService _telemetryService;
 
     public RelayCommand GoBackCommand { get; }
+
+    // Explicit interface implementation
+    ICommand ILoadingPageViewModel.GoBackCommand => GoBackCommand;
 
     public LoadingPageViewModel(
         ILoadingGoBackUseCase goBackAction,

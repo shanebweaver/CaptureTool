@@ -3,6 +3,7 @@ using CaptureTool.Common.Commands;
 using CaptureTool.Application.Interfaces.UseCases.Diagnostics;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Logging;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -13,6 +14,10 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase, IDiagnosticsVi
 
     public RelayCommand ClearLogsCommand { get; }
     public AsyncRelayCommand<bool> UpdateLoggingEnablementCommand { get; }
+
+    // Explicit interface implementations
+    ICommand IDiagnosticsViewModel.ClearLogsCommand => ClearLogsCommand;
+    IAsyncCommand<bool> IDiagnosticsViewModel.UpdateLoggingEnablementCommand => UpdateLoggingEnablementCommand;
 
     public string Logs
     {

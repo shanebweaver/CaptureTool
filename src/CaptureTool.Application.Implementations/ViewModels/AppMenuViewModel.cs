@@ -9,7 +9,9 @@ using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -47,12 +49,27 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase, IAppMenuVi
     public RelayCommand RefreshRecentCapturesCommand { get; }
     public RelayCommand<IRecentCaptureViewModel> OpenRecentCaptureCommand { get; }
 
+    // Explicit interface implementations
+    ICommand IAppMenuViewModel.NewImageCaptureCommand => NewImageCaptureCommand;
+    IAsyncCommand IAppMenuViewModel.OpenFileCommand => OpenFileCommand;
+    ICommand IAppMenuViewModel.NavigateToSettingsCommand => NavigateToSettingsCommand;
+    ICommand IAppMenuViewModel.ShowAboutAppCommand => ShowAboutAppCommand;
+    ICommand IAppMenuViewModel.ShowAddOnsCommand => ShowAddOnsCommand;
+    ICommand IAppMenuViewModel.ExitApplicationCommand => ExitApplicationCommand;
+    ICommand IAppMenuViewModel.RefreshRecentCapturesCommand => RefreshRecentCapturesCommand;
+    ICommand IAppMenuViewModel.OpenRecentCaptureCommand => OpenRecentCaptureCommand;
+
     public bool ShowAddOnsOption { get; }
 
     public ObservableCollection<IRecentCaptureViewModel> RecentCaptures
     {
         get => field;
         set => Set(ref field, value);
+    }
+    IReadOnlyList<IRecentCaptureViewModel> IAppMenuViewModel.RecentCaptures
+    {
+        get => RecentCaptures;
+        set => RecentCaptures = value is ObservableCollection<IRecentCaptureViewModel> oc ? oc : new ObservableCollection<IRecentCaptureViewModel>(value);
     }
 
     public AppMenuViewModel(

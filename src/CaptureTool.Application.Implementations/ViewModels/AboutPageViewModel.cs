@@ -6,6 +6,7 @@ using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -33,6 +34,13 @@ public sealed partial class AboutPageViewModel : ViewModelBase, IAboutPageViewMo
     public RelayCommand ShowTermsOfUseCommand { get; }
     public RelayCommand ShowDisclaimerOfLiabilityCommand { get; }
     public RelayCommand GoBackCommand { get; }
+
+    // Explicit interface implementations
+    ICommand IAboutPageViewModel.ShowThirdPartyCommand => ShowThirdPartyCommand;
+    ICommand IAboutPageViewModel.ShowPrivacyPolicyCommand => ShowPrivacyPolicyCommand;
+    ICommand IAboutPageViewModel.ShowTermsOfUseCommand => ShowTermsOfUseCommand;
+    ICommand IAboutPageViewModel.ShowDisclaimerOfLiabilityCommand => ShowDisclaimerOfLiabilityCommand;
+    ICommand IAboutPageViewModel.GoBackCommand => GoBackCommand;
 
     public AboutPageViewModel(
         IAboutGoBackUseCase goBackAction,

@@ -13,7 +13,9 @@ using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -89,11 +91,29 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
     public RelayCommand ClearTemporaryFilesCommand { get; }
     public AsyncRelayCommand RestoreDefaultSettingsCommand { get; }
 
+    // Explicit interface implementations
+    IAsyncCommand ISettingsPageViewModel.ChangeScreenshotsFolderCommand => ChangeScreenshotsFolderCommand;
+    ICommand ISettingsPageViewModel.OpenScreenshotsFolderCommand => OpenScreenshotsFolderCommand;
+    IAsyncCommand ISettingsPageViewModel.ChangeVideosFolderCommand => ChangeVideosFolderCommand;
+    ICommand ISettingsPageViewModel.OpenVideosFolderCommand => OpenVideosFolderCommand;
+    ICommand ISettingsPageViewModel.RestartAppCommand => RestartAppCommand;
+    ICommand ISettingsPageViewModel.GoBackCommand => GoBackCommand;
+    IAsyncCommand<bool> ISettingsPageViewModel.UpdateImageCaptureAutoCopyCommand => UpdateImageCaptureAutoCopyCommand;
+    IAsyncCommand<bool> ISettingsPageViewModel.UpdateImageCaptureAutoSaveCommand => UpdateImageCaptureAutoSaveCommand;
+    IAsyncCommand<bool> ISettingsPageViewModel.UpdateVideoCaptureAutoCopyCommand => UpdateVideoCaptureAutoCopyCommand;
+    IAsyncCommand<bool> ISettingsPageViewModel.UpdateVideoCaptureAutoSaveCommand => UpdateVideoCaptureAutoSaveCommand;
+    IAsyncCommand<int> ISettingsPageViewModel.UpdateAppLanguageCommand => UpdateAppLanguageCommand;
+    ICommand ISettingsPageViewModel.UpdateAppThemeCommand => UpdateAppThemeCommand;
+    ICommand ISettingsPageViewModel.OpenTemporaryFilesFolderCommand => OpenTemporaryFilesFolderCommand;
+    ICommand ISettingsPageViewModel.ClearTemporaryFilesCommand => ClearTemporaryFilesCommand;
+    IAsyncCommand ISettingsPageViewModel.RestoreDefaultSettingsCommand => RestoreDefaultSettingsCommand;
+
     public ObservableCollection<IAppLanguageViewModel> AppLanguages
     {
         get => field;
         private set => Set(ref field, value);
     }
+    IReadOnlyList<IAppLanguageViewModel> ISettingsPageViewModel.AppLanguages => AppLanguages;
 
     public int SelectedAppLanguageIndex
     {
@@ -112,6 +132,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
         get => field;
         private set => Set(ref field, value);
     }
+    IReadOnlyList<IAppThemeViewModel> ISettingsPageViewModel.AppThemes => AppThemes;
 
     public int SelectedAppThemeIndex
     {

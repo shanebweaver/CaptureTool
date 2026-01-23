@@ -17,9 +17,11 @@ using CaptureTool.Infrastructure.Interfaces.Store;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Numerics;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 
@@ -79,6 +81,25 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public RelayCommand<int> UpdateToleranceCommand { get; }
     public RelayCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
 
+    // Explicit interface implementations
+    IAsyncCommand IImageEditPageViewModel.CopyCommand => CopyCommand;
+    ICommand IImageEditPageViewModel.ToggleCropModeCommand => ToggleCropModeCommand;
+    IAsyncCommand IImageEditPageViewModel.SaveCommand => SaveCommand;
+    ICommand IImageEditPageViewModel.UndoCommand => UndoCommand;
+    ICommand IImageEditPageViewModel.RedoCommand => RedoCommand;
+    ICommand IImageEditPageViewModel.RotateCommand => RotateCommand;
+    ICommand IImageEditPageViewModel.FlipHorizontalCommand => FlipHorizontalCommand;
+    ICommand IImageEditPageViewModel.FlipVerticalCommand => FlipVerticalCommand;
+    IAsyncCommand IImageEditPageViewModel.PrintCommand => PrintCommand;
+    IAsyncCommand IImageEditPageViewModel.ShareCommand => ShareCommand;
+    ICommand IImageEditPageViewModel.UpdateChromaKeyColorCommand => UpdateChromaKeyColorCommand;
+    ICommand IImageEditPageViewModel.UpdateOrientationCommand => UpdateOrientationCommand;
+    ICommand IImageEditPageViewModel.UpdateCropRectCommand => UpdateCropRectCommand;
+    ICommand IImageEditPageViewModel.UpdateShowChromaKeyOptionsCommand => UpdateShowChromaKeyOptionsCommand;
+    ICommand IImageEditPageViewModel.UpdateDesaturationCommand => UpdateDesaturationCommand;
+    ICommand IImageEditPageViewModel.UpdateToleranceCommand => UpdateToleranceCommand;
+    ICommand IImageEditPageViewModel.UpdateSelectedColorOptionIndexCommand => UpdateSelectedColorOptionIndexCommand;
+
     public bool HasUndoStack
     {
         get => field;
@@ -96,6 +117,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         get => field;
         private set => Set(ref field, value);
     }
+    IReadOnlyList<IDrawable> IImageEditPageViewModel.Drawables => Drawables;
 
     public ImageFile? ImageFile
     {
@@ -168,6 +190,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         get => field;
         private set => Set(ref field, value);
     }
+    IReadOnlyList<ChromaKeyColorOption> IImageEditPageViewModel.ChromaKeyColorOptions => ChromaKeyColorOptions;
 
     public int SelectedChromaKeyColorOption
     {

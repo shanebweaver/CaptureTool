@@ -7,6 +7,7 @@ using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVideoFile>, IVideoEditPageViewModel
@@ -22,6 +23,10 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     public AsyncRelayCommand SaveCommand { get; }
     public AsyncRelayCommand CopyCommand { get; }
+
+    // Explicit interface implementations
+    IAsyncCommand IVideoEditPageViewModel.SaveCommand => SaveCommand;
+    IAsyncCommand IVideoEditPageViewModel.CopyCommand => CopyCommand;
 
     public string? VideoPath
     {
