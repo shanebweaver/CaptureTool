@@ -1,11 +1,11 @@
-using CaptureTool.Common.Commands;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
 public interface IAddOnsPageViewModel
 {
-    AsyncRelayCommand GetChromaKeyAddOnCommand { get; }
-    RelayCommand GoBackCommand { get; }
+    ICommand GetChromaKeyAddOnCommand { get; }
+    ICommand GoBackCommand { get; }
     bool IsChromaKeyAddOnOwned { get; }
     string ChromaKeyAddOnPrice { get; }
     Uri? ChromaKeyAddOnLogoImage { get; }

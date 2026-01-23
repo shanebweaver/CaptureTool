@@ -1,10 +1,10 @@
-using CaptureTool.Common.Commands;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domain.Edit.Interfaces.Drawable;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
@@ -12,27 +12,27 @@ public interface IImageEditPageViewModel
 {
     event EventHandler? InvalidateCanvasRequested;
     
-    AsyncRelayCommand CopyCommand { get; }
-    RelayCommand ToggleCropModeCommand { get; }
-    AsyncRelayCommand SaveCommand { get; }
-    RelayCommand UndoCommand { get; }
-    RelayCommand RedoCommand { get; }
-    RelayCommand RotateCommand { get; }
-    RelayCommand FlipHorizontalCommand { get; }
-    RelayCommand FlipVerticalCommand { get; }
-    AsyncRelayCommand PrintCommand { get; }
-    AsyncRelayCommand ShareCommand { get; }
-    RelayCommand<Color> UpdateChromaKeyColorCommand { get; }
-    RelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
-    RelayCommand<Rectangle> UpdateCropRectCommand { get; }
-    RelayCommand<bool> UpdateShowChromaKeyOptionsCommand { get; }
-    RelayCommand<int> UpdateDesaturationCommand { get; }
-    RelayCommand<int> UpdateToleranceCommand { get; }
-    RelayCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
+    ICommand CopyCommand { get; }
+    ICommand ToggleCropModeCommand { get; }
+    ICommand SaveCommand { get; }
+    ICommand UndoCommand { get; }
+    ICommand RedoCommand { get; }
+    ICommand RotateCommand { get; }
+    ICommand FlipHorizontalCommand { get; }
+    ICommand FlipVerticalCommand { get; }
+    ICommand PrintCommand { get; }
+    ICommand ShareCommand { get; }
+    ICommand UpdateChromaKeyColorCommand { get; }
+    ICommand UpdateOrientationCommand { get; }
+    ICommand UpdateCropRectCommand { get; }
+    ICommand UpdateShowChromaKeyOptionsCommand { get; }
+    ICommand UpdateDesaturationCommand { get; }
+    ICommand UpdateToleranceCommand { get; }
+    ICommand UpdateSelectedColorOptionIndexCommand { get; }
     
     bool HasUndoStack { get; }
     bool HasRedoStack { get; }
-    ObservableCollection<IDrawable> Drawables { get; }
+    IReadOnlyList<IDrawable> Drawables { get; }
     ImageFile? ImageFile { get; }
     Size ImageSize { get; }
     ImageOrientation Orientation { get; }
@@ -44,7 +44,7 @@ public interface IImageEditPageViewModel
     int ChromaKeyTolerance { get; }
     int ChromaKeyDesaturation { get; }
     Color ChromaKeyColor { get; }
-    ObservableCollection<ChromaKeyColorOption> ChromaKeyColorOptions { get; }
+    IReadOnlyList<ChromaKeyColorOption> ChromaKeyColorOptions { get; }
     int SelectedChromaKeyColorOption { get; }
     bool IsChromaKeyAddOnOwned { get; }
     

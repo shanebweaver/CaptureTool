@@ -1,4 +1,4 @@
-using CaptureTool.Common.Commands;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
@@ -6,9 +6,9 @@ public interface IAboutPageViewModel
 {
     event EventHandler<(string title, string content)>? ShowDialogRequested;
     
-    RelayCommand ShowThirdPartyCommand { get; }
-    RelayCommand ShowPrivacyPolicyCommand { get; }
-    RelayCommand ShowTermsOfUseCommand { get; }
-    RelayCommand ShowDisclaimerOfLiabilityCommand { get; }
-    RelayCommand GoBackCommand { get; }
+    ICommand ShowThirdPartyCommand { get; }
+    ICommand ShowPrivacyPolicyCommand { get; }
+    ICommand ShowTermsOfUseCommand { get; }
+    ICommand ShowDisclaimerOfLiabilityCommand { get; }
+    ICommand GoBackCommand { get; }
 }

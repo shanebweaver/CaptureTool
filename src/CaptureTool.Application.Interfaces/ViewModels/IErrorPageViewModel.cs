@@ -1,8 +1,8 @@
-using CaptureTool.Common.Commands;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
 public interface IErrorPageViewModel
 {
-    RelayCommand RestartAppCommand { get; }
+    ICommand RestartAppCommand { get; }
 }

@@ -1,10 +1,10 @@
-using CaptureTool.Common.Commands;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
 public interface IHomePageViewModel
 {
-    RelayCommand NewImageCaptureCommand { get; }
-    RelayCommand NewVideoCaptureCommand { get; }
+    ICommand NewImageCaptureCommand { get; }
+    ICommand NewVideoCaptureCommand { get; }
     bool IsVideoCaptureEnabled { get; }
 }

@@ -1,5 +1,5 @@
-using CaptureTool.Common.Commands;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
@@ -7,16 +7,16 @@ public interface IAppMenuViewModel
 {
     event EventHandler? RecentCapturesUpdated;
     
-    RelayCommand NewImageCaptureCommand { get; }
-    AsyncRelayCommand OpenFileCommand { get; }
-    RelayCommand NavigateToSettingsCommand { get; }
-    RelayCommand ShowAboutAppCommand { get; }
-    RelayCommand ShowAddOnsCommand { get; }
-    RelayCommand ExitApplicationCommand { get; }
-    RelayCommand RefreshRecentCapturesCommand { get; }
-    RelayCommand<IRecentCaptureViewModel> OpenRecentCaptureCommand { get; }
+    ICommand NewImageCaptureCommand { get; }
+    ICommand OpenFileCommand { get; }
+    ICommand NavigateToSettingsCommand { get; }
+    ICommand ShowAboutAppCommand { get; }
+    ICommand ShowAddOnsCommand { get; }
+    ICommand ExitApplicationCommand { get; }
+    ICommand RefreshRecentCapturesCommand { get; }
+    ICommand OpenRecentCaptureCommand { get; }
     bool ShowAddOnsOption { get; }
-    ObservableCollection<IRecentCaptureViewModel> RecentCaptures { get; set; }
+    IReadOnlyList<IRecentCaptureViewModel> RecentCaptures { get; set; }
     
     void Load();
     void RefreshRecentCaptures();

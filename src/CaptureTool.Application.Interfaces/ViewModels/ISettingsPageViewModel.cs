@@ -1,30 +1,30 @@
-using CaptureTool.Common.Commands;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Windows.Input;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
 public interface ISettingsPageViewModel
 {
-    AsyncRelayCommand ChangeScreenshotsFolderCommand { get; }
-    RelayCommand OpenScreenshotsFolderCommand { get; }
-    AsyncRelayCommand ChangeVideosFolderCommand { get; }
-    RelayCommand OpenVideosFolderCommand { get; }
-    RelayCommand RestartAppCommand { get; }
-    RelayCommand GoBackCommand { get; }
-    AsyncRelayCommand<bool> UpdateImageCaptureAutoCopyCommand { get; }
-    AsyncRelayCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
-    AsyncRelayCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
-    AsyncRelayCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
-    AsyncRelayCommand<int> UpdateAppLanguageCommand { get; }
-    RelayCommand<int> UpdateAppThemeCommand { get; }
-    RelayCommand OpenTemporaryFilesFolderCommand { get; }
-    RelayCommand ClearTemporaryFilesCommand { get; }
-    AsyncRelayCommand RestoreDefaultSettingsCommand { get; }
+    ICommand ChangeScreenshotsFolderCommand { get; }
+    ICommand OpenScreenshotsFolderCommand { get; }
+    ICommand ChangeVideosFolderCommand { get; }
+    ICommand OpenVideosFolderCommand { get; }
+    ICommand RestartAppCommand { get; }
+    ICommand GoBackCommand { get; }
+    ICommand UpdateImageCaptureAutoCopyCommand { get; }
+    ICommand UpdateImageCaptureAutoSaveCommand { get; }
+    ICommand UpdateVideoCaptureAutoCopyCommand { get; }
+    ICommand UpdateVideoCaptureAutoSaveCommand { get; }
+    ICommand UpdateAppLanguageCommand { get; }
+    ICommand UpdateAppThemeCommand { get; }
+    ICommand OpenTemporaryFilesFolderCommand { get; }
+    ICommand ClearTemporaryFilesCommand { get; }
+    ICommand RestoreDefaultSettingsCommand { get; }
     
-    ObservableCollection<IAppLanguageViewModel> AppLanguages { get; }
+    IReadOnlyList<IAppLanguageViewModel> AppLanguages { get; }
     int SelectedAppLanguageIndex { get; }
     bool ShowAppLanguageRestartMessage { get; }
-    ObservableCollection<IAppThemeViewModel> AppThemes { get; }
+    IReadOnlyList<IAppThemeViewModel> AppThemes { get; }
     int SelectedAppThemeIndex { get; }
     bool ShowAppThemeRestartMessage { get; }
     bool IsVideoCaptureFeatureEnabled { get; }
