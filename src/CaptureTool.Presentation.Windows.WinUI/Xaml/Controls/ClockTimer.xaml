@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.ClockTimer"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=local:ClockTimer}"
+    mc:Ignorable="d">
+
+    <Grid>
+        <StackPanel
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Orientation="Horizontal">
+            <TextBlock
+                x:Name="HoursTensText"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
+                FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
+                IsTextScaleFactorEnabled="False"
+                Text="0"
+                TextAlignment="Center" />
+            <TextBlock
+                x:Name="HoursOnesText"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
+                FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
+                IsTextScaleFactorEnabled="False"
+                Text="0"
+                TextAlignment="Center" />
+            <TextBlock
+                x:Name="Separator1"
+                VerticalAlignment="Center"
+                FontFamily="{x:Bind SeparatorFontFamily, Mode=OneWay}"
+                FontSize="{x:Bind SeparatorFontSize, Mode=OneWay}"
+                IsTextScaleFactorEnabled="False"
+                Text=":" />
+            <TextBlock
+                x:Name="MinutesTensText"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                VerticalAlignment="Center"
+                FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
+                FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
+                IsTextScaleFactorEnabled="False"
+                Text="0"
+                TextAlignment="Center" />
+            <TextBlock
+                x:Name="MinutesOnesText"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                VerticalAlignment="Center"
+                FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
+                FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
+                IsTextScaleFactorEnabled="False"
+                Text="0"
+                TextAlignment="Center" />
+            <TextBlock
+                x:Name="Separator2"
+                VerticalAlignment="Center"
+                FontFamily="{x:Bind SeparatorFontFamily, Mode=OneWay}"
+                FontSize="{x:Bind SeparatorFontSize, Mode=OneWay}"
+                IsTextScaleFactorEnabled="False"
+                Text=":" />
+            <TextBlock
+                x:Name="SecondsTensText"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                VerticalAlignment="Center"
+                FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
+                FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
+                IsTextScaleFactorEnabled="False"
+                Text="0"
+                TextAlignment="Center" />
+            <TextBlock
+                x:Name="SecondsOnesText"
+                MinWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                MaxWidth="{x:Bind DigitWidth, Mode=OneWay}"
+                VerticalAlignment="Center"
+                FontFamily="{x:Bind DigitFontFamily, Mode=OneWay}"
+                FontSize="{x:Bind DigitFontSize, Mode=OneWay}"
+                IsTextScaleFactorEnabled="False"
+                Text="0"
+                TextAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</local:UserControlBase>

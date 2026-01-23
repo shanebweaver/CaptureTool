@@ -1,0 +1,64 @@
+using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
+using CaptureTool.Application.Implementations.Services.Navigation;
+using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
+using CaptureTool.Application.Interfaces.Navigation;
+using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Interfaces.Shutdown;
+
+namespace CaptureTool.Application.Implementations.UseCases.CaptureOverlay;
+
+public sealed partial class CaptureOverlayCloseUseCase : UseCase, ICaptureOverlayCloseUseCase
+{
+    private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly IAppNavigation _appNavigation;
+    private readonly INavigationService _navigationService;
+    private readonly IShutdownHandler _shutdownHandler;
+
+    public CaptureOverlayCloseUseCase(
+        IVideoCaptureHandler videoCaptureHandler,
+        IAppNavigation appNavigation,
+        INavigationService navigationService,
+        IShutdownHandler shutdownHandler)
+    {
+        _videoCaptureHandler = videoCaptureHandler;
+        _appNavigation = appNavigation;
+        _navigationService = navigationService;
+        _shutdownHandler = shutdownHandler;
+    }
+
+    public override bool CanExecute()
+    {
+        if (!_navigationService.CanGoBack)
+        {
+            return false;
+        }
+
+        if (_navigationService.CurrentRequest?.Route is not CaptureToolNavigationRoute route
+            || route != CaptureToolNavigationRoute.VideoCapture)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public override void Execute()
+    {
+        try
+        {
+            _videoCaptureHandler.CancelVideoCapture();
+        }
+        catch { }
+
+        if (_appNavigation.CanGoBack)
+        {
+            _appNavigation.GoBackToMainWindow();
+        }
+        else
+        {
+            _shutdownHandler.Shutdown();
+        }
+    }
+}

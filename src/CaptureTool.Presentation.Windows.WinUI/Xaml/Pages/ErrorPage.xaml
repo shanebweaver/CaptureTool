@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:ErrorPageBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Pages.ErrorPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:CaptureTool.Application.Interfaces.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:IErrorPageViewModel}"
+    mc:Ignorable="d">
+
+    <Grid Padding="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="3*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="16">
+            <TextBlock
+                x:Uid="ErrorPage_HeaderLabel"
+                HorizontalAlignment="Center"
+                FontSize="24"
+                FontWeight="Bold"
+                Foreground="Red"
+                TextAlignment="Center"
+                TextWrapping="WrapWholeWords" />
+            <Button HorizontalAlignment="Center" Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RestartAppCommand)}">
+                <TextBlock x:Uid="ErrorPage_RestartAppButtonLabel" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</local:ErrorPageBase>

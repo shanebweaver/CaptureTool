@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:SelectionOverlayWindowViewBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Views.SelectionOverlayWindowView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:capture="using:CaptureTool.Domain.Capture.Interfaces"
+    xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:CaptureTool.Application.Interfaces.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:ISelectionOverlayWindowViewModel}"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootPanel">
+        <Grid PointerMoved="SelectionOverlayContainer_PointerMoved">
+            <controls:SelectionOverlay x:Name="SelectionOverlay" />
+        </Grid>
+
+        <Grid PointerMoved="ToolbarContainer_PointerMoved" Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}">
+            <controls:SelectionOverlayToolbar
+                x:Name="SelectionToolbar"
+                CaptureModeSelectionChanged="SelectionToolbar_CaptureModeSelectionChanged"
+                CaptureTypeSelectionChanged="SelectionToolbar_CaptureTypeSelectionChanged"
+                CloseCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.CloseOverlayCommand), Mode=OneWay}"
+                SelectedCaptureModeIndex="{x:Bind ViewModel.SelectedCaptureModeIndex, Mode=OneWay}"
+                SelectedCaptureTypeIndex="{x:Bind ViewModel.SelectedCaptureTypeIndex, Mode=OneWay}"
+                SupportedCaptureModes="{x:Bind ViewModel.SupportedCaptureModes}"
+                SupportedCaptureTypes="{x:Bind ViewModel.SupportedCaptureTypes}" />
+        </Grid>
+
+        <!--  Secret button to allow escape to work on all monitors.  -->
+        <Button
+            x:Name="SecretEscapeButton"
+            Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.CloseOverlayCommand), Mode=OneWay}"
+            IsTabStop="False"
+            Opacity="0">
+            <Button.KeyboardAccelerators>
+                <KeyboardAccelerator Key="Escape" />
+            </Button.KeyboardAccelerators>
+        </Button>
+    </Grid>
+</local:SelectionOverlayWindowViewBase>

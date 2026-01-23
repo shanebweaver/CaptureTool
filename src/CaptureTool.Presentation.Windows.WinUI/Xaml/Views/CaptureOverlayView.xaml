@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:CaptureOverlayViewBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Views.CaptureOverlayView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:CaptureTool.Application.Interfaces.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:ICaptureOverlayViewModel}"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootPanel" CornerRadius="8">
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Top">
+            <Grid x:Name="ToolbarHost" />
+            <controls:CaptureOverlayToolbar
+                x:Name="Toolbar"
+                CaptureTime="{x:Bind ViewModel.CaptureTime, Mode=OneWay}"
+                CloseCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.CloseOverlayCommand)}"
+                GoBackCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.GoBackCommand)}"
+                IsLocalAudioEnabled="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=OneWay}"
+                IsPaused="{x:Bind ViewModel.IsPaused, Mode=OneWay}"
+                IsRecording="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
+                StartVideoCaptureCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.StartVideoCaptureCommand)}"
+                StopVideoCaptureCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.StopVideoCaptureCommand)}"
+                ToggleLocalAudioCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ToggleDesktopAudioCommand)}"
+                TogglePauseResumeCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.TogglePauseResumeCommand)}" />
+        </Grid>
+    </Grid>
+</local:CaptureOverlayViewBase>

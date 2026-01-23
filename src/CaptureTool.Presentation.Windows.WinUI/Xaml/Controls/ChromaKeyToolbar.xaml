@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.ChromaKeyToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:chromakey="using:CaptureTool.Domain.Edit.Interfaces.ChromaKey"
+    xmlns:converters="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:templateselectors="using:CaptureTool.Presentation.Windows.WinUI.Xaml.TemplateSelectors"
+    d:DataContext="{d:DesignInstance Type=local:ChromaKeyToolbar}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ColorTypeConverter x:Key="ColorTypeConverter" />
+        <converters:ColorHexStringConverter x:Key="ColorHexStringConverter" />
+
+        <DataTemplate x:Key="EmptyTemplate" x:DataType="chromakey:ChromaKeyColorOption">
+            <Grid Margin="0,2" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Grid>
+                    <Rectangle
+                        Width="22"
+                        Height="22"
+                        Fill="Gray"
+                        RadiusX="4"
+                        RadiusY="4" />
+                    <SymbolIcon
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="White"
+                        Symbol="Cancel" />
+                </Grid>
+                <TextBlock
+                    x:Uid="ChromaKeyToolbar_ColorOption_NoEffect"
+                    Grid.Column="1"
+                    VerticalAlignment="Center" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ColorTemplate" x:DataType="chromakey:ChromaKeyColorOption">
+            <Grid Margin="0,2" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Rectangle
+                    Width="22"
+                    Height="22"
+                    RadiusX="11"
+                    RadiusY="11">
+                    <Rectangle.Fill>
+                        <SolidColorBrush Color="{x:Bind Color, Converter={StaticResource ColorTypeConverter}}" />
+                    </Rectangle.Fill>
+                </Rectangle>
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Text="{x:Bind Color, Converter={StaticResource ColorHexStringConverter}}" />
+            </Grid>
+        </DataTemplate>
+
+        <templateselectors:ChromaKeyColorOptionTemplateSelector
+            x:Key="ChromaKeyColorOptionTemplateSelector"
+            ColorTemplate="{StaticResource ColorTemplate}"
+            EmptyTemplate="{StaticResource EmptyTemplate}" />
+    </UserControl.Resources>
+
+    <Grid>
+        <CommandBar IsDynamicOverflowEnabled="true" IsOpen="False">
+
+            <!--  Key color  -->
+            <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
+                <Grid Margin="4,0">
+                    <ComboBox
+                        x:Uid="ChromaKeyToolbar_KeyColor"
+                        MinWidth="156"
+                        MinHeight="66"
+                        ItemTemplateSelector="{StaticResource ChromaKeyColorOptionTemplateSelector}"
+                        ItemsSource="{x:Bind ColorOptions, Mode=OneWay}"
+                        SelectedIndex="{x:Bind SelectedColorOptionIndex, Mode=OneWay}"
+                        SelectionChanged="KeyColorComboBox_SelectionChanged" />
+                </Grid>
+            </AppBarElementContainer>
+
+            <!--  Tolerance  -->
+            <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
+                <StackPanel Margin="4,0" Spacing="8">
+                    <TextBlock x:Uid="ChromaKeyToolbar_Tolerance" />
+
+                    <DropDownButton Padding="2,2,14,2" IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}">
+                        <NumberBox
+                            Background="Transparent"
+                            BorderThickness="0"
+                            LargeChange="5"
+                            Maximum="99"
+                            Minimum="1"
+                            SmallChange="1"
+                            ValueChanged="ToleranceNumberBox_ValueChanged"
+                            Value="{x:Bind Tolerance, Mode=OneWay}" />
+
+                        <DropDownButton.Flyout>
+                            <Flyout>
+                                <ListBox Background="Transparent" ItemsSource="{x:Bind ToleranceOptions}" />
+                            </Flyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                </StackPanel>
+            </AppBarElementContainer>
+
+            <!--  Desaturation  -->
+            <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
+                <StackPanel Margin="4,0" Spacing="8">
+                    <TextBlock x:Uid="ChromaKeyToolbar_Desaturation" />
+
+                    <DropDownButton Padding="2,2,14,2" IsEnabled="{x:Bind AreEffectOptionsEnabled, Mode=OneWay}">
+                        <NumberBox
+                            Background="Transparent"
+                            BorderThickness="0"
+                            LargeChange="5"
+                            Maximum="99"
+                            Minimum="1"
+                            SmallChange="1"
+                            ValueChanged="DesaturationNumberBox_ValueChanged"
+                            Value="{x:Bind Desaturation, Mode=OneWay}" />
+
+                        <DropDownButton.Flyout>
+                            <Flyout>
+                                <ListBox Background="Transparent" ItemsSource="{x:Bind DesaturationOptions}" />
+                            </Flyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                </StackPanel>
+            </AppBarElementContainer>
+        </CommandBar>
+    </Grid>
+</local:UserControlBase>

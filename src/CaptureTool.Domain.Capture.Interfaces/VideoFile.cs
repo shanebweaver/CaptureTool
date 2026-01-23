@@ -1,0 +1,8 @@
+using CaptureTool.Infrastructure.Interfaces.Storage;
+
+namespace CaptureTool.Domain.Capture.Interfaces;
+
+public partial class VideoFile : FileBase, IVideoFile
+{
+    public VideoFile(string path) : base(path) { }
+}

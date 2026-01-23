@@ -18,24 +18,24 @@
   <Project Path="src/CaptureInterop.Tests/CaptureInterop.Tests.vcxproj" />
   <Project Path="src/CaptureInterop/CaptureInterop.vcxproj" Id="e576bd23-e4b5-4a1e-a385-87cb932e6d32" />
   <Project Path="src/CaptureTool.Common/CaptureTool.Common.csproj" />
-  <Project Path="src/CaptureTool.Core.Implementations/CaptureTool.Core.Implementations.csproj" />
-  <Project Path="src/CaptureTool.Core.Interfaces/CaptureTool.Core.Interfaces.csproj" />
-  <Project Path="src/CaptureTool.Core.Tests/CaptureTool.Core.Tests.csproj" />
-  <Project Path="src/CaptureTool.Domains.Capture.Implementations.Windows/CaptureTool.Domains.Capture.Implementations.Windows.csproj">
+  <Project Path="src/CaptureTool.Application.Implementations/CaptureTool.Application.Implementations.csproj" />
+  <Project Path="src/CaptureTool.Application.Interfaces/CaptureTool.Application.Interfaces.csproj" />
+  <Project Path="src/CaptureTool.Application.Tests/CaptureTool.Application.Tests.csproj" />
+  <Project Path="src/CaptureTool.Domain.Capture.Implementations.Windows/CaptureTool.Domain.Capture.Implementations.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domains.Capture.Interfaces/CaptureTool.Domains.Capture.Interfaces.csproj" />
-  <Project Path="src/CaptureTool.Domains.Capture.Tests.Windows/CaptureTool.Domains.Capture.Tests.Windows.csproj">
+  <Project Path="src/CaptureTool.Domain.Capture.Interfaces/CaptureTool.Domain.Capture.Interfaces.csproj" />
+  <Project Path="src/CaptureTool.Domain.Capture.Tests.Windows/CaptureTool.Domain.Capture.Tests.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domains.Edit.Implementations.Windows/CaptureTool.Domains.Edit.Implementations.Windows.csproj">
+  <Project Path="src/CaptureTool.Domain.Edit.Implementations.Windows/CaptureTool.Domain.Edit.Implementations.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domains.Edit.Interfaces/CaptureTool.Domains.Edit.Interfaces.csproj" />
-  <Project Path="src/CaptureTool.Domains.Edit.Tests.Windows/CaptureTool.Domains.Edit.Tests.Windows.csproj">
+  <Project Path="src/CaptureTool.Domain.Edit.Interfaces/CaptureTool.Domain.Edit.Interfaces.csproj" />
+  <Project Path="src/CaptureTool.Domain.Edit.Tests.Windows/CaptureTool.Domain.Edit.Tests.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
@@ -47,11 +47,9 @@
   <Project Path="src/CaptureTool.Infrastructure.Implementations/CaptureTool.Infrastructure.Implementations.csproj" />
   <Project Path="src/CaptureTool.Infrastructure.Interfaces/CaptureTool.Infrastructure.Interfaces.csproj" />
   <Project Path="src/CaptureTool.Infrastructure.Tests/CaptureTool.Infrastructure.Tests.csproj" />
-  <Project Path="src/CaptureTool.UI.Windows/CaptureTool.UI.Windows.csproj">
+  <Project Path="src/CaptureTool.Presentation.Windows.WinUI/CaptureTool.Presentation.Windows.WinUI.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
     <Deploy />
   </Project>
-  <Project Path="src/CaptureTool.ViewModels.Tests/CaptureTool.ViewModels.Tests.csproj" />
-  <Project Path="src/CaptureTool.ViewModels/CaptureTool.ViewModels.csproj" />
 </Solution>

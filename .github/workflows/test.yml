@@ -45,8 +45,7 @@ jobs:
 
     - name: Run .NET tests
       run: |
-        dotnet test src\CaptureTool.Core.Tests\CaptureTool.Core.Tests.csproj -p:Platform=x64 --configuration Release
-        dotnet test src\CaptureTool.Domains.Capture.Tests.Windows\CaptureTool.Domains.Capture.Tests.Windows.csproj -p:Platform=x64 --configuration Release
-        dotnet test src\CaptureTool.Domains.Edit.Tests.Windows\CaptureTool.Domains.Edit.Tests.Windows.csproj -p:Platform=x64 --configuration Release
+        dotnet test src\CaptureTool.Application.Tests\CaptureTool.Application.Tests.csproj -p:Platform=x64 --configuration Release
+        dotnet test src\CaptureTool.Domain.Capture.Tests.Windows\CaptureTool.Domain.Capture.Tests.Windows.csproj -p:Platform=x64 --configuration Release
+        dotnet test src\CaptureTool.Domain.Edit.Tests.Windows\CaptureTool.Domain.Edit.Tests.Windows.csproj -p:Platform=x64 --configuration Release
         dotnet test src\CaptureTool.Infrastructure.Tests\CaptureTool.Infrastructure.Tests.csproj -p:Platform=x64 --configuration Release
-        dotnet test src\CaptureTool.ViewModels.Tests\CaptureTool.ViewModels.Tests.csproj -p:Platform=x64 --configuration Release

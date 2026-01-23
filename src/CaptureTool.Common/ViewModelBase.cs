@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace CaptureTool.Common;
 
-public abstract partial class ViewModelBase : HasLoadStateBase, INotifyPropertyChanged, IDisposable
+public abstract partial class ViewModelBase : HasLoadStateBase, IViewModel
 {
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler<LoadState>? LoadStateChanged;
