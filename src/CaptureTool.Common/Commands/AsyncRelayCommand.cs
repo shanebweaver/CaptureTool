@@ -1,11 +1,12 @@
-﻿using System.Windows.Input;
+﻿using CaptureTool.Application.Interfaces.Commands;
+using System.Windows.Input;
 
 namespace CaptureTool.Common.Commands;
 
 /// <summary>
 /// A RelayCommand variant for async methods.
 /// </summary>
-public sealed class AsyncRelayCommand : ICommand
+public sealed class AsyncRelayCommand : IAsyncCommand
 {
     private readonly Func<Task> _executeAsync;
     private readonly Func<bool>? _canExecute;

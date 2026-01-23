@@ -1,8 +1,9 @@
-﻿using System.Windows.Input;
+﻿using CaptureTool.Application.Interfaces.Commands;
+using System.Windows.Input;
 
 namespace CaptureTool.Common.Commands;
 
-public sealed class AsyncRelayCommand<T>(Func<T, Task> executeAsync, Func<T, bool>? canExecuteFunc = null, bool isExecuting = false) : ICommand
+public sealed class AsyncRelayCommand<T>(Func<T, Task> executeAsync, Func<T, bool>? canExecuteFunc = null, bool isExecuting = false) : IAsyncCommand<T>
 {
     public event EventHandler? CanExecuteChanged;
 

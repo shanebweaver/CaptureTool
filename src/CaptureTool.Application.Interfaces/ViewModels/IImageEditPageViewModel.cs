@@ -1,3 +1,4 @@
+using CaptureTool.Application.Interfaces.Commands;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces.ChromaKey;
@@ -12,16 +13,16 @@ public interface IImageEditPageViewModel
 {
     event EventHandler? InvalidateCanvasRequested;
     
-    ICommand CopyCommand { get; }
+    IAsyncCommand CopyCommand { get; }
     ICommand ToggleCropModeCommand { get; }
-    ICommand SaveCommand { get; }
+    IAsyncCommand SaveCommand { get; }
     ICommand UndoCommand { get; }
     ICommand RedoCommand { get; }
     ICommand RotateCommand { get; }
     ICommand FlipHorizontalCommand { get; }
     ICommand FlipVerticalCommand { get; }
-    ICommand PrintCommand { get; }
-    ICommand ShareCommand { get; }
+    IAsyncCommand PrintCommand { get; }
+    IAsyncCommand ShareCommand { get; }
     ICommand UpdateChromaKeyColorCommand { get; }
     ICommand UpdateOrientationCommand { get; }
     ICommand UpdateCropRectCommand { get; }

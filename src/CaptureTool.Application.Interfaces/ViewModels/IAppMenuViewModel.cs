@@ -1,3 +1,4 @@
+using CaptureTool.Application.Interfaces.Commands;
 using System.Collections.Generic;
 using System.Windows.Input;
 
@@ -8,7 +9,7 @@ public interface IAppMenuViewModel
     event EventHandler? RecentCapturesUpdated;
     
     ICommand NewImageCaptureCommand { get; }
-    ICommand OpenFileCommand { get; }
+    IAsyncCommand OpenFileCommand { get; }
     ICommand NavigateToSettingsCommand { get; }
     ICommand ShowAboutAppCommand { get; }
     ICommand ShowAddOnsCommand { get; }

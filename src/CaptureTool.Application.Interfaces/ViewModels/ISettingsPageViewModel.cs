@@ -1,3 +1,4 @@
+using CaptureTool.Application.Interfaces.Commands;
 using System.Collections.Generic;
 using System.Windows.Input;
 
@@ -5,21 +6,21 @@ namespace CaptureTool.Application.Interfaces.ViewModels;
 
 public interface ISettingsPageViewModel
 {
-    ICommand ChangeScreenshotsFolderCommand { get; }
+    IAsyncCommand ChangeScreenshotsFolderCommand { get; }
     ICommand OpenScreenshotsFolderCommand { get; }
-    ICommand ChangeVideosFolderCommand { get; }
+    IAsyncCommand ChangeVideosFolderCommand { get; }
     ICommand OpenVideosFolderCommand { get; }
     ICommand RestartAppCommand { get; }
     ICommand GoBackCommand { get; }
-    ICommand UpdateImageCaptureAutoCopyCommand { get; }
-    ICommand UpdateImageCaptureAutoSaveCommand { get; }
-    ICommand UpdateVideoCaptureAutoCopyCommand { get; }
-    ICommand UpdateVideoCaptureAutoSaveCommand { get; }
-    ICommand UpdateAppLanguageCommand { get; }
+    IAsyncCommand<bool> UpdateImageCaptureAutoCopyCommand { get; }
+    IAsyncCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
+    IAsyncCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
+    IAsyncCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
+    IAsyncCommand<int> UpdateAppLanguageCommand { get; }
     ICommand UpdateAppThemeCommand { get; }
     ICommand OpenTemporaryFilesFolderCommand { get; }
     ICommand ClearTemporaryFilesCommand { get; }
-    ICommand RestoreDefaultSettingsCommand { get; }
+    IAsyncCommand RestoreDefaultSettingsCommand { get; }
     
     IReadOnlyList<IAppLanguageViewModel> AppLanguages { get; }
     int SelectedAppLanguageIndex { get; }
