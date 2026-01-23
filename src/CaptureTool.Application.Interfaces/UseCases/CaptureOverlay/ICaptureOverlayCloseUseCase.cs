@@ -1,5 +1,5 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Infrastructure.Interfaces.UseCases;
 
 namespace CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 
-public interface ICaptureOverlayCloseUseCase : IActionCommand { }
+public interface ICaptureOverlayCloseUseCase : IUseCase { }

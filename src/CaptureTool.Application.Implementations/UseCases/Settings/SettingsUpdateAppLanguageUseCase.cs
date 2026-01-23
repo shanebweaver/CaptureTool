@@ -1,4 +1,5 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Interfaces.UseCases.Settings;
 using CaptureTool.Application.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Localization;
@@ -6,7 +7,7 @@ using CaptureTool.Infrastructure.Interfaces.Settings;
 
 namespace CaptureTool.Application.Implementations.UseCases.Settings;
 
-public sealed partial class SettingsUpdateAppLanguageUseCase : AsyncActionCommand<int>, ISettingsUpdateAppLanguageUseCase
+public sealed partial class SettingsUpdateAppLanguageUseCase : AsyncUseCase<int>, ISettingsUpdateAppLanguageUseCase
 {
     private readonly ILocalizationService _localization;
     private readonly ISettingsService _settings;

@@ -1,6 +1,6 @@
-﻿namespace CaptureTool.Common.Commands;
+namespace CaptureTool.Infrastructure.Interfaces.UseCases;
 
-public interface IAsyncActionCommand<T>
+public interface IAsyncUseCase<T>
 {
     bool CanExecute(T parameter);
     Task ExecuteAsync(T parameter, CancellationToken cancellationToken = default);

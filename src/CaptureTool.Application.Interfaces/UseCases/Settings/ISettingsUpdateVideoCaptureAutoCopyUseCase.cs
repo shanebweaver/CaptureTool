@@ -1,7 +1,7 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 
 namespace CaptureTool.Application.Interfaces.UseCases.Settings;
 
-public interface ISettingsUpdateVideoCaptureAutoCopyUseCase : IAsyncActionCommand<bool>
+public interface ISettingsUpdateVideoCaptureAutoCopyUseCase : IAsyncUseCase<bool>
 {
 }

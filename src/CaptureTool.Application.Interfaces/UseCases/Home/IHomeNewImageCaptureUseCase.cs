@@ -1,5 +1,5 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 
 namespace CaptureTool.Application.Interfaces.UseCases.Home;
 
-public interface IHomeNewImageCaptureUseCase : IActionCommand { }
+public interface IHomeNewImageCaptureUseCase : IUseCase { }

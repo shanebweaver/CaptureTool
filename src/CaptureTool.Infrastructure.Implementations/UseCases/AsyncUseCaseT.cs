@@ -1,6 +1,8 @@
-﻿namespace CaptureTool.Common.Commands;
+namespace CaptureTool.Infrastructure.Implementations.UseCases;
 
-public abstract partial class AsyncActionCommand<T> : ActionCommandBase, IAsyncActionCommand<T>
+using CaptureTool.Infrastructure.Interfaces.UseCases;
+
+public abstract partial class AsyncUseCase<T> : IAsyncUseCase<T>
 {
     public virtual bool CanExecute(T parameter)
     {

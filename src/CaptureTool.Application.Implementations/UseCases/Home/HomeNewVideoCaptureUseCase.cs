@@ -1,4 +1,5 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Interfaces.UseCases.Home;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.FeatureManagement;
@@ -7,7 +8,7 @@ using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 
 namespace CaptureTool.Application.Implementations.UseCases.Home;
 
-public sealed partial class HomeNewVideoCaptureUseCase : ActionCommand, IHomeNewVideoCaptureUseCase
+public sealed partial class HomeNewVideoCaptureUseCase : UseCase, IHomeNewVideoCaptureUseCase
 {
     private readonly IAppNavigation _appNavigation;
     private readonly IFeatureManager _featureManager;

@@ -1,4 +1,5 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Interfaces.UseCases.VideoEdit;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Storage;
@@ -6,7 +7,7 @@ using CaptureTool.Infrastructure.Interfaces.Windowing;
 
 namespace CaptureTool.Application.Implementations.UseCases.VideoEdit;
 
-public sealed partial class VideoEditSaveUseCase : AsyncActionCommand<string>, IVideoEditSaveUseCase
+public sealed partial class VideoEditSaveUseCase : AsyncUseCase<string>, IVideoEditSaveUseCase
 {
     private readonly IFilePickerService _filePickerService;
     private readonly IWindowHandleProvider _windowingService;

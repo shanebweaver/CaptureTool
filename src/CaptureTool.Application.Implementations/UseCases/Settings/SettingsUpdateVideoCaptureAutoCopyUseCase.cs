@@ -1,11 +1,12 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Interfaces.UseCases.Settings;
 using CaptureTool.Application.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 
 namespace CaptureTool.Application.Implementations.UseCases.Settings;
 
-public sealed partial class SettingsUpdateVideoCaptureAutoCopyUseCase : AsyncActionCommand<bool>, ISettingsUpdateVideoCaptureAutoCopyUseCase
+public sealed partial class SettingsUpdateVideoCaptureAutoCopyUseCase : AsyncUseCase<bool>, ISettingsUpdateVideoCaptureAutoCopyUseCase
 {
     private readonly ISettingsService _settingsService;
 

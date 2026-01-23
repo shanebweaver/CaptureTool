@@ -1,5 +1,5 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 
 namespace CaptureTool.Application.Interfaces.UseCases.Settings;
 
-public interface ISettingsOpenScreenshotsFolderUseCase : IActionCommand { }
+public interface ISettingsOpenScreenshotsFolderUseCase : IUseCase { }

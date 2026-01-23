@@ -1,4 +1,5 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Interfaces.UseCases.Settings;
 using CaptureTool.Application.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Settings;
@@ -7,7 +8,7 @@ using System.Diagnostics;
 
 namespace CaptureTool.Application.Implementations.UseCases.Settings;
 
-public sealed partial class SettingsOpenVideosFolderUseCase : ActionCommand, ISettingsOpenVideosFolderUseCase
+public sealed partial class SettingsOpenVideosFolderUseCase : UseCase, ISettingsOpenVideosFolderUseCase
 {
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;

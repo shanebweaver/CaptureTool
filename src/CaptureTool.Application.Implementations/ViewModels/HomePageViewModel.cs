@@ -1,6 +1,6 @@
 using CaptureTool.Common;
 using CaptureTool.Common.Commands;
-using CaptureTool.Common.Commands.Extensions;
+using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 using CaptureTool.Application.Interfaces.UseCases.Home;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.ViewModels;

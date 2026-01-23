@@ -1,10 +1,11 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Interfaces.UseCases.VideoEdit;
 using CaptureTool.Infrastructure.Interfaces.Clipboard;
 
 namespace CaptureTool.Application.Implementations.UseCases.VideoEdit;
 
-public sealed partial class VideoEditCopyUseCase : AsyncActionCommand<string>, IVideoEditCopyUseCase
+public sealed partial class VideoEditCopyUseCase : AsyncUseCase<string>, IVideoEditCopyUseCase
 {
     private readonly IClipboardService _clipboardService;
 

@@ -1,10 +1,11 @@
-﻿using CaptureTool.Common.Commands;
+﻿using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Domain.Capture.Interfaces;
 
 namespace CaptureTool.Application.Implementations.UseCases.CaptureOverlay;
 
-public sealed partial class CaptureOverlayToggleDesktopAudioUseCase : ActionCommand, ICaptureOverlayToggleDesktopAudioUseCase
+public sealed partial class CaptureOverlayToggleDesktopAudioUseCase : UseCase, ICaptureOverlayToggleDesktopAudioUseCase
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
 

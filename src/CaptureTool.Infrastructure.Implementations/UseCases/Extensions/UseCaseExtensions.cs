@@ -1,8 +1,10 @@
-﻿namespace CaptureTool.Common.Commands.Extensions;
+namespace CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 
-public static partial class ActionCommandExtensions
+using CaptureTool.Infrastructure.Interfaces.UseCases;
+
+public static partial class UseCaseExtensions
 {
-    public static void ExecuteCommand(this IActionCommand command)
+    public static void ExecuteCommand(this IUseCase command)
     {
         if (!command.CanExecute())
         {
@@ -12,7 +14,7 @@ public static partial class ActionCommandExtensions
         command.Execute();
     }
 
-    public static async Task ExecuteCommandAsync(this IAsyncActionCommand asyncCommand, CancellationToken cancellationToken = default)
+    public static async Task ExecuteCommandAsync(this IAsyncUseCase asyncCommand, CancellationToken cancellationToken = default)
     {
         if (!asyncCommand.CanExecute())
         {
@@ -22,7 +24,7 @@ public static partial class ActionCommandExtensions
         await asyncCommand.ExecuteAsync(cancellationToken);
     }
 
-    public static void ExecuteCommand<T>(this IActionCommand<T> command, T parameter)
+    public static void ExecuteCommand<T>(this IUseCase<T> command, T parameter)
     {
         if (!command.CanExecute(parameter))
         {
@@ -32,7 +34,7 @@ public static partial class ActionCommandExtensions
         command.Execute(parameter);
     }
 
-    public static async Task ExecuteCommandAsync<T>(this IAsyncActionCommand<T> asyncCommand, T parameter, CancellationToken cancellationToken = default)
+    public static async Task ExecuteCommandAsync<T>(this IAsyncUseCase<T> asyncCommand, T parameter, CancellationToken cancellationToken = default)
     {
         if (!asyncCommand.CanExecute(parameter))
         {

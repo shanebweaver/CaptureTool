@@ -1,4 +1,4 @@
-﻿using CaptureTool.Common.Commands.Extensions;
+﻿using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Domain.Capture.Interfaces;
 

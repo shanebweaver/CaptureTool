@@ -1,7 +1,7 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 
 namespace CaptureTool.Application.Interfaces.UseCases.VideoEdit;
 
-public interface IVideoEditSaveUseCase : IAsyncActionCommand<string>
+public interface IVideoEditSaveUseCase : IAsyncUseCase<string>
 {
 }

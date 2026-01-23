@@ -1,5 +1,5 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 
 namespace CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 
-public interface ICaptureOverlayTogglePauseResumeUseCase : IActionCommand { }
+public interface ICaptureOverlayTogglePauseResumeUseCase : IUseCase { }

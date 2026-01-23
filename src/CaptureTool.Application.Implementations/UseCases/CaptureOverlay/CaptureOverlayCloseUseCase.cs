@@ -1,4 +1,5 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Implementations.Services.Navigation;
 using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Application.Interfaces.Navigation;
@@ -8,7 +9,7 @@ using CaptureTool.Infrastructure.Interfaces.Shutdown;
 
 namespace CaptureTool.Application.Implementations.UseCases.CaptureOverlay;
 
-public sealed partial class CaptureOverlayCloseUseCase : ActionCommand, ICaptureOverlayCloseUseCase
+public sealed partial class CaptureOverlayCloseUseCase : UseCase, ICaptureOverlayCloseUseCase
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly IAppNavigation _appNavigation;

@@ -1,7 +1,7 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 
 namespace CaptureTool.Application.Interfaces.UseCases.AddOns;
 
-public interface IAddOnsGoBackUseCase : IActionCommand
+public interface IAddOnsGoBackUseCase : IUseCase
 {
 }

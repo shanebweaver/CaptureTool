@@ -1,11 +1,12 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Interfaces.UseCases.Settings;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using System.Diagnostics;
 
 namespace CaptureTool.Application.Implementations.UseCases.Settings;
 
-public sealed partial class SettingsOpenTempFolderUseCase : ActionCommand, ISettingsOpenTempFolderUseCase
+public sealed partial class SettingsOpenTempFolderUseCase : UseCase, ISettingsOpenTempFolderUseCase
 {
     private readonly IStorageService _storageService;
 

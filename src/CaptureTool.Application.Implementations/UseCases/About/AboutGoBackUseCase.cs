@@ -1,10 +1,11 @@
-using CaptureTool.Common.Commands;
+using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Interfaces.UseCases.About;
 using CaptureTool.Application.Interfaces.Navigation;
 
 namespace CaptureTool.Application.Implementations.UseCases.About;
 
-public sealed partial class AboutGoBackUseCase : ActionCommand, IAboutGoBackUseCase
+public sealed partial class AboutGoBackUseCase : UseCase, IAboutGoBackUseCase
 {
     private readonly IAppNavigation _appNavigation;
 
