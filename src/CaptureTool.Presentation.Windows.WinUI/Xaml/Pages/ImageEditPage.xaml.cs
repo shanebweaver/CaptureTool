@@ -20,6 +20,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
     }
 
+    private string FormatZoomPercentage(double zoomLevel)
+    {
+        return $"{(int)(zoomLevel * 100)}%";
+    }
+
     private void ViewModel_LoadStateChanged(object? sender, LoadState e)
     {
         if (ViewModel.IsLoaded)
@@ -64,5 +69,18 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ChromaKeyToolbar_SelectedColorOptionIndexChanged(object _, int e)
     {
         ViewModel.UpdateSelectedColorOptionIndexCommand.Execute(e);
+    }
+
+    private void ZoomSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
+        ViewModel.UpdateZoomLevelCommand.Execute(e.NewValue);
+    }
+
+    private void AutoZoomLockToggle_IsCheckedChanged(object sender, RoutedEventArgs _)
+    {
+        if (sender is ToggleButton toggleButton)
+        {
+            ViewModel.UpdateAutoZoomLockCommand.Execute(toggleButton.IsChecked ?? false);
+        }
     }
 }

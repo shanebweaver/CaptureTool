@@ -770,4 +770,12 @@ SOFTWARE.
     <value>Mirrored</value>
     <comment>The tooltip for the mirrored info.</comment>
   </data>
+  <data name="ImageEdit_ZoomAndCenterButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Zoom and Center</value>
+    <comment>The tooltip for the zoom and center button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_AutoZoomLockButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Auto-Zoom Lock</value>
+    <comment>The tooltip for the auto-zoom lock toggle button on the image edit page.</comment>
+  </data>
 </root>

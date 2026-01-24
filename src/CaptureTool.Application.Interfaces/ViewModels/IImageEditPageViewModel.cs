@@ -29,6 +29,9 @@ public interface IImageEditPageViewModel : IViewModel
     IAppCommand<int> UpdateDesaturationCommand { get; }
     IAppCommand<int> UpdateToleranceCommand { get; }
     IAppCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
+    IAppCommand<double> UpdateZoomLevelCommand { get; }
+    IAppCommand<bool> UpdateAutoZoomLockCommand { get; }
+    IAppCommand ZoomAndCenterCommand { get; }
 
     bool HasUndoStack { get; }
     bool HasRedoStack { get; }
@@ -47,6 +50,8 @@ public interface IImageEditPageViewModel : IViewModel
     IReadOnlyList<ChromaKeyColorOption> ChromaKeyColorOptions { get; }
     int SelectedChromaKeyColorOption { get; }
     bool IsChromaKeyAddOnOwned { get; }
+    double ZoomLevel { get; }
+    bool IsAutoZoomLocked { get; }
 
     Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken);
     void OnCropInteractionComplete(Rectangle oldCropRect);

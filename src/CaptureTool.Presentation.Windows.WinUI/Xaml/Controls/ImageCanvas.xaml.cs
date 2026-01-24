@@ -43,11 +43,31 @@ public sealed partial class ImageCanvas : UserControlBase
        typeof(ImageCanvas),
        new PropertyMetadata(Rectangle.Empty, OnCropRectPropertyChanged));
 
+    public static readonly DependencyProperty ZoomLevelProperty = DependencyProperty.Register(
+       nameof(ZoomLevel),
+       typeof(double),
+       typeof(ImageCanvas),
+       new PropertyMetadata(1.0, OnZoomLevelPropertyChanged));
+
+    public static readonly DependencyProperty IsAutoZoomLockedProperty = DependencyProperty.Register(
+       nameof(IsAutoZoomLocked),
+       typeof(bool),
+       typeof(ImageCanvas),
+       new PropertyMetadata(false));
+
     private static void OnCropRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is ImageCanvas control && !control.IsCropModeEnabled)
         {
             control.RenderCanvas.Invalidate();
+        }
+    }
+
+    private static void OnZoomLevelPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control && e.NewValue is double zoomLevel)
+        {
+            control.ApplyManualZoom(zoomLevel);
         }
     }
 
@@ -115,6 +135,18 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         get => Get<Rectangle>(CropRectProperty);
         set => Set(CropRectProperty, value);
+    }
+
+    public double ZoomLevel
+    {
+        get => Get<double>(ZoomLevelProperty);
+        set => Set(ZoomLevelProperty, value);
+    }
+
+    public bool IsAutoZoomLocked
+    {
+        get => Get<bool>(IsAutoZoomLockedProperty);
+        set => Set(IsAutoZoomLockedProperty, value);
     }
 
     public event EventHandler<Rectangle>? InteractionComplete;
@@ -229,13 +261,33 @@ public sealed partial class ImageCanvas : UserControlBase
             );
         }
     }
+
+    private void ApplyManualZoom(double zoomLevel)
+    {
+        lock (this)
+        {
+            if (CanvasScrollView == null)
+            {
+                return;
+            }
+
+            CanvasScrollView.ZoomTo(
+                (float)zoomLevel,
+                null,
+                new(ScrollingAnimationMode.Auto)
+            );
+        }
+    }
     #endregion
 
     #region Drawing
     public void InvalidateCanvas()
     {
         UpdateDrawingCanvasSize();
-        ZoomAndCenter();
+        if (!IsAutoZoomLocked)
+        {
+            ZoomAndCenter();
+        }
     }
 
     public void ForceCanvasRedrawWithResources()
