@@ -578,7 +578,6 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="ContentPanel.HorizontalAlignment" Value="Center" />
-                        <Setter Target="ContentPanel.MinWidth" Value="800" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
