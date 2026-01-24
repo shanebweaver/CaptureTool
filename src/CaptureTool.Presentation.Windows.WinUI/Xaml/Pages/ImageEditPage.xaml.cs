@@ -1,6 +1,7 @@
 using CaptureTool.Infrastructure.Interfaces.Loading;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Drawing;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
