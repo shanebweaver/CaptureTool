@@ -86,7 +86,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.UpdateSelectedColorOptionIndexCommand.Execute(e);
     }
 
-    private void ZoomSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    private void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         ViewModel.UpdateZoomLevelCommand.Execute(e.NewValue);
     }
