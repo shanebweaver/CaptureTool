@@ -42,9 +42,9 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
                 return;
             }
 
-            // Only restore if the window is actually minimized or hidden
+            // Only restore if the window is actually minimized
             // Otherwise, SW_RESTORE will unsnap a snapped window
-            if (!_mainWindow.Visible)
+            if (_mainWindow.IsMinimized())
             {
                 _mainWindow.Restore();
             }
