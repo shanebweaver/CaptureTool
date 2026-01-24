@@ -1,6 +1,6 @@
-using CaptureTool.Application.Implementations.ViewModels;
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using CaptureTool.Application.Implementations.ViewModels;
 using CaptureTool.Application.Interfaces.UseCases.VideoEdit;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
@@ -33,7 +33,7 @@ public class VideoEditPageViewModelTests
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
         var saveAction = Fixture.Freeze<Mock<IVideoEditSaveUseCase>>();
         var vm = Create();
-        
+
         // Set up a video file
         var videoFile = new VideoFile("test.mp4");
         vm.Load(videoFile);
@@ -54,7 +54,7 @@ public class VideoEditPageViewModelTests
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
         var copyAction = Fixture.Freeze<Mock<IVideoEditCopyUseCase>>();
         var vm = Create();
-        
+
         // Set up a video file
         var videoFile = new VideoFile("test.mp4");
         vm.Load(videoFile);
@@ -107,7 +107,7 @@ public class VideoEditPageViewModelTests
 
         // Act
         vm.Load(pendingVideo);
-        
+
         // Simulate completion
         pendingVideo.Complete();
         await Task.Delay(100); // Give time for async handler

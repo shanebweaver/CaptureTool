@@ -2,7 +2,6 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Common\CaptureTool.Common.csproj" />
     <ProjectReference Include="..\CaptureTool.Application.Interfaces\CaptureTool.Application.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Domain.Capture.Interfaces\CaptureTool.Domain.Capture.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Domain.Edit.Interfaces\CaptureTool.Domain.Edit.Interfaces.csproj" />

@@ -1,6 +1,5 @@
-using CaptureTool.Infrastructure.Implementations.UseCases;
-using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Interfaces.UseCases.Error;
+using CaptureTool.Infrastructure.Implementations.UseCases;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;
 
 namespace CaptureTool.Application.Implementations.UseCases.Error;

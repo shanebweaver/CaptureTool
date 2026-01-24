@@ -100,7 +100,7 @@ public class NavigationService : INavigationService
             {
                 _navigationStack.Clear();
             }
-            
+
             _navigationStack.Push(newRequest);
 
             RequestNavigation(newRequest);

@@ -18,7 +18,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 {
     internal sealed partial class DestroyIconSafeHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
-        public DestroyIconSafeHandle(HINSTANCE hINSTANCE) : base(true) 
+        public DestroyIconSafeHandle(HINSTANCE hINSTANCE) : base(true)
         {
             handle = hINSTANCE;
         }
@@ -81,7 +81,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             DesktopWindowXamlSource xamlSource = new();
             WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             xamlSource.Initialize(windowId);
-            
+
             CaptureOverlayView view = new(monitor, area);
             xamlSource.Content = view;
 
@@ -142,7 +142,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
             DesktopWindowXamlSource xamlSource = new();
             WindowId windowId = Win32Interop.GetWindowIdFromWindow(borderHwnd);
             xamlSource.Initialize(windowId);
-            
+
             CaptureOverlayBorder border = new();
             xamlSource.Content = border;
 
@@ -159,12 +159,12 @@ internal sealed partial class CaptureOverlayHost : IDisposable
 
         var monitor = args.Monitor;
         var area = args.Area;
-        
+
         var overlayResult = CreateCaptureOverlayWindow(monitor, area);
         _hwnd = overlayResult.hwnd;
         _xamlSource = overlayResult.xamlSource;
         _overlayView = overlayResult.view;
-        
+
         var borderResult = CreateCaptureOverlayBorderWindow(monitor, area);
         _borderHwnd = borderResult.hwnd;
         _borderXamlSource = borderResult.xamlSource;

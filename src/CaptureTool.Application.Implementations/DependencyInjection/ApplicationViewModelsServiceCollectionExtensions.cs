@@ -1,6 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
 using CaptureTool.Application.Implementations.ViewModels;
 using CaptureTool.Application.Interfaces.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.Implementations.DependencyInjection;
 

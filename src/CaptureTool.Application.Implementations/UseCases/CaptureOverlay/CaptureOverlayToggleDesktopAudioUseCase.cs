@@ -1,7 +1,6 @@
-﻿using CaptureTool.Infrastructure.Implementations.UseCases;
-using CaptureTool.Infrastructure.Interfaces.UseCases;
-using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
+﻿using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Implementations.UseCases;
 
 namespace CaptureTool.Application.Implementations.UseCases.CaptureOverlay;
 

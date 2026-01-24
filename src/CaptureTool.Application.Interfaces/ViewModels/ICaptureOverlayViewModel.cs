@@ -1,6 +1,6 @@
-using CaptureTool.Common;
-using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Application.Interfaces.ViewModels.Options;
+using CaptureTool.Infrastructure.Interfaces.Commands;
+using CaptureTool.Infrastructure.Interfaces.ViewModels;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
@@ -18,6 +18,6 @@ public interface ICaptureOverlayViewModel : IViewModel
     IAppCommand StopVideoCaptureCommand { get; }
     IAppCommand ToggleDesktopAudioCommand { get; }
     IAppCommand TogglePauseResumeCommand { get; }
-    
+
     void Load(CaptureOverlayViewModelOptions options);
 }

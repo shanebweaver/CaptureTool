@@ -1,7 +1,6 @@
-using CaptureTool.Infrastructure.Implementations.UseCases;
-using CaptureTool.Infrastructure.Interfaces.UseCases;
-using CaptureTool.Application.Interfaces.UseCases.About;
 using CaptureTool.Application.Interfaces.Navigation;
+using CaptureTool.Application.Interfaces.UseCases.About;
+using CaptureTool.Infrastructure.Implementations.UseCases;
 
 namespace CaptureTool.Application.Implementations.UseCases.About;
 

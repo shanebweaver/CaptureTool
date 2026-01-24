@@ -1,5 +1,5 @@
-using CaptureTool.Common;
 using CaptureTool.Infrastructure.Interfaces.Commands;
+using CaptureTool.Infrastructure.Interfaces.ViewModels;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
@@ -11,6 +11,6 @@ public interface IAddOnsPageViewModel : IViewModel
     string ChromaKeyAddOnPrice { get; }
     Uri? ChromaKeyAddOnLogoImage { get; }
     bool IsChromaKeyAddOnAvailable { get; }
-    
+
     Task LoadAsync(CancellationToken cancellationToken);
 }

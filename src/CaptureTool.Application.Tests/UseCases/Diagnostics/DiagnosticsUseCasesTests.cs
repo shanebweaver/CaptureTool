@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using CaptureTool.Application.Implementations.Settings;
 using CaptureTool.Application.Implementations.UseCases.Diagnostics;
-using CaptureTool.Application.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using FluentAssertions;

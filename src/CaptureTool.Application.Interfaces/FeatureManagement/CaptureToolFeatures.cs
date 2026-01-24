@@ -10,4 +10,3 @@ public static partial class CaptureToolFeatures
     public static readonly FeatureFlag Feature_VideoCapture_LocalAudio = new("VideoCapture_LocalAudio");
     public static readonly FeatureFlag Feature_VideoCapture_MetadataCollection = new("VideoCapture_MetadataCollection");
 }
-  

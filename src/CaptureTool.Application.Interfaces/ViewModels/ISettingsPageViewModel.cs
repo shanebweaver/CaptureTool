@@ -1,5 +1,5 @@
-using CaptureTool.Common;
 using CaptureTool.Infrastructure.Interfaces.Commands;
+using CaptureTool.Infrastructure.Interfaces.ViewModels;
 using System.Collections.ObjectModel;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
@@ -21,7 +21,7 @@ public interface ISettingsPageViewModel : IViewModel
     IAppCommand OpenTemporaryFilesFolderCommand { get; }
     IAppCommand ClearTemporaryFilesCommand { get; }
     IAsyncAppCommand RestoreDefaultSettingsCommand { get; }
-    
+
     ObservableCollection<IAppLanguageViewModel> AppLanguages { get; }
     int SelectedAppLanguageIndex { get; }
     bool ShowAppLanguageRestartMessage { get; }
@@ -36,6 +36,6 @@ public interface ISettingsPageViewModel : IViewModel
     string ScreenshotsFolderPath { get; }
     string VideosFolderPath { get; }
     string TemporaryFilesFolderPath { get; }
-    
+
     Task LoadAsync(CancellationToken cancellationToken);
 }

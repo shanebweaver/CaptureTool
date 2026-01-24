@@ -1,12 +1,12 @@
+using CaptureTool.Application.Implementations.Settings;
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.FeatureManagement;
-using CaptureTool.Application.Interfaces.Settings;
 using CaptureTool.Application.Interfaces.UseCases.Settings;
 using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Common;
 using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
-using CaptureTool.Infrastructure.Interfaces;
+using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
+using CaptureTool.Infrastructure.Interfaces.Factories;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Settings;
@@ -365,8 +365,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
 
     private void UpdateShowAppLanguageRestartMessage()
     {
-        ShowAppLanguageRestartMessage = 
-            _localizationService.RequestedLanguage != _localizationService.StartupLanguage || 
+        ShowAppLanguageRestartMessage =
+            _localizationService.RequestedLanguage != _localizationService.StartupLanguage ||
             (_localizationService.LanguageOverride == null && _localizationService.StartupLanguage != _localizationService.DefaultLanguage);
     }
 
@@ -430,7 +430,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
     private async Task ChangeScreenshotsFolderAsync()
     {
         await _changeScreenshotsFolderAction.ExecuteCommandAsync(CancellationToken.None);
-        
+
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
         if (string.IsNullOrWhiteSpace(screenshotsFolder))
         {
@@ -442,7 +442,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
     private async Task ChangeVideosFolderAsync()
     {
         await _changeVideosFolderAction.ExecuteCommandAsync(CancellationToken.None);
-        
+
         var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
         if (string.IsNullOrWhiteSpace(videosFolder))
         {
@@ -499,7 +499,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
 
         SelectedAppLanguageIndex = AppLanguages.Count - 1;
         SelectedAppThemeIndex = AppThemes.Count - 1;
-        
+
         UpdateShowAppLanguageRestartMessage();
         UpdateShowAppThemeRestartMessage();
     }

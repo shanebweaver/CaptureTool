@@ -1,6 +1,6 @@
-using CaptureTool.Application.Implementations.ViewModels;
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using CaptureTool.Application.Implementations.ViewModels;
 using CaptureTool.Application.Interfaces.UseCases.AddOns;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
 using CaptureTool.Infrastructure.Interfaces.Localization;

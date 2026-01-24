@@ -29,7 +29,7 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
         printManager.PrintTaskRequested -= OnPrintTaskRequested;
         printManager.PrintTaskRequested += OnPrintTaskRequested;
         await PrintManagerInterop.ShowPrintUIForWindowAsync(hwnd);
-       
+
         void PrintDocument_Preview(CanvasPrintDocument sender, CanvasPreviewEventArgs args)
         {
             var deferral = args.GetDeferral();
@@ -38,9 +38,9 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
                 printDocument.SetPageCount(PageCount);
                 Print(args.DrawingSession, args.PrintTaskOptions, drawables, options);
             }
-            finally 
+            finally
             {
-                deferral.Complete(); 
+                deferral.Complete();
             }
         }
 

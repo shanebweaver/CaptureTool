@@ -1,6 +1,6 @@
-using CaptureTool.Application.Implementations.ViewModels;
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using CaptureTool.Application.Implementations.ViewModels;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces;
@@ -195,7 +195,7 @@ public sealed class ImageEditPageViewModelTests
         // Assert telemetry
         telemetry.Verify(
             t => t.ActivityError(
-                ImageEditPageViewModel.ActivityIds.Undo, 
+                ImageEditPageViewModel.ActivityIds.Undo,
                 It.IsAny<InvalidOperationException>(),
                 It.IsAny<string?>(),
                 It.IsAny<string?>(),

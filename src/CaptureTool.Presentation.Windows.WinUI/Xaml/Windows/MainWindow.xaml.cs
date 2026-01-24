@@ -95,7 +95,7 @@ public sealed partial class MainWindow : Window
             AppWindow.TitleBar.SetDragRectangles([draggableRect]);
         });
     }
-    
+
     // Returns the X offset in physical pixels from the element to the left edge of the window
     private static double GetElementOffsetFromWindowLeftInPixels(FrameworkElement element)
     {
@@ -165,7 +165,7 @@ public sealed partial class MainWindow : Window
 
     private void RestoreAppWindowSizeAndPosition()
     {
-        AppWindow.Move(new PointInt32(1,1));
+        AppWindow.Move(new PointInt32(1, 1));
         AppWindow.Resize(DefaultWindowSize);
         this.CenterOnScreen();
     }

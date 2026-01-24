@@ -2,12 +2,12 @@ using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Store;
 using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Common;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domain.Edit.Interfaces.Drawable;
 using CaptureTool.Domain.Edit.Interfaces.Operations;
+using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
 using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
@@ -389,7 +389,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             return;
         }
-     
+
         UpdateChromaKeyColor(ChromaKeyColorOptions[colorIndex].Color);
     }
 
@@ -407,7 +407,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private async Task SaveAsync()
     {
         nint hwnd = _windowingService.GetMainWindowHandle();
-        IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures) 
+        IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures)
             ?? throw new OperationCanceledException("User cancelled the save file picker.");
         ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
         await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);

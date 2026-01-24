@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Numerics;
 
 namespace CaptureTool.Domain.Edit.Interfaces;
@@ -146,7 +145,7 @@ public static partial class ImageOrientationHelper
     {
         // Get the canonical crop rectangle based on the original orientation
         Rectangle canonicalCropRect = ToCanonicalCropRect(cropRect, imageSize, from);
-        
+
         // Calculate the new crop rectangle based on the target orientation
         Rectangle orientedCropRect = FromCanonicalCropRect(canonicalCropRect, imageSize, to);
 

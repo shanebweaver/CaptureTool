@@ -1,8 +1,8 @@
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
-using System.Runtime.InteropServices.WindowsRuntime;
 using WinLanguage = Windows.Globalization.Language;
 
 namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Scanners;
@@ -30,7 +30,7 @@ public sealed class WindowsMediaOcrVideoMetadataScanner : IVideoMetadataScanner
     {
         // Try to create OCR engine for user's default language
         _ocrEngine = OcrEngine.TryCreateFromUserProfileLanguages();
-        
+
         if (_ocrEngine == null)
         {
             // Fallback to English if available
@@ -75,7 +75,7 @@ public sealed class WindowsMediaOcrVideoMetadataScanner : IVideoMetadataScanner
 
             // Run OCR on the bitmap
             var ocrResult = await _ocrEngine.RecognizeAsync(softwareBitmap);
-            
+
             // Dispose the bitmap
             softwareBitmap.Dispose();
 
@@ -85,7 +85,7 @@ public sealed class WindowsMediaOcrVideoMetadataScanner : IVideoMetadataScanner
 
             // Extract all text
             var allText = string.Join(" ", ocrResult.Lines.Select(line => line.Text));
-            
+
             // Only create metadata entry if we found meaningful text
             if (string.IsNullOrWhiteSpace(allText))
                 return null;

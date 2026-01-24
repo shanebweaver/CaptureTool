@@ -114,7 +114,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         StorageFile file = await filePicker.PickSaveFileAsync();
         if (file is null)
         {
-           return null;
+            return null;
         }
 
         return new WindowsFile(file.Path);

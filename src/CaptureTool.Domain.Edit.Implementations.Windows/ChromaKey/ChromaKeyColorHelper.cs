@@ -1,9 +1,5 @@
 ﻿using Microsoft.Graphics.Canvas;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CaptureTool.Domain.Edit.Implementations.Windows.ChromaKey;
 

@@ -1,7 +1,7 @@
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.UseCases.Diagnostics;
 using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Common;
+using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;

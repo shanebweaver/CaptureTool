@@ -1,12 +1,12 @@
-using CaptureTool.Common;
 using CaptureTool.Infrastructure.Interfaces.Commands;
+using CaptureTool.Infrastructure.Interfaces.ViewModels;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
 public interface IAppMenuViewModel : IViewModel
 {
     event EventHandler? RecentCapturesUpdated;
-    
+
     IAppCommand NewImageCaptureCommand { get; }
     IAsyncAppCommand OpenFileCommand { get; }
     IAppCommand NavigateToSettingsCommand { get; }
@@ -17,7 +17,7 @@ public interface IAppMenuViewModel : IViewModel
     IAppCommand<IRecentCaptureViewModel> OpenRecentCaptureCommand { get; }
     bool ShowAddOnsOption { get; }
     IReadOnlyList<IRecentCaptureViewModel> RecentCaptures { get; set; }
-    
+
     void Load();
     void RefreshRecentCaptures();
 }

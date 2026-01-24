@@ -1,8 +1,8 @@
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.UseCases.AddOns;
 using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Common;
 using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
+using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
 using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Localization;

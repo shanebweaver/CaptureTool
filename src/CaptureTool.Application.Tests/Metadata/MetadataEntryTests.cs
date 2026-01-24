@@ -32,7 +32,7 @@ public class MetadataEntryTests
     public void Constructor_ShouldThrowException_WhenScannerIdIsNull()
     {
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(() => 
+        Assert.ThrowsException<ArgumentNullException>(() =>
             new MetadataEntry(12345, null!, "key", "value"));
     }
 
@@ -40,7 +40,7 @@ public class MetadataEntryTests
     public void Constructor_ShouldThrowException_WhenKeyIsNull()
     {
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(() => 
+        Assert.ThrowsException<ArgumentNullException>(() =>
             new MetadataEntry(12345, "scanner", null!, "value"));
     }
 

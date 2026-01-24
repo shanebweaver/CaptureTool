@@ -1,5 +1,3 @@
-using CaptureTool.Common.Settings;
-
 namespace CaptureTool.Infrastructure.Interfaces.Settings;
 
 public interface ISettingsService

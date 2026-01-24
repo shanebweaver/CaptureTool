@@ -24,7 +24,7 @@ public sealed partial class SelectionOverlayWindow : Window
         }
 
         MonitorBounds = overlayOptions.Monitor.MonitorBounds;
-        
+
         EnsureMaximized();
         InitializeComponent();
 

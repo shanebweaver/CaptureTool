@@ -1,8 +1,8 @@
-using System.Collections.Concurrent;
-using System.Text.Json;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Storage;
+using System.Collections.Concurrent;
+using System.Text.Json;
 
 namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata;
 
@@ -52,7 +52,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
         try
         {
             var pendingRequests = await _queueManager.LoadPendingJobsAsync();
-            
+
             _logService.LogInformation($"Loading {pendingRequests.Count} pending job(s) from previous session");
 
             foreach (var request in pendingRequests)
@@ -116,7 +116,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
     public IReadOnlyList<IMetadataScanJob> GetActiveJobs()
     {
         return _activeJobs.Values
-            .Where(j => j.Status == MetadataScanJobStatus.Queued || 
+            .Where(j => j.Status == MetadataScanJobStatus.Queued ||
                        j.Status == MetadataScanJobStatus.Processing)
             .Cast<IMetadataScanJob>()
             .ToList();
@@ -215,10 +215,10 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
 
             job.Complete(metadataPath);
             _logService.LogInformation($"Completed metadata scan job {job.JobId}. Output: {metadataPath}");
-            
+
             // Delete the job request file from queue now that it's complete
             _queueManager.DeleteJobRequest(job.JobId);
-            
+
             // Clean up completed job from active jobs after a delay
             _ = Task.Run(async () =>
             {
@@ -233,7 +233,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
         {
             // Job was cancelled
             _logService.LogInformation($"Metadata scan job {job.JobId} was cancelled");
-            
+
             // Delete the job request file when cancelled
             _queueManager.DeleteJobRequest(job.JobId);
         }
@@ -241,7 +241,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
         {
             job.SetError(ex.Message);
             _logService.LogException(ex, $"Failed to process metadata scan job {job.JobId}: {ex.Message}");
-            
+
             // Keep the job request file so it can be retried on next startup
             // Optionally, delete it after multiple failures
         }

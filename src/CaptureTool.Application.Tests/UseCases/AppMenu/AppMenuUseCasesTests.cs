@@ -1,14 +1,11 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Implementations.UseCases.AppMenu;
-using CaptureTool.Application.Interfaces;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
-using FluentAssertions;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.AppMenu;
@@ -104,13 +101,13 @@ public class AppMenuUseCasesTests
     {
         var filePickerService = Fixture.Freeze<Mock<IFilePickerService>>();
         var windowingService = Fixture.Freeze<Mock<IWindowHandleProvider>>();
-        
+
         windowingService.Setup(w => w.GetMainWindowHandle()).Returns(new nint(12345));
         filePickerService.Setup(f => f.PickFileAsync(It.IsAny<nint>(), FilePickerType.Image, UserFolder.Pictures))
             .ReturnsAsync((IFile?)null);
 
         var actions = Fixture.Create<AppMenuUseCases>();
-        
+
         await Assert.ThrowsExceptionAsync<OperationCanceledException>(
             async () => await actions.OpenFileAsync(CancellationToken.None));
     }
@@ -119,7 +116,7 @@ public class AppMenuUseCasesTests
     public async Task OpenRecentCaptureAsync_WhenFileDoesNotExist_ThrowsFileNotFoundException()
     {
         var actions = Fixture.Create<AppMenuUseCases>();
-        
+
         await Assert.ThrowsExceptionAsync<FileNotFoundException>(
             async () => await actions.OpenRecentCaptureAsync("nonexistent.png", CancellationToken.None));
     }

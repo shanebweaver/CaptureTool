@@ -3,6 +3,6 @@ namespace CaptureTool.Infrastructure.Interfaces.Shutdown;
 public partial interface IShutdownHandler
 {
     bool IsShuttingDown { get; }
-    void Shutdown(); 
+    void Shutdown();
     bool TryRestart();
 }

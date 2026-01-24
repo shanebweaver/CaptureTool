@@ -1,5 +1,5 @@
-using System.Text.Json.Serialization;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
+using System.Text.Json.Serialization;
 
 namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata;
 
