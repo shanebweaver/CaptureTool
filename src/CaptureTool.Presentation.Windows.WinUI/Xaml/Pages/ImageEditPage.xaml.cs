@@ -8,6 +8,8 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class ImageEditPage : ImageEditPageBase
 {
+    private bool _isUpdatingZoomFromCanvas = false;
+
     public ImageEditPage()
     {
         InitializeComponent();
@@ -15,6 +17,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
         ViewModel.ZoomLevelChanged += ViewModel_ZoomLevelChanged;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
+        ImageCanvas.ZoomChanged += ImageCanvas_ZoomChanged;
     }
 
     ~ImageEditPage()
@@ -23,6 +26,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
         ViewModel.ZoomLevelChanged -= ViewModel_ZoomLevelChanged;
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
+        ImageCanvas.ZoomChanged -= ImageCanvas_ZoomChanged;
     }
 
     private string FormatZoomPercentage(double zoomLevel)
@@ -45,12 +49,24 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void ViewModel_ZoomLevelChanged(object? _, double zoomLevel)
     {
-        ImageCanvas.SetZoomLevel(zoomLevel);
+        if (!_isUpdatingZoomFromCanvas)
+        {
+            ImageCanvas.SetZoomLevel(zoomLevel);
+        }
     }
 
     private void ViewModel_ForceZoomAndCenterRequested(object? _, EventArgs __)
     {
         ImageCanvas.ForceZoomAndCenter();
+    }
+
+    private void ImageCanvas_ZoomChanged(object? _, double zoomLevel)
+    {
+        // Update the ViewModel when the user zooms with CTRL+MouseWheel
+        // Set flag to prevent loop
+        _isUpdatingZoomFromCanvas = true;
+        ViewModel.UpdateZoomLevelCommand.Execute(zoomLevel);
+        _isUpdatingZoomFromCanvas = false;
     }
 
     private void ImageCanvas_InteractionComplete(object _, Rectangle e)

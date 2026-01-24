@@ -247,7 +247,7 @@
                     IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
                     Maximum="2.0"
                     Minimum="0.25"
-                    StepFrequency="0.05"
+                    StepFrequency="0.1"
                     Value="{x:Bind ViewModel.ZoomLevel, Mode=OneWay}"
                     ValueChanged="ZoomSlider_ValueChanged" />
                 <TextBlock

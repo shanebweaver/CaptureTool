@@ -151,6 +151,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public event EventHandler<Rectangle>? InteractionComplete;
     public event EventHandler<Rectangle>? CropRectChanged;
+    public event EventHandler<double>? ZoomChanged;
 
     private bool _isPointerDown;
     private Point _lastPointerPosition;
@@ -158,6 +159,29 @@ public sealed partial class ImageCanvas : UserControlBase
     public ImageCanvas()
     {
         InitializeComponent();
+        Loaded += ImageCanvas_Loaded;
+    }
+
+    private void ImageCanvas_Loaded(object sender, RoutedEventArgs e)
+    {
+        // Wire up the ViewChanged event after the control is loaded
+        if (CanvasScrollView != null)
+        {
+            CanvasScrollView.ViewChanged += CanvasScrollView_ViewChanged;
+        }
+    }
+
+    private void CanvasScrollView_ViewChanged(ScrollView? sender, object args)
+    {
+        if (sender != null)
+        {
+            double currentZoomFactor = sender.ZoomFactor;
+            // Only raise event if zoom actually changed (not just scroll position)
+            if (Math.Abs(currentZoomFactor - ZoomLevel) > 0.001)
+            {
+                ZoomChanged?.Invoke(this, currentZoomFactor);
+            }
+        }
     }
 
     #region Zoom, Center, and Size
