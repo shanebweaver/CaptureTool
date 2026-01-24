@@ -69,6 +69,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly Stack<CanvasOperation> _operationsRedoStack;
 
     public event EventHandler? InvalidateCanvasRequested;
+    public event EventHandler<double>? ZoomLevelChanged;
+    public event EventHandler? ForceZoomAndCenterRequested;
 
     public IAsyncAppCommand CopyCommand { get; }
     public IAppCommand ToggleCropModeCommand { get; }
@@ -592,7 +594,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void UpdateZoomLevel(double zoomLevel)
     {
         ZoomLevel = zoomLevel;
-        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        ZoomLevelChanged?.Invoke(this, zoomLevel);
     }
 
     private void UpdateAutoZoomLock(bool isLocked)
@@ -607,6 +609,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void RequestZoomAndCenter()
     {
-        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        ForceZoomAndCenterRequested?.Invoke(this, EventArgs.Empty);
     }
 }

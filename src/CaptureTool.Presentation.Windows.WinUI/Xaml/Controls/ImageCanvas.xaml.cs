@@ -296,6 +296,17 @@ public sealed partial class ImageCanvas : UserControlBase
         InvalidateCanvas();
     }
 
+    public void ForceZoomAndCenter()
+    {
+        UpdateDrawingCanvasSize();
+        ZoomAndCenter();
+    }
+
+    public void SetZoomLevel(double zoomLevel)
+    {
+        ApplyManualZoom(zoomLevel);
+    }
+
     private void CanvasControl_Draw(CanvasControl sender, CanvasDrawEventArgs args)
     {
         lock (this)

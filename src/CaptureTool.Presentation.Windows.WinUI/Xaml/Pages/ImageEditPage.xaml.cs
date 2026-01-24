@@ -13,12 +13,16 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         InitializeComponent();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
+        ViewModel.ZoomLevelChanged += ViewModel_ZoomLevelChanged;
+        ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
     }
 
     ~ImageEditPage()
     {
         ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
+        ViewModel.ZoomLevelChanged -= ViewModel_ZoomLevelChanged;
+        ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
     }
 
     private string FormatZoomPercentage(double zoomLevel)
@@ -37,6 +41,16 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ViewModel_InvalidateCanvasRequested(object? _, EventArgs __)
     {
         ImageCanvas.InvalidateCanvas();
+    }
+
+    private void ViewModel_ZoomLevelChanged(object? _, double zoomLevel)
+    {
+        ImageCanvas.SetZoomLevel(zoomLevel);
+    }
+
+    private void ViewModel_ForceZoomAndCenterRequested(object? _, EventArgs __)
+    {
+        ImageCanvas.ForceZoomAndCenter();
     }
 
     private void ImageCanvas_InteractionComplete(object _, Rectangle e)
