@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Common;
 using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Implementations.ViewModels;
 using System.ComponentModel;
 using System.Drawing;
 
@@ -46,13 +46,13 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
             {
                 windowViewModel.PropertyChanged -= OnSecondaryWindowViewModelPropertyChanged;
             }
-            
+
             // Dispose each ViewModel to release their Monitor references
             windowViewModel.Dispose();
         }
-        
+
         _windowViewModels.Clear();
-        
+
         base.Dispose();
     }
 

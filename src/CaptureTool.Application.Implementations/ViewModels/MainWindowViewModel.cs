@@ -1,5 +1,5 @@
-using CaptureTool.Common;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Navigation;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 

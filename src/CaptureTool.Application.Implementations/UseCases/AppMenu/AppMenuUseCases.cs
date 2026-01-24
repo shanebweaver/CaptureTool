@@ -1,8 +1,7 @@
 using CaptureTool.Application.Interfaces;
-using CaptureTool.Application.Interfaces.UseCases.AppMenu;
 using CaptureTool.Application.Interfaces.Navigation;
+using CaptureTool.Application.Interfaces.UseCases.AppMenu;
 using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Windowing;

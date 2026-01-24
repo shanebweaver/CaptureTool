@@ -1,5 +1,4 @@
 ﻿using Microsoft.UI.Xaml.Data;
-using System;
 using System.Globalization;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Converters;
@@ -15,7 +14,7 @@ public sealed partial class ColorHexStringConverter : IValueConverter
                 return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
             }
         }
-        catch(Exception)
+        catch (Exception)
         {
             // Failed to convert the color.
         }

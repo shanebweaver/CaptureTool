@@ -1,5 +1,5 @@
 using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Infrastructure.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.Factories;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 

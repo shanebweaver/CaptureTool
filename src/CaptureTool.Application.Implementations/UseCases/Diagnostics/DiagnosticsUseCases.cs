@@ -1,5 +1,5 @@
+using CaptureTool.Application.Implementations.Settings;
 using CaptureTool.Application.Interfaces.UseCases.Diagnostics;
-using CaptureTool.Application.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 

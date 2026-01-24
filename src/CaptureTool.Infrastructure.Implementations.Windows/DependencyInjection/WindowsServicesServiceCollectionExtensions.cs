@@ -1,21 +1,21 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.UI.Dispatching;
-using CaptureTool.Infrastructure.Interfaces.Clipboard;
-using CaptureTool.Infrastructure.Interfaces.Store;
-using CaptureTool.Infrastructure.Interfaces.Themes;
-using CaptureTool.Infrastructure.Interfaces.Storage;
-using CaptureTool.Infrastructure.Interfaces.Localization;
-using CaptureTool.Infrastructure.Interfaces.Share;
-using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
-using CaptureTool.Infrastructure.Interfaces.Shutdown;
 using CaptureTool.Infrastructure.Implementations.Windows.Clipboard;
-using CaptureTool.Infrastructure.Implementations.Windows.Store;
-using CaptureTool.Infrastructure.Implementations.Windows.Themes;
-using CaptureTool.Infrastructure.Implementations.Windows.Storage;
 using CaptureTool.Infrastructure.Implementations.Windows.Localization;
 using CaptureTool.Infrastructure.Implementations.Windows.Share;
-using CaptureTool.Infrastructure.Implementations.Windows.TaskEnvironment;
 using CaptureTool.Infrastructure.Implementations.Windows.Shutdown;
+using CaptureTool.Infrastructure.Implementations.Windows.Storage;
+using CaptureTool.Infrastructure.Implementations.Windows.Store;
+using CaptureTool.Infrastructure.Implementations.Windows.TaskEnvironment;
+using CaptureTool.Infrastructure.Implementations.Windows.Themes;
+using CaptureTool.Infrastructure.Interfaces.Clipboard;
+using CaptureTool.Infrastructure.Interfaces.Localization;
+using CaptureTool.Infrastructure.Interfaces.Share;
+using CaptureTool.Infrastructure.Interfaces.Shutdown;
+using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.Store;
+using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
+using CaptureTool.Infrastructure.Interfaces.Themes;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Dispatching;
 
 namespace CaptureTool.Infrastructure.Implementations.Windows.DependencyInjection;
 

@@ -14,7 +14,7 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 
     public WindowsShutdownHandler(
         ILogService logService,
-        ICancellationService cancellationService) 
+        ICancellationService cancellationService)
     {
         _logService = logService;
         _cancellationService = cancellationService;

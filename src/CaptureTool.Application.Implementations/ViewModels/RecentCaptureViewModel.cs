@@ -1,7 +1,7 @@
-﻿using CaptureTool.Common;
-using CaptureTool.Application.Interfaces;
+﻿using CaptureTool.Application.Interfaces;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Implementations.ViewModels;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
 

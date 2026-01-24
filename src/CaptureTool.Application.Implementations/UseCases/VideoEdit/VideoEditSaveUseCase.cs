@@ -1,7 +1,5 @@
-using CaptureTool.Infrastructure.Implementations.UseCases;
-using CaptureTool.Infrastructure.Interfaces.UseCases;
 using CaptureTool.Application.Interfaces.UseCases.VideoEdit;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Implementations.UseCases;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
 
@@ -31,7 +29,7 @@ public sealed partial class VideoEditSaveUseCase : AsyncUseCase<string>, IVideoE
         nint hwnd = _windowingService.GetMainWindowHandle();
         IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Video, UserFolder.Videos)
             ?? throw new OperationCanceledException("No file was selected.");
-    
+
         File.Copy(videoPath, file.FilePath, true);
     }
 }

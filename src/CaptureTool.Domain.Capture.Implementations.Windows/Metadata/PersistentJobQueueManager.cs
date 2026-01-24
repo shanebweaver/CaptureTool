@@ -1,7 +1,7 @@
-using System.Text.Json;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Storage;
+using System.Text.Json;
 
 namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata;
 
@@ -80,7 +80,7 @@ internal sealed class PersistentJobQueueManager
                 {
                     using var stream = File.OpenRead(filePath);
                     var request = await JsonSerializer.DeserializeAsync(stream, MetadataJsonContext.Default.ScanJobRequest, cancellationToken);
-                    
+
                     if (request != null)
                     {
                         jobs.Add(request);

@@ -48,11 +48,11 @@ public sealed partial class TelemetryService : ITelemetryService
     }
 
     public void ActivityError(
-        string activityId, 
-        Exception exception, 
+        string activityId,
+        Exception exception,
         string? message = null,
         [CallerMemberName] string? caller = null,
-        [CallerFilePath] string? file = null, 
+        [CallerFilePath] string? file = null,
         [CallerLineNumber] int line = 0,
         [CallerArgumentExpression(nameof(exception))] string? exceptionExpr = null)
     {

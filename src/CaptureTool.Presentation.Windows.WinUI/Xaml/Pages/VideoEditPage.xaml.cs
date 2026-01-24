@@ -1,6 +1,5 @@
 using CaptureTool.Application.Implementations.ViewModels;
 using Microsoft.UI.Xaml;
-using System;
 using System.ComponentModel;
 using Windows.Media.Core;
 using Windows.Media.Playback;

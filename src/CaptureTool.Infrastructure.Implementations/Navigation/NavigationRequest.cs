@@ -10,9 +10,9 @@ public readonly struct NavigationRequest : INavigationRequest
     public bool ClearHistory { get; }
 
     public NavigationRequest(
-        object route, 
-        object? parameter = null, 
-        bool isBackNavigation = false, 
+        object route,
+        object? parameter = null,
+        bool isBackNavigation = false,
         bool clearHistroy = false)
     {
         Route = route;

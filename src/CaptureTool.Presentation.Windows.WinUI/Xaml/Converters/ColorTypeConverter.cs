@@ -1,6 +1,5 @@
 ﻿using Microsoft.UI;
 using Microsoft.UI.Xaml.Data;
-using System;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Converters;
 

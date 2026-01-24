@@ -8,7 +8,7 @@ public static partial class Win32WindowExtensions
     public static nint GetWindowHandle(this Window window)
         => WinRT.Interop.WindowNative.GetWindowHandle(window);
 
-    public static void SetForegroundWindow(this Window window) 
+    public static void SetForegroundWindow(this Window window)
         => Win32WindowHelpers.SetForegroundWindow(window.GetWindowHandle());
 
     public static void ExcludeFromScreenCapture(this Window window)

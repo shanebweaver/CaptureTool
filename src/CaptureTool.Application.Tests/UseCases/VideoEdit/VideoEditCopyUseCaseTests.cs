@@ -22,9 +22,9 @@ public class VideoEditCopyUseCaseTests
     {
         var clipboardService = Fixture.Freeze<Mock<IClipboardService>>();
         var action = Fixture.Create<VideoEditCopyUseCase>();
-        
+
         await action.ExecuteAsync("/test/video.mp4");
-        
+
         clipboardService.Verify(c => c.CopyFileAsync(It.Is<ClipboardFile>(f => f.FilePath == "/test/video.mp4")), Times.Once);
     }
 

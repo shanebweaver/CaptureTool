@@ -1,6 +1,6 @@
+using CaptureTool.Application.Implementations.Settings;
 using CaptureTool.Application.Interfaces;
 using CaptureTool.Application.Interfaces.FeatureManagement;
-using CaptureTool.Application.Interfaces.Settings;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
 using CaptureTool.Infrastructure.Interfaces.Clipboard;
@@ -21,7 +21,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private readonly IFeatureManager _featureManager;
     private readonly IMetadataScannerRegistry? _metadataScannerRegistry;
     private readonly IRealTimeMetadataScanJobFactory? _scanJobFactory;
-    
+
     private string? _tempVideoPath;
     private AudioSampleCallback? _audioSampleCallback;
     private VideoFrameCallback? _videoFrameCallback;
@@ -75,7 +75,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
         // Start metadata collection if feature is enabled and factory/registry are available
         if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MetadataCollection) &&
-            _scanJobFactory != null && 
+            _scanJobFactory != null &&
             _metadataScannerRegistry != null)
         {
             _currentScanJob = _scanJobFactory.CreateJob(Guid.NewGuid(), _tempVideoPath, _metadataScannerRegistry);

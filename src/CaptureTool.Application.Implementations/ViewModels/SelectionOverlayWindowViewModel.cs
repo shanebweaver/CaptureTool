@@ -3,10 +3,10 @@ using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Application.Interfaces.ViewModels.Options;
-using CaptureTool.Common;
 using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces;
+using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
+using CaptureTool.Infrastructure.Interfaces.Factories;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
@@ -78,8 +78,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     }
 
     public CaptureType? GetSelectedCaptureType()
-        => SelectedCaptureTypeIndex != -1 && SelectedCaptureTypeIndex < SupportedCaptureTypes.Count 
-            ? SupportedCaptureTypes[SelectedCaptureTypeIndex].CaptureType 
+        => SelectedCaptureTypeIndex != -1 && SelectedCaptureTypeIndex < SupportedCaptureTypes.Count
+            ? SupportedCaptureTypes[SelectedCaptureTypeIndex].CaptureType
             : null;
 
     private ObservableCollection<ICaptureModeViewModel> _supportedCaptureModes = [];
@@ -102,7 +102,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public CaptureMode? GetSelectedCaptureMode()
         => SelectedCaptureModeIndex != -1 && SelectedCaptureModeIndex < SupportedCaptureModes.Count
-            ? SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode 
+            ? SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode
             : null;
 
     public Rectangle CaptureArea
@@ -164,7 +164,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _shutdownHandler = shutdownHandler;
         _imageCaptureHandler = imageCaptureHandler;
         _captureTypeViewModelFactory = captureTypeViewModelFactory;
-        
+
         CaptureArea = Rectangle.Empty;
         MonitorWindows = [];
 
@@ -305,11 +305,11 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         // Explicitly null Monitor to release the ~100MB PixelBuffer reference
         Monitor = null;
         MonitorWindows = [];
-        
+
         // Clear collections to release any remaining references
         _supportedCaptureTypes.Clear();
         _supportedCaptureModes.Clear();
-        
+
         base.Dispose();
     }
 }

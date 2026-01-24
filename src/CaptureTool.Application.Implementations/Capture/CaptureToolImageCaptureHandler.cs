@@ -1,4 +1,4 @@
-using CaptureTool.Application.Interfaces.Settings;
+using CaptureTool.Application.Implementations.Settings;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Clipboard;
 using CaptureTool.Infrastructure.Interfaces.Settings;
@@ -27,7 +27,7 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         _settingsService = settingsService;
         _screenCapture = screenCapture;
     }
-    
+
     public ImageFile PerformAllScreensCapture()
     {
         MonitorCaptureResult[] monitors = _screenCapture.CaptureAllMonitors();

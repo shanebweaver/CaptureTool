@@ -30,7 +30,7 @@ public partial class App : Microsoft.UI.Xaml.Application
     private void RestoreAppTheme()
     {
         IThemeService themeService = ServiceProvider.GetService<IThemeService>();
-        
+
         AppTheme defaultTheme = RequestedTheme == ApplicationTheme.Light ? AppTheme.Light : AppTheme.Dark;
         themeService.Initialize(defaultTheme);
     }

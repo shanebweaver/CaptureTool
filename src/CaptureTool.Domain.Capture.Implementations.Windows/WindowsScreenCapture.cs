@@ -94,7 +94,7 @@ public class WindowsScreenCapture : IScreenCapture
                         // Continue enumeration even if buffer size is invalid
                         return true;
                     }
-                    
+
                     byte[] pixels = new byte[(int)totalBytes];
                     if (!CaptureInterop.CopyScreenshotPixels(screenshotHandle, pixels, pixels.Length))
                     {

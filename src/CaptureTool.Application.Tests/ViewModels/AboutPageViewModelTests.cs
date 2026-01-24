@@ -1,12 +1,11 @@
-using CaptureTool.Application.Implementations.ViewModels;
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using CaptureTool.Application.Implementations.ViewModels;
 using CaptureTool.Application.Interfaces.UseCases.About;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
-using System.Windows.Input;
-using CaptureTool.Infrastructure.Interfaces.Commands;
 
 namespace CaptureTool.Application.Tests.ViewModels;
 

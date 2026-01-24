@@ -1,8 +1,8 @@
 using CaptureTool.Application.Interfaces.ViewModels.Options;
-using CaptureTool.Common;
-using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Themes;
+using CaptureTool.Infrastructure.Interfaces.ViewModels;
 using System.Collections.ObjectModel;
 using System.Drawing;
 
@@ -11,7 +11,7 @@ namespace CaptureTool.Application.Interfaces.ViewModels;
 public interface ISelectionOverlayWindowViewModel : IViewModel
 {
     event EventHandler<CaptureOptions>? CaptureOptionsUpdated;
-    
+
     bool IsPrimary { get; }
     ObservableCollection<ICaptureTypeViewModel> SupportedCaptureTypes { get; }
     int SelectedCaptureTypeIndex { get; }
@@ -30,7 +30,7 @@ public interface ISelectionOverlayWindowViewModel : IViewModel
     IAppCommand<int> UpdateSelectedCaptureTypeCommand { get; }
     IAppCommand<Rectangle> UpdateCaptureAreaCommand { get; }
     IAppCommand<CaptureOptions> UpdateCaptureOptionsCommand { get; }
-    
+
     CaptureType? GetSelectedCaptureType();
     CaptureMode? GetSelectedCaptureMode();
     void Load(SelectionOverlayWindowOptions options);

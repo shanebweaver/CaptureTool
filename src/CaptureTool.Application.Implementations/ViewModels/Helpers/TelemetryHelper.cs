@@ -9,7 +9,7 @@ public static class TelemetryHelper
     public static void ExecuteActivity(
         ITelemetryService telemetryService,
         string context,
-        string activityId, 
+        string activityId,
         Action activityAction,
         [CallerMemberName] string? caller = null,
         [CallerFilePath] string? file = null,
@@ -33,11 +33,11 @@ public static class TelemetryHelper
             var frame = GetRootUserFrame(e);
 
             telemetryService.ActivityError(
-                activityId, 
+                activityId,
                 e,
-                $"Thrown in: {frame.method} ({frame.file}:{frame.line}) | Context: {context}", 
-                caller, 
-                file, 
+                $"Thrown in: {frame.method} ({frame.file}:{frame.line}) | Context: {context}",
+                caller,
+                file,
                 line,
                 actionExpr);
         }
@@ -46,7 +46,7 @@ public static class TelemetryHelper
     public static async Task ExecuteActivityAsync(
         ITelemetryService telemetryService,
         string context,
-        string activityId, 
+        string activityId,
         Func<Task> action,
         [CallerMemberName] string? caller = null,
         [CallerFilePath] string? file = null,

@@ -1,3 +1,4 @@
+using CaptureTool.Infrastructure.Interfaces.Loading;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Drawing;
@@ -19,7 +20,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
     }
 
-    private void ViewModel_LoadStateChanged(object? sender, Common.Loading.LoadState e)
+    private void ViewModel_LoadStateChanged(object? sender, LoadState e)
     {
         if (ViewModel.IsLoaded)
         {

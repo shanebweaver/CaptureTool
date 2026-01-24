@@ -39,7 +39,7 @@ public class MetadataFileTests
         var scannerInfo = new Dictionary<string, string>();
 
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(() => 
+        Assert.ThrowsException<ArgumentNullException>(() =>
             new MetadataFile(null!, DateTime.UtcNow, entries, scannerInfo));
     }
 
@@ -50,7 +50,7 @@ public class MetadataFileTests
         var scannerInfo = new Dictionary<string, string>();
 
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(() => 
+        Assert.ThrowsException<ArgumentNullException>(() =>
             new MetadataFile("path", DateTime.UtcNow, null!, scannerInfo));
     }
 
@@ -61,7 +61,7 @@ public class MetadataFileTests
         var entries = new List<MetadataEntry>();
 
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(() => 
+        Assert.ThrowsException<ArgumentNullException>(() =>
             new MetadataFile("path", DateTime.UtcNow, entries, null!));
     }
 }

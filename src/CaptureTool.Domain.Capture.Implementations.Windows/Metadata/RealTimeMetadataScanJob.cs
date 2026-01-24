@@ -1,9 +1,9 @@
-using System.Collections.Concurrent;
-using System.Text.Json;
+using CaptureTool.Application.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
-using CaptureTool.Application.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Logging;
+using System.Collections.Concurrent;
+using System.Text.Json;
 
 namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata;
 
@@ -75,7 +75,7 @@ public sealed class RealTimeMetadataScanJob : IRealTimeMetadataScanJob
     public void ProcessVideoFrame(ref VideoFrameData frameData)
     {
         _videoFrameCount++;
-        
+
         var videoScanners = _registry.GetVideoScanners();
         foreach (var scanner in videoScanners)
         {
@@ -107,7 +107,7 @@ public sealed class RealTimeMetadataScanJob : IRealTimeMetadataScanJob
     public void ProcessAudioSample(ref AudioSampleData sampleData)
     {
         _audioSampleCount++;
-        
+
         var audioScanners = _registry.GetAudioScanners();
         foreach (var scanner in audioScanners)
         {

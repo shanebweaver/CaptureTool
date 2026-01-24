@@ -30,7 +30,7 @@ public sealed partial class AboutPage : AboutPageBase
             {
                 Text = details.content,
                 TextWrapping = TextWrapping.WrapWholeWords,
-                Padding = new(0,0,12,0)
+                Padding = new(0, 0, 12, 0)
             }
         };
 

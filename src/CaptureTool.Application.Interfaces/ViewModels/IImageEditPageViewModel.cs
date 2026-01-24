@@ -1,9 +1,9 @@
-using CaptureTool.Common;
-using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces.ChromaKey;
 using CaptureTool.Domain.Edit.Interfaces.Drawable;
+using CaptureTool.Infrastructure.Interfaces.Commands;
+using CaptureTool.Infrastructure.Interfaces.ViewModels;
 using System.Drawing;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
@@ -11,7 +11,7 @@ namespace CaptureTool.Application.Interfaces.ViewModels;
 public interface IImageEditPageViewModel : IViewModel
 {
     event EventHandler? InvalidateCanvasRequested;
-    
+
     IAsyncAppCommand CopyCommand { get; }
     IAppCommand ToggleCropModeCommand { get; }
     IAsyncAppCommand SaveCommand { get; }
@@ -29,7 +29,7 @@ public interface IImageEditPageViewModel : IViewModel
     IAppCommand<int> UpdateDesaturationCommand { get; }
     IAppCommand<int> UpdateToleranceCommand { get; }
     IAppCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
-    
+
     bool HasUndoStack { get; }
     bool HasRedoStack { get; }
     IReadOnlyList<IDrawable> Drawables { get; }
@@ -47,7 +47,7 @@ public interface IImageEditPageViewModel : IViewModel
     IReadOnlyList<ChromaKeyColorOption> ChromaKeyColorOptions { get; }
     int SelectedChromaKeyColorOption { get; }
     bool IsChromaKeyAddOnOwned { get; }
-    
+
     Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken);
     void OnCropInteractionComplete(Rectangle oldCropRect);
 }

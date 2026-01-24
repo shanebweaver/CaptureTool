@@ -1,11 +1,11 @@
 using CaptureTool.Application.Implementations.DependencyInjection;
+using CaptureTool.Application.Implementations.ViewModels.Factories.DependencyInjection;
 using CaptureTool.Domain.Capture.Implementations.Windows.DependencyInjection;
 using CaptureTool.Domain.Edit.Implementations.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.Implementations.DependencyInjection;
 using CaptureTool.Infrastructure.Implementations.FeatureManagement.DependencyInjection;
 using CaptureTool.Infrastructure.Implementations.Windows.DependencyInjection;
 using CaptureTool.Presentation.Windows.WinUI.DependencyInjection;
-using CaptureTool.Application.Implementations.ViewModels.Factories.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Presentation.Windows.WinUI;
@@ -58,7 +58,7 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddAppWindowsServices();
 
         _serviceProvider = collection.BuildServiceProvider();
-        
+
         // Register metadata scanners with the registry
         _serviceProvider.RegisterMetadataScanners();
     }

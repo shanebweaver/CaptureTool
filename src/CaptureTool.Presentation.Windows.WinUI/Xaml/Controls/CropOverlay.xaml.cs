@@ -11,11 +11,11 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
 public sealed partial class CropOverlay : UserControlBase
 {
-    private enum DragMode 
-    { 
-        None, 
-        Move, 
-        Resize 
+    private enum DragMode
+    {
+        None,
+        Move,
+        Resize
     }
 
     private static readonly Size MinimumSelectionRectangleSize = new(50, 50);

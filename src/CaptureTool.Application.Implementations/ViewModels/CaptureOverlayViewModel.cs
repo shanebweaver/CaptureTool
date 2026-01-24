@@ -3,8 +3,8 @@ using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Application.Interfaces.ViewModels.Options;
-using CaptureTool.Common;
 using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
@@ -154,9 +154,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         _videoCaptureHandler.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
         _videoCaptureHandler.PausedStateChanged -= OnPausedStateChanged;
-        
+
         StopTimer();
-        
+
         // Dispose timer if it exists
         if (_timer != null)
         {
@@ -164,11 +164,11 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             _timer.Dispose();
             _timer = null;
         }
-        
+
         // Explicitly null the MonitorCaptureResult to release the PixelBuffer
         _monitorCaptureResult = null;
         _captureArea = null;
-        
+
         base.Dispose();
     }
 

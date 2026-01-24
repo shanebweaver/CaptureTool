@@ -1,5 +1,3 @@
-using CaptureTool.Domain.Capture.Interfaces;
-
 namespace CaptureTool.Application.Interfaces.UseCases.AppMenu;
 
 public interface IAppMenuUseCases

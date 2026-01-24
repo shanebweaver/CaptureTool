@@ -1,14 +1,15 @@
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.UseCases.VideoEdit;
 using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Common;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
+using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
+
 public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVideoFile>, IVideoEditPageViewModel
 {
     public readonly struct ActivityIds

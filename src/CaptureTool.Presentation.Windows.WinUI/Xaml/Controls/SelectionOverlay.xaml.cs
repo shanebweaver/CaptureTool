@@ -199,7 +199,7 @@ public sealed partial class SelectionOverlay : UserControlBase
         }
         else if (CaptureType == CaptureType.Window)
         {
-            if(_isCreatingNewSelection || e.Pointer.IsInContact)
+            if (_isCreatingNewSelection || e.Pointer.IsInContact)
             {
                 return;
             }
@@ -235,7 +235,7 @@ public sealed partial class SelectionOverlay : UserControlBase
         }
         else if (CaptureType == CaptureType.FullScreen)
         {
-            UpdateSelectionRect(new(0,0, (int)SelectionCanvas.Width, (int)SelectionCanvas.Height));
+            UpdateSelectionRect(new(0, 0, (int)SelectionCanvas.Width, (int)SelectionCanvas.Height));
             e.Handled = true;
         }
 

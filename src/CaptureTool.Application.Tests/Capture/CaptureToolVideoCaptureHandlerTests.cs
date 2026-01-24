@@ -70,7 +70,7 @@ public class CaptureToolVideoCaptureHandlerTests
         // Arrange
         var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
         var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
-        
+
         // Manually set IsRecording to true using reflection to avoid StartVideoCapture complexity
         var isRecordingField = typeof(CaptureToolVideoCaptureHandler).GetProperty("IsRecording");
         isRecordingField?.SetValue(handler, true);
@@ -89,7 +89,7 @@ public class CaptureToolVideoCaptureHandlerTests
         // Arrange
         var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
         var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
-        
+
         // Manually set IsRecording to true using reflection to avoid StartVideoCapture complexity
         var isRecordingField = typeof(CaptureToolVideoCaptureHandler).GetProperty("IsRecording");
         isRecordingField?.SetValue(handler, true);
@@ -124,9 +124,9 @@ public class CaptureToolVideoCaptureHandlerTests
         var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
         var storageService = Fixture.Freeze<Mock<CaptureTool.Infrastructure.Interfaces.Storage.IStorageService>>();
         storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
-        
+
         var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
-        
+
         var args = new NewCaptureArgs(
             new MonitorCaptureResult(
                 IntPtr.Zero,
@@ -138,10 +138,10 @@ public class CaptureToolVideoCaptureHandlerTests
             ),
             new System.Drawing.Rectangle(0, 0, 1920, 1080)
         );
-        
+
         handler.StartVideoCapture(args);
         handler.ToggleIsPaused(true);
-        
+
         // Verify paused state is set
         handler.IsPaused.Should().BeTrue();
 
@@ -159,9 +159,9 @@ public class CaptureToolVideoCaptureHandlerTests
         var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
         var storageService = Fixture.Freeze<Mock<CaptureTool.Infrastructure.Interfaces.Storage.IStorageService>>();
         storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
-        
+
         var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
-        
+
         var args = new NewCaptureArgs(
             new MonitorCaptureResult(
                 IntPtr.Zero,
@@ -173,10 +173,10 @@ public class CaptureToolVideoCaptureHandlerTests
             ),
             new System.Drawing.Rectangle(0, 0, 1920, 1080)
         );
-        
+
         handler.StartVideoCapture(args);
         handler.ToggleIsPaused(true);
-        
+
         // Verify paused state is set
         handler.IsPaused.Should().BeTrue();
 

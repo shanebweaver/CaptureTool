@@ -1,4 +1,3 @@
-using CaptureTool.Common.Settings;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Storage;
@@ -25,7 +24,7 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
     public event Action<ISettingDefinition[]>? SettingsChanged;
 
     public LocalSettingsService(
-        ILogService logService, 
+        ILogService logService,
         IJsonStorageService jsonStorageService)
     {
         _logService = logService;

@@ -1,6 +1,6 @@
-using CaptureTool.Common;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
@@ -12,7 +12,7 @@ public sealed partial class CaptureModeViewModel : ViewModelBase, ICaptureModeVi
     public string AutomationName { get; }
 
     public CaptureModeViewModel(
-        CaptureMode captureMode, 
+        CaptureMode captureMode,
         ILocalizationService localizationService)
     {
         CaptureMode = captureMode;

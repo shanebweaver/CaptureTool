@@ -105,8 +105,8 @@ public sealed partial class WindowsStoreService : IStoreService
         {
             _telemetryService.ActivityInitiated(activityId);
 
-            IList<string> productKinds = [ "Durable" ];
-            IList<string> storeIds = [ storeProductId ];
+            IList<string> productKinds = ["Durable"];
+            IList<string> storeIds = [storeProductId];
             StoreProductQueryResult queryResult = await _storeContext.GetStoreProductsAsync(productKinds, storeIds);
 
             IStoreAddOn? addOn = null;
