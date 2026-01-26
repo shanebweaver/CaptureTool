@@ -314,6 +314,14 @@ public sealed partial class ImageCanvas : UserControlBase
         if (!IsAutoZoomLocked)
         {
             ZoomAndCenter();
+            
+            // Read back the actual zoom factor and notify
+            if (CanvasScrollView != null)
+            {
+                double actualZoomFactor = CanvasScrollView.ZoomFactor;
+                _lastZoomUpdateSource = ZoomUpdateSource.Programmatic;
+                ZoomFactorChanged?.Invoke(this, (actualZoomFactor, ZoomUpdateSource.Programmatic));
+            }
         }
     }
 

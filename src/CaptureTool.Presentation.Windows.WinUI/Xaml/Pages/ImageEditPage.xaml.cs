@@ -40,7 +40,13 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     // Conversion utilities
     private static double PercentageToFactor(int percentage) => percentage / 100.0;
-    private static int FactorToPercentage(double factor) => (int)Math.Round(factor * 100);
+    private static int FactorToPercentage(double factor)
+    {
+        // Round to nearest 5% to match slider step frequency
+        int percentage = (int)Math.Round(factor * 100);
+        // Snap to nearest multiple of 5
+        return (int)(Math.Round(percentage / 5.0) * 5);
+    }
     private static int ClampPercentage(int value) => Math.Clamp(value, 25, 200);
 
     private void ViewModel_LoadStateChanged(object? sender, LoadState e)
