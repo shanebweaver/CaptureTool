@@ -75,10 +75,13 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void ShapeTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (sender is ComboBox comboBox && comboBox.SelectedIndex >= 0)
+        if (sender is ComboBox comboBox && comboBox.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is string tag)
         {
-            var shapeType = (CaptureTool.Domain.Edit.Interfaces.ShapeType)comboBox.SelectedIndex;
-            ViewModel.UpdateSelectedShapeTypeCommand.Execute(shapeType);
+            if (int.TryParse(tag, out int shapeTypeValue) && Enum.IsDefined(typeof(CaptureTool.Domain.Edit.Interfaces.ShapeType), shapeTypeValue))
+            {
+                var shapeType = (CaptureTool.Domain.Edit.Interfaces.ShapeType)shapeTypeValue;
+                ViewModel.UpdateSelectedShapeTypeCommand.Execute(shapeType);
+            }
         }
     }
 }

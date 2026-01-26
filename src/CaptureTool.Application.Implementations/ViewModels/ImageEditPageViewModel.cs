@@ -483,46 +483,66 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 {
                     float x = Math.Min(startPoint.X, endPoint.X);
                     float y = Math.Min(startPoint.Y, endPoint.Y);
-                    int width = (int)Math.Abs(endPoint.X - startPoint.X);
-                    int height = (int)Math.Abs(endPoint.Y - startPoint.Y);
-                    newShape = new RectangleDrawable(
-                        new Vector2(x, y),
-                        new Size(width, height),
-                        ShapeStrokeColor,
-                        ShapeFillColor,
-                        ShapeStrokeWidth);
+                    float width = Math.Abs(endPoint.X - startPoint.X);
+                    float height = Math.Abs(endPoint.Y - startPoint.Y);
+                    
+                    // Only create shape if it has a minimum size (at least 2 pixels)
+                    if (width >= 2 && height >= 2)
+                    {
+                        newShape = new RectangleDrawable(
+                            new Vector2(x, y),
+                            new Size((int)Math.Ceiling(width), (int)Math.Ceiling(height)),
+                            ShapeStrokeColor,
+                            ShapeFillColor,
+                            ShapeStrokeWidth);
+                    }
                     break;
                 }
             case ShapeType.Ellipse:
                 {
                     float x = Math.Min(startPoint.X, endPoint.X);
                     float y = Math.Min(startPoint.Y, endPoint.Y);
-                    int width = (int)Math.Abs(endPoint.X - startPoint.X);
-                    int height = (int)Math.Abs(endPoint.Y - startPoint.Y);
-                    newShape = new EllipseDrawable(
-                        new Vector2(x, y),
-                        new Size(width, height),
-                        ShapeStrokeColor,
-                        ShapeFillColor,
-                        ShapeStrokeWidth);
+                    float width = Math.Abs(endPoint.X - startPoint.X);
+                    float height = Math.Abs(endPoint.Y - startPoint.Y);
+                    
+                    // Only create shape if it has a minimum size (at least 2 pixels)
+                    if (width >= 2 && height >= 2)
+                    {
+                        newShape = new EllipseDrawable(
+                            new Vector2(x, y),
+                            new Size((int)Math.Ceiling(width), (int)Math.Ceiling(height)),
+                            ShapeStrokeColor,
+                            ShapeFillColor,
+                            ShapeStrokeWidth);
+                    }
                     break;
                 }
             case ShapeType.Line:
                 {
-                    newShape = new LineDrawable(
-                        startPoint,
-                        endPoint,
-                        ShapeStrokeColor,
-                        ShapeStrokeWidth);
+                    // Only create line if it has a minimum length (at least 2 pixels)
+                    float distance = Vector2.Distance(startPoint, endPoint);
+                    if (distance >= 2)
+                    {
+                        newShape = new LineDrawable(
+                            startPoint,
+                            endPoint,
+                            ShapeStrokeColor,
+                            ShapeStrokeWidth);
+                    }
                     break;
                 }
             case ShapeType.Arrow:
                 {
-                    newShape = new ArrowDrawable(
-                        startPoint,
-                        endPoint,
-                        ShapeStrokeColor,
-                        ShapeStrokeWidth);
+                    // Only create arrow if it has a minimum length (at least 2 pixels)
+                    float distance = Vector2.Distance(startPoint, endPoint);
+                    if (distance >= 2)
+                    {
+                        newShape = new ArrowDrawable(
+                            startPoint,
+                            endPoint,
+                            ShapeStrokeColor,
+                            ShapeStrokeWidth);
+                    }
                     break;
                 }
         }

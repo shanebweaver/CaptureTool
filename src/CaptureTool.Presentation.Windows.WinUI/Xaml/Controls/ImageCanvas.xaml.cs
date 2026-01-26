@@ -361,10 +361,7 @@ public sealed partial class ImageCanvas : UserControlBase
             var start = new System.Numerics.Vector2((float)_shapeStartPoint.Value.X, (float)_shapeStartPoint.Value.Y);
             var end = new System.Numerics.Vector2((float)endPoint.X, (float)endPoint.Y);
             
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                ShapeDrawn?.Invoke(this, (start, end));
-            });
+            ShapeDrawn?.Invoke(this, (start, end));
 
             _shapeStartPoint = null;
             e.Handled = true;
