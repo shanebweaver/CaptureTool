@@ -11,6 +11,7 @@ namespace CaptureTool.Application.Interfaces.ViewModels;
 public interface IImageEditPageViewModel : IViewModel
 {
     event EventHandler? InvalidateCanvasRequested;
+    event EventHandler? ForceZoomAndCenterRequested;
 
     IAsyncAppCommand CopyCommand { get; }
     IAppCommand ToggleCropModeCommand { get; }
@@ -29,6 +30,9 @@ public interface IImageEditPageViewModel : IViewModel
     IAppCommand<int> UpdateDesaturationCommand { get; }
     IAppCommand<int> UpdateToleranceCommand { get; }
     IAppCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
+    IAppCommand<int> UpdateZoomPercentageCommand { get; }
+    IAppCommand<bool> UpdateAutoZoomLockCommand { get; }
+    IAppCommand ZoomAndCenterCommand { get; }
 
     bool HasUndoStack { get; }
     bool HasRedoStack { get; }
@@ -47,6 +51,8 @@ public interface IImageEditPageViewModel : IViewModel
     IReadOnlyList<ChromaKeyColorOption> ChromaKeyColorOptions { get; }
     int SelectedChromaKeyColorOption { get; }
     bool IsChromaKeyAddOnOwned { get; }
+    int ZoomPercentage { get; }
+    bool IsAutoZoomLocked { get; }
 
     Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken);
     void OnCropInteractionComplete(Rectangle oldCropRect);

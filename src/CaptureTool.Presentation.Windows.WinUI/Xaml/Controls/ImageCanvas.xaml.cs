@@ -43,6 +43,12 @@ public sealed partial class ImageCanvas : UserControlBase
        typeof(ImageCanvas),
        new PropertyMetadata(Rectangle.Empty, OnCropRectPropertyChanged));
 
+    public static readonly DependencyProperty IsAutoZoomLockedProperty = DependencyProperty.Register(
+       nameof(IsAutoZoomLocked),
+       typeof(bool),
+       typeof(ImageCanvas),
+       new PropertyMetadata(false));
+
     private static void OnCropRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is ImageCanvas control && !control.IsCropModeEnabled)
@@ -117,8 +123,19 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(CropRectProperty, value);
     }
 
+    public bool IsAutoZoomLocked
+    {
+        get => Get<bool>(IsAutoZoomLockedProperty);
+        set => Set(IsAutoZoomLockedProperty, value);
+    }
+
     public event EventHandler<Rectangle>? InteractionComplete;
     public event EventHandler<Rectangle>? CropRectChanged;
+    public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
+
+    private ZoomUpdateSource _lastZoomUpdateSource = ZoomUpdateSource.Programmatic;
+    private readonly object _zoomUpdateLock = new object();
+    private double _currentZoomFactor = 1.0;
 
     private bool _isPointerDown;
     private Point _lastPointerPosition;
@@ -126,6 +143,52 @@ public sealed partial class ImageCanvas : UserControlBase
     public ImageCanvas()
     {
         InitializeComponent();
+        Loaded += ImageCanvas_Loaded;
+        Unloaded += ImageCanvas_Unloaded;
+    }
+
+    private void ImageCanvas_Loaded(object sender, RoutedEventArgs e)
+    {
+        // Wire up the ViewChanged event after the control is loaded
+        if (CanvasScrollView != null)
+        {
+            CanvasScrollView.ViewChanged += CanvasScrollView_ViewChanged;
+        }
+    }
+
+    private void ImageCanvas_Unloaded(object sender, RoutedEventArgs e)
+    {
+        // Clean up event subscription to prevent memory leak
+        if (CanvasScrollView != null)
+        {
+            CanvasScrollView.ViewChanged -= CanvasScrollView_ViewChanged;
+        }
+    }
+
+    private void CanvasScrollView_ViewChanged(ScrollView? sender, object args)
+    {
+        if (sender == null)
+        {
+            return;
+        }
+
+        lock (_zoomUpdateLock)
+        {
+            // Skip if this was triggered by a slider update
+            if (_lastZoomUpdateSource == ZoomUpdateSource.Slider)
+            {
+                return;
+            }
+
+            double currentZoomFactor = sender.ZoomFactor;
+            // Only raise event if zoom actually changed (not just scroll position)
+            if (Math.Abs(currentZoomFactor - _currentZoomFactor) > 0.001)
+            {
+                _currentZoomFactor = currentZoomFactor;
+                _lastZoomUpdateSource = ZoomUpdateSource.CanvasGesture;
+                ZoomFactorChanged?.Invoke(this, (currentZoomFactor, ZoomUpdateSource.CanvasGesture));
+            }
+        }
     }
 
     #region Zoom, Center, and Size
@@ -229,19 +292,98 @@ public sealed partial class ImageCanvas : UserControlBase
             );
         }
     }
+
+    private void ApplyManualZoom(double zoomLevel)
+    {
+        lock (this)
+        {
+            if (CanvasScrollView == null)
+            {
+                return;
+            }
+
+            CanvasScrollView.ZoomTo(
+                (float)zoomLevel,
+                null,
+                new(ScrollingAnimationMode.Auto)
+            );
+        }
+    }
     #endregion
 
     #region Drawing
     public void InvalidateCanvas()
     {
         UpdateDrawingCanvasSize();
-        ZoomAndCenter();
+        if (!IsAutoZoomLocked)
+        {
+            ZoomAndCenter();
+            
+            // Read back the actual zoom factor and notify
+            if (CanvasScrollView != null)
+            {
+                double actualZoomFactor = CanvasScrollView.ZoomFactor;
+                lock (_zoomUpdateLock)
+                {
+                    _lastZoomUpdateSource = ZoomUpdateSource.Programmatic;
+                    _currentZoomFactor = actualZoomFactor;
+                }
+                ZoomFactorChanged?.Invoke(this, (actualZoomFactor, ZoomUpdateSource.Programmatic));
+            }
+        }
     }
 
     public void ForceCanvasRedrawWithResources()
     {
         RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? 1.0001f : 1f;
         InvalidateCanvas();
+    }
+
+    public void ForceZoomAndCenter()
+    {
+        UpdateDrawingCanvasSize();
+        ZoomAndCenter();
+        
+        // Read back the actual zoom factor that was applied
+        if (CanvasScrollView != null)
+        {
+            double actualZoomFactor = CanvasScrollView.ZoomFactor;
+            lock (_zoomUpdateLock)
+            {
+                _lastZoomUpdateSource = ZoomUpdateSource.ZoomAndCenter;
+                _currentZoomFactor = actualZoomFactor;
+            }
+            ZoomFactorChanged?.Invoke(this, (actualZoomFactor, ZoomUpdateSource.ZoomAndCenter));
+        }
+    }
+
+    public void SetZoom(double zoomFactor, ZoomUpdateSource source)
+    {
+        lock (_zoomUpdateLock)
+        {
+            _lastZoomUpdateSource = source;
+            _currentZoomFactor = zoomFactor;
+        }
+        
+        ApplyManualZoom(zoomFactor);
+        
+        // For non-slider sources, fire the event immediately
+        // For slider, ViewChanged will handle it (but we block it with _lastZoomUpdateSource check)
+        if (source != ZoomUpdateSource.Slider)
+        {
+            ZoomFactorChanged?.Invoke(this, (zoomFactor, source));
+        }
+    }
+
+    public double GetCurrentZoomFactor()
+    {
+        return CanvasScrollView?.ZoomFactor ?? 1.0;
+    }
+
+    public void SetZoomLevel(double zoomLevel)
+    {
+        // Legacy method for backward compatibility
+        SetZoom(zoomLevel, ZoomUpdateSource.Programmatic);
     }
 
     private void CanvasControl_Draw(CanvasControl sender, CanvasDrawEventArgs args)

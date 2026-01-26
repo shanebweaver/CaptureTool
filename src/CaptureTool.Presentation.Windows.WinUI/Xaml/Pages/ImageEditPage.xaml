@@ -156,6 +156,7 @@
                 CropRectChanged="ImageCanvas_CropRectChanged"
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"
                 InteractionComplete="ImageCanvas_InteractionComplete"
+                IsAutoZoomLocked="{x:Bind ViewModel.IsAutoZoomLocked, Mode=OneWay}"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}" />
         </Grid>
@@ -173,7 +174,13 @@
             MinHeight="38"
             Padding="8"
             Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
             <StackPanel
+                Grid.Column="0"
                 VerticalAlignment="Center"
                 Orientation="Horizontal"
                 Spacing="12">
@@ -202,6 +209,50 @@
                     FontSize="12"
                     FontWeight="SemiLight"
                     Text="{x:Bind ViewModel.MirroredDisplayName, Mode=OneWay}" />
+            </StackPanel>
+
+            <StackPanel
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="8">
+                <ToggleButton
+                    x:Name="AutoZoomLockToggle"
+                    x:Uid="ImageEdit_AutoZoomLockButton"
+                    MinWidth="32"
+                    Padding="8,4"
+                    IsChecked="{x:Bind ViewModel.IsAutoZoomLocked, Mode=OneWay}"
+                    IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
+                    Checked="AutoZoomLockToggle_IsCheckedChanged"
+                    Unchecked="AutoZoomLockToggle_IsCheckedChanged">
+                    <FontIcon FontSize="16" Glyph="&#xE72E;" />
+                </ToggleButton>
+                <Button
+                    x:Uid="ImageEdit_ZoomAndCenterButton"
+                    MinWidth="32"
+                    Padding="8,4"
+                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ZoomAndCenterCommand)}"
+                    IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
+                    <FontIcon FontSize="16" Glyph="&#xE71E;" />
+                </Button>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Text="Zoom:" />
+                <Slider
+                    x:Name="ZoomSlider"
+                    Width="120"
+                    VerticalAlignment="Center"
+                    IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
+                    Maximum="200"
+                    Minimum="25"
+                    StepFrequency="5"
+                    Value="{x:Bind ViewModel.ZoomPercentage, Mode=OneWay}"
+                    ValueChanged="ZoomSlider_ValueChanged" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Text="{x:Bind FormatZoomPercentage(ViewModel.ZoomPercentage), Mode=OneWay}" />
             </StackPanel>
         </Grid>
     </Grid>
