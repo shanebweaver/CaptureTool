@@ -1,6 +1,7 @@
 using CaptureTool.Application.Implementations.Settings;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.UseCases.VideoEdit;
+using CaptureTool.Domain.Capture.Interfaces.Metadata;
 using CaptureTool.Infrastructure.Implementations.UseCases;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Settings;
@@ -43,14 +44,14 @@ public sealed partial class VideoEditSaveUseCase : AsyncUseCase<string>, IVideoE
         File.Copy(videoPath, file.FilePath, true);
 
         // Copy metadata file if it exists and the setting is enabled
-        string metadataFilePath = Path.ChangeExtension(videoPath, ".metadata.json");
+        string metadataFilePath = Path.ChangeExtension(videoPath, MetadataFile.FileExtension);
         if (File.Exists(metadataFilePath) &&
             _featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MetadataCollection))
         {
             bool autoSaveMetadata = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_MetadataAutoSave);
             if (autoSaveMetadata)
             {
-                string newMetadataFilePath = Path.ChangeExtension(file.FilePath, ".metadata.json");
+                string newMetadataFilePath = Path.ChangeExtension(file.FilePath, MetadataFile.FileExtension);
                 File.Copy(metadataFilePath, newMetadataFilePath, true);
             }
         }

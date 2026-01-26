@@ -272,7 +272,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
                 bool autoSaveMetadata = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_MetadataAutoSave);
                 if (autoSaveMetadata)
                 {
-                    string newMetadataFilePath = Path.ChangeExtension(newFilePath, ".metadata.json");
+                    string newMetadataFilePath = Path.ChangeExtension(newFilePath, MetadataFile.FileExtension);
                     File.Copy(metadataFilePath, newMetadataFilePath, true);
                 }
             }
