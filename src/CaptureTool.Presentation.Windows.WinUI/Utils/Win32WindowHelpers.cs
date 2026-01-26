@@ -144,4 +144,9 @@ public static partial class Win32WindowHelpers
     {
         PInvoke.SetActiveWindow(new(hwnd));
     }
+
+    public static bool IsMinimized(nint hwnd)
+    {
+        return PInvoke.IsIconic(new HWND(hwnd));
+    }
 }
