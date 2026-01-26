@@ -5,6 +5,7 @@ using CaptureTool.Domain.Edit.Interfaces.Drawable;
 using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.ViewModels;
 using System.Drawing;
+using System.Numerics;
 
 namespace CaptureTool.Application.Interfaces.ViewModels;
 
@@ -22,6 +23,7 @@ public interface IImageEditPageViewModel : IViewModel
     IAppCommand FlipVerticalCommand { get; }
     IAsyncAppCommand PrintCommand { get; }
     IAsyncAppCommand ShareCommand { get; }
+    IAppCommand ToggleShapesModeCommand { get; }
     IAppCommand<Color> UpdateChromaKeyColorCommand { get; }
     IAppCommand<ImageOrientation> UpdateOrientationCommand { get; }
     IAppCommand<Rectangle> UpdateCropRectCommand { get; }
@@ -29,6 +31,10 @@ public interface IImageEditPageViewModel : IViewModel
     IAppCommand<int> UpdateDesaturationCommand { get; }
     IAppCommand<int> UpdateToleranceCommand { get; }
     IAppCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
+    IAppCommand<ShapeType> UpdateSelectedShapeTypeCommand { get; }
+    IAppCommand<Color> UpdateShapeStrokeColorCommand { get; }
+    IAppCommand<Color> UpdateShapeFillColorCommand { get; }
+    IAppCommand<int> UpdateShapeStrokeWidthCommand { get; }
 
     bool HasUndoStack { get; }
     bool HasRedoStack { get; }
@@ -39,6 +45,11 @@ public interface IImageEditPageViewModel : IViewModel
     string MirroredDisplayName { get; }
     string RotationDisplayName { get; }
     bool IsInCropMode { get; }
+    bool IsInShapesMode { get; }
+    ShapeType SelectedShapeType { get; }
+    Color ShapeStrokeColor { get; }
+    Color ShapeFillColor { get; }
+    int ShapeStrokeWidth { get; }
     Rectangle CropRect { get; }
     bool ShowChromaKeyOptions { get; }
     int ChromaKeyTolerance { get; }
@@ -50,4 +61,5 @@ public interface IImageEditPageViewModel : IViewModel
 
     Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken);
     void OnCropInteractionComplete(Rectangle oldCropRect);
+    void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint);
 }
