@@ -342,11 +342,10 @@ public sealed partial class ImageCanvas : UserControlBase
         _lastZoomUpdateSource = source;
         ApplyManualZoom(zoomFactor);
         
-        // Don't fire ZoomFactorChanged here - it will be fired by ViewChanged if needed
-        // or we fire it explicitly for specific sources
-        if (source == ZoomUpdateSource.Slider)
+        // For non-slider sources, fire the event immediately
+        // For slider, ViewChanged will handle it (but we block it with _lastZoomUpdateSource check)
+        if (source != ZoomUpdateSource.Slider)
         {
-            // For slider, we don't want ViewChanged to fire back
             ZoomFactorChanged?.Invoke(this, (zoomFactor, source));
         }
     }

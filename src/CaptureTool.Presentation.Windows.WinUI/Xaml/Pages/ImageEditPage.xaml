@@ -158,8 +158,7 @@
                 InteractionComplete="ImageCanvas_InteractionComplete"
                 IsAutoZoomLocked="{x:Bind ViewModel.IsAutoZoomLocked, Mode=OneWay}"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
-                Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}"
-                ZoomLevel="{x:Bind ViewModel.ZoomLevel, Mode=OneWay}" />
+                Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}" />
         </Grid>
 
         <ProgressRing
