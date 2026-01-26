@@ -12,12 +12,14 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         InitializeComponent();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
+        ShapeTypeComboBox.SelectionChanged += ShapeTypeComboBox_SelectionChanged;
     }
 
     ~ImageEditPage()
     {
         ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
+        ShapeTypeComboBox.SelectionChanged -= ShapeTypeComboBox_SelectionChanged;
     }
 
     private void ViewModel_LoadStateChanged(object? sender, LoadState e)
@@ -43,6 +45,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.UpdateCropRectCommand.Execute(e);
     }
 
+    private void ImageCanvas_ShapeDrawn(object _, (System.Numerics.Vector2 Start, System.Numerics.Vector2 End) e)
+    {
+        ViewModel.OnShapeDrawn(e.Start, e.End);
+    }
+
     private void ChromaKeyAppBarToggleButton_IsCheckedChanged(object sender, RoutedEventArgs _)
     {
         if (sender is AppBarToggleButton toggleButton)
@@ -64,5 +71,14 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ChromaKeyToolbar_SelectedColorOptionIndexChanged(object _, int e)
     {
         ViewModel.UpdateSelectedColorOptionIndexCommand.Execute(e);
+    }
+
+    private void ShapeTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox comboBox && comboBox.SelectedIndex >= 0)
+        {
+            var shapeType = (CaptureTool.Domain.Edit.Interfaces.ShapeType)comboBox.SelectedIndex;
+            ViewModel.UpdateSelectedShapeTypeCommand.Execute(shapeType);
+        }
     }
 }

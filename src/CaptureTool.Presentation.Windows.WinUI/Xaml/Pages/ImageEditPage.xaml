@@ -45,6 +45,16 @@
                 Icon="Crop"
                 IsChecked="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
+            <AppBarToggleButton
+                x:Uid="ImageEdit_ShapesButton"
+                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ToggleShapesModeCommand)}"
+                IsChecked="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
+                Label="Shapes">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE91B;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
             <AppBarButton
                 x:Uid="ImageEdit_RotateButton"
                 Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RotateCommand)}"
@@ -141,6 +151,27 @@
                 ToleranceChanged="ChromaKeyToolbar_ToleranceChanged" />
         </Grid>
 
+        <!--  Shapes options  -->
+        <Grid
+            Margin="0,8"
+            Padding="12,8"
+            HorizontalAlignment="Center"
+            Row="1"
+            Visibility="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <ComboBox
+                    x:Name="ShapeTypeComboBox"
+                    Width="120"
+                    Header="Shape Type"
+                    SelectedIndex="0">
+                    <ComboBoxItem Content="Rectangle" Tag="0" />
+                    <ComboBoxItem Content="Ellipse" Tag="1" />
+                    <ComboBoxItem Content="Line" Tag="2" />
+                    <ComboBoxItem Content="Arrow" Tag="3" />
+                </ComboBox>
+            </StackPanel>
+        </Grid>
+
         <!--  Canvas  -->
         <Grid
             x:Name="CanvasContainer"
@@ -157,7 +188,9 @@
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"
                 InteractionComplete="ImageCanvas_InteractionComplete"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
-                Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}" />
+                IsShapesModeEnabled="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
+                Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}"
+                ShapeDrawn="ImageCanvas_ShapeDrawn" />
         </Grid>
 
         <ProgressRing
