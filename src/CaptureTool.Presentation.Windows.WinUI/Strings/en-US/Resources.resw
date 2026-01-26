@@ -269,6 +269,10 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Crop</value>
     <comment>The label for the crop button on the image edit page.</comment>
   </data>
+  <data name="ImageEdit_ShapesButton.Label" xml:space="preserve">
+    <value>Shapes</value>
+    <comment>The label for the shapes button on the image edit page.</comment>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Print</value>
     <comment>The label for the print button on the image edit page.</comment>
@@ -284,6 +288,10 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="ImageEdit_CropButton.AccessKey" xml:space="preserve">
     <value>I</value>
     <comment>The access key for the crop button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_ShapesButton.AccessKey" xml:space="preserve">
+    <value>H</value>
+    <comment>The access key for the shapes button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -392,6 +400,10 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Crop</value>
     <comment>The tooltip for the crop button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_ShapesButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Draw shapes</value>
+    <comment>The tooltip for the shapes button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Rotate</value>
