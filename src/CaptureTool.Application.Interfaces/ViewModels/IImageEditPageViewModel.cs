@@ -11,7 +11,6 @@ namespace CaptureTool.Application.Interfaces.ViewModels;
 public interface IImageEditPageViewModel : IViewModel
 {
     event EventHandler? InvalidateCanvasRequested;
-    event EventHandler<int>? ZoomPercentageChanged;
     event EventHandler? ForceZoomAndCenterRequested;
 
     IAsyncAppCommand CopyCommand { get; }

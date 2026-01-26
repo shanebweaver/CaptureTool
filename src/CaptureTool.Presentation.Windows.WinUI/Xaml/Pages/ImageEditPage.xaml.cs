@@ -17,7 +17,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         InitializeComponent();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
-        ViewModel.ZoomPercentageChanged += ViewModel_ZoomPercentageChanged;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
     }
@@ -26,7 +25,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
-        ViewModel.ZoomPercentageChanged -= ViewModel_ZoomPercentageChanged;
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
         _sliderDebounceTokenSource?.Cancel();
@@ -60,12 +58,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ViewModel_InvalidateCanvasRequested(object? _, EventArgs __)
     {
         ImageCanvas.InvalidateCanvas();
-    }
-
-    private void ViewModel_ZoomPercentageChanged(object? _, int percentage)
-    {
-        // ViewModel updated zoom, but we don't need to do anything here
-        // The slider is already bound to ViewModel.ZoomPercentage
     }
 
     private void ViewModel_ForceZoomAndCenterRequested(object? _, EventArgs __)
@@ -143,7 +135,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
             double zoomFactor = PercentageToFactor(newPercentage);
             ImageCanvas.SetZoom(zoomFactor, ZoomUpdateSource.Slider);
             
-            // Update ViewModel for consistency
+            // Update ViewModel for consistency (doesn't fire events that would loop back)
             ViewModel.UpdateZoomPercentageCommand.Execute(newPercentage);
         }
         catch (TaskCanceledException)

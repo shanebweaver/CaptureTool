@@ -69,7 +69,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly Stack<CanvasOperation> _operationsRedoStack;
 
     public event EventHandler? InvalidateCanvasRequested;
-    public event EventHandler<int>? ZoomPercentageChanged;
     public event EventHandler? ForceZoomAndCenterRequested;
 
     public IAsyncAppCommand CopyCommand { get; }
@@ -594,7 +593,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void UpdateZoomPercentage(int percentage)
     {
         ZoomPercentage = Math.Clamp(percentage, 25, 200);
-        ZoomPercentageChanged?.Invoke(this, ZoomPercentage);
     }
 
     private void UpdateAutoZoomLock(bool isLocked)
