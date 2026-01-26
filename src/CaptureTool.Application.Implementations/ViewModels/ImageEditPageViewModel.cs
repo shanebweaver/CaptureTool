@@ -45,7 +45,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         public static readonly string UpdateDesaturation = "UpdateDesaturation";
         public static readonly string UpdateTolerance = "UpdateTolerance";
         public static readonly string UpdateSelectedColorOptionIndex = "UpdateSelectedColorOptionIndex";
-        public static readonly string UpdateZoomLevel = "UpdateZoomLevel";
+        public static readonly string UpdateZoomPercentage = "UpdateZoomPercentage";
         public static readonly string UpdateAutoZoomLock = "UpdateAutoZoomLock";
         public static readonly string ZoomAndCenter = "ZoomAndCenter";
     }
@@ -69,7 +69,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly Stack<CanvasOperation> _operationsRedoStack;
 
     public event EventHandler? InvalidateCanvasRequested;
-    public event EventHandler<double>? ZoomLevelChanged;
+    public event EventHandler<int>? ZoomPercentageChanged;
     public event EventHandler? ForceZoomAndCenterRequested;
 
     public IAsyncAppCommand CopyCommand { get; }
@@ -89,7 +89,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IAppCommand<int> UpdateDesaturationCommand { get; }
     public IAppCommand<int> UpdateToleranceCommand { get; }
     public IAppCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
-    public IAppCommand<double> UpdateZoomLevelCommand { get; }
+    public IAppCommand<int> UpdateZoomPercentageCommand { get; }
     public IAppCommand<bool> UpdateAutoZoomLockCommand { get; }
     public IAppCommand ZoomAndCenterCommand { get; }
 
@@ -207,7 +207,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
-    public double ZoomLevel
+    public int ZoomPercentage
     {
         get => field;
         private set => Set(ref field, value);
@@ -254,7 +254,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyTolerance = 30;
         ChromaKeyColor = Color.Empty;
         ChromaKeyColorOptions = [];
-        ZoomLevel = 1.0;
+        ZoomPercentage = 100;
         IsAutoZoomLocked = false;
         _operationsUndoStack = [];
         _operationsRedoStack = [];
@@ -277,7 +277,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateDesaturationCommand = commandFactory.Create<int>(ActivityIds.UpdateDesaturation, UpdateDesaturation);
         UpdateToleranceCommand = commandFactory.Create<int>(ActivityIds.UpdateTolerance, UpdateTolerance);
         UpdateSelectedColorOptionIndexCommand = commandFactory.Create<int>(ActivityIds.UpdateSelectedColorOptionIndex, UpdateSelectedColorOptionIndex);
-        UpdateZoomLevelCommand = commandFactory.Create<double>(ActivityIds.UpdateZoomLevel, UpdateZoomLevel);
+        UpdateZoomPercentageCommand = commandFactory.Create<int>(ActivityIds.UpdateZoomPercentage, UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = commandFactory.Create<bool>(ActivityIds.UpdateAutoZoomLock, UpdateAutoZoomLock);
         ZoomAndCenterCommand = commandFactory.Create(ActivityIds.ZoomAndCenter, RequestZoomAndCenter);
     }
@@ -591,10 +591,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         };
     }
 
-    private void UpdateZoomLevel(double zoomLevel)
+    private void UpdateZoomPercentage(int percentage)
     {
-        ZoomLevel = zoomLevel;
-        ZoomLevelChanged?.Invoke(this, zoomLevel);
+        ZoomPercentage = Math.Clamp(percentage, 25, 200);
+        ZoomPercentageChanged?.Invoke(this, ZoomPercentage);
     }
 
     private void UpdateAutoZoomLock(bool isLocked)

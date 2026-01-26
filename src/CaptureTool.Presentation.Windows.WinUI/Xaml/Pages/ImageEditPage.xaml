@@ -245,15 +245,15 @@
                     Width="120"
                     VerticalAlignment="Center"
                     IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
-                    Maximum="2.0"
-                    Minimum="0.25"
-                    StepFrequency="0.1"
-                    Value="{x:Bind ViewModel.ZoomLevel, Mode=OneWay}"
+                    Maximum="200"
+                    Minimum="25"
+                    StepFrequency="5"
+                    Value="{x:Bind ViewModel.ZoomPercentage, Mode=OneWay}"
                     ValueChanged="ZoomSlider_ValueChanged" />
                 <TextBlock
                     VerticalAlignment="Center"
                     FontSize="12"
-                    Text="{x:Bind FormatZoomPercentage(ViewModel.ZoomLevel), Mode=OneWay}" />
+                    Text="{x:Bind FormatZoomPercentage(ViewModel.ZoomPercentage), Mode=OneWay}" />
             </StackPanel>
         </Grid>
     </Grid>

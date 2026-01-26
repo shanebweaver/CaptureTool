@@ -1,4 +1,5 @@
 using CaptureTool.Infrastructure.Interfaces.Loading;
+using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -8,31 +9,39 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class ImageEditPage : ImageEditPageBase
 {
-    private bool _isUpdatingZoomFromCanvas = false;
+    private CancellationTokenSource? _sliderDebounceTokenSource;
+    private const int SliderDebounceMs = 300;
 
     public ImageEditPage()
     {
         InitializeComponent();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
-        ViewModel.ZoomLevelChanged += ViewModel_ZoomLevelChanged;
+        ViewModel.ZoomPercentageChanged += ViewModel_ZoomPercentageChanged;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
-        ImageCanvas.ZoomChanged += ImageCanvas_ZoomChanged;
+        ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
     }
 
     ~ImageEditPage()
     {
         ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
-        ViewModel.ZoomLevelChanged -= ViewModel_ZoomLevelChanged;
+        ViewModel.ZoomPercentageChanged -= ViewModel_ZoomPercentageChanged;
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
-        ImageCanvas.ZoomChanged -= ImageCanvas_ZoomChanged;
+        ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
+        _sliderDebounceTokenSource?.Cancel();
+        _sliderDebounceTokenSource?.Dispose();
     }
 
-    private string FormatZoomPercentage(double zoomLevel)
+    private string FormatZoomPercentage(int zoomPercentage)
     {
-        return $"{(int)(zoomLevel * 100)}%";
+        return $"{zoomPercentage}%";
     }
+
+    // Conversion utilities
+    private static double PercentageToFactor(int percentage) => percentage / 100.0;
+    private static int FactorToPercentage(double factor) => (int)Math.Round(factor * 100);
+    private static int ClampPercentage(int value) => Math.Clamp(value, 25, 200);
 
     private void ViewModel_LoadStateChanged(object? sender, LoadState e)
     {
@@ -47,12 +56,10 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.InvalidateCanvas();
     }
 
-    private void ViewModel_ZoomLevelChanged(object? _, double zoomLevel)
+    private void ViewModel_ZoomPercentageChanged(object? _, int percentage)
     {
-        if (!_isUpdatingZoomFromCanvas)
-        {
-            ImageCanvas.SetZoomLevel(zoomLevel);
-        }
+        // ViewModel updated zoom, but we don't need to do anything here
+        // The slider is already bound to ViewModel.ZoomPercentage
     }
 
     private void ViewModel_ForceZoomAndCenterRequested(object? _, EventArgs __)
@@ -60,13 +67,23 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ForceZoomAndCenter();
     }
 
-    private void ImageCanvas_ZoomChanged(object? _, double zoomLevel)
+    private void ImageCanvas_ZoomFactorChanged(object? _, (double ZoomFactor, ZoomUpdateSource Source) args)
     {
-        // Update the ViewModel when the user zooms with CTRL+MouseWheel
-        // Set flag to prevent loop
-        _isUpdatingZoomFromCanvas = true;
-        ViewModel.UpdateZoomLevelCommand.Execute(zoomLevel);
-        _isUpdatingZoomFromCanvas = false;
+        // State machine: Handle zoom factor changes based on source
+        switch (args.Source)
+        {
+            case ZoomUpdateSource.Slider:
+                // Slider initiated the change, no propagation needed
+                break;
+
+            case ZoomUpdateSource.CanvasGesture:
+            case ZoomUpdateSource.ZoomAndCenter:
+            case ZoomUpdateSource.Programmatic:
+                // Update ViewModel, which will update slider via binding
+                int percentage = ClampPercentage(FactorToPercentage(args.ZoomFactor));
+                ViewModel.UpdateZoomPercentageCommand.Execute(percentage);
+                break;
+        }
     }
 
     private void ImageCanvas_InteractionComplete(object _, Rectangle e)
@@ -102,9 +119,31 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.UpdateSelectedColorOptionIndexCommand.Execute(e);
     }
 
-    private void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    private async void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
-        ViewModel.UpdateZoomLevelCommand.Execute(e.NewValue);
+        // Debounce: Cancel any pending zoom application
+        _sliderDebounceTokenSource?.Cancel();
+        _sliderDebounceTokenSource?.Dispose();
+        _sliderDebounceTokenSource = new CancellationTokenSource();
+
+        int newPercentage = (int)e.NewValue;
+        
+        try
+        {
+            // Wait for user to stop dragging
+            await Task.Delay(SliderDebounceMs, _sliderDebounceTokenSource.Token);
+            
+            // Apply zoom after debounce
+            double zoomFactor = PercentageToFactor(newPercentage);
+            ImageCanvas.SetZoom(zoomFactor, ZoomUpdateSource.Slider);
+            
+            // Update ViewModel for consistency
+            ViewModel.UpdateZoomPercentageCommand.Execute(newPercentage);
+        }
+        catch (TaskCanceledException)
+        {
+            // Superseded by newer value, ignore
+        }
     }
 
     private void AutoZoomLockToggle_IsCheckedChanged(object sender, RoutedEventArgs _)

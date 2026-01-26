@@ -151,7 +151,9 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public event EventHandler<Rectangle>? InteractionComplete;
     public event EventHandler<Rectangle>? CropRectChanged;
-    public event EventHandler<double>? ZoomChanged;
+    public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
+
+    private ZoomUpdateSource _lastZoomUpdateSource = ZoomUpdateSource.Programmatic;
 
     private bool _isPointerDown;
     private Point _lastPointerPosition;
@@ -173,13 +175,14 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void CanvasScrollView_ViewChanged(ScrollView? sender, object args)
     {
-        if (sender != null)
+        if (sender != null && _lastZoomUpdateSource != ZoomUpdateSource.Slider)
         {
             double currentZoomFactor = sender.ZoomFactor;
             // Only raise event if zoom actually changed (not just scroll position)
             if (Math.Abs(currentZoomFactor - ZoomLevel) > 0.001)
             {
-                ZoomChanged?.Invoke(this, currentZoomFactor);
+                _lastZoomUpdateSource = ZoomUpdateSource.CanvasGesture;
+                ZoomFactorChanged?.Invoke(this, (currentZoomFactor, ZoomUpdateSource.CanvasGesture));
             }
         }
     }
@@ -324,11 +327,39 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         UpdateDrawingCanvasSize();
         ZoomAndCenter();
+        
+        // Read back the actual zoom factor that was applied
+        if (CanvasScrollView != null)
+        {
+            double actualZoomFactor = CanvasScrollView.ZoomFactor;
+            _lastZoomUpdateSource = ZoomUpdateSource.ZoomAndCenter;
+            ZoomFactorChanged?.Invoke(this, (actualZoomFactor, ZoomUpdateSource.ZoomAndCenter));
+        }
+    }
+
+    public void SetZoom(double zoomFactor, ZoomUpdateSource source)
+    {
+        _lastZoomUpdateSource = source;
+        ApplyManualZoom(zoomFactor);
+        
+        // Don't fire ZoomFactorChanged here - it will be fired by ViewChanged if needed
+        // or we fire it explicitly for specific sources
+        if (source == ZoomUpdateSource.Slider)
+        {
+            // For slider, we don't want ViewChanged to fire back
+            ZoomFactorChanged?.Invoke(this, (zoomFactor, source));
+        }
+    }
+
+    public double GetCurrentZoomFactor()
+    {
+        return CanvasScrollView?.ZoomFactor ?? 1.0;
     }
 
     public void SetZoomLevel(double zoomLevel)
     {
-        ApplyManualZoom(zoomLevel);
+        // Legacy method for backward compatibility
+        SetZoom(zoomLevel, ZoomUpdateSource.Programmatic);
     }
 
     private void CanvasControl_Draw(CanvasControl sender, CanvasDrawEventArgs args)
