@@ -10,6 +10,7 @@ GetDpiForWindow
 SetWindowPos
 GetForegroundWindow
 SetWindowDisplayAffinity
+IsIconic
 RegisterClassEx
 CreateWindowEx
 SetLayeredWindowAttributes

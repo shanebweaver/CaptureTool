@@ -42,7 +42,12 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
                 return;
             }
 
-            _mainWindow.Restore();
+            // Only restore if the window is actually minimized
+            // Otherwise, SW_RESTORE will unsnap a snapped window
+            if (_mainWindow.IsMinimized())
+            {
+                _mainWindow.Restore();
+            }
             _mainWindow.Activate();
             _mainWindow.SetForegroundWindow();
         });
