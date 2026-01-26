@@ -46,6 +46,14 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
+    private void MetadataAutoSaveToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggleSwitch)
+        {
+            _ = ViewModel.UpdateVideoMetadataAutoSaveCommand.ExecuteAsync(toggleSwitch.IsOn);
+        }
+    }
+
     private void AppThemeRadioButtons_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (sender is RadioButtons radioButtons)

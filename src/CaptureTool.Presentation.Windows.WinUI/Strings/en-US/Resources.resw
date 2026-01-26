@@ -589,6 +589,26 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Automatically save videos to a folder after capture.</value>
     <comment>The subtitle for the video auto save section on the settings page.</comment>
   </data>
+  <data name="Settings_MetadataScannersHeaderLabel.Text" xml:space="preserve">
+    <value>Metadata scanners</value>
+    <comment>The header for the metadata scanners section of the settings page.</comment>
+  </data>
+  <data name="Settings_MetadataAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>Auto-save metadata</value>
+    <comment>The header for the metadata auto save section on the settings page.</comment>
+  </data>
+  <data name="Settings_MetadataAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>Automatically save metadata files alongside videos.</value>
+    <comment>The subtitle for the metadata auto save section on the settings page.</comment>
+  </data>
+  <data name="Settings_MetadataAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+    <comment>The label for the on state of the metadata auto save toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_MetadataAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+    <comment>The label for the off state of the metadata auto save toggle switch on the settings page.</comment>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Isolate a target in front of a green or blue screen.</value>
     <comment>The subtitle for the chroma key feature on the add-ons page</comment>

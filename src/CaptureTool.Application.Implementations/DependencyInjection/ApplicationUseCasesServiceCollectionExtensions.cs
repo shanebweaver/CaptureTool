@@ -82,6 +82,7 @@ public static class ApplicationUseCasesServiceCollectionExtensions
         services.AddTransient<ISettingsUpdateImageAutoSaveUseCase, SettingsUpdateImageAutoSaveUseCase>();
         services.AddTransient<ISettingsUpdateVideoCaptureAutoCopyUseCase, SettingsUpdateVideoCaptureAutoCopyUseCase>();
         services.AddTransient<ISettingsUpdateVideoCaptureAutoSaveUseCase, SettingsUpdateVideoCaptureAutoSaveUseCase>();
+        services.AddTransient<ISettingsUpdateVideoMetadataAutoSaveUseCase, SettingsUpdateVideoMetadataAutoSaveUseCase>();
         services.AddTransient<ISettingsUpdateAppLanguageUseCase, SettingsUpdateAppLanguageUseCase>();
         services.AddTransient<ISettingsUpdateAppThemeUseCase, SettingsUpdateAppThemeUseCase>();
         services.AddTransient<ISettingsChangeScreenshotsFolderUseCase, SettingsChangeScreenshotsFolderUseCase>();

@@ -13,4 +13,5 @@ public static partial class CaptureToolSettings
     public static readonly IStringSettingDefinition Settings_ImageCapture_AutoSaveFolder = new StringSettingDefinition("Settings_ImageCapture_ScreenshotsFolder", string.Empty);
     public static readonly IStringSettingDefinition Settings_LanguageOverride = new StringSettingDefinition("Settings_LanguageOverride", string.Empty);
     public static readonly IBoolSettingDefinition VerboseLogging = new BoolSettingDefinition("VerboseLogging", false);
+    public static readonly IBoolSettingDefinition Settings_VideoCapture_MetadataAutoSave = new BoolSettingDefinition("Settings_VideoCapture_MetadataAutoSave", true);
 }
