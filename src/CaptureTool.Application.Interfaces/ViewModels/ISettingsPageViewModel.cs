@@ -16,6 +16,7 @@ public interface ISettingsPageViewModel : IViewModel
     IAsyncAppCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
     IAsyncAppCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
     IAsyncAppCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
+    IAsyncAppCommand<bool> UpdateVideoMetadataAutoSaveCommand { get; }
     IAsyncAppCommand<int> UpdateAppLanguageCommand { get; }
     IAppCommand<int> UpdateAppThemeCommand { get; }
     IAppCommand OpenTemporaryFilesFolderCommand { get; }
@@ -29,10 +30,12 @@ public interface ISettingsPageViewModel : IViewModel
     int SelectedAppThemeIndex { get; }
     bool ShowAppThemeRestartMessage { get; }
     bool IsVideoCaptureFeatureEnabled { get; }
+    bool IsVideoMetadataFeatureEnabled { get; }
     bool ImageCaptureAutoCopy { get; }
     bool ImageCaptureAutoSave { get; }
     bool VideoCaptureAutoCopy { get; }
     bool VideoCaptureAutoSave { get; }
+    bool VideoMetadataAutoSave { get; }
     string ScreenshotsFolderPath { get; }
     string VideosFolderPath { get; }
     string TemporaryFilesFolderPath { get; }
