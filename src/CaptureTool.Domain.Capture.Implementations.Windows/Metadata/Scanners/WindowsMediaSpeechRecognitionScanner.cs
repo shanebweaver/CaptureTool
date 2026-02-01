@@ -96,24 +96,28 @@ public sealed class WindowsMediaSpeechRecognitionScanner : IAudioMetadataScanner
             SpeechRecognitionResult result;
             try
             {
-                // Note: Windows.Media.SpeechRecognition is primarily designed for microphone input.
-                // For processing audio from a stream, we would need to use a different approach
-                // such as saving to a file or using a streaming API. For now, this is a basic
-                // implementation that may need refinement based on testing.
-                
-                // The RecognizeAsync() method uses the default microphone input.
-                // To use a custom audio stream, we would need additional configuration
-                // or use a different API approach (e.g., Azure Speech Service).
+                // IMPORTANT LIMITATION: Windows.Media.SpeechRecognition's RecognizeAsync() 
+                // uses the default microphone input and does not support direct stream input.
+                // The audioStream created above is currently unused.
+                // 
+                // To properly process captured audio, we would need to either:
+                // 1. Use a different API like Azure Speech Service (supports stream input)
+                // 2. Save audio to a temporary file and use RecognizeWithUIAsync()
+                // 3. Implement a custom audio input provider (complex)
+                //
+                // For now, this is a basic implementation demonstrating the integration pattern.
+                // Real-world usage will require enhancement for stream-based audio processing.
                 result = await _recognizer.RecognizeAsync();
-                
-                // Clean up the stream
-                audioStream.Dispose();
             }
             catch (Exception ex)
             {
-                audioStream?.Dispose();
                 System.Diagnostics.Debug.WriteLine($"[Speech Scanner] Recognition failed: {ex.Message}");
                 return null;
+            }
+            finally
+            {
+                // Always dispose the stream
+                audioStream?.Dispose();
             }
 
             // Check if recognition was successful
@@ -134,7 +138,10 @@ public sealed class WindowsMediaSpeechRecognitionScanner : IAudioMetadataScanner
 
             _speechDetectedSamples++;
 
-            System.Diagnostics.Debug.WriteLine($"[Speech Scanner] Speech detected: {result.Text.Substring(0, Math.Min(50, result.Text.Length))}...");
+            var displayText = result.Text.Length > 50 
+                ? $"{result.Text.Substring(0, 50)}..." 
+                : result.Text;
+            System.Diagnostics.Debug.WriteLine($"[Speech Scanner] Speech detected: {displayText}");
 
             // Create metadata with recognized speech
             return new MetadataEntry(
