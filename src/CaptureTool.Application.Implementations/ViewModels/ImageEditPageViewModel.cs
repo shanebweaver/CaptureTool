@@ -609,13 +609,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextColor = value;
     }
 
-    private void UpdateTextFontFamily(string value)
+    private void UpdateTextFontFamily(string? value)
     {
         if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text))
         {
             return;
         }
-        TextFontFamily = value;
+        if (!string.IsNullOrEmpty(value))
+        {
+            TextFontFamily = value;
+        }
     }
 
     private void UpdateTextFontSize(float value)
