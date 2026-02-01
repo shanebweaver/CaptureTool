@@ -14,6 +14,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         InitializeComponent();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
+        ShapeTypeComboBox.SelectionChanged += ShapeTypeComboBox_SelectionChanged;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
     }
@@ -22,8 +23,10 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
+        ShapeTypeComboBox.SelectionChanged -= ShapeTypeComboBox_SelectionChanged;
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
+        ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
     }
 
     private string FormatZoomPercentage(int zoomPercentage)
@@ -86,6 +89,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.UpdateCropRectCommand.Execute(e);
     }
 
+    private void ImageCanvas_ShapeDrawn(object? _, (System.Numerics.Vector2 Start, System.Numerics.Vector2 End) e)
+    {
+        ViewModel.OnShapeDrawn(e.Start, e.End);
+    }
+
     private void ChromaKeyAppBarToggleButton_IsCheckedChanged(object sender, RoutedEventArgs _)
     {
         if (sender is AppBarToggleButton toggleButton)
@@ -109,6 +117,18 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.UpdateSelectedColorOptionIndexCommand.Execute(e);
     }
 
+    private void ShapeTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox comboBox && comboBox.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is string tag)
+        {
+            if (int.TryParse(tag, out int shapeTypeValue) && Enum.IsDefined(typeof(CaptureTool.Domain.Edit.Interfaces.ShapeType), shapeTypeValue))
+            {
+                var shapeType = (CaptureTool.Domain.Edit.Interfaces.ShapeType)shapeTypeValue;
+                ViewModel.UpdateSelectedShapeTypeCommand.Execute(shapeType);
+            }
+        }
+    }
+    
     private async void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         int newPercentage = (int)e.NewValue;

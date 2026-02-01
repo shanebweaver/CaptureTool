@@ -61,6 +61,12 @@ public static partial class Win2DImageCanvasRenderer
             DrawText(textDrawable, drawingSession);
         else if (drawable is RectangleDrawable rectangleDrawable)
             DrawRectangle(rectangleDrawable, drawingSession);
+        else if (drawable is EllipseDrawable ellipseDrawable)
+            DrawEllipse(ellipseDrawable, drawingSession);
+        else if (drawable is LineDrawable lineDrawable)
+            DrawLine(lineDrawable, drawingSession);
+        else if (drawable is ArrowDrawable arrowDrawable)
+            DrawArrow(arrowDrawable, drawingSession);
         else if (drawable is ImageDrawable imageDrawable)
             DrawImage(imageDrawable, drawingSession);
     }
@@ -75,8 +81,71 @@ public static partial class Win2DImageCanvasRenderer
     private static void DrawRectangle(RectangleDrawable drawable, CanvasDrawingSession drawingSession)
     {
         Rect rectangleRect = new(drawable.Offset.X, drawable.Offset.Y, drawable.Size.Width, drawable.Size.Height);
-        Color color = Color.FromArgb(drawable.Color.A, drawable.Color.R, drawable.Color.G, drawable.Color.B);
-        drawingSession.DrawRectangle(rectangleRect, color, drawable.StrokeWidth);
+        
+        // Draw fill if FillColor is not transparent
+        if (drawable.FillColor.A > 0)
+        {
+            Color fillColor = Color.FromArgb(drawable.FillColor.A, drawable.FillColor.R, drawable.FillColor.G, drawable.FillColor.B);
+            drawingSession.FillRectangle(rectangleRect, fillColor);
+        }
+        
+        // Draw stroke
+        Color strokeColor = Color.FromArgb(drawable.StrokeColor.A, drawable.StrokeColor.R, drawable.StrokeColor.G, drawable.StrokeColor.B);
+        drawingSession.DrawRectangle(rectangleRect, strokeColor, drawable.StrokeWidth);
+    }
+
+    private static void DrawEllipse(EllipseDrawable drawable, CanvasDrawingSession drawingSession)
+    {
+        float centerX = drawable.Offset.X + drawable.Size.Width / 2f;
+        float centerY = drawable.Offset.Y + drawable.Size.Height / 2f;
+        float radiusX = drawable.Size.Width / 2f;
+        float radiusY = drawable.Size.Height / 2f;
+        
+        // Draw fill if FillColor is not transparent
+        if (drawable.FillColor.A > 0)
+        {
+            Color fillColor = Color.FromArgb(drawable.FillColor.A, drawable.FillColor.R, drawable.FillColor.G, drawable.FillColor.B);
+            drawingSession.FillEllipse(centerX, centerY, radiusX, radiusY, fillColor);
+        }
+        
+        // Draw stroke
+        Color strokeColor = Color.FromArgb(drawable.StrokeColor.A, drawable.StrokeColor.R, drawable.StrokeColor.G, drawable.StrokeColor.B);
+        drawingSession.DrawEllipse(centerX, centerY, radiusX, radiusY, strokeColor, drawable.StrokeWidth);
+    }
+
+    private static void DrawLine(LineDrawable drawable, CanvasDrawingSession drawingSession)
+    {
+        Vector2 startPoint = drawable.Offset;
+        Vector2 endPoint = drawable.EndPoint;
+        Color strokeColor = Color.FromArgb(drawable.StrokeColor.A, drawable.StrokeColor.R, drawable.StrokeColor.G, drawable.StrokeColor.B);
+        drawingSession.DrawLine(startPoint, endPoint, strokeColor, drawable.StrokeWidth);
+    }
+
+    private static void DrawArrow(ArrowDrawable drawable, CanvasDrawingSession drawingSession)
+    {
+        Vector2 startPoint = drawable.Offset;
+        Vector2 endPoint = drawable.EndPoint;
+        Color strokeColor = Color.FromArgb(drawable.StrokeColor.A, drawable.StrokeColor.R, drawable.StrokeColor.G, drawable.StrokeColor.B);
+        
+        // Draw the main line
+        drawingSession.DrawLine(startPoint, endPoint, strokeColor, drawable.StrokeWidth);
+        
+        // Calculate arrow head
+        Vector2 direction = Vector2.Normalize(endPoint - startPoint);
+        float arrowHeadLength = Math.Max(15f, drawable.StrokeWidth * 3f);
+        float arrowHeadWidth = Math.Max(10f, drawable.StrokeWidth * 2f);
+        
+        // Perpendicular vector
+        Vector2 perpendicular = new(-direction.Y, direction.X);
+        
+        // Arrow head points
+        Vector2 arrowBase = endPoint - direction * arrowHeadLength;
+        Vector2 arrowLeft = arrowBase + perpendicular * arrowHeadWidth / 2f;
+        Vector2 arrowRight = arrowBase - perpendicular * arrowHeadWidth / 2f;
+        
+        // Draw arrow head
+        drawingSession.DrawLine(endPoint, arrowLeft, strokeColor, drawable.StrokeWidth);
+        drawingSession.DrawLine(endPoint, arrowRight, strokeColor, drawable.StrokeWidth);
     }
 
     private static void DrawImage(ImageDrawable drawable, CanvasDrawingSession drawingSession)

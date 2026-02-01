@@ -30,6 +30,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         public static readonly string Load = "LoadImageEditPage";
         public static readonly string Copy = "Copy";
         public static readonly string ToggleCropMode = "ToggleCropMode";
+        public static readonly string ToggleShapesMode = "ToggleShapesMode";
         public static readonly string Save = "Save";
         public static readonly string Undo = "Undo";
         public static readonly string Redo = "Redo";
@@ -45,6 +46,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         public static readonly string UpdateDesaturation = "UpdateDesaturation";
         public static readonly string UpdateTolerance = "UpdateTolerance";
         public static readonly string UpdateSelectedColorOptionIndex = "UpdateSelectedColorOptionIndex";
+        public static readonly string UpdateSelectedShapeType = "UpdateSelectedShapeType";
+        public static readonly string UpdateShapeStrokeColor = "UpdateShapeStrokeColor";
+        public static readonly string UpdateShapeFillColor = "UpdateShapeFillColor";
+        public static readonly string UpdateShapeStrokeWidth = "UpdateShapeStrokeWidth";
         public static readonly string UpdateZoomPercentage = "UpdateZoomPercentage";
         public static readonly string UpdateAutoZoomLock = "UpdateAutoZoomLock";
         public static readonly string ZoomAndCenter = "ZoomAndCenter";
@@ -73,6 +78,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public IAsyncAppCommand CopyCommand { get; }
     public IAppCommand ToggleCropModeCommand { get; }
+    public IAppCommand ToggleShapesModeCommand { get; }
     public IAsyncAppCommand SaveCommand { get; }
     public IAppCommand UndoCommand { get; }
     public IAppCommand RedoCommand { get; }
@@ -88,6 +94,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IAppCommand<int> UpdateDesaturationCommand { get; }
     public IAppCommand<int> UpdateToleranceCommand { get; }
     public IAppCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
+    public IAppCommand<ShapeType> UpdateSelectedShapeTypeCommand { get; }
+    public IAppCommand<Color> UpdateShapeStrokeColorCommand { get; }
+    public IAppCommand<Color> UpdateShapeFillColorCommand { get; }
+    public IAppCommand<int> UpdateShapeStrokeWidthCommand { get; }
     public IAppCommand<int> UpdateZoomPercentageCommand { get; }
     public IAppCommand<bool> UpdateAutoZoomLockCommand { get; }
     public IAppCommand ZoomAndCenterCommand { get; }
@@ -152,6 +162,36 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public bool IsInShapesMode
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public ShapeType SelectedShapeType
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public Color ShapeStrokeColor
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public Color ShapeFillColor
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public int ShapeStrokeWidth
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public Rectangle CropRect
     {
         get => field;
@@ -206,6 +246,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public bool IsShapesFeatureEnabled
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public int ZoomPercentage
     {
         get => field;
@@ -253,6 +299,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyTolerance = 30;
         ChromaKeyColor = Color.Empty;
         ChromaKeyColorOptions = [];
+        SelectedShapeType = ShapeType.Rectangle;
+        ShapeStrokeColor = Color.Black;
+        ShapeFillColor = Color.Transparent;
+        ShapeStrokeWidth = 3;
         ZoomPercentage = 100;
         IsAutoZoomLocked = false;
         _operationsUndoStack = [];
@@ -261,6 +311,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         CopyCommand = commandFactory.CreateAsync(ActivityIds.Copy, CopyAsync);
         ToggleCropModeCommand = commandFactory.Create(ActivityIds.ToggleCropMode, ToggleCropMode);
+        ToggleShapesModeCommand = commandFactory.Create(ActivityIds.ToggleShapesMode, ToggleShapesMode, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
         SaveCommand = commandFactory.CreateAsync(ActivityIds.Save, SaveAsync);
         UndoCommand = commandFactory.Create(ActivityIds.Undo, Undo);
         RedoCommand = commandFactory.Create(ActivityIds.Redo, Redo);
@@ -276,6 +327,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateDesaturationCommand = commandFactory.Create<int>(ActivityIds.UpdateDesaturation, UpdateDesaturation);
         UpdateToleranceCommand = commandFactory.Create<int>(ActivityIds.UpdateTolerance, UpdateTolerance);
         UpdateSelectedColorOptionIndexCommand = commandFactory.Create<int>(ActivityIds.UpdateSelectedColorOptionIndex, UpdateSelectedColorOptionIndex);
+        UpdateSelectedShapeTypeCommand = commandFactory.Create<ShapeType>(ActivityIds.UpdateSelectedShapeType, UpdateSelectedShapeType, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeStrokeColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeStrokeColor, UpdateShapeStrokeColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeFillColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeFillColor, UpdateShapeFillColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeStrokeWidthCommand = commandFactory.Create<int>(ActivityIds.UpdateShapeStrokeWidth, UpdateShapeStrokeWidth, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
         UpdateZoomPercentageCommand = commandFactory.Create<int>(ActivityIds.UpdateZoomPercentage, UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = commandFactory.Create<bool>(ActivityIds.UpdateAutoZoomLock, UpdateAutoZoomLock);
         ZoomAndCenterCommand = commandFactory.Create(ActivityIds.ZoomAndCenter, RequestZoomAndCenter);
@@ -317,6 +372,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                         }
                     }
                 }
+
+                IsShapesFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes);
 
                 InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
             }
@@ -361,18 +418,32 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void UpdateShowChromaKeyOptions(bool value)
     {
         ShowChromaKeyOptions = value;
-        if (value && IsInCropMode)
+        if (value)
         {
-            IsInCropMode = false;
+            if (IsInCropMode)
+            {
+                IsInCropMode = false;
+            }
+            if (IsInShapesMode)
+            {
+                IsInShapesMode = false;
+            }
         }
     }
 
     private void UpdateIsInCropMode(bool value)
     {
         IsInCropMode = value;
-        if (value && ShowChromaKeyOptions)
+        if (value)
         {
-            ShowChromaKeyOptions = false;
+            if (ShowChromaKeyOptions)
+            {
+                ShowChromaKeyOptions = false;
+            }
+            if (IsInShapesMode)
+            {
+                IsInShapesMode = false;
+            }
         }
     }
 
@@ -385,6 +456,150 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void ToggleCropMode()
     {
         UpdateIsInCropMode(!IsInCropMode);
+    }
+
+    private void ToggleShapesMode()
+    {
+        UpdateIsInShapesMode(!IsInShapesMode);
+    }
+
+    private void UpdateIsInShapesMode(bool value)
+    {
+        IsInShapesMode = value;
+        if (value)
+        {
+            // Disable other modes when shapes mode is enabled
+            if (IsInCropMode)
+            {
+                IsInCropMode = false;
+            }
+            if (ShowChromaKeyOptions)
+            {
+                ShowChromaKeyOptions = false;
+            }
+        }
+    }
+
+    private void UpdateSelectedShapeType(ShapeType value)
+    {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
+        SelectedShapeType = value;
+    }
+
+    private void UpdateShapeStrokeColor(Color value)
+    {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
+        ShapeStrokeColor = value;
+    }
+
+    private void UpdateShapeFillColor(Color value)
+    {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
+        ShapeFillColor = value;
+    }
+
+    private void UpdateShapeStrokeWidth(int value)
+    {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
+        ShapeStrokeWidth = value;
+    }
+
+    public void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint)
+    {
+        if (!IsInShapesMode || !_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
+
+        IDrawable? newShape = null;
+
+        switch (SelectedShapeType)
+        {
+            case ShapeType.Rectangle:
+                {
+                    float x = Math.Min(startPoint.X, endPoint.X);
+                    float y = Math.Min(startPoint.Y, endPoint.Y);
+                    float width = Math.Abs(endPoint.X - startPoint.X);
+                    float height = Math.Abs(endPoint.Y - startPoint.Y);
+                    
+                    // Only create shape if it has a minimum size (at least 2 pixels)
+                    if (width >= 2 && height >= 2)
+                    {
+                        newShape = new RectangleDrawable(
+                            new Vector2(x, y),
+                            new Size((int)Math.Ceiling(width), (int)Math.Ceiling(height)),
+                            ShapeStrokeColor,
+                            ShapeFillColor,
+                            ShapeStrokeWidth);
+                    }
+                    break;
+                }
+            case ShapeType.Ellipse:
+                {
+                    float x = Math.Min(startPoint.X, endPoint.X);
+                    float y = Math.Min(startPoint.Y, endPoint.Y);
+                    float width = Math.Abs(endPoint.X - startPoint.X);
+                    float height = Math.Abs(endPoint.Y - startPoint.Y);
+                    
+                    // Only create shape if it has a minimum size (at least 2 pixels)
+                    if (width >= 2 && height >= 2)
+                    {
+                        newShape = new EllipseDrawable(
+                            new Vector2(x, y),
+                            new Size((int)Math.Ceiling(width), (int)Math.Ceiling(height)),
+                            ShapeStrokeColor,
+                            ShapeFillColor,
+                            ShapeStrokeWidth);
+                    }
+                    break;
+                }
+            case ShapeType.Line:
+                {
+                    // Only create line if it has a minimum length (at least 2 pixels)
+                    float distance = Vector2.Distance(startPoint, endPoint);
+                    if (distance >= 2)
+                    {
+                        newShape = new LineDrawable(
+                            startPoint,
+                            endPoint,
+                            ShapeStrokeColor,
+                            ShapeStrokeWidth);
+                    }
+                    break;
+                }
+            case ShapeType.Arrow:
+                {
+                    // Only create arrow if it has a minimum length (at least 2 pixels)
+                    float distance = Vector2.Distance(startPoint, endPoint);
+                    if (distance >= 2)
+                    {
+                        newShape = new ArrowDrawable(
+                            startPoint,
+                            endPoint,
+                            ShapeStrokeColor,
+                            ShapeStrokeWidth);
+                    }
+                    break;
+                }
+        }
+
+        if (newShape != null)
+        {
+            _drawables.Add(newShape);
+            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     private void UpdateChromaKeyEffectValues()

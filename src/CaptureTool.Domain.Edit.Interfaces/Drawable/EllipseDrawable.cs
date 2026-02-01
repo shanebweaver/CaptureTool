@@ -1,9 +1,9 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Numerics;
 
 namespace CaptureTool.Domain.Edit.Interfaces.Drawable;
 
-public sealed partial class RectangleDrawable : IDrawable
+public sealed partial class EllipseDrawable : IDrawable
 {
     public Vector2 Offset { get; set; }
     public Size Size { get; set; }
@@ -11,7 +11,7 @@ public sealed partial class RectangleDrawable : IDrawable
     public Color FillColor { get; set; }
     public int StrokeWidth { get; set; }
 
-    public RectangleDrawable(Vector2 offset, Size size, Color strokeColor, Color fillColor, int strokeWidth)
+    public EllipseDrawable(Vector2 offset, Size size, Color strokeColor, Color fillColor, int strokeWidth)
     {
         Offset = offset;
         Size = size;
