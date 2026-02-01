@@ -6,6 +6,11 @@ namespace CaptureTool.Domain.Capture.Interfaces.Metadata;
 public sealed class MetadataFile
 {
     /// <summary>
+    /// The file extension used for metadata files.
+    /// </summary>
+    public const string FileExtension = ".metadata.json";
+
+    /// <summary>
     /// Gets the source file path that was scanned.
     /// </summary>
     public string SourceFilePath { get; }
