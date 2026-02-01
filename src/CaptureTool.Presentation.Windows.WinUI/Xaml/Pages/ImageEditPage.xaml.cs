@@ -89,7 +89,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.UpdateCropRectCommand.Execute(e);
     }
 
-    private void ImageCanvas_ShapeDrawn(object _, (System.Numerics.Vector2 Start, System.Numerics.Vector2 End) e)
+    private void ImageCanvas_ShapeDrawn(object? _, (System.Numerics.Vector2 Start, System.Numerics.Vector2 End) e)
     {
         ViewModel.OnShapeDrawn(e.Start, e.End);
     }
