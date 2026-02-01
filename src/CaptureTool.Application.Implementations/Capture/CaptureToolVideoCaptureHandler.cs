@@ -79,14 +79,14 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             _metadataScannerRegistry != null)
         {
             _currentScanJob = _scanJobFactory.CreateJob(Guid.NewGuid(), _tempVideoPath, _metadataScannerRegistry);
+
+            // Set callbacks - ScreenRecorderImpl will apply them to the session
+            _audioSampleCallback = OnAudioSampleCallback;
+            _screenRecorder.SetAudioSampleCallback(_audioSampleCallback);
+
+            _videoFrameCallback = OnVideoFrameCallback;
+            _screenRecorder.SetVideoFrameCallback(_videoFrameCallback);
         }
-
-        // Set callbacks - ScreenRecorderImpl will apply them to the session
-        _audioSampleCallback = OnAudioSampleCallback;
-        _screenRecorder.SetAudioSampleCallback(_audioSampleCallback);
-
-        _videoFrameCallback = OnVideoFrameCallback;
-        _screenRecorder.SetVideoFrameCallback(_videoFrameCallback);
 
         // Start recording - callbacks will be automatically applied to the new session
         _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled);

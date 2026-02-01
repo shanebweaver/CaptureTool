@@ -221,9 +221,9 @@
                     x:Uid="ImageEdit_AutoZoomLockButton"
                     MinWidth="32"
                     Padding="8,4"
+                    Checked="AutoZoomLockToggle_IsCheckedChanged"
                     IsChecked="{x:Bind ViewModel.IsAutoZoomLocked, Mode=OneWay}"
                     IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
-                    Checked="AutoZoomLockToggle_IsCheckedChanged"
                     Unchecked="AutoZoomLockToggle_IsCheckedChanged">
                     <FontIcon FontSize="16" Glyph="&#xE72E;" />
                 </ToggleButton>
@@ -245,10 +245,10 @@
                     VerticalAlignment="Center"
                     IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
                     Maximum="200"
-                    Minimum="25"
-                    StepFrequency="5"
-                    Value="{x:Bind ViewModel.ZoomPercentage, Mode=OneWay}"
-                    ValueChanged="ZoomSlider_ValueChanged" />
+                    Minimum="1"
+                    StepFrequency="1"
+                    ValueChanged="ZoomSlider_ValueChanged"
+                    Value="{x:Bind ViewModel.ZoomPercentage, Mode=OneWay}" />
                 <TextBlock
                     VerticalAlignment="Center"
                     FontSize="12"

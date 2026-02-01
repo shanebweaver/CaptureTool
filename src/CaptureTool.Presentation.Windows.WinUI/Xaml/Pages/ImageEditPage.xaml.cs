@@ -9,9 +9,6 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class ImageEditPage : ImageEditPageBase
 {
-    private CancellationTokenSource? _sliderDebounceTokenSource;
-    private const int SliderDebounceMs = 300;
-
     public ImageEditPage()
     {
         InitializeComponent();
@@ -27,8 +24,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
-        _sliderDebounceTokenSource?.Cancel();
-        _sliderDebounceTokenSource?.Dispose();
     }
 
     private string FormatZoomPercentage(int zoomPercentage)
@@ -40,12 +35,9 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private static double PercentageToFactor(int percentage) => percentage / 100.0;
     private static int FactorToPercentage(double factor)
     {
-        // Round to nearest 5% to match slider step frequency
-        int percentage = (int)Math.Round(factor * 100);
-        // Snap to nearest multiple of 5
-        return (int)(Math.Round(percentage / 5.0) * 5);
+        return (int)Math.Round(factor * 100);
     }
-    private static int ClampPercentage(int value) => Math.Clamp(value, 25, 200);
+    private static int ClampPercentage(int value) => Math.Clamp(value, 1, 200);
 
     private void ViewModel_LoadStateChanged(object? sender, LoadState e)
     {
@@ -119,29 +111,12 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private async void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
-        // Debounce: Cancel any pending zoom application
-        _sliderDebounceTokenSource?.Cancel();
-        _sliderDebounceTokenSource?.Dispose();
-        _sliderDebounceTokenSource = new CancellationTokenSource();
-
         int newPercentage = (int)e.NewValue;
-        
-        try
-        {
-            // Wait for user to stop dragging
-            await Task.Delay(SliderDebounceMs, _sliderDebounceTokenSource.Token);
-            
-            // Apply zoom after debounce
-            double zoomFactor = PercentageToFactor(newPercentage);
-            ImageCanvas.SetZoom(zoomFactor, ZoomUpdateSource.Slider);
-            
-            // Update ViewModel for consistency (doesn't fire events that would loop back)
-            ViewModel.UpdateZoomPercentageCommand.Execute(newPercentage);
-        }
-        catch (TaskCanceledException)
-        {
-            // Superseded by newer value, ignore
-        }
+
+        double zoomFactor = PercentageToFactor(newPercentage);
+        ImageCanvas.SetZoom(zoomFactor, ZoomUpdateSource.Slider);
+
+        ViewModel.UpdateZoomPercentageCommand.Execute(newPercentage);
     }
 
     private void AutoZoomLockToggle_IsCheckedChanged(object sender, RoutedEventArgs _)

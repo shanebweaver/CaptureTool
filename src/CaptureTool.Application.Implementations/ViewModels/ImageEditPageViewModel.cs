@@ -592,7 +592,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateZoomPercentage(int percentage)
     {
-        ZoomPercentage = Math.Clamp(percentage, 25, 200);
+        ZoomPercentage = Math.Clamp(percentage, 1, 200);
     }
 
     private void UpdateAutoZoomLock(bool isLocked)
