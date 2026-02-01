@@ -273,6 +273,10 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Shapes</value>
     <comment>The label for the shapes button on the image edit page.</comment>
   </data>
+  <data name="ImageEdit_TextButton.Label" xml:space="preserve">
+    <value>Text</value>
+    <comment>The label for the text button on the image edit page.</comment>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Print</value>
     <comment>The label for the print button on the image edit page.</comment>
@@ -292,6 +296,10 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="ImageEdit_ShapesButton.AccessKey" xml:space="preserve">
     <value>H</value>
     <comment>The access key for the shapes button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
+    <value>T</value>
+    <comment>The access key for the text button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -404,6 +412,14 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="ImageEdit_ShapesButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Draw shapes</value>
     <comment>The tooltip for the shapes button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Add text</value>
+    <comment>The tooltip for the text button on the image edit page.</comment>
+  </data>
+  <data name="TextOptionsLabel.Text" xml:space="preserve">
+    <value>Click on the canvas to add text</value>
+    <comment>The instruction label for text mode on the image edit page.</comment>
   </data>
   <data name="ShapeTypeComboBox.Header" xml:space="preserve">
     <value>Shape Type</value>

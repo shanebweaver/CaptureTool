@@ -55,6 +55,16 @@
                     <FontIcon Glyph="&#xE91B;" />
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
+            <AppBarToggleButton
+                x:Uid="ImageEdit_TextButton"
+                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ToggleTextModeCommand)}"
+                IsChecked="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsTextFeatureEnabled, Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE8D2;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
             <AppBarButton
                 x:Uid="ImageEdit_RotateButton"
                 Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RotateCommand)}"
@@ -172,6 +182,21 @@
             </StackPanel>
         </Grid>
 
+        <!--  Text options  -->
+        <Grid
+            Margin="0,8"
+            Padding="12,8"
+            HorizontalAlignment="Center"
+            Row="1"
+            Visibility="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock
+                    x:Uid="TextOptionsLabel"
+                    VerticalAlignment="Center"
+                    Text="Click on the canvas to add text" />
+            </StackPanel>
+        </Grid>
+
         <!--  Canvas  -->
         <Grid
             x:Name="CanvasContainer"
@@ -190,8 +215,10 @@
                 IsAutoZoomLocked="{x:Bind ViewModel.IsAutoZoomLocked, Mode=OneWay}"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 IsShapesModeEnabled="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
+                IsTextModeEnabled="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}"
-                ShapeDrawn="ImageCanvas_ShapeDrawn" />
+                ShapeDrawn="ImageCanvas_ShapeDrawn"
+                TextAdded="ImageCanvas_TextAdded" />
         </Grid>
 
         <ProgressRing

@@ -17,6 +17,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ShapeTypeComboBox.SelectionChanged += ShapeTypeComboBox_SelectionChanged;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
+        ImageCanvas.TextAdded += ImageCanvas_TextAdded;
     }
 
     ~ImageEditPage()
@@ -27,6 +28,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
         ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
+        ImageCanvas.TextAdded -= ImageCanvas_TextAdded;
     }
 
     private string FormatZoomPercentage(int zoomPercentage)
@@ -92,6 +94,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ImageCanvas_ShapeDrawn(object? _, (System.Numerics.Vector2 Start, System.Numerics.Vector2 End) e)
     {
         ViewModel.OnShapeDrawn(e.Start, e.End);
+    }
+
+    private void ImageCanvas_TextAdded(object? _, (System.Numerics.Vector2 Position, string Text) e)
+    {
+        ViewModel.OnTextAdded(e.Position, e.Text);
     }
 
     private void ChromaKeyAppBarToggleButton_IsCheckedChanged(object sender, RoutedEventArgs _)

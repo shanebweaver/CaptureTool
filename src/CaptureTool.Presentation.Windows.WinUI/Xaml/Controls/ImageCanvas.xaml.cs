@@ -43,6 +43,12 @@ public sealed partial class ImageCanvas : UserControlBase
         typeof(ImageCanvas),
         new PropertyMetadata(false));
 
+    public static readonly DependencyProperty IsTextModeEnabledProperty = DependencyProperty.Register(
+        nameof(IsTextModeEnabled),
+        typeof(bool),
+        typeof(ImageCanvas),
+        new PropertyMetadata(false));
+
     public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
        nameof(CropRect),
        typeof(Rectangle),
@@ -129,6 +135,12 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(IsShapesModeEnabledProperty, value);
     }
 
+    public bool IsTextModeEnabled
+    {
+        get => Get<bool>(IsTextModeEnabledProperty);
+        set => Set(IsTextModeEnabledProperty, value);
+    }
+
     public Rectangle CropRect
     {
         get => Get<Rectangle>(CropRectProperty);
@@ -144,6 +156,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<Rectangle>? InteractionComplete;
     public event EventHandler<Rectangle>? CropRectChanged;
     public event EventHandler<(System.Numerics.Vector2 Start, System.Numerics.Vector2 End)>? ShapeDrawn;
+    public event EventHandler<(System.Numerics.Vector2 Position, string Text)>? TextAdded;
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
 
     private readonly Lock _zoomUpdateLock = new Lock();
@@ -388,6 +401,18 @@ public sealed partial class ImageCanvas : UserControlBase
     #region Panning
     private void RootContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (IsTextModeEnabled)
+        {
+            // Get position relative to the RenderCanvas
+            var point = e.GetCurrentPoint(RenderCanvas);
+            if (point.Properties.IsLeftButtonPressed)
+            {
+                _ = ShowTextInputDialogAsync(point.Position);
+                e.Handled = true;
+                return;
+            }
+        }
+
         if (IsShapesModeEnabled)
         {
             // Get position relative to the RenderCanvas
@@ -489,5 +514,34 @@ public sealed partial class ImageCanvas : UserControlBase
     private void CropOverlay_SelectionAreaChanged(object sender, Rectangle e)
     {
         UpdateCropRect(e);
+    }
+
+    private async Task ShowTextInputDialogAsync(Point position)
+    {
+        var dialog = new ContentDialog
+        {
+            Title = "Add Text",
+            PrimaryButtonText = "Add",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = this.XamlRoot
+        };
+
+        var textBox = new TextBox
+        {
+            PlaceholderText = "Enter text...",
+            AcceptsReturn = false,
+            MaxLength = 1000
+        };
+
+        dialog.Content = textBox;
+
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(textBox.Text))
+        {
+            var vector2Position = new System.Numerics.Vector2((float)position.X, (float)position.Y);
+            TextAdded?.Invoke(this, (vector2Position, textBox.Text));
+        }
     }
 }
