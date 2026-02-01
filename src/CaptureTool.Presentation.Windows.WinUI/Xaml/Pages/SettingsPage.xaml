@@ -291,6 +291,52 @@
                     </Expander>
                 </StackPanel>
 
+                <!--  Metadata Scanners section  -->
+                <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsVideoMetadataFeatureEnabled, Mode=OneWay}">
+                    <TextBlock x:Uid="Settings_MetadataScannersHeaderLabel" Margin="0,4" />
+
+                    <!--  Auto save metadata  -->
+                    <Grid
+                        Padding="16,12"
+                        Background="{ThemeResource CardBackgroundFillColorDefault}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                        BorderThickness="1"
+                        ColumnSpacing="16"
+                        CornerRadius="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="28" />
+                        </Grid.ColumnDefinitions>
+
+                        <SymbolIcon Symbol="Document" />
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock
+                                x:Uid="Settings_MetadataAutoSave_HeaderLabel"
+                                MaxLines="2"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="WrapWholeWords" />
+                            <TextBlock
+                                x:Uid="Settings_MetadataAutoSave_SubtitleLabel"
+                                FontSize="12"
+                                MaxLines="2"
+                                Opacity=".75"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+
+                        <ToggleSwitch
+                            x:Uid="Settings_MetadataAutoSave_Toggle"
+                            Grid.Column="2"
+                            MinWidth="0"
+                            HorizontalAlignment="Right"
+                            IsOn="{x:Bind ViewModel.VideoMetadataAutoSave, Mode=OneWay}"
+                            Toggled="MetadataAutoSaveToggleSwitch_Toggled" />
+                    </Grid>
+                </StackPanel>
+
                 <!--  Appearance section  -->
                 <StackPanel Spacing="4">
                     <TextBlock x:Uid="Settings_AppearanceHeaderLabel" Margin="0,4" />

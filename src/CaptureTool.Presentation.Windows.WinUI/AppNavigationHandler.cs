@@ -43,6 +43,8 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
     {
         await _semaphoreNavigation.WaitAsync();
 
+        _mainWindowHost.Initialize();
+
         try
         {
             if (CaptureToolNavigationRouteHelper.IsMainWindowRoute(request.Route))

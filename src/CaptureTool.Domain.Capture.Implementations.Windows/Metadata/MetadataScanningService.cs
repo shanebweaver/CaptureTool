@@ -210,7 +210,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
             );
 
             // Save metadata file next to the media file
-            string metadataPath = Path.ChangeExtension(job.FilePath, ".metadata.json");
+            string metadataPath = Path.ChangeExtension(job.FilePath, MetadataFile.FileExtension);
             await SaveMetadataFileAsync(metadataFile, metadataPath, job.CancellationToken);
 
             job.Complete(metadataPath);

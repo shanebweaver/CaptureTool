@@ -151,7 +151,7 @@ public sealed class RealTimeMetadataScanJob : IRealTimeMetadataScanJob
             );
 
             // Save metadata file next to the media file
-            _metadataFilePath = Path.ChangeExtension(_filePath, ".metadata.json");
+            _metadataFilePath = Path.ChangeExtension(_filePath, MetadataFile.FileExtension);
             await SaveMetadataFileAsync(metadataFile, _metadataFilePath);
 
             _status = MetadataScanJobStatus.Completed;
