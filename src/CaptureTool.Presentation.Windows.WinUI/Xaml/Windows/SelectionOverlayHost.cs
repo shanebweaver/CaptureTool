@@ -84,7 +84,11 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             {
                 window.AppWindow?.Hide();
             }
-            catch { }
+            catch
+            {
+                // AppWindow.Hide() may fail if the window is in an invalid state during initialization.
+                // This is safe to ignore as the window will still function, just without the smooth animation.
+            }
 
             _viewModel.AddWindowViewModel(window.ViewModel, monitor.IsPrimary);
             if (monitor.IsPrimary)

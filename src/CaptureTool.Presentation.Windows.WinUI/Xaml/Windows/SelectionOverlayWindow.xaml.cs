@@ -37,11 +37,21 @@ public sealed partial class SelectionOverlayWindow : Window
     private void OnBackgroundImageLoaded(object? sender, EventArgs e)
     {
         // Show the window only after the background image has loaded to prevent black flash
+        // Only show if the window is still valid and not closed
+        if (IsClosed)
+        {
+            return;
+        }
+
         try
         {
             AppWindow?.Show();
         }
-        catch { }
+        catch
+        {
+            // AppWindow.Show() may fail during window teardown or if the window is in an invalid state.
+            // This is safe to ignore as the window is being closed anyway.
+        }
     }
 
     private void EnsureMaximized()
