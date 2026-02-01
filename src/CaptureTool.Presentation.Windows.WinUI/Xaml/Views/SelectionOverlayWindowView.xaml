@@ -13,7 +13,7 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:ISelectionOverlayWindowViewModel}"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootPanel">
+    <Grid x:Name="RootPanel" Opacity="0">
         <Grid PointerMoved="SelectionOverlayContainer_PointerMoved">
             <controls:SelectionOverlay x:Name="SelectionOverlay" />
         </Grid>

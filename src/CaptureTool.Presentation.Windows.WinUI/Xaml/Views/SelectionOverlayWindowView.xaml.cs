@@ -129,9 +129,39 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
                 Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
             };
 
+            // Animate opacity from 0 to 1 for smooth fade-in effect
+            AnimateFadeIn();
+
             // Notify that background image has been loaded
             BackgroundImageLoaded?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    private void AnimateFadeIn()
+    {
+        if (RootPanel == null)
+        {
+            return;
+        }
+
+        // Create a smooth fade-in animation
+        var fadeInAnimation = new Microsoft.UI.Xaml.Media.Animation.DoubleAnimation
+        {
+            From = 0.0,
+            To = 1.0,
+            Duration = new Duration(TimeSpan.FromMilliseconds(200)),
+            EasingFunction = new Microsoft.UI.Xaml.Media.Animation.QuadraticEase
+            {
+                EasingMode = Microsoft.UI.Xaml.Media.Animation.EasingMode.EaseOut
+            }
+        };
+
+        var storyboard = new Microsoft.UI.Xaml.Media.Animation.Storyboard();
+        storyboard.Children.Add(fadeInAnimation);
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTarget(fadeInAnimation, RootPanel);
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTargetProperty(fadeInAnimation, "Opacity");
+
+        storyboard.Begin();
     }
 
     private void UpdateRequestedAppTheme()
