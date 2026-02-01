@@ -75,7 +75,15 @@ public static partial class Win2DImageCanvasRenderer
     {
         Vector2 textPosition = new(drawable.Offset.X, drawable.Offset.Y);
         Color color = Color.FromArgb(drawable.Color.A, drawable.Color.R, drawable.Color.G, drawable.Color.B);
-        drawingSession.DrawText(drawable.Text, textPosition, color);
+        
+        // Create text format with specified font family and size
+        using var textFormat = new Microsoft.Graphics.Canvas.Text.CanvasTextFormat
+        {
+            FontFamily = drawable.FontFamily,
+            FontSize = drawable.FontSize
+        };
+        
+        drawingSession.DrawText(drawable.Text, textPosition, color, textFormat);
     }
 
     private static void DrawRectangle(RectangleDrawable drawable, CanvasDrawingSession drawingSession)

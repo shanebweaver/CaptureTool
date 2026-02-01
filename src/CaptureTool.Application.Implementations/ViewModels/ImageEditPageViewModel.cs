@@ -31,6 +31,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         public static readonly string Copy = "Copy";
         public static readonly string ToggleCropMode = "ToggleCropMode";
         public static readonly string ToggleShapesMode = "ToggleShapesMode";
+        public static readonly string ToggleTextMode = "ToggleTextMode";
         public static readonly string Save = "Save";
         public static readonly string Undo = "Undo";
         public static readonly string Redo = "Redo";
@@ -50,6 +51,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         public static readonly string UpdateShapeStrokeColor = "UpdateShapeStrokeColor";
         public static readonly string UpdateShapeFillColor = "UpdateShapeFillColor";
         public static readonly string UpdateShapeStrokeWidth = "UpdateShapeStrokeWidth";
+        public static readonly string UpdateTextColor = "UpdateTextColor";
+        public static readonly string UpdateTextFontFamily = "UpdateTextFontFamily";
+        public static readonly string UpdateTextFontSize = "UpdateTextFontSize";
         public static readonly string UpdateZoomPercentage = "UpdateZoomPercentage";
         public static readonly string UpdateAutoZoomLock = "UpdateAutoZoomLock";
         public static readonly string ZoomAndCenter = "ZoomAndCenter";
@@ -79,6 +83,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IAsyncAppCommand CopyCommand { get; }
     public IAppCommand ToggleCropModeCommand { get; }
     public IAppCommand ToggleShapesModeCommand { get; }
+    public IAppCommand ToggleTextModeCommand { get; }
     public IAsyncAppCommand SaveCommand { get; }
     public IAppCommand UndoCommand { get; }
     public IAppCommand RedoCommand { get; }
@@ -98,6 +103,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IAppCommand<Color> UpdateShapeStrokeColorCommand { get; }
     public IAppCommand<Color> UpdateShapeFillColorCommand { get; }
     public IAppCommand<int> UpdateShapeStrokeWidthCommand { get; }
+    public IAppCommand<Color> UpdateTextColorCommand { get; }
+    public IAppCommand<string> UpdateTextFontFamilyCommand { get; }
+    public IAppCommand<float> UpdateTextFontSizeCommand { get; }
     public IAppCommand<int> UpdateZoomPercentageCommand { get; }
     public IAppCommand<bool> UpdateAutoZoomLockCommand { get; }
     public IAppCommand ZoomAndCenterCommand { get; }
@@ -168,6 +176,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public bool IsInTextMode
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public ShapeType SelectedShapeType
     {
         get => field;
@@ -187,6 +201,24 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     }
 
     public int ShapeStrokeWidth
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public Color TextColor
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public string TextFontFamily
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public float TextFontSize
     {
         get => field;
         private set => Set(ref field, value);
@@ -252,6 +284,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public bool IsTextFeatureEnabled
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public int ZoomPercentage
     {
         get => field;
@@ -303,6 +341,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ShapeStrokeColor = Color.Black;
         ShapeFillColor = Color.Transparent;
         ShapeStrokeWidth = 3;
+        TextColor = Color.Black;
+        TextFontFamily = "Segoe UI";
+        TextFontSize = 16f;
         ZoomPercentage = 100;
         IsAutoZoomLocked = false;
         _operationsUndoStack = [];
@@ -312,6 +353,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CopyCommand = commandFactory.CreateAsync(ActivityIds.Copy, CopyAsync);
         ToggleCropModeCommand = commandFactory.Create(ActivityIds.ToggleCropMode, ToggleCropMode);
         ToggleShapesModeCommand = commandFactory.Create(ActivityIds.ToggleShapesMode, ToggleShapesMode, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        ToggleTextModeCommand = commandFactory.Create(ActivityIds.ToggleTextMode, ToggleTextMode, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text));
         SaveCommand = commandFactory.CreateAsync(ActivityIds.Save, SaveAsync);
         UndoCommand = commandFactory.Create(ActivityIds.Undo, Undo);
         RedoCommand = commandFactory.Create(ActivityIds.Redo, Redo);
@@ -331,6 +373,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateShapeStrokeColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeStrokeColor, UpdateShapeStrokeColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
         UpdateShapeFillColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeFillColor, UpdateShapeFillColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
         UpdateShapeStrokeWidthCommand = commandFactory.Create<int>(ActivityIds.UpdateShapeStrokeWidth, UpdateShapeStrokeWidth, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateTextColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateTextColor, UpdateTextColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text));
+        UpdateTextFontFamilyCommand = commandFactory.Create<string>(ActivityIds.UpdateTextFontFamily, UpdateTextFontFamily, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text));
+        UpdateTextFontSizeCommand = commandFactory.Create<float>(ActivityIds.UpdateTextFontSize, UpdateTextFontSize, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text));
         UpdateZoomPercentageCommand = commandFactory.Create<int>(ActivityIds.UpdateZoomPercentage, UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = commandFactory.Create<bool>(ActivityIds.UpdateAutoZoomLock, UpdateAutoZoomLock);
         ZoomAndCenterCommand = commandFactory.Create(ActivityIds.ZoomAndCenter, RequestZoomAndCenter);
@@ -374,6 +419,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 }
 
                 IsShapesFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes);
+                IsTextFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text);
 
                 InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
             }
@@ -428,6 +474,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             {
                 IsInShapesMode = false;
             }
+            if (IsInTextMode)
+            {
+                IsInTextMode = false;
+            }
         }
     }
 
@@ -443,6 +493,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             if (IsInShapesMode)
             {
                 IsInShapesMode = false;
+            }
+            if (IsInTextMode)
+            {
+                IsInTextMode = false;
             }
         }
     }
@@ -463,6 +517,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateIsInShapesMode(!IsInShapesMode);
     }
 
+    private void ToggleTextMode()
+    {
+        UpdateIsInTextMode(!IsInTextMode);
+    }
+
     private void UpdateIsInShapesMode(bool value)
     {
         IsInShapesMode = value;
@@ -476,6 +535,31 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             if (ShowChromaKeyOptions)
             {
                 ShowChromaKeyOptions = false;
+            }
+            if (IsInTextMode)
+            {
+                IsInTextMode = false;
+            }
+        }
+    }
+
+    private void UpdateIsInTextMode(bool value)
+    {
+        IsInTextMode = value;
+        if (value)
+        {
+            // Disable other modes when text mode is enabled
+            if (IsInCropMode)
+            {
+                IsInCropMode = false;
+            }
+            if (ShowChromaKeyOptions)
+            {
+                ShowChromaKeyOptions = false;
+            }
+            if (IsInShapesMode)
+            {
+                IsInShapesMode = false;
             }
         }
     }
@@ -514,6 +598,33 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
         ShapeStrokeWidth = value;
+    }
+
+    private void UpdateTextColor(Color value)
+    {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text))
+        {
+            return;
+        }
+        TextColor = value;
+    }
+
+    private void UpdateTextFontFamily(string value)
+    {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text))
+        {
+            return;
+        }
+        TextFontFamily = value;
+    }
+
+    private void UpdateTextFontSize(float value)
+    {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text))
+        {
+            return;
+        }
+        TextFontSize = value;
     }
 
     public void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint)
@@ -598,6 +709,21 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (newShape != null)
         {
             _drawables.Add(newShape);
+            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public void OnTextAdded(Vector2 position, string text)
+    {
+        if (!IsInTextMode || !_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text))
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            var newText = new TextDrawable(position, text, TextColor, TextFontFamily, TextFontSize);
+            _drawables.Add(newText);
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
     }

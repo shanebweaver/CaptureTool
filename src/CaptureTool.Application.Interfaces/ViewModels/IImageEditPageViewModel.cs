@@ -25,6 +25,7 @@ public interface IImageEditPageViewModel : IViewModel
     IAsyncAppCommand PrintCommand { get; }
     IAsyncAppCommand ShareCommand { get; }
     IAppCommand ToggleShapesModeCommand { get; }
+    IAppCommand ToggleTextModeCommand { get; }
     IAppCommand<Color> UpdateChromaKeyColorCommand { get; }
     IAppCommand<ImageOrientation> UpdateOrientationCommand { get; }
     IAppCommand<Rectangle> UpdateCropRectCommand { get; }
@@ -36,6 +37,9 @@ public interface IImageEditPageViewModel : IViewModel
     IAppCommand<Color> UpdateShapeStrokeColorCommand { get; }
     IAppCommand<Color> UpdateShapeFillColorCommand { get; }
     IAppCommand<int> UpdateShapeStrokeWidthCommand { get; }
+    IAppCommand<Color> UpdateTextColorCommand { get; }
+    IAppCommand<string> UpdateTextFontFamilyCommand { get; }
+    IAppCommand<float> UpdateTextFontSizeCommand { get; }
     IAppCommand<int> UpdateZoomPercentageCommand { get; }
     IAppCommand<bool> UpdateAutoZoomLockCommand { get; }
     IAppCommand ZoomAndCenterCommand { get; }
@@ -50,10 +54,14 @@ public interface IImageEditPageViewModel : IViewModel
     string RotationDisplayName { get; }
     bool IsInCropMode { get; }
     bool IsInShapesMode { get; }
+    bool IsInTextMode { get; }
     ShapeType SelectedShapeType { get; }
     Color ShapeStrokeColor { get; }
     Color ShapeFillColor { get; }
     int ShapeStrokeWidth { get; }
+    Color TextColor { get; }
+    string TextFontFamily { get; }
+    float TextFontSize { get; }
     Rectangle CropRect { get; }
     bool ShowChromaKeyOptions { get; }
     int ChromaKeyTolerance { get; }
@@ -63,10 +71,12 @@ public interface IImageEditPageViewModel : IViewModel
     int SelectedChromaKeyColorOption { get; }
     bool IsChromaKeyAddOnOwned { get; }
     bool IsShapesFeatureEnabled { get; }
+    bool IsTextFeatureEnabled { get; }
     int ZoomPercentage { get; }
     bool IsAutoZoomLocked { get; }
 
     Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken);
     void OnCropInteractionComplete(Rectangle oldCropRect);
     void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint);
+    void OnTextAdded(Vector2 position, string text);
 }
