@@ -50,7 +50,8 @@
                 Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ToggleShapesModeCommand)}"
                 IsChecked="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
-                Label="Shapes">
+                Label="Shapes"
+                Visibility="{x:Bind ViewModel.IsShapesFeatureEnabled, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="&#xE91B;" />
                 </AppBarToggleButton.Icon>

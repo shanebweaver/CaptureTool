@@ -246,6 +246,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public bool IsShapesFeatureEnabled
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public int ZoomPercentage
     {
         get => field;
@@ -305,7 +311,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         CopyCommand = commandFactory.CreateAsync(ActivityIds.Copy, CopyAsync);
         ToggleCropModeCommand = commandFactory.Create(ActivityIds.ToggleCropMode, ToggleCropMode);
-        ToggleShapesModeCommand = commandFactory.Create(ActivityIds.ToggleShapesMode, ToggleShapesMode);
+        ToggleShapesModeCommand = commandFactory.Create(ActivityIds.ToggleShapesMode, ToggleShapesMode, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
         SaveCommand = commandFactory.CreateAsync(ActivityIds.Save, SaveAsync);
         UndoCommand = commandFactory.Create(ActivityIds.Undo, Undo);
         RedoCommand = commandFactory.Create(ActivityIds.Redo, Redo);
@@ -321,10 +327,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateDesaturationCommand = commandFactory.Create<int>(ActivityIds.UpdateDesaturation, UpdateDesaturation);
         UpdateToleranceCommand = commandFactory.Create<int>(ActivityIds.UpdateTolerance, UpdateTolerance);
         UpdateSelectedColorOptionIndexCommand = commandFactory.Create<int>(ActivityIds.UpdateSelectedColorOptionIndex, UpdateSelectedColorOptionIndex);
-        UpdateSelectedShapeTypeCommand = commandFactory.Create<ShapeType>(ActivityIds.UpdateSelectedShapeType, UpdateSelectedShapeType);
-        UpdateShapeStrokeColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeStrokeColor, UpdateShapeStrokeColor);
-        UpdateShapeFillColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeFillColor, UpdateShapeFillColor);
-        UpdateShapeStrokeWidthCommand = commandFactory.Create<int>(ActivityIds.UpdateShapeStrokeWidth, UpdateShapeStrokeWidth);
+        UpdateSelectedShapeTypeCommand = commandFactory.Create<ShapeType>(ActivityIds.UpdateSelectedShapeType, UpdateSelectedShapeType, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeStrokeColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeStrokeColor, UpdateShapeStrokeColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeFillColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeFillColor, UpdateShapeFillColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeStrokeWidthCommand = commandFactory.Create<int>(ActivityIds.UpdateShapeStrokeWidth, UpdateShapeStrokeWidth, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
         UpdateZoomPercentageCommand = commandFactory.Create<int>(ActivityIds.UpdateZoomPercentage, UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = commandFactory.Create<bool>(ActivityIds.UpdateAutoZoomLock, UpdateAutoZoomLock);
         ZoomAndCenterCommand = commandFactory.Create(ActivityIds.ZoomAndCenter, RequestZoomAndCenter);
@@ -366,6 +372,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                         }
                     }
                 }
+
+                IsShapesFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes);
 
                 InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
             }
@@ -474,27 +482,43 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateSelectedShapeType(ShapeType value)
     {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
         SelectedShapeType = value;
     }
 
     private void UpdateShapeStrokeColor(Color value)
     {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
         ShapeStrokeColor = value;
     }
 
     private void UpdateShapeFillColor(Color value)
     {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
         ShapeFillColor = value;
     }
 
     private void UpdateShapeStrokeWidth(int value)
     {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
         ShapeStrokeWidth = value;
     }
 
     public void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint)
     {
-        if (!IsInShapesMode)
+        if (!IsInShapesMode || !_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
         {
             return;
         }

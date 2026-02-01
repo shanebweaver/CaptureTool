@@ -62,6 +62,7 @@ public interface IImageEditPageViewModel : IViewModel
     IReadOnlyList<ChromaKeyColorOption> ChromaKeyColorOptions { get; }
     int SelectedChromaKeyColorOption { get; }
     bool IsChromaKeyAddOnOwned { get; }
+    bool IsShapesFeatureEnabled { get; }
     int ZoomPercentage { get; }
     bool IsAutoZoomLocked { get; }
 
