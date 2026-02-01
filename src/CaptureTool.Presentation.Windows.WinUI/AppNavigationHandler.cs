@@ -37,6 +37,10 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
         _shutdownHandler = shutdownHandler;
         _appNavigation = appNavigation;
         _videoCaptureHandler = videoCaptureHandler;
+        
+        // Ensure MainWindow is created during initialization to avoid crashes
+        // when protocol activation goes directly to overlays
+        _mainWindowHost.EnsureWindowCreated();
     }
 
     public async void HandleNavigationRequest(INavigationRequest request)

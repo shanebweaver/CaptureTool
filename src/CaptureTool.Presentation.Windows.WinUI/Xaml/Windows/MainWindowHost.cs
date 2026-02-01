@@ -19,6 +19,11 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
         _mainWindow = new MainWindow();
     }
 
+    public void EnsureWindowCreated()
+    {
+        EnsureCreated();
+    }
+
     public void ExcludeWindowFromCapture(bool exclude)
     {
         if (exclude)
