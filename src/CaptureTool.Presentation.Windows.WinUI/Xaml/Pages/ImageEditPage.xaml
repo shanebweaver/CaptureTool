@@ -161,13 +161,13 @@
             <StackPanel Orientation="Horizontal" Spacing="12">
                 <ComboBox
                     x:Name="ShapeTypeComboBox"
+                    x:Uid="ShapeTypeComboBox"
                     Width="120"
-                    Header="Shape Type"
                     SelectedIndex="0">
-                    <ComboBoxItem Content="Rectangle" Tag="0" />
-                    <ComboBoxItem Content="Ellipse" Tag="1" />
-                    <ComboBoxItem Content="Line" Tag="2" />
-                    <ComboBoxItem Content="Arrow" Tag="3" />
+                    <ComboBoxItem x:Uid="ShapeTypeComboBox_RectangleItem" Tag="0" />
+                    <ComboBoxItem x:Uid="ShapeTypeComboBox_EllipseItem" Tag="1" />
+                    <ComboBoxItem x:Uid="ShapeTypeComboBox_LineItem" Tag="2" />
+                    <ComboBoxItem x:Uid="ShapeTypeComboBox_ArrowItem" Tag="3" />
                 </ComboBox>
             </StackPanel>
         </Grid>

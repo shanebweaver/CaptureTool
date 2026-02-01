@@ -405,6 +405,26 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Draw shapes</value>
     <comment>The tooltip for the shapes button on the image edit page.</comment>
   </data>
+  <data name="ShapeTypeComboBox.Header" xml:space="preserve">
+    <value>Shape Type</value>
+    <comment>The header for the shape type selector combo box on the image edit page.</comment>
+  </data>
+  <data name="ShapeTypeComboBox_RectangleItem.Content" xml:space="preserve">
+    <value>Rectangle</value>
+    <comment>The rectangle shape option in the shape type selector.</comment>
+  </data>
+  <data name="ShapeTypeComboBox_EllipseItem.Content" xml:space="preserve">
+    <value>Ellipse</value>
+    <comment>The ellipse shape option in the shape type selector.</comment>
+  </data>
+  <data name="ShapeTypeComboBox_LineItem.Content" xml:space="preserve">
+    <value>Line</value>
+    <comment>The line shape option in the shape type selector.</comment>
+  </data>
+  <data name="ShapeTypeComboBox_ArrowItem.Content" xml:space="preserve">
+    <value>Arrow</value>
+    <comment>The arrow shape option in the shape type selector.</comment>
+  </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Rotate</value>
     <comment>The tool tip for the rotate button on the image edit page.</comment>

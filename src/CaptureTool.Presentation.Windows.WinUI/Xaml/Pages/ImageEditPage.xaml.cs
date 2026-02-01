@@ -26,6 +26,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ShapeTypeComboBox.SelectionChanged -= ShapeTypeComboBox_SelectionChanged;
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
+        ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
     }
 
     private string FormatZoomPercentage(int zoomPercentage)
