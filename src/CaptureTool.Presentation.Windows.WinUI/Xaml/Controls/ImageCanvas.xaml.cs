@@ -37,6 +37,12 @@ public sealed partial class ImageCanvas : UserControlBase
         typeof(ImageCanvas),
         new PropertyMetadata(false, OnIsCropModeEnabledPropertyChanged));
 
+    public static readonly DependencyProperty IsShapesModeEnabledProperty = DependencyProperty.Register(
+        nameof(IsShapesModeEnabled),
+        typeof(bool),
+        typeof(ImageCanvas),
+        new PropertyMetadata(false));
+
     public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
        nameof(CropRect),
        typeof(Rectangle),
@@ -117,6 +123,12 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(IsCropModeEnabledProperty, value);
     }
 
+    public bool IsShapesModeEnabled
+    {
+        get => Get<bool>(IsShapesModeEnabledProperty);
+        set => Set(IsShapesModeEnabledProperty, value);
+    }
+
     public Rectangle CropRect
     {
         get => Get<Rectangle>(CropRectProperty);
@@ -131,12 +143,14 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public event EventHandler<Rectangle>? InteractionComplete;
     public event EventHandler<Rectangle>? CropRectChanged;
+    public event EventHandler<(System.Numerics.Vector2 Start, System.Numerics.Vector2 End)>? ShapeDrawn;
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
 
     private readonly Lock _zoomUpdateLock = new Lock();
 
     private bool _isPointerDown;
     private Point _lastPointerPosition;
+    private Point? _shapeStartPoint;
 
     public ImageCanvas()
     {
@@ -374,6 +388,20 @@ public sealed partial class ImageCanvas : UserControlBase
     #region Panning
     private void RootContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (IsShapesModeEnabled)
+        {
+            // Get position relative to the RenderCanvas
+            var point = e.GetCurrentPoint(RenderCanvas);
+            if (point.Properties.IsLeftButtonPressed)
+            {
+                _shapeStartPoint = point.Position;
+                _isPointerDown = true;
+                RootContainer.CapturePointer(e.Pointer);
+                e.Handled = true;
+                return;
+            }
+        }
+
         _isPointerDown = true;
         _lastPointerPosition = e.GetCurrentPoint(RootContainer).Position;
         RootContainer.CapturePointer(e.Pointer);
@@ -383,6 +411,13 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (_isPointerDown)
         {
+            // In shapes mode, don't pan
+            if (IsShapesModeEnabled && _shapeStartPoint.HasValue)
+            {
+                e.Handled = true;
+                return;
+            }
+
             var currentPosition = e.GetCurrentPoint(RootContainer).Position;
             double deltaX = _lastPointerPosition.X - currentPosition.X;
             double deltaY = _lastPointerPosition.Y - currentPosition.Y;
@@ -404,6 +439,21 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RootContainer_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
+        if (IsShapesModeEnabled && _shapeStartPoint.HasValue)
+        {
+            // Get end position relative to the RenderCanvas
+            var endPoint = e.GetCurrentPoint(RenderCanvas).Position;
+            
+            // Convert to Vector2 and invoke event
+            var start = new System.Numerics.Vector2((float)_shapeStartPoint.Value.X, (float)_shapeStartPoint.Value.Y);
+            var end = new System.Numerics.Vector2((float)endPoint.X, (float)endPoint.Y);
+            
+            ShapeDrawn?.Invoke(this, (start, end));
+
+            _shapeStartPoint = null;
+            e.Handled = true;
+        }
+
         _isPointerDown = false;
         RootContainer.ReleasePointerCaptures();
     }
@@ -411,12 +461,14 @@ public sealed partial class ImageCanvas : UserControlBase
     private void RootContainer_PointerCanceled(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = false;
+        _shapeStartPoint = null;
         RootContainer.ReleasePointerCaptures();
     }
 
     private void RootContainer_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = false;
+        _shapeStartPoint = null;
     }
     #endregion
 

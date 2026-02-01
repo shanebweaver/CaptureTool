@@ -10,6 +10,9 @@ public sealed partial class DrawableJsonConverter : JsonConverter<IDrawable>
     {
         Rectangle = 0,
         Text,
+        Ellipse,
+        Line,
+        Arrow,
     }
 
     public override bool CanConvert(Type typeToConvert) => typeof(IDrawable).IsAssignableFrom(typeToConvert);
@@ -39,6 +42,15 @@ public sealed partial class DrawableJsonConverter : JsonConverter<IDrawable>
             case RectangleDrawable rectangleDrawable:
                 WriteSettingDefinition(ref writer, TypeDiscriminator.Rectangle, rectangleDrawable, DrawableJsonSerializerContext.Default.RectangleDrawable);
                 break;
+            case EllipseDrawable ellipseDrawable:
+                WriteSettingDefinition(ref writer, TypeDiscriminator.Ellipse, ellipseDrawable, DrawableJsonSerializerContext.Default.EllipseDrawable);
+                break;
+            case LineDrawable lineDrawable:
+                WriteSettingDefinition(ref writer, TypeDiscriminator.Line, lineDrawable, DrawableJsonSerializerContext.Default.LineDrawable);
+                break;
+            case ArrowDrawable arrowDrawable:
+                WriteSettingDefinition(ref writer, TypeDiscriminator.Arrow, arrowDrawable, DrawableJsonSerializerContext.Default.ArrowDrawable);
+                break;
             case TextDrawable textDrawable:
                 WriteSettingDefinition(ref writer, TypeDiscriminator.Text, textDrawable, DrawableJsonSerializerContext.Default.TextDrawable);
                 break;
@@ -60,6 +72,9 @@ public sealed partial class DrawableJsonConverter : JsonConverter<IDrawable>
             : typeDiscriminator switch
             {
                 TypeDiscriminator.Rectangle => JsonSerializer.Deserialize(ref reader, DrawableJsonSerializerContext.Default.RectangleDrawable),
+                TypeDiscriminator.Ellipse => JsonSerializer.Deserialize(ref reader, DrawableJsonSerializerContext.Default.EllipseDrawable),
+                TypeDiscriminator.Line => JsonSerializer.Deserialize(ref reader, DrawableJsonSerializerContext.Default.LineDrawable),
+                TypeDiscriminator.Arrow => JsonSerializer.Deserialize(ref reader, DrawableJsonSerializerContext.Default.ArrowDrawable),
                 TypeDiscriminator.Text => JsonSerializer.Deserialize(ref reader, DrawableJsonSerializerContext.Default.TextDrawable),
                 _ => throw new JsonException("Unknown TypeDiscriminator value")
             };
