@@ -79,6 +79,13 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             nint hwnd = window.GetWindowHandle();
             _windowHandles.Add(hwnd);
 
+            // Hide the window initially to prevent black flash while background image loads
+            try
+            {
+                window.AppWindow?.Hide();
+            }
+            catch { }
+
             _viewModel.AddWindowViewModel(window.ViewModel, monitor.IsPrimary);
             if (monitor.IsPrimary)
             {

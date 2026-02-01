@@ -28,7 +28,20 @@ public sealed partial class SelectionOverlayWindow : Window
         EnsureMaximized();
         InitializeComponent();
 
+        // Subscribe to background image loaded event to show window smoothly
+        RootView.BackgroundImageLoaded += OnBackgroundImageLoaded;
+
         ViewModel.Load(overlayOptions);
+    }
+
+    private void OnBackgroundImageLoaded(object? sender, EventArgs e)
+    {
+        // Show the window only after the background image has loaded to prevent black flash
+        try
+        {
+            AppWindow?.Show();
+        }
+        catch { }
     }
 
     private void EnsureMaximized()
@@ -55,6 +68,8 @@ public sealed partial class SelectionOverlayWindow : Window
     {
         Activated -= OnActivated;
         Closed -= OnClosed;
+
+        RootView.BackgroundImageLoaded -= OnBackgroundImageLoaded;
 
         try
         {

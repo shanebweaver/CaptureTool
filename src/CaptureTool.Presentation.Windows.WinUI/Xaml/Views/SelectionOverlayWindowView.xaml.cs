@@ -16,6 +16,8 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 {
     private WriteableBitmap? _backgroundBitmap;
 
+    public event EventHandler? BackgroundImageLoaded;
+
     public SelectionOverlayWindowView()
     {
         InitializeComponent();
@@ -126,6 +128,9 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
                 ImageSource = _backgroundBitmap,
                 Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
             };
+
+            // Notify that background image has been loaded
+            BackgroundImageLoaded?.Invoke(this, EventArgs.Empty);
         }
     }
 
