@@ -1,8 +1,12 @@
 # Audio Sample Speech-to-Text Scanner - Technology Research
 
+> **Implementation Status**: ✅ Windows Media Speech Recognition scanner implemented (see below)
+
 ## Executive Summary
 
 This document presents research findings and technology recommendations for implementing a speech-to-text metadata scanner for the CaptureTool application. The scanner will analyze audio samples from video captures and detect speech, outputting text that can be used for automatic caption generation.
+
+**Update (2026-02-01)**: The Windows Media Speech Recognition solution has been implemented as the initial scanner. See [Implementation Status](#implementation-status) section below.
 
 ## Current Architecture Context
 
@@ -365,7 +369,42 @@ I recommend a **hybrid approach**:
 - Warn users approaching limits
 - Provide usage statistics in settings
 
-## Next Steps
+## Implementation Status
+
+### ✅ Implemented: Windows Media Speech Recognition
+
+**Date**: 2026-02-01  
+**Implementation**: `WindowsMediaSpeechRecognitionScanner`  
+**Location**: `src/CaptureTool.Domain.Capture.Implementations.Windows/Metadata/Scanners/`
+
+The Windows Media Speech Recognition scanner has been implemented as the initial speech-to-text solution:
+
+**Features Implemented:**
+- ✅ Implements `IAudioMetadataScanner` interface
+- ✅ Uses Windows.Media.SpeechRecognition API (built-in to Windows 10/11)
+- ✅ Converts PCM audio samples to WAV format for recognition
+- ✅ Configured for dictation scenario (continuous speech)
+- ✅ Performance optimization: processes every 30th audio chunk
+- ✅ Skips samples shorter than 1 second for better accuracy
+- ✅ Returns metadata entries with speech text and confidence levels
+- ✅ Error handling and diagnostic logging
+- ✅ Implements IDisposable for proper resource cleanup
+- ✅ Registered in dependency injection container
+
+**Current Limitations:**
+- Basic implementation - may need refinement for stream-based audio input
+- Limited to Windows built-in speech recognition capabilities
+- Requires Windows 10/11 with speech recognition enabled
+- May need adjustment of sampling rate based on real-world testing
+
+**Next Steps for Enhancement:**
+1. Test with real audio capture scenarios
+2. Fine-tune sampling rate and audio chunk size
+3. Consider implementing Azure Speech or Whisper.net for improved accuracy
+4. Add configuration options for users to enable/disable
+5. Add UI to display recognized speech in captions
+
+## Future Enhancements
 
 1. **Get approval** on technology choice (Azure Speech + optional Whisper.net)
 2. **Proof of Concept**: Implement basic Azure Speech scanner
