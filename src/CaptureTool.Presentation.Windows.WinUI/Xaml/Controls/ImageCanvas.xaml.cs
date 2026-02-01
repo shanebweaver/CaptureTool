@@ -49,6 +49,12 @@ public sealed partial class ImageCanvas : UserControlBase
        typeof(ImageCanvas),
        new PropertyMetadata(Rectangle.Empty, OnCropRectPropertyChanged));
 
+    public static readonly DependencyProperty IsAutoZoomLockedProperty = DependencyProperty.Register(
+       nameof(IsAutoZoomLocked),
+       typeof(bool),
+       typeof(ImageCanvas),
+       new PropertyMetadata(false));
+
     private static void OnCropRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is ImageCanvas control && !control.IsCropModeEnabled)
@@ -129,9 +135,18 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(CropRectProperty, value);
     }
 
+    public bool IsAutoZoomLocked
+    {
+        get => Get<bool>(IsAutoZoomLockedProperty);
+        set => Set(IsAutoZoomLockedProperty, value);
+    }
+
     public event EventHandler<Rectangle>? InteractionComplete;
     public event EventHandler<Rectangle>? CropRectChanged;
     public event EventHandler<(System.Numerics.Vector2 Start, System.Numerics.Vector2 End)>? ShapeDrawn;
+    public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
+
+    private readonly Lock _zoomUpdateLock = new Lock();
 
     private bool _isPointerDown;
     private Point _lastPointerPosition;
@@ -140,6 +155,44 @@ public sealed partial class ImageCanvas : UserControlBase
     public ImageCanvas()
     {
         InitializeComponent();
+        Loaded += ImageCanvas_Loaded;
+        Unloaded += ImageCanvas_Unloaded;
+    }
+
+    private void ImageCanvas_Loaded(object sender, RoutedEventArgs e)
+    {
+        // Wire up the ViewChanged event after the control is loaded
+        if (CanvasScrollView != null)
+        {
+            CanvasScrollView.ViewChanged += CanvasScrollView_ViewChanged;
+        }
+    }
+
+    private void ImageCanvas_Unloaded(object sender, RoutedEventArgs e)
+    {
+        // Clean up event subscription to prevent memory leak
+        if (CanvasScrollView != null)
+        {
+            CanvasScrollView.ViewChanged -= CanvasScrollView_ViewChanged;
+        }
+    }
+
+    private void CanvasScrollView_ViewChanged(ScrollView? sender, object args)
+    {
+        if (sender == null)
+        {
+            return;
+        }
+
+        lock (_zoomUpdateLock)
+        {
+            double currentZoomFactor = sender.ZoomFactor;
+            // Only raise event if zoom actually changed (not just scroll position)
+            if (Math.Abs(currentZoomFactor - CanvasScrollView.ZoomFactor) > 1)
+            {
+                ZoomFactorChanged?.Invoke(this, (currentZoomFactor, ZoomUpdateSource.CanvasGesture));
+            }
+        }
     }
 
     #region Zoom, Center, and Size
@@ -241,6 +294,37 @@ public sealed partial class ImageCanvas : UserControlBase
                 null,
                 new(ScrollingAnimationMode.Auto)
             );
+
+            ZoomFactorChanged?.Invoke(this, (targetZoomFactor, ZoomUpdateSource.ZoomAndCenter));
+        }
+    }
+
+    public void ForceZoomAndCenter()
+    {
+        UpdateDrawingCanvasSize();
+        ZoomAndCenter();
+    }
+
+    public void SetZoom(double zoomLevel, ZoomUpdateSource source)
+    {
+        lock (this)
+        {
+            if (CanvasScrollView == null)
+            {
+                return;
+            }
+
+            CanvasScrollView.ZoomTo(
+                (float)zoomLevel,
+                null,
+                new(ScrollingAnimationMode.Auto)
+            );
+        }
+
+        // For non-programmatic sources, fire the event immediately
+        if (source != ZoomUpdateSource.Programmatic)
+        {
+            ZoomFactorChanged?.Invoke(this, (zoomLevel, source));
         }
     }
     #endregion
@@ -249,7 +333,10 @@ public sealed partial class ImageCanvas : UserControlBase
     public void InvalidateCanvas()
     {
         UpdateDrawingCanvasSize();
-        ZoomAndCenter();
+        if (!IsAutoZoomLocked)
+        {
+            ZoomAndCenter();
+        }
     }
 
     public void ForceCanvasRedrawWithResources()

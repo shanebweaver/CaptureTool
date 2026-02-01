@@ -50,6 +50,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         public static readonly string UpdateShapeStrokeColor = "UpdateShapeStrokeColor";
         public static readonly string UpdateShapeFillColor = "UpdateShapeFillColor";
         public static readonly string UpdateShapeStrokeWidth = "UpdateShapeStrokeWidth";
+        public static readonly string UpdateZoomPercentage = "UpdateZoomPercentage";
+        public static readonly string UpdateAutoZoomLock = "UpdateAutoZoomLock";
+        public static readonly string ZoomAndCenter = "ZoomAndCenter";
     }
 
     private const string TelemetryContext = "ImageEditPage";
@@ -71,6 +74,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly Stack<CanvasOperation> _operationsRedoStack;
 
     public event EventHandler? InvalidateCanvasRequested;
+    public event EventHandler? ForceZoomAndCenterRequested;
 
     public IAsyncAppCommand CopyCommand { get; }
     public IAppCommand ToggleCropModeCommand { get; }
@@ -94,6 +98,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IAppCommand<Color> UpdateShapeStrokeColorCommand { get; }
     public IAppCommand<Color> UpdateShapeFillColorCommand { get; }
     public IAppCommand<int> UpdateShapeStrokeWidthCommand { get; }
+    public IAppCommand<int> UpdateZoomPercentageCommand { get; }
+    public IAppCommand<bool> UpdateAutoZoomLockCommand { get; }
+    public IAppCommand ZoomAndCenterCommand { get; }
 
     public bool HasUndoStack
     {
@@ -239,6 +246,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public int ZoomPercentage
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsAutoZoomLocked
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public ImageEditPageViewModel(
         ILocalizationService localizationService,
         IStoreService storeService,
@@ -278,6 +297,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ShapeStrokeColor = Color.Black;
         ShapeFillColor = Color.Transparent;
         ShapeStrokeWidth = 3;
+        ZoomPercentage = 100;
+        IsAutoZoomLocked = false;
         _operationsUndoStack = [];
         _operationsRedoStack = [];
 
@@ -304,6 +325,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateShapeStrokeColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeStrokeColor, UpdateShapeStrokeColor);
         UpdateShapeFillColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeFillColor, UpdateShapeFillColor);
         UpdateShapeStrokeWidthCommand = commandFactory.Create<int>(ActivityIds.UpdateShapeStrokeWidth, UpdateShapeStrokeWidth);
+        UpdateZoomPercentageCommand = commandFactory.Create<int>(ActivityIds.UpdateZoomPercentage, UpdateZoomPercentage);
+        UpdateAutoZoomLockCommand = commandFactory.Create<bool>(ActivityIds.UpdateAutoZoomLock, UpdateAutoZoomLock);
+        ZoomAndCenterCommand = commandFactory.Create(ActivityIds.ZoomAndCenter, RequestZoomAndCenter);
     }
 
     public override Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
@@ -755,5 +779,25 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             ImageOrientation.Rotate270FlipX => true,
             _ => false,
         };
+    }
+
+    private void UpdateZoomPercentage(int percentage)
+    {
+        ZoomPercentage = Math.Clamp(percentage, 1, 200);
+    }
+
+    private void UpdateAutoZoomLock(bool isLocked)
+    {
+        IsAutoZoomLocked = isLocked;
+        if (!isLocked)
+        {
+            // When unlocking, trigger a zoom and center
+            RequestZoomAndCenter();
+        }
+    }
+
+    private void RequestZoomAndCenter()
+    {
+        ForceZoomAndCenterRequested?.Invoke(this, EventArgs.Empty);
     }
 }

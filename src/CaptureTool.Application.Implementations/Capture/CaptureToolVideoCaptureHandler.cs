@@ -79,14 +79,14 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             _metadataScannerRegistry != null)
         {
             _currentScanJob = _scanJobFactory.CreateJob(Guid.NewGuid(), _tempVideoPath, _metadataScannerRegistry);
+
+            // Set callbacks - ScreenRecorderImpl will apply them to the session
+            _audioSampleCallback = OnAudioSampleCallback;
+            _screenRecorder.SetAudioSampleCallback(_audioSampleCallback);
+
+            _videoFrameCallback = OnVideoFrameCallback;
+            _screenRecorder.SetVideoFrameCallback(_videoFrameCallback);
         }
-
-        // Set callbacks - ScreenRecorderImpl will apply them to the session
-        _audioSampleCallback = OnAudioSampleCallback;
-        _screenRecorder.SetAudioSampleCallback(_audioSampleCallback);
-
-        _videoFrameCallback = OnVideoFrameCallback;
-        _screenRecorder.SetVideoFrameCallback(_videoFrameCallback);
 
         // Start recording - callbacks will be automatically applied to the new session
         _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled);
@@ -147,10 +147,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
                     }
                 }
 
-                TryAutoSaveVideo(pendingVideo);
+                TryAutoSaveVideo(pendingVideo, currentScanJob?.MetadataFilePath);
                 _ = TryAutoCopyVideoAsync(pendingVideo);
-                // TODO: Also auto save the metadata file.
-                // TODO: Create auto save and auto copy options in the settings page.
             }
             catch (Exception ex)
             {
@@ -244,7 +242,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         }
     }
 
-    private bool TryAutoSaveVideo(VideoFile videoFile)
+    private bool TryAutoSaveVideo(VideoFile videoFile, string? metadataFilePath = null)
     {
         try
         {
@@ -265,6 +263,19 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             string newFilePath = Path.Combine(videosFolder, $"capture_{Guid.NewGuid()}.mp4");
 
             File.Copy(tempFilePath, newFilePath, true);
+
+            // Copy metadata file if it exists and the setting is enabled
+            if (!string.IsNullOrWhiteSpace(metadataFilePath) && 
+                File.Exists(metadataFilePath) &&
+                _featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MetadataCollection))
+            {
+                bool autoSaveMetadata = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_MetadataAutoSave);
+                if (autoSaveMetadata)
+                {
+                    string newMetadataFilePath = Path.ChangeExtension(newFilePath, MetadataFile.FileExtension);
+                    File.Copy(metadataFilePath, newMetadataFilePath, true);
+                }
+            }
 
             return true;
         }
