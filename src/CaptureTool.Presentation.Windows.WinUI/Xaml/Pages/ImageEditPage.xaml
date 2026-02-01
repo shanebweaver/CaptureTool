@@ -192,8 +192,7 @@
             <StackPanel Orientation="Horizontal" Spacing="12">
                 <TextBlock
                     x:Uid="TextOptionsLabel"
-                    VerticalAlignment="Center"
-                    Text="Click on the canvas to add text" />
+                    VerticalAlignment="Center" />
             </StackPanel>
         </Grid>
 

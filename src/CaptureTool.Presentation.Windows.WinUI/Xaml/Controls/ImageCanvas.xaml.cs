@@ -520,18 +520,20 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         var dialog = new ContentDialog
         {
-            Title = "Add Text",
-            PrimaryButtonText = "Add",
-            CloseButtonText = "Cancel",
+            Title = GetLocalizedString("TextInputDialog_Title"),
+            PrimaryButtonText = GetLocalizedString("TextInputDialog_PrimaryButton"),
+            CloseButtonText = GetLocalizedString("TextInputDialog_CloseButton"),
             DefaultButton = ContentDialogButton.Primary,
             XamlRoot = this.XamlRoot
         };
 
         var textBox = new TextBox
         {
-            PlaceholderText = "Enter text...",
-            AcceptsReturn = false,
-            MaxLength = 1000
+            PlaceholderText = GetLocalizedString("TextInputDialog_Placeholder"),
+            AcceptsReturn = true,
+            TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap,
+            MaxLength = 1000,
+            Height = 100
         };
 
         dialog.Content = textBox;
@@ -543,5 +545,11 @@ public sealed partial class ImageCanvas : UserControlBase
             var vector2Position = new System.Numerics.Vector2((float)position.X, (float)position.Y);
             TextAdded?.Invoke(this, (vector2Position, textBox.Text));
         }
+    }
+
+    private string GetLocalizedString(string key)
+    {
+        var resourceLoader = Microsoft.Windows.ApplicationModel.Resources.ResourceLoader.GetForViewIndependentUse();
+        return resourceLoader.GetString(key);
     }
 }

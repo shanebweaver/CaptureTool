@@ -421,6 +421,22 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Click on the canvas to add text</value>
     <comment>The instruction label for text mode on the image edit page.</comment>
   </data>
+  <data name="TextInputDialog_Title" xml:space="preserve">
+    <value>Add Text</value>
+    <comment>The title for the text input dialog.</comment>
+  </data>
+  <data name="TextInputDialog_PrimaryButton" xml:space="preserve">
+    <value>Add</value>
+    <comment>The primary button text for the text input dialog.</comment>
+  </data>
+  <data name="TextInputDialog_CloseButton" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>The close button text for the text input dialog.</comment>
+  </data>
+  <data name="TextInputDialog_Placeholder" xml:space="preserve">
+    <value>Enter text...</value>
+    <comment>The placeholder text for the text input dialog text box.</comment>
+  </data>
   <data name="ShapeTypeComboBox.Header" xml:space="preserve">
     <value>Shape Type</value>
     <comment>The header for the shape type selector combo box on the image edit page.</comment>
