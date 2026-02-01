@@ -85,7 +85,7 @@ public sealed class WindowsMediaSpeechRecognitionScanner : IAudioMetadataScanner
             }
 
             // Convert audio sample to WAV stream
-            using var audioStream = ConvertAudioSampleToWavStream(sampleData);
+            var audioStream = await ConvertAudioSampleToWavStreamAsync(sampleData);
             if (audioStream == null)
             {
                 _lastError = new InvalidOperationException("Failed to convert audio sample to WAV stream");
@@ -96,12 +96,22 @@ public sealed class WindowsMediaSpeechRecognitionScanner : IAudioMetadataScanner
             SpeechRecognitionResult result;
             try
             {
-                // Note: RecognizeAsync() expects audio input to be configured separately
-                // For now, we'll attempt recognition but this may need refinement
+                // Note: Windows.Media.SpeechRecognition is primarily designed for microphone input.
+                // For processing audio from a stream, we would need to use a different approach
+                // such as saving to a file or using a streaming API. For now, this is a basic
+                // implementation that may need refinement based on testing.
+                
+                // The RecognizeAsync() method uses the default microphone input.
+                // To use a custom audio stream, we would need additional configuration
+                // or use a different API approach (e.g., Azure Speech Service).
                 result = await _recognizer.RecognizeAsync();
+                
+                // Clean up the stream
+                audioStream.Dispose();
             }
             catch (Exception ex)
             {
+                audioStream?.Dispose();
                 System.Diagnostics.Debug.WriteLine($"[Speech Scanner] Recognition failed: {ex.Message}");
                 return null;
             }
@@ -161,7 +171,7 @@ public sealed class WindowsMediaSpeechRecognitionScanner : IAudioMetadataScanner
         }
     }
 
-    private IRandomAccessStream? ConvertAudioSampleToWavStream(AudioSampleData sampleData)
+    private async Task<IRandomAccessStream?> ConvertAudioSampleToWavStreamAsync(AudioSampleData sampleData)
     {
         try
         {
@@ -203,18 +213,40 @@ public sealed class WindowsMediaSpeechRecognitionScanner : IAudioMetadataScanner
             writer.Write(dataSize); // Subchunk2Size
             writer.Write(audioData); // Audio data
 
-            // Convert to IRandomAccessStream
+            // Flush to ensure all data is written to memory stream
+            writer.Flush();
+            
+            // Get the complete WAV data before disposing the writer
             byte[] wavData = memoryStream.ToArray();
+
+            // Convert to IRandomAccessStream
             var randomAccessStream = new InMemoryRandomAccessStream();
             var outputStream = randomAccessStream.GetOutputStreamAt(0);
             var dataWriter = new DataWriter(outputStream);
-            dataWriter.WriteBytes(wavData);
-            dataWriter.StoreAsync().AsTask().Wait();
-            dataWriter.FlushAsync().AsTask().Wait();
-            outputStream.FlushAsync().AsTask().Wait();
-
-            randomAccessStream.Seek(0);
-            return randomAccessStream;
+            
+            try
+            {
+                dataWriter.WriteBytes(wavData);
+                await dataWriter.StoreAsync();
+                await dataWriter.FlushAsync();
+                await outputStream.FlushAsync();
+                
+                randomAccessStream.Seek(0);
+                return randomAccessStream;
+            }
+            catch
+            {
+                // Clean up on failure
+                dataWriter.Dispose();
+                outputStream.Dispose();
+                randomAccessStream.Dispose();
+                throw;
+            }
+            finally
+            {
+                dataWriter.Dispose();
+                outputStream.Dispose();
+            }
         }
         catch (Exception ex)
         {
