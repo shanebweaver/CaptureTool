@@ -27,6 +27,9 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
         // OCR scanner
         services.AddSingleton<IVideoMetadataScanner, WindowsMediaOcrVideoMetadataScanner>();
 
+        // Speech recognition scanner
+        services.AddSingleton<IAudioMetadataScanner, WindowsMediaSpeechRecognitionScanner>();
+
         return services;
     }
 
