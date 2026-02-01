@@ -9,7 +9,7 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 
     public nint Handle => _mainWindow?.GetWindowHandle() ?? IntPtr.Zero;
 
-    private void EnsureCreated()
+    public void Initialize()
     {
         if (_mainWindow != null)
         {
@@ -33,9 +33,9 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 
     public void Show()
     {
-        EnsureCreated();
+        Initialize();
 
-        App.Current.DispatcherQueue.TryEnqueue(() =>
+        //App.Current.DispatcherQueue.TryEnqueue(() =>
         {
             if (_mainWindow == null)
             {
@@ -50,7 +50,7 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
             }
             _mainWindow.Activate();
             _mainWindow.SetForegroundWindow();
-        });
+        }//);
     }
 
     public void Hide()
