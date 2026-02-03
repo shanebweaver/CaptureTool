@@ -139,10 +139,24 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
             
             // Wait for the composition/rendering to actually paint the frame
             // Use a one-shot rendering event handler to show window after next frame is rendered
+            int renderingHandlerInvoked = 0;
             void OnRenderingForShow(object? sender, object args)
             {
-                Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= OnRenderingForShow;
-                _parentWindow?.ShowWindowWhenReady();
+                // Ensure this handler only executes once, even if multiple rendering events queue
+                if (Interlocked.CompareExchange(ref renderingHandlerInvoked, 1, 0) != 0)
+                {
+                    return;
+                }
+
+                try
+                {
+                    _parentWindow?.ShowWindowWhenReady();
+                }
+                finally
+                {
+                    // Always unsubscribe, even if ShowWindowWhenReady throws
+                    Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= OnRenderingForShow;
+                }
             }
 
             Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += OnRenderingForShow;
