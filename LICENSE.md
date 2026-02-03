@@ -1,6 +1,6 @@
 # PolyForm Noncommercial License 1.0.0 – Modified
 
-Copyright (c) Shane Weaver, 2025
+Copyright (c) Shane Weaver, 2026
 
 Permission is hereby granted to any individual or organization to use, copy, modify, and distribute this software, provided that:
 

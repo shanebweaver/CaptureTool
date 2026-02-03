@@ -214,7 +214,7 @@ This application is provided "as is", without any warranty of any kind. The deve
     <comment>The title of the terms of use dialog on the about page.</comment>
   </data>
   <data name="About_Copyright.Text" xml:space="preserve">
-    <value>© 2025 Shane Weaver. All rights reserved.</value>
+    <value>© 2026 Shane Weaver. All rights reserved.</value>
     <comment>Copyright symbol, the year, the publisher, all rights reserved. Shown on the about page.</comment>
   </data>
   <data name="About_DisclaimerOfLiability_ButtonLabel.Text" xml:space="preserve">
