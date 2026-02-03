@@ -12,6 +12,7 @@ public sealed partial class SelectionOverlayWindow : Window
 
     public Rectangle MonitorBounds { get; private set; }
     public bool IsClosed { get; private set; }
+    private bool _isWindowShown = false;
 
     public SelectionOverlayWindow(SelectionOverlayWindowOptions overlayOptions)
     {
@@ -26,9 +27,25 @@ public sealed partial class SelectionOverlayWindow : Window
         MonitorBounds = overlayOptions.Monitor.MonitorBounds;
 
         EnsureMaximized();
+        
+        // Hide window before initializing to prevent black flash
+        this.HideWindow();
+        
         InitializeComponent();
 
+        // Pass window reference to view so it can show when ready
+        RootView.SetParentWindow(this);
+
         ViewModel.Load(overlayOptions);
+    }
+
+    public void ShowWindowWhenReady()
+    {
+        if (!_isWindowShown && !IsClosed)
+        {
+            _isWindowShown = true;
+            this.ShowWindow();
+        }
     }
 
     private void EnsureMaximized()

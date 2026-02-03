@@ -1,6 +1,7 @@
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Themes;
+using CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
@@ -15,6 +16,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowViewBase
 {
     private WriteableBitmap? _backgroundBitmap;
+    private SelectionOverlayWindow? _parentWindow;
 
     public SelectionOverlayWindowView()
     {
@@ -27,6 +29,11 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         {
             UpdateRequestedAppTheme();
         });
+    }
+
+    public void SetParentWindow(SelectionOverlayWindow window)
+    {
+        _parentWindow = window;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -126,6 +133,9 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
                 ImageSource = _backgroundBitmap,
                 Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
             };
+
+            // Show window after background image is loaded to prevent black flash
+            _parentWindow?.ShowWindowWhenReady();
         }
     }
 

@@ -34,4 +34,10 @@ public static partial class Win32WindowExtensions
 
     public static bool IsMinimized(this Window window)
         => Win32WindowHelpers.IsMinimized(window.GetWindowHandle());
+
+    public static void HideWindow(this Window window)
+        => Win32WindowHelpers.HideWindow(window.GetWindowHandle());
+
+    public static void ShowWindow(this Window window)
+        => Win32WindowHelpers.ShowWindow(window.GetWindowHandle());
 }
