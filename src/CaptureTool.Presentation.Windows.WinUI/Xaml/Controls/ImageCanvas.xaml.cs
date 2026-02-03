@@ -443,11 +443,11 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             // Get end position relative to the RenderCanvas
             var endPoint = e.GetCurrentPoint(RenderCanvas).Position;
-            
+
             // Convert to Vector2 and invoke event
             var start = new System.Numerics.Vector2((float)_shapeStartPoint.Value.X, (float)_shapeStartPoint.Value.Y);
             var end = new System.Numerics.Vector2((float)endPoint.X, (float)endPoint.Y);
-            
+
             ShapeDrawn?.Invoke(this, (start, end));
 
             _shapeStartPoint = null;

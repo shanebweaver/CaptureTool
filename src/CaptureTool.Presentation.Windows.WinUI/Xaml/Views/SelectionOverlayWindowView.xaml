@@ -13,7 +13,22 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:ISelectionOverlayWindowViewModel}"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootPanel">
+    <local:SelectionOverlayWindowViewBase.Resources>
+        <Storyboard x:Name="FadeInStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetName="RootPanel"
+                Storyboard.TargetProperty="Opacity"
+                From="0"
+                To="1"
+                Duration="0:0:0.2">
+                <DoubleAnimation.EasingFunction>
+                    <QuadraticEase EasingMode="EaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+    </local:SelectionOverlayWindowViewBase.Resources>
+
+    <Grid x:Name="RootPanel" Opacity="0">
         <Grid PointerMoved="SelectionOverlayContainer_PointerMoved">
             <controls:SelectionOverlay x:Name="SelectionOverlay" />
         </Grid>

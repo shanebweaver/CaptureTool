@@ -4,18 +4,14 @@ using CaptureTool.Infrastructure.Interfaces.Themes;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media.Imaging;
 using System.ComponentModel;
 using System.Drawing;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI.Core;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 
 public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowViewBase
 {
-    private WriteableBitmap? _backgroundBitmap;
-
     public SelectionOverlayWindowView()
     {
         InitializeComponent();
@@ -31,6 +27,9 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        // Start fade-in animation
+        FadeInStoryboard.Begin();
+
         ViewModel.CaptureOptionsUpdated += ViewModel_CaptureOptionsUpdated;
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete += SelectionOverlay_SelectionComplete;
@@ -45,9 +44,9 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
             {
                 SelectionOverlay.CaptureType = selectedCaptureType.Value;
             }
-
-            LoadBackgroundImage();
         }
+
+        SetFocus();
     }
 
     private void ViewModel_CaptureOptionsUpdated(object? sender, CaptureOptions e)
@@ -69,19 +68,6 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         ViewModel.CaptureOptionsUpdated -= ViewModel_CaptureOptionsUpdated;
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;
-
-        CleanupBackgroundImage();
-    }
-
-    private void CleanupBackgroundImage()
-    {
-        if (RootPanel != null && RootPanel.Background is Microsoft.UI.Xaml.Media.ImageBrush imageBrush)
-        {
-            imageBrush.ImageSource = null;
-            RootPanel.Background = null;
-        }
-
-        _backgroundBitmap = null;
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -101,31 +87,6 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
             case nameof(ISelectionOverlayWindowViewModel.MonitorWindows):
                 SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
                 break;
-            case nameof(ISelectionOverlayWindowViewModel.Monitor):
-                LoadBackgroundImage();
-                break;
-        }
-    }
-
-    private void LoadBackgroundImage()
-    {
-        CleanupBackgroundImage();
-
-        if (ViewModel.Monitor is MonitorCaptureResult monitor && RootPanel is not null)
-        {
-            var monitorBounds = monitor.MonitorBounds;
-
-            _backgroundBitmap = new WriteableBitmap(monitorBounds.Width, monitorBounds.Height);
-            using (var stream = _backgroundBitmap.PixelBuffer.AsStream())
-            {
-                stream.Write(monitor.PixelBuffer, 0, monitor.PixelBuffer.Length);
-            }
-
-            RootPanel.Background = new Microsoft.UI.Xaml.Media.ImageBrush
-            {
-                ImageSource = _backgroundBitmap,
-                Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
-            };
         }
     }
 
@@ -181,5 +142,21 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
     private void ToolbarContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
         ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(0, 1));
+    }
+
+    public void SetFocus()
+    {
+        try
+        {
+            if (ViewModel.IsPrimary)
+            {
+                _ = SelectionToolbar.Focus(FocusState.Programmatic);
+            }
+            else
+            {
+                _ = SecretEscapeButton.Focus(FocusState.Programmatic);
+            }
+        }
+        catch { }
     }
 }

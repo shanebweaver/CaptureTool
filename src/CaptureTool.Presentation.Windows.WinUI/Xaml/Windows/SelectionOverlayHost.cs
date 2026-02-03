@@ -20,7 +20,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private readonly HashSet<nint> _windowHandles = [];
     private ISelectionOverlayHostViewModel? _viewModel;
     private DispatcherTimer? _foregroundTimer;
-    private Window? _primaryWindow;
+    private SelectionOverlayWindow? _primaryWindow;
     private bool _disposed;
 
     public event EventHandler? LostFocus;
@@ -79,11 +79,14 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             nint hwnd = window.GetWindowHandle();
             _windowHandles.Add(hwnd);
 
-            _viewModel.AddWindowViewModel(window.ViewModel, monitor.IsPrimary);
+            if (window.ViewModel != null)
+            {
+                _viewModel.AddWindowViewModel(window.ViewModel, monitor.IsPrimary);
+            }
+
             if (monitor.IsPrimary)
             {
                 _primaryWindow = window;
-                _primaryWindow.Activated += OnPrimaryWindowActivated;
             }
         }
     }
@@ -101,12 +104,37 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             return;
         }
 
+        // Activate non-primary windows first
         foreach (var window in _windows)
         {
-            window.Activate();
+            if (window != _primaryWindow)
+            {
+                window.Activate();
+            }
         }
 
+        // Activate primary window (shows it)
         _primaryWindow?.Activate();
+
+        // Now explicitly set the primary window as active and foreground
+        // This ensures proper focus order for keyboard navigation
+        if (_primaryWindow != null)
+        {
+            nint primaryHwnd = _primaryWindow.GetWindowHandle();
+            if (primaryHwnd != IntPtr.Zero)
+            {
+                Win32WindowHelpers.SetActiveWindow(primaryHwnd);
+                Win32WindowHelpers.SetForegroundWindow(primaryHwnd);
+
+                App.Current.DispatcherQueue.TryEnqueue(() =>
+                {
+                    _primaryWindow?.FocusContent();
+                });
+            }
+        }
+
+        // Start foreground monitor after activation
+        StartForegroundWindowWatcher();
     }
 
     public void Close()
@@ -120,7 +148,6 @@ internal sealed partial class SelectionOverlayHost : IDisposable
 
         if (_primaryWindow != null)
         {
-            _primaryWindow.Activated -= OnPrimaryWindowActivated;
             _primaryWindow = null;
         }
 
@@ -137,7 +164,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             {
                 if (!window.IsClosed)
                 {
-                    window.DispatcherQueue.TryEnqueue(window.Close);
+                    window.Close();
                 }
             }
             catch (Exception) { }
@@ -146,15 +173,6 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         _windows.Clear();
         _windowHandles.Clear();
         _monitors.Clear();
-    }
-
-    private void OnPrimaryWindowActivated(object sender, WindowActivatedEventArgs args)
-    {
-        if (sender is Window window)
-        {
-            window.Activated -= OnPrimaryWindowActivated;
-            StartForegroundWindowWatcher();
-        }
     }
 
     private void StartForegroundWindowWatcher()

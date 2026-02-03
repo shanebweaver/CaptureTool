@@ -6,6 +6,7 @@ CoWaitForMultipleObjects
 MonitorFromWindow
 GetMonitorInfo
 GetWindowRect
+GetClientRect
 GetDpiForWindow
 SetWindowPos
 GetForegroundWindow
@@ -19,3 +20,15 @@ DestroyWindow
 GetWindowLong
 SetWindowLong
 ShowWindow
+GetDC
+ReleaseDC
+CreateCompatibleDC
+DeleteDC
+CreateCompatibleBitmap
+SetDIBits
+CreatePatternBrush
+DeleteObject
+FillRect
+CreateSolidBrush
+GetStockObject
+
