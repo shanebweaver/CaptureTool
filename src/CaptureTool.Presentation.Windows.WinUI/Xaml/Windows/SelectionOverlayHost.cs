@@ -20,7 +20,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private readonly HashSet<nint> _windowHandles = [];
     private ISelectionOverlayHostViewModel? _viewModel;
     private DispatcherTimer? _foregroundTimer;
-    private Window? _primaryWindow;
+    private SelectionOverlayWindow? _primaryWindow;
     private bool _disposed;
 
     public event EventHandler? LostFocus;
@@ -83,7 +83,6 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             if (monitor.IsPrimary)
             {
                 _primaryWindow = window;
-                _primaryWindow.Activated += OnPrimaryWindowActivated;
             }
         }
     }
@@ -107,6 +106,9 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         }
 
         _primaryWindow?.Activate();
+        
+        // Start foreground monitor after activation
+        StartForegroundWindowWatcher();
     }
 
     public void Close()
@@ -120,7 +122,6 @@ internal sealed partial class SelectionOverlayHost : IDisposable
 
         if (_primaryWindow != null)
         {
-            _primaryWindow.Activated -= OnPrimaryWindowActivated;
             _primaryWindow = null;
         }
 
@@ -137,7 +138,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             {
                 if (!window.IsClosed)
                 {
-                    window.DispatcherQueue.TryEnqueue(window.Close);
+                    window.Close();
                 }
             }
             catch (Exception) { }
@@ -146,15 +147,6 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         _windows.Clear();
         _windowHandles.Clear();
         _monitors.Clear();
-    }
-
-    private void OnPrimaryWindowActivated(object sender, WindowActivatedEventArgs args)
-    {
-        if (sender is Window window)
-        {
-            window.Activated -= OnPrimaryWindowActivated;
-            StartForegroundWindowWatcher();
-        }
     }
 
     private void StartForegroundWindowWatcher()
