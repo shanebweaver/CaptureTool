@@ -45,6 +45,8 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
                 SelectionOverlay.CaptureType = selectedCaptureType.Value;
             }
         }
+
+        SetFocus();
     }
 
     private void ViewModel_CaptureOptionsUpdated(object? sender, CaptureOptions e)
@@ -142,12 +144,18 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(0, 1));
     }
 
-    public void FocusRootPanel()
+    public void SetFocus()
     {
         try
         {
-            // Try to focus the root panel to ensure keyboard input works
-            _ = RootPanel.Focus(FocusState.Programmatic);
+            if (ViewModel.IsPrimary)
+            {
+                _ = SelectionToolbar.Focus(FocusState.Programmatic);
+            }
+            else
+            {
+                _ = SecretEscapeButton.Focus(FocusState.Programmatic);
+            }
         }
         catch { }
     }

@@ -28,10 +28,7 @@
         </Storyboard>
     </local:SelectionOverlayWindowViewBase.Resources>
 
-    <Grid
-        x:Name="RootPanel"
-        IsTabStop="True"
-        Opacity="0">
+    <Grid x:Name="RootPanel" Opacity="0">
         <Grid PointerMoved="SelectionOverlayContainer_PointerMoved">
             <controls:SelectionOverlay x:Name="SelectionOverlay" />
         </Grid>

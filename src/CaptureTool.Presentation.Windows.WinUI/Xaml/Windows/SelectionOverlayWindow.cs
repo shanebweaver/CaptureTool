@@ -262,6 +262,9 @@ public sealed partial class SelectionOverlayWindow : IDisposable
                 SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
                 SET_WINDOW_POS_FLAGS.SWP_SHOWWINDOW |
                 SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+
+            Win32WindowHelpers.SetActiveWindow(GetWindowHandle());
+            Win32WindowHelpers.SetForegroundWindow(GetWindowHandle());
         }
     }
 
@@ -280,7 +283,7 @@ public sealed partial class SelectionOverlayWindow : IDisposable
             _xamlSource.NavigateFocus(request);
 
             // Set focus to the root panel to ensure keyboard input is captured
-            _view.FocusRootPanel();
+            _view.SetFocus();
         }
         catch { }
     }
