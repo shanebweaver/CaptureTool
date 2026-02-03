@@ -17,6 +17,7 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 {
     private WriteableBitmap? _backgroundBitmap;
     private SelectionOverlayWindow? _parentWindow;
+    private bool _isBackgroundReady = false;
 
     public SelectionOverlayWindowView()
     {
@@ -77,6 +78,7 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;
 
+        _isBackgroundReady = false;
         CleanupBackgroundImage();
     }
 
@@ -134,8 +136,24 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
                 Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
             };
 
-            // Show window after background image is loaded to prevent black flash
-            _parentWindow?.ShowWindowWhenReady();
+            // Force layout update to ensure background is measured and arranged
+            RootPanel.UpdateLayout();
+            
+            // Wait for the composition/rendering to actually paint the frame
+            // Use a one-shot rendering event handler to show window after next frame is rendered
+            void OnRenderingForShow(object? sender, object args)
+            {
+                Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= OnRenderingForShow;
+                
+                // Double-check that we're ready, then show the window
+                if (_isBackgroundReady)
+                {
+                    _parentWindow?.ShowWindowWhenReady();
+                }
+            }
+
+            _isBackgroundReady = true;
+            Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += OnRenderingForShow;
         }
     }
 
