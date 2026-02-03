@@ -7,7 +7,6 @@ using Microsoft.UI.Xaml.Hosting;
 using System.Collections.Concurrent;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Threading;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
@@ -15,16 +14,19 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 
-public sealed class SelectionOverlayWindow : IDisposable
+public sealed partial class SelectionOverlayWindow : IDisposable
 {
+    [DllImport("user32.dll")]
+    private static extern int FillRect(nint hDC, in RECT lprc, nint hbr);
+
     private static readonly ConcurrentDictionary<nint, SelectionOverlayWindow> _windowInstances = new();
 
-    private HWND _hwnd;
-    private DesktopWindowXamlSource? _xamlSource;
-    private SelectionOverlayWindowView? _view;
+    private readonly HWND _hwnd;
     private readonly Rectangle _monitorBounds;
     private readonly bool _isPrimary;
     private readonly SelectionOverlayWindowOptions _overlayOptions;
+    private DesktopWindowXamlSource? _xamlSource;
+    private SelectionOverlayWindowView? _view;
     private int _windowShownFlag = 0;
     private int _isClosed = 0; // Using int for Interlocked operations
     private bool _disposed = false;
@@ -162,7 +164,7 @@ public sealed class SelectionOverlayWindow : IDisposable
                     // Set the bitmap bits
                     fixed (byte* pSrc = pixelBuffer)
                     {
-                        PInvoke.SetDIBits(
+                        _ = PInvoke.SetDIBits(
                             hdc,
                             _backgroundBitmap,
                             0,
@@ -175,7 +177,7 @@ public sealed class SelectionOverlayWindow : IDisposable
 
                 // Create pattern brush from bitmap
                 _backgroundBrush = PInvoke.CreatePatternBrush(_backgroundBitmap);
-                
+
                 if (_backgroundBrush.IsNull)
                 {
                     // Failed to create brush, clean up bitmap and use fallback
@@ -183,7 +185,7 @@ public sealed class SelectionOverlayWindow : IDisposable
                     _backgroundBitmap = default;
                 }
             }
-            
+
             // Fallback: If bitmap or brush creation failed, create a solid black brush
             if (_backgroundBrush.IsNull)
             {
@@ -238,10 +240,7 @@ public sealed class SelectionOverlayWindow : IDisposable
         _view = new SelectionOverlayWindowView();
         _xamlSource.Content = _view;
 
-        if (ViewModel != null)
-        {
-            ViewModel.Load(overlayOptions);
-        }
+        ViewModel?.Load(overlayOptions);
     }
 
     public void Activate()
@@ -391,13 +390,13 @@ public sealed class SelectionOverlayWindow : IDisposable
                 {
                     // wParam contains the HDC
                     nint hdcValue = (nint)wParam.Value;
-                    RECT rect;
-                    PInvoke.GetClientRect(hwnd, out rect);
+                    PInvoke.GetClientRect(hwnd, out RECT rect);
 
-                    // Fill with our background brush using generated PInvoke method
-                    // Cast HBRUSH to HGDIOBJ for FillRect
-                    var hbrushObj = new HGDIOBJ(window._backgroundBrush.Value);
-                    PInvoke.FillRect((HDC)hdcValue, rect, hbrushObj);
+                    // Fill with our background brush using direct user32 FillRect
+                    unsafe
+                    {
+                        _ = FillRect(hdcValue, in rect, (nint)window._backgroundBrush.Value);
+                    }
                     return new LRESULT(1); // Return non-zero to indicate we handled it
                 }
             }

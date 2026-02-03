@@ -83,7 +83,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             {
                 _viewModel.AddWindowViewModel(window.ViewModel, monitor.IsPrimary);
             }
-            
+
             if (monitor.IsPrimary)
             {
                 _primaryWindow = window;

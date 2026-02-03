@@ -533,7 +533,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                     float y = Math.Min(startPoint.Y, endPoint.Y);
                     float width = Math.Abs(endPoint.X - startPoint.X);
                     float height = Math.Abs(endPoint.Y - startPoint.Y);
-                    
+
                     // Only create shape if it has a minimum size (at least 2 pixels)
                     if (width >= 2 && height >= 2)
                     {
@@ -552,7 +552,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                     float y = Math.Min(startPoint.Y, endPoint.Y);
                     float width = Math.Abs(endPoint.X - startPoint.X);
                     float height = Math.Abs(endPoint.Y - startPoint.Y);
-                    
+
                     // Only create shape if it has a minimum size (at least 2 pixels)
                     if (width >= 2 && height >= 2)
                     {

@@ -265,7 +265,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             File.Copy(tempFilePath, newFilePath, true);
 
             // Copy metadata file if it exists and the setting is enabled
-            if (!string.IsNullOrWhiteSpace(metadataFilePath) && 
+            if (!string.IsNullOrWhiteSpace(metadataFilePath) &&
                 File.Exists(metadataFilePath) &&
                 _featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MetadataCollection))
             {
