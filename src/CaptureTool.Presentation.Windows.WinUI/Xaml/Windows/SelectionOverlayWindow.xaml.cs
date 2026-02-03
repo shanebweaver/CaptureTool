@@ -13,7 +13,7 @@ public sealed partial class SelectionOverlayWindow : Window
 
     public Rectangle MonitorBounds { get; private set; }
     public bool IsClosed { get; private set; }
-    private int _isWindowShown = 0;  // Using int for Interlocked operations
+    private int _windowShownFlag = 0;  // Using int for Interlocked operations (0 = not shown, 1 = shown)
 
     public SelectionOverlayWindow(SelectionOverlayWindowOptions overlayOptions)
     {
@@ -43,7 +43,7 @@ public sealed partial class SelectionOverlayWindow : Window
     public void ShowWindowWhenReady()
     {
         // Use Interlocked for thread-safe check-and-set
-        if (Interlocked.CompareExchange(ref _isWindowShown, 1, 0) == 0 && !IsClosed)
+        if (Interlocked.CompareExchange(ref _windowShownFlag, 1, 0) == 0 && !IsClosed)
         {
             this.Show();
         }
