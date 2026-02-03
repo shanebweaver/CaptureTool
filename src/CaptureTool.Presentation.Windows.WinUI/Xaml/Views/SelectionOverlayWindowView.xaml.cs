@@ -120,6 +120,12 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
         if (ViewModel.Monitor is MonitorCaptureResult monitor && RootPanel is not null)
         {
+            // The Win32 window already has the background image set via hbrBackground
+            // So we can show the window immediately without waiting for XAML rendering
+            _parentWindow?.ShowWindowWhenReady();
+
+            // Optional: Still set the XAML background for any XAML elements that might render on top
+            // But this is no longer critical for preventing black flash
             var monitorBounds = monitor.MonitorBounds;
 
             _backgroundBitmap = new WriteableBitmap(monitorBounds.Width, monitorBounds.Height);
@@ -133,33 +139,6 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
                 ImageSource = _backgroundBitmap,
                 Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
             };
-
-            // Force layout update to ensure background is measured and arranged
-            RootPanel.UpdateLayout();
-            
-            // Wait for the composition/rendering to actually paint the frame
-            // Use a one-shot rendering event handler to show window after next frame is rendered
-            int handlerExecuted = 0;  // Using int (not bool) for Interlocked operations
-            void ShowAfterFirstRender(object? sender, object args)
-            {
-                // Ensure this handler only executes once, even if multiple rendering events queue
-                if (Interlocked.CompareExchange(ref handlerExecuted, 1, 0) != 0)
-                {
-                    return;
-                }
-
-                try
-                {
-                    _parentWindow?.ShowWindowWhenReady();
-                }
-                finally
-                {
-                    // Always unsubscribe, even if ShowWindowWhenReady throws
-                    Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= ShowAfterFirstRender;
-                }
-            }
-
-            Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += ShowAfterFirstRender;
         }
     }
 

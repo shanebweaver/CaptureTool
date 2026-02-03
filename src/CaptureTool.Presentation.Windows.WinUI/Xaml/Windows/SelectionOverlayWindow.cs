@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
@@ -20,9 +21,12 @@ public sealed class SelectionOverlayWindow : IDisposable
     private SelectionOverlayWindowView? _view;
     private readonly Rectangle _monitorBounds;
     private readonly bool _isPrimary;
+    private readonly SelectionOverlayWindowOptions _overlayOptions;
     private int _windowShownFlag = 0;
     private bool _isClosed = false;
     private bool _disposed = false;
+    private HBITMAP _backgroundBitmap;
+    private HBRUSH _backgroundBrush;
 
     public ISelectionOverlayWindowViewModel ViewModel => _view?.ViewModel!;
     public Rectangle MonitorBounds => _monitorBounds;
@@ -30,10 +34,11 @@ public sealed class SelectionOverlayWindow : IDisposable
 
     public SelectionOverlayWindow(SelectionOverlayWindowOptions overlayOptions)
     {
+        _overlayOptions = overlayOptions;
         _monitorBounds = overlayOptions.Monitor.MonitorBounds;
         _isPrimary = overlayOptions.Monitor.IsPrimary;
 
-        // Create the Win32 window initially hidden
+        // Create the Win32 window initially hidden with background image
         _hwnd = CreateWindow();
 
         // Initialize XAML content
@@ -43,6 +48,9 @@ public sealed class SelectionOverlayWindow : IDisposable
     private unsafe HWND CreateWindow()
     {
         const string className = "SelectionOverlayWindow";
+
+        // Create bitmap and brush from monitor pixel buffer
+        CreateBackgroundBrushFromMonitor();
 
         // Register window class (ignore if already registered)
         WNDCLASSEXW wndClass = new()
@@ -55,7 +63,7 @@ public sealed class SelectionOverlayWindow : IDisposable
             hInstance = HINSTANCE.Null,
             hIcon = HICON.Null,
             hCursor = HCURSOR.Null,
-            hbrBackground = HBRUSH.Null,
+            hbrBackground = _backgroundBrush, // Set our background brush
             lpszMenuName = null,
             hIconSm = HICON.Null
         };
@@ -93,6 +101,62 @@ public sealed class SelectionOverlayWindow : IDisposable
         }
 
         return hwnd;
+    }
+
+    private unsafe void CreateBackgroundBrushFromMonitor()
+    {
+        var monitor = _overlayOptions.Monitor;
+        var bounds = monitor.MonitorBounds;
+        var pixelBuffer = monitor.PixelBuffer;
+
+        // Create device context
+        HDC hdc = PInvoke.GetDC(new HWND(IntPtr.Zero));
+        HDC memDC = PInvoke.CreateCompatibleDC(hdc);
+
+        // Create bitmap info header
+        BITMAPINFO bmi = new()
+        {
+            bmiHeader = new BITMAPINFOHEADER
+            {
+                biSize = (uint)Marshal.SizeOf<BITMAPINFOHEADER>(),
+                biWidth = bounds.Width,
+                biHeight = -bounds.Height, // Negative for top-down DIB
+                biPlanes = 1,
+                biBitCount = 32, // BGRA8
+                biCompression = 0, // BI_RGB
+                biSizeImage = 0,
+                biXPelsPerMeter = 0,
+                biYPelsPerMeter = 0,
+                biClrUsed = 0,
+                biClrImportant = 0
+            }
+        };
+
+        // Create DIB section
+        void* pBits = null;
+        _backgroundBitmap = PInvoke.CreateDIBSection(
+            memDC,
+            &bmi,
+            0, // DIB_RGB_COLORS
+            &pBits,
+            null,
+            0);
+
+        if (_backgroundBitmap.Value != IntPtr.Zero && pBits != null)
+        {
+            // Copy pixel data
+            fixed (byte* pSrc = pixelBuffer)
+            {
+                Buffer.MemoryCopy(pSrc, pBits, pixelBuffer.Length, pixelBuffer.Length);
+            }
+
+            // Create pattern brush from bitmap
+            _backgroundBrush = PInvoke.CreatePatternBrush(_backgroundBitmap);
+        }
+
+        // Cleanup DCs
+        PInvoke.DeleteDC(memDC);
+        PInvoke.ReleaseDC(new HWND(IntPtr.Zero), hdc);
     }
 
     private void ApplyBorderlessStyles(HWND hwnd)
@@ -210,6 +274,19 @@ public sealed class SelectionOverlayWindow : IDisposable
                 PInvoke.DestroyWindow(_hwnd);
             }
             catch { }
+        }
+
+        // Clean up brush and bitmap
+        if (_backgroundBrush.Value != IntPtr.Zero)
+        {
+            PInvoke.DeleteObject(new HGDIOBJ(_backgroundBrush.Value));
+            _backgroundBrush = default;
+        }
+
+        if (_backgroundBitmap.Value != IntPtr.Zero)
+        {
+            PInvoke.DeleteObject(new HGDIOBJ(_backgroundBitmap.Value));
+            _backgroundBitmap = default;
         }
     }
 
