@@ -1,23 +1,17 @@
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Themes;
-using CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media.Imaging;
 using System.ComponentModel;
 using System.Drawing;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI.Core;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 
 public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowViewBase
 {
-    private WriteableBitmap? _backgroundBitmap;
-    private SelectionOverlayWindow? _parentWindow;
-
     public SelectionOverlayWindowView()
     {
         InitializeComponent();
@@ -31,13 +25,11 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         });
     }
 
-    public void SetParentWindow(SelectionOverlayWindow window)
-    {
-        _parentWindow = window;
-    }
-
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        // Start fade-in animation
+        FadeInStoryboard.Begin();
+        
         ViewModel.CaptureOptionsUpdated += ViewModel_CaptureOptionsUpdated;
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete += SelectionOverlay_SelectionComplete;
@@ -52,8 +44,6 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
             {
                 SelectionOverlay.CaptureType = selectedCaptureType.Value;
             }
-
-            LoadBackgroundImage();
         }
     }
 
@@ -76,19 +66,6 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         ViewModel.CaptureOptionsUpdated -= ViewModel_CaptureOptionsUpdated;
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;
-
-        CleanupBackgroundImage();
-    }
-
-    private void CleanupBackgroundImage()
-    {
-        if (RootPanel != null && RootPanel.Background is Microsoft.UI.Xaml.Media.ImageBrush imageBrush)
-        {
-            imageBrush.ImageSource = null;
-            RootPanel.Background = null;
-        }
-
-        _backgroundBitmap = null;
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -108,37 +85,6 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
             case nameof(ISelectionOverlayWindowViewModel.MonitorWindows):
                 SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
                 break;
-            case nameof(ISelectionOverlayWindowViewModel.Monitor):
-                LoadBackgroundImage();
-                break;
-        }
-    }
-
-    private void LoadBackgroundImage()
-    {
-        CleanupBackgroundImage();
-
-        if (ViewModel.Monitor is MonitorCaptureResult monitor && RootPanel is not null)
-        {
-            // The Win32 window already has the background image set via hbrBackground
-            // So we can show the window immediately without waiting for XAML rendering
-            _parentWindow?.ShowWindowWhenReady();
-
-            // Optional: Still set the XAML background for any XAML elements that might render on top
-            // But this is no longer critical for preventing black flash
-            var monitorBounds = monitor.MonitorBounds;
-
-            _backgroundBitmap = new WriteableBitmap(monitorBounds.Width, monitorBounds.Height);
-            using (var stream = _backgroundBitmap.PixelBuffer.AsStream())
-            {
-                stream.Write(monitor.PixelBuffer, 0, monitor.PixelBuffer.Length);
-            }
-
-            RootPanel.Background = new Microsoft.UI.Xaml.Media.ImageBrush
-            {
-                ImageSource = _backgroundBitmap,
-                Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
-            };
         }
     }
 
@@ -194,5 +140,15 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
     private void ToolbarContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
         ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(0, 1));
+    }
+
+    public void FocusRootPanel()
+    {
+        try
+        {
+            // Try to focus the root panel to ensure keyboard input works
+            _ = RootPanel.Focus(FocusState.Programmatic);
+        }
+        catch { }
     }
 }

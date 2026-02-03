@@ -100,12 +100,32 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             return;
         }
 
+        // Activate non-primary windows first
         foreach (var window in _windows)
         {
-            window.Activate();
+            if (window != _primaryWindow)
+            {
+                window.Activate();
+            }
         }
 
+        // Activate primary window (shows it)
         _primaryWindow?.Activate();
+
+        // Now explicitly set the primary window as active and foreground
+        // This ensures proper focus order for keyboard navigation
+        if (_primaryWindow != null)
+        {
+            nint primaryHwnd = _primaryWindow.GetWindowHandle();
+            if (primaryHwnd != IntPtr.Zero)
+            {
+                Win32WindowHelpers.SetActiveWindow(primaryHwnd);
+                Win32WindowHelpers.SetForegroundWindow(primaryHwnd);
+                
+                // Focus the XAML content to ensure keyboard input works
+                _primaryWindow.FocusContent();
+            }
+        }
         
         // Start foreground monitor after activation
         StartForegroundWindowWatcher();
