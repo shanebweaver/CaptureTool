@@ -4,7 +4,6 @@ using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Hosting;
-using Microsoft.Win32.SafeHandles;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -16,19 +15,6 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 
 public sealed class SelectionOverlayWindow : IDisposable
 {
-    internal sealed class DestroyIconSafeHandle : SafeHandleZeroOrMinusOneIsInvalid
-    {
-        public DestroyIconSafeHandle(HINSTANCE hINSTANCE) : base(true)
-        {
-            handle = hINSTANCE;
-        }
-
-        protected override bool ReleaseHandle()
-        {
-            return PInvoke.DestroyIcon(new(handle));
-        }
-    }
-
     private HWND _hwnd;
     private DesktopWindowXamlSource? _xamlSource;
     private SelectionOverlayWindowView? _view;
@@ -58,7 +44,7 @@ public sealed class SelectionOverlayWindow : IDisposable
     {
         const string className = "SelectionOverlayWindow";
 
-        // Register window class
+        // Register window class (ignore if already registered)
         WNDCLASSEXW wndClass = new()
         {
             cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
@@ -76,8 +62,9 @@ public sealed class SelectionOverlayWindow : IDisposable
         fixed (char* name = className)
         {
             wndClass.lpszClassName = name;
+            // Try to register; ignore ERROR_CLASS_ALREADY_EXISTS
+            PInvoke.RegisterClassEx(in wndClass);
         }
-        PInvoke.RegisterClassEx(in wndClass);
 
         // Create window WITHOUT WS_VISIBLE flag - window starts hidden
         HWND hwnd = PInvoke.CreateWindowEx(
@@ -91,7 +78,7 @@ public sealed class SelectionOverlayWindow : IDisposable
             _monitorBounds.Height,
             new(IntPtr.Zero),
             null,
-            new DestroyIconSafeHandle(wndClass.hInstance),
+            HINSTANCE.Null,
             null);
 
         // Apply borderless styles without showing
@@ -134,6 +121,7 @@ public sealed class SelectionOverlayWindow : IDisposable
             SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
             SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
             SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE |
+            SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER |
             SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED);
     }
 
@@ -177,6 +165,10 @@ public sealed class SelectionOverlayWindow : IDisposable
 
     public nint GetWindowHandle()
     {
+        if (_isClosed || _disposed)
+        {
+            return IntPtr.Zero;
+        }
         return _hwnd;
     }
 
