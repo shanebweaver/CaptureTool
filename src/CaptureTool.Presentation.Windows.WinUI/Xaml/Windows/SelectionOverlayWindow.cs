@@ -238,7 +238,10 @@ public sealed class SelectionOverlayWindow : IDisposable
         _view = new SelectionOverlayWindowView();
         _xamlSource.Content = _view;
 
-        ViewModel.Load(overlayOptions);
+        if (ViewModel != null)
+        {
+            ViewModel.Load(overlayOptions);
+        }
     }
 
     public void Activate()
@@ -392,7 +395,9 @@ public sealed class SelectionOverlayWindow : IDisposable
                     PInvoke.GetClientRect(hwnd, out rect);
 
                     // Fill with our background brush using generated PInvoke method
-                    PInvoke.FillRect((HDC)hdcValue, rect, window._backgroundBrush);
+                    // Cast HBRUSH to HGDIOBJ for FillRect
+                    var hbrushObj = new HGDIOBJ(window._backgroundBrush.Value);
+                    PInvoke.FillRect((HDC)hdcValue, rect, hbrushObj);
                     return new LRESULT(1); // Return non-zero to indicate we handled it
                 }
             }

@@ -79,7 +79,11 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             nint hwnd = window.GetWindowHandle();
             _windowHandles.Add(hwnd);
 
-            _viewModel.AddWindowViewModel(window.ViewModel, monitor.IsPrimary);
+            if (window.ViewModel != null)
+            {
+                _viewModel.AddWindowViewModel(window.ViewModel, monitor.IsPrimary);
+            }
+            
             if (monitor.IsPrimary)
             {
                 _primaryWindow = window;
