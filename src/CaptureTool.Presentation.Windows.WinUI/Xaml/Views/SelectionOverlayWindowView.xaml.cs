@@ -17,7 +17,6 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 {
     private WriteableBitmap? _backgroundBitmap;
     private SelectionOverlayWindow? _parentWindow;
-    private bool _isBackgroundReady = false;
 
     public SelectionOverlayWindowView()
     {
@@ -78,7 +77,6 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;
 
-        _isBackgroundReady = false;
         CleanupBackgroundImage();
     }
 
@@ -144,15 +142,9 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
             void OnRenderingForShow(object? sender, object args)
             {
                 Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= OnRenderingForShow;
-                
-                // Double-check that we're ready, then show the window
-                if (_isBackgroundReady)
-                {
-                    _parentWindow?.ShowWindowWhenReady();
-                }
+                _parentWindow?.ShowWindowWhenReady();
             }
 
-            _isBackgroundReady = true;
             Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += OnRenderingForShow;
         }
     }
