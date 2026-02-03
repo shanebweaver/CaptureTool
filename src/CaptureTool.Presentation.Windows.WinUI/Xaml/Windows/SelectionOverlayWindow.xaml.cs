@@ -3,6 +3,7 @@ using CaptureTool.Application.Interfaces.ViewModels.Options;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using System.Drawing;
+using System.Threading;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 
@@ -12,7 +13,7 @@ public sealed partial class SelectionOverlayWindow : Window
 
     public Rectangle MonitorBounds { get; private set; }
     public bool IsClosed { get; private set; }
-    private bool _isWindowShown = false;
+    private int _isWindowShown = 0;  // Using int for Interlocked operations
 
     public SelectionOverlayWindow(SelectionOverlayWindowOptions overlayOptions)
     {
@@ -29,7 +30,7 @@ public sealed partial class SelectionOverlayWindow : Window
         EnsureMaximized();
         
         // Hide window before initializing to prevent black flash
-        this.HideWindow();
+        this.Hide();
         
         InitializeComponent();
 
@@ -41,10 +42,10 @@ public sealed partial class SelectionOverlayWindow : Window
 
     public void ShowWindowWhenReady()
     {
-        if (!_isWindowShown && !IsClosed)
+        // Use Interlocked for thread-safe check-and-set
+        if (Interlocked.CompareExchange(ref _isWindowShown, 1, 0) == 0 && !IsClosed)
         {
-            _isWindowShown = true;
-            this.ShowWindow();
+            this.Show();
         }
     }
 
