@@ -128,7 +128,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
             }
         }
     }
-    
+
     private async void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         int newPercentage = (int)e.NewValue;

@@ -16,7 +16,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 public sealed class SelectionOverlayWindow : IDisposable
 {
     private static readonly Dictionary<nint, SelectionOverlayWindow> _windowInstances = new();
-    
+
     private HWND _hwnd;
     private DesktopWindowXamlSource? _xamlSource;
     private SelectionOverlayWindowView? _view;
@@ -96,7 +96,7 @@ public sealed class SelectionOverlayWindow : IDisposable
 
         // Apply borderless styles without showing
         ApplyBorderlessStyles(hwnd);
-        
+
         // Set final position and size in one atomic operation while still hidden
         PInvoke.SetWindowPos(
             hwnd,
@@ -136,7 +136,7 @@ public sealed class SelectionOverlayWindow : IDisposable
             int headerSize = sizeof(BITMAPINFOHEADER);
             int bmiSize = headerSize;
             byte[] bmiBytes = new byte[bmiSize];
-            
+
             fixed (byte* pBmi = bmiBytes)
             {
                 BITMAPINFOHEADER* bmiHeader = (BITMAPINFOHEADER*)pBmi;
@@ -146,7 +146,7 @@ public sealed class SelectionOverlayWindow : IDisposable
                 bmiHeader->biPlanes = 1;
                 bmiHeader->biBitCount = 32;
                 bmiHeader->biCompression = 0; // BI_RGB
-                
+
                 // Set the bitmap bits
                 fixed (byte* pSrc = pixelBuffer)
                 {
@@ -300,7 +300,7 @@ public sealed class SelectionOverlayWindow : IDisposable
             {
                 // Unregister this instance
                 _windowInstances.Remove((nint)_hwnd.Value);
-                
+
                 try
                 {
                     PInvoke.DestroyWindow(_hwnd);
@@ -328,7 +328,7 @@ public sealed class SelectionOverlayWindow : IDisposable
     {
         const uint WM_ERASEBKGND = 0x0014;
         const uint WM_ACTIVATE = 0x0006;
-        
+
         // Handle window activation - when user clicks on any window
         if (msg == WM_ACTIVATE)
         {
@@ -342,13 +342,13 @@ public sealed class SelectionOverlayWindow : IDisposable
                 {
                     // Ensure this window is foreground
                     Win32WindowHelpers.SetForegroundWindow(hwnd);
-                    
+
                     // Focus the XAML content
                     window.FocusContent();
                 }
             }
         }
-        
+
         // Handle background painting for this specific window instance
         if (msg == WM_ERASEBKGND)
         {
@@ -361,14 +361,14 @@ public sealed class SelectionOverlayWindow : IDisposable
                     nint hdcValue = (nint)wParam.Value;
                     RECT rect;
                     PInvoke.GetClientRect(hwnd, out rect);
-                    
+
                     // Fill with our background brush - use raw Win32 API
                     FillRect((IntPtr)hdcValue, ref rect, window._backgroundBrush);
                     return new LRESULT(1); // Return non-zero to indicate we handled it
                 }
             }
         }
-        
+
         return PInvoke.DefWindowProc(hwnd, msg, wParam, lParam);
     }
 

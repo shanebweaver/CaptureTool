@@ -121,12 +121,12 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             {
                 Win32WindowHelpers.SetActiveWindow(primaryHwnd);
                 Win32WindowHelpers.SetForegroundWindow(primaryHwnd);
-                
+
                 // Focus the XAML content to ensure keyboard input works
                 _primaryWindow.FocusContent();
             }
         }
-        
+
         // Start foreground monitor after activation
         StartForegroundWindowWatcher();
     }

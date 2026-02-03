@@ -29,7 +29,7 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
     {
         // Start fade-in animation
         FadeInStoryboard.Begin();
-        
+
         ViewModel.CaptureOptionsUpdated += ViewModel_CaptureOptionsUpdated;
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         SelectionOverlay.SelectionComplete += SelectionOverlay_SelectionComplete;
