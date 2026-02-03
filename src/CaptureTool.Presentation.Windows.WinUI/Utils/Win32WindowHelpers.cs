@@ -149,14 +149,4 @@ public static partial class Win32WindowHelpers
     {
         return PInvoke.IsIconic(new HWND(hwnd));
     }
-
-    public static void HideWindow(nint windowHandle)
-    {
-        PInvoke.ShowWindow(new HWND(windowHandle), SHOW_WINDOW_CMD.SW_HIDE);
-    }
-
-    public static void ShowWindow(nint windowHandle)
-    {
-        PInvoke.ShowWindow(new HWND(windowHandle), SHOW_WINDOW_CMD.SW_SHOW);
-    }
 }
