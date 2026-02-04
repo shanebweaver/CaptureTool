@@ -38,6 +38,14 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly IFactoryServiceWithArgs<ICaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
     
     private bool _isUpdatingFromExternalSource;
+    
+    // Properties monitored by the host that should not raise PropertyChanged when updated externally
+    private static readonly HashSet<string> _hostMonitoredProperties =
+    [
+        nameof(SelectedCaptureTypeIndex),
+        nameof(SelectedCaptureModeIndex),
+        nameof(CaptureArea)
+    ];
 
     private static readonly CaptureType[] _imageCaptureTypes = [
         CaptureType.Rectangle,
@@ -76,7 +84,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     public int SelectedCaptureTypeIndex
     {
         get => field;
-        private set => SetWithoutExternalNotification(ref field, value);
+        private set => SetSuppressingExternalEcho(ref field, value);
     }
 
     public CaptureType? GetSelectedCaptureType()
@@ -99,7 +107,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     public int SelectedCaptureModeIndex
     {
         get => field;
-        private set => SetWithoutExternalNotification(ref field, value);
+        private set => SetSuppressingExternalEcho(ref field, value);
     }
 
     public CaptureMode? GetSelectedCaptureMode()
@@ -110,7 +118,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     public Rectangle CaptureArea
     {
         get => field;
-        private set => SetWithoutExternalNotification(ref field, value);
+        private set => SetSuppressingExternalEcho(ref field, value);
     }
 
     public MonitorCaptureResult? Monitor
@@ -195,22 +203,21 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     }
 
     /// <summary>
-    /// Custom property setter that suppresses PropertyChanged notifications when updating from external sources.
-    /// This prevents the host from reacting to changes it initiated, breaking the propagation cycle.
+    /// Custom property setter that suppresses PropertyChanged notifications for host-monitored properties
+    /// when updating from external sources. This prevents echo events that would cause propagation cycles.
     /// </summary>
-    private bool SetWithoutExternalNotification<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
+    private bool SetSuppressingExternalEcho<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
     {
         if (!System.Collections.Generic.EqualityComparer<T>.Default.Equals(field, value))
         {
             field = value;
             
-            // Only raise PropertyChanged if not updating from external source for monitored properties
-            bool shouldRaisePropertyChanged = !_isUpdatingFromExternalSource || 
-                (propertyName != nameof(SelectedCaptureTypeIndex) && 
-                 propertyName != nameof(SelectedCaptureModeIndex) && 
-                 propertyName != nameof(CaptureArea));
+            // Suppress PropertyChanged if this is an external update of a host-monitored property
+            bool isExternalUpdateOfMonitoredProperty = _isUpdatingFromExternalSource && 
+                                                       propertyName != null && 
+                                                       _hostMonitoredProperties.Contains(propertyName);
             
-            if (shouldRaisePropertyChanged && propertyName != null)
+            if (!isExternalUpdateOfMonitoredProperty && propertyName != null)
             {
                 RaisePropertyChanged(propertyName);
             }
