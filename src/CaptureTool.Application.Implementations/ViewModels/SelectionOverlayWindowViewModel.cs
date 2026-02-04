@@ -257,7 +257,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void UpdateSelectedCaptureMode(int index)
     {
-        // Mark this as an external update to prevent circular propagation
+        // Set flag to prevent this update from being propagated to other windows
+        // (avoiding circular updates when this method is called by the host VM)
         _isUpdatingFromExternalSource = true;
         try
         {
@@ -272,7 +273,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void UpdateSelectedCaptureType(int index)
     {
-        // Mark this as an external update to prevent circular propagation
+        // Set flag to prevent this update from being propagated to other windows
+        // (avoiding circular updates when this method is called by the host VM)
         _isUpdatingFromExternalSource = true;
         try
         {
