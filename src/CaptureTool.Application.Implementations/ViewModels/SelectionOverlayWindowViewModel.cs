@@ -36,6 +36,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IFactoryServiceWithArgs<ICaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
+    
+    private bool _isUpdatingFromExternalSource;
 
     private static readonly CaptureType[] _imageCaptureTypes = [
         CaptureType.Rectangle,
@@ -74,7 +76,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     public int SelectedCaptureTypeIndex
     {
         get => field;
-        private set => Set(ref field, value);
+        private set => SetWithoutExternalNotification(ref field, value);
     }
 
     public CaptureType? GetSelectedCaptureType()
@@ -97,7 +99,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     public int SelectedCaptureModeIndex
     {
         get => field;
-        private set => Set(ref field, value);
+        private set => SetWithoutExternalNotification(ref field, value);
     }
 
     public CaptureMode? GetSelectedCaptureMode()
@@ -108,7 +110,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     public Rectangle CaptureArea
     {
         get => field;
-        private set => Set(ref field, value);
+        private set => SetWithoutExternalNotification(ref field, value);
     }
 
     public MonitorCaptureResult? Monitor
@@ -192,6 +194,32 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         IsDesktopAudioEnabled = true;
     }
 
+    /// <summary>
+    /// Custom property setter that suppresses PropertyChanged notifications when updating from external sources.
+    /// This prevents the host from reacting to changes it initiated, breaking the propagation cycle.
+    /// </summary>
+    private bool SetWithoutExternalNotification<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
+    {
+        if (!System.Collections.Generic.EqualityComparer<T>.Default.Equals(field, value))
+        {
+            field = value;
+            
+            // Only raise PropertyChanged if not updating from external source for monitored properties
+            bool shouldRaisePropertyChanged = !_isUpdatingFromExternalSource || 
+                (propertyName != nameof(SelectedCaptureTypeIndex) && 
+                 propertyName != nameof(SelectedCaptureModeIndex) && 
+                 propertyName != nameof(CaptureArea));
+            
+            if (shouldRaisePropertyChanged && propertyName != null)
+            {
+                RaisePropertyChanged(propertyName);
+            }
+            return true;
+        }
+
+        return false;
+    }
+
     public override void Load(SelectionOverlayWindowOptions options)
     {
         TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.Load, () =>
@@ -228,7 +256,15 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void UpdateCaptureArea(Rectangle area)
     {
-        CaptureArea = area;
+        _isUpdatingFromExternalSource = true;
+        try
+        {
+            CaptureArea = area;
+        }
+        finally
+        {
+            _isUpdatingFromExternalSource = false;
+        }
     }
 
     private void UpdateCaptureOptions(CaptureOptions options)
@@ -248,13 +284,29 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void UpdateSelectedCaptureMode(int index)
     {
-        SelectedCaptureModeIndex = index;
-        UpdateSupportedCaptureTypes();
+        _isUpdatingFromExternalSource = true;
+        try
+        {
+            SelectedCaptureModeIndex = index;
+            UpdateSupportedCaptureTypes();
+        }
+        finally
+        {
+            _isUpdatingFromExternalSource = false;
+        }
     }
 
     private void UpdateSelectedCaptureType(int index)
     {
-        SelectedCaptureTypeIndex = index;
+        _isUpdatingFromExternalSource = true;
+        try
+        {
+            SelectedCaptureTypeIndex = index;
+        }
+        finally
+        {
+            _isUpdatingFromExternalSource = false;
+        }
     }
 
     private void UpdateSupportedCaptureTypes()
