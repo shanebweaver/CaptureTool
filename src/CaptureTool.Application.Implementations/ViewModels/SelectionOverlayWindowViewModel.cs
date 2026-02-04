@@ -252,7 +252,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     {
         SelectedCaptureModeIndex = args.Index;
         UpdateSupportedCaptureTypes();
-        
+
         // Raise event with source information for propagation control
         CaptureModeIndexChanged?.Invoke(this, args);
     }
@@ -260,7 +260,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private void UpdateSelectedCaptureType((int Index, SelectionUpdateSource Source) args)
     {
         SelectedCaptureTypeIndex = args.Index;
-        
+
         // Raise event with source information for propagation control
         CaptureTypeIndexChanged?.Invoke(this, args);
     }
