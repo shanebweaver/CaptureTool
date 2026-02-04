@@ -37,12 +37,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IFactoryServiceWithArgs<ICaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
-    // Flag to suppress propagation when this window is being updated by the host VM
-    // to prevent circular updates between windows.
-    // Note: This flag is not thread-safe, but is safe for this use case since all
-    // ViewModel updates and PropertyChanged notifications occur on the UI thread.
-    private bool _isSuppressingPropagation;
-
     private static readonly CaptureType[] _imageCaptureTypes = [
         CaptureType.Rectangle,
         CaptureType.Window,
@@ -56,20 +50,16 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public IAppCommand RequestCaptureCommand { get; }
     public IAppCommand CloseOverlayCommand { get; }
-    public IAppCommand<int> UpdateSelectedCaptureModeCommand { get; }
-    public IAppCommand<int> UpdateSelectedCaptureTypeCommand { get; }
+    public IAppCommand<(int Index, SelectionUpdateSource Source)> UpdateSelectedCaptureModeCommand { get; }
+    public IAppCommand<(int Index, SelectionUpdateSource Source)> UpdateSelectedCaptureTypeCommand { get; }
     public IAppCommand<Rectangle> UpdateCaptureAreaCommand { get; }
     public IAppCommand<CaptureOptions> UpdateCaptureOptionsCommand { get; }
 
     public event EventHandler<CaptureOptions>? CaptureOptionsUpdated;
+    public event EventHandler<(int Index, SelectionUpdateSource Source)>? CaptureModeIndexChanged;
+    public event EventHandler<(int Index, SelectionUpdateSource Source)>? CaptureTypeIndexChanged;
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
-
-    /// <summary>
-    /// Gets whether property changes from this window should be propagated to other windows.
-    /// Returns false when this window is being updated by the host VM (to avoid re-propagation).
-    /// </summary>
-    public bool ShouldPropagateChanges => !_isSuppressingPropagation;
 
     private ObservableCollection<ICaptureTypeViewModel> _supportedCaptureTypes = [];
 
@@ -186,8 +176,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         RequestCaptureCommand = commandFactory.Create(ActivityIds.RequestCapture, RequestCapture);
         CloseOverlayCommand = commandFactory.Create(ActivityIds.CloseOverlay, CloseOverlay);
-        UpdateSelectedCaptureModeCommand = commandFactory.Create<int>(ActivityIds.UpdateSelectedCaptureMode, UpdateSelectedCaptureMode);
-        UpdateSelectedCaptureTypeCommand = commandFactory.Create<int>(ActivityIds.UpdateSelectedCaptureType, UpdateSelectedCaptureType);
+        UpdateSelectedCaptureModeCommand = commandFactory.Create<(int Index, SelectionUpdateSource Source)>(ActivityIds.UpdateSelectedCaptureMode, UpdateSelectedCaptureMode);
+        UpdateSelectedCaptureTypeCommand = commandFactory.Create<(int Index, SelectionUpdateSource Source)>(ActivityIds.UpdateSelectedCaptureType, UpdateSelectedCaptureType);
         UpdateCaptureAreaCommand = commandFactory.Create<Rectangle>(ActivityIds.UpdateCaptureArea, UpdateCaptureArea);
         UpdateCaptureOptionsCommand = commandFactory.Create<CaptureOptions>(ActivityIds.UpdateCaptureOptions, UpdateCaptureOptions);
 
@@ -215,12 +205,12 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             MonitorWindows = [.. options.MonitorWindows];
 
             var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
-            UpdateSelectedCaptureMode(_supportedCaptureModes.IndexOf(targetMode));
+            UpdateSelectedCaptureMode((_supportedCaptureModes.IndexOf(targetMode), SelectionUpdateSource.Programmatic));
 
             UpdateSupportedCaptureTypes();
 
             var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureOptions.CaptureType);
-            UpdateSelectedCaptureType(_supportedCaptureTypes.IndexOf(targetType));
+            UpdateSelectedCaptureType((_supportedCaptureTypes.IndexOf(targetType), SelectionUpdateSource.Programmatic));
 
             base.Load(options);
         });
@@ -246,45 +236,33 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private void UpdateCaptureOptions(CaptureOptions options)
     {
         var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureMode);
-        UpdateSelectedCaptureMode(_supportedCaptureModes.IndexOf(targetMode));
+        UpdateSelectedCaptureMode((_supportedCaptureModes.IndexOf(targetMode), SelectionUpdateSource.Programmatic));
 
         UpdateSupportedCaptureTypes();
 
         var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureType);
-        UpdateSelectedCaptureType(_supportedCaptureTypes.IndexOf(targetType));
+        UpdateSelectedCaptureType((_supportedCaptureTypes.IndexOf(targetType), SelectionUpdateSource.Programmatic));
 
         UpdateCaptureArea(Rectangle.Empty);
 
         CaptureOptionsUpdated?.Invoke(this, options);
     }
 
-    private void UpdateSelectedCaptureMode(int index)
+    private void UpdateSelectedCaptureMode((int Index, SelectionUpdateSource Source) args)
     {
-        // Suppress propagation to prevent circular updates when called by the host VM
-        _isSuppressingPropagation = true;
-        try
-        {
-            SelectedCaptureModeIndex = index;
-            UpdateSupportedCaptureTypes();
-        }
-        finally
-        {
-            _isSuppressingPropagation = false;
-        }
+        SelectedCaptureModeIndex = args.Index;
+        UpdateSupportedCaptureTypes();
+        
+        // Raise event with source information for propagation control
+        CaptureModeIndexChanged?.Invoke(this, args);
     }
 
-    private void UpdateSelectedCaptureType(int index)
+    private void UpdateSelectedCaptureType((int Index, SelectionUpdateSource Source) args)
     {
-        // Suppress propagation to prevent circular updates when called by the host VM
-        _isSuppressingPropagation = true;
-        try
-        {
-            SelectedCaptureTypeIndex = index;
-        }
-        finally
-        {
-            _isSuppressingPropagation = false;
-        }
+        SelectedCaptureTypeIndex = args.Index;
+        
+        // Raise event with source information for propagation control
+        CaptureTypeIndexChanged?.Invoke(this, args);
     }
 
     private void UpdateSupportedCaptureTypes()
@@ -292,7 +270,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _supportedCaptureTypes.Clear();
         if (SupportedCaptureModes.Count == 0)
         {
-            UpdateSelectedCaptureType(-1);
+            UpdateSelectedCaptureType((-1, SelectionUpdateSource.Programmatic));
             return;
         }
 
@@ -308,7 +286,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             _supportedCaptureTypes.Add(_captureTypeViewModelFactory.Create(supportedCaptureType));
         }
 
-        UpdateSelectedCaptureType(0);
+        UpdateSelectedCaptureType((0, SelectionUpdateSource.Programmatic));
     }
 
     private void RequestCapture()

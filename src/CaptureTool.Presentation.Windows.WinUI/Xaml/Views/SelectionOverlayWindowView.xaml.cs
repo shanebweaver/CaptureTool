@@ -126,12 +126,12 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
     private void SelectionToolbar_CaptureModeSelectionChanged(object _, int e)
     {
-        ViewModel.UpdateSelectedCaptureModeCommand.Execute(e);
+        ViewModel.UpdateSelectedCaptureModeCommand.Execute((e, SelectionUpdateSource.UserInteraction));
     }
 
     private void SelectionToolbar_CaptureTypeSelectionChanged(object _, int e)
     {
-        ViewModel.UpdateSelectedCaptureTypeCommand.Execute(e);
+        ViewModel.UpdateSelectedCaptureTypeCommand.Execute((e, SelectionUpdateSource.UserInteraction));
     }
 
     private void SelectionOverlayContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
