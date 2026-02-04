@@ -39,7 +39,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     // Flag to suppress propagation when this window is being updated by the host VM
     // to prevent circular updates between windows
-    private bool _isSuppressingPropagation = false;
+    private bool _isSuppressingPropagation;
 
     private static readonly CaptureType[] _imageCaptureTypes = [
         CaptureType.Rectangle,
