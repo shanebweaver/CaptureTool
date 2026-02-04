@@ -9,6 +9,7 @@ namespace CaptureTool.Application.Implementations.ViewModels;
 public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISelectionOverlayHostViewModel
 {
     private readonly List<ISelectionOverlayWindowViewModel> _windowViewModels = [];
+    private bool _isPropagatingChanges = false;
 
     public event EventHandler? AllScreensCaptureRequested;
 
@@ -58,6 +59,12 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
 
     private void OnPrimaryWindowViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        // Prevent propagation cycles by ignoring property changes that we triggered
+        if (_isPropagatingChanges)
+        {
+            return;
+        }
+
         if (sender is ISelectionOverlayWindowViewModel windowVM)
         {
             switch (e.PropertyName)
@@ -79,6 +86,12 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
 
     private void OnSecondaryWindowViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        // Prevent propagation cycles by ignoring property changes that we triggered
+        if (_isPropagatingChanges)
+        {
+            return;
+        }
+
         if (sender is ISelectionOverlayWindowViewModel windowVM)
         {
             switch (e.PropertyName)
@@ -97,12 +110,20 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
             return;
         }
 
-        foreach (var target in _windowViewModels)
+        _isPropagatingChanges = true;
+        try
         {
-            if (ReferenceEquals(target, windowVM))
-                continue;
+            foreach (var target in _windowViewModels)
+            {
+                if (ReferenceEquals(target, windowVM))
+                    continue;
 
-            target.UpdateCaptureAreaCommand.Execute(Rectangle.Empty);
+                target.UpdateCaptureAreaCommand.Execute(Rectangle.Empty);
+            }
+        }
+        finally
+        {
+            _isPropagatingChanges = false;
         }
     }
 
@@ -113,36 +134,60 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
             return;
         }
 
-        foreach (var target in _windowViewModels)
+        _isPropagatingChanges = true;
+        try
         {
-            if (ReferenceEquals(target, windowVM))
-                continue;
+            foreach (var target in _windowViewModels)
+            {
+                if (ReferenceEquals(target, windowVM))
+                    continue;
 
-            target.UpdateCaptureAreaCommand.Execute(Rectangle.Empty);
+                target.UpdateCaptureAreaCommand.Execute(Rectangle.Empty);
+            }
+        }
+        finally
+        {
+            _isPropagatingChanges = false;
         }
     }
 
     private void OnSelectedCaptureModeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
     {
         var selectedIndex = windowVM.SelectedCaptureModeIndex;
-        foreach (var target in _windowViewModels)
+        _isPropagatingChanges = true;
+        try
         {
-            if (ReferenceEquals(target, windowVM))
-                continue;
+            foreach (var target in _windowViewModels)
+            {
+                if (ReferenceEquals(target, windowVM))
+                    continue;
 
-            target.UpdateSelectedCaptureModeCommand.Execute(selectedIndex);
+                target.UpdateSelectedCaptureModeCommand.Execute(selectedIndex);
+            }
+        }
+        finally
+        {
+            _isPropagatingChanges = false;
         }
     }
 
     private void OnSelectedCaptureTypeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
     {
         var selectedIndex = windowVM.SelectedCaptureTypeIndex;
-        foreach (var target in _windowViewModels)
+        _isPropagatingChanges = true;
+        try
         {
-            if (ReferenceEquals(target, windowVM))
-                continue;
+            foreach (var target in _windowViewModels)
+            {
+                if (ReferenceEquals(target, windowVM))
+                    continue;
 
-            target.UpdateSelectedCaptureTypeCommand.Execute(selectedIndex);
+                target.UpdateSelectedCaptureTypeCommand.Execute(selectedIndex);
+            }
+        }
+        finally
+        {
+            _isPropagatingChanges = false;
         }
 
         if (windowVM.GetSelectedCaptureType() == CaptureType.AllScreens)
