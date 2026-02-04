@@ -19,7 +19,7 @@ public static partial class Win2DImageCanvasRenderer
         drawingSession.Clear(ClearColor);
 
         var device = drawingSession.Device;
-        var renderTarget = new CanvasRenderTarget(device, options.CanvasSize.Width, options.CanvasSize.Height, options.Dpi);
+        using var renderTarget = new CanvasRenderTarget(device, options.CanvasSize.Width, options.CanvasSize.Height, options.Dpi);
 
         using (var tempSession = renderTarget.CreateDrawingSession())
         {
@@ -32,21 +32,21 @@ public static partial class Win2DImageCanvasRenderer
         }
 
         //  Rotate, flip/mirror, scale
-        var rotateEffect = new Transform2DEffect
+        using var rotateEffect = new Transform2DEffect
         {
             Source = renderTarget,
             TransformMatrix = ImageOrientationHelper.CalculateRenderTransform(options.CanvasSize, options.Orientation, scale)
         };
 
         // Crop
-        var cropEffect = new CropEffect
+        using var cropEffect = new CropEffect
         {
             Source = rotateEffect,
             SourceRectangle = new(
                 new Point(options.CropRect.Location.X, options.CropRect.Location.Y),
                 new Size(options.CropRect.Width, options.CropRect.Height))
         };
-        var cropAlignmentEffect = new Transform2DEffect
+        using var cropAlignmentEffect = new Transform2DEffect
         {
             Source = cropEffect,
             TransformMatrix = Matrix3x2.CreateTranslation(-options.CropRect.X, -options.CropRect.Y)
