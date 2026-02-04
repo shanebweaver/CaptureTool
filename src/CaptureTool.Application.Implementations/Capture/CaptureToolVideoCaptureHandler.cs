@@ -8,17 +8,28 @@ using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
 
 namespace CaptureTool.Application.Implementations.Capture;
 
 public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 {
+    enum CaptureState
+    {
+        Idle,
+        Recording,
+        Finalizing
+    }
+
     private readonly IClipboardService _clipboardService;
     private readonly IScreenRecorder _screenRecorder;
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
     private readonly ILogService _logService;
     private readonly IFeatureManager _featureManager;
+    private readonly ITaskEnvironment _taskEnvironment;
+    private readonly ITelemetryService _telemetryService;
     private readonly IMetadataScannerRegistry? _metadataScannerRegistry;
     private readonly IRealTimeMetadataScanJobFactory? _scanJobFactory;
 
@@ -27,8 +38,11 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private VideoFrameCallback? _videoFrameCallback;
     private IRealTimeMetadataScanJob? _currentScanJob;
 
+    private CaptureState _captureState = CaptureState.Idle;
+
     public bool IsDesktopAudioEnabled { get; private set; }
-    public bool IsRecording { get; private set; }
+    public bool IsRecording => _captureState == CaptureState.Recording;
+    public bool IsFinalizing => _captureState == CaptureState.Finalizing;
     public bool IsPaused { get; private set; }
 
     public event EventHandler<IVideoFile>? NewVideoCaptured;
@@ -42,6 +56,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         IStorageService storageService,
         ILogService logService,
         IFeatureManager featureManager,
+        ITaskEnvironment taskEnvironment,
+        ITelemetryService telemetryService,
         IMetadataScannerRegistry? metadataScannerRegistry = null,
         IRealTimeMetadataScanJobFactory? scanJobFactory = null)
     {
@@ -51,6 +67,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         _storageService = storageService;
         _logService = logService;
         _featureManager = featureManager;
+        _taskEnvironment = taskEnvironment;
+        _telemetryService = telemetryService;
         _metadataScannerRegistry = metadataScannerRegistry;
         _scanJobFactory = scanJobFactory;
 
@@ -59,18 +77,16 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public void StartVideoCapture(NewCaptureArgs args)
     {
-        if (IsRecording)
+        if (_captureState != CaptureState.Idle)
         {
             throw new InvalidOperationException("A video is already being recorded.");
         }
 
-        IsRecording = true;
+        UpdateCaptureState(CaptureState.Recording);
 
-        DateTime timestamp = DateTime.Now;
-        string fileName = $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.mp4";
         _tempVideoPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
-            fileName
+            GetNewCaptureFileName()
         );
 
         // Start metadata collection if feature is enabled and factory/registry are available
@@ -106,70 +122,72 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public PendingVideoFile StopVideoCapture()
     {
-        if (!IsRecording || string.IsNullOrEmpty(_tempVideoPath))
+        if (_captureState != CaptureState.Recording || string.IsNullOrEmpty(_tempVideoPath))
         {
             throw new InvalidOperationException("Cannot stop, no video is recording.");
         }
 
-        IsRecording = false;
-        IsPaused = false;
-        string filePath = _tempVideoPath;
-        _tempVideoPath = null;
+        UpdateCaptureState(CaptureState.Finalizing);
 
-        var pendingVideo = new PendingVideoFile(filePath);
-        NewVideoCaptured?.Invoke(this, pendingVideo);
-
+        var pendingVideo = new PendingVideoFile(_tempVideoPath);
         var currentScanJob = _currentScanJob;
-        _currentScanJob = null;
 
         // Finalize video on a background thread to avoid blocking the UI
-        Task.Run(async () =>
-        {
-            try
-            {
-                _screenRecorder.SetAudioSampleCallback(null);
-                _screenRecorder.SetVideoFrameCallback(null);
-                _screenRecorder.StopRecording();
+        Task.Run(() => FinalizeVideoAsync(pendingVideo, currentScanJob));
 
-                pendingVideo.Complete();
-
-                // Save metadata if collection was active
-                if (currentScanJob != null)
-                {
-                    try
-                    {
-                        await currentScanJob.FinalizeAndSaveAsync();
-                        _logService.LogInformation($"Saved metadata for video: {filePath}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logService.LogException(ex, $"Failed to save metadata for video: {filePath}");
-                    }
-                }
-
-                TryAutoSaveVideo(pendingVideo, currentScanJob?.MetadataFilePath);
-                _ = TryAutoCopyVideoAsync(pendingVideo);
-            }
-            catch (Exception ex)
-            {
-                pendingVideo.Fail(ex);
-                throw;
-            }
-            finally
-            {
-                _audioSampleCallback = null;
-                _videoFrameCallback = null;
-            }
-        });
-
+        NewVideoCaptured?.Invoke(this, pendingVideo);
         return pendingVideo;
+    }
+
+    private async Task FinalizeVideoAsync(PendingVideoFile pendingVideo, IRealTimeMetadataScanJob? currentScanJob)
+    {
+        try
+        {
+            _screenRecorder.SetAudioSampleCallback(null);
+            _screenRecorder.SetVideoFrameCallback(null);
+            _screenRecorder.StopRecording();
+
+            pendingVideo.Complete();
+
+            // Save metadata if collection was active
+            if (currentScanJob != null)
+            {
+                try
+                {
+                    await currentScanJob.FinalizeAndSaveAsync();
+                    _logService.LogInformation($"Saved metadata for video: {pendingVideo.FileName}");
+                }
+                catch (Exception ex)
+                {
+                    _logService.LogException(ex, $"Failed to save metadata for video: {pendingVideo.FileName}");
+                }
+            }
+
+            AutoSaveVideo(pendingVideo, currentScanJob?.MetadataFilePath);
+            AutoCopyVideo(pendingVideo);
+        }
+        catch (Exception ex)
+        {
+            pendingVideo.Fail(ex);
+            throw;
+        }
+        finally
+        {
+            _audioSampleCallback = null;
+            _videoFrameCallback = null;
+            _tempVideoPath = null;
+            _currentScanJob = null;
+            IsPaused = false;
+
+            UpdateCaptureState(CaptureState.Idle);
+        }
     }
 
     public void CancelVideoCapture()
     {
         try
         {
-            if (!IsRecording)
+            if (_captureState != CaptureState.Recording)
             {
                 return;
             }
@@ -184,8 +202,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             _videoFrameCallback = null;
             _tempVideoPath = null;
             _currentScanJob = null;
-            IsRecording = false;
             IsPaused = false;
+            UpdateCaptureState(CaptureState.Idle);
         }
     }
 
@@ -197,7 +215,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public void ToggleDesktopAudioCapture(bool enabled)
     {
-        if (IsRecording)
+        if (_captureState == CaptureState.Recording)
         {
             _screenRecorder.ToggleAudioCapture(enabled);
         }
@@ -208,7 +226,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         IsPaused = isPaused;
         PausedStateChanged?.Invoke(this, isPaused);
 
-        if (IsRecording)
+        if (_captureState == CaptureState.Recording)
         {
             if (isPaused)
             {
@@ -221,35 +239,36 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         }
     }
 
-    private async Task<bool> TryAutoCopyVideoAsync(VideoFile videoFile)
+    private void AutoCopyVideo(VideoFile videoFile)
     {
-        try
+        _taskEnvironment.TryExecute(async () =>
         {
-            bool autoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
-            if (!autoCopy)
+            try
             {
-                //return false;
+                bool autoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
+                if (!autoCopy)
+                {
+                    return;
+                }
+
+                ClipboardFile clipboardFile = new(videoFile.FilePath);
+                await _clipboardService.CopyFileAsync(clipboardFile);
             }
-
-            ClipboardFile clipboardFile = new(videoFile.FilePath);
-            await _clipboardService.CopyFileAsync(clipboardFile);
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
+            catch (Exception e)
+            {
+                _telemetryService.ActivityError("AutoCopyVideo", e);
+            }
+        });
     }
 
-    private bool TryAutoSaveVideo(VideoFile videoFile, string? metadataFilePath = null)
+    private void AutoSaveVideo(VideoFile videoFile, string? metadataFilePath = null)
     {
         try
         {
             bool autoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
             if (!autoSave)
             {
-                //return false;
+                return;
             }
 
             string videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
@@ -259,8 +278,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             }
 
             string tempFilePath = videoFile.FilePath;
-            string fileName = Path.GetFileName(tempFilePath);
-            string newFilePath = Path.Combine(videosFolder, $"capture_{Guid.NewGuid()}.mp4");
+            string newFilePath = Path.Combine(videosFolder, GetNewCaptureFileName());
 
             File.Copy(tempFilePath, newFilePath, true);
 
@@ -276,12 +294,21 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
                     File.Copy(metadataFilePath, newMetadataFilePath, true);
                 }
             }
-
-            return true;
         }
-        catch
+        catch (Exception e)
         {
-            return false;
+            _telemetryService.ActivityError("AutoSaveVideo", e);
         }
+    }
+
+    private static string GetNewCaptureFileName()
+    {
+        DateTime timestamp = DateTime.Now;
+        return $"Capture_{timestamp:yyyy-MM-dd}_{timestamp:FFFFF}.mp4";
+    }
+
+    private void UpdateCaptureState(CaptureState newState)
+    {
+        _captureState = newState;
     }
 }
