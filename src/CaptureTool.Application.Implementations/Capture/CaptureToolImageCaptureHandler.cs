@@ -3,6 +3,8 @@ using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Clipboard;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using System.Drawing;
 
 namespace CaptureTool.Application.Implementations.Capture;
@@ -13,6 +15,8 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
     private readonly IStorageService _storageService;
     private readonly ISettingsService _settingsService;
     private readonly IScreenCapture _screenCapture;
+    private readonly ITaskEnvironment _taskEnvironment;
+    private readonly ITelemetryService _telemetryService;
 
     public event EventHandler<IImageFile>? NewImageCaptured;
 
@@ -20,12 +24,16 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         IClipboardService clipboardService,
         IStorageService storageService,
         ISettingsService settingsService,
-        IScreenCapture screenCapture)
+        IScreenCapture screenCapture,
+        ITaskEnvironment taskEnvironment,
+        ITelemetryService telemetryService)
     {
         _clipboardService = clipboardService;
         _storageService = storageService;
         _settingsService = settingsService;
         _screenCapture = screenCapture;
+        _taskEnvironment = taskEnvironment;
+        _telemetryService = telemetryService;
     }
 
     public ImageFile PerformAllScreensCapture()
@@ -48,8 +56,8 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         _screenCapture.SaveImageToFile(combined, tempPath);
 
         ImageFile imageFile = new(tempPath);
-        TryAutoSaveImage(imageFile);
-        _ = TryAutoCopyImageAsync(imageFile);
+        AutoSaveImage(imageFile);
+        AutoCopyImage(imageFile);
 
         NewImageCaptured?.Invoke(this, imageFile);
         return imageFile;
@@ -71,60 +79,63 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         _screenCapture.SaveImageToFile(cropped, tempPath);
 
         var imageFile = new ImageFile(tempPath);
-        TryAutoSaveImage(imageFile);
-        _ = TryAutoCopyImageAsync(imageFile);
+        AutoSaveImage(imageFile);
+        AutoCopyImage(imageFile);
 
         NewImageCaptured?.Invoke(this, imageFile);
         return imageFile;
     }
 
-    private async Task<bool> TryAutoCopyImageAsync(ImageFile imageFile)
+    private void AutoCopyImage(ImageFile imageFile)
     {
-        try
+        _taskEnvironment.TryExecute(async () =>
         {
-            bool autoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
-            if (!autoCopy)
+            try
             {
-                return false;
+                bool autoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
+                if (!autoCopy)
+                {
+                    return;
+                }
+
+                ClipboardFile clipboardFile = new(imageFile.FilePath);
+                await _clipboardService.CopyBitmapAsync(clipboardFile);
             }
-
-            ClipboardFile clipboardFile = new(imageFile.FilePath);
-            await _clipboardService.CopyBitmapAsync(clipboardFile);
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
+            catch (Exception e)
+            {
+                _telemetryService.ActivityError("AutoCopyImageAsync", e);
+            }
+        });
     }
 
-    private bool TryAutoSaveImage(ImageFile imageFile)
+    private void AutoSaveImage(ImageFile imageFile)
     {
-        try
+        _taskEnvironment.TryExecute(() =>
         {
-            bool autoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
-            if (!autoSave)
+            try
             {
-                return false;
-            }
+                bool autoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
+                if (!autoSave)
+                {
+                    return;
+                }
 
-            string screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
-            if (string.IsNullOrWhiteSpace(screenshotsFolder))
+                string screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
+                if (string.IsNullOrWhiteSpace(screenshotsFolder))
+                {
+                    screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
+                }
+
+                string tempFilePath = imageFile.FilePath;
+                string fileName = Path.GetFileName(tempFilePath);
+                string newFilePath = Path.Combine(screenshotsFolder, $"capture_{Guid.NewGuid()}.png");
+
+                File.Copy(tempFilePath, newFilePath, true);
+            }
+            catch (Exception e)
             {
-                screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
+                _telemetryService.ActivityError("AutoSaveImage", e);
             }
-
-            string tempFilePath = imageFile.FilePath;
-            string fileName = Path.GetFileName(tempFilePath);
-            string newFilePath = Path.Combine(screenshotsFolder, $"capture_{Guid.NewGuid()}.png");
-
-            File.Copy(tempFilePath, newFilePath, true);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
+        });
     }
 }

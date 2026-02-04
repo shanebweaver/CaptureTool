@@ -8,6 +8,8 @@ using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
+using CaptureTool.Infrastructure.Interfaces.Telemetry;
 
 namespace CaptureTool.Application.Implementations.Capture;
 
@@ -19,6 +21,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private readonly IStorageService _storageService;
     private readonly ILogService _logService;
     private readonly IFeatureManager _featureManager;
+    private readonly ITaskEnvironment _taskEnvironment;
+    private readonly ITelemetryService _telemetryService;
     private readonly IMetadataScannerRegistry? _metadataScannerRegistry;
     private readonly IRealTimeMetadataScanJobFactory? _scanJobFactory;
 
@@ -42,6 +46,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         IStorageService storageService,
         ILogService logService,
         IFeatureManager featureManager,
+        ITaskEnvironment taskEnvironment,
+        ITelemetryService telemetryService,
         IMetadataScannerRegistry? metadataScannerRegistry = null,
         IRealTimeMetadataScanJobFactory? scanJobFactory = null)
     {
@@ -51,6 +57,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         _storageService = storageService;
         _logService = logService;
         _featureManager = featureManager;
+        _taskEnvironment = taskEnvironment;
+        _telemetryService = telemetryService;
         _metadataScannerRegistry = metadataScannerRegistry;
         _scanJobFactory = scanJobFactory;
 
@@ -117,52 +125,53 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         _tempVideoPath = null;
 
         var pendingVideo = new PendingVideoFile(filePath);
-        NewVideoCaptured?.Invoke(this, pendingVideo);
-
         var currentScanJob = _currentScanJob;
         _currentScanJob = null;
 
         // Finalize video on a background thread to avoid blocking the UI
-        Task.Run(async () =>
-        {
-            try
-            {
-                _screenRecorder.SetAudioSampleCallback(null);
-                _screenRecorder.SetVideoFrameCallback(null);
-                _screenRecorder.StopRecording();
+        Task.Run(() => FinalizeVideoAsync(pendingVideo, currentScanJob));
 
-                pendingVideo.Complete();
-
-                // Save metadata if collection was active
-                if (currentScanJob != null)
-                {
-                    try
-                    {
-                        await currentScanJob.FinalizeAndSaveAsync();
-                        _logService.LogInformation($"Saved metadata for video: {filePath}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logService.LogException(ex, $"Failed to save metadata for video: {filePath}");
-                    }
-                }
-
-                TryAutoSaveVideo(pendingVideo, currentScanJob?.MetadataFilePath);
-                _ = TryAutoCopyVideoAsync(pendingVideo);
-            }
-            catch (Exception ex)
-            {
-                pendingVideo.Fail(ex);
-                throw;
-            }
-            finally
-            {
-                _audioSampleCallback = null;
-                _videoFrameCallback = null;
-            }
-        });
-
+        NewVideoCaptured?.Invoke(this, pendingVideo);
         return pendingVideo;
+    }
+
+    private async Task FinalizeVideoAsync(PendingVideoFile pendingVideo, IRealTimeMetadataScanJob? currentScanJob)
+    {
+        try
+        {
+            _screenRecorder.SetAudioSampleCallback(null);
+            _screenRecorder.SetVideoFrameCallback(null);
+            _screenRecorder.StopRecording();
+
+            pendingVideo.Complete();
+
+            // Save metadata if collection was active
+            if (currentScanJob != null)
+            {
+                try
+                {
+                    await currentScanJob.FinalizeAndSaveAsync();
+                    _logService.LogInformation($"Saved metadata for video: {pendingVideo.FileName}");
+                }
+                catch (Exception ex)
+                {
+                    _logService.LogException(ex, $"Failed to save metadata for video: {pendingVideo.FileName}");
+                }
+            }
+
+            AutoSaveVideo(pendingVideo, currentScanJob?.MetadataFilePath);
+            AutoCopyVideo(pendingVideo);
+        }
+        catch (Exception ex)
+        {
+            pendingVideo.Fail(ex);
+            throw;
+        }
+        finally
+        {
+            _audioSampleCallback = null;
+            _videoFrameCallback = null;
+        }
     }
 
     public void CancelVideoCapture()
@@ -221,35 +230,36 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         }
     }
 
-    private async Task<bool> TryAutoCopyVideoAsync(VideoFile videoFile)
+    private void AutoCopyVideo(VideoFile videoFile)
     {
-        try
+        _taskEnvironment.TryExecute(async () =>
         {
-            bool autoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
-            if (!autoCopy)
+            try
             {
-                //return false;
+                bool autoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
+                if (!autoCopy)
+                {
+                    return;
+                }
+
+                ClipboardFile clipboardFile = new(videoFile.FilePath);
+                await _clipboardService.CopyFileAsync(clipboardFile);
             }
-
-            ClipboardFile clipboardFile = new(videoFile.FilePath);
-            await _clipboardService.CopyFileAsync(clipboardFile);
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
+            catch (Exception e)
+            {
+                _telemetryService.ActivityError("AutoCopyVideoFailed", e);
+            }
+        });
     }
 
-    private bool TryAutoSaveVideo(VideoFile videoFile, string? metadataFilePath = null)
+    private void AutoSaveVideo(VideoFile videoFile, string? metadataFilePath = null)
     {
         try
         {
             bool autoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
             if (!autoSave)
             {
-                //return false;
+                return;
             }
 
             string videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
@@ -276,12 +286,10 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
                     File.Copy(metadataFilePath, newMetadataFilePath, true);
                 }
             }
-
-            return true;
         }
-        catch
+        catch (Exception e)
         {
-            return false;
+            _telemetryService.ActivityError("AutoSaveVideoFailed", e);
         }
     }
 }
