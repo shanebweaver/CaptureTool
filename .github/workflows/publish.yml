@@ -44,9 +44,18 @@ jobs:
       run: |
         # Create a flat directory structure for the Store action
         New-Item -Path packages-flat -ItemType Directory -Force
-        Get-ChildItem -Path packages -Recurse -Filter "*.msix" | ForEach-Object {
-          Copy-Item $_.FullName -Destination (Join-Path 'packages-flat' $_.Name)
-          Write-Host "Copied: $($_.Name)"
+
+        # Find all .msix packages in the downloaded artifacts
+        $msixFiles = Get-ChildItem -Path packages -Recurse -Filter "*.msix"
+
+        if (-not $msixFiles -or $msixFiles.Count -eq 0) {
+          Write-Error "No .msix files were found in the 'packages' directory. Ensure the build produced .msix artifacts and they were downloaded correctly."
+          exit 1
+        }
+
+        foreach ($file in $msixFiles) {
+          Copy-Item $file.FullName -Destination (Join-Path 'packages-flat' $file.Name)
+          Write-Host "Copied: $($file.Name)"
         }
         Write-Host "Packages ready for upload:"
         Get-ChildItem -Path packages-flat | ForEach-Object { Write-Host $_.FullName }
