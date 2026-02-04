@@ -15,6 +15,13 @@ namespace CaptureTool.Application.Implementations.Capture;
 
 public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 {
+    enum CaptureState
+    {
+        Idle,
+        Recording,
+        Finalizing
+    }
+
     private readonly IClipboardService _clipboardService;
     private readonly IScreenRecorder _screenRecorder;
     private readonly ISettingsService _settingsService;
@@ -31,8 +38,11 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private VideoFrameCallback? _videoFrameCallback;
     private IRealTimeMetadataScanJob? _currentScanJob;
 
+    private CaptureState _captureState = CaptureState.Idle;
+
     public bool IsDesktopAudioEnabled { get; private set; }
-    public bool IsRecording { get; private set; }
+    public bool IsRecording => _captureState == CaptureState.Recording;
+    public bool IsFinalizing => _captureState == CaptureState.Finalizing;
     public bool IsPaused { get; private set; }
 
     public event EventHandler<IVideoFile>? NewVideoCaptured;
@@ -67,12 +77,12 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public void StartVideoCapture(NewCaptureArgs args)
     {
-        if (IsRecording)
+        if (_captureState != CaptureState.Idle)
         {
             throw new InvalidOperationException("A video is already being recorded.");
         }
 
-        IsRecording = true;
+        UpdateCaptureState(CaptureState.Recording);
 
         _tempVideoPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
@@ -112,19 +122,15 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public PendingVideoFile StopVideoCapture()
     {
-        if (!IsRecording || string.IsNullOrEmpty(_tempVideoPath))
+        if (_captureState != CaptureState.Recording || string.IsNullOrEmpty(_tempVideoPath))
         {
             throw new InvalidOperationException("Cannot stop, no video is recording.");
         }
 
-        IsRecording = false;
-        IsPaused = false;
-        string filePath = _tempVideoPath;
-        _tempVideoPath = null;
+        UpdateCaptureState(CaptureState.Finalizing);
 
-        var pendingVideo = new PendingVideoFile(filePath);
+        var pendingVideo = new PendingVideoFile(_tempVideoPath);
         var currentScanJob = _currentScanJob;
-        _currentScanJob = null;
 
         // Finalize video on a background thread to avoid blocking the UI
         Task.Run(() => FinalizeVideoAsync(pendingVideo, currentScanJob));
@@ -169,6 +175,11 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         {
             _audioSampleCallback = null;
             _videoFrameCallback = null;
+            _tempVideoPath = null;
+            _currentScanJob = null;
+            IsPaused = false;
+
+            UpdateCaptureState(CaptureState.Idle);
         }
     }
 
@@ -176,7 +187,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     {
         try
         {
-            if (!IsRecording)
+            if (_captureState != CaptureState.Recording)
             {
                 return;
             }
@@ -191,8 +202,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             _videoFrameCallback = null;
             _tempVideoPath = null;
             _currentScanJob = null;
-            IsRecording = false;
             IsPaused = false;
+            UpdateCaptureState(CaptureState.Idle);
         }
     }
 
@@ -204,7 +215,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public void ToggleDesktopAudioCapture(bool enabled)
     {
-        if (IsRecording)
+        if (_captureState == CaptureState.Recording)
         {
             _screenRecorder.ToggleAudioCapture(enabled);
         }
@@ -215,7 +226,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         IsPaused = isPaused;
         PausedStateChanged?.Invoke(this, isPaused);
 
-        if (IsRecording)
+        if (_captureState == CaptureState.Recording)
         {
             if (isPaused)
             {
@@ -294,5 +305,10 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     {
         DateTime timestamp = DateTime.Now;
         return $"Capture_{timestamp:yyyy-MM-dd}_{timestamp:FFFFF}.mp4";
+    }
+
+    private void UpdateCaptureState(CaptureState newState)
+    {
+        _captureState = newState;
     }
 }
