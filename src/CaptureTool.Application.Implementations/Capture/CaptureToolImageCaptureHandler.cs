@@ -44,15 +44,12 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
 
     public ImageFile PerformMultiMonitorImageCapture(MonitorCaptureResult[] monitors)
     {
-        Image combined = _screenCapture.CombineMonitors(monitors);
-
-        DateTime timestamp = DateTime.Now;
-        string fileName = $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.png";
         string tempPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
-            fileName
+            GetNewCaptureFileName()
         );
 
+        Image combined = _screenCapture.CombineMonitors(monitors);
         _screenCapture.SaveImageToFile(combined, tempPath);
 
         ImageFile imageFile = new(tempPath);
@@ -65,20 +62,18 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
 
     public ImageFile PerformImageCapture(NewCaptureArgs args)
     {
-        MonitorCaptureResult monitor = args.Monitor;
-        Rectangle area = args.Area;
-        DateTime timestamp = DateTime.Now;
-        string fileName = $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.png";
         string tempPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
-            fileName
+            GetNewCaptureFileName()
         );
 
+        MonitorCaptureResult monitor = args.Monitor;
+        Rectangle area = args.Area;
         using Bitmap image = _screenCapture.CreateBitmapFromMonitorCaptureResult(monitor);
         using Bitmap cropped = _screenCapture.CreateCroppedBitmap(image, area, monitor.Scale);
         _screenCapture.SaveImageToFile(cropped, tempPath);
 
-        var imageFile = new ImageFile(tempPath);
+        ImageFile imageFile = new(tempPath);
         AutoSaveImage(imageFile);
         AutoCopyImage(imageFile);
 
@@ -127,8 +122,7 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
                 }
 
                 string tempFilePath = imageFile.FilePath;
-                string fileName = Path.GetFileName(tempFilePath);
-                string newFilePath = Path.Combine(screenshotsFolder, $"capture_{Guid.NewGuid()}.png");
+                string newFilePath = Path.Combine(screenshotsFolder, GetNewCaptureFileName());
 
                 File.Copy(tempFilePath, newFilePath, true);
             }
@@ -137,5 +131,11 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
                 _telemetryService.ActivityError("AutoSaveImage", e);
             }
         });
+    }
+
+    private static string GetNewCaptureFileName()
+    {
+        DateTime timestamp = DateTime.Now;
+        return $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.png";
     }
 }
