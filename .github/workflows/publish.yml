@@ -7,12 +7,11 @@ on:
       - completed
     branches:
       - main
-  pull_request:
 
 jobs:
   publish:
     runs-on: windows-latest
-    #if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
     permissions:
       actions: read
@@ -47,7 +46,7 @@ jobs:
         tenant-id: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
         client-id: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
         client-secret: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
-        app-id: '9N7W6J13C4W0'
+        app-id: ${{ secrets.PARTNER_CENTER_APP_ID }}
         package-path: 'packages/**/*.msix'
         # Set to false to create/update submission without publishing
         # You will need to manually publish from Partner Center
