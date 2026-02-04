@@ -38,7 +38,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly IFactoryServiceWithArgs<ICaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
     // Flag to suppress propagation when this window is being updated by the host VM
-    // to prevent circular updates between windows
+    // to prevent circular updates between windows.
+    // Note: This flag is not thread-safe, but is safe for this use case since all
+    // ViewModel updates and PropertyChanged notifications occur on the UI thread.
     private bool _isSuppressingPropagation;
 
     private static readonly CaptureType[] _imageCaptureTypes = [
