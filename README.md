@@ -9,6 +9,7 @@
 
 [![Tests](https://github.com/shanebweaver/CaptureTool/actions/workflows/test.yml/badge.svg)](https://github.com/shanebweaver/CaptureTool/actions/workflows/test.yml)
 [![Build](https://github.com/shanebweaver/CaptureTool/actions/workflows/build.yml/badge.svg)](https://github.com/shanebweaver/CaptureTool/actions/workflows/build.yml)
+[![Publish to Microsoft Store](https://github.com/shanebweaver/CaptureTool/actions/workflows/publish.yml/badge.svg)](https://github.com/shanebweaver/CaptureTool/actions/workflows/publish.yml)
 
 Capture, edit, and share screenshots—fast.
 
