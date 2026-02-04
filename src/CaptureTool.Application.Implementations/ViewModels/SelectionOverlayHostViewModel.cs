@@ -124,6 +124,12 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
 
     private void OnSelectedCaptureModeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
     {
+        // Only propagate if this change should be propagated (not from another window's propagation)
+        if (!windowVM.ShouldPropagateChanges)
+        {
+            return;
+        }
+
         var selectedIndex = windowVM.SelectedCaptureModeIndex;
         foreach (var target in _windowViewModels)
         {
@@ -136,6 +142,12 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
 
     private void OnSelectedCaptureTypeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
     {
+        // Only propagate if this change should be propagated (not from another window's propagation)
+        if (!windowVM.ShouldPropagateChanges)
+        {
+            return;
+        }
+
         var selectedIndex = windowVM.SelectedCaptureTypeIndex;
         foreach (var target in _windowViewModels)
         {

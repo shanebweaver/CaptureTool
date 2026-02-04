@@ -13,6 +13,7 @@ public interface ISelectionOverlayWindowViewModel : IViewModel
     event EventHandler<CaptureOptions>? CaptureOptionsUpdated;
 
     bool IsPrimary { get; }
+    bool ShouldPropagateChanges { get; }
     ObservableCollection<ICaptureTypeViewModel> SupportedCaptureTypes { get; }
     int SelectedCaptureTypeIndex { get; }
     ObservableCollection<ICaptureModeViewModel> SupportedCaptureModes { get; }

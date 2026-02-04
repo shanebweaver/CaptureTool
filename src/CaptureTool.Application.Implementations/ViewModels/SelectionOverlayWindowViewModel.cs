@@ -37,6 +37,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IFactoryServiceWithArgs<ICaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
+    // Flag to prevent circular updates when changes are propagated from other windows
+    private bool _isUpdatingFromExternalSource = false;
+
     private static readonly CaptureType[] _imageCaptureTypes = [
         CaptureType.Rectangle,
         CaptureType.Window,
@@ -58,6 +61,12 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     public event EventHandler<CaptureOptions>? CaptureOptionsUpdated;
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
+
+    /// <summary>
+    /// Gets whether the current property change should be propagated to other windows.
+    /// Returns false when the change originated from another window's propagation.
+    /// </summary>
+    public bool ShouldPropagateChanges => !_isUpdatingFromExternalSource;
 
     private ObservableCollection<ICaptureTypeViewModel> _supportedCaptureTypes = [];
 
@@ -248,13 +257,31 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void UpdateSelectedCaptureMode(int index)
     {
-        SelectedCaptureModeIndex = index;
-        UpdateSupportedCaptureTypes();
+        // Mark this as an external update to prevent circular propagation
+        _isUpdatingFromExternalSource = true;
+        try
+        {
+            SelectedCaptureModeIndex = index;
+            UpdateSupportedCaptureTypes();
+        }
+        finally
+        {
+            _isUpdatingFromExternalSource = false;
+        }
     }
 
     private void UpdateSelectedCaptureType(int index)
     {
-        SelectedCaptureTypeIndex = index;
+        // Mark this as an external update to prevent circular propagation
+        _isUpdatingFromExternalSource = true;
+        try
+        {
+            SelectedCaptureTypeIndex = index;
+        }
+        finally
+        {
+            _isUpdatingFromExternalSource = false;
+        }
     }
 
     private void UpdateSupportedCaptureTypes()
