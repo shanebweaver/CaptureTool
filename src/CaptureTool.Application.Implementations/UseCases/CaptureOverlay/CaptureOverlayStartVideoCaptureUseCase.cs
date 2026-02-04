@@ -37,7 +37,7 @@ public sealed partial class CaptureOverlayStartVideoCaptureUseCase : UseCase<New
 
     public override void Execute(NewCaptureArgs args)
     {
-        _appNavigation.GoToVideoCapture(args);
         _videoCaptureHandler.StartVideoCapture(args);
+        _appNavigation.GoToVideoCapture(args);
     }
 }
