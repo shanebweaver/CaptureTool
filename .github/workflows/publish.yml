@@ -1,0 +1,53 @@
+name: Publish to Microsoft Store
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    permissions:
+      actions: read
+      contents: read
+    
+    steps:
+    - name: Download x64 artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: StorePackage-x64
+        path: packages/x64
+        run-id: ${{ github.event.workflow_run.id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Download arm64 artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: StorePackage-arm64
+        path: packages/arm64
+        run-id: ${{ github.event.workflow_run.id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: List downloaded packages
+      run: |
+        Write-Host "Downloaded packages:"
+        Get-ChildItem -Path packages -Recurse -File | ForEach-Object { Write-Host $_.FullName }
+      shell: pwsh
+    
+    - name: Publish to Microsoft Store
+      uses: isaacrlevin/windows-store-action@1.0
+      with:
+        tenant-id: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+        client-id: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+        client-secret: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+        app-id: ${{ secrets.PARTNER_CENTER_APP_ID }}
+        package-path: 'packages/**/*.msix'
+        # Set to false to create/update submission without publishing
+        # You will need to manually publish from Partner Center
+        skip-polling: false
