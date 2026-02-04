@@ -57,6 +57,22 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
         base.Dispose();
     }
 
+    /// <summary>
+    /// Executes an action while preventing property change cycles by setting the propagation flag.
+    /// </summary>
+    private void ExecuteWhilePropagating(Action action)
+    {
+        _isPropagatingChanges = true;
+        try
+        {
+            action();
+        }
+        finally
+        {
+            _isPropagatingChanges = false;
+        }
+    }
+
     private void OnPrimaryWindowViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         // Prevent propagation cycles by ignoring property changes that we triggered
@@ -110,8 +126,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
             return;
         }
 
-        _isPropagatingChanges = true;
-        try
+        ExecuteWhilePropagating(() =>
         {
             foreach (var target in _windowViewModels)
             {
@@ -120,11 +135,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
 
                 target.UpdateCaptureAreaCommand.Execute(Rectangle.Empty);
             }
-        }
-        finally
-        {
-            _isPropagatingChanges = false;
-        }
+        });
     }
 
     private void OnSecondaryCaptureAreaChanged(ISelectionOverlayWindowViewModel windowVM)
@@ -134,8 +145,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
             return;
         }
 
-        _isPropagatingChanges = true;
-        try
+        ExecuteWhilePropagating(() =>
         {
             foreach (var target in _windowViewModels)
             {
@@ -144,18 +154,13 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
 
                 target.UpdateCaptureAreaCommand.Execute(Rectangle.Empty);
             }
-        }
-        finally
-        {
-            _isPropagatingChanges = false;
-        }
+        });
     }
 
     private void OnSelectedCaptureModeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
     {
         var selectedIndex = windowVM.SelectedCaptureModeIndex;
-        _isPropagatingChanges = true;
-        try
+        ExecuteWhilePropagating(() =>
         {
             foreach (var target in _windowViewModels)
             {
@@ -164,18 +169,13 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
 
                 target.UpdateSelectedCaptureModeCommand.Execute(selectedIndex);
             }
-        }
-        finally
-        {
-            _isPropagatingChanges = false;
-        }
+        });
     }
 
     private void OnSelectedCaptureTypeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
     {
         var selectedIndex = windowVM.SelectedCaptureTypeIndex;
-        _isPropagatingChanges = true;
-        try
+        ExecuteWhilePropagating(() =>
         {
             foreach (var target in _windowViewModels)
             {
@@ -184,11 +184,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
 
                 target.UpdateSelectedCaptureTypeCommand.Execute(selectedIndex);
             }
-        }
-        finally
-        {
-            _isPropagatingChanges = false;
-        }
+        });
 
         if (windowVM.GetSelectedCaptureType() == CaptureType.AllScreens)
         {
