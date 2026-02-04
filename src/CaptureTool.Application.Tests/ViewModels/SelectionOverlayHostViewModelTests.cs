@@ -103,13 +103,9 @@ public sealed class SelectionOverlayHostViewModelTests
         var primaryWindowVM = new Mock<ISelectionOverlayWindowViewModel>();
         primaryWindowVM.SetupGet(w => w.IsPrimary).Returns(true);
         primaryWindowVM.SetupGet(w => w.CaptureArea).Returns(new Rectangle(0, 0, 100, 100));
+        // Create a valid MonitorCaptureResult to satisfy the non-null monitor check
         var monitorResult = new MonitorCaptureResult(
-            IntPtr.Zero, 
-            new byte[100], 
-            96, 
-            new Rectangle(0, 0, 1920, 1080), 
-            new Rectangle(0, 0, 1920, 1080), 
-            true);
+            IntPtr.Zero, Array.Empty<byte>(), 96, Rectangle.Empty, Rectangle.Empty, true);
         primaryWindowVM.SetupGet(w => w.Monitor).Returns(monitorResult);
         
         var updateCommand = new Mock<IAppCommand<Rectangle>>();

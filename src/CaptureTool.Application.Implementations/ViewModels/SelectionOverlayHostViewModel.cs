@@ -59,6 +59,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
 
     /// <summary>
     /// Executes an action while preventing property change cycles by setting the propagation flag.
+    /// This implementation assumes single-threaded access (UI thread) as per WinUI/MVVM patterns.
     /// </summary>
     private void ExecuteWhilePropagating(Action action)
     {
