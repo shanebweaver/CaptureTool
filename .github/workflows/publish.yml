@@ -47,7 +47,5 @@ jobs:
         client-id: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
         client-secret: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
         app-id: ${{ secrets.PARTNER_CENTER_APP_ID }}
-        package-path: 'packages/**/*.msix'
-        # Set to false to create/update submission without publishing
-        # You will need to manually publish from Partner Center
+        package-path: '${{ github.workspace }}/packages/**/*.msix'
         skip-polling: false
