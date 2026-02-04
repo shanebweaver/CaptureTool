@@ -37,8 +37,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IFactoryServiceWithArgs<ICaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
-    // Flag to prevent circular updates when changes are propagated from other windows
-    private bool _isUpdatingFromExternalSource = false;
+    // Flag to suppress propagation when this window is being updated by the host VM
+    // to prevent circular updates between windows
+    private bool _isSuppressingPropagation = false;
 
     private static readonly CaptureType[] _imageCaptureTypes = [
         CaptureType.Rectangle,
@@ -63,10 +64,10 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
     /// <summary>
-    /// Gets whether the current property change should be propagated to other windows.
-    /// Returns false when the change originated from another window's propagation.
+    /// Gets whether property changes from this window should be propagated to other windows.
+    /// Returns false when this window is being updated by the host VM (to avoid re-propagation).
     /// </summary>
-    public bool ShouldPropagateChanges => !_isUpdatingFromExternalSource;
+    public bool ShouldPropagateChanges => !_isSuppressingPropagation;
 
     private ObservableCollection<ICaptureTypeViewModel> _supportedCaptureTypes = [];
 
@@ -257,9 +258,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void UpdateSelectedCaptureMode(int index)
     {
-        // Set flag to prevent this update from being propagated to other windows
-        // (avoiding circular updates when this method is called by the host VM)
-        _isUpdatingFromExternalSource = true;
+        // Suppress propagation to prevent circular updates when called by the host VM
+        _isSuppressingPropagation = true;
         try
         {
             SelectedCaptureModeIndex = index;
@@ -267,22 +267,21 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         }
         finally
         {
-            _isUpdatingFromExternalSource = false;
+            _isSuppressingPropagation = false;
         }
     }
 
     private void UpdateSelectedCaptureType(int index)
     {
-        // Set flag to prevent this update from being propagated to other windows
-        // (avoiding circular updates when this method is called by the host VM)
-        _isUpdatingFromExternalSource = true;
+        // Suppress propagation to prevent circular updates when called by the host VM
+        _isSuppressingPropagation = true;
         try
         {
             SelectedCaptureTypeIndex = index;
         }
         finally
         {
-            _isUpdatingFromExternalSource = false;
+            _isSuppressingPropagation = false;
         }
     }
 
