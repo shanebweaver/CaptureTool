@@ -9,7 +9,7 @@ namespace CaptureTool.Application.Implementations.ViewModels;
 public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISelectionOverlayHostViewModel
 {
     private readonly List<ISelectionOverlayWindowViewModel> _windowViewModels = [];
-    private bool _isPropagatingChanges = false;
+    private bool _isPropagatingChanges;
 
     public event EventHandler? AllScreensCaptureRequested;
 
