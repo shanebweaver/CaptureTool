@@ -13,6 +13,10 @@ jobs:
     runs-on: windows-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
+    permissions:
+      actions: read
+      contents: read
+    
     steps:
     - name: Download x64 artifacts
       uses: actions/download-artifact@v4
