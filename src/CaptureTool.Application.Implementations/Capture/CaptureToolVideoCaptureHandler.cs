@@ -256,7 +256,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             }
             catch (Exception e)
             {
-                _telemetryService.ActivityError("AutoCopyVideoFailed", e);
+                _telemetryService.ActivityError("AutoCopyVideo", e);
             }
         });
     }
@@ -297,7 +297,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         }
         catch (Exception e)
         {
-            _telemetryService.ActivityError("AutoSaveVideoFailed", e);
+            _telemetryService.ActivityError("AutoSaveVideo", e);
         }
     }
 

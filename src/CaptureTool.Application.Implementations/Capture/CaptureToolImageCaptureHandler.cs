@@ -98,7 +98,7 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
             }
             catch (Exception e)
             {
-                _telemetryService.ActivityError("AutoCopyImageAsync", e);
+                _telemetryService.ActivityError("AutoCopyImage", e);
             }
         });
     }
