@@ -98,7 +98,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
         switch (args.Source)
         {
             case SelectionUpdateSource.UserInteraction:
-                // User initiated the change on primary window, propagate to others
+                // User initiated the change, propagate to other windows
                 foreach (var target in _windowViewModels)
                 {
                     if (ReferenceEquals(target, windowVM))
@@ -127,7 +127,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
         switch (args.Source)
         {
             case SelectionUpdateSource.UserInteraction:
-                // User initiated the change on primary window, propagate to others
+                // User initiated the change, propagate to other windows
                 foreach (var target in _windowViewModels)
                 {
                     if (ReferenceEquals(target, windowVM))

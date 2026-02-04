@@ -207,8 +207,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
             UpdateSelectedCaptureMode((_supportedCaptureModes.IndexOf(targetMode), SelectionUpdateSource.Programmatic));
 
-            UpdateSupportedCaptureTypes();
-
             var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureOptions.CaptureType);
             UpdateSelectedCaptureType((_supportedCaptureTypes.IndexOf(targetType), SelectionUpdateSource.Programmatic));
 
@@ -237,8 +235,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     {
         var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureMode);
         UpdateSelectedCaptureMode((_supportedCaptureModes.IndexOf(targetMode), SelectionUpdateSource.Programmatic));
-
-        UpdateSupportedCaptureTypes();
 
         var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureType);
         UpdateSelectedCaptureType((_supportedCaptureTypes.IndexOf(targetType), SelectionUpdateSource.Programmatic));

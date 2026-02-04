@@ -6,7 +6,7 @@ namespace CaptureTool.Application.Interfaces.ViewModels;
 public enum SelectionUpdateSource
 {
     /// <summary>
-    /// Update initiated by user interaction with the toolbar on the primary window.
+    /// Update initiated by user interaction with the toolbar.
     /// </summary>
     UserInteraction,
 
