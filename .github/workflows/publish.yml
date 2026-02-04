@@ -7,6 +7,7 @@ on:
       - completed
     branches:
       - main
+  pull_request:
 
 jobs:
   publish:
@@ -46,8 +47,8 @@ jobs:
         tenant-id: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
         client-id: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
         client-secret: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
-        app-id: ${{ secrets.PARTNER_CENTER_APP_ID }}
+        app-id: '9N7W6J13C4W0'
         package-path: 'packages/**/*.msix'
         # Set to false to create/update submission without publishing
         # You will need to manually publish from Partner Center
-        skip-polling: true
+        skip-polling: false
