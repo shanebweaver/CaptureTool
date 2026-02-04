@@ -74,11 +74,9 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
         IsRecording = true;
 
-        DateTime timestamp = DateTime.Now;
-        string fileName = $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.mp4";
         _tempVideoPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
-            fileName
+            GetNewCaptureFileName()
         );
 
         // Start metadata collection if feature is enabled and factory/registry are available
@@ -269,8 +267,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             }
 
             string tempFilePath = videoFile.FilePath;
-            string fileName = Path.GetFileName(tempFilePath);
-            string newFilePath = Path.Combine(videosFolder, $"capture_{Guid.NewGuid()}.mp4");
+            string newFilePath = Path.Combine(videosFolder, GetNewCaptureFileName());
 
             File.Copy(tempFilePath, newFilePath, true);
 
@@ -291,5 +288,11 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         {
             _telemetryService.ActivityError("AutoSaveVideoFailed", e);
         }
+    }
+
+    private static string GetNewCaptureFileName()
+    {
+        DateTime timestamp = DateTime.Now;
+        return $"Capture_{timestamp:yyyy-MM-dd}_{timestamp:FFFFF}.mp4";
     }
 }

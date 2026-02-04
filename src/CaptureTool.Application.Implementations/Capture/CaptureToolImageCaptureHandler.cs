@@ -136,6 +136,6 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
     private static string GetNewCaptureFileName()
     {
         DateTime timestamp = DateTime.Now;
-        return $"Capture {timestamp:yyyy-MM-dd} {timestamp:FFFFF}.png";
+        return $"Capture_{timestamp:yyyy-MM-dd}_{timestamp:FFFFF}.png";
     }
 }
