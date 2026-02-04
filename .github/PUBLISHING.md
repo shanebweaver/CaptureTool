@@ -14,21 +14,21 @@ This workflow automatically uploads app packages to Microsoft Partner Center whe
 You need to configure the following secrets in your GitHub repository settings:
 
 ### 1. `PARTNER_CENTER_TENANT_ID`
-Your Azure AD tenant ID. You can find this in the Azure Portal under Azure Active Directory > Properties > Directory ID.
+Your Microsoft Entra ID (formerly Azure AD) tenant ID. You can find this in the Azure Portal under Microsoft Entra ID > Properties > Directory ID.
 
 ### 2. `PARTNER_CENTER_CLIENT_ID`
-The application (client) ID from your Azure AD app registration used for Partner Center API access.
+The application (client) ID from your Microsoft Entra ID app registration used for Partner Center API access.
 
 To create this:
-1. Go to Azure Portal > Azure Active Directory > App registrations
+1. Go to Azure Portal > Microsoft Entra ID > App registrations
 2. Create a new registration or use an existing one
 3. Copy the Application (client) ID
 
 ### 3. `PARTNER_CENTER_CLIENT_SECRET`
-A client secret for the Azure AD app registration.
+A client secret for the Microsoft Entra ID app registration.
 
 To create this:
-1. In your Azure AD app registration, go to Certificates & secrets
+1. In your Microsoft Entra ID app registration, go to Certificates & secrets
 2. Create a new client secret
 3. Copy the secret value (not the ID)
 
@@ -41,12 +41,12 @@ To find this:
 3. Go to App management > App identity
 4. Copy the Store ID (format: 9NBLGGH4NNS1 or similar)
 
-## Setting Up Azure AD App Registration
+## Setting Up Microsoft Entra ID App Registration
 
-To use the Partner Center Submission API, you need to associate an Azure AD application with your Partner Center account:
+To use the Partner Center Submission API, you need to associate a Microsoft Entra ID application with your Partner Center account:
 
-1. Go to Partner Center > Account settings > User management > Azure AD applications
-2. Add your Azure AD application
+1. Go to Partner Center > Account settings > User management > Microsoft Entra ID applications
+2. Add your Microsoft Entra ID application
 3. Assign it the "Manager" role to allow creating and updating submissions
 
 ## Manual Publishing
@@ -59,7 +59,7 @@ After the workflow completes successfully:
 
 ## Troubleshooting
 
-- Ensure your Azure AD app has the proper permissions in Partner Center
+- Ensure your Microsoft Entra ID app has the proper permissions in Partner Center
 - Verify all secrets are correctly configured in GitHub
 - Check the workflow logs for detailed error messages
 - The `skip-polling` option is set to `true` to prevent automatic publishing
