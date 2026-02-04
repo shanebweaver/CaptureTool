@@ -45,7 +45,7 @@ jobs:
         # Create a flat directory structure for the Store action
         New-Item -Path packages-flat -ItemType Directory -Force
         Get-ChildItem -Path packages -Recurse -Filter "*.msix" | ForEach-Object {
-          Copy-Item $_.FullName -Destination packages-flat\
+          Copy-Item $_.FullName -Destination (Join-Path 'packages-flat' $_.Name)
           Write-Host "Copied: $($_.Name)"
         }
         Write-Host "Packages ready for upload:"
