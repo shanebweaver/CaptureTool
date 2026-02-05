@@ -54,6 +54,14 @@
   <ItemGroup>
     <Content Include="Fonts\FluentSystemIcons-Regular.ttf" />
   </ItemGroup>
+
+  <!-- Native DLL references for MSIX packaging -->
+  <ItemGroup>
+    <Content Include="$(SolutionDir)bin\$(Configuration)\$(Platform)\CaptureInterop.dll">
+      <Link>CaptureInterop.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
     
   <!-- 
     Don't generate the XAML main function and use the one in Program.cs instead.
