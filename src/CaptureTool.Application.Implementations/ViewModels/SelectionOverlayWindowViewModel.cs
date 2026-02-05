@@ -73,10 +73,12 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         }
     }
 
+    private int _selectedCaptureTypeIndex;
+
     public int SelectedCaptureTypeIndex
     {
-        get => field;
-        private set => Set(ref field, value);
+        get => _selectedCaptureTypeIndex;
+        private set => Set(ref _selectedCaptureTypeIndex, value);
     }
 
     public CaptureType? GetSelectedCaptureType()
@@ -96,10 +98,12 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         }
     }
 
+    private int _selectedCaptureModeIndex;
+
     public int SelectedCaptureModeIndex
     {
-        get => field;
-        private set => Set(ref field, value);
+        get => _selectedCaptureModeIndex;
+        private set => Set(ref _selectedCaptureModeIndex, value);
     }
 
     public CaptureMode? GetSelectedCaptureMode()
@@ -266,8 +270,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _supportedCaptureTypes.Clear();
         if (SupportedCaptureModes.Count == 0)
         {
-            // Internal update, no event raised
-            SelectedCaptureTypeIndex = -1;
+            _selectedCaptureTypeIndex = -1;
             return;
         }
 
@@ -283,8 +286,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             _supportedCaptureTypes.Add(_captureTypeViewModelFactory.Create(supportedCaptureType));
         }
 
-        // Internal update, no event raised
-        SelectedCaptureTypeIndex = 0;
+        _selectedCaptureTypeIndex = 0;
     }
 
     private void RequestCapture()
