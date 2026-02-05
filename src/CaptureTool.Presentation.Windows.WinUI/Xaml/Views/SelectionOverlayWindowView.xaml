@@ -36,8 +36,6 @@
         <Grid PointerMoved="ToolbarContainer_PointerMoved" Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}">
             <controls:SelectionOverlayToolbar
                 x:Name="SelectionToolbar"
-                CaptureModeSelectionChanged="SelectionToolbar_CaptureModeSelectionChanged"
-                CaptureTypeSelectionChanged="SelectionToolbar_CaptureTypeSelectionChanged"
                 CloseCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.CloseOverlayCommand), Mode=OneWay}"
                 SelectedCaptureModeIndex="{x:Bind ViewModel.SelectedCaptureModeIndex, Mode=OneWay}"
                 SelectedCaptureTypeIndex="{x:Bind ViewModel.SelectedCaptureTypeIndex, Mode=OneWay}"
