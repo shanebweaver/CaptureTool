@@ -54,6 +54,14 @@
   <ItemGroup>
     <Content Include="Fonts\FluentSystemIcons-Regular.ttf" />
   </ItemGroup>
+
+  <!-- Native DLL references for MSIX packaging -->
+  <ItemGroup>
+    <Content Include="$(SolutionDir)bin\$(Configuration)\$(Platform)\CaptureInterop.dll">
+      <Link>CaptureInterop.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
     
   <!-- 
     Don't generate the XAML main function and use the one in Program.cs instead.
@@ -90,9 +98,9 @@
   <PropertyGroup>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundle>Auto</AppxBundle>
-    <AppxBundlePlatforms>x64|arm64</AppxBundlePlatforms>
+    <AppxBundlePlatforms>x64</AppxBundlePlatforms>
     <AppxPackageDir>$(SolutionDir)output\$(Platform)\</AppxPackageDir>
-    <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
@@ -105,5 +113,6 @@
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <PackageCertificateKeyFile>CaptureTool.Presentation.Windows.WinUI_TemporaryKey.pfx</PackageCertificateKeyFile>
   </PropertyGroup>
 </Project>
