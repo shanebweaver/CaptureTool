@@ -22,6 +22,10 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
 
     public void AddWindowViewModel(ISelectionOverlayWindowViewModel newVM, bool isPrimary = false)
     {
+        // Subscribe to the new source-aware events
+        newVM.CaptureModeIndexChanged += OnCaptureModeIndexChanged;
+        newVM.CaptureTypeIndexChanged += OnCaptureTypeIndexChanged;
+        
         if (isPrimary)
         {
             newVM.PropertyChanged += OnPrimaryWindowViewModelPropertyChanged;
@@ -38,6 +42,9 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
         // Unregister event handlers first
         foreach (var windowViewModel in _windowViewModels)
         {
+            windowViewModel.CaptureModeIndexChanged -= OnCaptureModeIndexChanged;
+            windowViewModel.CaptureTypeIndexChanged -= OnCaptureTypeIndexChanged;
+            
             if (windowViewModel.IsPrimary)
             {
                 windowViewModel.PropertyChanged -= OnPrimaryWindowViewModelPropertyChanged;
@@ -65,14 +72,6 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
                 case nameof(ISelectionOverlayWindowViewModel.CaptureArea):
                     OnPrimaryCaptureAreaChanged(windowVM);
                     break;
-
-                case nameof(ISelectionOverlayWindowViewModel.SelectedCaptureModeIndex):
-                    OnSelectedCaptureModeIndexChanged(windowVM);
-                    break;
-
-                case nameof(ISelectionOverlayWindowViewModel.SelectedCaptureTypeIndex):
-                    OnSelectedCaptureTypeIndexChanged(windowVM);
-                    break;
             }
         }
     }
@@ -87,6 +86,78 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
                     OnSecondaryCaptureAreaChanged(windowVM);
                     break;
             }
+        }
+    }
+
+    private void OnCaptureModeIndexChanged(object? sender, (int Index, SelectionUpdateSource Source) args)
+    {
+        if (sender is not ISelectionOverlayWindowViewModel windowVM)
+            return;
+
+        // State machine: Handle capture mode changes based on source
+        switch (args.Source)
+        {
+            case SelectionUpdateSource.UserInteraction:
+                // User initiated the change, propagate to other windows
+                foreach (var target in _windowViewModels)
+                {
+                    if (ReferenceEquals(target, windowVM))
+                        continue;
+
+                    target.UpdateSelectedCaptureModeCommand.Execute((args.Index, SelectionUpdateSource.Propagation));
+                }
+                break;
+
+            case SelectionUpdateSource.Propagation:
+                // Already propagated from another window, don't re-propagate
+                break;
+
+            case SelectionUpdateSource.Programmatic:
+                // Programmatic update (load, etc.), don't propagate
+                break;
+        }
+    }
+
+    private void OnCaptureTypeIndexChanged(object? sender, (int Index, SelectionUpdateSource Source) args)
+    {
+        if (sender is not ISelectionOverlayWindowViewModel windowVM)
+            return;
+
+        // State machine: Handle capture type changes based on source
+        switch (args.Source)
+        {
+            case SelectionUpdateSource.UserInteraction:
+                // User initiated the change, propagate to other windows
+                foreach (var target in _windowViewModels)
+                {
+                    if (ReferenceEquals(target, windowVM))
+                        continue;
+
+                    target.UpdateSelectedCaptureTypeCommand.Execute((args.Index, SelectionUpdateSource.Propagation));
+                }
+
+                // Handle AllScreens capture request
+                if (windowVM.GetSelectedCaptureType() == CaptureType.AllScreens)
+                {
+                    switch (windowVM.GetSelectedCaptureMode())
+                    {
+                        case CaptureMode.Image:
+                            AllScreensCaptureRequested?.Invoke(this, EventArgs.Empty);
+                            break;
+
+                        case CaptureMode.Video:
+                            break;
+                    }
+                }
+                break;
+
+            case SelectionUpdateSource.Propagation:
+                // Already propagated from another window, don't re-propagate
+                break;
+
+            case SelectionUpdateSource.Programmatic:
+                // Programmatic update (load, etc.), don't propagate
+                break;
         }
     }
 
@@ -119,43 +190,6 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
                 continue;
 
             target.UpdateCaptureAreaCommand.Execute(Rectangle.Empty);
-        }
-    }
-
-    private void OnSelectedCaptureModeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
-    {
-        var selectedIndex = windowVM.SelectedCaptureModeIndex;
-        foreach (var target in _windowViewModels)
-        {
-            if (ReferenceEquals(target, windowVM))
-                continue;
-
-            target.UpdateSelectedCaptureModeCommand.Execute(selectedIndex);
-        }
-    }
-
-    private void OnSelectedCaptureTypeIndexChanged(ISelectionOverlayWindowViewModel windowVM)
-    {
-        var selectedIndex = windowVM.SelectedCaptureTypeIndex;
-        foreach (var target in _windowViewModels)
-        {
-            if (ReferenceEquals(target, windowVM))
-                continue;
-
-            target.UpdateSelectedCaptureTypeCommand.Execute(selectedIndex);
-        }
-
-        if (windowVM.GetSelectedCaptureType() == CaptureType.AllScreens)
-        {
-            switch (windowVM.GetSelectedCaptureMode())
-            {
-                case CaptureMode.Image:
-                    AllScreensCaptureRequested?.Invoke(this, EventArgs.Empty);
-                    break;
-
-                case CaptureMode.Video:
-                    break;
-            }
         }
     }
 }

@@ -11,6 +11,8 @@ namespace CaptureTool.Application.Interfaces.ViewModels;
 public interface ISelectionOverlayWindowViewModel : IViewModel
 {
     event EventHandler<CaptureOptions>? CaptureOptionsUpdated;
+    event EventHandler<(int Index, SelectionUpdateSource Source)>? CaptureModeIndexChanged;
+    event EventHandler<(int Index, SelectionUpdateSource Source)>? CaptureTypeIndexChanged;
 
     bool IsPrimary { get; }
     ObservableCollection<ICaptureTypeViewModel> SupportedCaptureTypes { get; }
@@ -26,8 +28,8 @@ public interface ISelectionOverlayWindowViewModel : IViewModel
     bool IsCapturingVideo { get; }
     IAppCommand RequestCaptureCommand { get; }
     IAppCommand CloseOverlayCommand { get; }
-    IAppCommand<int> UpdateSelectedCaptureModeCommand { get; }
-    IAppCommand<int> UpdateSelectedCaptureTypeCommand { get; }
+    IAppCommand<(int Index, SelectionUpdateSource Source)> UpdateSelectedCaptureModeCommand { get; }
+    IAppCommand<(int Index, SelectionUpdateSource Source)> UpdateSelectedCaptureTypeCommand { get; }
     IAppCommand<Rectangle> UpdateCaptureAreaCommand { get; }
     IAppCommand<CaptureOptions> UpdateCaptureOptionsCommand { get; }
 
