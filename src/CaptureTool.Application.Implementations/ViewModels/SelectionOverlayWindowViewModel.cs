@@ -270,7 +270,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _supportedCaptureTypes.Clear();
         if (SupportedCaptureModes.Count == 0)
         {
-            _selectedCaptureTypeIndex = -1;
+            SelectedCaptureTypeIndex = -1;
             return;
         }
 
@@ -286,7 +286,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             _supportedCaptureTypes.Add(_captureTypeViewModelFactory.Create(supportedCaptureType));
         }
 
-        _selectedCaptureTypeIndex = 0;
+        SelectedCaptureTypeIndex = 0;
+        CaptureTypeIndexChanged?.Invoke(this, (0, SelectionUpdateSource.Programmatic));
     }
 
     private void RequestCapture()
