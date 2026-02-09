@@ -7,7 +7,13 @@ public static partial class ChromaKeyColorHelper
 {
     public static async Task<Color[]> GetTopColorsAsync(string fileName, uint count = 3, byte quantizeStep = 8)
     {
-        var device = CanvasDevice.GetSharedDevice();
+        CanvasDevice? device = CanvasDevice.GetSharedDevice();
+        if (device == null)
+        {
+            throw new InvalidOperationException(
+                "Failed to create Win2D device. Your system may not support the required Direct3D features.");
+        }
+
         using var bitmap = await CanvasBitmap.LoadAsync(device, fileName);
 
         var pixelBytes = bitmap.GetPixelBytes();
