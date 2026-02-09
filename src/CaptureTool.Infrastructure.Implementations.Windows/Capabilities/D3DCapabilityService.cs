@@ -158,7 +158,8 @@ public sealed class D3DCapabilityService : ID3DCapabilityService
 
             return D3DCapabilityCheckResult.Failure(
                 "Win2D CanvasDevice",
-                errorMessage);
+                errorMessage,
+                ex.HResult);
         }
     }
 }

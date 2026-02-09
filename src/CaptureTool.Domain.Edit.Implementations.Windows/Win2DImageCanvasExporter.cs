@@ -81,13 +81,18 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
             }
             return device;
         }
+        catch (InvalidOperationException)
+        {
+            // Re-throw InvalidOperationException without wrapping to preserve stack trace
+            throw;
+        }
         catch (Exception ex) when (ex.HResult == unchecked((int)0x887A0001)) // DXGI_ERROR_UNSUPPORTED
         {
             throw new InvalidOperationException(
                 "Your graphics hardware does not support the required Direct3D features (DXGI_ERROR_UNSUPPORTED). " +
                 "This application requires a GPU with DirectX 11 Feature Level 11.0 support.", ex);
         }
-        catch (Exception ex) when (ex is not InvalidOperationException)
+        catch (Exception ex)
         {
             throw new InvalidOperationException(
                 "Failed to create Win2D device for image editing. " +
