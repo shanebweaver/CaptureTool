@@ -138,7 +138,7 @@ public sealed class D3DCapabilityService : ID3DCapabilityService
         {
             // Attempt to get or create a Win2D CanvasDevice
             // This validates that the system can create a device for Win2D operations
-            using CanvasDevice? device = CanvasDevice.GetSharedDevice();
+            CanvasDevice? device = CanvasDevice.GetSharedDevice();
             
             if (device == null)
             {
@@ -147,6 +147,8 @@ public sealed class D3DCapabilityService : ID3DCapabilityService
                     "Failed to create Win2D CanvasDevice. The system may not support the required graphics features for image editing.");
             }
 
+            // Dispose the device after successful validation
+            device.Dispose();
             return D3DCapabilityCheckResult.Success();
         }
         catch (Exception ex)
