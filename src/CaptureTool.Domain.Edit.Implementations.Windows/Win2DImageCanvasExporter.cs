@@ -81,9 +81,8 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
             }
             return device;
         }
-        catch (Exception ex) when (ex.Message.Contains("0x887A0001", StringComparison.OrdinalIgnoreCase))
+        catch (Exception ex) when (ex.HResult == unchecked((int)0x887A0001)) // DXGI_ERROR_UNSUPPORTED
         {
-            // DXGI_ERROR_UNSUPPORTED
             throw new InvalidOperationException(
                 "Your graphics hardware does not support the required Direct3D features (DXGI_ERROR_UNSUPPORTED). " +
                 "This application requires a GPU with DirectX 11 Feature Level 11.0 support.", ex);

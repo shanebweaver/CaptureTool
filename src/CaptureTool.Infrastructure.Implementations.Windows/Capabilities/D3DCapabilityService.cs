@@ -32,9 +32,6 @@ public sealed class D3DCapabilityService : ID3DCapabilityService
         IntPtr pFeatureLevel,
         out IntPtr ppImmediateContext);
 
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern int GetLastError();
-
     /// <inheritdoc/>
     public D3DCapabilityCheckResult CheckD3DCapabilities()
     {
@@ -154,7 +151,8 @@ public sealed class D3DCapabilityService : ID3DCapabilityService
         }
         catch (Exception ex)
         {
-            string errorMessage = ex.Message.Contains("0x887A0001", StringComparison.OrdinalIgnoreCase)
+            // Check if the exception has an HResult indicating DXGI_ERROR_UNSUPPORTED
+            string errorMessage = ex.HResult == DXGI_ERROR_UNSUPPORTED
                 ? "Win2D device creation failed with DXGI_ERROR_UNSUPPORTED. The GPU may not support the required DirectX features."
                 : $"Failed to create Win2D device: {ex.Message}";
 
