@@ -61,24 +61,38 @@ jobs:
         Get-ChildItem -Path packages-flat | ForEach-Object { Write-Host $_.FullName }
       shell: pwsh
     
-    - name: Configure Microsoft Store CLI
+    - name: Setup Microsoft Store Developer CLI
       uses: microsoft/microsoft-store-apppublisher@v1.1
     
-    - name: Reconfigure store credentials
-      run: |
-        msstore reconfigure `
-          --tenantId ${{ secrets.AZURE_AD_TENANT_ID }} `
-          --sellerId ${{ secrets.SELLER_ID }} `
-          --clientId ${{ secrets.AZURE_AD_APPLICATION_CLIENT_ID }} `
-          --clientSecret ${{ secrets.AZURE_AD_APPLICATION_SECRET }}
+    - name: Configure Microsoft Store Developer CLI
+      run: msstore reconfigure --tenantId ${{ secrets.PARTNER_CENTER_TENANT_ID }} --sellerId ${{ secrets.PARTNER_CENTER_SELLER_ID }} --clientId ${{ secrets.PARTNER_CENTER_CLIENT_ID }} --clientSecret ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
       shell: pwsh
     
     - name: Publish App packages
+      env:
+        STORE_PRODUCT_ID: ${{ secrets.STORE_PRODUCT_ID }}
       run: |
         # Publish all .msix packages in the packages-flat directory
-        $msixFiles = Get-ChildItem -Path packages-flat -Filter "*.msix"
+        $packagesPath = "${{ github.workspace }}/packages-flat"
+        $msixFiles = Get-ChildItem -Path $packagesPath -Filter "*.msix"
+        $failedPackages = @()
+        
         foreach ($file in $msixFiles) {
           Write-Host "Publishing: $($file.FullName)"
-          msstore publish "$($file.FullName)" -id ${{ secrets.STORE_PRODUCT_ID }}
+          try {
+            msstore publish "$($file.FullName)" -id $env:STORE_PRODUCT_ID
+            Write-Host "Successfully published: $($file.Name)"
+          }
+          catch {
+            Write-Error "Failed to publish $($file.Name): $_"
+            $failedPackages += $file.Name
+          }
         }
+        
+        if ($failedPackages.Count -gt 0) {
+          Write-Error "Failed to publish the following packages: $($failedPackages -join ', ')"
+          exit 1
+        }
+        
+        Write-Host "All packages published successfully"
       shell: pwsh

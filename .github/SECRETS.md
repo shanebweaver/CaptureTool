@@ -10,23 +10,23 @@ The `publish.yml` workflow uses the Microsoft Store CLI to publish app packages 
 
 | Secret Name | Description |
 |------------|-------------|
-| `AZURE_AD_TENANT_ID` | The Azure AD Tenant ID for your Microsoft Partner Center account |
-| `SELLER_ID` | Your Microsoft Partner Center Seller ID |
-| `AZURE_AD_APPLICATION_CLIENT_ID` | The Client ID of your Azure AD application registered for Partner Center API access |
-| `AZURE_AD_APPLICATION_SECRET` | The Client Secret for your Azure AD application |
+| `PARTNER_CENTER_TENANT_ID` | The Azure AD Tenant ID for your Microsoft Partner Center account |
+| `PARTNER_CENTER_SELLER_ID` | Your Microsoft Partner Center Seller ID |
+| `PARTNER_CENTER_CLIENT_ID` | The Client ID of your Azure AD application registered for Partner Center API access |
+| `PARTNER_CENTER_CLIENT_SECRET` | The Client Secret for your Azure AD application |
 | `STORE_PRODUCT_ID` | Your app's Store Product ID (found in Partner Center) |
 
 ### Migration from Previous Secrets
 
-If you are migrating from the previous publishing workflow, you will need to update/add the following secrets:
+If you are migrating from the previous publishing workflow, the secret names have changed slightly:
 
 | Old Secret Name | New Secret Name | Notes |
 |----------------|-----------------|-------|
-| `PARTNER_CENTER_TENANT_ID` | `AZURE_AD_TENANT_ID` | Rename or create new |
-| `PARTNER_CENTER_CLIENT_ID` | `AZURE_AD_APPLICATION_CLIENT_ID` | Rename or create new |
-| `PARTNER_CENTER_CLIENT_SECRET` | `AZURE_AD_APPLICATION_SECRET` | Rename or create new |
-| `PARTNER_CENTER_APP_ID` | `STORE_PRODUCT_ID` | Rename or create new |
-| N/A | `SELLER_ID` | New secret - obtain from Partner Center |
+| `PARTNER_CENTER_TENANT_ID` | `PARTNER_CENTER_TENANT_ID` | No change needed |
+| `PARTNER_CENTER_CLIENT_ID` | `PARTNER_CENTER_CLIENT_ID` | No change needed |
+| `PARTNER_CENTER_CLIENT_SECRET` | `PARTNER_CENTER_CLIENT_SECRET` | No change needed |
+| `PARTNER_CENTER_APP_ID` | `STORE_PRODUCT_ID` | Rename to new name |
+| N/A | `PARTNER_CENTER_SELLER_ID` | New secret - obtain from Partner Center |
 
 ### Setting up Azure AD Application
 
