@@ -61,12 +61,24 @@ jobs:
         Get-ChildItem -Path packages-flat | ForEach-Object { Write-Host $_.FullName }
       shell: pwsh
     
-    - name: Publish to Microsoft Store
-      uses: isaacrlevin/windows-store-action@1.0
-      with:
-        tenant-id: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
-        client-id: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
-        client-secret: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
-        app-id: ${{ secrets.PARTNER_CENTER_APP_ID }}
-        package-path: '${{ github.workspace }}/packages-flat'
-        skip-polling: false
+    - name: Configure Microsoft Store CLI
+      uses: microsoft/microsoft-store-apppublisher@v1.1
+    
+    - name: Reconfigure store credentials
+      run: |
+        msstore reconfigure `
+          --tenantId ${{ secrets.AZURE_AD_TENANT_ID }} `
+          --sellerId ${{ secrets.SELLER_ID }} `
+          --clientId ${{ secrets.AZURE_AD_APPLICATION_CLIENT_ID }} `
+          --clientSecret ${{ secrets.AZURE_AD_APPLICATION_SECRET }}
+      shell: pwsh
+    
+    - name: Publish App packages
+      run: |
+        # Publish all .msix packages in the packages-flat directory
+        $msixFiles = Get-ChildItem -Path packages-flat -Filter "*.msix"
+        foreach ($file in $msixFiles) {
+          Write-Host "Publishing: $($file.FullName)"
+          msstore publish "$($file.FullName)" -id ${{ secrets.STORE_PRODUCT_ID }}
+        }
+      shell: pwsh
