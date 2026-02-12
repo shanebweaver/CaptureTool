@@ -65,14 +65,7 @@ jobs:
       env:
         STORE_PRODUCT_ID: ${{ secrets.STORE_PRODUCT_ID }}
       run: |
-        # Find the .msix package for this architecture
         $msixFile = Get-ChildItem -Path packages -Recurse -Filter "*.msix" | Select-Object -First 1
-        
-        if (-not $msixFile) {
-          Write-Error "No .msix file found for ${{ matrix.platform }}"
-          exit 1
-        }
-        
         Write-Host "Publishing ${{ matrix.platform }} package: $($msixFile.FullName)"
         msstore publish "$($msixFile.FullName)" -id $env:STORE_PRODUCT_ID
         Write-Host "Successfully published ${{ matrix.platform }} package: $($msixFile.Name)"
