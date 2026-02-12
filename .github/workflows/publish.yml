@@ -16,7 +16,6 @@ jobs:
     strategy:
       matrix:
         platform: [x64, arm64]
-      fail-fast: false
     
     permissions:
       actions: read
@@ -31,52 +30,31 @@ jobs:
         run-id: ${{ github.event.workflow_run.id }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: List downloaded packages
-      run: |
-        Write-Host "Downloaded packages for ${{ matrix.platform }}:"
-        Get-ChildItem -Path packages -Recurse -File | ForEach-Object { Write-Host $_.FullName }
-      shell: pwsh
-    
-    - name: Verify package exists
-      run: |
-        $msixFiles = Get-ChildItem -Path packages -Recurse -Filter "*.msix"
-
-        if (-not $msixFiles -or $msixFiles.Count -eq 0) {
-          Write-Error "No .msix files were found for ${{ matrix.platform }}. Ensure the build produced .msix artifacts and they were downloaded correctly."
-          exit 1
-        }
-
-        Write-Host "Found $($msixFiles.Count) package(s) for ${{ matrix.platform }}"
-      shell: pwsh
-    
     - name: Setup Microsoft Store Developer CLI
       uses: microsoft/microsoft-store-apppublisher@v1.1
     
     - name: Configure Microsoft Store Developer CLI
+      shell: pwsh
       env:
         PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
         PARTNER_CENTER_SELLER_ID: ${{ secrets.PARTNER_CENTER_SELLER_ID }}
         PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
         PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
-      run: msstore reconfigure --tenantId $env:PARTNER_CENTER_TENANT_ID --sellerId $env:PARTNER_CENTER_SELLER_ID --clientId $env:PARTNER_CENTER_CLIENT_ID --clientSecret $env:PARTNER_CENTER_CLIENT_SECRET
-      shell: pwsh
+      run: |
+        msstore reconfigure `
+          --tenantId $env:PARTNER_CENTER_TENANT_ID `
+          --sellerId $env:PARTNER_CENTER_SELLER_ID `
+          --clientId $env:PARTNER_CENTER_CLIENT_ID `
+          --clientSecret $env:PARTNER_CENTER_CLIENT_SECRET
     
     - name: Publish ${{ matrix.platform }} package
+      shell: pwsh
       env:
         STORE_PRODUCT_ID: ${{ secrets.STORE_PRODUCT_ID }}
       run: |
         $msixFile = Get-ChildItem -Path packages -Recurse -Filter "*.msix" | Select-Object -First 1
-        
         if (-not $msixFile) {
           throw "No .msix file found for ${{ matrix.platform }}"
         }
         
-        Write-Host "Publishing ${{ matrix.platform }} package: $($msixFile.FullName)"
-        msstore publish "$($msixFile.FullName)" -id $env:STORE_PRODUCT_ID
-        
-        if ($LASTEXITCODE -ne 0) {
-          throw "Failed to publish ${{ matrix.platform }} package"
-        }
-        
-        Write-Host "Successfully published ${{ matrix.platform }} package: $($msixFile.Name)"
-      shell: pwsh
+        msstore publish "$($msixFile.FullName)" -id $env:STORE_PRODUCT_ID -v
