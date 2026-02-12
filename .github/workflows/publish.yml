@@ -13,52 +13,40 @@ jobs:
     runs-on: windows-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
+    strategy:
+      matrix:
+        platform: [x64, arm64]
+      fail-fast: false
+    
     permissions:
       actions: read
       contents: read
     
     steps:
-    - name: Download x64 artifacts
+    - name: Download ${{ matrix.platform }} artifacts
       uses: actions/download-artifact@v7
       with:
-        name: StorePackage-x64
-        path: packages/x64
-        run-id: ${{ github.event.workflow_run.id }}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Download arm64 artifacts
-      uses: actions/download-artifact@v7
-      with:
-        name: StorePackage-arm64
-        path: packages/arm64
+        name: StorePackage-${{ matrix.platform }}
+        path: packages
         run-id: ${{ github.event.workflow_run.id }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: List downloaded packages
       run: |
-        Write-Host "Downloaded packages:"
+        Write-Host "Downloaded packages for ${{ matrix.platform }}:"
         Get-ChildItem -Path packages -Recurse -File | ForEach-Object { Write-Host $_.FullName }
       shell: pwsh
     
-    - name: Prepare packages for upload
+    - name: Verify package exists
       run: |
-        # Create a flat directory structure for the Store action
-        New-Item -Path packages-flat -ItemType Directory -Force
-
-        # Find all .msix packages in the downloaded artifacts
         $msixFiles = Get-ChildItem -Path packages -Recurse -Filter "*.msix"
 
         if (-not $msixFiles -or $msixFiles.Count -eq 0) {
-          Write-Error "No .msix files were found in the 'packages' directory. Ensure the build produced .msix artifacts and they were downloaded correctly."
+          Write-Error "No .msix files were found for ${{ matrix.platform }}. Ensure the build produced .msix artifacts and they were downloaded correctly."
           exit 1
         }
 
-        foreach ($file in $msixFiles) {
-          Copy-Item $file.FullName -Destination (Join-Path 'packages-flat' $file.Name)
-          Write-Host "Copied: $($file.Name)"
-        }
-        Write-Host "Packages ready for upload:"
-        Get-ChildItem -Path packages-flat | ForEach-Object { Write-Host $_.FullName }
+        Write-Host "Found $($msixFiles.Count) package(s) for ${{ matrix.platform }}"
       shell: pwsh
     
     - name: Setup Microsoft Store Developer CLI
@@ -73,31 +61,19 @@ jobs:
       run: msstore reconfigure --tenantId $env:PARTNER_CENTER_TENANT_ID --sellerId $env:PARTNER_CENTER_SELLER_ID --clientId $env:PARTNER_CENTER_CLIENT_ID --clientSecret $env:PARTNER_CENTER_CLIENT_SECRET
       shell: pwsh
     
-    - name: Publish App packages
+    - name: Publish ${{ matrix.platform }} package
       env:
         STORE_PRODUCT_ID: ${{ secrets.STORE_PRODUCT_ID }}
       run: |
-        # Publish all .msix packages in the packages-flat directory
-        $packagesPath = "${{ github.workspace }}/packages-flat"
-        $msixFiles = Get-ChildItem -Path $packagesPath -Filter "*.msix"
-        $failedPackages = @()
+        # Find the .msix package for this architecture
+        $msixFile = Get-ChildItem -Path packages -Recurse -Filter "*.msix" | Select-Object -First 1
         
-        foreach ($file in $msixFiles) {
-          Write-Host "Publishing: $($file.FullName)"
-          try {
-            msstore publish "$($file.FullName)" -id $env:STORE_PRODUCT_ID
-            Write-Host "Successfully published: $($file.Name)"
-          }
-          catch {
-            Write-Error "Failed to publish $($file.Name): $_"
-            $failedPackages += $file.Name
-          }
-        }
-        
-        if ($failedPackages.Count -gt 0) {
-          Write-Error "Failed to publish the following packages: $($failedPackages -join ', ')"
+        if (-not $msixFile) {
+          Write-Error "No .msix file found for ${{ matrix.platform }}"
           exit 1
         }
         
-        Write-Host "All packages published successfully"
+        Write-Host "Publishing ${{ matrix.platform }} package: $($msixFile.FullName)"
+        msstore publish "$($msixFile.FullName)" -id $env:STORE_PRODUCT_ID
+        Write-Host "Successfully published ${{ matrix.platform }} package: $($msixFile.Name)"
       shell: pwsh
