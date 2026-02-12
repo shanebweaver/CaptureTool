@@ -66,7 +66,17 @@ jobs:
         STORE_PRODUCT_ID: ${{ secrets.STORE_PRODUCT_ID }}
       run: |
         $msixFile = Get-ChildItem -Path packages -Recurse -Filter "*.msix" | Select-Object -First 1
+        
+        if (-not $msixFile) {
+          throw "No .msix file found for ${{ matrix.platform }}"
+        }
+        
         Write-Host "Publishing ${{ matrix.platform }} package: $($msixFile.FullName)"
         msstore publish "$($msixFile.FullName)" -id $env:STORE_PRODUCT_ID
+        
+        if ($LASTEXITCODE -ne 0) {
+          throw "Failed to publish ${{ matrix.platform }} package"
+        }
+        
         Write-Host "Successfully published ${{ matrix.platform }} package: $($msixFile.Name)"
       shell: pwsh
