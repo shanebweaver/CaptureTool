@@ -462,6 +462,18 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="Settings_VideoAutoCopy_SubtitleLabel.Text" xml:space="preserve">
     <value>Copier automatiquement les vidéos dans le presse-papiers après la capture.</value>
   </data>
+  <data name="Settings_VideoDefaultLocalAudio_HeaderLabel.Text" xml:space="preserve">
+    <value>Audio local par défaut</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_SubtitleLabel.Text" xml:space="preserve">
+    <value>État par défaut de l'audio local lors du démarrage de l'enregistrement d'écran.</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_Toggle.OnContent" xml:space="preserve">
+    <value>Activé</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_Toggle.OffContent" xml:space="preserve">
+    <value>Désactivé</value>
+  </data>
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Enregistrer automatiquement les vidéos dans le dossier des vidéos après la capture.</value>
   </data>

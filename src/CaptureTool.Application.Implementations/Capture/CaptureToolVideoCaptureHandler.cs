@@ -72,7 +72,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         _metadataScannerRegistry = metadataScannerRegistry;
         _scanJobFactory = scanJobFactory;
 
-        IsDesktopAudioEnabled = true;
+        IsDesktopAudioEnabled = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
     }
 
     public void StartVideoCapture(NewCaptureArgs args)
