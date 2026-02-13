@@ -858,4 +858,8 @@ SOFTWARE.
     <value>Auto-Zoom Lock</value>
     <comment>The tooltip for the auto-zoom lock toggle button on the image edit page.</comment>
   </data>
+  <data name="ImageEdit_ZoomLabel.Text" xml:space="preserve">
+    <value>Zoom:</value>
+    <comment>The label for the zoom slider on the image edit page.</comment>
+  </data>
 </root>

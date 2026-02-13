@@ -269,9 +269,9 @@
                     <FontIcon FontSize="16" Glyph="&#xE71E;" />
                 </Button>
                 <TextBlock
+                    x:Uid="ImageEdit_ZoomLabel"
                     VerticalAlignment="Center"
-                    FontSize="12"
-                    Text="Zoom:" />
+                    FontSize="12" />
                 <Slider
                     x:Name="ZoomSlider"
                     Width="120"
