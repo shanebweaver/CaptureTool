@@ -12,6 +12,8 @@ public interface IAppNavigation
     void GoHome();
     void GoToAbout();
     void GoToAddOns();
+    void GoToAudioCapture();
+    void GoToAudioEdit();
     void GoToError(Exception exception);
     void GoToImageCapture(CaptureOptions captureOptions, bool clearHistory = false);
     void GoToImageEdit(IImageFile imageFile);

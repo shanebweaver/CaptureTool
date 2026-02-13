@@ -360,6 +360,15 @@
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
     <value>屏幕录制</value>
   </data>
+  <data name="NewCaptureButton_Audio_Label.Text" xml:space="preserve">
+    <value>音频录制</value>
+  </data>
+  <data name="NewCaptureButton_Audio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>新音频录制</value>
+  </data>
+  <data name="NewCaptureButton_Audio.AutomationProperties.Name" xml:space="preserve">
+    <value>音频录制</value>
+  </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>使用系统默认</value>
   </data>

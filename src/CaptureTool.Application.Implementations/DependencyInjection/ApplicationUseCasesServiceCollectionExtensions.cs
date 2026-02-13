@@ -64,6 +64,7 @@ public static class ApplicationUseCasesServiceCollectionExtensions
     {
         services.AddTransient<IHomeNewImageCaptureUseCase, HomeNewImageCaptureUseCase>();
         services.AddTransient<IHomeNewVideoCaptureUseCase, HomeNewVideoCaptureUseCase>();
+        services.AddTransient<IHomeNewAudioCaptureUseCase, HomeNewAudioCaptureUseCase>();
         return services;
     }
 

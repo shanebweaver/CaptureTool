@@ -360,6 +360,15 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
     <value>Bildschirmaufnahme</value>
   </data>
+  <data name="NewCaptureButton_Audio_Label.Text" xml:space="preserve">
+    <value>Audioaufnahme</value>
+  </data>
+  <data name="NewCaptureButton_Audio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Neue Audioaufnahme</value>
+  </data>
+  <data name="NewCaptureButton_Audio.AutomationProperties.Name" xml:space="preserve">
+    <value>Audioaufnahme</value>
+  </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Systemstandard verwenden</value>
   </data>

@@ -10,6 +10,8 @@ public enum CaptureToolNavigationRoute
     AddOns,
     ImageCapture,
     VideoCapture,
+    AudioCapture,
     ImageEdit,
-    VideoEdit
+    VideoEdit,
+    AudioEdit
 }

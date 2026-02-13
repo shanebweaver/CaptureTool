@@ -18,6 +18,8 @@ public static class ApplicationViewModelsServiceCollectionExtensions
         services.AddTransient<ILoadingPageViewModel, LoadingPageViewModel>();
         services.AddTransient<IImageEditPageViewModel, ImageEditPageViewModel>();
         services.AddTransient<IVideoEditPageViewModel, VideoEditPageViewModel>();
+        services.AddTransient<IAudioCapturePageViewModel, AudioCapturePageViewModel>();
+        services.AddTransient<IAudioEditPageViewModel, AudioEditPageViewModel>();
         services.AddTransient<IAppMenuViewModel, AppMenuViewModel>();
         services.AddTransient<IDiagnosticsViewModel, DiagnosticsViewModel>();
         services.AddTransient<ISelectionOverlayHostViewModel, SelectionOverlayHostViewModel>();

@@ -24,6 +24,7 @@ public sealed class HomePageViewModelTests
 
         Fixture.Freeze<Mock<IHomeNewImageCaptureUseCase>>();
         Fixture.Freeze<Mock<IHomeNewVideoCaptureUseCase>>();
+        Fixture.Freeze<Mock<IHomeNewAudioCaptureUseCase>>();
         Fixture.Freeze<Mock<IFeatureManager>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
@@ -51,6 +52,7 @@ public sealed class HomePageViewModelTests
         featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(true);
 
         var newVideoCaptureAction = Fixture.Freeze<Mock<IHomeNewVideoCaptureUseCase>>();
+        newVideoCaptureAction.Setup(a => a.CanExecute()).Returns(true);
         var vm = Create();
 
         vm.NewVideoCaptureCommand.Execute();
@@ -58,5 +60,36 @@ public sealed class HomePageViewModelTests
         newVideoCaptureAction.Verify(a => a.Execute(), Times.Once);
         telemetry.Verify(t => t.ActivityInitiated(HomePageViewModel.ActivityIds.NewVideoCapture, It.IsAny<string>()), Times.Once);
         telemetry.Verify(t => t.ActivityCompleted(HomePageViewModel.ActivityIds.NewVideoCapture, It.IsAny<string>()), Times.Once);
+    }
+
+    [TestMethod]
+    public void NewAudioCaptureCommand_ShouldInvokeAction_AndTrackTelemetry_WhenEnabled()
+    {
+        var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_AudioCapture)).Returns(true);
+
+        var newAudioCaptureAction = Fixture.Freeze<Mock<IHomeNewAudioCaptureUseCase>>();
+        newAudioCaptureAction.Setup(a => a.CanExecute()).Returns(true);
+        var vm = Create();
+
+        vm.NewAudioCaptureCommand.Execute();
+
+        newAudioCaptureAction.Verify(a => a.Execute(), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(HomePageViewModel.ActivityIds.NewAudioCapture, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(HomePageViewModel.ActivityIds.NewAudioCapture, It.IsAny<string>()), Times.Once);
+    }
+
+    [TestMethod]
+    public void IsAudioCaptureEnabled_ShouldReflectFeatureFlag()
+    {
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_AudioCapture)).Returns(false);
+        var vm = Create();
+        Assert.IsFalse(vm.IsAudioCaptureEnabled);
+
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_AudioCapture)).Returns(true);
+        vm = Create();
+        Assert.IsTrue(vm.IsAudioCaptureEnabled);
     }
 }
