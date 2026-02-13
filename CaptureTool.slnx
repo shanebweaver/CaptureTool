@@ -20,6 +20,11 @@
   <Project Path="src/CaptureTool.Application.Implementations/CaptureTool.Application.Implementations.csproj" />
   <Project Path="src/CaptureTool.Application.Interfaces/CaptureTool.Application.Interfaces.csproj" />
   <Project Path="src/CaptureTool.Application.Tests/CaptureTool.Application.Tests.csproj" />
+  <Project Path="src/CaptureTool.Domain.Audio.Implementations.Windows/CaptureTool.Domain.Audio.Implementations.Windows.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="src/CaptureTool.Domain.Audio.Interfaces/CaptureTool.Domain.Audio.Interfaces.csproj" />
   <Project Path="src/CaptureTool.Domain.Capture.Implementations.Windows/CaptureTool.Domain.Capture.Implementations.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
