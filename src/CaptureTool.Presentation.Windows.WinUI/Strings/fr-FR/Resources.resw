@@ -358,9 +358,8 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>Nouvel enregistrement</value>
   </data>
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
-    <value>Enregistrement d’écran</value>
-  <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
-  <data name="AppLanguage_SystemDefault" xml:space="preserve">
+    <value>Enregistrement d'écran</value>
+  </data>
   <data name="NewCaptureButton_Audio_Label.Text" xml:space="preserve">
     <value>Enregistrement audio</value>
   </data>
@@ -370,6 +369,7 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="NewCaptureButton_Audio.AutomationProperties.Name" xml:space="preserve">
     <value>Enregistrement audio</value>
   </data>
+  <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Utiliser les paramètres par défaut du système</value>
   </data>
   <data name="CaptureType_Rectangle" xml:space="preserve">
