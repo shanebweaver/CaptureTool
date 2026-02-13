@@ -24,6 +24,7 @@ public sealed class HomePageViewModelTests
 
         Fixture.Freeze<Mock<IHomeNewImageCaptureUseCase>>();
         Fixture.Freeze<Mock<IHomeNewVideoCaptureUseCase>>();
+        Fixture.Freeze<Mock<IHomeNewAudioCaptureUseCase>>();
         Fixture.Freeze<Mock<IFeatureManager>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
@@ -51,6 +52,7 @@ public sealed class HomePageViewModelTests
         featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(true);
 
         var newVideoCaptureAction = Fixture.Freeze<Mock<IHomeNewVideoCaptureUseCase>>();
+        newVideoCaptureAction.Setup(a => a.CanExecute()).Returns(true);
         var vm = Create();
 
         vm.NewVideoCaptureCommand.Execute();
