@@ -8,22 +8,18 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
-  <!-- Project references -->
-  <ItemGroup>
-    <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj" />
-    <ProjectReference Include="..\CaptureTool.Application.Interfaces\CaptureTool.Application.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Audio.Interfaces\CaptureTool.Domain.Audio.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Interfaces\CaptureTool.Infrastructure.Interfaces.csproj" />
-  </ItemGroup>
-
   <!-- Package references -->
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Windows.CsWin32">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Domain.Audio.Interfaces\CaptureTool.Domain.Audio.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>
