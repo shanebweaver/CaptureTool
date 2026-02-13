@@ -13,6 +13,8 @@ internal static partial class PageLocator
         { CaptureToolNavigationRoute.Loading, typeof(LoadingPage) },
         { CaptureToolNavigationRoute.ImageEdit, typeof(ImageEditPage) },
         { CaptureToolNavigationRoute.VideoEdit, typeof(VideoEditPage) },
+        { CaptureToolNavigationRoute.AudioCapture, typeof(AudioCapturePage) },
+        { CaptureToolNavigationRoute.AudioEdit, typeof(AudioEditPage) },
     };
 
     public static Type GetPageType(object route)

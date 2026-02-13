@@ -70,6 +70,20 @@
                             TextWrapping="WrapWholeWords" />
                     </StackPanel>
                 </Button>
+                <Button
+                    x:Name="NewAudioCaptureButton"
+                    x:Uid="NewCaptureButton_Audio"
+                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewAudioCaptureCommand)}"
+                    Style="{StaticResource NewCaptureButtonStyle}"
+                    Visibility="{x:Bind ViewModel.IsAudioCaptureEnabled}">
+                    <StackPanel Spacing="4">
+                        <SymbolIcon Symbol="Audio" />
+                        <TextBlock
+                            x:Uid="NewCaptureButton_Audio_Label"
+                            TextAlignment="Center"
+                            TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </StackPanel>
     </Grid>

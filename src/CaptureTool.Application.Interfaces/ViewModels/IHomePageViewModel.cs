@@ -7,5 +7,7 @@ public interface IHomePageViewModel : IViewModel
 {
     IAppCommand NewImageCaptureCommand { get; }
     IAppCommand NewVideoCaptureCommand { get; }
+    IAppCommand NewAudioCaptureCommand { get; }
     bool IsVideoCaptureEnabled { get; }
+    bool IsAudioCaptureEnabled { get; }
 }

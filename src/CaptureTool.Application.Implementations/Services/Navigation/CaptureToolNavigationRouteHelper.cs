@@ -14,7 +14,9 @@ public static partial class CaptureToolNavigationRouteHelper
                 navigationRoute == CaptureToolNavigationRoute.About ||
                 navigationRoute == CaptureToolNavigationRoute.Settings ||
                 navigationRoute == CaptureToolNavigationRoute.ImageEdit ||
-                navigationRoute == CaptureToolNavigationRoute.VideoEdit;
+                navigationRoute == CaptureToolNavigationRoute.VideoEdit ||
+                navigationRoute == CaptureToolNavigationRoute.AudioCapture ||
+                navigationRoute == CaptureToolNavigationRoute.AudioEdit;
         }
 
         return false;
