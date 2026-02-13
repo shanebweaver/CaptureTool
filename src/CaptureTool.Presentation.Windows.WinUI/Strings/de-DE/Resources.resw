@@ -462,6 +462,18 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="Settings_VideoAutoCopy_SubtitleLabel.Text" xml:space="preserve">
     <value>Videos nach der Aufnahme automatisch in die Zwischenablage kopieren.</value>
   </data>
+  <data name="Settings_VideoDefaultLocalAudio_HeaderLabel.Text" xml:space="preserve">
+    <value>Standardeinstellung für lokales Audio</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_SubtitleLabel.Text" xml:space="preserve">
+    <value>Standardzustand des lokalen Audios beim Starten der Bildschirmaufzeichnung.</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_Toggle.OnContent" xml:space="preserve">
+    <value>Ein</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_Toggle.OffContent" xml:space="preserve">
+    <value>Aus</value>
+  </data>
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Videos nach der Aufnahme automatisch im Videoordner speichern.</value>
   </data>
