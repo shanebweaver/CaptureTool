@@ -462,6 +462,18 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="Settings_VideoAutoCopy_SubtitleLabel.Text" xml:space="preserve">
     <value>Copiar automáticamente los vídeos al portapapeles después de capturarlos.</value>
   </data>
+  <data name="Settings_VideoDefaultLocalAudio_HeaderLabel.Text" xml:space="preserve">
+    <value>Audio local predeterminado</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_SubtitleLabel.Text" xml:space="preserve">
+    <value>Estado predeterminado del audio local al iniciar la grabación de pantalla.</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_Toggle.OnContent" xml:space="preserve">
+    <value>Activado</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_Toggle.OffContent" xml:space="preserve">
+    <value>Desactivado</value>
+  </data>
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Guardar automáticamente los vídeos en la carpeta de vídeos después de capturarlos.</value>
   </data>

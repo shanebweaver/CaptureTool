@@ -28,6 +28,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
         public static readonly string UpdateImageCaptureAutoSave = "UpdateImageCaptureAutoSave";
         public static readonly string UpdateVideoCaptureAutoCopy = "UpdateVideoCaptureAutoCopy";
         public static readonly string UpdateVideoCaptureAutoSave = "UpdateVideoCaptureAutoSave";
+        public static readonly string UpdateVideoCaptureDefaultLocalAudio = "UpdateVideoCaptureDefaultLocalAudio";
         public static readonly string UpdateVideoMetadataAutoSave = "UpdateVideoMetadataAutoSave";
         public static readonly string ChangeScreenshotsFolder = "ChangeScreenshotsFolder";
         public static readonly string ChangeVideosFolder = "ChangeVideosFolder";
@@ -50,6 +51,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
     private readonly ISettingsUpdateImageAutoSaveUseCase _updateImageAutoSaveAction;
     private readonly ISettingsUpdateVideoCaptureAutoCopyUseCase _updateVideoCaptureAutoCopyAction;
     private readonly ISettingsUpdateVideoCaptureAutoSaveUseCase _updateVideoCaptureAutoSaveAction;
+    private readonly ISettingsUpdateVideoCaptureDefaultLocalAudioUseCase _updateVideoCaptureDefaultLocalAudioAction;
     private readonly ISettingsUpdateVideoMetadataAutoSaveUseCase _updateVideoMetadataAutoSaveAction;
     private readonly ISettingsUpdateAppLanguageUseCase _updateAppLanguageAction;
     private readonly ISettingsUpdateAppThemeUseCase _updateAppThemeAction;
@@ -86,6 +88,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
     public IAsyncAppCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
     public IAsyncAppCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
     public IAsyncAppCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
+    public IAsyncAppCommand<bool> UpdateVideoCaptureDefaultLocalAudioCommand { get; }
     public IAsyncAppCommand<bool> UpdateVideoMetadataAutoSaveCommand { get; }
     public IAsyncAppCommand<int> UpdateAppLanguageCommand { get; }
     public IAppCommand<int> UpdateAppThemeCommand { get; }
@@ -177,6 +180,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
         private set => Set(ref field, value);
     }
 
+    public bool VideoCaptureDefaultLocalAudio
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public bool VideoMetadataAutoSave
     {
         get => field;
@@ -208,6 +217,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
         ISettingsUpdateImageAutoSaveUseCase updateImageAutoSaveAction,
         ISettingsUpdateVideoCaptureAutoCopyUseCase updateVideoCaptureAutoCopyAction,
         ISettingsUpdateVideoCaptureAutoSaveUseCase updateVideoCaptureAutoSaveAction,
+        ISettingsUpdateVideoCaptureDefaultLocalAudioUseCase updateVideoCaptureDefaultLocalAudioAction,
         ISettingsUpdateVideoMetadataAutoSaveUseCase updateVideoMetadataAutoSaveAction,
         ISettingsUpdateAppLanguageUseCase updateAppLanguageAction,
         ISettingsUpdateAppThemeUseCase updateAppThemeAction,
@@ -233,6 +243,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
         _updateImageAutoSaveAction = updateImageAutoSaveAction;
         _updateVideoCaptureAutoCopyAction = updateVideoCaptureAutoCopyAction;
         _updateVideoCaptureAutoSaveAction = updateVideoCaptureAutoSaveAction;
+        _updateVideoCaptureDefaultLocalAudioAction = updateVideoCaptureDefaultLocalAudioAction;
         _updateVideoMetadataAutoSaveAction = updateVideoMetadataAutoSaveAction;
         _updateAppLanguageAction = updateAppLanguageAction;
         _updateAppThemeAction = updateAppThemeAction;
@@ -269,6 +280,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
         UpdateImageCaptureAutoSaveCommand = commandFactory.CreateAsync<bool>(ActivityIds.UpdateImageCaptureAutoSave, UpdateImageCaptureAutoSaveAsync);
         UpdateVideoCaptureAutoCopyCommand = commandFactory.CreateAsync<bool>(ActivityIds.UpdateVideoCaptureAutoCopy, UpdateVideoCaptureAutoCopyAsync);
         UpdateVideoCaptureAutoSaveCommand = commandFactory.CreateAsync<bool>(ActivityIds.UpdateVideoCaptureAutoSave, UpdateVideoCaptureAutoSaveAsync);
+        UpdateVideoCaptureDefaultLocalAudioCommand = commandFactory.CreateAsync<bool>(ActivityIds.UpdateVideoCaptureDefaultLocalAudio, UpdateVideoCaptureDefaultLocalAudioAsync);
         UpdateVideoMetadataAutoSaveCommand = commandFactory.CreateAsync<bool>(ActivityIds.UpdateVideoMetadataAutoSave, UpdateVideoMetadataAutoSaveAsync);
         UpdateAppLanguageCommand = commandFactory.CreateAsync<int>(ActivityIds.UpdateAppLanguage, UpdateAppLanguageAsync);
         UpdateAppThemeCommand = commandFactory.Create<int>(ActivityIds.UpdateAppTheme, UpdateAppTheme);
@@ -342,6 +354,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
 
             VideoCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
             VideoCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
+            VideoCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
             VideoMetadataAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_MetadataAutoSave);
 
             var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
@@ -453,6 +466,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
         await _updateVideoMetadataAutoSaveAction.ExecuteCommandAsync(value, CancellationToken.None);
     }
 
+    private async Task UpdateVideoCaptureDefaultLocalAudioAsync(bool value)
+    {
+        VideoCaptureDefaultLocalAudio = value;
+        await _updateVideoCaptureDefaultLocalAudioAction.ExecuteCommandAsync(value, CancellationToken.None);
+    }
+
     private async Task ChangeScreenshotsFolderAsync()
     {
         await _changeScreenshotsFolderAction.ExecuteCommandAsync(CancellationToken.None);
@@ -516,6 +535,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
 
         VideoCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
         VideoCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
+        VideoCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
         VideoMetadataAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_MetadataAutoSave);
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);

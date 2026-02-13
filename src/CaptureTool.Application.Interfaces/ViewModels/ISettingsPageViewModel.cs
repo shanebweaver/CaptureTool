@@ -16,6 +16,7 @@ public interface ISettingsPageViewModel : IViewModel
     IAsyncAppCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
     IAsyncAppCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
     IAsyncAppCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
+    IAsyncAppCommand<bool> UpdateVideoCaptureDefaultLocalAudioCommand { get; }
     IAsyncAppCommand<bool> UpdateVideoMetadataAutoSaveCommand { get; }
     IAsyncAppCommand<int> UpdateAppLanguageCommand { get; }
     IAppCommand<int> UpdateAppThemeCommand { get; }
@@ -35,6 +36,7 @@ public interface ISettingsPageViewModel : IViewModel
     bool ImageCaptureAutoSave { get; }
     bool VideoCaptureAutoCopy { get; }
     bool VideoCaptureAutoSave { get; }
+    bool VideoCaptureDefaultLocalAudio { get; }
     bool VideoMetadataAutoSave { get; }
     string ScreenshotsFolderPath { get; }
     string VideosFolderPath { get; }

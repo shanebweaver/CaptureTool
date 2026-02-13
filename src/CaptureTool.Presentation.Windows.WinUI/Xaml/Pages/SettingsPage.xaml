@@ -211,6 +211,47 @@
                             Toggled="VideoAutoCopyToggleSwitch_Toggled" />
                     </Grid>
 
+                    <!--  Default Local Audio  -->
+                    <Grid
+                        Padding="16,12"
+                        Background="{ThemeResource CardBackgroundFillColorDefault}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                        BorderThickness="1"
+                        ColumnSpacing="16"
+                        CornerRadius="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="28" />
+                        </Grid.ColumnDefinitions>
+
+                        <SymbolIcon Symbol="Volume" />
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock
+                                x:Uid="Settings_VideoDefaultLocalAudio_HeaderLabel"
+                                MaxLines="2"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="WrapWholeWords" />
+                            <TextBlock
+                                x:Uid="Settings_VideoDefaultLocalAudio_SubtitleLabel"
+                                FontSize="12"
+                                MaxLines="2"
+                                Opacity=".75"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+
+                        <ToggleSwitch
+                            x:Uid="Settings_VideoDefaultLocalAudio_Toggle"
+                            Grid.Column="2"
+                            MinWidth="0"
+                            HorizontalAlignment="Right"
+                            IsOn="{x:Bind ViewModel.VideoCaptureDefaultLocalAudio, Mode=OneWay}"
+                            Toggled="VideoDefaultLocalAudioToggleSwitch_Toggled" />
+                    </Grid>
+
                     <!--  Auto save  -->
                     <Expander
                         HorizontalAlignment="Stretch"
