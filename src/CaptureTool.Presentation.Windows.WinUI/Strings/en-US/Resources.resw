@@ -473,6 +473,18 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Screen recording</value>
     <comment>The automation name for the button that starts a new video capture.</comment>
   </data>
+  <data name="NewCaptureButton_Audio_Label.Text" xml:space="preserve">
+    <value>Audio recording</value>
+    <comment>The label for the button that starts a new audio capture.</comment>
+  </data>
+  <data name="NewCaptureButton_Audio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>New audio recording</value>
+    <comment>The tool tip for the button that starts a new audio capture.</comment>
+  </data>
+  <data name="NewCaptureButton_Audio.AutomationProperties.Name" xml:space="preserve">
+    <value>Audio recording</value>
+    <comment>The automation name for the button that starts a new audio capture.</comment>
+  </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Use system default</value>
     <comment>The label for the system default language option.</comment>

@@ -360,6 +360,15 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
     <value>Grabación de pantalla</value>
   </data>
+  <data name="NewCaptureButton_Audio_Label.Text" xml:space="preserve">
+    <value>Grabación de audio</value>
+  </data>
+  <data name="NewCaptureButton_Audio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Nueva grabación de audio</value>
+  </data>
+  <data name="NewCaptureButton_Audio.AutomationProperties.Name" xml:space="preserve">
+    <value>Grabación de audio</value>
+  </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Usar el idioma del sistema</value>
   </data>

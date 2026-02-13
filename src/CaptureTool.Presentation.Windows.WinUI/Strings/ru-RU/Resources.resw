@@ -360,6 +360,15 @@
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
     <value>Запись с экрана</value>
   </data>
+  <data name="NewCaptureButton_Audio_Label.Text" xml:space="preserve">
+    <value>Аудиозапись</value>
+  </data>
+  <data name="NewCaptureButton_Audio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Новая аудиозапись</value>
+  </data>
+  <data name="NewCaptureButton_Audio.AutomationProperties.Name" xml:space="preserve">
+    <value>Аудиозапись</value>
+  </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Использовать системный язык</value>
   </data>
