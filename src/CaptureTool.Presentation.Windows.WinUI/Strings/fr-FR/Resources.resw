@@ -627,4 +627,7 @@ SOFTWARE.
   <data name="ImageEdit_Info_Mirrored.ToolTipService.ToolTip" xml:space="preserve">
     <value>Miroir</value>
   </data>
+  <data name="ImageEdit_ZoomLabel.Text" xml:space="preserve">
+    <value>Zoom :</value>
+  </data>
 </root>
