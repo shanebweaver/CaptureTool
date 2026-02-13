@@ -617,6 +617,22 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Automatically copy videos to the clipboard after capture.</value>
     <comment>The subtitle for the video auto copy section on the settings page.</comment>
   </data>
+  <data name="Settings_VideoDefaultLocalAudio_HeaderLabel.Text" xml:space="preserve">
+    <value>Default local audio</value>
+    <comment>The header for the default local audio setting on the settings page.</comment>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_SubtitleLabel.Text" xml:space="preserve">
+    <value>Default state of local audio when starting screen recording.</value>
+    <comment>The subtitle for the default local audio setting on the settings page.</comment>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+    <comment>The label for the on state of the default local audio toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+    <comment>The label for the off state of the default local audio toggle switch on the settings page.</comment>
+  </data>
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Automatically save videos to a folder after capture.</value>
     <comment>The subtitle for the video auto save section on the settings page.</comment>
