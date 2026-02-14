@@ -161,7 +161,7 @@
             <controls:ShapeToolbar
                 FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
                 FillColorChanged="ShapeToolbar_FillColorChanged"
-                SelectedShapeTypeIndex="0"
+                SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay}"
                 SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
                 StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
                 StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
