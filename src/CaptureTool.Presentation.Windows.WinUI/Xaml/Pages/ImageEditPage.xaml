@@ -14,7 +14,7 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        <converters:EnumToIntConverter x:Key="EnumToIntConverter" />
+        <converters:ShapeTypeToIntConverter x:Key="ShapeTypeToIntConverter" />
     </Page.Resources>
 
     <Grid>
@@ -166,7 +166,7 @@
             <controls:ShapeToolbar
                 FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
                 FillColorChanged="ShapeToolbar_FillColorChanged"
-                SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay, Converter={StaticResource EnumToIntConverter}}"
+                SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay, Converter={StaticResource ShapeTypeToIntConverter}}"
                 SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
                 StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
                 StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
