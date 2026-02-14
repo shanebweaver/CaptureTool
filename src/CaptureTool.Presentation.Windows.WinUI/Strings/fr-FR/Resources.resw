@@ -322,6 +322,8 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>Nouvelle capture</value>
   </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Rogner l'image</value>
+  </data>
   <data name="ShapeToolbar_ShapeType.Header" xml:space="preserve">
     <value>Type de forme</value>
     <comment>The header for the shape type selector in the shape toolbar.</comment>
@@ -353,9 +355,6 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="ShapeToolbar_StrokeWidth.Text" xml:space="preserve">
     <value>Épaisseur du contour</value>
     <comment>The label for the stroke width control in the shape toolbar.</comment>
-  </data>
-  <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Rogner l’image</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Faire pivoter l’image</value>
