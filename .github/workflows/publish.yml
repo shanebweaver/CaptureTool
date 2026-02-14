@@ -31,7 +31,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Setup Microsoft Store Developer CLI
-      uses: microsoft/microsoft-store-apppublisher@v1.1
+      uses: microsoft/microsoft-store-apppublisher@v1.3
     
     - name: Configure Microsoft Store Developer CLI
       shell: pwsh
