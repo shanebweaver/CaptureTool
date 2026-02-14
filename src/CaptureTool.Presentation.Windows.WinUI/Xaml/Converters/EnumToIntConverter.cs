@@ -37,6 +37,9 @@ public sealed partial class EnumToIntConverter : IValueConverter
         {
             // Failed to convert the int to enum.
         }
-        return Enum.GetValues(targetType).GetValue(0)!;
+        
+        // Return the first enum value as fallback
+        var enumValues = Enum.GetValues(targetType);
+        return enumValues.GetValue(0) ?? 0;
     }
 }
