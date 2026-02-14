@@ -21,7 +21,7 @@
                 x:Name="ShapeTypeComboBox"
                 x:Uid="ShapeToolbar_ShapeType"
                 Width="120"
-                SelectedIndex="{x:Bind SelectedShapeTypeIndex, Mode=TwoWay}"
+                SelectedIndex="{x:Bind SelectedShapeTypeIndex, Mode=OneWay}"
                 SelectionChanged="ShapeTypeComboBox_SelectionChanged">
                 <ComboBoxItem x:Uid="ShapeToolbar_RectangleItem" Tag="0" />
                 <ComboBoxItem x:Uid="ShapeToolbar_EllipseItem" Tag="1" />
@@ -39,7 +39,7 @@
                     IsColorChannelTextInputVisible="False"
                     IsColorSliderVisible="True"
                     IsHexInputVisible="True"
-                    Color="{x:Bind StrokeColor, Mode=TwoWay, Converter={StaticResource ColorTypeConverter}}"
+                    Color="{x:Bind StrokeColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}"
                     ColorChanged="StrokeColorPicker_ColorChanged" />
             </StackPanel>
 
@@ -53,7 +53,7 @@
                     IsColorChannelTextInputVisible="False"
                     IsColorSliderVisible="True"
                     IsHexInputVisible="True"
-                    Color="{x:Bind FillColor, Mode=TwoWay, Converter={StaticResource ColorTypeConverter}}"
+                    Color="{x:Bind FillColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}"
                     ColorChanged="FillColorPicker_ColorChanged" />
             </StackPanel>
 
@@ -68,7 +68,7 @@
                     Minimum="1"
                     SmallChange="1"
                     SpinButtonPlacementMode="Inline"
-                    Value="{x:Bind StrokeWidth, Mode=TwoWay}"
+                    Value="{x:Bind StrokeWidth, Mode=OneWay}"
                     ValueChanged="StrokeWidthNumberBox_ValueChanged" />
             </StackPanel>
         </StackPanel>
