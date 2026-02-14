@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:converters="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
@@ -11,6 +12,10 @@
     xmlns:viewmodels="using:CaptureTool.Application.Interfaces.ViewModels"
     d:DataContext="{d:DesignInstance Type=viewmodels:IImageEditPageViewModel}"
     mc:Ignorable="d">
+
+    <Page.Resources>
+        <converters:EnumToIntConverter x:Key="EnumToIntConverter" />
+    </Page.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -161,7 +166,7 @@
             <controls:ShapeToolbar
                 FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
                 FillColorChanged="ShapeToolbar_FillColorChanged"
-                SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay}"
+                SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay, Converter={StaticResource EnumToIntConverter}}"
                 SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
                 StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
                 StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
