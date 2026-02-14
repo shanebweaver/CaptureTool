@@ -354,6 +354,7 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>Épaisseur du contour</value>
     <comment>The label for the stroke width control in the shape toolbar.</comment>
   </data>
+  <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Rogner l’image</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
