@@ -425,6 +425,38 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Arrow</value>
     <comment>The arrow shape option in the shape type selector.</comment>
   </data>
+  <data name="ShapeToolbar_ShapeType.Header" xml:space="preserve">
+    <value>Shape Type</value>
+    <comment>The header for the shape type selector in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_RectangleItem.Content" xml:space="preserve">
+    <value>Rectangle</value>
+    <comment>The rectangle shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_EllipseItem.Content" xml:space="preserve">
+    <value>Ellipse</value>
+    <comment>The ellipse shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_LineItem.Content" xml:space="preserve">
+    <value>Line</value>
+    <comment>The line shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_ArrowItem.Content" xml:space="preserve">
+    <value>Arrow</value>
+    <comment>The arrow shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeColor.Text" xml:space="preserve">
+    <value>Stroke Color</value>
+    <comment>The label for the stroke color picker in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColor.Text" xml:space="preserve">
+    <value>Fill Color</value>
+    <comment>The label for the fill color picker in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeWidth.Text" xml:space="preserve">
+    <value>Stroke Width</value>
+    <comment>The label for the stroke width control in the shape toolbar.</comment>
+  </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Rotate</value>
     <comment>The tool tip for the rotate button on the image edit page.</comment>

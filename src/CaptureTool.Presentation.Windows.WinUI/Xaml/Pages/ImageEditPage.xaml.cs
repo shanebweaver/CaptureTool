@@ -14,7 +14,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         InitializeComponent();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
-        ShapeTypeComboBox.SelectionChanged += ShapeTypeComboBox_SelectionChanged;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
     }
@@ -23,7 +22,6 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
-        ShapeTypeComboBox.SelectionChanged -= ShapeTypeComboBox_SelectionChanged;
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
         ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
@@ -117,16 +115,28 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.UpdateSelectedColorOptionIndexCommand.Execute(e);
     }
 
-    private void ShapeTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void ShapeToolbar_SelectedShapeTypeIndexChanged(object _, int e)
     {
-        if (sender is ComboBox comboBox && comboBox.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is string tag)
+        if (Enum.IsDefined(typeof(CaptureTool.Domain.Edit.Interfaces.ShapeType), e))
         {
-            if (int.TryParse(tag, out int shapeTypeValue) && Enum.IsDefined(typeof(CaptureTool.Domain.Edit.Interfaces.ShapeType), shapeTypeValue))
-            {
-                var shapeType = (CaptureTool.Domain.Edit.Interfaces.ShapeType)shapeTypeValue;
-                ViewModel.UpdateSelectedShapeTypeCommand.Execute(shapeType);
-            }
+            var shapeType = (CaptureTool.Domain.Edit.Interfaces.ShapeType)e;
+            ViewModel.UpdateSelectedShapeTypeCommand.Execute(shapeType);
         }
+    }
+
+    private void ShapeToolbar_StrokeColorChanged(object _, Color e)
+    {
+        ViewModel.UpdateShapeStrokeColorCommand.Execute(e);
+    }
+
+    private void ShapeToolbar_FillColorChanged(object _, Color e)
+    {
+        ViewModel.UpdateShapeFillColorCommand.Execute(e);
+    }
+
+    private void ShapeToolbar_StrokeWidthChanged(object _, int e)
+    {
+        ViewModel.UpdateShapeStrokeWidthCommand.Execute(e);
     }
 
     private async void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)

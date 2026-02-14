@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.ShapeToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=local:ShapeToolbar}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ColorTypeConverter x:Key="ColorTypeConverter" />
+    </UserControl.Resources>
+
+    <Grid>
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <!--  Shape Type  -->
+            <ComboBox
+                x:Name="ShapeTypeComboBox"
+                x:Uid="ShapeToolbar_ShapeType"
+                Width="120"
+                SelectedIndex="{x:Bind SelectedShapeTypeIndex, Mode=TwoWay}"
+                SelectionChanged="ShapeTypeComboBox_SelectionChanged">
+                <ComboBoxItem x:Uid="ShapeToolbar_RectangleItem" Tag="0" />
+                <ComboBoxItem x:Uid="ShapeToolbar_EllipseItem" Tag="1" />
+                <ComboBoxItem x:Uid="ShapeToolbar_LineItem" Tag="2" />
+                <ComboBoxItem x:Uid="ShapeToolbar_ArrowItem" Tag="3" />
+            </ComboBox>
+
+            <!--  Stroke Color  -->
+            <StackPanel Spacing="4">
+                <TextBlock x:Uid="ShapeToolbar_StrokeColor" />
+                <ColorPicker
+                    x:Name="StrokeColorPicker"
+                    ColorSpectrumShape="Ring"
+                    IsAlphaEnabled="False"
+                    IsColorChannelTextInputVisible="False"
+                    IsColorSliderVisible="True"
+                    IsHexInputVisible="True"
+                    Color="{x:Bind StrokeColor, Mode=TwoWay, Converter={StaticResource ColorTypeConverter}}"
+                    ColorChanged="StrokeColorPicker_ColorChanged" />
+            </StackPanel>
+
+            <!--  Fill Color  -->
+            <StackPanel Spacing="4">
+                <TextBlock x:Uid="ShapeToolbar_FillColor" />
+                <ColorPicker
+                    x:Name="FillColorPicker"
+                    ColorSpectrumShape="Ring"
+                    IsAlphaEnabled="True"
+                    IsColorChannelTextInputVisible="False"
+                    IsColorSliderVisible="True"
+                    IsHexInputVisible="True"
+                    Color="{x:Bind FillColor, Mode=TwoWay, Converter={StaticResource ColorTypeConverter}}"
+                    ColorChanged="FillColorPicker_ColorChanged" />
+            </StackPanel>
+
+            <!--  Stroke Width  -->
+            <StackPanel Spacing="4">
+                <TextBlock x:Uid="ShapeToolbar_StrokeWidth" />
+                <NumberBox
+                    x:Name="StrokeWidthNumberBox"
+                    Width="100"
+                    LargeChange="1"
+                    Maximum="20"
+                    Minimum="1"
+                    SmallChange="1"
+                    SpinButtonPlacementMode="Inline"
+                    Value="{x:Bind StrokeWidth, Mode=TwoWay}"
+                    ValueChanged="StrokeWidthNumberBox_ValueChanged" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</local:UserControlBase>

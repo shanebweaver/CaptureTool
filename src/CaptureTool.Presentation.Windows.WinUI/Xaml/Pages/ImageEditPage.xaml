@@ -158,18 +158,15 @@
             HorizontalAlignment="Center"
             Row="1"
             Visibility="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <ComboBox
-                    x:Name="ShapeTypeComboBox"
-                    x:Uid="ShapeTypeComboBox"
-                    Width="120"
-                    SelectedIndex="0">
-                    <ComboBoxItem x:Uid="ShapeTypeComboBox_RectangleItem" Tag="0" />
-                    <ComboBoxItem x:Uid="ShapeTypeComboBox_EllipseItem" Tag="1" />
-                    <ComboBoxItem x:Uid="ShapeTypeComboBox_LineItem" Tag="2" />
-                    <ComboBoxItem x:Uid="ShapeTypeComboBox_ArrowItem" Tag="3" />
-                </ComboBox>
-            </StackPanel>
+            <controls:ShapeToolbar
+                FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
+                FillColorChanged="ShapeToolbar_FillColorChanged"
+                SelectedShapeTypeIndex="0"
+                SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
+                StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
+                StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
+                StrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
+                StrokeWidthChanged="ShapeToolbar_StrokeWidthChanged" />
         </Grid>
 
         <!--  Canvas  -->
