@@ -321,6 +321,38 @@
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
     <value>新建捕获</value>
   </data>
+  <data name="ShapeToolbar_ShapeType.Header" xml:space="preserve">
+    <value>形状类型</value>
+    <comment>The header for the shape type selector in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_RectangleItem.Content" xml:space="preserve">
+    <value>矩形</value>
+    <comment>The rectangle shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_EllipseItem.Content" xml:space="preserve">
+    <value>椭圆</value>
+    <comment>The ellipse shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_LineItem.Content" xml:space="preserve">
+    <value>直线</value>
+    <comment>The line shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_ArrowItem.Content" xml:space="preserve">
+    <value>箭头</value>
+    <comment>The arrow shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeColor.Text" xml:space="preserve">
+    <value>描边颜色</value>
+    <comment>The label for the stroke color picker in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColor.Text" xml:space="preserve">
+    <value>填充颜色</value>
+    <comment>The label for the fill color picker in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeWidth.Text" xml:space="preserve">
+    <value>描边宽度</value>
+    <comment>The label for the stroke width control in the shape toolbar.</comment>
+  </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>裁剪图像</value>
   </data>

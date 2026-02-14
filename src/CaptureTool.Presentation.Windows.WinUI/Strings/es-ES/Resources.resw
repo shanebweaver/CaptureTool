@@ -321,6 +321,38 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
     <value>Nueva captura</value>
   </data>
+  <data name="ShapeToolbar_ShapeType.Header" xml:space="preserve">
+    <value>Tipo de forma</value>
+    <comment>The header for the shape type selector in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_RectangleItem.Content" xml:space="preserve">
+    <value>Rectángulo</value>
+    <comment>The rectangle shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_EllipseItem.Content" xml:space="preserve">
+    <value>Elipse</value>
+    <comment>The ellipse shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_LineItem.Content" xml:space="preserve">
+    <value>Línea</value>
+    <comment>The line shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_ArrowItem.Content" xml:space="preserve">
+    <value>Flecha</value>
+    <comment>The arrow shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeColor.Text" xml:space="preserve">
+    <value>Color del trazo</value>
+    <comment>The label for the stroke color picker in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColor.Text" xml:space="preserve">
+    <value>Color de relleno</value>
+    <comment>The label for the fill color picker in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeWidth.Text" xml:space="preserve">
+    <value>Ancho del trazo</value>
+    <comment>The label for the stroke width control in the shape toolbar.</comment>
+  </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Recortar imagen</value>
   </data>
