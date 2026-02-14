@@ -96,7 +96,7 @@ public sealed class AppMenuUseCases : IAppMenuUseCases
         nint hwnd = _windowingService.GetMainWindowHandle();
         IFile file = await _filePickerService.PickFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures)
             ?? throw new OperationCanceledException("No file was selected.");
-        
+
         var fileType = _fileTypeDetector.DetectFileType(file.FilePath);
         switch (fileType)
         {

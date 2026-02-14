@@ -9,10 +9,13 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class AudioEditPage : AudioEditPageBase
 {
+    private MediaPlayer? _mediaPlayer;
+
     public AudioEditPage()
     {
         InitializeComponent();
-        AudioPlayer.SetMediaPlayer(new MediaPlayer());
+        _mediaPlayer = new MediaPlayer();
+        AudioPlayer.SetMediaPlayer(_mediaPlayer);
         AudioPlayer.Loaded += AudioPlayer_Loaded;
         AudioPlayer.Unloaded += AudioPlayer_Unloaded;
     }
@@ -20,6 +23,8 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     private void AudioPlayer_Unloaded(object sender, RoutedEventArgs e)
     {
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        _mediaPlayer?.Dispose();
+        _mediaPlayer = null;
     }
 
     private void AudioPlayer_Loaded(object sender, RoutedEventArgs e)
@@ -54,7 +59,10 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         {
             StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
             var mediaSource = MediaSource.CreateFromStorageFile(file);
-            AudioPlayer.MediaPlayer.Source = mediaSource;
+            if (_mediaPlayer is not null)
+            {
+                _mediaPlayer.Source = mediaSource;
+            }
         }
         catch (Exception)
         {
