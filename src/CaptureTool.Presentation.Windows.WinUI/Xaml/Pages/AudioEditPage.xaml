@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:CaptureTool.Application.Interfaces.ViewModels"
@@ -11,7 +12,43 @@
     mc:Ignorable="d">
 
     <Grid>
-        <!-- Empty for now as per requirements -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <!--  Toolbar  -->
+        <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+            <!--  Copy  -->
+            <AppBarButton
+                x:Uid="AudioEdit_CopyButton"
+                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.CopyCommand)}"
+                Icon="Copy"
+                IsEnabled="{x:Bind ViewModel.IsAudioReady, Mode=OneWay}">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="C" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+
+            <!--  Save  -->
+            <AppBarButton
+                x:Uid="AudioEdit_SaveButton"
+                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.SaveCommand)}"
+                Icon="Save"
+                IsEnabled="{x:Bind ViewModel.IsAudioReady, Mode=OneWay}">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="S" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+        </CommandBar>
+
+        <!--  Content  -->
+        <Grid Grid.Row="1" Padding="8,0,8,8">
+            <MediaPlayerElement
+                x:Name="AudioPlayer"
+                AreTransportControlsEnabled="True"
+                Visibility="{x:Bind ViewModel.IsAudioReady, Mode=OneWay}" />
+        </Grid>
     </Grid>
 
 </local:AudioEditPageBase>

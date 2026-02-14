@@ -64,6 +64,9 @@ public sealed partial class CaptureToolAppNavigation : IAppNavigation
     public void GoToAudioEdit()
         => _navigationService.Navigate(CaptureToolNavigationRoute.AudioEdit, clearHistory: true);
 
+    public void GoToAudioEdit(IAudioFile audioFile)
+        => _navigationService.Navigate(CaptureToolNavigationRoute.AudioEdit, audioFile, true);
+
     public void GoToImageEdit(IImageFile imageFile)
         => _navigationService.Navigate(CaptureToolNavigationRoute.ImageEdit, imageFile, true);
 

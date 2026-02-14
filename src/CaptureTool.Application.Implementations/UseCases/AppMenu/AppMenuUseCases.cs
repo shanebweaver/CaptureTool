@@ -79,6 +79,11 @@ public sealed class AppMenuUseCases : IAppMenuUseCases
                 _appNavigation.GoToVideoEdit(videoFile);
                 break;
 
+            case CaptureFileType.Audio:
+                AudioFile audioFile = new(filePath);
+                _appNavigation.GoToAudioEdit(audioFile);
+                break;
+
             default:
                 throw new InvalidOperationException($"Unknown file type: {fileType}");
         }
@@ -91,7 +96,21 @@ public sealed class AppMenuUseCases : IAppMenuUseCases
         nint hwnd = _windowingService.GetMainWindowHandle();
         IFile file = await _filePickerService.PickFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures)
             ?? throw new OperationCanceledException("No file was selected.");
-        _appNavigation.GoToImageEdit(new ImageFile(file.FilePath));
+        
+        var fileType = _fileTypeDetector.DetectFileType(file.FilePath);
+        switch (fileType)
+        {
+            case CaptureFileType.Image:
+                _appNavigation.GoToImageEdit(new ImageFile(file.FilePath));
+                break;
+
+            case CaptureFileType.Audio:
+                _appNavigation.GoToAudioEdit(new AudioFile(file.FilePath));
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unsupported file type: {fileType}");
+        }
     }
 
     public void NewImageCapture()
