@@ -16,6 +16,8 @@ public sealed partial class ShapeTypeToIntConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
     {
+        // Validate range for ShapeType enum (Rectangle=0, Ellipse=1, Line=2, Arrow=3)
+        // Using hardcoded value instead of Enum.GetValues() to maintain AOT compatibility
         if (value is int intValue && intValue >= 0 && intValue <= 3)
         {
             return (ShapeType)intValue;
