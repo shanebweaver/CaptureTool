@@ -13,9 +13,13 @@ public sealed partial class EnumToIntConverter : IValueConverter
                 return System.Convert.ToInt32(enumValue);
             }
         }
-        catch (Exception)
+        catch (InvalidCastException)
         {
             // Failed to convert the enum.
+        }
+        catch (OverflowException)
+        {
+            // Enum value is outside the range of Int32.
         }
         return 0;
     }
@@ -29,10 +33,10 @@ public sealed partial class EnumToIntConverter : IValueConverter
                 return Enum.ToObject(targetType, intValue);
             }
         }
-        catch (Exception)
+        catch (ArgumentException)
         {
-            // Failed to convert the int.
+            // Failed to convert the int to enum.
         }
-        return Enum.GetValues(targetType).GetValue(0) ?? 0;
+        return Enum.GetValues(targetType).GetValue(0)!;
     }
 }
