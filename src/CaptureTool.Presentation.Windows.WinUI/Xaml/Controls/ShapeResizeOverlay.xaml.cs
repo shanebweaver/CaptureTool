@@ -246,12 +246,14 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
     {
         base.OnPointerCaptureLost(e);
         EndResizeCore();
+        e.Handled = true;
     }
 
     protected override void OnPointerCanceled(PointerRoutedEventArgs e)
     {
         base.OnPointerCanceled(e);
         EndResizeCore();
+        e.Handled = true;
     }
 
     private void UpdateLayout(RectangleF bounds)
