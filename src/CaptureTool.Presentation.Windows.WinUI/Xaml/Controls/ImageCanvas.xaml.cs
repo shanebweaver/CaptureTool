@@ -7,7 +7,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using System.Drawing;
-using Point = Windows.Foundation.Point;
+using Windows.System;
+using Point = global::Windows.Foundation.Point;
+using WinUIColor = Microsoft.UI.Color;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
@@ -213,7 +215,6 @@ public sealed partial class ImageCanvas : UserControlBase
     // Shape selection state
     private IDrawable? _selectedShape;
     private int _selectedShapeIndex = -1;
-    private bool _isManipulatingShape;
 
     public ImageCanvas()
     {
@@ -232,13 +233,13 @@ public sealed partial class ImageCanvas : UserControlBase
 
         switch (e.Key)
         {
-            case Windows.System.VirtualKey.Delete:
+            case VirtualKey.Delete:
                 // Delete the selected shape
                 DeleteSelectedShape();
                 e.Handled = true;
                 break;
 
-            case Windows.System.VirtualKey.Escape:
+            case VirtualKey.Escape:
                 // Deselect the shape
                 DeselectShape();
                 e.Handled = true;
@@ -650,13 +651,13 @@ public sealed partial class ImageCanvas : UserControlBase
                         Width = width,
                         Height = height,
                         Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 ShapeStrokeColor.A,
                                 ShapeStrokeColor.R,
                                 ShapeStrokeColor.G,
                                 ShapeStrokeColor.B)),
                         Fill = ShapeFillColor.A > 0 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 ShapeFillColor.A,
                                 ShapeFillColor.R,
                                 ShapeFillColor.G,
@@ -683,13 +684,13 @@ public sealed partial class ImageCanvas : UserControlBase
                         Width = width,
                         Height = height,
                         Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 ShapeStrokeColor.A,
                                 ShapeStrokeColor.R,
                                 ShapeStrokeColor.G,
                                 ShapeStrokeColor.B)),
                         Fill = ShapeFillColor.A > 0 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 ShapeFillColor.A,
                                 ShapeFillColor.R,
                                 ShapeFillColor.G,
@@ -714,7 +715,7 @@ public sealed partial class ImageCanvas : UserControlBase
                         X2 = endPoint.X,
                         Y2 = endPoint.Y,
                         Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 ShapeStrokeColor.A,
                                 ShapeStrokeColor.R,
                                 ShapeStrokeColor.G,
@@ -735,16 +736,16 @@ public sealed partial class ImageCanvas : UserControlBase
                         {
                             Points = new Microsoft.UI.Xaml.Media.PointCollection
                             {
-                                new Windows.Foundation.Point(
+                                new global::Windows.Foundation.Point(
                                     endPoint.X - arrowLength * Math.Cos(angle - arrowAngle),
                                     endPoint.Y - arrowLength * Math.Sin(angle - arrowAngle)),
-                                new Windows.Foundation.Point(endPoint.X, endPoint.Y),
-                                new Windows.Foundation.Point(
+                                new global::Windows.Foundation.Point(endPoint.X, endPoint.Y),
+                                new global::Windows.Foundation.Point(
                                     endPoint.X - arrowLength * Math.Cos(angle + arrowAngle),
                                     endPoint.Y - arrowLength * Math.Sin(angle + arrowAngle))
                             },
                             Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                                Microsoft.UI.Color.FromArgb(
+                                WinUIColor.FromArgb(
                                     ShapeStrokeColor.A,
                                     ShapeStrokeColor.R,
                                     ShapeStrokeColor.G,
@@ -923,13 +924,8 @@ public sealed partial class ImageCanvas : UserControlBase
                     float maxX = Math.Max(line.Offset.X, line.EndPoint.X);
                     float maxY = Math.Max(line.Offset.Y, line.EndPoint.Y);
                     
-                    // Add some tolerance for line hit testing
-                    float tolerance = Math.Max(10, line.StrokeWidth * 2);
-                    return new RectangleF(
-                        minX - tolerance,
-                        minY - tolerance,
-                        maxX - minX + tolerance * 2,
-                        maxY - minY + tolerance * 2);
+                    // Return tight bounds without tolerance (used for resize overlay)
+                    return new RectangleF(minX, minY, maxX - minX, maxY - minY);
                 }
 
             case ArrowDrawable arrow:
@@ -939,13 +935,8 @@ public sealed partial class ImageCanvas : UserControlBase
                     float maxX = Math.Max(arrow.Offset.X, arrow.EndPoint.X);
                     float maxY = Math.Max(arrow.Offset.Y, arrow.EndPoint.Y);
                     
-                    // Add some tolerance for arrow hit testing
-                    float tolerance = Math.Max(10, arrow.StrokeWidth * 2);
-                    return new RectangleF(
-                        minX - tolerance,
-                        minY - tolerance,
-                        maxX - minX + tolerance * 2,
-                        maxY - minY + tolerance * 2);
+                    // Return tight bounds without tolerance (used for resize overlay)
+                    return new RectangleF(minX, minY, maxX - minX, maxY - minY);
                 }
 
             default:
@@ -1057,13 +1048,13 @@ public sealed partial class ImageCanvas : UserControlBase
                         Width = rect.Size.Width,
                         Height = rect.Size.Height,
                         Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 rect.StrokeColor.A,
                                 rect.StrokeColor.R,
                                 rect.StrokeColor.G,
                                 rect.StrokeColor.B)),
                         Fill = rect.FillColor.A > 0 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 rect.FillColor.A,
                                 rect.FillColor.R,
                                 rect.FillColor.G,
@@ -1083,13 +1074,13 @@ public sealed partial class ImageCanvas : UserControlBase
                         Width = ellipse.Size.Width,
                         Height = ellipse.Size.Height,
                         Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 ellipse.StrokeColor.A,
                                 ellipse.StrokeColor.R,
                                 ellipse.StrokeColor.G,
                                 ellipse.StrokeColor.B)),
                         Fill = ellipse.FillColor.A > 0 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 ellipse.FillColor.A,
                                 ellipse.FillColor.R,
                                 ellipse.FillColor.G,
@@ -1111,7 +1102,7 @@ public sealed partial class ImageCanvas : UserControlBase
                         X2 = line.EndPoint.X,
                         Y2 = line.EndPoint.Y,
                         Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 line.StrokeColor.A,
                                 line.StrokeColor.R,
                                 line.StrokeColor.G,
@@ -1131,7 +1122,7 @@ public sealed partial class ImageCanvas : UserControlBase
                         X2 = arrow.EndPoint.X,
                         Y2 = arrow.EndPoint.Y,
                         Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 arrow.StrokeColor.A,
                                 arrow.StrokeColor.R,
                                 arrow.StrokeColor.G,
@@ -1149,16 +1140,16 @@ public sealed partial class ImageCanvas : UserControlBase
                     {
                         Points = new Microsoft.UI.Xaml.Media.PointCollection
                         {
-                            new Windows.Foundation.Point(
+                            new global::Windows.Foundation.Point(
                                 arrow.EndPoint.X - arrowLength * Math.Cos(angle - arrowAngle),
                                 arrow.EndPoint.Y - arrowLength * Math.Sin(angle - arrowAngle)),
-                            new Windows.Foundation.Point(arrow.EndPoint.X, arrow.EndPoint.Y),
-                            new Windows.Foundation.Point(
+                            new global::Windows.Foundation.Point(arrow.EndPoint.X, arrow.EndPoint.Y),
+                            new global::Windows.Foundation.Point(
                                 arrow.EndPoint.X - arrowLength * Math.Cos(angle + arrowAngle),
                                 arrow.EndPoint.Y - arrowLength * Math.Sin(angle + arrowAngle))
                         },
                         Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.Color.FromArgb(
+                            WinUIColor.FromArgb(
                                 arrow.StrokeColor.A,
                                 arrow.StrokeColor.R,
                                 arrow.StrokeColor.G,

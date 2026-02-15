@@ -25,6 +25,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
         ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
+        ImageCanvas.ShapeDeleted -= ImageCanvas_ShapeDeleted;
     }
 
     private string FormatZoomPercentage(int zoomPercentage)

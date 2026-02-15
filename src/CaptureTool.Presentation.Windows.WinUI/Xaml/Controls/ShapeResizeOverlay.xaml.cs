@@ -221,17 +221,37 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         e.Handled = true;
     }
 
-    private void EndResize(PointerRoutedEventArgs e)
+    private void EndResizeCore()
     {
         if (_activeHandle != ResizeHandle.None)
         {
             _activeHandle = ResizeHandle.None;
             ResizeComplete?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private void EndResize(PointerRoutedEventArgs e)
+    {
+        if (_activeHandle != ResizeHandle.None)
+        {
+            EndResizeCore();
 
             var element = e.OriginalSource as UIElement;
             element?.ReleasePointerCaptures();
             e.Handled = true;
         }
+    }
+
+    protected override void OnPointerCaptureLost(PointerRoutedEventArgs e)
+    {
+        base.OnPointerCaptureLost(e);
+        EndResizeCore();
+    }
+
+    protected override void OnPointerCanceled(PointerRoutedEventArgs e)
+    {
+        base.OnPointerCanceled(e);
+        EndResizeCore();
     }
 
     private void UpdateLayout(RectangleF bounds)
