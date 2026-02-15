@@ -3,6 +3,7 @@
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Application.Interfaces\CaptureTool.Application.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Audio.Interfaces\CaptureTool.Domain.Audio.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Domain.Capture.Interfaces\CaptureTool.Domain.Capture.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Domain.Edit.Interfaces\CaptureTool.Domain.Edit.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations.FeatureManagement\CaptureTool.Infrastructure.Implementations.FeatureManagement.csproj" />
