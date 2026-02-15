@@ -308,7 +308,7 @@
         </Grid>
 
         <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
+            <VisualStateGroup x:Name="CommonStates">
                 <!--  Minimal: Show only dimensions (smallest screens)  -->
                 <VisualState x:Name="MinimalState">
                     <VisualState.StateTriggers>
