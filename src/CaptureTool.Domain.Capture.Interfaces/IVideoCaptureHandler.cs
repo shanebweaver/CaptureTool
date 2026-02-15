@@ -19,4 +19,5 @@ public partial interface IVideoCaptureHandler
     PendingVideoFile StopVideoCapture();
     void CancelVideoCapture();
     void ToggleIsPaused(bool isPaused);
+    void PrepareForVideoCapture();
 }
