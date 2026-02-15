@@ -25,7 +25,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
         // Subscribe to the new source-aware events
         newVM.CaptureModeIndexChanged += OnCaptureModeIndexChanged;
         newVM.CaptureTypeIndexChanged += OnCaptureTypeIndexChanged;
-        
+
         if (isPrimary)
         {
             newVM.PropertyChanged += OnPrimaryWindowViewModelPropertyChanged;
@@ -44,7 +44,7 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase, ISele
         {
             windowViewModel.CaptureModeIndexChanged -= OnCaptureModeIndexChanged;
             windowViewModel.CaptureTypeIndexChanged -= OnCaptureTypeIndexChanged;
-            
+
             if (windowViewModel.IsPrimary)
             {
                 windowViewModel.PropertyChanged -= OnPrimaryWindowViewModelPropertyChanged;

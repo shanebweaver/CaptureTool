@@ -226,29 +226,37 @@
                 Spacing="12">
                 <TextBlock
                     x:Uid="ImageEdit_Info_Dimensions"
+                    MinWidth="72"
                     FontSize="12"
-                    FontWeight="SemiLight">
+                    FontWeight="SemiLight"
+                    TextAlignment="Right">
                     <Run Text="{x:Bind ViewModel.CropRect.Width, Mode=OneWay}" />
                     <Run Text="×" />
                     <Run Text="{x:Bind ViewModel.CropRect.Height, Mode=OneWay}" /><Run Text="px" />
                 </TextBlock>
                 <TextBlock
                     x:Uid="ImageEdit_Info_Offset"
+                    MinWidth="72"
                     FontSize="12"
-                    FontWeight="SemiLight">
+                    FontWeight="SemiLight"
+                    TextAlignment="Right">
                     <Run Text="(" /><Run Text="{x:Bind ViewModel.CropRect.Left, Mode=OneWay}" /><Run Text="," />
-                    <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text=")" />
+                    <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text=")" /><Run Text="px" />
                 </TextBlock>
                 <TextBlock
                     x:Uid="ImageEdit_Info_Rotation"
+                    MinWidth="36"
                     FontSize="12"
                     FontWeight="SemiLight"
-                    Text="{x:Bind ViewModel.RotationDisplayName, Mode=OneWay}" />
+                    Text="{x:Bind ViewModel.RotationDisplayName, Mode=OneWay}"
+                    TextAlignment="Right" />
                 <TextBlock
                     x:Uid="ImageEdit_Info_Mirrored"
+                    MinWidth="72"
                     FontSize="12"
                     FontWeight="SemiLight"
-                    Text="{x:Bind ViewModel.MirroredDisplayName, Mode=OneWay}" />
+                    Text="{x:Bind ViewModel.MirroredDisplayName, Mode=OneWay}"
+                    TextAlignment="Right" />
             </StackPanel>
 
             <StackPanel
@@ -290,9 +298,11 @@
                     ValueChanged="ZoomSlider_ValueChanged"
                     Value="{x:Bind ViewModel.ZoomPercentage, Mode=OneWay}" />
                 <TextBlock
+                    MinWidth="32"
                     VerticalAlignment="Center"
                     FontSize="12"
-                    Text="{x:Bind FormatZoomPercentage(ViewModel.ZoomPercentage), Mode=OneWay}" />
+                    Text="{x:Bind FormatZoomPercentage(ViewModel.ZoomPercentage), Mode=OneWay}"
+                    TextAlignment="Right" />
             </StackPanel>
         </Grid>
     </Grid>
