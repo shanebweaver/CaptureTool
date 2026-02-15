@@ -218,6 +218,10 @@ public sealed partial class ImageCanvas : UserControlBase
     private IDrawable? _selectedShape;
     private int _selectedShapeIndex = -1;
     private ModifyShapeOperation.ShapeState? _shapeStateBeforeModification;
+    
+    // Track if we're in a potential selection scenario
+    private IDrawable? _shapeUnderPointer;
+    private Point? _pointerPressPosition;
 
     // Cached preview elements for performance
     private Microsoft.UI.Xaml.Shapes.Rectangle? _previewRectangle;
@@ -235,22 +239,6 @@ public sealed partial class ImageCanvas : UserControlBase
         Loaded += ImageCanvas_Loaded;
         Unloaded += ImageCanvas_Unloaded;
         KeyDown += ImageCanvas_KeyDown;
-        DoubleTapped += ImageCanvas_DoubleTapped;
-    }
-
-    private void ImageCanvas_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
-    {
-        if (!IsShapesModeEnabled)
-        {
-            return;
-        }
-
-        // Get position relative to the RenderCanvas
-        var point = e.GetPosition(RenderCanvas);
-        
-        // Try to select a shape at this position
-        SelectShape(point);
-        e.Handled = true;
     }
 
     private void ImageCanvas_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
@@ -519,26 +507,27 @@ public sealed partial class ImageCanvas : UserControlBase
             var point = e.GetCurrentPoint(RenderCanvas);
             if (point.Properties.IsLeftButtonPressed)
             {
-                // First check if clicking on an existing shape
-                ///bool clickedOnSelectedShape = false;
+                // Store the press position for later use
+                _pointerPressPosition = point.Position;
                 
+                // Check if clicking on the already selected shape
                 if (_selectedShape != null && IsPointInShape(point.Position, _selectedShape))
                 {
                     // Clicking on already selected shape - let resize handles handle it (for moving)
-                    //clickedOnSelectedShape = true;
                     e.Handled = true;
                     return;
                 }
                 
-                // If clicking on a different (unselected) shape, deselect it and start drawing
-                // This allows drawing on top of existing shapes
-                if (_selectedShape != null)
+                // Check if clicking on any unselected shape
+                _shapeUnderPointer = FindShapeAtPoint(point.Position);
+                
+                // If we had a previous selection and clicked away, deselect
+                if (_selectedShape != null && _shapeUnderPointer == null)
                 {
                     DeselectShape();
                 }
                 
-                // Start drawing a new shape
-                _shapeStartPoint = point.Position;
+                // Don't start drawing yet - wait to see if user drags or releases
                 _isPointerDown = true;
                 RootContainer.CapturePointer(e.Pointer);
                 
@@ -556,11 +545,35 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (_isPointerDown)
         {
-            // In shapes mode, show preview
-            if (IsShapesModeEnabled && _shapeStartPoint.HasValue)
+            // In shapes mode, handle shape drawing
+            if (IsShapesModeEnabled && _pointerPressPosition.HasValue)
             {
                 var currentPoint = e.GetCurrentPoint(RenderCanvas).Position;
-                UpdatePreviewShape(_shapeStartPoint.Value, currentPoint);
+                
+                // Check if user has moved enough to start drawing (threshold to distinguish from click)
+                const double dragThreshold = 3.0; // pixels
+                double distance = Math.Sqrt(
+                    Math.Pow(currentPoint.X - _pointerPressPosition.Value.X, 2) +
+                    Math.Pow(currentPoint.Y - _pointerPressPosition.Value.Y, 2));
+                
+                if (distance > dragThreshold)
+                {
+                    // User is dragging - start drawing a new shape
+                    if (!_shapeStartPoint.HasValue)
+                    {
+                        // Deselect any shape under pointer since we're drawing
+                        if (_shapeUnderPointer != null)
+                        {
+                            DeselectShape();
+                            _shapeUnderPointer = null;
+                        }
+                        
+                        _shapeStartPoint = _pointerPressPosition.Value;
+                    }
+                    
+                    UpdatePreviewShape(_shapeStartPoint.Value, currentPoint);
+                }
+                
                 e.Handled = true;
                 return;
             }
@@ -586,22 +599,35 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RootContainer_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
-        if (IsShapesModeEnabled && _shapeStartPoint.HasValue)
+        if (IsShapesModeEnabled)
         {
-            // Get end position relative to the RenderCanvas
-            var endPoint = e.GetCurrentPoint(RenderCanvas).Position;
+            if (_shapeStartPoint.HasValue)
+            {
+                // User dragged to draw a shape
+                var endPoint = e.GetCurrentPoint(RenderCanvas).Position;
 
-            // Hide the preview shape
-            ClearPreviewShape();
+                // Hide the preview shape
+                ClearPreviewShape();
 
-            // Convert to Vector2 and invoke event
-            var start = new System.Numerics.Vector2((float)_shapeStartPoint.Value.X, (float)_shapeStartPoint.Value.Y);
-            var end = new System.Numerics.Vector2((float)endPoint.X, (float)endPoint.Y);
+                // Convert to Vector2 and invoke event
+                var start = new System.Numerics.Vector2((float)_shapeStartPoint.Value.X, (float)_shapeStartPoint.Value.Y);
+                var end = new System.Numerics.Vector2((float)endPoint.X, (float)endPoint.Y);
 
-            ShapeDrawn?.Invoke(this, (start, end));
+                ShapeDrawn?.Invoke(this, (start, end));
 
-            _shapeStartPoint = null;
-            e.Handled = true;
+                _shapeStartPoint = null;
+                e.Handled = true;
+            }
+            else if (_shapeUnderPointer != null && _pointerPressPosition.HasValue)
+            {
+                // User clicked without dragging - select the shape
+                SelectShapeDirectly(_shapeUnderPointer);
+                e.Handled = true;
+            }
+            
+            // Clean up tracking variables
+            _shapeUnderPointer = null;
+            _pointerPressPosition = null;
         }
 
         _isPointerDown = false;
@@ -612,6 +638,8 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         _isPointerDown = false;
         _shapeStartPoint = null;
+        _shapeUnderPointer = null;
+        _pointerPressPosition = null;
         ClearPreviewShape();
         RootContainer.ReleasePointerCaptures();
     }
@@ -620,6 +648,8 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         _isPointerDown = false;
         _shapeStartPoint = null;
+        _shapeUnderPointer = null;
+        _pointerPressPosition = null;
         ClearPreviewShape();
     }
     #endregion
@@ -959,6 +989,55 @@ public sealed partial class ImageCanvas : UserControlBase
         ShapeResizeOverlay.Visibility = Visibility.Collapsed;
         ClearPreviewShape();
         RenderCanvas.Invalidate(); // Redraw to show all shapes
+    }
+
+    private IDrawable? FindShapeAtPoint(Point clickPoint)
+    {
+        if (Drawables == null)
+        {
+            return null;
+        }
+
+        var drawableList = Drawables.ToList();
+        
+        // Check shapes in reverse order (top to bottom)
+        for (int i = drawableList.Count - 1; i >= 0; i--)
+        {
+            var drawable = drawableList[i];
+            if (IsPointInShape(clickPoint, drawable))
+            {
+                return drawable;
+            }
+        }
+
+        return null;
+    }
+
+    private void SelectShapeDirectly(IDrawable shape)
+    {
+        if (Drawables == null)
+        {
+            return;
+        }
+
+        var drawableList = Drawables.ToList();
+        int index = drawableList.IndexOf(shape);
+        
+        if (index >= 0)
+        {
+            _selectedShape = shape;
+            _selectedShapeIndex = index;
+            
+            // Capture state before modification
+            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(shape);
+            
+            ShowResizeHandles(shape);
+            UpdatePreviewShapeFromDrawable(shape);
+            RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
+            
+            // Set focus to enable keyboard events
+            Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+        }
     }
 
     private void DeleteSelectedShape()
