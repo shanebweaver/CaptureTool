@@ -45,7 +45,8 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         Top,
         Bottom,
         Left,
-        Right
+        Right,
+        Move
     }
 
     public ShapeResizeOverlay()
@@ -95,6 +96,11 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         Handle_Right.PointerPressed += (s, e) => StartResize(ResizeHandle.Right, e);
         Handle_Right.PointerMoved += (s, e) => ContinueResize(e);
         Handle_Right.PointerReleased += (s, e) => EndResize(e);
+
+        // Move (interior area)
+        MoveHandle.PointerPressed += (s, e) => StartResize(ResizeHandle.Move, e);
+        MoveHandle.PointerMoved += (s, e) => ContinueResize(e);
+        MoveHandle.PointerReleased += (s, e) => EndResize(e);
     }
 
     private void StartResize(ResizeHandle handle, PointerRoutedEventArgs e)
@@ -164,24 +170,33 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
             case ResizeHandle.Right:
                 newBounds.Width += deltaX;
                 break;
+
+            case ResizeHandle.Move:
+                // Move the entire shape
+                newBounds.X += deltaX;
+                newBounds.Y += deltaY;
+                break;
         }
 
-        // Enforce minimum size
-        if (newBounds.Width < 2)
+        // Enforce minimum size (but not for Move operations)
+        if (_activeHandle != ResizeHandle.Move)
         {
-            newBounds.Width = 2;
-            if (_activeHandle == ResizeHandle.TopLeft || _activeHandle == ResizeHandle.Left || _activeHandle == ResizeHandle.BottomLeft)
+            if (newBounds.Width < 2)
             {
-                newBounds.X = _initialBounds.X + _initialBounds.Width - 2;
+                newBounds.Width = 2;
+                if (_activeHandle == ResizeHandle.TopLeft || _activeHandle == ResizeHandle.Left || _activeHandle == ResizeHandle.BottomLeft)
+                {
+                    newBounds.X = _initialBounds.X + _initialBounds.Width - 2;
+                }
             }
-        }
 
-        if (newBounds.Height < 2)
-        {
-            newBounds.Height = 2;
-            if (_activeHandle == ResizeHandle.TopLeft || _activeHandle == ResizeHandle.Top || _activeHandle == ResizeHandle.TopRight)
+            if (newBounds.Height < 2)
             {
-                newBounds.Y = _initialBounds.Y + _initialBounds.Height - 2;
+                newBounds.Height = 2;
+                if (_activeHandle == ResizeHandle.TopLeft || _activeHandle == ResizeHandle.Top || _activeHandle == ResizeHandle.TopRight)
+                {
+                    newBounds.Y = _initialBounds.Y + _initialBounds.Height - 2;
+                }
             }
         }
 

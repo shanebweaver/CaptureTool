@@ -24,6 +24,14 @@
                 StrokeDashArray="4,4"
                 StrokeThickness="1" />
 
+            <!--  Move Handle (interior area for dragging entire shape)  -->
+            <Grid
+                x:Name="MoveHandle"
+                Margin="6"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="Transparent" />
+
             <!--  Resize Handles  -->
             <!--  Top left  -->
             <Ellipse

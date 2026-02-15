@@ -213,6 +213,11 @@ public sealed partial class ImageCanvas : UserControlBase
     private IDrawable? _selectedShape;
     private int _selectedShapeIndex = -1;
     private bool _isManipulatingShape;
+    
+    // Shape movement state
+    private bool _isMovingShape;
+    private Point _shapeMoveStartPoint;
+    private System.Numerics.Vector2 _initialShapeOffset;
 
     public ImageCanvas()
     {
@@ -413,7 +418,15 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             var rect = (!IsCropModeEnabled) ? CropRect : IsTurned() ? new Rectangle(0, 0, CanvasSize.Height, CanvasSize.Width) : new Rectangle(0, 0, CanvasSize.Width, CanvasSize.Height);
             ImageCanvasRenderOptions options = new(Orientation, CanvasSize, rect);
-            Win2DImageCanvasRenderer.Render([.. Drawables], options, args.DrawingSession);
+            
+            // Filter out the selected shape if it's being manipulated
+            var drawablesToRender = Drawables;
+            if (_selectedShape != null && _selectedShapeIndex >= 0)
+            {
+                drawablesToRender = Drawables.Where((d, i) => i != _selectedShapeIndex);
+            }
+            
+            Win2DImageCanvasRenderer.Render([.. drawablesToRender], options, args.DrawingSession);
         }
     }
 
@@ -755,10 +768,10 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ShapeResizeOverlay_ResizeComplete(object? sender, EventArgs e)
     {
-        // Resize complete - keep the shape selected
+        // Resize/move complete - redraw canvas with updated shape
         if (_selectedShape != null)
         {
-            InvalidateCanvas();
+            RenderCanvas.Invalidate();
         }
     }
 
@@ -781,6 +794,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 _selectedShapeIndex = i;
                 ShowResizeHandles(drawable);
                 UpdatePreviewShapeFromDrawable(drawable);
+                RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
                 return;
             }
         }
@@ -795,6 +809,7 @@ public sealed partial class ImageCanvas : UserControlBase
         _selectedShapeIndex = -1;
         ShapeResizeOverlay.Visibility = Visibility.Collapsed;
         ClearPreviewShape();
+        RenderCanvas.Invalidate(); // Redraw to show all shapes
     }
 
     private bool IsPointInShape(Point point, IDrawable drawable)
