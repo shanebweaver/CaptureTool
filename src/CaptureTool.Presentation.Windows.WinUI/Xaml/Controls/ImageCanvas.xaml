@@ -65,6 +65,13 @@
                     VerticalAlignment="Stretch"
                     IsHitTestVisible="False"
                     Visibility="Collapsed" />
+
+                <!--  Shape Resize Overlay  -->
+                <local:ShapeResizeOverlay
+                    x:Name="ShapeResizeOverlay"
+                    BoundsChanged="ShapeResizeOverlay_BoundsChanged"
+                    ResizeComplete="ShapeResizeOverlay_ResizeComplete"
+                    Visibility="Collapsed" />
             </Grid>
         </ScrollView>
     </Grid>
