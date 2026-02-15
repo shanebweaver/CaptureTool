@@ -149,10 +149,10 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             // Load available microphones asynchronously
             LoadMicrophonesAsync().ContinueWith(task =>
             {
-                if (task.IsFaulted)
+                if (task.IsFaulted && task.Exception != null)
                 {
                     // Log exception but don't crash - microphones list will remain empty
-                    _telemetryService.TrackException(task.Exception?.GetBaseException() ?? task.Exception!);
+                    _telemetryService.TrackException(task.Exception.GetBaseException());
                 }
             }, TaskScheduler.Default);
 
@@ -162,23 +162,16 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private async Task LoadMicrophonesAsync()
     {
-        try
+        var microphones = await _audioInputService.GetAudioInputDevicesAsync();
+        _taskEnvironment.TryExecute(() =>
         {
-            var microphones = await _audioInputService.GetAudioInputDevicesAsync();
-            _taskEnvironment.TryExecute(() =>
+            AvailableMicrophones = microphones;
+            // Set the first microphone as selected by default
+            if (microphones.Count > 0)
             {
-                AvailableMicrophones = microphones;
-                // Set the first microphone as selected by default
-                if (microphones.Count > 0)
-                {
-                    SelectedMicrophone = microphones[0];
-                }
-            });
-        }
-        catch
-        {
-            // If loading fails, keep empty list
-        }
+                SelectedMicrophone = microphones[0];
+            }
+        });
     }
 
     private void OnDesktopAudioStateChanged(object? sender, bool value)
