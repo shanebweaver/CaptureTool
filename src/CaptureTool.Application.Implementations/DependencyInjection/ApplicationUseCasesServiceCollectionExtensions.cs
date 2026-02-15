@@ -1,6 +1,7 @@
 using CaptureTool.Application.Implementations.UseCases.About;
 using CaptureTool.Application.Implementations.UseCases.AddOns;
 using CaptureTool.Application.Implementations.UseCases.AppMenu;
+using CaptureTool.Application.Implementations.UseCases.AudioEdit;
 using CaptureTool.Application.Implementations.UseCases.CaptureOverlay;
 using CaptureTool.Application.Implementations.UseCases.Diagnostics;
 using CaptureTool.Application.Implementations.UseCases.Error;
@@ -11,6 +12,7 @@ using CaptureTool.Application.Implementations.UseCases.VideoEdit;
 using CaptureTool.Application.Interfaces.UseCases.About;
 using CaptureTool.Application.Interfaces.UseCases.AddOns;
 using CaptureTool.Application.Interfaces.UseCases.AppMenu;
+using CaptureTool.Application.Interfaces.UseCases.AudioEdit;
 using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Application.Interfaces.UseCases.Diagnostics;
 using CaptureTool.Application.Interfaces.UseCases.Error;
@@ -72,6 +74,13 @@ public static class ApplicationUseCasesServiceCollectionExtensions
     {
         services.AddTransient<IVideoEditSaveUseCase, VideoEditSaveUseCase>();
         services.AddTransient<IVideoEditCopyUseCase, VideoEditCopyUseCase>();
+        return services;
+    }
+
+    public static IServiceCollection AddAudioEditUseCases(this IServiceCollection services)
+    {
+        services.AddTransient<IAudioEditSaveUseCase, AudioEditSaveUseCase>();
+        services.AddTransient<IAudioEditCopyUseCase, AudioEditCopyUseCase>();
         return services;
     }
 

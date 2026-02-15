@@ -15,12 +15,18 @@ public sealed class FileTypeDetector : IFileTypeDetector
         ".mp4", ".avi", ".mov", ".wmv"
     };
 
+    private static readonly HashSet<string> AudioExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".mp3", ".wav", ".flac"
+    };
+
     public CaptureFileType DetectFileType(string filePath)
     {
         var ext = Path.GetExtension(filePath);
 
         if (ImageExtensions.Contains(ext)) return CaptureFileType.Image;
         if (VideoExtensions.Contains(ext)) return CaptureFileType.Video;
+        if (AudioExtensions.Contains(ext)) return CaptureFileType.Audio;
 
         return CaptureFileType.Unknown;
     }
@@ -30,4 +36,7 @@ public sealed class FileTypeDetector : IFileTypeDetector
 
     public bool IsVideoFile(string filePath)
         => DetectFileType(filePath) == CaptureFileType.Video;
+
+    public bool IsAudioFile(string filePath)
+        => DetectFileType(filePath) == CaptureFileType.Audio;
 }

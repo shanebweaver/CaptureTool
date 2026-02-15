@@ -79,6 +79,11 @@ public sealed class AppMenuUseCases : IAppMenuUseCases
                 _appNavigation.GoToVideoEdit(videoFile);
                 break;
 
+            case CaptureFileType.Audio:
+                AudioFile audioFile = new(filePath);
+                _appNavigation.GoToAudioEdit(audioFile);
+                break;
+
             default:
                 throw new InvalidOperationException($"Unknown file type: {fileType}");
         }

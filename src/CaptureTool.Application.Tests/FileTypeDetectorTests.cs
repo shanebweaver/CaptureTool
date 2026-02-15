@@ -119,4 +119,53 @@ public class FileTypeDetectorTests
         var result = _detector.IsVideoFile("test.png");
         result.Should().BeFalse();
     }
+
+    [TestMethod]
+    public void DetectFileType_WithMp3Extension_ReturnsAudio()
+    {
+        var result = _detector.DetectFileType("test.mp3");
+        result.Should().Be(CaptureFileType.Audio);
+    }
+
+    [TestMethod]
+    public void DetectFileType_WithWavExtension_ReturnsAudio()
+    {
+        var result = _detector.DetectFileType("test.wav");
+        result.Should().Be(CaptureFileType.Audio);
+    }
+
+    [TestMethod]
+    public void DetectFileType_WithFlacExtension_ReturnsAudio()
+    {
+        var result = _detector.DetectFileType("test.flac");
+        result.Should().Be(CaptureFileType.Audio);
+    }
+
+    [TestMethod]
+    public void DetectFileType_WithUppercaseAudioExtension_ReturnsAudio()
+    {
+        var result = _detector.DetectFileType("test.MP3");
+        result.Should().Be(CaptureFileType.Audio);
+    }
+
+    [TestMethod]
+    public void IsAudioFile_WithAudioExtension_ReturnsTrue()
+    {
+        var result = _detector.IsAudioFile("test.mp3");
+        result.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public void IsAudioFile_WithVideoExtension_ReturnsFalse()
+    {
+        var result = _detector.IsAudioFile("test.mp4");
+        result.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void IsAudioFile_WithImageExtension_ReturnsFalse()
+    {
+        var result = _detector.IsAudioFile("test.png");
+        result.Should().BeFalse();
+    }
 }

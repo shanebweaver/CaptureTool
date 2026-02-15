@@ -50,9 +50,9 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
                 break;
 
             case FilePickerType.Audio:
-                //filePicker.FileTypeFilter.Add(".mp3");
-                //filePicker.FileTypeFilter.Add(".wav");
-                //filePicker.FileTypeFilter.Add(".flac");
+                filePicker.FileTypeFilter.Add(".mp3");
+                filePicker.FileTypeFilter.Add(".wav");
+                filePicker.FileTypeFilter.Add(".flac");
                 break;
 
             case FilePickerType.Video:
@@ -105,6 +105,16 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
                 break;
 
             case FilePickerType.Audio:
+                unsafe
+                {
+#pragma warning disable IDE0028 // Simplify collection initialization
+                    filePicker.FileTypeChoices.Add("MP3", new List<string>() { ".mp3" });
+                    filePicker.FileTypeChoices.Add("WAV", new List<string>() { ".wav" });
+                    filePicker.FileTypeChoices.Add("FLAC", new List<string>() { ".flac" });
+#pragma warning restore IDE0028 // Simplify collection initialization
+                }
+                break;
+
             default:
                 throw new InvalidOperationException("Unexpected file type value.");
         }
