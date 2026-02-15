@@ -121,6 +121,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             ThrowIfNotReadyToLoad();
             StartLoading();
 
+            _videoCaptureHandler.PrepareForVideoCapture();
+
             IsDesktopAudioEnabled = _videoCaptureHandler.IsDesktopAudioEnabled;
             _videoCaptureHandler.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
 
