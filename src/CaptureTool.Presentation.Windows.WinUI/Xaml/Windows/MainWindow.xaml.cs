@@ -18,11 +18,18 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 public sealed partial class MainWindow : Window
 {
     private static readonly SizeInt32 DefaultWindowSize = new(720, 540);
+    private static readonly SizeInt32 MinWindowSize = new(500, 374);
 
     public IMainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<IMainWindowViewModel>();
 
     public MainWindow()
     {
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            presenter.PreferredMinimumWidth = MinWindowSize.Width;
+            presenter.PreferredMinimumHeight = MinWindowSize.Height;
+        }
+
         InitializeComponent();
 
         AppTitleBar.Loaded += AppTitleBar_Loaded;
