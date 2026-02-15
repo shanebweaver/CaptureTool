@@ -1,4 +1,5 @@
 using CaptureTool.Application.Interfaces.ViewModels.Options;
+using CaptureTool.Domain.Audio.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.ViewModels;
 
@@ -12,6 +13,8 @@ public interface ICaptureOverlayViewModel : IViewModel
     Infrastructure.Interfaces.Themes.AppTheme CurrentAppTheme { get; }
     Infrastructure.Interfaces.Themes.AppTheme DefaultAppTheme { get; }
     bool IsDesktopAudioEnabled { get; }
+    IReadOnlyList<AudioInputDevice> AvailableMicrophones { get; }
+    AudioInputDevice? SelectedMicrophone { get; set; }
     IAppCommand CloseOverlayCommand { get; }
     IAppCommand GoBackCommand { get; }
     IAppCommand StartVideoCaptureCommand { get; }

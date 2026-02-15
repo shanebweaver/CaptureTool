@@ -89,6 +89,12 @@
                 </Grid>
             </Button>
 
+            <local:MicrophoneSelectionControl
+                x:Name="MicrophoneSelection"
+                AvailableMicrophones="{x:Bind AvailableMicrophones, Mode=OneWay}"
+                SelectedMicrophone="{x:Bind SelectedMicrophone, Mode=TwoWay}"
+                Visibility="Collapsed" />
+
             <Button
                 x:Uid="SelectionOverlay_CloseButton"
                 Command="{x:Bind CloseCommand, Mode=OneWay}"
