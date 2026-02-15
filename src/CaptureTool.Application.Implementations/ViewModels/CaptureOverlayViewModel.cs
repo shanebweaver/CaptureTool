@@ -85,7 +85,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     public IReadOnlyList<AudioInputDevice> AvailableMicrophones
     {
-        get => field = [];
+        get => field ?? Array.Empty<AudioInputDevice>();
         private set => Set(ref field, value);
     }
 
@@ -147,7 +147,14 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             _captureArea = options.Area;
 
             // Load available microphones asynchronously
-            _ = LoadMicrophonesAsync();
+            LoadMicrophonesAsync().ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    // Log exception but don't crash - microphones list will remain empty
+                    _telemetryService.TrackException(task.Exception?.GetBaseException() ?? task.Exception!);
+                }
+            }, TaskScheduler.Default);
 
             base.Load(options);
         });
