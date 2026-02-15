@@ -8,6 +8,7 @@ public static class AudioDomainsWindowsServiceCollectionExtensions
     public static IServiceCollection AddWindowsAudioDomains(this IServiceCollection services)
     {
         services.AddSingleton<IAudioCaptureService, WindowsAudioCaptureService>();
+        services.AddSingleton<IAudioInputService, WindowsAudioInputService>();
 
         return services;
     }

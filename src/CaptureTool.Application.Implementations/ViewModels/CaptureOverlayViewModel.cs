@@ -1,11 +1,14 @@
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Application.Interfaces.ViewModels.Options;
+using CaptureTool.Domain.Audio.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Themes;
@@ -35,6 +38,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly ITelemetryService _telemetryService;
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ICaptureOverlayUseCases _captureOverlayActions;
+    private readonly IAudioInputService _audioInputService;
+    private readonly IFeatureManager _featureManager;
 
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
@@ -81,6 +86,18 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
+    public IReadOnlyList<AudioInputDevice> AvailableMicrophones
+    {
+        get => field ?? Array.Empty<AudioInputDevice>();
+        private set => Set(ref field, value);
+    }
+
+    public AudioInputDevice? SelectedMicrophone
+    {
+        get => field;
+        set => Set(ref field, value);
+    }
+
     public IAppCommand CloseOverlayCommand { get; }
     public IAppCommand GoBackCommand { get; }
     public IAppCommand StartVideoCaptureCommand { get; }
@@ -94,13 +111,17 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IVideoCaptureHandler videoCaptureHandler,
         ITelemetryService telemetryService,
         ITaskEnvironment taskEnvironment,
-        ICaptureOverlayUseCases captureOverlayActions)
+        ICaptureOverlayUseCases captureOverlayActions,
+        IAudioInputService audioInputService,
+        IFeatureManager featureManager)
     {
         _appNavigation = appNavigation;
         _videoCaptureHandler = videoCaptureHandler;
         _telemetryService = telemetryService;
         _taskEnvironment = taskEnvironment;
         _captureOverlayActions = captureOverlayActions;
+        _audioInputService = audioInputService;
+        _featureManager = featureManager;
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
@@ -132,8 +153,32 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             _monitorCaptureResult = options.Monitor;
             _captureArea = options.Area;
 
+            // Load available microphones asynchronously only if feature is enabled
+            if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MicrophoneSelection))
+            {
+                _ = LoadMicrophonesAsync();
+            }
+
             base.Load(options);
         });
+    }
+
+    private async Task LoadMicrophonesAsync()
+    {
+        try
+        {
+            var microphones = await _audioInputService.GetAudioInputDevicesAsync().ConfigureAwait(false);
+            _taskEnvironment.TryExecute(() =>
+            {
+                AvailableMicrophones = microphones;
+                // Do not auto-select a microphone by default; allow SelectedMicrophone to remain null
+                // so the user can intentionally choose to capture without a microphone.
+            });
+        }
+        catch (Exception ex)
+        {
+            _telemetryService.TrackException(ex);
+        }
     }
 
     private void OnDesktopAudioStateChanged(object? sender, bool value)

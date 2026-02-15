@@ -1,4 +1,5 @@
 using CaptureTool.Application.Interfaces.FeatureManagement;
+using CaptureTool.Domain.Audio.Interfaces;
 using Microsoft.UI.Xaml;
 using System.Windows.Input;
 
@@ -66,6 +67,18 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(TimeSpan.Zero));
 
+    public static readonly DependencyProperty AvailableMicrophonesProperty = DependencyProperty.Register(
+        nameof(AvailableMicrophones),
+        typeof(IReadOnlyList<AudioInputDevice>),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(Array.Empty<AudioInputDevice>()));
+
+    public static readonly DependencyProperty SelectedMicrophoneProperty = DependencyProperty.Register(
+        nameof(SelectedMicrophone),
+        typeof(AudioInputDevice),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(null));
+
     public CaptureOverlayToolbar()
     {
         InitializeComponent();
@@ -73,6 +86,11 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         if (AppServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_LocalAudio))
         {
             LocalAudioToggleButton.Visibility = Visibility.Visible;
+        }
+
+        if (AppServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MicrophoneSelection))
+        {
+            MicrophoneSelection.Visibility = Visibility.Visible;
         }
     }
 
@@ -144,5 +162,17 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     {
         get => Get<TimeSpan>(CaptureTimeProperty);
         set => Set(CaptureTimeProperty, value);
+    }
+
+    public IReadOnlyList<AudioInputDevice> AvailableMicrophones
+    {
+        get => Get<IReadOnlyList<AudioInputDevice>>(AvailableMicrophonesProperty);
+        set => Set(AvailableMicrophonesProperty, value);
+    }
+
+    public AudioInputDevice? SelectedMicrophone
+    {
+        get => Get<AudioInputDevice>(SelectedMicrophoneProperty);
+        set => Set(SelectedMicrophoneProperty, value);
     }
 }
