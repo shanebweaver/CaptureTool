@@ -632,20 +632,19 @@ public sealed partial class ImageCanvas : UserControlBase
         float width = (float)Math.Abs(endPoint.X - startPoint.X);
         float height = (float)Math.Abs(endPoint.Y - startPoint.Y);
 
-        // Only show preview if the shape has a minimum size
-        if (width < 2 && height < 2)
-        {
-            PreviewShapeCanvas.Visibility = Visibility.Collapsed;
-            return;
-        }
-
         Microsoft.UI.Xaml.Shapes.Shape? previewShape = null;
 
         switch (SelectedShapeType)
         {
             case ShapeType.Rectangle:
-                if (width >= 2 && height >= 2)
                 {
+                    // Only show rectangle if both dimensions meet minimum
+                    if (width < 2 || height < 2)
+                    {
+                        PreviewShapeCanvas.Visibility = Visibility.Collapsed;
+                        return;
+                    }
+                    
                     var rect = new Microsoft.UI.Xaml.Shapes.Rectangle
                     {
                         Width = width,
@@ -671,8 +670,14 @@ public sealed partial class ImageCanvas : UserControlBase
                 break;
 
             case ShapeType.Ellipse:
-                if (width >= 2 && height >= 2)
                 {
+                    // Only show ellipse if both dimensions meet minimum
+                    if (width < 2 || height < 2)
+                    {
+                        PreviewShapeCanvas.Visibility = Visibility.Collapsed;
+                        return;
+                    }
+                    
                     var ellipse = new Microsoft.UI.Xaml.Shapes.Ellipse
                     {
                         Width = width,
