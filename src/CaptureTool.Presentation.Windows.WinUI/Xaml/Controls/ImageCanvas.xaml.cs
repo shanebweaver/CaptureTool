@@ -9,7 +9,7 @@ using Microsoft.UI.Xaml.Input;
 using System.Drawing;
 using Windows.System;
 using Point = global::Windows.Foundation.Point;
-using WinUIColor = Microsoft.UI.Color;
+using WinUIColor = global::Windows.UI.Color;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
