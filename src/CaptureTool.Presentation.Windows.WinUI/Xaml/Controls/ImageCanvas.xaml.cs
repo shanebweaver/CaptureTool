@@ -1,6 +1,7 @@
 using CaptureTool.Domain.Edit.Implementations.Windows;
 using CaptureTool.Domain.Edit.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces.Drawable;
+using CaptureTool.Domain.Edit.Interfaces.Operations;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
@@ -519,12 +520,12 @@ public sealed partial class ImageCanvas : UserControlBase
             if (point.Properties.IsLeftButtonPressed)
             {
                 // First check if clicking on an existing shape
-                bool clickedOnSelectedShape = false;
+                ///bool clickedOnSelectedShape = false;
                 
                 if (_selectedShape != null && IsPointInShape(point.Position, _selectedShape))
                 {
                     // Clicking on already selected shape - let resize handles handle it (for moving)
-                    clickedOnSelectedShape = true;
+                    //clickedOnSelectedShape = true;
                     e.Handled = true;
                     return;
                 }
