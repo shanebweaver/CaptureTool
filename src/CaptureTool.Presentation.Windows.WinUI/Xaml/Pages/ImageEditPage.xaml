@@ -210,16 +210,19 @@
             Padding="8"
             Row="3">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <StackPanel
+                x:Name="InfoPanel"
                 Grid.Column="0"
                 VerticalAlignment="Center"
                 Orientation="Horizontal"
                 Spacing="12">
                 <TextBlock
+                    x:Name="DimensionsTextBlock"
                     x:Uid="ImageEdit_Info_Dimensions"
                     MinWidth="72"
                     FontSize="12"
@@ -230,6 +233,7 @@
                     <Run Text="{x:Bind ViewModel.CropRect.Height, Mode=OneWay}" /><Run Text="px" />
                 </TextBlock>
                 <TextBlock
+                    x:Name="OffsetTextBlock"
                     x:Uid="ImageEdit_Info_Offset"
                     MinWidth="72"
                     FontSize="12"
@@ -239,6 +243,7 @@
                     <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text=")" /><Run Text="px" />
                 </TextBlock>
                 <TextBlock
+                    x:Name="RotationTextBlock"
                     x:Uid="ImageEdit_Info_Rotation"
                     MinWidth="36"
                     FontSize="12"
@@ -246,6 +251,7 @@
                     Text="{x:Bind ViewModel.RotationDisplayName, Mode=OneWay}"
                     TextAlignment="Right" />
                 <TextBlock
+                    x:Name="MirroredTextBlock"
                     x:Uid="ImageEdit_Info_Mirrored"
                     MinWidth="72"
                     FontSize="12"
@@ -255,7 +261,7 @@
             </StackPanel>
 
             <StackPanel
-                Grid.Column="1"
+                Grid.Column="2"
                 VerticalAlignment="Center"
                 Orientation="Horizontal"
                 Spacing="8">
@@ -300,5 +306,58 @@
                     TextAlignment="Right" />
             </StackPanel>
         </Grid>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <!--  Minimal: Hide all info (smallest screens)  -->
+                <VisualState x:Name="MinimalState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DimensionsTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="OffsetTextBlock.Visibility" Value="Collapsed" />
+                        <Setter Target="RotationTextBlock.Visibility" Value="Collapsed" />
+                        <Setter Target="MirroredTextBlock.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <!--  Narrow: Show Dimensions and Offset  -->
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="550" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DimensionsTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="OffsetTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="RotationTextBlock.Visibility" Value="Collapsed" />
+                        <Setter Target="MirroredTextBlock.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <!--  Medium: Show Dimensions, Offset, and Rotation  -->
+                <VisualState x:Name="MediumState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="600" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DimensionsTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="OffsetTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="RotationTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="MirroredTextBlock.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <!--  Wide: Show all info  -->
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="650" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DimensionsTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="OffsetTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="RotationTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="MirroredTextBlock.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 </local:ImageEditPageBase>
