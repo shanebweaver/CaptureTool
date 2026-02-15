@@ -1,3 +1,4 @@
+using CaptureTool.Infrastructure.Implementations.Windows.Capabilities;
 using CaptureTool.Infrastructure.Implementations.Windows.Clipboard;
 using CaptureTool.Infrastructure.Implementations.Windows.Localization;
 using CaptureTool.Infrastructure.Implementations.Windows.Share;
@@ -6,6 +7,7 @@ using CaptureTool.Infrastructure.Implementations.Windows.Storage;
 using CaptureTool.Infrastructure.Implementations.Windows.Store;
 using CaptureTool.Infrastructure.Implementations.Windows.TaskEnvironment;
 using CaptureTool.Infrastructure.Implementations.Windows.Themes;
+using CaptureTool.Infrastructure.Interfaces.Capabilities;
 using CaptureTool.Infrastructure.Interfaces.Clipboard;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Share;
@@ -33,6 +35,7 @@ public static class WindowsServicesServiceCollectionExtensions
         services.AddSingleton<ITaskEnvironment>(_ => new WinUITaskEnvironment(dispatcherQueue));
         services.AddSingleton<IShutdownHandler, WindowsShutdownHandler>();
         services.AddSingleton<IFilePickerService, WindowsFilePickerService>();
+        services.AddSingleton<ID3DCapabilityService, D3DCapabilityService>();
         return services;
     }
 }

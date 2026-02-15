@@ -4,6 +4,7 @@ using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Activation;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
+using CaptureTool.Infrastructure.Interfaces.Capabilities;
 using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Logging;
@@ -24,6 +25,7 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
     private readonly INavigationHandler _navigationHandler;
     private readonly INavigationService _navigationService;
     private readonly IFeatureManager _featureManager;
+    private readonly ID3DCapabilityService _d3dCapabilityService;
 
     private readonly SemaphoreSlim _semaphoreActivation = new(1, 1);
     private readonly SemaphoreSlim _semaphoreInit = new(1, 1);
@@ -38,7 +40,8 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
         IAppNavigation appNavigation,
         INavigationHandler navigationHandler,
         INavigationService navigationService,
-        IFeatureManager featureManager)
+        IFeatureManager featureManager,
+        ID3DCapabilityService d3dCapabilityService)
     {
         _cancellationService = cancellationService;
         _settingsService = settingsService;
@@ -48,6 +51,7 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
         _navigationHandler = navigationHandler;
         _navigationService = navigationService;
         _featureManager = featureManager;
+        _d3dCapabilityService = d3dCapabilityService;
     }
 
     private async Task InitializeAsync()
@@ -59,6 +63,14 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
             if (_isInitialized)
             {
                 return;
+            }
+
+            // Check D3D capabilities early
+            D3DCapabilityCheckResult capabilityResult = _d3dCapabilityService.CheckD3DCapabilities();
+            if (!capabilityResult.IsSupported)
+            {
+                _logService.LogWarning($"D3D capability check failed: {capabilityResult.FailureReason}. {capabilityResult.ErrorMessage}");
+                // Note: App will continue to load but features may fail gracefully
             }
 
             CancellationTokenSource cancellationTokenSource = _cancellationService.GetLinkedCancellationTokenSource();
