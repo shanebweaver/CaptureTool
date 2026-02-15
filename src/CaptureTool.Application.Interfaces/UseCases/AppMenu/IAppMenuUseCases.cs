@@ -6,6 +6,7 @@ public interface IAppMenuUseCases
     Task OpenRecentCaptureAsync(string filePath, CancellationToken ct);
     Task OpenFileAsync(CancellationToken ct);
     void NewImageCapture();
+    void NewVideoCapture();
     void NavigateToSettings();
     void ShowAboutApp();
     void ShowAddOns();

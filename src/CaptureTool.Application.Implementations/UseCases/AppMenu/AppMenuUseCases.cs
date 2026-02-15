@@ -104,6 +104,11 @@ public sealed class AppMenuUseCases : IAppMenuUseCases
         _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
     }
 
+    public void NewVideoCapture()
+    {
+        _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault);
+    }
+
     public void NavigateToSettings()
     {
         _appNavigation.GoToSettings();

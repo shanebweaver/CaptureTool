@@ -321,6 +321,18 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
     <value>Nouvelle capture</value>
   </data>
+  <data name="AppMenu_NewVideoCaptureItem.AccessKey" xml:space="preserve">
+    <value>V</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value>Control,Shift</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem.Text" xml:space="preserve">
+    <value>Nouvelle capture vidéo</value>
+  </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Rogner l'image</value>
   </data>

@@ -33,6 +33,17 @@ public class AppMenuUseCasesTests
     }
 
     [TestMethod]
+    public void NewVideoCapture_NavigatesToVideoCapture()
+    {
+        var navigation = Fixture.Freeze<Mock<IAppNavigation>>();
+
+        var actions = Fixture.Create<AppMenuUseCases>();
+        actions.NewVideoCapture();
+
+        navigation.Verify(n => n.GoToImageCapture(CaptureOptions.VideoDefault), Times.Once);
+    }
+
+    [TestMethod]
     public void NavigateToSettings_NavigatesToSettings()
     {
         var navigation = Fixture.Freeze<Mock<IAppNavigation>>();

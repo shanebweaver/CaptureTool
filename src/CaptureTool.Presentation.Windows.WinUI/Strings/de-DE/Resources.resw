@@ -321,6 +321,18 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
     <value>Neue Aufnahme</value>
   </data>
+  <data name="AppMenu_NewVideoCaptureItem.AccessKey" xml:space="preserve">
+    <value>V</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value>Control,Shift</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem.Text" xml:space="preserve">
+    <value>Neue Videoaufnahme</value>
+  </data>
   <data name="ShapeToolbar_ShapeType.Header" xml:space="preserve">
     <value>Formtyp</value>
     <comment>The header for the shape type selector in the shape toolbar.</comment>

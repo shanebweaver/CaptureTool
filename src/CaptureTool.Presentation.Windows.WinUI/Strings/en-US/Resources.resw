@@ -397,6 +397,22 @@ By using this application, you acknowledge that you are responsible for managing
     <value>New capture</value>
     <comment>The label for the new capture item in the file menu.</comment>
   </data>
+  <data name="AppMenu_NewVideoCaptureItem.AccessKey" xml:space="preserve">
+    <value>V</value>
+    <comment>The access key for the new video capture item in the file menu.</comment>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value>N</value>
+    <comment>The keyboard accelerator key for the new video capture item in the file menu.</comment>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value>Control,Shift</value>
+    <comment>The keyboard accelerator modifiers for the new video capture item in the file menu.</comment>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem.Text" xml:space="preserve">
+    <value>New video capture</value>
+    <comment>The label for the new video capture item in the file menu.</comment>
+  </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Crop</value>
     <comment>The tooltip for the crop button on the image edit page.</comment>

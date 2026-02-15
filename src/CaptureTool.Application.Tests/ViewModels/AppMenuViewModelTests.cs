@@ -68,4 +68,21 @@ public sealed class AppMenuViewModelTests
         telemetry.Verify(t => t.ActivityInitiated(AppMenuViewModel.ActivityIds.NavigateToSettings, It.IsAny<string>()), Times.Once);
         telemetry.Verify(t => t.ActivityCompleted(AppMenuViewModel.ActivityIds.NavigateToSettings, It.IsAny<string>()), Times.Once);
     }
+
+    [TestMethod]
+    public void NewVideoCaptureCommand_ShouldNavigate_AndTrackTelemetry()
+    {
+        // Arrange
+        var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
+        var appMenuActions = Fixture.Freeze<Mock<IAppMenuUseCases>>();
+        var vm = Create();
+
+        // Act
+        vm.NewVideoCaptureCommand.Execute();
+
+        // Assert
+        appMenuActions.Verify(a => a.NewVideoCapture(), Times.Once);
+        telemetry.Verify(t => t.ActivityInitiated(AppMenuViewModel.ActivityIds.NewVideoCapture, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(AppMenuViewModel.ActivityIds.NewVideoCapture, It.IsAny<string>()), Times.Once);
+    }
 }

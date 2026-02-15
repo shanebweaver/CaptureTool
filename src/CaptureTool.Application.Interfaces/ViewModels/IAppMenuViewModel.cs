@@ -8,6 +8,7 @@ public interface IAppMenuViewModel : IViewModel
     event EventHandler? RecentCapturesUpdated;
 
     IAppCommand NewImageCaptureCommand { get; }
+    IAppCommand NewVideoCaptureCommand { get; }
     IAsyncAppCommand OpenFileCommand { get; }
     IAppCommand NavigateToSettingsCommand { get; }
     IAppCommand ShowAboutAppCommand { get; }
