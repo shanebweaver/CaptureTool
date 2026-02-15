@@ -11,6 +11,7 @@ public interface IAudioCapturePageViewModel : IViewModel
     IAppCommand MuteCommand { get; }
     IAppCommand ToggleDesktopAudioCommand { get; }
     
+    bool CanPlay { get; }
     bool IsPlaying { get; }
     bool IsPaused { get; }
     bool IsMuted { get; }

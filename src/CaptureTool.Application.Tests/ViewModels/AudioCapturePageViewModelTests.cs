@@ -36,6 +36,10 @@ public class AudioCapturePageViewModelTests
         var playAction = Fixture.Freeze<Mock<IAudioCapturePlayUseCase>>();
         var vm = Create();
 
+        // Assert initial state
+        Assert.IsTrue(vm.CanPlay);
+        Assert.IsFalse(vm.IsPlaying);
+
         // Act
         vm.PlayCommand.Execute();
 
@@ -43,6 +47,7 @@ public class AudioCapturePageViewModelTests
         playAction.Verify(a => a.Execute(), Times.Once);
         Assert.IsTrue(vm.IsPlaying);
         Assert.IsFalse(vm.IsPaused);
+        Assert.IsFalse(vm.CanPlay);
         telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Play, It.IsAny<string>()), Times.Once);
         telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Play, It.IsAny<string>()), Times.Once);
     }
@@ -57,6 +62,7 @@ public class AudioCapturePageViewModelTests
 
         // Start playing first
         vm.PlayCommand.Execute();
+        Assert.IsFalse(vm.CanPlay);
 
         // Act
         vm.StopCommand.Execute();
@@ -65,6 +71,7 @@ public class AudioCapturePageViewModelTests
         stopAction.Verify(a => a.Execute(), Times.Once);
         Assert.IsFalse(vm.IsPlaying);
         Assert.IsFalse(vm.IsPaused);
+        Assert.IsTrue(vm.CanPlay);
         telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Stop, It.IsAny<string>()), Times.Once);
         telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Stop, It.IsAny<string>()), Times.Once);
     }

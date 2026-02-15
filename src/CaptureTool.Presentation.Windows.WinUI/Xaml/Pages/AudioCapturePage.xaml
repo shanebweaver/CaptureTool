@@ -24,7 +24,7 @@
                 x:Uid="AudioCapture_PlayButton"
                 Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.PlayCommand)}"
                 Icon="Play"
-                IsEnabled="{x:Bind ViewModel.IsPlaying, Mode=OneWay, Converter={StaticResource InverseBoolConverter}}"
+                IsEnabled="{x:Bind ViewModel.CanPlay, Mode=OneWay}"
                 Label="Play" />
 
             <!--  Pause  -->

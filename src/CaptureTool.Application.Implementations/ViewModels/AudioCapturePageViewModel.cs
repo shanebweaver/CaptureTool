@@ -26,6 +26,12 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
     public IAppCommand MuteCommand { get; }
     public IAppCommand ToggleDesktopAudioCommand { get; }
 
+    public bool CanPlay
+    {
+        get => field;
+        private set => Set(ref field, value);
+    }
+
     public bool IsPlaying
     {
         get => field;
@@ -81,6 +87,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
         IsPaused = false;
         IsMuted = false;
         IsDesktopAudioEnabled = false;
+        CanPlay = true;
     }
 
     private void Play()
@@ -88,6 +95,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
         _playAction.Execute();
         IsPlaying = true;
         IsPaused = false;
+        CanPlay = false;
     }
 
     private void Stop()
@@ -95,6 +103,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
         _stopAction.Execute();
         IsPlaying = false;
         IsPaused = false;
+        CanPlay = true;
     }
 
     private void Pause()
