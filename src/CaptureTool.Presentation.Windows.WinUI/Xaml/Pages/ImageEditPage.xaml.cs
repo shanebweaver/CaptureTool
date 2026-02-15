@@ -92,6 +92,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.OnShapeDrawn(e.Start, e.End);
     }
 
+    private void ImageCanvas_ShapeDeleted(object? _, int shapeIndex)
+    {
+        ViewModel.OnShapeDeleted(shapeIndex);
+    }
+
     private void ChromaKeyAppBarToggleButton_IsCheckedChanged(object sender, RoutedEventArgs _)
     {
         if (sender is AppBarToggleButton toggleButton)

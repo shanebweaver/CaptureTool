@@ -194,6 +194,7 @@
                 IsShapesModeEnabled="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}"
                 SelectedShapeType="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay}"
+                ShapeDeleted="ImageCanvas_ShapeDeleted"
                 ShapeDrawn="ImageCanvas_ShapeDrawn"
                 ShapeFillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
                 ShapeStrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"

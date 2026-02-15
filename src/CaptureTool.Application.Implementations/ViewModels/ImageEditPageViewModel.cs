@@ -602,6 +602,20 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
+    public void OnShapeDeleted(int shapeIndex)
+    {
+        if (!IsInShapesMode || !_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
+
+        if (shapeIndex >= 0 && shapeIndex < _drawables.Count)
+        {
+            _drawables.RemoveAt(shapeIndex);
+            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
     private void UpdateChromaKeyEffectValues()
     {
         if (_imageDrawable != null && _imageDrawable.ImageEffect == null)

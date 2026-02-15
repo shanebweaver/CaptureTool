@@ -69,4 +69,5 @@ public interface IImageEditPageViewModel : IViewModel
     Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken);
     void OnCropInteractionComplete(Rectangle oldCropRect);
     void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint);
+    void OnShapeDeleted(int shapeIndex);
 }

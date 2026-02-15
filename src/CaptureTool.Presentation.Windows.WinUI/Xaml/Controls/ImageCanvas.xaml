@@ -9,6 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DataContext="{d:DesignInstance Type=local:ImageCanvas}"
     Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
+    IsTabStop="True"
     mc:Ignorable="d">
     <Grid
         x:Name="RootContainer"

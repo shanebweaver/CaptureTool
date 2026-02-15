@@ -202,6 +202,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<Rectangle>? CropRectChanged;
     public event EventHandler<(System.Numerics.Vector2 Start, System.Numerics.Vector2 End)>? ShapeDrawn;
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
+    public event EventHandler<int>? ShapeDeleted;
 
     private readonly Lock _zoomUpdateLock = new Lock();
 
@@ -224,6 +225,30 @@ public sealed partial class ImageCanvas : UserControlBase
         InitializeComponent();
         Loaded += ImageCanvas_Loaded;
         Unloaded += ImageCanvas_Unloaded;
+        KeyDown += ImageCanvas_KeyDown;
+    }
+
+    private void ImageCanvas_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        if (!IsShapesModeEnabled || _selectedShape == null)
+        {
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case Windows.System.VirtualKey.Delete:
+                // Delete the selected shape
+                DeleteSelectedShape();
+                e.Handled = true;
+                break;
+
+            case Windows.System.VirtualKey.Escape:
+                // Deselect the shape
+                DeselectShape();
+                e.Handled = true;
+                break;
+        }
     }
 
     private void ImageCanvas_Loaded(object sender, RoutedEventArgs e)
@@ -795,6 +820,9 @@ public sealed partial class ImageCanvas : UserControlBase
                 ShowResizeHandles(drawable);
                 UpdatePreviewShapeFromDrawable(drawable);
                 RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
+                
+                // Set focus to enable keyboard events
+                Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
                 return;
             }
         }
@@ -810,6 +838,24 @@ public sealed partial class ImageCanvas : UserControlBase
         ShapeResizeOverlay.Visibility = Visibility.Collapsed;
         ClearPreviewShape();
         RenderCanvas.Invalidate(); // Redraw to show all shapes
+    }
+
+    private void DeleteSelectedShape()
+    {
+        if (_selectedShape == null || _selectedShapeIndex < 0)
+        {
+            return;
+        }
+
+        // Notify via event so the ViewModel can remove it from the collection
+        ShapeDeleted?.Invoke(this, _selectedShapeIndex);
+        
+        // Clear selection state
+        _selectedShape = null;
+        _selectedShapeIndex = -1;
+        ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+        ClearPreviewShape();
+        RenderCanvas.Invalidate();
     }
 
     private bool IsPointInShape(Point point, IDrawable drawable)
