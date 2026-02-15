@@ -1,4 +1,5 @@
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Application.Interfaces.ViewModels;
@@ -7,6 +8,7 @@ using CaptureTool.Domain.Audio.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Themes;
@@ -37,6 +39,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ICaptureOverlayUseCases _captureOverlayActions;
     private readonly IAudioInputService _audioInputService;
+    private readonly IFeatureManager _featureManager;
 
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
@@ -109,7 +112,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         ITelemetryService telemetryService,
         ITaskEnvironment taskEnvironment,
         ICaptureOverlayUseCases captureOverlayActions,
-        IAudioInputService audioInputService)
+        IAudioInputService audioInputService,
+        IFeatureManager featureManager)
     {
         _appNavigation = appNavigation;
         _videoCaptureHandler = videoCaptureHandler;
@@ -117,6 +121,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _taskEnvironment = taskEnvironment;
         _captureOverlayActions = captureOverlayActions;
         _audioInputService = audioInputService;
+        _featureManager = featureManager;
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
@@ -146,15 +151,11 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             _monitorCaptureResult = options.Monitor;
             _captureArea = options.Area;
 
-            // Load available microphones asynchronously
-            LoadMicrophonesAsync().ContinueWith(task =>
+            // Load available microphones asynchronously only if feature is enabled
+            if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MicrophoneSelection))
             {
-                if (task.IsFaulted && task.Exception != null)
-                {
-                    // Log exception but don't crash - microphones list will remain empty
-                    _telemetryService.TrackException(task.Exception.GetBaseException());
-                }
-            }, TaskScheduler.Default);
+                _ = LoadMicrophonesAsync();
+            }
 
             base.Load(options);
         });
@@ -162,16 +163,20 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private async Task LoadMicrophonesAsync()
     {
-        var microphones = await _audioInputService.GetAudioInputDevicesAsync().ConfigureAwait(false);
-        _taskEnvironment.TryExecute(() =>
+        try
         {
-            AvailableMicrophones = microphones;
-            // Set the first microphone as selected by default
-            if (microphones.Count > 0)
+            var microphones = await _audioInputService.GetAudioInputDevicesAsync().ConfigureAwait(false);
+            _taskEnvironment.TryExecute(() =>
             {
-                SelectedMicrophone = microphones[0];
-            }
-        });
+                AvailableMicrophones = microphones;
+                // Do not auto-select a microphone by default; allow SelectedMicrophone to remain null
+                // so the user can intentionally choose to capture without a microphone.
+            });
+        }
+        catch (Exception ex)
+        {
+            _telemetryService.TrackException(ex);
+        }
     }
 
     private void OnDesktopAudioStateChanged(object? sender, bool value)

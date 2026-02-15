@@ -13,7 +13,7 @@
     <ComboBox
         x:Name="MicrophoneComboBox"
         MinWidth="150"
-        ItemsSource="{x:Bind AvailableMicrophones, Mode=OneWay}"
+        ItemsSource="{x:Bind MicrophonesWithNone, Mode=OneWay}"
         PlaceholderText="Select microphone"
         SelectedItem="{x:Bind SelectedMicrophone, Mode=TwoWay}">
         <ComboBox.ItemTemplate>
