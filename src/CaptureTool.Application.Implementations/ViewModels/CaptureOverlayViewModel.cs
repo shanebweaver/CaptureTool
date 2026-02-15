@@ -162,7 +162,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private async Task LoadMicrophonesAsync()
     {
-        var microphones = await _audioInputService.GetAudioInputDevicesAsync();
+        var microphones = await _audioInputService.GetAudioInputDevicesAsync().ConfigureAwait(false);
         _taskEnvironment.TryExecute(() =>
         {
             AvailableMicrophones = microphones;
