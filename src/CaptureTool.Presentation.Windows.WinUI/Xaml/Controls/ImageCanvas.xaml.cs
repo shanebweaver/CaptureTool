@@ -782,8 +782,12 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void UpdatePreviewBrushes()
     {
-        // Update stroke brush
-        if (_previewStrokeBrush == null || _cachedStrokeColor != ShapeStrokeColor)
+        // Update stroke brush (compare color components explicitly)
+        if (_previewStrokeBrush == null || 
+            _cachedStrokeColor.A != ShapeStrokeColor.A ||
+            _cachedStrokeColor.R != ShapeStrokeColor.R ||
+            _cachedStrokeColor.G != ShapeStrokeColor.G ||
+            _cachedStrokeColor.B != ShapeStrokeColor.B)
         {
             _cachedStrokeColor = ShapeStrokeColor;
             if (_previewStrokeBrush == null)
@@ -797,10 +801,14 @@ public sealed partial class ImageCanvas : UserControlBase
                 ShapeStrokeColor.B);
         }
 
-        // Update fill brush
+        // Update fill brush (compare color components explicitly)
         if (ShapeFillColor.A > 0)
         {
-            if (_previewFillBrush == null || _cachedFillColor != ShapeFillColor)
+            if (_previewFillBrush == null || 
+                _cachedFillColor.A != ShapeFillColor.A ||
+                _cachedFillColor.R != ShapeFillColor.R ||
+                _cachedFillColor.G != ShapeFillColor.G ||
+                _cachedFillColor.B != ShapeFillColor.B)
             {
                 _cachedFillColor = ShapeFillColor;
                 if (_previewFillBrush == null)
