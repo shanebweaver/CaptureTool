@@ -71,7 +71,10 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         _telemetryService = telemetryService;
         _metadataScannerRegistry = metadataScannerRegistry;
         _scanJobFactory = scanJobFactory;
+    }
 
+    public void PrepareForVideoCapture()
+    {
         IsDesktopAudioEnabled = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
     }
 
