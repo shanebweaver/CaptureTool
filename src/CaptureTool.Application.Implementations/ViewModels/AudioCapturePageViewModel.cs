@@ -11,11 +11,11 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
 {
     public readonly struct ActivityIds
     {
-        public static readonly string Play = $"Play";
-        public static readonly string Stop = $"Stop";
-        public static readonly string Pause = $"Pause";
-        public static readonly string Mute = $"Mute";
-        public static readonly string ToggleDesktopAudio = $"ToggleDesktopAudio";
+        public static readonly string Play = "Play";
+        public static readonly string Stop = "Stop";
+        public static readonly string Pause = "Pause";
+        public static readonly string Mute = "Mute";
+        public static readonly string ToggleDesktopAudio = "ToggleDesktopAudio";
     }
 
     private const string TelemetryContext = "AudioCapturePage";
