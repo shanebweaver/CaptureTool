@@ -214,11 +214,6 @@ public sealed partial class ImageCanvas : UserControlBase
     private IDrawable? _selectedShape;
     private int _selectedShapeIndex = -1;
     private bool _isManipulatingShape;
-    
-    // Shape movement state
-    private bool _isMovingShape;
-    private Point _shapeMoveStartPoint;
-    private System.Numerics.Vector2 _initialShapeOffset;
 
     public ImageCanvas()
     {
@@ -982,12 +977,6 @@ public sealed partial class ImageCanvas : UserControlBase
             case LineDrawable line:
                 {
                     // Preserve line direction when resizing
-                    // Calculate current line vector
-                    float currentStartX = Math.Min(line.Offset.X, line.EndPoint.X);
-                    float currentStartY = Math.Min(line.Offset.Y, line.EndPoint.Y);
-                    float currentEndX = Math.Max(line.Offset.X, line.EndPoint.X);
-                    float currentEndY = Math.Max(line.Offset.Y, line.EndPoint.Y);
-                    
                     bool startsFromLeft = line.Offset.X <= line.EndPoint.X;
                     bool startsFromTop = line.Offset.Y <= line.EndPoint.Y;
                     
