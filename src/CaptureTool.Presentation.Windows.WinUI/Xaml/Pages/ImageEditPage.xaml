@@ -193,7 +193,11 @@
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 IsShapesModeEnabled="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}"
-                ShapeDrawn="ImageCanvas_ShapeDrawn" />
+                SelectedShapeType="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay}"
+                ShapeDrawn="ImageCanvas_ShapeDrawn"
+                ShapeFillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
+                ShapeStrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
+                ShapeStrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}" />
         </Grid>
 
         <ProgressRing

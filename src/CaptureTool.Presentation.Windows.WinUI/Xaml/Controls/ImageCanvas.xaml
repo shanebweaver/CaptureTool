@@ -57,6 +57,14 @@
                     SelectionArea="{x:Bind CropRect, Mode=OneWay}"
                     SelectionAreaChanged="CropOverlay_SelectionAreaChanged"
                     Visibility="{x:Bind IsCropModeEnabled, Mode=OneWay}" />
+
+                <!--  Preview Shape Overlay  -->
+                <Canvas
+                    x:Name="PreviewShapeCanvas"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    IsHitTestVisible="False"
+                    Visibility="Collapsed" />
             </Grid>
         </ScrollView>
     </Grid>
