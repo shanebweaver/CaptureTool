@@ -1,7 +1,9 @@
 using CaptureTool.Application.Interfaces;
+using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.UseCases.AppMenu;
 using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
@@ -18,6 +20,7 @@ public sealed class AppMenuUseCases : IAppMenuUseCases
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IWindowHandleProvider _windowingService;
     private readonly IFileTypeDetector _fileTypeDetector;
+    private readonly IFeatureManager _featureManager;
 
     public AppMenuUseCases(
         IStorageService storageService,
@@ -27,7 +30,8 @@ public sealed class AppMenuUseCases : IAppMenuUseCases
         IAppNavigation appNavigation,
         IShutdownHandler shutdownHandler,
         IWindowHandleProvider windowingService,
-        IFileTypeDetector fileTypeDetector)
+        IFileTypeDetector fileTypeDetector,
+        IFeatureManager featureManager)
     {
         _storageService = storageService;
         _imageCaptureHandler = imageCaptureHandler;
@@ -37,6 +41,7 @@ public sealed class AppMenuUseCases : IAppMenuUseCases
         _shutdownHandler = shutdownHandler;
         _windowingService = windowingService;
         _fileTypeDetector = fileTypeDetector;
+        _featureManager = featureManager;
     }
 
     public Task<IEnumerable<IRecentCapture>> LoadRecentCapturesAsync(CancellationToken ct)
@@ -106,6 +111,10 @@ public sealed class AppMenuUseCases : IAppMenuUseCases
 
     public void NewVideoCapture()
     {
+        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
+        {
+            return;
+        }
         _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault);
     }
 

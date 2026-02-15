@@ -17,6 +17,7 @@ public interface IAppMenuViewModel : IViewModel
     IAppCommand RefreshRecentCapturesCommand { get; }
     IAppCommand<IRecentCaptureViewModel> OpenRecentCaptureCommand { get; }
     bool ShowAddOnsOption { get; }
+    bool IsVideoCaptureEnabled { get; }
     IReadOnlyList<IRecentCaptureViewModel> RecentCaptures { get; set; }
 
     void Load();
