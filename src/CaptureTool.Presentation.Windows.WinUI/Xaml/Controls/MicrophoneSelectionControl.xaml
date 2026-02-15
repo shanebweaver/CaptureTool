@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.MicrophoneSelectionControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:audio="using:CaptureTool.Domain.Audio.Interfaces"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=local:MicrophoneSelectionControl}"
+    mc:Ignorable="d">
+
+    <ComboBox
+        x:Name="MicrophoneComboBox"
+        MinWidth="150"
+        ItemsSource="{x:Bind AvailableMicrophones, Mode=OneWay}"
+        PlaceholderText="Select microphone"
+        SelectedItem="{x:Bind SelectedMicrophone, Mode=TwoWay}">
+        <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="audio:AudioInputDevice">
+                <TextBlock Text="{x:Bind Name}" />
+            </DataTemplate>
+        </ComboBox.ItemTemplate>
+    </ComboBox>
+</local:UserControlBase>

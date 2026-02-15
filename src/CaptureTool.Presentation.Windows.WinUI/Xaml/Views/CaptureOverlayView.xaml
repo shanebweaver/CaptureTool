@@ -17,12 +17,14 @@
             <Grid x:Name="ToolbarHost" />
             <controls:CaptureOverlayToolbar
                 x:Name="Toolbar"
+                AvailableMicrophones="{x:Bind ViewModel.AvailableMicrophones, Mode=OneWay}"
                 CaptureTime="{x:Bind ViewModel.CaptureTime, Mode=OneWay}"
                 CloseCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.CloseOverlayCommand)}"
                 GoBackCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.GoBackCommand)}"
                 IsLocalAudioEnabled="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=OneWay}"
                 IsPaused="{x:Bind ViewModel.IsPaused, Mode=OneWay}"
                 IsRecording="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
+                SelectedMicrophone="{x:Bind ViewModel.SelectedMicrophone, Mode=TwoWay}"
                 StartVideoCaptureCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.StartVideoCaptureCommand)}"
                 StopVideoCaptureCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.StopVideoCaptureCommand)}"
                 ToggleLocalAudioCommand="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ToggleDesktopAudioCommand)}"

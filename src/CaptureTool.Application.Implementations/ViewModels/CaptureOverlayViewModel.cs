@@ -3,6 +3,7 @@ using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Application.Interfaces.ViewModels;
 using CaptureTool.Application.Interfaces.ViewModels.Options;
+using CaptureTool.Domain.Audio.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
@@ -35,6 +36,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly ITelemetryService _telemetryService;
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ICaptureOverlayUseCases _captureOverlayActions;
+    private readonly IAudioInputService _audioInputService;
 
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
@@ -81,6 +83,18 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
+    public IReadOnlyList<AudioInputDevice> AvailableMicrophones
+    {
+        get => field = [];
+        private set => Set(ref field, value);
+    }
+
+    public AudioInputDevice? SelectedMicrophone
+    {
+        get => field;
+        set => Set(ref field, value);
+    }
+
     public IAppCommand CloseOverlayCommand { get; }
     public IAppCommand GoBackCommand { get; }
     public IAppCommand StartVideoCaptureCommand { get; }
@@ -94,13 +108,15 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IVideoCaptureHandler videoCaptureHandler,
         ITelemetryService telemetryService,
         ITaskEnvironment taskEnvironment,
-        ICaptureOverlayUseCases captureOverlayActions)
+        ICaptureOverlayUseCases captureOverlayActions,
+        IAudioInputService audioInputService)
     {
         _appNavigation = appNavigation;
         _videoCaptureHandler = videoCaptureHandler;
         _telemetryService = telemetryService;
         _taskEnvironment = taskEnvironment;
         _captureOverlayActions = captureOverlayActions;
+        _audioInputService = audioInputService;
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
@@ -130,8 +146,32 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             _monitorCaptureResult = options.Monitor;
             _captureArea = options.Area;
 
+            // Load available microphones asynchronously
+            _ = LoadMicrophonesAsync();
+
             base.Load(options);
         });
+    }
+
+    private async Task LoadMicrophonesAsync()
+    {
+        try
+        {
+            var microphones = await _audioInputService.GetAudioInputDevicesAsync();
+            _taskEnvironment.TryExecute(() =>
+            {
+                AvailableMicrophones = microphones;
+                // Set the first microphone as selected by default
+                if (microphones.Count > 0)
+                {
+                    SelectedMicrophone = microphones[0];
+                }
+            });
+        }
+        catch
+        {
+            // If loading fails, keep empty list
+        }
     }
 
     private void OnDesktopAudioStateChanged(object? sender, bool value)
