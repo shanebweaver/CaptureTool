@@ -860,8 +860,50 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private bool IsPointInShape(Point point, IDrawable drawable)
     {
-        var bounds = GetShapeBounds(drawable);
-        return bounds.Contains((float)point.X, (float)point.Y);
+        switch (drawable)
+        {
+            case LineDrawable line:
+                return IsPointNearLine(point, line.Offset, line.EndPoint, Math.Max(10, line.StrokeWidth * 2));
+            
+            case ArrowDrawable arrow:
+                return IsPointNearLine(point, arrow.Offset, arrow.EndPoint, Math.Max(10, arrow.StrokeWidth * 2));
+            
+            default:
+                var bounds = GetShapeBounds(drawable);
+                return bounds.Contains((float)point.X, (float)point.Y);
+        }
+    }
+
+    private bool IsPointNearLine(Point point, System.Numerics.Vector2 lineStart, System.Numerics.Vector2 lineEnd, float tolerance)
+    {
+        // Calculate distance from point to line segment
+        float px = (float)point.X;
+        float py = (float)point.Y;
+        
+        float dx = lineEnd.X - lineStart.X;
+        float dy = lineEnd.Y - lineStart.Y;
+        
+        // If line is actually a point
+        if (dx == 0 && dy == 0)
+        {
+            float dist = (float)Math.Sqrt((px - lineStart.X) * (px - lineStart.X) + (py - lineStart.Y) * (py - lineStart.Y));
+            return dist <= tolerance;
+        }
+        
+        // Calculate the parameter t for the projection of point onto the line
+        float t = ((px - lineStart.X) * dx + (py - lineStart.Y) * dy) / (dx * dx + dy * dy);
+        
+        // Clamp t to [0, 1] to stay within the line segment
+        t = Math.Max(0, Math.Min(1, t));
+        
+        // Calculate the closest point on the line segment
+        float closestX = lineStart.X + t * dx;
+        float closestY = lineStart.Y + t * dy;
+        
+        // Calculate distance from point to closest point on line
+        float distance = (float)Math.Sqrt((px - closestX) * (px - closestX) + (py - closestY) * (py - closestY));
+        
+        return distance <= tolerance;
     }
 
     private RectangleF GetShapeBounds(IDrawable drawable)
@@ -938,15 +980,69 @@ public sealed partial class ImageCanvas : UserControlBase
                 break;
 
             case LineDrawable line:
-                // For lines, update start and end points based on bounds
-                line.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
-                line.EndPoint = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y + newBounds.Height);
+                {
+                    // Preserve line direction when resizing
+                    // Calculate current line vector
+                    float currentStartX = Math.Min(line.Offset.X, line.EndPoint.X);
+                    float currentStartY = Math.Min(line.Offset.Y, line.EndPoint.Y);
+                    float currentEndX = Math.Max(line.Offset.X, line.EndPoint.X);
+                    float currentEndY = Math.Max(line.Offset.Y, line.EndPoint.Y);
+                    
+                    bool startsFromLeft = line.Offset.X <= line.EndPoint.X;
+                    bool startsFromTop = line.Offset.Y <= line.EndPoint.Y;
+                    
+                    // Apply new bounds while preserving direction
+                    if (startsFromLeft && startsFromTop)
+                    {
+                        line.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
+                        line.EndPoint = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y + newBounds.Height);
+                    }
+                    else if (!startsFromLeft && startsFromTop)
+                    {
+                        line.Offset = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y);
+                        line.EndPoint = new System.Numerics.Vector2(newBounds.X, newBounds.Y + newBounds.Height);
+                    }
+                    else if (startsFromLeft && !startsFromTop)
+                    {
+                        line.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y + newBounds.Height);
+                        line.EndPoint = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y);
+                    }
+                    else
+                    {
+                        line.Offset = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y + newBounds.Height);
+                        line.EndPoint = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
+                    }
+                }
                 break;
 
             case ArrowDrawable arrow:
-                // For arrows, update start and end points based on bounds
-                arrow.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
-                arrow.EndPoint = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y + newBounds.Height);
+                {
+                    // Preserve arrow direction when resizing
+                    bool startsFromLeft = arrow.Offset.X <= arrow.EndPoint.X;
+                    bool startsFromTop = arrow.Offset.Y <= arrow.EndPoint.Y;
+                    
+                    // Apply new bounds while preserving direction
+                    if (startsFromLeft && startsFromTop)
+                    {
+                        arrow.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
+                        arrow.EndPoint = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y + newBounds.Height);
+                    }
+                    else if (!startsFromLeft && startsFromTop)
+                    {
+                        arrow.Offset = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y);
+                        arrow.EndPoint = new System.Numerics.Vector2(newBounds.X, newBounds.Y + newBounds.Height);
+                    }
+                    else if (startsFromLeft && !startsFromTop)
+                    {
+                        arrow.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y + newBounds.Height);
+                        arrow.EndPoint = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y);
+                    }
+                    else
+                    {
+                        arrow.Offset = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y + newBounds.Height);
+                        arrow.EndPoint = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
+                    }
+                }
                 break;
         }
     }

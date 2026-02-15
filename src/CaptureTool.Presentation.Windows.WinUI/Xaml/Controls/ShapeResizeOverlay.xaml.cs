@@ -183,19 +183,35 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         {
             if (newBounds.Width < 2)
             {
-                newBounds.Width = 2;
+                // Adjust X position based on which edge is being dragged
                 if (_activeHandle == ResizeHandle.TopLeft || _activeHandle == ResizeHandle.Left || _activeHandle == ResizeHandle.BottomLeft)
                 {
-                    newBounds.X = _initialBounds.X + _initialBounds.Width - 2;
+                    // Left edge being dragged - keep right edge fixed
+                    float rightEdge = newBounds.X + newBounds.Width;
+                    newBounds.Width = 2;
+                    newBounds.X = rightEdge - 2;
+                }
+                else
+                {
+                    // Right edge being dragged - keep left edge fixed
+                    newBounds.Width = 2;
                 }
             }
 
             if (newBounds.Height < 2)
             {
-                newBounds.Height = 2;
+                // Adjust Y position based on which edge is being dragged
                 if (_activeHandle == ResizeHandle.TopLeft || _activeHandle == ResizeHandle.Top || _activeHandle == ResizeHandle.TopRight)
                 {
-                    newBounds.Y = _initialBounds.Y + _initialBounds.Height - 2;
+                    // Top edge being dragged - keep bottom edge fixed
+                    float bottomEdge = newBounds.Y + newBounds.Height;
+                    newBounds.Height = 2;
+                    newBounds.Y = bottomEdge - 2;
+                }
+                else
+                {
+                    // Bottom edge being dragged - keep top edge fixed
+                    newBounds.Height = 2;
                 }
             }
         }
