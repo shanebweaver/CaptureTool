@@ -229,4 +229,149 @@ public sealed class ImageEditPageViewModelTests
         telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Rotate, It.IsAny<string>()), Times.Once);
         telemetry.Verify(t => t.ActivityError(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
     }
+
+    // ------------------------------------------------------------------
+    // TEST: OnShapeDeleted — should ignore when shapes mode is off
+    // ------------------------------------------------------------------
+    [TestMethod]
+    public void OnShapeDeleted_ShouldIgnore_WhenShapesModeIsOff()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+                     .Returns(true);
+
+        var vm = Create();
+        
+        // Add a drawable to delete
+        var drawable = new RectangleDrawable(
+            new System.Numerics.Vector2(10, 10),
+            new Size(50, 50),
+            Color.Red,
+            Color.Transparent,
+            2);
+        vm.Drawables.Add(drawable);
+        
+        // Ensure shapes mode is off (even though feature is enabled)
+        // This simulates when user is not in shapes mode
+        
+        int initialCount = vm.Drawables.Count;
+
+        // Act
+        vm.OnShapeDeleted(0);
+
+        // Assert
+        vm.Drawables.Count.Should().Be(initialCount, "Drawable should not be removed when not in shapes mode");
+    }
+
+    // ------------------------------------------------------------------
+    // TEST: OnShapeDeleted — should ignore when feature is disabled
+    // ------------------------------------------------------------------
+    [TestMethod]
+    public void OnShapeDeleted_ShouldIgnore_WhenFeatureIsDisabled()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+                     .Returns(false);
+
+        var vm = Create();
+        
+        // Toggle shapes mode on
+        vm.ToggleShapesModeCommand.Execute();
+        
+        // Add a drawable to delete
+        var drawable = new RectangleDrawable(
+            new System.Numerics.Vector2(10, 10),
+            new Size(50, 50),
+            Color.Red,
+            Color.Transparent,
+            2);
+        vm.Drawables.Add(drawable);
+        
+        int initialCount = vm.Drawables.Count;
+
+        // Act
+        vm.OnShapeDeleted(0);
+
+        // Assert
+        vm.Drawables.Count.Should().Be(initialCount, "Drawable should not be removed when feature is disabled");
+    }
+
+    // ------------------------------------------------------------------
+    // TEST: OnShapeDeleted — should remove drawable and invalidate canvas
+    // ------------------------------------------------------------------
+    [TestMethod]
+    public void OnShapeDeleted_ShouldRemoveDrawable_AndInvalidateCanvas()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+                     .Returns(true);
+
+        var vm = Create();
+        
+        // Toggle shapes mode on
+        vm.ToggleShapesModeCommand.Execute();
+        
+        // Add drawables
+        var drawable1 = new RectangleDrawable(
+            new System.Numerics.Vector2(10, 10),
+            new Size(50, 50),
+            Color.Red,
+            Color.Transparent,
+            2);
+        var drawable2 = new EllipseDrawable(
+            new System.Numerics.Vector2(100, 100),
+            new Size(30, 30),
+            Color.Blue,
+            Color.Transparent,
+            2);
+        vm.Drawables.Add(drawable1);
+        vm.Drawables.Add(drawable2);
+        
+        bool invalidateRequested = false;
+        vm.InvalidateCanvasRequested += (s, e) => invalidateRequested = true;
+
+        // Act
+        vm.OnShapeDeleted(0);
+
+        // Assert
+        vm.Drawables.Count.Should().Be(1, "One drawable should be removed");
+        vm.Drawables[0].Should().Be(drawable2, "The second drawable should remain");
+        invalidateRequested.Should().BeTrue("InvalidateCanvasRequested event should be raised");
+    }
+
+    // ------------------------------------------------------------------
+    // TEST: OnShapeDeleted — should handle invalid index
+    // ------------------------------------------------------------------
+    [TestMethod]
+    public void OnShapeDeleted_ShouldHandleInvalidIndex()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+                     .Returns(true);
+
+        var vm = Create();
+        
+        // Toggle shapes mode on
+        vm.ToggleShapesModeCommand.Execute();
+        
+        // Add a drawable
+        var drawable = new RectangleDrawable(
+            new System.Numerics.Vector2(10, 10),
+            new Size(50, 50),
+            Color.Red,
+            Color.Transparent,
+            2);
+        vm.Drawables.Add(drawable);
+
+        // Act - try to delete with invalid indices
+        vm.OnShapeDeleted(-1);
+        vm.OnShapeDeleted(999);
+
+        // Assert
+        vm.Drawables.Count.Should().Be(1, "Drawable should not be removed with invalid index");
+    }
 }

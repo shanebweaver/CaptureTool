@@ -25,6 +25,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
         ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
+        ImageCanvas.ShapeDeleted -= ImageCanvas_ShapeDeleted;
     }
 
     private string FormatZoomPercentage(int zoomPercentage)
@@ -90,6 +91,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ImageCanvas_ShapeDrawn(object? _, (System.Numerics.Vector2 Start, System.Numerics.Vector2 End) e)
     {
         ViewModel.OnShapeDrawn(e.Start, e.End);
+    }
+
+    private void ImageCanvas_ShapeDeleted(object? _, int shapeIndex)
+    {
+        ViewModel.OnShapeDeleted(shapeIndex);
     }
 
     private void ChromaKeyAppBarToggleButton_IsCheckedChanged(object sender, RoutedEventArgs _)
