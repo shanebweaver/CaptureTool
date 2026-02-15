@@ -205,6 +205,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<(System.Numerics.Vector2 Start, System.Numerics.Vector2 End)>? ShapeDrawn;
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
     public event EventHandler<int>? ShapeDeleted;
+    public event EventHandler<(int ShapeIndex, IDrawable OldState, IDrawable NewState)>? ShapeModified;
 
     private readonly Lock _zoomUpdateLock = new Lock();
 
@@ -215,6 +216,7 @@ public sealed partial class ImageCanvas : UserControlBase
     // Shape selection state
     private IDrawable? _selectedShape;
     private int _selectedShapeIndex = -1;
+    private ModifyShapeOperation.ShapeState? _shapeStateBeforeModification;
 
     // Cached preview elements for performance
     private Microsoft.UI.Xaml.Shapes.Rectangle? _previewRectangle;
@@ -892,10 +894,26 @@ public sealed partial class ImageCanvas : UserControlBase
     private void ShapeResizeOverlay_ResizeComplete(object? sender, EventArgs e)
     {
         // Resize/move complete - redraw canvas with updated shape
-        if (_selectedShape != null)
+        if (_selectedShape != null && _shapeStateBeforeModification.HasValue)
         {
+            var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+            
+            // Only fire event if the shape actually changed
+            if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
+            {
+                ShapeModified?.Invoke(this, (_selectedShapeIndex, _selectedShape, _selectedShape));
+            }
+            
+            _shapeStateBeforeModification = null;
             RenderCanvas.Invalidate();
         }
+    }
+
+    private bool StatesAreEqual(ModifyShapeOperation.ShapeState state1, ModifyShapeOperation.ShapeState state2)
+    {
+        return state1.Offset == state2.Offset && 
+               state1.Size == state2.Size && 
+               state1.EndPoint == state2.EndPoint;
     }
 
     private void SelectShape(Point clickPoint)
@@ -915,6 +933,10 @@ public sealed partial class ImageCanvas : UserControlBase
             {
                 _selectedShape = drawable;
                 _selectedShapeIndex = i;
+                
+                // Capture state before modification
+                _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(drawable);
+                
                 ShowResizeHandles(drawable);
                 UpdatePreviewShapeFromDrawable(drawable);
                 RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering

@@ -597,8 +597,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (newShape != null)
         {
-            _drawables.Add(newShape);
-            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+            // Add to undo stack
+            var operation = new AddShapeOperation(
+                _drawables, 
+                newShape, 
+                () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
+            
+            _operationsUndoStack.Push(operation);
+            _operationsRedoStack.Clear(); // Clear redo stack on new action
+            UpdateUndoRedoStackProperties();
+            
+            // Execute the operation
+            operation.Redo();
         }
     }
 
@@ -611,8 +621,47 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         if (shapeIndex >= 0 && shapeIndex < _drawables.Count)
         {
-            _drawables.RemoveAt(shapeIndex);
-            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+            var shape = _drawables[shapeIndex];
+            
+            // Add to undo stack
+            var operation = new DeleteShapeOperation(
+                _drawables, 
+                shape, 
+                shapeIndex,
+                () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
+            
+            _operationsUndoStack.Push(operation);
+            _operationsRedoStack.Clear(); // Clear redo stack on new action
+            UpdateUndoRedoStackProperties();
+            
+            // Execute the operation
+            operation.Redo();
+        }
+    }
+
+    public void OnShapeModified(int shapeIndex, IDrawable shape)
+    {
+        if (!IsInShapesMode || !_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
+
+        if (shapeIndex >= 0 && shapeIndex < _drawables.Count)
+        {
+            var currentShape = _drawables[shapeIndex];
+            var oldState = new ModifyShapeOperation.ShapeState(shape);
+            var newState = new ModifyShapeOperation.ShapeState(currentShape);
+            
+            // Add to undo stack
+            var operation = new ModifyShapeOperation(
+                currentShape, 
+                oldState, 
+                newState,
+                () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
+            
+            _operationsUndoStack.Push(operation);
+            _operationsRedoStack.Clear(); // Clear redo stack on new action
+            UpdateUndoRedoStackProperties();
         }
     }
 

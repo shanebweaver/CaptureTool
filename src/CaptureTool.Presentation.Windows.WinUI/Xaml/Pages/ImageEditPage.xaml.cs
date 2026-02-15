@@ -1,3 +1,4 @@
+using CaptureTool.Domain.Edit.Interfaces.Drawable;
 using CaptureTool.Infrastructure.Interfaces.Loading;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI.Xaml;
@@ -26,6 +27,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
         ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
         ImageCanvas.ShapeDeleted -= ImageCanvas_ShapeDeleted;
+        ImageCanvas.ShapeModified -= ImageCanvas_ShapeModified;
     }
 
     private string FormatZoomPercentage(int zoomPercentage)
@@ -96,6 +98,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ImageCanvas_ShapeDeleted(object? _, int shapeIndex)
     {
         ViewModel.OnShapeDeleted(shapeIndex);
+    }
+
+    private void ImageCanvas_ShapeModified(object? _, (int ShapeIndex, IDrawable OldState, IDrawable NewState) e)
+    {
+        ViewModel.OnShapeModified(e.ShapeIndex, e.OldState);
     }
 
     private void ChromaKeyAppBarToggleButton_IsCheckedChanged(object sender, RoutedEventArgs _)

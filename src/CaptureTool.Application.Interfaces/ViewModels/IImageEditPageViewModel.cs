@@ -70,4 +70,5 @@ public interface IImageEditPageViewModel : IViewModel
     void OnCropInteractionComplete(Rectangle oldCropRect);
     void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint);
     void OnShapeDeleted(int shapeIndex);
+    void OnShapeModified(int shapeIndex, IDrawable shape);
 }
