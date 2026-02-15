@@ -236,7 +236,7 @@
                     FontWeight="SemiLight"
                     TextAlignment="Right">
                     <Run Text="(" /><Run Text="{x:Bind ViewModel.CropRect.Left, Mode=OneWay}" /><Run Text="," />
-                    <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text="px)" />
+                    <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text=")" /><Run Text="px" />
                 </TextBlock>
                 <TextBlock
                     x:Uid="ImageEdit_Info_Rotation"
@@ -296,8 +296,8 @@
                     MinWidth="32"
                     VerticalAlignment="Center"
                     FontSize="12"
-                    HorizontalTextAlignment="Right"
-                    Text="{x:Bind FormatZoomPercentage(ViewModel.ZoomPercentage), Mode=OneWay}" />
+                    Text="{x:Bind FormatZoomPercentage(ViewModel.ZoomPercentage), Mode=OneWay}"
+                    TextAlignment="Right" />
             </StackPanel>
         </Grid>
     </Grid>
