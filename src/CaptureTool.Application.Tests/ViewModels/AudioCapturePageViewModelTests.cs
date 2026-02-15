@@ -2,6 +2,7 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Implementations.ViewModels;
 using CaptureTool.Application.Interfaces.UseCases.AudioCapture;
+using CaptureTool.Domain.Audio.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
 
@@ -20,6 +21,12 @@ public class AudioCapturePageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
+        var audioCaptureService = Fixture.Freeze<Mock<IAudioCaptureService>>();
+        audioCaptureService.Setup(s => s.IsPlaying).Returns(false);
+        audioCaptureService.Setup(s => s.IsPaused).Returns(false);
+        audioCaptureService.Setup(s => s.IsMuted).Returns(false);
+        audioCaptureService.Setup(s => s.IsDesktopAudioEnabled).Returns(false);
+
         Fixture.Freeze<Mock<IAudioCapturePlayUseCase>>();
         Fixture.Freeze<Mock<IAudioCaptureStopUseCase>>();
         Fixture.Freeze<Mock<IAudioCapturePauseUseCase>>();
@@ -29,7 +36,7 @@ public class AudioCapturePageViewModelTests
     }
 
     [TestMethod]
-    public void PlayCommand_ShouldInvokeAction_AndUpdateState_AndTrackTelemetry()
+    public void PlayCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
@@ -45,115 +52,141 @@ public class AudioCapturePageViewModelTests
 
         // Assert
         playAction.Verify(a => a.Execute(), Times.Once);
-        Assert.IsTrue(vm.IsPlaying);
-        Assert.IsFalse(vm.IsPaused);
-        Assert.IsFalse(vm.CanPlay);
         telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Play, It.IsAny<string>()), Times.Once);
         telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Play, It.IsAny<string>()), Times.Once);
     }
 
     [TestMethod]
-    public void StopCommand_ShouldInvokeAction_AndUpdateState_AndTrackTelemetry()
+    public void StopCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
         var stopAction = Fixture.Freeze<Mock<IAudioCaptureStopUseCase>>();
         var vm = Create();
 
-        // Start playing first
-        vm.PlayCommand.Execute();
-        Assert.IsFalse(vm.CanPlay);
-
         // Act
         vm.StopCommand.Execute();
 
         // Assert
         stopAction.Verify(a => a.Execute(), Times.Once);
-        Assert.IsFalse(vm.IsPlaying);
-        Assert.IsFalse(vm.IsPaused);
-        Assert.IsTrue(vm.CanPlay);
         telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Stop, It.IsAny<string>()), Times.Once);
         telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Stop, It.IsAny<string>()), Times.Once);
     }
 
     [TestMethod]
-    public void PauseCommand_ShouldInvokeAction_AndToggleState_AndTrackTelemetry()
+    public void PauseCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
         var pauseAction = Fixture.Freeze<Mock<IAudioCapturePauseUseCase>>();
         var vm = Create();
 
-        // Act - First pause
+        // Act
         vm.PauseCommand.Execute();
 
-        // Assert - First pause
+        // Assert
         pauseAction.Verify(a => a.Execute(), Times.Once);
-        Assert.IsTrue(vm.IsPaused);
         telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Pause, It.IsAny<string>()), Times.Once);
         telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Pause, It.IsAny<string>()), Times.Once);
-
-        // Act - Second pause (toggle off)
-        vm.PauseCommand.Execute();
-
-        // Assert - Second pause
-        pauseAction.Verify(a => a.Execute(), Times.Exactly(2));
-        Assert.IsFalse(vm.IsPaused);
-        telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Pause, It.IsAny<string>()), Times.Exactly(2));
-        telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Pause, It.IsAny<string>()), Times.Exactly(2));
     }
 
     [TestMethod]
-    public void MuteCommand_ShouldInvokeAction_AndToggleState_AndTrackTelemetry()
+    public void MuteCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
         var muteAction = Fixture.Freeze<Mock<IAudioCaptureMuteUseCase>>();
         var vm = Create();
 
-        // Act - First mute
+        // Act
         vm.MuteCommand.Execute();
 
-        // Assert - First mute
+        // Assert
         muteAction.Verify(a => a.Execute(), Times.Once);
-        Assert.IsTrue(vm.IsMuted);
         telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Mute, It.IsAny<string>()), Times.Once);
         telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Mute, It.IsAny<string>()), Times.Once);
-
-        // Act - Second mute (toggle off)
-        vm.MuteCommand.Execute();
-
-        // Assert - Second mute
-        muteAction.Verify(a => a.Execute(), Times.Exactly(2));
-        Assert.IsFalse(vm.IsMuted);
-        telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Mute, It.IsAny<string>()), Times.Exactly(2));
-        telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Mute, It.IsAny<string>()), Times.Exactly(2));
     }
 
     [TestMethod]
-    public void ToggleDesktopAudioCommand_ShouldInvokeAction_AndToggleState_AndTrackTelemetry()
+    public void ToggleDesktopAudioCommand_ShouldInvokeAction_AndTrackTelemetry()
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
         var toggleDesktopAudioAction = Fixture.Freeze<Mock<IAudioCaptureToggleDesktopAudioUseCase>>();
         var vm = Create();
 
-        // Act - First toggle
+        // Act
         vm.ToggleDesktopAudioCommand.Execute();
 
-        // Assert - First toggle
+        // Assert
         toggleDesktopAudioAction.Verify(a => a.Execute(), Times.Once);
-        Assert.IsTrue(vm.IsDesktopAudioEnabled);
         telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.ToggleDesktopAudio, It.IsAny<string>()), Times.Once);
         telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.ToggleDesktopAudio, It.IsAny<string>()), Times.Once);
+    }
 
-        // Act - Second toggle (toggle off)
-        vm.ToggleDesktopAudioCommand.Execute();
+    [TestMethod]
+    public void ViewModel_ShouldSyncStateFromService_WhenPlayingStateChanges()
+    {
+        // Arrange
+        var audioCaptureService = Fixture.Freeze<Mock<IAudioCaptureService>>();
+        var vm = Create();
 
-        // Assert - Second toggle
-        toggleDesktopAudioAction.Verify(a => a.Execute(), Times.Exactly(2));
+        Assert.IsFalse(vm.IsPlaying);
+        Assert.IsTrue(vm.CanPlay);
+
+        // Act
+        audioCaptureService.Raise(s => s.PlayingStateChanged += null, audioCaptureService.Object, true);
+
+        // Assert
+        Assert.IsTrue(vm.IsPlaying);
+        Assert.IsFalse(vm.CanPlay);
+    }
+
+    [TestMethod]
+    public void ViewModel_ShouldSyncStateFromService_WhenPausedStateChanges()
+    {
+        // Arrange
+        var audioCaptureService = Fixture.Freeze<Mock<IAudioCaptureService>>();
+        var vm = Create();
+
+        Assert.IsFalse(vm.IsPaused);
+
+        // Act
+        audioCaptureService.Raise(s => s.PausedStateChanged += null, audioCaptureService.Object, true);
+
+        // Assert
+        Assert.IsTrue(vm.IsPaused);
+    }
+
+    [TestMethod]
+    public void ViewModel_ShouldSyncStateFromService_WhenMutedStateChanges()
+    {
+        // Arrange
+        var audioCaptureService = Fixture.Freeze<Mock<IAudioCaptureService>>();
+        var vm = Create();
+
+        Assert.IsFalse(vm.IsMuted);
+
+        // Act
+        audioCaptureService.Raise(s => s.MutedStateChanged += null, audioCaptureService.Object, true);
+
+        // Assert
+        Assert.IsTrue(vm.IsMuted);
+    }
+
+    [TestMethod]
+    public void ViewModel_ShouldSyncStateFromService_WhenDesktopAudioStateChanges()
+    {
+        // Arrange
+        var audioCaptureService = Fixture.Freeze<Mock<IAudioCaptureService>>();
+        var vm = Create();
+
         Assert.IsFalse(vm.IsDesktopAudioEnabled);
-        telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.ToggleDesktopAudio, It.IsAny<string>()), Times.Exactly(2));
-        telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.ToggleDesktopAudio, It.IsAny<string>()), Times.Exactly(2));
+
+        // Act
+        audioCaptureService.Raise(s => s.DesktopAudioStateChanged += null, audioCaptureService.Object, true);
+
+        // Assert
+        Assert.IsTrue(vm.IsDesktopAudioEnabled);
     }
 }

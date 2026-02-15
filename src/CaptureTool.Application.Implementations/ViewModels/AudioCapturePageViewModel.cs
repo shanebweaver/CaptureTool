@@ -1,6 +1,7 @@
 using CaptureTool.Application.Implementations.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.UseCases.AudioCapture;
 using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Domain.Audio.Interfaces;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
@@ -56,6 +57,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
         private set => Set(ref field, value);
     }
 
+    private readonly IAudioCaptureService _audioCaptureService;
     private readonly IAudioCapturePlayUseCase _playAction;
     private readonly IAudioCaptureStopUseCase _stopAction;
     private readonly IAudioCapturePauseUseCase _pauseAction;
@@ -63,6 +65,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
     private readonly IAudioCaptureToggleDesktopAudioUseCase _toggleDesktopAudioAction;
 
     public AudioCapturePageViewModel(
+        IAudioCaptureService audioCaptureService,
         IAudioCapturePlayUseCase playAction,
         IAudioCaptureStopUseCase stopAction,
         IAudioCapturePauseUseCase pauseAction,
@@ -70,6 +73,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
         IAudioCaptureToggleDesktopAudioUseCase toggleDesktopAudioAction,
         ITelemetryService telemetryService)
     {
+        _audioCaptureService = audioCaptureService;
         _playAction = playAction;
         _stopAction = stopAction;
         _pauseAction = pauseAction;
@@ -83,44 +87,73 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
         MuteCommand = commandFactory.Create(ActivityIds.Mute, Mute);
         ToggleDesktopAudioCommand = commandFactory.Create(ActivityIds.ToggleDesktopAudio, ToggleDesktopAudio);
 
-        IsPlaying = false;
-        IsPaused = false;
-        IsMuted = false;
-        IsDesktopAudioEnabled = false;
-        CanPlay = true;
+        // Subscribe to service events for state synchronization
+        _audioCaptureService.PlayingStateChanged += OnPlayingStateChanged;
+        _audioCaptureService.PausedStateChanged += OnPausedStateChanged;
+        _audioCaptureService.MutedStateChanged += OnMutedStateChanged;
+        _audioCaptureService.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
+
+        // Initialize state from service
+        IsPlaying = _audioCaptureService.IsPlaying;
+        IsPaused = _audioCaptureService.IsPaused;
+        IsMuted = _audioCaptureService.IsMuted;
+        IsDesktopAudioEnabled = _audioCaptureService.IsDesktopAudioEnabled;
+        CanPlay = !_audioCaptureService.IsPlaying;
+    }
+
+    private void OnPlayingStateChanged(object? sender, bool value)
+    {
+        IsPlaying = value;
+        CanPlay = !value;
+    }
+
+    private void OnPausedStateChanged(object? sender, bool value)
+    {
+        IsPaused = value;
+    }
+
+    private void OnMutedStateChanged(object? sender, bool value)
+    {
+        IsMuted = value;
+    }
+
+    private void OnDesktopAudioStateChanged(object? sender, bool value)
+    {
+        IsDesktopAudioEnabled = value;
     }
 
     private void Play()
     {
         _playAction.Execute();
-        IsPlaying = true;
-        IsPaused = false;
-        CanPlay = false;
     }
 
     private void Stop()
     {
         _stopAction.Execute();
-        IsPlaying = false;
-        IsPaused = false;
-        CanPlay = true;
     }
 
     private void Pause()
     {
         _pauseAction.Execute();
-        IsPaused = !IsPaused;
     }
 
     private void Mute()
     {
         _muteAction.Execute();
-        IsMuted = !IsMuted;
     }
 
     private void ToggleDesktopAudio()
     {
         _toggleDesktopAudioAction.Execute();
-        IsDesktopAudioEnabled = !IsDesktopAudioEnabled;
+    }
+
+    public override void Dispose()
+    {
+        _audioCaptureService.PlayingStateChanged -= OnPlayingStateChanged;
+        _audioCaptureService.PausedStateChanged -= OnPausedStateChanged;
+        _audioCaptureService.MutedStateChanged -= OnMutedStateChanged;
+        _audioCaptureService.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
+
+        base.Dispose();
     }
 }

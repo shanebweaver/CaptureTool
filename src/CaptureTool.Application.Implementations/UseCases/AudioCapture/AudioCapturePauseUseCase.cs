@@ -4,7 +4,7 @@ using CaptureTool.Infrastructure.Implementations.UseCases;
 
 namespace CaptureTool.Application.Implementations.UseCases.AudioCapture;
 
-public sealed class AudioCapturePauseUseCase : UseCase, IAudioCapturePauseUseCase
+public sealed partial class AudioCapturePauseUseCase : UseCase, IAudioCapturePauseUseCase
 {
     private readonly IAudioCaptureService _audioCaptureService;
 

@@ -4,7 +4,7 @@ using CaptureTool.Infrastructure.Implementations.UseCases;
 
 namespace CaptureTool.Application.Implementations.UseCases.AudioCapture;
 
-public sealed class AudioCaptureMuteUseCase : UseCase, IAudioCaptureMuteUseCase
+public sealed partial class AudioCaptureMuteUseCase : UseCase, IAudioCaptureMuteUseCase
 {
     private readonly IAudioCaptureService _audioCaptureService;
 
@@ -15,6 +15,6 @@ public sealed class AudioCaptureMuteUseCase : UseCase, IAudioCaptureMuteUseCase
 
     public override void Execute()
     {
-        _audioCaptureService.Mute();
+        _audioCaptureService.ToggleMute();
     }
 }
