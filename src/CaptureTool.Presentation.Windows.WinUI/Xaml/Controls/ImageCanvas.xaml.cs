@@ -216,6 +216,16 @@ public sealed partial class ImageCanvas : UserControlBase
     private IDrawable? _selectedShape;
     private int _selectedShapeIndex = -1;
 
+    // Cached preview elements for performance
+    private Microsoft.UI.Xaml.Shapes.Rectangle? _previewRectangle;
+    private Microsoft.UI.Xaml.Shapes.Ellipse? _previewEllipse;
+    private Microsoft.UI.Xaml.Shapes.Line? _previewLine;
+    private Microsoft.UI.Xaml.Shapes.Polyline? _previewArrowHead;
+    private Microsoft.UI.Xaml.Media.SolidColorBrush? _previewStrokeBrush;
+    private Microsoft.UI.Xaml.Media.SolidColorBrush? _previewFillBrush;
+    private Color _cachedStrokeColor;
+    private Color _cachedFillColor;
+
     public ImageCanvas()
     {
         InitializeComponent();
@@ -625,15 +635,13 @@ public sealed partial class ImageCanvas : UserControlBase
     #region Preview Shape Management
     private void UpdatePreviewShape(Point startPoint, Point endPoint)
     {
-        // Clear any existing preview shape
-        PreviewShapeCanvas.Children.Clear();
-
         float x = (float)Math.Min(startPoint.X, endPoint.X);
         float y = (float)Math.Min(startPoint.Y, endPoint.Y);
         float width = (float)Math.Abs(endPoint.X - startPoint.X);
         float height = (float)Math.Abs(endPoint.Y - startPoint.Y);
 
-        Microsoft.UI.Xaml.Shapes.Shape? previewShape = null;
+        // Update or create brushes only if colors changed
+        UpdatePreviewBrushes();
 
         switch (SelectedShapeType)
         {
@@ -645,28 +653,26 @@ public sealed partial class ImageCanvas : UserControlBase
                         PreviewShapeCanvas.Visibility = Visibility.Collapsed;
                         return;
                     }
-                    
-                    var rect = new Microsoft.UI.Xaml.Shapes.Rectangle
+
+                    // Create rectangle on first use
+                    if (_previewRectangle == null)
                     {
-                        Width = width,
-                        Height = height,
-                        Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                ShapeStrokeColor.A,
-                                ShapeStrokeColor.R,
-                                ShapeStrokeColor.G,
-                                ShapeStrokeColor.B)),
-                        Fill = ShapeFillColor.A > 0 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                ShapeFillColor.A,
-                                ShapeFillColor.R,
-                                ShapeFillColor.G,
-                                ShapeFillColor.B)) : null,
-                        StrokeThickness = ShapeStrokeWidth
-                    };
-                    Canvas.SetLeft(rect, x);
-                    Canvas.SetTop(rect, y);
-                    previewShape = rect;
+                        _previewRectangle = new Microsoft.UI.Xaml.Shapes.Rectangle();
+                        PreviewShapeCanvas.Children.Add(_previewRectangle);
+                    }
+
+                    // Update properties
+                    _previewRectangle.Width = width;
+                    _previewRectangle.Height = height;
+                    _previewRectangle.Stroke = _previewStrokeBrush;
+                    _previewRectangle.Fill = ShapeFillColor.A > 0 ? _previewFillBrush : null;
+                    _previewRectangle.StrokeThickness = ShapeStrokeWidth;
+                    Canvas.SetLeft(_previewRectangle, x);
+                    Canvas.SetTop(_previewRectangle, y);
+                    _previewRectangle.Visibility = Visibility.Visible;
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Rectangle);
                 }
                 break;
 
@@ -678,101 +684,176 @@ public sealed partial class ImageCanvas : UserControlBase
                         PreviewShapeCanvas.Visibility = Visibility.Collapsed;
                         return;
                     }
-                    
-                    var ellipse = new Microsoft.UI.Xaml.Shapes.Ellipse
+
+                    // Create ellipse on first use
+                    if (_previewEllipse == null)
                     {
-                        Width = width,
-                        Height = height,
-                        Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                ShapeStrokeColor.A,
-                                ShapeStrokeColor.R,
-                                ShapeStrokeColor.G,
-                                ShapeStrokeColor.B)),
-                        Fill = ShapeFillColor.A > 0 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                ShapeFillColor.A,
-                                ShapeFillColor.R,
-                                ShapeFillColor.G,
-                                ShapeFillColor.B)) : null,
-                        StrokeThickness = ShapeStrokeWidth
-                    };
-                    Canvas.SetLeft(ellipse, x);
-                    Canvas.SetTop(ellipse, y);
-                    previewShape = ellipse;
+                        _previewEllipse = new Microsoft.UI.Xaml.Shapes.Ellipse();
+                        PreviewShapeCanvas.Children.Add(_previewEllipse);
+                    }
+
+                    // Update properties
+                    _previewEllipse.Width = width;
+                    _previewEllipse.Height = height;
+                    _previewEllipse.Stroke = _previewStrokeBrush;
+                    _previewEllipse.Fill = ShapeFillColor.A > 0 ? _previewFillBrush : null;
+                    _previewEllipse.StrokeThickness = ShapeStrokeWidth;
+                    Canvas.SetLeft(_previewEllipse, x);
+                    Canvas.SetTop(_previewEllipse, y);
+                    _previewEllipse.Visibility = Visibility.Visible;
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Ellipse);
                 }
                 break;
 
             case ShapeType.Line:
             case ShapeType.Arrow:
-                float distance = (float)Math.Sqrt(Math.Pow(endPoint.X - startPoint.X, 2) + Math.Pow(endPoint.Y - startPoint.Y, 2));
-                if (distance >= 2)
                 {
-                    var line = new Microsoft.UI.Xaml.Shapes.Line
+                    float distance = (float)Math.Sqrt(Math.Pow(endPoint.X - startPoint.X, 2) + Math.Pow(endPoint.Y - startPoint.Y, 2));
+                    if (distance < 2)
                     {
-                        X1 = startPoint.X,
-                        Y1 = startPoint.Y,
-                        X2 = endPoint.X,
-                        Y2 = endPoint.Y,
-                        Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                ShapeStrokeColor.A,
-                                ShapeStrokeColor.R,
-                                ShapeStrokeColor.G,
-                                ShapeStrokeColor.B)),
-                        StrokeThickness = ShapeStrokeWidth
-                    };
-                    previewShape = line;
+                        PreviewShapeCanvas.Visibility = Visibility.Collapsed;
+                        return;
+                    }
 
-                    // For arrows, add an arrowhead (simplified representation in preview)
+                    // Create line on first use
+                    if (_previewLine == null)
+                    {
+                        _previewLine = new Microsoft.UI.Xaml.Shapes.Line();
+                        PreviewShapeCanvas.Children.Add(_previewLine);
+                    }
+
+                    // Update line properties
+                    _previewLine.X1 = startPoint.X;
+                    _previewLine.Y1 = startPoint.Y;
+                    _previewLine.X2 = endPoint.X;
+                    _previewLine.Y2 = endPoint.Y;
+                    _previewLine.Stroke = _previewStrokeBrush;
+                    _previewLine.StrokeThickness = ShapeStrokeWidth;
+                    _previewLine.Visibility = Visibility.Visible;
+
+                    // Handle arrow head
                     if (SelectedShapeType == ShapeType.Arrow)
                     {
+                        // Create arrow head on first use
+                        if (_previewArrowHead == null)
+                        {
+                            _previewArrowHead = new Microsoft.UI.Xaml.Shapes.Polyline
+                            {
+                                Points = new Microsoft.UI.Xaml.Media.PointCollection()
+                            };
+                            PreviewShapeCanvas.Children.Add(_previewArrowHead);
+                        }
+
                         // Calculate arrow head
                         double angle = Math.Atan2(endPoint.Y - startPoint.Y, endPoint.X - startPoint.X);
                         double arrowLength = 10 + ShapeStrokeWidth;
                         double arrowAngle = Math.PI / 6; // 30 degrees
 
-                        var arrowHead = new Microsoft.UI.Xaml.Shapes.Polyline
-                        {
-                            Points = new Microsoft.UI.Xaml.Media.PointCollection
-                            {
-                                new global::Windows.Foundation.Point(
-                                    endPoint.X - arrowLength * Math.Cos(angle - arrowAngle),
-                                    endPoint.Y - arrowLength * Math.Sin(angle - arrowAngle)),
-                                new global::Windows.Foundation.Point(endPoint.X, endPoint.Y),
-                                new global::Windows.Foundation.Point(
-                                    endPoint.X - arrowLength * Math.Cos(angle + arrowAngle),
-                                    endPoint.Y - arrowLength * Math.Sin(angle + arrowAngle))
-                            },
-                            Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                                WinUIColor.FromArgb(
-                                    ShapeStrokeColor.A,
-                                    ShapeStrokeColor.R,
-                                    ShapeStrokeColor.G,
-                                    ShapeStrokeColor.B)),
-                            StrokeThickness = ShapeStrokeWidth,
-                            StrokeLineJoin = Microsoft.UI.Xaml.Media.PenLineJoin.Miter
-                        };
-                        PreviewShapeCanvas.Children.Add(arrowHead);
+                        // Update arrow head points
+                        _previewArrowHead.Points.Clear();
+                        _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(
+                            endPoint.X - arrowLength * Math.Cos(angle - arrowAngle),
+                            endPoint.Y - arrowLength * Math.Sin(angle - arrowAngle)));
+                        _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(endPoint.X, endPoint.Y));
+                        _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(
+                            endPoint.X - arrowLength * Math.Cos(angle + arrowAngle),
+                            endPoint.Y - arrowLength * Math.Sin(angle + arrowAngle)));
+
+                        _previewArrowHead.Stroke = _previewStrokeBrush;
+                        _previewArrowHead.StrokeThickness = ShapeStrokeWidth;
+                        _previewArrowHead.StrokeLineJoin = Microsoft.UI.Xaml.Media.PenLineJoin.Miter;
+                        _previewArrowHead.Visibility = Visibility.Visible;
                     }
+                    else if (_previewArrowHead != null)
+                    {
+                        _previewArrowHead.Visibility = Visibility.Collapsed;
+                    }
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(SelectedShapeType == ShapeType.Arrow ? ShapeType.Arrow : ShapeType.Line);
                 }
                 break;
         }
 
-        if (previewShape != null)
+        PreviewShapeCanvas.Visibility = Visibility.Visible;
+    }
+
+    private void UpdatePreviewBrushes()
+    {
+        // Update stroke brush
+        if (_previewStrokeBrush == null || _cachedStrokeColor != ShapeStrokeColor)
         {
-            PreviewShapeCanvas.Children.Add(previewShape);
-            PreviewShapeCanvas.Visibility = Visibility.Visible;
+            _cachedStrokeColor = ShapeStrokeColor;
+            if (_previewStrokeBrush == null)
+            {
+                _previewStrokeBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+            }
+            _previewStrokeBrush.Color = WinUIColor.FromArgb(
+                ShapeStrokeColor.A,
+                ShapeStrokeColor.R,
+                ShapeStrokeColor.G,
+                ShapeStrokeColor.B);
         }
-        else
+
+        // Update fill brush
+        if (ShapeFillColor.A > 0)
         {
-            PreviewShapeCanvas.Visibility = Visibility.Collapsed;
+            if (_previewFillBrush == null || _cachedFillColor != ShapeFillColor)
+            {
+                _cachedFillColor = ShapeFillColor;
+                if (_previewFillBrush == null)
+                {
+                    _previewFillBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                }
+                _previewFillBrush.Color = WinUIColor.FromArgb(
+                    ShapeFillColor.A,
+                    ShapeFillColor.R,
+                    ShapeFillColor.G,
+                    ShapeFillColor.B);
+            }
+        }
+    }
+
+    private void HideOtherPreviewShapes(ShapeType activeType)
+    {
+        if (activeType != ShapeType.Rectangle && _previewRectangle != null)
+        {
+            _previewRectangle.Visibility = Visibility.Collapsed;
+        }
+        if (activeType != ShapeType.Ellipse && _previewEllipse != null)
+        {
+            _previewEllipse.Visibility = Visibility.Collapsed;
+        }
+        if (activeType != ShapeType.Line && activeType != ShapeType.Arrow && _previewLine != null)
+        {
+            _previewLine.Visibility = Visibility.Collapsed;
+        }
+        if (activeType != ShapeType.Arrow && _previewArrowHead != null)
+        {
+            _previewArrowHead.Visibility = Visibility.Collapsed;
         }
     }
 
     private void ClearPreviewShape()
     {
-        PreviewShapeCanvas.Children.Clear();
+        if (_previewRectangle != null)
+        {
+            _previewRectangle.Visibility = Visibility.Collapsed;
+        }
+        if (_previewEllipse != null)
+        {
+            _previewEllipse.Visibility = Visibility.Collapsed;
+        }
+        if (_previewLine != null)
+        {
+            _previewLine.Visibility = Visibility.Collapsed;
+        }
+        if (_previewArrowHead != null)
+        {
+            _previewArrowHead.Visibility = Visibility.Collapsed;
+        }
         PreviewShapeCanvas.Visibility = Visibility.Collapsed;
     }
     #endregion
@@ -1034,139 +1115,222 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void UpdatePreviewShapeFromDrawable(IDrawable drawable)
     {
-        // Clear existing preview
-        PreviewShapeCanvas.Children.Clear();
-
-        Microsoft.UI.Xaml.Shapes.Shape? previewShape = null;
-
         switch (drawable)
         {
             case RectangleDrawable rect:
                 {
-                    var rectShape = new Microsoft.UI.Xaml.Shapes.Rectangle
+                    // Create rectangle on first use
+                    if (_previewRectangle == null)
                     {
-                        Width = rect.Size.Width,
-                        Height = rect.Size.Height,
-                        Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                rect.StrokeColor.A,
-                                rect.StrokeColor.R,
-                                rect.StrokeColor.G,
-                                rect.StrokeColor.B)),
-                        Fill = rect.FillColor.A > 0 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                rect.FillColor.A,
-                                rect.FillColor.R,
-                                rect.FillColor.G,
-                                rect.FillColor.B)) : null,
-                        StrokeThickness = rect.StrokeWidth
-                    };
-                    Canvas.SetLeft(rectShape, rect.Offset.X);
-                    Canvas.SetTop(rectShape, rect.Offset.Y);
-                    previewShape = rectShape;
+                        _previewRectangle = new Microsoft.UI.Xaml.Shapes.Rectangle();
+                        PreviewShapeCanvas.Children.Add(_previewRectangle);
+                    }
+
+                    // Update properties from drawable
+                    _previewRectangle.Width = rect.Size.Width;
+                    _previewRectangle.Height = rect.Size.Height;
+                    
+                    // Update stroke brush
+                    if (_previewStrokeBrush == null)
+                    {
+                        _previewStrokeBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                    }
+                    _previewStrokeBrush.Color = WinUIColor.FromArgb(
+                        rect.StrokeColor.A,
+                        rect.StrokeColor.R,
+                        rect.StrokeColor.G,
+                        rect.StrokeColor.B);
+                    _previewRectangle.Stroke = _previewStrokeBrush;
+                    
+                    // Update fill brush
+                    if (rect.FillColor.A > 0)
+                    {
+                        if (_previewFillBrush == null)
+                        {
+                            _previewFillBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                        }
+                        _previewFillBrush.Color = WinUIColor.FromArgb(
+                            rect.FillColor.A,
+                            rect.FillColor.R,
+                            rect.FillColor.G,
+                            rect.FillColor.B);
+                        _previewRectangle.Fill = _previewFillBrush;
+                    }
+                    else
+                    {
+                        _previewRectangle.Fill = null;
+                    }
+                    
+                    _previewRectangle.StrokeThickness = rect.StrokeWidth;
+                    Canvas.SetLeft(_previewRectangle, rect.Offset.X);
+                    Canvas.SetTop(_previewRectangle, rect.Offset.Y);
+                    _previewRectangle.Visibility = Visibility.Visible;
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Rectangle);
                 }
                 break;
 
             case EllipseDrawable ellipse:
                 {
-                    var ellipseShape = new Microsoft.UI.Xaml.Shapes.Ellipse
+                    // Create ellipse on first use
+                    if (_previewEllipse == null)
                     {
-                        Width = ellipse.Size.Width,
-                        Height = ellipse.Size.Height,
-                        Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                ellipse.StrokeColor.A,
-                                ellipse.StrokeColor.R,
-                                ellipse.StrokeColor.G,
-                                ellipse.StrokeColor.B)),
-                        Fill = ellipse.FillColor.A > 0 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                ellipse.FillColor.A,
-                                ellipse.FillColor.R,
-                                ellipse.FillColor.G,
-                                ellipse.FillColor.B)) : null,
-                        StrokeThickness = ellipse.StrokeWidth
-                    };
-                    Canvas.SetLeft(ellipseShape, ellipse.Offset.X);
-                    Canvas.SetTop(ellipseShape, ellipse.Offset.Y);
-                    previewShape = ellipseShape;
+                        _previewEllipse = new Microsoft.UI.Xaml.Shapes.Ellipse();
+                        PreviewShapeCanvas.Children.Add(_previewEllipse);
+                    }
+
+                    // Update properties from drawable
+                    _previewEllipse.Width = ellipse.Size.Width;
+                    _previewEllipse.Height = ellipse.Size.Height;
+                    
+                    // Update stroke brush
+                    if (_previewStrokeBrush == null)
+                    {
+                        _previewStrokeBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                    }
+                    _previewStrokeBrush.Color = WinUIColor.FromArgb(
+                        ellipse.StrokeColor.A,
+                        ellipse.StrokeColor.R,
+                        ellipse.StrokeColor.G,
+                        ellipse.StrokeColor.B);
+                    _previewEllipse.Stroke = _previewStrokeBrush;
+                    
+                    // Update fill brush
+                    if (ellipse.FillColor.A > 0)
+                    {
+                        if (_previewFillBrush == null)
+                        {
+                            _previewFillBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                        }
+                        _previewFillBrush.Color = WinUIColor.FromArgb(
+                            ellipse.FillColor.A,
+                            ellipse.FillColor.R,
+                            ellipse.FillColor.G,
+                            ellipse.FillColor.B);
+                        _previewEllipse.Fill = _previewFillBrush;
+                    }
+                    else
+                    {
+                        _previewEllipse.Fill = null;
+                    }
+                    
+                    _previewEllipse.StrokeThickness = ellipse.StrokeWidth;
+                    Canvas.SetLeft(_previewEllipse, ellipse.Offset.X);
+                    Canvas.SetTop(_previewEllipse, ellipse.Offset.Y);
+                    _previewEllipse.Visibility = Visibility.Visible;
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Ellipse);
                 }
                 break;
 
             case LineDrawable line:
                 {
-                    var lineShape = new Microsoft.UI.Xaml.Shapes.Line
+                    // Create line on first use
+                    if (_previewLine == null)
                     {
-                        X1 = line.Offset.X,
-                        Y1 = line.Offset.Y,
-                        X2 = line.EndPoint.X,
-                        Y2 = line.EndPoint.Y,
-                        Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                line.StrokeColor.A,
-                                line.StrokeColor.R,
-                                line.StrokeColor.G,
-                                line.StrokeColor.B)),
-                        StrokeThickness = line.StrokeWidth
-                    };
-                    previewShape = lineShape;
+                        _previewLine = new Microsoft.UI.Xaml.Shapes.Line();
+                        PreviewShapeCanvas.Children.Add(_previewLine);
+                    }
+
+                    // Update line properties from drawable
+                    _previewLine.X1 = line.Offset.X;
+                    _previewLine.Y1 = line.Offset.Y;
+                    _previewLine.X2 = line.EndPoint.X;
+                    _previewLine.Y2 = line.EndPoint.Y;
+                    
+                    // Update stroke brush
+                    if (_previewStrokeBrush == null)
+                    {
+                        _previewStrokeBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                    }
+                    _previewStrokeBrush.Color = WinUIColor.FromArgb(
+                        line.StrokeColor.A,
+                        line.StrokeColor.R,
+                        line.StrokeColor.G,
+                        line.StrokeColor.B);
+                    _previewLine.Stroke = _previewStrokeBrush;
+                    _previewLine.StrokeThickness = line.StrokeWidth;
+                    _previewLine.Visibility = Visibility.Visible;
+
+                    // Hide arrow head if present
+                    if (_previewArrowHead != null)
+                    {
+                        _previewArrowHead.Visibility = Visibility.Collapsed;
+                    }
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Line);
                 }
                 break;
 
             case ArrowDrawable arrow:
                 {
-                    var lineShape = new Microsoft.UI.Xaml.Shapes.Line
+                    // Create line on first use
+                    if (_previewLine == null)
                     {
-                        X1 = arrow.Offset.X,
-                        Y1 = arrow.Offset.Y,
-                        X2 = arrow.EndPoint.X,
-                        Y2 = arrow.EndPoint.Y,
-                        Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                arrow.StrokeColor.A,
-                                arrow.StrokeColor.R,
-                                arrow.StrokeColor.G,
-                                arrow.StrokeColor.B)),
-                        StrokeThickness = arrow.StrokeWidth
-                    };
-                    previewShape = lineShape;
+                        _previewLine = new Microsoft.UI.Xaml.Shapes.Line();
+                        PreviewShapeCanvas.Children.Add(_previewLine);
+                    }
 
-                    // Add arrow head
+                    // Update line properties from drawable
+                    _previewLine.X1 = arrow.Offset.X;
+                    _previewLine.Y1 = arrow.Offset.Y;
+                    _previewLine.X2 = arrow.EndPoint.X;
+                    _previewLine.Y2 = arrow.EndPoint.Y;
+                    
+                    // Update stroke brush
+                    if (_previewStrokeBrush == null)
+                    {
+                        _previewStrokeBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                    }
+                    _previewStrokeBrush.Color = WinUIColor.FromArgb(
+                        arrow.StrokeColor.A,
+                        arrow.StrokeColor.R,
+                        arrow.StrokeColor.G,
+                        arrow.StrokeColor.B);
+                    _previewLine.Stroke = _previewStrokeBrush;
+                    _previewLine.StrokeThickness = arrow.StrokeWidth;
+                    _previewLine.Visibility = Visibility.Visible;
+
+                    // Create arrow head on first use
+                    if (_previewArrowHead == null)
+                    {
+                        _previewArrowHead = new Microsoft.UI.Xaml.Shapes.Polyline
+                        {
+                            Points = new Microsoft.UI.Xaml.Media.PointCollection()
+                        };
+                        PreviewShapeCanvas.Children.Add(_previewArrowHead);
+                    }
+
+                    // Calculate arrow head
                     double angle = Math.Atan2(arrow.EndPoint.Y - arrow.Offset.Y, arrow.EndPoint.X - arrow.Offset.X);
                     double arrowLength = 10 + arrow.StrokeWidth;
                     double arrowAngle = Math.PI / 6;
 
-                    var arrowHead = new Microsoft.UI.Xaml.Shapes.Polyline
-                    {
-                        Points = new Microsoft.UI.Xaml.Media.PointCollection
-                        {
-                            new global::Windows.Foundation.Point(
-                                arrow.EndPoint.X - arrowLength * Math.Cos(angle - arrowAngle),
-                                arrow.EndPoint.Y - arrowLength * Math.Sin(angle - arrowAngle)),
-                            new global::Windows.Foundation.Point(arrow.EndPoint.X, arrow.EndPoint.Y),
-                            new global::Windows.Foundation.Point(
-                                arrow.EndPoint.X - arrowLength * Math.Cos(angle + arrowAngle),
-                                arrow.EndPoint.Y - arrowLength * Math.Sin(angle + arrowAngle))
-                        },
-                        Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            WinUIColor.FromArgb(
-                                arrow.StrokeColor.A,
-                                arrow.StrokeColor.R,
-                                arrow.StrokeColor.G,
-                                arrow.StrokeColor.B)),
-                        StrokeThickness = arrow.StrokeWidth,
-                        StrokeLineJoin = Microsoft.UI.Xaml.Media.PenLineJoin.Miter
-                    };
-                    PreviewShapeCanvas.Children.Add(arrowHead);
+                    // Update arrow head points
+                    _previewArrowHead.Points.Clear();
+                    _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(
+                        arrow.EndPoint.X - arrowLength * Math.Cos(angle - arrowAngle),
+                        arrow.EndPoint.Y - arrowLength * Math.Sin(angle - arrowAngle)));
+                    _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(arrow.EndPoint.X, arrow.EndPoint.Y));
+                    _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(
+                        arrow.EndPoint.X - arrowLength * Math.Cos(angle + arrowAngle),
+                        arrow.EndPoint.Y - arrowLength * Math.Sin(angle + arrowAngle)));
+
+                    _previewArrowHead.Stroke = _previewStrokeBrush;
+                    _previewArrowHead.StrokeThickness = arrow.StrokeWidth;
+                    _previewArrowHead.StrokeLineJoin = Microsoft.UI.Xaml.Media.PenLineJoin.Miter;
+                    _previewArrowHead.Visibility = Visibility.Visible;
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Arrow);
                 }
                 break;
         }
 
-        if (previewShape != null)
-        {
-            PreviewShapeCanvas.Children.Add(previewShape);
-            PreviewShapeCanvas.Visibility = Visibility.Visible;
-        }
+        PreviewShapeCanvas.Visibility = Visibility.Visible;
     }
     #endregion
 }
