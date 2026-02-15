@@ -319,7 +319,7 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>Control</value>
   </data>
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
-    <value>Nouvelle capture</value>
+    <value>Nouvelle capture d'image</value>
   </data>
   <data name="AppMenu_NewVideoCaptureItem.AccessKey" xml:space="preserve">
     <value>V</value>

@@ -319,7 +319,7 @@
     <value>Control</value>
   </data>
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
-    <value>Новый захват</value>
+    <value>Новый захват изображения</value>
   </data>
   <data name="AppMenu_NewVideoCaptureItem.AccessKey" xml:space="preserve">
     <value>V</value>
