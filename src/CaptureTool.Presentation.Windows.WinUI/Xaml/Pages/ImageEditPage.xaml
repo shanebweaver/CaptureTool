@@ -309,7 +309,7 @@
 
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
-                <!--  Minimal: Hide all info (smallest screens)  -->
+                <!--  Minimal: Show only dimensions (smallest screens)  -->
                 <VisualState x:Name="MinimalState">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="0" />
