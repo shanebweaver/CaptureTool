@@ -232,6 +232,22 @@ public sealed partial class ImageCanvas : UserControlBase
         Loaded += ImageCanvas_Loaded;
         Unloaded += ImageCanvas_Unloaded;
         KeyDown += ImageCanvas_KeyDown;
+        DoubleTapped += ImageCanvas_DoubleTapped;
+    }
+
+    private void ImageCanvas_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
+    {
+        if (!IsShapesModeEnabled)
+        {
+            return;
+        }
+
+        // Get position relative to the RenderCanvas
+        var point = e.GetPosition(RenderCanvas);
+        
+        // Try to select a shape at this position
+        SelectShape(point);
+        e.Handled = true;
     }
 
     private void ImageCanvas_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
@@ -501,35 +517,27 @@ public sealed partial class ImageCanvas : UserControlBase
             if (point.Properties.IsLeftButtonPressed)
             {
                 // First check if clicking on an existing shape
-                bool clickedOnShape = false;
+                bool clickedOnSelectedShape = false;
                 
                 if (_selectedShape != null && IsPointInShape(point.Position, _selectedShape))
                 {
-                    // Clicking on already selected shape - let resize handles handle it
-                    clickedOnShape = true;
-                }
-                else
-                {
-                    // Check if clicking on any shape to select it
-                    var previousSelection = _selectedShape;
-                    SelectShape(point.Position);
-                    clickedOnShape = _selectedShape != null;
-                    
-                    // If we had a previous selection and clicked away, we just deselected
-                    if (previousSelection != null && _selectedShape == null)
-                    {
-                        e.Handled = true;
-                        return;
-                    }
+                    // Clicking on already selected shape - let resize handles handle it (for moving)
+                    clickedOnSelectedShape = true;
+                    e.Handled = true;
+                    return;
                 }
                 
-                // If no shape was selected, start drawing a new shape
-                if (!clickedOnShape)
+                // If clicking on a different (unselected) shape, deselect it and start drawing
+                // This allows drawing on top of existing shapes
+                if (_selectedShape != null)
                 {
-                    _shapeStartPoint = point.Position;
-                    _isPointerDown = true;
-                    RootContainer.CapturePointer(e.Pointer);
+                    DeselectShape();
                 }
+                
+                // Start drawing a new shape
+                _shapeStartPoint = point.Position;
+                _isPointerDown = true;
+                RootContainer.CapturePointer(e.Pointer);
                 
                 e.Handled = true;
                 return;

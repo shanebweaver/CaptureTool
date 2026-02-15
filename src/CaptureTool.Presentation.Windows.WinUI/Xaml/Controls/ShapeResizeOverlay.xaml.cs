@@ -61,46 +61,64 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         Handle_TopLeft.PointerPressed += (s, e) => StartResize(ResizeHandle.TopLeft, e);
         Handle_TopLeft.PointerMoved += (s, e) => ContinueResize(e);
         Handle_TopLeft.PointerReleased += (s, e) => EndResize(e);
+        Handle_TopLeft.PointerEntered += (s, e) => SetCursorForHandle(ResizeHandle.TopLeft);
+        Handle_TopLeft.PointerExited += (s, e) => ResetCursor();
 
         // Top right
         Handle_TopRight.PointerPressed += (s, e) => StartResize(ResizeHandle.TopRight, e);
         Handle_TopRight.PointerMoved += (s, e) => ContinueResize(e);
         Handle_TopRight.PointerReleased += (s, e) => EndResize(e);
+        Handle_TopRight.PointerEntered += (s, e) => SetCursorForHandle(ResizeHandle.TopRight);
+        Handle_TopRight.PointerExited += (s, e) => ResetCursor();
 
         // Bottom left
         Handle_BottomLeft.PointerPressed += (s, e) => StartResize(ResizeHandle.BottomLeft, e);
         Handle_BottomLeft.PointerMoved += (s, e) => ContinueResize(e);
         Handle_BottomLeft.PointerReleased += (s, e) => EndResize(e);
+        Handle_BottomLeft.PointerEntered += (s, e) => SetCursorForHandle(ResizeHandle.BottomLeft);
+        Handle_BottomLeft.PointerExited += (s, e) => ResetCursor();
 
         // Bottom right
         Handle_BottomRight.PointerPressed += (s, e) => StartResize(ResizeHandle.BottomRight, e);
         Handle_BottomRight.PointerMoved += (s, e) => ContinueResize(e);
         Handle_BottomRight.PointerReleased += (s, e) => EndResize(e);
+        Handle_BottomRight.PointerEntered += (s, e) => SetCursorForHandle(ResizeHandle.BottomRight);
+        Handle_BottomRight.PointerExited += (s, e) => ResetCursor();
 
         // Top
         Handle_Top.PointerPressed += (s, e) => StartResize(ResizeHandle.Top, e);
         Handle_Top.PointerMoved += (s, e) => ContinueResize(e);
         Handle_Top.PointerReleased += (s, e) => EndResize(e);
+        Handle_Top.PointerEntered += (s, e) => SetCursorForHandle(ResizeHandle.Top);
+        Handle_Top.PointerExited += (s, e) => ResetCursor();
 
         // Bottom
         Handle_Bottom.PointerPressed += (s, e) => StartResize(ResizeHandle.Bottom, e);
         Handle_Bottom.PointerMoved += (s, e) => ContinueResize(e);
         Handle_Bottom.PointerReleased += (s, e) => EndResize(e);
+        Handle_Bottom.PointerEntered += (s, e) => SetCursorForHandle(ResizeHandle.Bottom);
+        Handle_Bottom.PointerExited += (s, e) => ResetCursor();
 
         // Left
         Handle_Left.PointerPressed += (s, e) => StartResize(ResizeHandle.Left, e);
         Handle_Left.PointerMoved += (s, e) => ContinueResize(e);
         Handle_Left.PointerReleased += (s, e) => EndResize(e);
+        Handle_Left.PointerEntered += (s, e) => SetCursorForHandle(ResizeHandle.Left);
+        Handle_Left.PointerExited += (s, e) => ResetCursor();
 
         // Right
         Handle_Right.PointerPressed += (s, e) => StartResize(ResizeHandle.Right, e);
         Handle_Right.PointerMoved += (s, e) => ContinueResize(e);
         Handle_Right.PointerReleased += (s, e) => EndResize(e);
+        Handle_Right.PointerEntered += (s, e) => SetCursorForHandle(ResizeHandle.Right);
+        Handle_Right.PointerExited += (s, e) => ResetCursor();
 
         // Move (interior area)
         MoveHandle.PointerPressed += (s, e) => StartResize(ResizeHandle.Move, e);
         MoveHandle.PointerMoved += (s, e) => ContinueResize(e);
         MoveHandle.PointerReleased += (s, e) => EndResize(e);
+        MoveHandle.PointerEntered += (s, e) => SetCursorForHandle(ResizeHandle.Move);
+        MoveHandle.PointerExited += (s, e) => ResetCursor();
     }
 
     private void StartResize(ResizeHandle handle, PointerRoutedEventArgs e)
@@ -271,5 +289,27 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         Canvas.SetTop(Boundary, bounds.Y);
         Boundary.Width = bounds.Width;
         Boundary.Height = bounds.Height;
+    }
+
+    private void SetCursorForHandle(ResizeHandle handle)
+    {
+        ProtectedCursor = handle switch
+        {
+            ResizeHandle.TopLeft => Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.SizeNorthwestSoutheast),
+            ResizeHandle.TopRight => Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.SizeNortheastSouthwest),
+            ResizeHandle.BottomLeft => Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.SizeNortheastSouthwest),
+            ResizeHandle.BottomRight => Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.SizeNorthwestSoutheast),
+            ResizeHandle.Top => Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.SizeNorthSouth),
+            ResizeHandle.Bottom => Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.SizeNorthSouth),
+            ResizeHandle.Left => Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.SizeWestEast),
+            ResizeHandle.Right => Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.SizeWestEast),
+            ResizeHandle.Move => Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.SizeAll),
+            _ => null
+        };
+    }
+
+    private void ResetCursor()
+    {
+        ProtectedCursor = null;
     }
 }
