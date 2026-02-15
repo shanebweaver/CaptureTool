@@ -46,6 +46,7 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
             .AddSettingsUseCases()
             .AddVideoEditUseCases()
             .AddAudioEditUseCases()
+            .AddAudioCaptureUseCases()
             .AddAppMenuUseCases()
             .AddDiagnosticsUseCases();
 
