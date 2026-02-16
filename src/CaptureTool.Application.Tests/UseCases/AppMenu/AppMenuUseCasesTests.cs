@@ -1,8 +1,10 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Implementations.UseCases.AppMenu;
+using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
@@ -30,6 +32,32 @@ public class AppMenuUseCasesTests
         actions.NewImageCapture();
 
         navigation.Verify(n => n.GoToImageCapture(CaptureOptions.ImageDefault), Times.Once);
+    }
+
+    [TestMethod]
+    public void NewVideoCapture_NavigatesToVideoCapture()
+    {
+        var navigation = Fixture.Freeze<Mock<IAppNavigation>>();
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(true);
+
+        var actions = Fixture.Create<AppMenuUseCases>();
+        actions.NewVideoCapture();
+
+        navigation.Verify(n => n.GoToImageCapture(CaptureOptions.VideoDefault), Times.Once);
+    }
+
+    [TestMethod]
+    public void NewVideoCapture_WhenFeatureDisabled_DoesNotNavigate()
+    {
+        var navigation = Fixture.Freeze<Mock<IAppNavigation>>();
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(false);
+
+        var actions = Fixture.Create<AppMenuUseCases>();
+        actions.NewVideoCapture();
+
+        navigation.Verify(n => n.GoToImageCapture(It.IsAny<CaptureOptions>()), Times.Never);
     }
 
     [TestMethod]
