@@ -77,19 +77,43 @@ public sealed partial class ImageCanvas : UserControlBase
        nameof(ShapeStrokeColor),
        typeof(Color),
        typeof(ImageCanvas),
-       new PropertyMetadata(Color.Red));
+       new PropertyMetadata(Color.Red, OnShapeStrokeColorChanged));
+
+    private static void OnShapeStrokeColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control && e.NewValue is Color color && control._selectedShape != null)
+        {
+            control.UpdateSelectedShapeStrokeColor(color);
+        }
+    }
 
     public static readonly DependencyProperty ShapeFillColorProperty = DependencyProperty.Register(
        nameof(ShapeFillColor),
        typeof(Color),
        typeof(ImageCanvas),
-       new PropertyMetadata(Color.Transparent));
+       new PropertyMetadata(Color.Transparent, OnShapeFillColorChanged));
+
+    private static void OnShapeFillColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control && e.NewValue is Color color && control._selectedShape != null)
+        {
+            control.UpdateSelectedShapeFillColor(color);
+        }
+    }
 
     public static readonly DependencyProperty ShapeStrokeWidthProperty = DependencyProperty.Register(
        nameof(ShapeStrokeWidth),
        typeof(int),
        typeof(ImageCanvas),
-       new PropertyMetadata(2));
+       new PropertyMetadata(2, OnShapeStrokeWidthChanged));
+
+    private static void OnShapeStrokeWidthChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control && e.NewValue is int width && control._selectedShape != null)
+        {
+            control.UpdateSelectedShapeStrokeWidth(width);
+        }
+    }
 
     private static void OnCropRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -970,6 +994,10 @@ public sealed partial class ImageCanvas : UserControlBase
                 
                 ShowResizeHandles(drawable);
                 UpdatePreviewShapeFromDrawable(drawable);
+                
+                // Ensure preview canvas is visible
+                PreviewShapeCanvas.Visibility = Visibility.Visible;
+                
                 RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
                 
                 // Set focus to enable keyboard events
@@ -1033,6 +1061,10 @@ public sealed partial class ImageCanvas : UserControlBase
             
             ShowResizeHandles(shape);
             UpdatePreviewShapeFromDrawable(shape);
+            
+            // Ensure preview canvas is visible
+            PreviewShapeCanvas.Visibility = Visibility.Visible;
+            
             RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
             
             // Set focus to enable keyboard events
@@ -1145,9 +1177,19 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ShowResizeHandles(IDrawable drawable)
     {
-        var bounds = GetShapeBounds(drawable);
-        ShapeResizeOverlay.ShapeBounds = bounds;
-        ShapeResizeOverlay.Visibility = Visibility.Visible;
+        // For lines and arrows, we don't show the box resize overlay
+        // The preview shape itself with its endpoints serves as the resize interface
+        if (drawable is LineDrawable || drawable is ArrowDrawable)
+        {
+            ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            // For rectangles and ellipses, show the box resize overlay
+            var bounds = GetShapeBounds(drawable);
+            ShapeResizeOverlay.ShapeBounds = bounds;
+            ShapeResizeOverlay.Visibility = Visibility.Visible;
+        }
     }
 
     private void UpdateSelectedShapeBounds(RectangleF newBounds)
@@ -1229,6 +1271,85 @@ public sealed partial class ImageCanvas : UserControlBase
                 }
                 break;
         }
+    }
+
+    private void UpdateSelectedShapeStrokeColor(Color color)
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        switch (_selectedShape)
+        {
+            case RectangleDrawable rect:
+                rect.StrokeColor = color;
+                break;
+            case EllipseDrawable ellipse:
+                ellipse.StrokeColor = color;
+                break;
+            case LineDrawable line:
+                line.StrokeColor = color;
+                break;
+            case ArrowDrawable arrow:
+                arrow.StrokeColor = color;
+                break;
+        }
+
+        // Update preview to reflect the new color
+        UpdatePreviewShapeFromDrawable(_selectedShape);
+        RenderCanvas.Invalidate();
+    }
+
+    private void UpdateSelectedShapeFillColor(Color color)
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        switch (_selectedShape)
+        {
+            case RectangleDrawable rect:
+                rect.FillColor = color;
+                break;
+            case EllipseDrawable ellipse:
+                ellipse.FillColor = color;
+                break;
+            // Lines and arrows don't have fill color
+        }
+
+        // Update preview to reflect the new color
+        UpdatePreviewShapeFromDrawable(_selectedShape);
+        RenderCanvas.Invalidate();
+    }
+
+    private void UpdateSelectedShapeStrokeWidth(int width)
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        switch (_selectedShape)
+        {
+            case RectangleDrawable rect:
+                rect.StrokeWidth = width;
+                break;
+            case EllipseDrawable ellipse:
+                ellipse.StrokeWidth = width;
+                break;
+            case LineDrawable line:
+                line.StrokeWidth = width;
+                break;
+            case ArrowDrawable arrow:
+                arrow.StrokeWidth = width;
+                break;
+        }
+
+        // Update preview to reflect the new width
+        UpdatePreviewShapeFromDrawable(_selectedShape);
+        RenderCanvas.Invalidate();
     }
 
     private void UpdatePreviewShapeFromDrawable(IDrawable drawable)
