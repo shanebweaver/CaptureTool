@@ -1,13 +1,16 @@
 using CaptureTool.Domain.Edit.Implementations.Windows;
 using CaptureTool.Domain.Edit.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces.Drawable;
+using CaptureTool.Domain.Edit.Interfaces.Operations;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using System.Drawing;
-using Point = Windows.Foundation.Point;
+using Windows.System;
+using Point = global::Windows.Foundation.Point;
+using WinUIColor = global::Windows.UI.Color;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
@@ -41,7 +44,16 @@ public sealed partial class ImageCanvas : UserControlBase
         nameof(IsShapesModeEnabled),
         typeof(bool),
         typeof(ImageCanvas),
-        new PropertyMetadata(false));
+        new PropertyMetadata(false, OnIsShapesModeEnabledPropertyChanged));
+
+    private static void OnIsShapesModeEnabledPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control && e.NewValue is bool isEnabled && !isEnabled)
+        {
+            // When leaving shapes mode, deselect any selected shape
+            control.DeselectShape();
+        }
+    }
 
     public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
        nameof(CropRect),
@@ -54,6 +66,30 @@ public sealed partial class ImageCanvas : UserControlBase
        typeof(bool),
        typeof(ImageCanvas),
        new PropertyMetadata(false));
+
+    public static readonly DependencyProperty SelectedShapeTypeProperty = DependencyProperty.Register(
+       nameof(SelectedShapeType),
+       typeof(ShapeType),
+       typeof(ImageCanvas),
+       new PropertyMetadata(ShapeType.Rectangle));
+
+    public static readonly DependencyProperty ShapeStrokeColorProperty = DependencyProperty.Register(
+       nameof(ShapeStrokeColor),
+       typeof(Color),
+       typeof(ImageCanvas),
+       new PropertyMetadata(Color.Red));
+
+    public static readonly DependencyProperty ShapeFillColorProperty = DependencyProperty.Register(
+       nameof(ShapeFillColor),
+       typeof(Color),
+       typeof(ImageCanvas),
+       new PropertyMetadata(Color.Transparent));
+
+    public static readonly DependencyProperty ShapeStrokeWidthProperty = DependencyProperty.Register(
+       nameof(ShapeStrokeWidth),
+       typeof(int),
+       typeof(ImageCanvas),
+       new PropertyMetadata(2));
 
     private static void OnCropRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -141,22 +177,91 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(IsAutoZoomLockedProperty, value);
     }
 
+    public ShapeType SelectedShapeType
+    {
+        get => Get<ShapeType>(SelectedShapeTypeProperty);
+        set => Set(SelectedShapeTypeProperty, value);
+    }
+
+    public Color ShapeStrokeColor
+    {
+        get => Get<Color>(ShapeStrokeColorProperty);
+        set => Set(ShapeStrokeColorProperty, value);
+    }
+
+    public Color ShapeFillColor
+    {
+        get => Get<Color>(ShapeFillColorProperty);
+        set => Set(ShapeFillColorProperty, value);
+    }
+
+    public int ShapeStrokeWidth
+    {
+        get => Get<int>(ShapeStrokeWidthProperty);
+        set => Set(ShapeStrokeWidthProperty, value);
+    }
+
     public event EventHandler<Rectangle>? InteractionComplete;
     public event EventHandler<Rectangle>? CropRectChanged;
     public event EventHandler<(System.Numerics.Vector2 Start, System.Numerics.Vector2 End)>? ShapeDrawn;
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
+    public event EventHandler<int>? ShapeDeleted;
+    public event EventHandler<(int ShapeIndex, IDrawable OldState, IDrawable NewState)>? ShapeModified;
 
     private readonly Lock _zoomUpdateLock = new Lock();
 
     private bool _isPointerDown;
     private Point _lastPointerPosition;
     private Point? _shapeStartPoint;
+    
+    // Shape selection state
+    private IDrawable? _selectedShape;
+    private int _selectedShapeIndex = -1;
+    private ModifyShapeOperation.ShapeState? _shapeStateBeforeModification;
+    
+    // Track if we're in a potential selection scenario
+    private IDrawable? _shapeUnderPointer;
+    private Point? _pointerPressPosition;
+
+    // Cached preview elements for performance
+    private Microsoft.UI.Xaml.Shapes.Rectangle? _previewRectangle;
+    private Microsoft.UI.Xaml.Shapes.Ellipse? _previewEllipse;
+    private Microsoft.UI.Xaml.Shapes.Line? _previewLine;
+    private Microsoft.UI.Xaml.Shapes.Polyline? _previewArrowHead;
+    private Microsoft.UI.Xaml.Media.SolidColorBrush? _previewStrokeBrush;
+    private Microsoft.UI.Xaml.Media.SolidColorBrush? _previewFillBrush;
+    private Color _cachedStrokeColor;
+    private Color _cachedFillColor;
 
     public ImageCanvas()
     {
         InitializeComponent();
         Loaded += ImageCanvas_Loaded;
         Unloaded += ImageCanvas_Unloaded;
+        KeyDown += ImageCanvas_KeyDown;
+    }
+
+    private void ImageCanvas_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        if (!IsShapesModeEnabled || _selectedShape == null)
+        {
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case VirtualKey.Delete:
+                // Delete the selected shape
+                DeleteSelectedShape();
+                e.Handled = true;
+                break;
+
+            case VirtualKey.Escape:
+                // Deselect the shape
+                DeselectShape();
+                e.Handled = true;
+                break;
+        }
     }
 
     private void ImageCanvas_Loaded(object sender, RoutedEventArgs e)
@@ -351,7 +456,15 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             var rect = (!IsCropModeEnabled) ? CropRect : IsTurned() ? new Rectangle(0, 0, CanvasSize.Height, CanvasSize.Width) : new Rectangle(0, 0, CanvasSize.Width, CanvasSize.Height);
             ImageCanvasRenderOptions options = new(Orientation, CanvasSize, rect);
-            Win2DImageCanvasRenderer.Render([.. Drawables], options, args.DrawingSession);
+            
+            // Filter out the selected shape if it's being manipulated
+            var drawablesToRender = Drawables;
+            if (_selectedShape != null && _selectedShapeIndex >= 0)
+            {
+                drawablesToRender = Drawables.Where((d, i) => i != _selectedShapeIndex);
+            }
+            
+            Win2DImageCanvasRenderer.Render([.. drawablesToRender], options, args.DrawingSession);
         }
     }
 
@@ -394,9 +507,30 @@ public sealed partial class ImageCanvas : UserControlBase
             var point = e.GetCurrentPoint(RenderCanvas);
             if (point.Properties.IsLeftButtonPressed)
             {
-                _shapeStartPoint = point.Position;
+                // Store the press position for later use
+                _pointerPressPosition = point.Position;
+                
+                // Check if clicking on the already selected shape
+                if (_selectedShape != null && IsPointInShape(point.Position, _selectedShape))
+                {
+                    // Clicking on already selected shape - let resize handles handle it (for moving)
+                    e.Handled = true;
+                    return;
+                }
+                
+                // Check if clicking on any unselected shape
+                _shapeUnderPointer = FindShapeAtPoint(point.Position);
+                
+                // If we had a previous selection and clicked away, deselect
+                if (_selectedShape != null && _shapeUnderPointer == null)
+                {
+                    DeselectShape();
+                }
+                
+                // Don't start drawing yet - wait to see if user drags or releases
                 _isPointerDown = true;
                 RootContainer.CapturePointer(e.Pointer);
+                
                 e.Handled = true;
                 return;
             }
@@ -411,9 +545,35 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         if (_isPointerDown)
         {
-            // In shapes mode, don't pan
-            if (IsShapesModeEnabled && _shapeStartPoint.HasValue)
+            // In shapes mode, handle shape drawing
+            if (IsShapesModeEnabled && _pointerPressPosition.HasValue)
             {
+                var currentPoint = e.GetCurrentPoint(RenderCanvas).Position;
+                
+                // Check if user has moved enough to start drawing (threshold to distinguish from click)
+                const double dragThreshold = 3.0; // pixels
+                double distance = Math.Sqrt(
+                    Math.Pow(currentPoint.X - _pointerPressPosition.Value.X, 2) +
+                    Math.Pow(currentPoint.Y - _pointerPressPosition.Value.Y, 2));
+                
+                if (distance > dragThreshold)
+                {
+                    // User is dragging - start drawing a new shape
+                    if (!_shapeStartPoint.HasValue)
+                    {
+                        // Deselect any shape under pointer since we're drawing
+                        if (_shapeUnderPointer != null)
+                        {
+                            DeselectShape();
+                            _shapeUnderPointer = null;
+                        }
+                        
+                        _shapeStartPoint = _pointerPressPosition.Value;
+                    }
+                    
+                    UpdatePreviewShape(_shapeStartPoint.Value, currentPoint);
+                }
+                
                 e.Handled = true;
                 return;
             }
@@ -439,19 +599,35 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RootContainer_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
-        if (IsShapesModeEnabled && _shapeStartPoint.HasValue)
+        if (IsShapesModeEnabled)
         {
-            // Get end position relative to the RenderCanvas
-            var endPoint = e.GetCurrentPoint(RenderCanvas).Position;
+            if (_shapeStartPoint.HasValue)
+            {
+                // User dragged to draw a shape
+                var endPoint = e.GetCurrentPoint(RenderCanvas).Position;
 
-            // Convert to Vector2 and invoke event
-            var start = new System.Numerics.Vector2((float)_shapeStartPoint.Value.X, (float)_shapeStartPoint.Value.Y);
-            var end = new System.Numerics.Vector2((float)endPoint.X, (float)endPoint.Y);
+                // Hide the preview shape
+                ClearPreviewShape();
 
-            ShapeDrawn?.Invoke(this, (start, end));
+                // Convert to Vector2 and invoke event
+                var start = new System.Numerics.Vector2((float)_shapeStartPoint.Value.X, (float)_shapeStartPoint.Value.Y);
+                var end = new System.Numerics.Vector2((float)endPoint.X, (float)endPoint.Y);
 
-            _shapeStartPoint = null;
-            e.Handled = true;
+                ShapeDrawn?.Invoke(this, (start, end));
+
+                _shapeStartPoint = null;
+                e.Handled = true;
+            }
+            else if (_shapeUnderPointer != null && _pointerPressPosition.HasValue)
+            {
+                // User clicked without dragging - select the shape
+                SelectShapeDirectly(_shapeUnderPointer);
+                e.Handled = true;
+            }
+            
+            // Clean up tracking variables
+            _shapeUnderPointer = null;
+            _pointerPressPosition = null;
         }
 
         _isPointerDown = false;
@@ -462,6 +638,9 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         _isPointerDown = false;
         _shapeStartPoint = null;
+        _shapeUnderPointer = null;
+        _pointerPressPosition = null;
+        ClearPreviewShape();
         RootContainer.ReleasePointerCaptures();
     }
 
@@ -469,6 +648,9 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         _isPointerDown = false;
         _shapeStartPoint = null;
+        _shapeUnderPointer = null;
+        _pointerPressPosition = null;
+        ClearPreviewShape();
     }
     #endregion
 
@@ -490,4 +672,783 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         UpdateCropRect(e);
     }
+
+    #region Preview Shape Management
+    private void UpdatePreviewShape(Point startPoint, Point endPoint)
+    {
+        float x = (float)Math.Min(startPoint.X, endPoint.X);
+        float y = (float)Math.Min(startPoint.Y, endPoint.Y);
+        float width = (float)Math.Abs(endPoint.X - startPoint.X);
+        float height = (float)Math.Abs(endPoint.Y - startPoint.Y);
+
+        // Update or create brushes only if colors changed
+        UpdatePreviewBrushes();
+
+        switch (SelectedShapeType)
+        {
+            case ShapeType.Rectangle:
+                {
+                    // Only show rectangle if both dimensions meet minimum
+                    if (width < 2 || height < 2)
+                    {
+                        PreviewShapeCanvas.Visibility = Visibility.Collapsed;
+                        return;
+                    }
+
+                    // Create rectangle on first use
+                    if (_previewRectangle == null)
+                    {
+                        _previewRectangle = new Microsoft.UI.Xaml.Shapes.Rectangle();
+                        PreviewShapeCanvas.Children.Add(_previewRectangle);
+                    }
+
+                    // Update properties
+                    _previewRectangle.Width = width;
+                    _previewRectangle.Height = height;
+                    _previewRectangle.Stroke = _previewStrokeBrush;
+                    _previewRectangle.Fill = ShapeFillColor.A > 0 ? _previewFillBrush : null;
+                    _previewRectangle.StrokeThickness = ShapeStrokeWidth;
+                    Canvas.SetLeft(_previewRectangle, x);
+                    Canvas.SetTop(_previewRectangle, y);
+                    _previewRectangle.Visibility = Visibility.Visible;
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Rectangle);
+                }
+                break;
+
+            case ShapeType.Ellipse:
+                {
+                    // Only show ellipse if both dimensions meet minimum
+                    if (width < 2 || height < 2)
+                    {
+                        PreviewShapeCanvas.Visibility = Visibility.Collapsed;
+                        return;
+                    }
+
+                    // Create ellipse on first use
+                    if (_previewEllipse == null)
+                    {
+                        _previewEllipse = new Microsoft.UI.Xaml.Shapes.Ellipse();
+                        PreviewShapeCanvas.Children.Add(_previewEllipse);
+                    }
+
+                    // Update properties
+                    _previewEllipse.Width = width;
+                    _previewEllipse.Height = height;
+                    _previewEllipse.Stroke = _previewStrokeBrush;
+                    _previewEllipse.Fill = ShapeFillColor.A > 0 ? _previewFillBrush : null;
+                    _previewEllipse.StrokeThickness = ShapeStrokeWidth;
+                    Canvas.SetLeft(_previewEllipse, x);
+                    Canvas.SetTop(_previewEllipse, y);
+                    _previewEllipse.Visibility = Visibility.Visible;
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Ellipse);
+                }
+                break;
+
+            case ShapeType.Line:
+            case ShapeType.Arrow:
+                {
+                    float distance = (float)Math.Sqrt(Math.Pow(endPoint.X - startPoint.X, 2) + Math.Pow(endPoint.Y - startPoint.Y, 2));
+                    if (distance < 2)
+                    {
+                        PreviewShapeCanvas.Visibility = Visibility.Collapsed;
+                        return;
+                    }
+
+                    // Create line on first use
+                    if (_previewLine == null)
+                    {
+                        _previewLine = new Microsoft.UI.Xaml.Shapes.Line();
+                        PreviewShapeCanvas.Children.Add(_previewLine);
+                    }
+
+                    // Update line properties
+                    _previewLine.X1 = startPoint.X;
+                    _previewLine.Y1 = startPoint.Y;
+                    _previewLine.X2 = endPoint.X;
+                    _previewLine.Y2 = endPoint.Y;
+                    _previewLine.Stroke = _previewStrokeBrush;
+                    _previewLine.StrokeThickness = ShapeStrokeWidth;
+                    _previewLine.Visibility = Visibility.Visible;
+
+                    // Handle arrow head
+                    if (SelectedShapeType == ShapeType.Arrow)
+                    {
+                        // Create arrow head on first use
+                        if (_previewArrowHead == null)
+                        {
+                            _previewArrowHead = new Microsoft.UI.Xaml.Shapes.Polyline
+                            {
+                                Points = new Microsoft.UI.Xaml.Media.PointCollection()
+                            };
+                            PreviewShapeCanvas.Children.Add(_previewArrowHead);
+                        }
+
+                        // Calculate arrow head
+                        double angle = Math.Atan2(endPoint.Y - startPoint.Y, endPoint.X - startPoint.X);
+                        double arrowLength = 10 + ShapeStrokeWidth;
+                        double arrowAngle = Math.PI / 6; // 30 degrees
+
+                        // Update arrow head points
+                        _previewArrowHead.Points.Clear();
+                        _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(
+                            endPoint.X - arrowLength * Math.Cos(angle - arrowAngle),
+                            endPoint.Y - arrowLength * Math.Sin(angle - arrowAngle)));
+                        _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(endPoint.X, endPoint.Y));
+                        _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(
+                            endPoint.X - arrowLength * Math.Cos(angle + arrowAngle),
+                            endPoint.Y - arrowLength * Math.Sin(angle + arrowAngle)));
+
+                        _previewArrowHead.Stroke = _previewStrokeBrush;
+                        _previewArrowHead.StrokeThickness = ShapeStrokeWidth;
+                        _previewArrowHead.StrokeLineJoin = Microsoft.UI.Xaml.Media.PenLineJoin.Miter;
+                        _previewArrowHead.Visibility = Visibility.Visible;
+                    }
+                    else if (_previewArrowHead != null)
+                    {
+                        _previewArrowHead.Visibility = Visibility.Collapsed;
+                    }
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(SelectedShapeType == ShapeType.Arrow ? ShapeType.Arrow : ShapeType.Line);
+                }
+                break;
+        }
+
+        PreviewShapeCanvas.Visibility = Visibility.Visible;
+    }
+
+    private void UpdatePreviewBrushes()
+    {
+        // Update stroke brush (compare color components explicitly)
+        if (_previewStrokeBrush == null || 
+            _cachedStrokeColor.A != ShapeStrokeColor.A ||
+            _cachedStrokeColor.R != ShapeStrokeColor.R ||
+            _cachedStrokeColor.G != ShapeStrokeColor.G ||
+            _cachedStrokeColor.B != ShapeStrokeColor.B)
+        {
+            _cachedStrokeColor = ShapeStrokeColor;
+            if (_previewStrokeBrush == null)
+            {
+                _previewStrokeBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+            }
+            _previewStrokeBrush.Color = WinUIColor.FromArgb(
+                ShapeStrokeColor.A,
+                ShapeStrokeColor.R,
+                ShapeStrokeColor.G,
+                ShapeStrokeColor.B);
+        }
+
+        // Update fill brush (compare color components explicitly)
+        if (ShapeFillColor.A > 0)
+        {
+            if (_previewFillBrush == null || 
+                _cachedFillColor.A != ShapeFillColor.A ||
+                _cachedFillColor.R != ShapeFillColor.R ||
+                _cachedFillColor.G != ShapeFillColor.G ||
+                _cachedFillColor.B != ShapeFillColor.B)
+            {
+                _cachedFillColor = ShapeFillColor;
+                if (_previewFillBrush == null)
+                {
+                    _previewFillBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                }
+                _previewFillBrush.Color = WinUIColor.FromArgb(
+                    ShapeFillColor.A,
+                    ShapeFillColor.R,
+                    ShapeFillColor.G,
+                    ShapeFillColor.B);
+            }
+        }
+    }
+
+    private void HideOtherPreviewShapes(ShapeType activeType)
+    {
+        if (activeType != ShapeType.Rectangle && _previewRectangle != null)
+        {
+            _previewRectangle.Visibility = Visibility.Collapsed;
+        }
+        if (activeType != ShapeType.Ellipse && _previewEllipse != null)
+        {
+            _previewEllipse.Visibility = Visibility.Collapsed;
+        }
+        if (activeType != ShapeType.Line && activeType != ShapeType.Arrow && _previewLine != null)
+        {
+            _previewLine.Visibility = Visibility.Collapsed;
+        }
+        if (activeType != ShapeType.Arrow && _previewArrowHead != null)
+        {
+            _previewArrowHead.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void ClearPreviewShape()
+    {
+        if (_previewRectangle != null)
+        {
+            _previewRectangle.Visibility = Visibility.Collapsed;
+        }
+        if (_previewEllipse != null)
+        {
+            _previewEllipse.Visibility = Visibility.Collapsed;
+        }
+        if (_previewLine != null)
+        {
+            _previewLine.Visibility = Visibility.Collapsed;
+        }
+        if (_previewArrowHead != null)
+        {
+            _previewArrowHead.Visibility = Visibility.Collapsed;
+        }
+        PreviewShapeCanvas.Visibility = Visibility.Collapsed;
+    }
+    #endregion
+
+    #region Shape Selection and Manipulation
+    private void ShapeResizeOverlay_BoundsChanged(object? sender, RectangleF newBounds)
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        // Update the selected shape's properties based on newBounds
+        UpdateSelectedShapeBounds(newBounds);
+        
+        // Update the preview to show the new bounds
+        UpdatePreviewShapeFromDrawable(_selectedShape);
+    }
+
+    private void ShapeResizeOverlay_ResizeComplete(object? sender, EventArgs e)
+    {
+        // Resize/move complete - redraw canvas with updated shape
+        if (_selectedShape != null && _shapeStateBeforeModification.HasValue)
+        {
+            var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+            
+            // Only fire event if the shape actually changed
+            if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
+            {
+                ShapeModified?.Invoke(this, (_selectedShapeIndex, _selectedShape, _selectedShape));
+            }
+            
+            _shapeStateBeforeModification = null;
+            RenderCanvas.Invalidate();
+        }
+    }
+
+    private bool StatesAreEqual(ModifyShapeOperation.ShapeState state1, ModifyShapeOperation.ShapeState state2)
+    {
+        return state1.Offset == state2.Offset && 
+               state1.Size == state2.Size && 
+               state1.EndPoint == state2.EndPoint;
+    }
+
+    private void SelectShape(Point clickPoint)
+    {
+        if (Drawables == null)
+        {
+            return;
+        }
+
+        var drawableList = Drawables.ToList();
+        
+        // Check shapes in reverse order (top to bottom)
+        for (int i = drawableList.Count - 1; i >= 0; i--)
+        {
+            var drawable = drawableList[i];
+            if (IsPointInShape(clickPoint, drawable))
+            {
+                _selectedShape = drawable;
+                _selectedShapeIndex = i;
+                
+                // Capture state before modification
+                _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(drawable);
+                
+                ShowResizeHandles(drawable);
+                UpdatePreviewShapeFromDrawable(drawable);
+                RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
+                
+                // Set focus to enable keyboard events
+                Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+                return;
+            }
+        }
+
+        // No shape selected
+        DeselectShape();
+    }
+
+    private void DeselectShape()
+    {
+        _selectedShape = null;
+        _selectedShapeIndex = -1;
+        ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+        ClearPreviewShape();
+        RenderCanvas.Invalidate(); // Redraw to show all shapes
+    }
+
+    private IDrawable? FindShapeAtPoint(Point clickPoint)
+    {
+        if (Drawables == null)
+        {
+            return null;
+        }
+
+        var drawableList = Drawables.ToList();
+        
+        // Check shapes in reverse order (top to bottom)
+        for (int i = drawableList.Count - 1; i >= 0; i--)
+        {
+            var drawable = drawableList[i];
+            if (IsPointInShape(clickPoint, drawable))
+            {
+                return drawable;
+            }
+        }
+
+        return null;
+    }
+
+    private void SelectShapeDirectly(IDrawable shape)
+    {
+        if (Drawables == null)
+        {
+            return;
+        }
+
+        var drawableList = Drawables.ToList();
+        int index = drawableList.IndexOf(shape);
+        
+        if (index >= 0)
+        {
+            _selectedShape = shape;
+            _selectedShapeIndex = index;
+            
+            // Capture state before modification
+            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(shape);
+            
+            ShowResizeHandles(shape);
+            UpdatePreviewShapeFromDrawable(shape);
+            RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
+            
+            // Set focus to enable keyboard events
+            Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+        }
+    }
+
+    private void DeleteSelectedShape()
+    {
+        if (_selectedShape == null || _selectedShapeIndex < 0)
+        {
+            return;
+        }
+
+        // Notify via event so the ViewModel can remove it from the collection
+        ShapeDeleted?.Invoke(this, _selectedShapeIndex);
+        
+        // Clear selection state
+        _selectedShape = null;
+        _selectedShapeIndex = -1;
+        ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+        ClearPreviewShape();
+        RenderCanvas.Invalidate();
+    }
+
+    private bool IsPointInShape(Point point, IDrawable drawable)
+    {
+        switch (drawable)
+        {
+            case LineDrawable line:
+                return IsPointNearLine(point, line.Offset, line.EndPoint, Math.Max(10, line.StrokeWidth * 2));
+            
+            case ArrowDrawable arrow:
+                return IsPointNearLine(point, arrow.Offset, arrow.EndPoint, Math.Max(10, arrow.StrokeWidth * 2));
+            
+            default:
+                var bounds = GetShapeBounds(drawable);
+                return bounds.Contains((float)point.X, (float)point.Y);
+        }
+    }
+
+    private bool IsPointNearLine(Point point, System.Numerics.Vector2 lineStart, System.Numerics.Vector2 lineEnd, float tolerance)
+    {
+        // Calculate distance from point to line segment
+        float px = (float)point.X;
+        float py = (float)point.Y;
+        
+        float dx = lineEnd.X - lineStart.X;
+        float dy = lineEnd.Y - lineStart.Y;
+        
+        // If line is actually a point
+        if (dx == 0 && dy == 0)
+        {
+            float dist = (float)Math.Sqrt((px - lineStart.X) * (px - lineStart.X) + (py - lineStart.Y) * (py - lineStart.Y));
+            return dist <= tolerance;
+        }
+        
+        // Calculate the parameter t for the projection of point onto the line
+        float t = ((px - lineStart.X) * dx + (py - lineStart.Y) * dy) / (dx * dx + dy * dy);
+        
+        // Clamp t to [0, 1] to stay within the line segment
+        t = Math.Max(0, Math.Min(1, t));
+        
+        // Calculate the closest point on the line segment
+        float closestX = lineStart.X + t * dx;
+        float closestY = lineStart.Y + t * dy;
+        
+        // Calculate distance from point to closest point on line
+        float distance = (float)Math.Sqrt((px - closestX) * (px - closestX) + (py - closestY) * (py - closestY));
+        
+        return distance <= tolerance;
+    }
+
+    private RectangleF GetShapeBounds(IDrawable drawable)
+    {
+        switch (drawable)
+        {
+            case RectangleDrawable rect:
+                return new RectangleF(rect.Offset.X, rect.Offset.Y, rect.Size.Width, rect.Size.Height);
+
+            case EllipseDrawable ellipse:
+                return new RectangleF(ellipse.Offset.X, ellipse.Offset.Y, ellipse.Size.Width, ellipse.Size.Height);
+
+            case LineDrawable line:
+                {
+                    float minX = Math.Min(line.Offset.X, line.EndPoint.X);
+                    float minY = Math.Min(line.Offset.Y, line.EndPoint.Y);
+                    float maxX = Math.Max(line.Offset.X, line.EndPoint.X);
+                    float maxY = Math.Max(line.Offset.Y, line.EndPoint.Y);
+                    
+                    // Return tight bounds without tolerance (used for resize overlay)
+                    return new RectangleF(minX, minY, maxX - minX, maxY - minY);
+                }
+
+            case ArrowDrawable arrow:
+                {
+                    float minX = Math.Min(arrow.Offset.X, arrow.EndPoint.X);
+                    float minY = Math.Min(arrow.Offset.Y, arrow.EndPoint.Y);
+                    float maxX = Math.Max(arrow.Offset.X, arrow.EndPoint.X);
+                    float maxY = Math.Max(arrow.Offset.Y, arrow.EndPoint.Y);
+                    
+                    // Return tight bounds without tolerance (used for resize overlay)
+                    return new RectangleF(minX, minY, maxX - minX, maxY - minY);
+                }
+
+            default:
+                return RectangleF.Empty;
+        }
+    }
+
+    private void ShowResizeHandles(IDrawable drawable)
+    {
+        var bounds = GetShapeBounds(drawable);
+        ShapeResizeOverlay.ShapeBounds = bounds;
+        ShapeResizeOverlay.Visibility = Visibility.Visible;
+    }
+
+    private void UpdateSelectedShapeBounds(RectangleF newBounds)
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        switch (_selectedShape)
+        {
+            case RectangleDrawable rect:
+                rect.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
+                rect.Size = new Size((int)Math.Ceiling(newBounds.Width), (int)Math.Ceiling(newBounds.Height));
+                break;
+
+            case EllipseDrawable ellipse:
+                ellipse.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
+                ellipse.Size = new Size((int)Math.Ceiling(newBounds.Width), (int)Math.Ceiling(newBounds.Height));
+                break;
+
+            case LineDrawable line:
+                {
+                    // Preserve line direction when resizing
+                    bool startsFromLeft = line.Offset.X <= line.EndPoint.X;
+                    bool startsFromTop = line.Offset.Y <= line.EndPoint.Y;
+                    
+                    // Apply new bounds while preserving direction
+                    if (startsFromLeft && startsFromTop)
+                    {
+                        line.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
+                        line.EndPoint = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y + newBounds.Height);
+                    }
+                    else if (!startsFromLeft && startsFromTop)
+                    {
+                        line.Offset = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y);
+                        line.EndPoint = new System.Numerics.Vector2(newBounds.X, newBounds.Y + newBounds.Height);
+                    }
+                    else if (startsFromLeft && !startsFromTop)
+                    {
+                        line.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y + newBounds.Height);
+                        line.EndPoint = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y);
+                    }
+                    else
+                    {
+                        line.Offset = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y + newBounds.Height);
+                        line.EndPoint = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
+                    }
+                }
+                break;
+
+            case ArrowDrawable arrow:
+                {
+                    // Preserve arrow direction when resizing
+                    bool startsFromLeft = arrow.Offset.X <= arrow.EndPoint.X;
+                    bool startsFromTop = arrow.Offset.Y <= arrow.EndPoint.Y;
+                    
+                    // Apply new bounds while preserving direction
+                    if (startsFromLeft && startsFromTop)
+                    {
+                        arrow.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
+                        arrow.EndPoint = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y + newBounds.Height);
+                    }
+                    else if (!startsFromLeft && startsFromTop)
+                    {
+                        arrow.Offset = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y);
+                        arrow.EndPoint = new System.Numerics.Vector2(newBounds.X, newBounds.Y + newBounds.Height);
+                    }
+                    else if (startsFromLeft && !startsFromTop)
+                    {
+                        arrow.Offset = new System.Numerics.Vector2(newBounds.X, newBounds.Y + newBounds.Height);
+                        arrow.EndPoint = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y);
+                    }
+                    else
+                    {
+                        arrow.Offset = new System.Numerics.Vector2(newBounds.X + newBounds.Width, newBounds.Y + newBounds.Height);
+                        arrow.EndPoint = new System.Numerics.Vector2(newBounds.X, newBounds.Y);
+                    }
+                }
+                break;
+        }
+    }
+
+    private void UpdatePreviewShapeFromDrawable(IDrawable drawable)
+    {
+        switch (drawable)
+        {
+            case RectangleDrawable rect:
+                {
+                    // Create rectangle on first use
+                    if (_previewRectangle == null)
+                    {
+                        _previewRectangle = new Microsoft.UI.Xaml.Shapes.Rectangle();
+                        PreviewShapeCanvas.Children.Add(_previewRectangle);
+                    }
+
+                    // Update properties from drawable
+                    _previewRectangle.Width = rect.Size.Width;
+                    _previewRectangle.Height = rect.Size.Height;
+                    
+                    // Update stroke brush
+                    if (_previewStrokeBrush == null)
+                    {
+                        _previewStrokeBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                    }
+                    _previewStrokeBrush.Color = WinUIColor.FromArgb(
+                        rect.StrokeColor.A,
+                        rect.StrokeColor.R,
+                        rect.StrokeColor.G,
+                        rect.StrokeColor.B);
+                    _previewRectangle.Stroke = _previewStrokeBrush;
+                    
+                    // Update fill brush
+                    if (rect.FillColor.A > 0)
+                    {
+                        if (_previewFillBrush == null)
+                        {
+                            _previewFillBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                        }
+                        _previewFillBrush.Color = WinUIColor.FromArgb(
+                            rect.FillColor.A,
+                            rect.FillColor.R,
+                            rect.FillColor.G,
+                            rect.FillColor.B);
+                        _previewRectangle.Fill = _previewFillBrush;
+                    }
+                    else
+                    {
+                        _previewRectangle.Fill = null;
+                    }
+                    
+                    _previewRectangle.StrokeThickness = rect.StrokeWidth;
+                    Canvas.SetLeft(_previewRectangle, rect.Offset.X);
+                    Canvas.SetTop(_previewRectangle, rect.Offset.Y);
+                    _previewRectangle.Visibility = Visibility.Visible;
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Rectangle);
+                }
+                break;
+
+            case EllipseDrawable ellipse:
+                {
+                    // Create ellipse on first use
+                    if (_previewEllipse == null)
+                    {
+                        _previewEllipse = new Microsoft.UI.Xaml.Shapes.Ellipse();
+                        PreviewShapeCanvas.Children.Add(_previewEllipse);
+                    }
+
+                    // Update properties from drawable
+                    _previewEllipse.Width = ellipse.Size.Width;
+                    _previewEllipse.Height = ellipse.Size.Height;
+                    
+                    // Update stroke brush
+                    if (_previewStrokeBrush == null)
+                    {
+                        _previewStrokeBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                    }
+                    _previewStrokeBrush.Color = WinUIColor.FromArgb(
+                        ellipse.StrokeColor.A,
+                        ellipse.StrokeColor.R,
+                        ellipse.StrokeColor.G,
+                        ellipse.StrokeColor.B);
+                    _previewEllipse.Stroke = _previewStrokeBrush;
+                    
+                    // Update fill brush
+                    if (ellipse.FillColor.A > 0)
+                    {
+                        if (_previewFillBrush == null)
+                        {
+                            _previewFillBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                        }
+                        _previewFillBrush.Color = WinUIColor.FromArgb(
+                            ellipse.FillColor.A,
+                            ellipse.FillColor.R,
+                            ellipse.FillColor.G,
+                            ellipse.FillColor.B);
+                        _previewEllipse.Fill = _previewFillBrush;
+                    }
+                    else
+                    {
+                        _previewEllipse.Fill = null;
+                    }
+                    
+                    _previewEllipse.StrokeThickness = ellipse.StrokeWidth;
+                    Canvas.SetLeft(_previewEllipse, ellipse.Offset.X);
+                    Canvas.SetTop(_previewEllipse, ellipse.Offset.Y);
+                    _previewEllipse.Visibility = Visibility.Visible;
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Ellipse);
+                }
+                break;
+
+            case LineDrawable line:
+                {
+                    // Create line on first use
+                    if (_previewLine == null)
+                    {
+                        _previewLine = new Microsoft.UI.Xaml.Shapes.Line();
+                        PreviewShapeCanvas.Children.Add(_previewLine);
+                    }
+
+                    // Update line properties from drawable
+                    _previewLine.X1 = line.Offset.X;
+                    _previewLine.Y1 = line.Offset.Y;
+                    _previewLine.X2 = line.EndPoint.X;
+                    _previewLine.Y2 = line.EndPoint.Y;
+                    
+                    // Update stroke brush
+                    if (_previewStrokeBrush == null)
+                    {
+                        _previewStrokeBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                    }
+                    _previewStrokeBrush.Color = WinUIColor.FromArgb(
+                        line.StrokeColor.A,
+                        line.StrokeColor.R,
+                        line.StrokeColor.G,
+                        line.StrokeColor.B);
+                    _previewLine.Stroke = _previewStrokeBrush;
+                    _previewLine.StrokeThickness = line.StrokeWidth;
+                    _previewLine.Visibility = Visibility.Visible;
+
+                    // Hide arrow head if present
+                    if (_previewArrowHead != null)
+                    {
+                        _previewArrowHead.Visibility = Visibility.Collapsed;
+                    }
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Line);
+                }
+                break;
+
+            case ArrowDrawable arrow:
+                {
+                    // Create line on first use
+                    if (_previewLine == null)
+                    {
+                        _previewLine = new Microsoft.UI.Xaml.Shapes.Line();
+                        PreviewShapeCanvas.Children.Add(_previewLine);
+                    }
+
+                    // Update line properties from drawable
+                    _previewLine.X1 = arrow.Offset.X;
+                    _previewLine.Y1 = arrow.Offset.Y;
+                    _previewLine.X2 = arrow.EndPoint.X;
+                    _previewLine.Y2 = arrow.EndPoint.Y;
+                    
+                    // Update stroke brush
+                    if (_previewStrokeBrush == null)
+                    {
+                        _previewStrokeBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush();
+                    }
+                    _previewStrokeBrush.Color = WinUIColor.FromArgb(
+                        arrow.StrokeColor.A,
+                        arrow.StrokeColor.R,
+                        arrow.StrokeColor.G,
+                        arrow.StrokeColor.B);
+                    _previewLine.Stroke = _previewStrokeBrush;
+                    _previewLine.StrokeThickness = arrow.StrokeWidth;
+                    _previewLine.Visibility = Visibility.Visible;
+
+                    // Create arrow head on first use
+                    if (_previewArrowHead == null)
+                    {
+                        _previewArrowHead = new Microsoft.UI.Xaml.Shapes.Polyline
+                        {
+                            Points = new Microsoft.UI.Xaml.Media.PointCollection()
+                        };
+                        PreviewShapeCanvas.Children.Add(_previewArrowHead);
+                    }
+
+                    // Calculate arrow head
+                    double angle = Math.Atan2(arrow.EndPoint.Y - arrow.Offset.Y, arrow.EndPoint.X - arrow.Offset.X);
+                    double arrowLength = 10 + arrow.StrokeWidth;
+                    double arrowAngle = Math.PI / 6;
+
+                    // Update arrow head points
+                    _previewArrowHead.Points.Clear();
+                    _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(
+                        arrow.EndPoint.X - arrowLength * Math.Cos(angle - arrowAngle),
+                        arrow.EndPoint.Y - arrowLength * Math.Sin(angle - arrowAngle)));
+                    _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(arrow.EndPoint.X, arrow.EndPoint.Y));
+                    _previewArrowHead.Points.Add(new global::Windows.Foundation.Point(
+                        arrow.EndPoint.X - arrowLength * Math.Cos(angle + arrowAngle),
+                        arrow.EndPoint.Y - arrowLength * Math.Sin(angle + arrowAngle)));
+
+                    _previewArrowHead.Stroke = _previewStrokeBrush;
+                    _previewArrowHead.StrokeThickness = arrow.StrokeWidth;
+                    _previewArrowHead.StrokeLineJoin = Microsoft.UI.Xaml.Media.PenLineJoin.Miter;
+                    _previewArrowHead.Visibility = Visibility.Visible;
+
+                    // Hide other shapes
+                    HideOtherPreviewShapes(ShapeType.Arrow);
+                }
+                break;
+        }
+
+        PreviewShapeCanvas.Visibility = Visibility.Visible;
+    }
+    #endregion
 }
