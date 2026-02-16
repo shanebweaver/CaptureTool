@@ -665,6 +665,20 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
+    /// <summary>
+    /// Adds a drawable to the canvas. Primarily for testing purposes.
+    /// </summary>
+    public void AddDrawable(IDrawable drawable)
+    {
+        if (drawable == null)
+        {
+            return;
+        }
+
+        _drawables.Add(drawable);
+        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+    }
+
     private void UpdateChromaKeyEffectValues()
     {
         if (_imageDrawable != null && _imageDrawable.ImageEffect == null)

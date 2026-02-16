@@ -71,4 +71,9 @@ public interface IImageEditPageViewModel : IViewModel
     void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint);
     void OnShapeDeleted(int shapeIndex);
     void OnShapeModified(int shapeIndex, IDrawable shape);
+    
+    /// <summary>
+    /// Adds a drawable to the canvas. Primarily for testing purposes.
+    /// </summary>
+    void AddDrawable(IDrawable drawable);
 }
