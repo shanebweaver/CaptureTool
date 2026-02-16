@@ -8,6 +8,7 @@ public interface IAppMenuViewModel : IViewModel
     event EventHandler? RecentCapturesUpdated;
 
     IAppCommand NewImageCaptureCommand { get; }
+    IAppCommand NewVideoCaptureCommand { get; }
     IAsyncAppCommand OpenFileCommand { get; }
     IAppCommand NavigateToSettingsCommand { get; }
     IAppCommand ShowAboutAppCommand { get; }
@@ -16,6 +17,7 @@ public interface IAppMenuViewModel : IViewModel
     IAppCommand RefreshRecentCapturesCommand { get; }
     IAppCommand<IRecentCaptureViewModel> OpenRecentCaptureCommand { get; }
     bool ShowAddOnsOption { get; }
+    bool IsVideoCaptureEnabled { get; }
     IReadOnlyList<IRecentCaptureViewModel> RecentCaptures { get; set; }
 
     void Load();

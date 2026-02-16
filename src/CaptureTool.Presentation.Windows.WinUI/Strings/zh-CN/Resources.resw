@@ -319,7 +319,19 @@
     <value>Control</value>
   </data>
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
-    <value>新建捕获</value>
+    <value>新建图像捕获</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem.AccessKey" xml:space="preserve">
+    <value>V</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value>Control,Shift</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem.Text" xml:space="preserve">
+    <value>新建视频捕获</value>
   </data>
   <data name="ShapeToolbar_ShapeType.Header" xml:space="preserve">
     <value>形状类型</value>
