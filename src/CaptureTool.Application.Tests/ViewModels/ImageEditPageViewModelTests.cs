@@ -243,14 +243,15 @@ public sealed class ImageEditPageViewModelTests
 
         var vm = Create();
         
-        // Add a drawable to delete
+        // Add a drawable to delete (cast to the underlying collection type)
+        var drawables = vm.Drawables as System.Collections.ObjectModel.ObservableCollection<IDrawable>;
         var drawable = new RectangleDrawable(
             new System.Numerics.Vector2(10, 10),
             new Size(50, 50),
             Color.Red,
             Color.Transparent,
             2);
-        vm.Drawables.Add(drawable);
+        drawables!.Add(drawable);
         
         // Ensure shapes mode is off (even though feature is enabled)
         // This simulates when user is not in shapes mode
@@ -280,14 +281,15 @@ public sealed class ImageEditPageViewModelTests
         // Toggle shapes mode on
         vm.ToggleShapesModeCommand.Execute();
         
-        // Add a drawable to delete
+        // Add a drawable to delete (cast to the underlying collection type)
+        var drawables = vm.Drawables as System.Collections.ObjectModel.ObservableCollection<IDrawable>;
         var drawable = new RectangleDrawable(
             new System.Numerics.Vector2(10, 10),
             new Size(50, 50),
             Color.Red,
             Color.Transparent,
             2);
-        vm.Drawables.Add(drawable);
+        drawables!.Add(drawable);
         
         int initialCount = vm.Drawables.Count;
 
@@ -314,7 +316,8 @@ public sealed class ImageEditPageViewModelTests
         // Toggle shapes mode on
         vm.ToggleShapesModeCommand.Execute();
         
-        // Add drawables
+        // Add drawables (cast to the underlying collection type)
+        var drawables = vm.Drawables as System.Collections.ObjectModel.ObservableCollection<IDrawable>;
         var drawable1 = new RectangleDrawable(
             new System.Numerics.Vector2(10, 10),
             new Size(50, 50),
@@ -327,8 +330,8 @@ public sealed class ImageEditPageViewModelTests
             Color.Blue,
             Color.Transparent,
             2);
-        vm.Drawables.Add(drawable1);
-        vm.Drawables.Add(drawable2);
+        drawables!.Add(drawable1);
+        drawables!.Add(drawable2);
         
         bool invalidateRequested = false;
         vm.InvalidateCanvasRequested += (s, e) => invalidateRequested = true;
@@ -358,14 +361,15 @@ public sealed class ImageEditPageViewModelTests
         // Toggle shapes mode on
         vm.ToggleShapesModeCommand.Execute();
         
-        // Add a drawable
+        // Add a drawable (cast to the underlying collection type)
+        var drawables = vm.Drawables as System.Collections.ObjectModel.ObservableCollection<IDrawable>;
         var drawable = new RectangleDrawable(
             new System.Numerics.Vector2(10, 10),
             new Size(50, 50),
             Color.Red,
             Color.Transparent,
             2);
-        vm.Drawables.Add(drawable);
+        drawables!.Add(drawable);
 
         // Act - try to delete with invalid indices
         vm.OnShapeDeleted(-1);
