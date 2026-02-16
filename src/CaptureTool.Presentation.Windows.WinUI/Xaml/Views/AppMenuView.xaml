@@ -25,6 +25,18 @@
                 </MenuFlyoutItem.KeyboardAccelerators>
             </MenuFlyoutItem>
 
+            <!--  New video capture  -->
+            <MenuFlyoutItem
+                x:Uid="AppMenu_NewVideoCaptureItem"
+                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewVideoCaptureCommand)}"
+                Icon="Video"
+                IsEnabled="{x:Bind ViewModel.IsVideoCaptureEnabled}"
+                Visibility="{x:Bind ViewModel.IsVideoCaptureEnabled}">
+                <MenuFlyoutItem.KeyboardAccelerators>
+                    <KeyboardAccelerator x:Uid="AppMenu_NewVideoCaptureItem_KeyboardAccelerator" />
+                </MenuFlyoutItem.KeyboardAccelerators>
+            </MenuFlyoutItem>
+
             <!--  Open  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_OpenFileItem"
