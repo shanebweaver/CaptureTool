@@ -83,7 +83,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         // If a shape is currently selected, update its stroke color
         // The property value is updated automatically by DependencyProperty for use with new shapes
-        if (d is ImageCanvas control && e.NewValue is Color color && control._selectedShape != null)
+        if (d is ImageCanvas control && control._selectedShape != null && e.NewValue is Color color)
         {
             control.UpdateSelectedShapeStrokeColor(color);
         }
@@ -99,7 +99,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         // If a shape is currently selected, update its fill color
         // The property value is updated automatically by DependencyProperty for use with new shapes
-        if (d is ImageCanvas control && e.NewValue is Color color && control._selectedShape != null)
+        if (d is ImageCanvas control && control._selectedShape != null && e.NewValue is Color color)
         {
             control.UpdateSelectedShapeFillColor(color);
         }
@@ -115,7 +115,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         // If a shape is currently selected, update its stroke width
         // The property value is updated automatically by DependencyProperty for use with new shapes
-        if (d is ImageCanvas control && e.NewValue is int width && control._selectedShape != null)
+        if (d is ImageCanvas control && control._selectedShape != null && e.NewValue is int width)
         {
             control.UpdateSelectedShapeStrokeWidth(width);
         }
