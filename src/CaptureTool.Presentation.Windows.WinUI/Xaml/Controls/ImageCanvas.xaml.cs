@@ -500,7 +500,7 @@ public sealed partial class ImageCanvas : UserControlBase
             // Filter out the selected shape ONLY when it's being actively manipulated
             // This prevents double rendering during drag operations
             var drawablesToRender = Drawables;
-            if (_selectedShape != null && _selectedShapeIndex >= 0 && IsShapeBeingManipulated())
+            if (_selectedShape != null && IsShapeBeingManipulated())
             {
                 drawablesToRender = Drawables.Where((d, i) => i != _selectedShapeIndex);
             }
@@ -513,7 +513,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         // Check if any manipulation is active (line endpoints, line move, or box resize/move)
         return _isDraggingLineStart || _isDraggingLineEnd || _isDraggingLineMove || 
-               (_selectedShape is not LineDrawable && _selectedShape is not ArrowDrawable && ShapeResizeOverlay.IsManipulating);
+               (_selectedShape is not LineDrawable && _selectedShape is not ArrowDrawable && ShapeResizeOverlay?.IsManipulating == true);
     }
 
     private bool CanCreateResources() => Drawables.Any();
