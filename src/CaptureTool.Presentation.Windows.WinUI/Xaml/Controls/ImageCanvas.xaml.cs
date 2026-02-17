@@ -240,7 +240,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private readonly Lock _zoomUpdateLock = new Lock();
 
-    private const int LineHandleRadius = 6; // Half of handle size (12px)
+    private const int LineHandleRadius = 6; // Half of handle diameter (12px total)
 
     private bool _isPointerDown;
     private Point _lastPointerPosition;
