@@ -1245,20 +1245,7 @@ public sealed partial class ImageCanvas : UserControlBase
         }
 
         var currentPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
-        
-        if (_selectedShape is LineDrawable line)
-        {
-            line.Offset = new System.Numerics.Vector2((float)currentPoint.X, (float)currentPoint.Y);
-            UpdatePreviewShapeFromDrawable(line);
-            ShowLineEndpointHandles(line.Offset.X, line.Offset.Y, line.EndPoint.X, line.EndPoint.Y);
-        }
-        else if (_selectedShape is ArrowDrawable arrow)
-        {
-            arrow.Offset = new System.Numerics.Vector2((float)currentPoint.X, (float)currentPoint.Y);
-            UpdatePreviewShapeFromDrawable(arrow);
-            ShowLineEndpointHandles(arrow.Offset.X, arrow.Offset.Y, arrow.EndPoint.X, arrow.EndPoint.Y);
-        }
-        
+        UpdateLineEndpoint(true, currentPoint);
         e.Handled = true;
     }
 
@@ -1268,19 +1255,7 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             _isDraggingLineStart = false;
             LineStartHandle.ReleasePointerCaptures();
-            
-            // Fire modification event
-            if (_selectedShape != null && _shapeStateBeforeModification.HasValue)
-            {
-                var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
-                if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
-                {
-                    ShapeModified?.Invoke(this, (_selectedShapeIndex, _selectedShape, _selectedShape));
-                }
-                _shapeStateBeforeModification = null;
-                RenderCanvas.Invalidate();
-            }
-            
+            CompleteLineEndpointDrag();
             e.Handled = true;
         }
     }
@@ -1307,20 +1282,7 @@ public sealed partial class ImageCanvas : UserControlBase
         }
 
         var currentPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
-        
-        if (_selectedShape is LineDrawable line)
-        {
-            line.EndPoint = new System.Numerics.Vector2((float)currentPoint.X, (float)currentPoint.Y);
-            UpdatePreviewShapeFromDrawable(line);
-            ShowLineEndpointHandles(line.Offset.X, line.Offset.Y, line.EndPoint.X, line.EndPoint.Y);
-        }
-        else if (_selectedShape is ArrowDrawable arrow)
-        {
-            arrow.EndPoint = new System.Numerics.Vector2((float)currentPoint.X, (float)currentPoint.Y);
-            UpdatePreviewShapeFromDrawable(arrow);
-            ShowLineEndpointHandles(arrow.Offset.X, arrow.Offset.Y, arrow.EndPoint.X, arrow.EndPoint.Y);
-        }
-        
+        UpdateLineEndpoint(false, currentPoint);
         e.Handled = true;
     }
 
@@ -1330,20 +1292,60 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             _isDraggingLineEnd = false;
             LineEndHandle.ReleasePointerCaptures();
-            
-            // Fire modification event
-            if (_selectedShape != null && _shapeStateBeforeModification.HasValue)
-            {
-                var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
-                if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
-                {
-                    ShapeModified?.Invoke(this, (_selectedShapeIndex, _selectedShape, _selectedShape));
-                }
-                _shapeStateBeforeModification = null;
-                RenderCanvas.Invalidate();
-            }
-            
+            CompleteLineEndpointDrag();
             e.Handled = true;
+        }
+    }
+
+    private void UpdateLineEndpoint(bool isStartPoint, Point position)
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        var newPoint = new System.Numerics.Vector2((float)position.X, (float)position.Y);
+        
+        if (_selectedShape is LineDrawable line)
+        {
+            if (isStartPoint)
+            {
+                line.Offset = newPoint;
+            }
+            else
+            {
+                line.EndPoint = newPoint;
+            }
+            UpdatePreviewShapeFromDrawable(line);
+            ShowLineEndpointHandles(line.Offset.X, line.Offset.Y, line.EndPoint.X, line.EndPoint.Y);
+        }
+        else if (_selectedShape is ArrowDrawable arrow)
+        {
+            if (isStartPoint)
+            {
+                arrow.Offset = newPoint;
+            }
+            else
+            {
+                arrow.EndPoint = newPoint;
+            }
+            UpdatePreviewShapeFromDrawable(arrow);
+            ShowLineEndpointHandles(arrow.Offset.X, arrow.Offset.Y, arrow.EndPoint.X, arrow.EndPoint.Y);
+        }
+    }
+
+    private void CompleteLineEndpointDrag()
+    {
+        // Fire modification event
+        if (_selectedShape != null && _shapeStateBeforeModification.HasValue)
+        {
+            var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+            if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
+            {
+                ShapeModified?.Invoke(this, (_selectedShapeIndex, _selectedShape, _selectedShape));
+            }
+            _shapeStateBeforeModification = null;
+            RenderCanvas.Invalidate();
         }
     }
 
