@@ -12,12 +12,12 @@
         <Grid
             x:Name="Boundary"
             Background="Transparent"
-            BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
-            BorderThickness="2">
+            BorderBrush="Transparent"
+            BorderThickness="0">
 
             <!--  Selection Border  -->
             <Rectangle
-                Margin="-2"
+                Margin="0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 Stroke="{ThemeResource AccentFillColorDefaultBrush}"

@@ -77,19 +77,49 @@ public sealed partial class ImageCanvas : UserControlBase
        nameof(ShapeStrokeColor),
        typeof(Color),
        typeof(ImageCanvas),
-       new PropertyMetadata(Color.Red));
+       new PropertyMetadata(Color.Red, OnShapeStrokeColorChanged));
+
+    private static void OnShapeStrokeColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        // If a shape is currently selected, update its stroke color
+        // The property value is updated automatically by DependencyProperty for use with new shapes
+        if (d is ImageCanvas control && control._selectedShape != null && e.NewValue is Color color)
+        {
+            control.UpdateSelectedShapeStrokeColor(color);
+        }
+    }
 
     public static readonly DependencyProperty ShapeFillColorProperty = DependencyProperty.Register(
        nameof(ShapeFillColor),
        typeof(Color),
        typeof(ImageCanvas),
-       new PropertyMetadata(Color.Transparent));
+       new PropertyMetadata(Color.Transparent, OnShapeFillColorChanged));
+
+    private static void OnShapeFillColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        // If a shape is currently selected, update its fill color
+        // The property value is updated automatically by DependencyProperty for use with new shapes
+        if (d is ImageCanvas control && control._selectedShape != null && e.NewValue is Color color)
+        {
+            control.UpdateSelectedShapeFillColor(color);
+        }
+    }
 
     public static readonly DependencyProperty ShapeStrokeWidthProperty = DependencyProperty.Register(
        nameof(ShapeStrokeWidth),
        typeof(int),
        typeof(ImageCanvas),
-       new PropertyMetadata(2));
+       new PropertyMetadata(2, OnShapeStrokeWidthChanged));
+
+    private static void OnShapeStrokeWidthChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        // If a shape is currently selected, update its stroke width
+        // The property value is updated automatically by DependencyProperty for use with new shapes
+        if (d is ImageCanvas control && control._selectedShape != null && e.NewValue is int width)
+        {
+            control.UpdateSelectedShapeStrokeWidth(width);
+        }
+    }
 
     private static void OnCropRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -210,6 +240,8 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private readonly Lock _zoomUpdateLock = new Lock();
 
+    private const int LineHandleRadius = 6; // Half of handle diameter (12px total)
+
     private bool _isPointerDown;
     private Point _lastPointerPosition;
     private Point? _shapeStartPoint;
@@ -233,6 +265,14 @@ public sealed partial class ImageCanvas : UserControlBase
     private Color _cachedStrokeColor;
     private Color _cachedFillColor;
 
+    // Line endpoint manipulation
+    private bool _isDraggingLineStart = false;
+    private bool _isDraggingLineEnd = false;
+    private bool _isDraggingLineMove = false;
+    private Point _lineMoveStartPoint;
+    private System.Numerics.Vector2 _lineMoveInitialOffset;
+    private System.Numerics.Vector2 _lineMoveInitialEndPoint;
+
     public ImageCanvas()
     {
         InitializeComponent();
@@ -241,7 +281,7 @@ public sealed partial class ImageCanvas : UserControlBase
         KeyDown += ImageCanvas_KeyDown;
     }
 
-    private void ImageCanvas_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    private void ImageCanvas_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (!IsShapesModeEnabled || _selectedShape == null)
         {
@@ -457,15 +497,21 @@ public sealed partial class ImageCanvas : UserControlBase
             var rect = (!IsCropModeEnabled) ? CropRect : IsTurned() ? new Rectangle(0, 0, CanvasSize.Height, CanvasSize.Width) : new Rectangle(0, 0, CanvasSize.Width, CanvasSize.Height);
             ImageCanvasRenderOptions options = new(Orientation, CanvasSize, rect);
             
-            // Filter out the selected shape if it's being manipulated
+            // Filter out the selected shape ONLY when it's being actively manipulated
+            // This prevents double rendering during drag operations
             var drawablesToRender = Drawables;
-            if (_selectedShape != null && _selectedShapeIndex >= 0)
+            if (IsShapeSelected())
             {
                 drawablesToRender = Drawables.Where((d, i) => i != _selectedShapeIndex);
             }
             
             Win2DImageCanvasRenderer.Render([.. drawablesToRender], options, args.DrawingSession);
         }
+    }
+
+    private bool IsShapeSelected()
+    {
+        return _selectedShape != null;
     }
 
     private bool CanCreateResources() => Drawables.Any();
@@ -570,7 +616,7 @@ public sealed partial class ImageCanvas : UserControlBase
                         
                         _shapeStartPoint = _pointerPressPosition.Value;
                     }
-                    
+
                     UpdatePreviewShape(_shapeStartPoint.Value, currentPoint);
                 }
                 
@@ -615,13 +661,17 @@ public sealed partial class ImageCanvas : UserControlBase
 
                 ShapeDrawn?.Invoke(this, (start, end));
 
+                DispatcherQueue.TryEnqueue(() => {
+                    SelectShape(endPoint);
+                });
+
                 _shapeStartPoint = null;
                 e.Handled = true;
             }
             else if (_shapeUnderPointer != null && _pointerPressPosition.HasValue)
             {
                 // User clicked without dragging - select the shape
-                SelectShapeDirectly(_shapeUnderPointer);
+                SelectShape(_shapeUnderPointer);
                 e.Handled = true;
             }
             
@@ -640,7 +690,6 @@ public sealed partial class ImageCanvas : UserControlBase
         _shapeStartPoint = null;
         _shapeUnderPointer = null;
         _pointerPressPosition = null;
-        ClearPreviewShape();
         RootContainer.ReleasePointerCaptures();
     }
 
@@ -650,7 +699,6 @@ public sealed partial class ImageCanvas : UserControlBase
         _shapeStartPoint = null;
         _shapeUnderPointer = null;
         _pointerPressPosition = null;
-        ClearPreviewShape();
     }
     #endregion
 
@@ -887,22 +935,10 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ClearPreviewShape()
     {
-        if (_previewRectangle != null)
-        {
-            _previewRectangle.Visibility = Visibility.Collapsed;
-        }
-        if (_previewEllipse != null)
-        {
-            _previewEllipse.Visibility = Visibility.Collapsed;
-        }
-        if (_previewLine != null)
-        {
-            _previewLine.Visibility = Visibility.Collapsed;
-        }
-        if (_previewArrowHead != null)
-        {
-            _previewArrowHead.Visibility = Visibility.Collapsed;
-        }
+        _previewRectangle?.Visibility = Visibility.Collapsed;
+        _previewEllipse?.Visibility = Visibility.Collapsed;
+        _previewLine?.Visibility = Visibility.Collapsed;
+        _previewArrowHead?.Visibility = Visibility.Collapsed;
         PreviewShapeCanvas.Visibility = Visibility.Collapsed;
     }
     #endregion
@@ -940,46 +976,11 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
-    private bool StatesAreEqual(ModifyShapeOperation.ShapeState state1, ModifyShapeOperation.ShapeState state2)
+    private static bool StatesAreEqual(ModifyShapeOperation.ShapeState state1, ModifyShapeOperation.ShapeState state2)
     {
         return state1.Offset == state2.Offset && 
                state1.Size == state2.Size && 
                state1.EndPoint == state2.EndPoint;
-    }
-
-    private void SelectShape(Point clickPoint)
-    {
-        if (Drawables == null)
-        {
-            return;
-        }
-
-        var drawableList = Drawables.ToList();
-        
-        // Check shapes in reverse order (top to bottom)
-        for (int i = drawableList.Count - 1; i >= 0; i--)
-        {
-            var drawable = drawableList[i];
-            if (IsPointInShape(clickPoint, drawable))
-            {
-                _selectedShape = drawable;
-                _selectedShapeIndex = i;
-                
-                // Capture state before modification
-                _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(drawable);
-                
-                ShowResizeHandles(drawable);
-                UpdatePreviewShapeFromDrawable(drawable);
-                RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
-                
-                // Set focus to enable keyboard events
-                Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
-                return;
-            }
-        }
-
-        // No shape selected
-        DeselectShape();
     }
 
     private void DeselectShape()
@@ -987,6 +988,7 @@ public sealed partial class ImageCanvas : UserControlBase
         _selectedShape = null;
         _selectedShapeIndex = -1;
         ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+        LineEndpointHandlesCanvas.Visibility = Visibility.Collapsed;
         ClearPreviewShape();
         RenderCanvas.Invalidate(); // Redraw to show all shapes
     }
@@ -1013,7 +1015,47 @@ public sealed partial class ImageCanvas : UserControlBase
         return null;
     }
 
-    private void SelectShapeDirectly(IDrawable shape)
+
+    private void SelectShape(Point clickPoint)
+    {
+        if (Drawables == null)
+        {
+            return;
+        }
+
+        var drawableList = Drawables.ToList();
+
+        // Check shapes in reverse order (top to bottom)
+        for (int i = drawableList.Count - 1; i >= 0; i--)
+        {
+            var drawable = drawableList[i];
+            if (IsPointInShape(clickPoint, drawable))
+            {
+                _selectedShape = drawable;
+                _selectedShapeIndex = i;
+
+                // Capture state before modification
+                _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(drawable);
+
+                ShowResizeHandles(drawable);
+                UpdatePreviewShapeFromDrawable(drawable);
+
+                // Ensure preview canvas is visible
+                PreviewShapeCanvas.Visibility = Visibility.Visible;
+
+                RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
+
+                // Set focus to enable keyboard events
+                Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+                return;
+            }
+        }
+
+        // No shape selected
+        DeselectShape();
+    }
+
+    private void SelectShape(IDrawable shape)
     {
         if (Drawables == null)
         {
@@ -1033,10 +1075,14 @@ public sealed partial class ImageCanvas : UserControlBase
             
             ShowResizeHandles(shape);
             UpdatePreviewShapeFromDrawable(shape);
+
+            // Ensure preview canvas is visible
+            PreviewShapeCanvas.Visibility = Visibility.Visible;
+            
             RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
             
             // Set focus to enable keyboard events
-            Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+            Focus(FocusState.Programmatic);
         }
     }
 
@@ -1054,6 +1100,7 @@ public sealed partial class ImageCanvas : UserControlBase
         _selectedShape = null;
         _selectedShapeIndex = -1;
         ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+        LineEndpointHandlesCanvas.Visibility = Visibility.Collapsed;
         ClearPreviewShape();
         RenderCanvas.Invalidate();
     }
@@ -1145,9 +1192,295 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ShowResizeHandles(IDrawable drawable)
     {
-        var bounds = GetShapeBounds(drawable);
-        ShapeResizeOverlay.ShapeBounds = bounds;
-        ShapeResizeOverlay.Visibility = Visibility.Visible;
+        // For lines and arrows, show endpoint handles instead of box resize overlay
+        if (drawable is LineDrawable line)
+        {
+            ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+            ShowLineEndpointHandles(line.Offset.X, line.Offset.Y, line.EndPoint.X, line.EndPoint.Y);
+        }
+        else if (drawable is ArrowDrawable arrow)
+        {
+            ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+            ShowLineEndpointHandles(arrow.Offset.X, arrow.Offset.Y, arrow.EndPoint.X, arrow.EndPoint.Y);
+        }
+        else
+        {
+            // For rectangles and ellipses, show the box resize overlay
+            LineEndpointHandlesCanvas.Visibility = Visibility.Collapsed;
+            var bounds = GetShapeBounds(drawable);
+            ShapeResizeOverlay.ShapeBounds = bounds;
+            ShapeResizeOverlay.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void ShowLineEndpointHandles(float x1, float y1, float x2, float y2)
+    {
+        LineEndpointHandlesCanvas.Visibility = Visibility.Visible;
+        
+        // Position the selection visual line (dashed line)
+        LineSelectionVisual.X1 = x1;
+        LineSelectionVisual.Y1 = y1;
+        LineSelectionVisual.X2 = x2;
+        LineSelectionVisual.Y2 = y2;
+        
+        // Position the move handle line (make it cover the entire line for hit testing)
+        LineMoveHandle.X1 = x1;
+        LineMoveHandle.Y1 = y1;
+        LineMoveHandle.X2 = x2;
+        LineMoveHandle.Y2 = y2;
+        
+        // Position start handle (center the handle on the endpoint)
+        Canvas.SetLeft(LineStartHandle, x1 - LineHandleRadius);
+        Canvas.SetTop(LineStartHandle, y1 - LineHandleRadius);
+        
+        // Position end handle (center the handle on the endpoint)
+        Canvas.SetLeft(LineEndHandle, x2 - LineHandleRadius);
+        Canvas.SetTop(LineEndHandle, y2 - LineHandleRadius);
+    }
+
+    private void LineStartHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _isDraggingLineStart = true;
+        
+        // Capture state for undo
+        if (_selectedShape != null)
+        {
+            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+        }
+        
+        RenderCanvas.Invalidate(); // Trigger filtering
+        LineStartHandle.CapturePointer(e.Pointer);
+        e.Handled = true;
+    }
+
+    private void LineStartHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingLineStart || _selectedShape == null)
+        {
+            return;
+        }
+
+        UpdateLineEndpoint(true, e);
+        e.Handled = true;
+    }
+
+    private void LineStartHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isDraggingLineStart)
+        {
+            _isDraggingLineStart = false;
+            LineStartHandle.ReleasePointerCaptures();
+            CompleteLineEndpointDrag();
+            e.Handled = true;
+        }
+    }
+
+    private void LineEndHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _isDraggingLineEnd = true;
+        
+        // Capture state for undo
+        if (_selectedShape != null)
+        {
+            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+        }
+        
+        RenderCanvas.Invalidate(); // Trigger filtering
+        LineEndHandle.CapturePointer(e.Pointer);
+        e.Handled = true;
+    }
+
+    private void LineEndHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingLineEnd || _selectedShape == null)
+        {
+            return;
+        }
+
+        UpdateLineEndpoint(false, e);
+        e.Handled = true;
+    }
+
+    private void LineEndHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isDraggingLineEnd)
+        {
+            _isDraggingLineEnd = false;
+            LineEndHandle.ReleasePointerCaptures();
+            CompleteLineEndpointDrag();
+            e.Handled = true;
+        }
+    }
+
+    private void LineStartHandle_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        // Show crosshair cursor for endpoint handles
+        ProtectedCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Cross);
+    }
+
+    private void LineStartHandle_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingLineStart)
+        {
+            ProtectedCursor = null;
+        }
+    }
+
+    private void LineEndHandle_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        // Show crosshair cursor for endpoint handles
+        ProtectedCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Cross);
+    }
+
+    private void LineEndHandle_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingLineEnd)
+        {
+            ProtectedCursor = null;
+        }
+    }
+
+    private void UpdateLineEndpoint(bool isStartPoint, PointerRoutedEventArgs e)
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        var currentPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
+        var newPoint = new System.Numerics.Vector2((float)currentPoint.X, (float)currentPoint.Y);
+        
+        if (_selectedShape is LineDrawable line)
+        {
+            if (isStartPoint)
+            {
+                line.Offset = newPoint;
+            }
+            else
+            {
+                line.EndPoint = newPoint;
+            }
+            UpdatePreviewShapeFromDrawable(line);
+            ShowLineEndpointHandles(line.Offset.X, line.Offset.Y, line.EndPoint.X, line.EndPoint.Y);
+        }
+        else if (_selectedShape is ArrowDrawable arrow)
+        {
+            if (isStartPoint)
+            {
+                arrow.Offset = newPoint;
+            }
+            else
+            {
+                arrow.EndPoint = newPoint;
+            }
+            UpdatePreviewShapeFromDrawable(arrow);
+            ShowLineEndpointHandles(arrow.Offset.X, arrow.Offset.Y, arrow.EndPoint.X, arrow.EndPoint.Y);
+        }
+    }
+
+    private void CompleteLineEndpointDrag()
+    {
+        // Fire modification event
+        if (_selectedShape != null && _shapeStateBeforeModification.HasValue)
+        {
+            var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+            if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
+            {
+                ShapeModified?.Invoke(this, (_selectedShapeIndex, _selectedShape, _selectedShape));
+            }
+            _shapeStateBeforeModification = null;
+            RenderCanvas.Invalidate();
+        }
+    }
+
+    private void LineMoveHandle_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        // Change cursor to move cursor when hovering over the line
+        ProtectedCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.SizeAll);
+    }
+
+    private void LineMoveHandle_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        // Reset cursor
+        if (!_isDraggingLineMove)
+        {
+            ProtectedCursor = null;
+        }
+    }
+
+    private void LineMoveHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _isDraggingLineMove = true;
+        _lineMoveStartPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
+        
+        // Capture initial positions
+        if (_selectedShape is LineDrawable line)
+        {
+            _lineMoveInitialOffset = line.Offset;
+            _lineMoveInitialEndPoint = line.EndPoint;
+        }
+        else if (_selectedShape is ArrowDrawable arrow)
+        {
+            _lineMoveInitialOffset = arrow.Offset;
+            _lineMoveInitialEndPoint = arrow.EndPoint;
+        }
+        
+        // Capture state for undo
+        if (_selectedShape != null)
+        {
+            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+        }
+        
+        RenderCanvas.Invalidate(); // Trigger filtering
+        LineMoveHandle.CapturePointer(e.Pointer);
+        e.Handled = true;
+    }
+
+    private void LineMoveHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingLineMove || _selectedShape == null)
+        {
+            return;
+        }
+
+        var currentPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
+        var deltaX = (float)(currentPoint.X - _lineMoveStartPoint.X);
+        var deltaY = (float)(currentPoint.Y - _lineMoveStartPoint.Y);
+        
+        // Move both offset and endpoint by the same delta
+        if (_selectedShape is LineDrawable line)
+        {
+            line.Offset = new System.Numerics.Vector2(_lineMoveInitialOffset.X + deltaX, _lineMoveInitialOffset.Y + deltaY);
+            line.EndPoint = new System.Numerics.Vector2(_lineMoveInitialEndPoint.X + deltaX, _lineMoveInitialEndPoint.Y + deltaY);
+            UpdatePreviewShapeFromDrawable(line);
+            ShowLineEndpointHandles(line.Offset.X, line.Offset.Y, line.EndPoint.X, line.EndPoint.Y);
+        }
+        else if (_selectedShape is ArrowDrawable arrow)
+        {
+            arrow.Offset = new System.Numerics.Vector2(_lineMoveInitialOffset.X + deltaX, _lineMoveInitialOffset.Y + deltaY);
+            arrow.EndPoint = new System.Numerics.Vector2(_lineMoveInitialEndPoint.X + deltaX, _lineMoveInitialEndPoint.Y + deltaY);
+            UpdatePreviewShapeFromDrawable(arrow);
+            ShowLineEndpointHandles(arrow.Offset.X, arrow.Offset.Y, arrow.EndPoint.X, arrow.EndPoint.Y);
+        }
+        
+        e.Handled = true;
+    }
+
+    private void LineMoveHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isDraggingLineMove)
+        {
+            _isDraggingLineMove = false;
+            LineMoveHandle.ReleasePointerCaptures();
+            
+            // Reset cursor
+            ProtectedCursor = null;
+            
+            // Fire modification event
+            CompleteLineEndpointDrag();
+            
+            e.Handled = true;
+        }
     }
 
     private void UpdateSelectedShapeBounds(RectangleF newBounds)
@@ -1229,6 +1562,85 @@ public sealed partial class ImageCanvas : UserControlBase
                 }
                 break;
         }
+    }
+
+    private void UpdateSelectedShapeStrokeColor(Color color)
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        switch (_selectedShape)
+        {
+            case RectangleDrawable rect:
+                rect.StrokeColor = color;
+                break;
+            case EllipseDrawable ellipse:
+                ellipse.StrokeColor = color;
+                break;
+            case LineDrawable line:
+                line.StrokeColor = color;
+                break;
+            case ArrowDrawable arrow:
+                arrow.StrokeColor = color;
+                break;
+        }
+
+        // Update preview to reflect the new color
+        UpdatePreviewShapeFromDrawable(_selectedShape);
+        RenderCanvas.Invalidate();
+    }
+
+    private void UpdateSelectedShapeFillColor(Color color)
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        switch (_selectedShape)
+        {
+            case RectangleDrawable rect:
+                rect.FillColor = color;
+                break;
+            case EllipseDrawable ellipse:
+                ellipse.FillColor = color;
+                break;
+            // Lines and arrows don't have fill color
+        }
+
+        // Update preview to reflect the new color
+        UpdatePreviewShapeFromDrawable(_selectedShape);
+        RenderCanvas.Invalidate();
+    }
+
+    private void UpdateSelectedShapeStrokeWidth(int width)
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        switch (_selectedShape)
+        {
+            case RectangleDrawable rect:
+                rect.StrokeWidth = width;
+                break;
+            case EllipseDrawable ellipse:
+                ellipse.StrokeWidth = width;
+                break;
+            case LineDrawable line:
+                line.StrokeWidth = width;
+                break;
+            case ArrowDrawable arrow:
+                arrow.StrokeWidth = width;
+                break;
+        }
+
+        // Update preview to reflect the new width
+        UpdatePreviewShapeFromDrawable(_selectedShape);
+        RenderCanvas.Invalidate();
     }
 
     private void UpdatePreviewShapeFromDrawable(IDrawable drawable)
