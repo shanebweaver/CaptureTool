@@ -281,7 +281,7 @@ public sealed partial class ImageCanvas : UserControlBase
         KeyDown += ImageCanvas_KeyDown;
     }
 
-    private void ImageCanvas_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    private void ImageCanvas_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (!IsShapesModeEnabled || _selectedShape == null)
         {
@@ -500,7 +500,7 @@ public sealed partial class ImageCanvas : UserControlBase
             // Filter out the selected shape ONLY when it's being actively manipulated
             // This prevents double rendering during drag operations
             var drawablesToRender = Drawables;
-            if (_selectedShape != null && IsShapeBeingManipulated())
+            if (IsShapeSelected())
             {
                 drawablesToRender = Drawables.Where((d, i) => i != _selectedShapeIndex);
             }
@@ -509,11 +509,9 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
-    private bool IsShapeBeingManipulated()
+    private bool IsShapeSelected()
     {
-        // Check if any manipulation is active (line endpoints, line move, or box resize/move)
-        return _isDraggingLineStart || _isDraggingLineEnd || _isDraggingLineMove || 
-               (_selectedShape is not LineDrawable && _selectedShape is not ArrowDrawable && ShapeResizeOverlay?.IsManipulating == true);
+        return _selectedShape != null;
     }
 
     private bool CanCreateResources() => Drawables.Any();
@@ -618,7 +616,7 @@ public sealed partial class ImageCanvas : UserControlBase
                         
                         _shapeStartPoint = _pointerPressPosition.Value;
                     }
-                    
+
                     UpdatePreviewShape(_shapeStartPoint.Value, currentPoint);
                 }
                 
@@ -663,13 +661,17 @@ public sealed partial class ImageCanvas : UserControlBase
 
                 ShapeDrawn?.Invoke(this, (start, end));
 
+                DispatcherQueue.TryEnqueue(() => {
+                    SelectShape(endPoint);
+                });
+
                 _shapeStartPoint = null;
                 e.Handled = true;
             }
             else if (_shapeUnderPointer != null && _pointerPressPosition.HasValue)
             {
                 // User clicked without dragging - select the shape
-                SelectShapeDirectly(_shapeUnderPointer);
+                SelectShape(_shapeUnderPointer);
                 e.Handled = true;
             }
             
@@ -688,7 +690,6 @@ public sealed partial class ImageCanvas : UserControlBase
         _shapeStartPoint = null;
         _shapeUnderPointer = null;
         _pointerPressPosition = null;
-        ClearPreviewShape();
         RootContainer.ReleasePointerCaptures();
     }
 
@@ -698,7 +699,6 @@ public sealed partial class ImageCanvas : UserControlBase
         _shapeStartPoint = null;
         _shapeUnderPointer = null;
         _pointerPressPosition = null;
-        ClearPreviewShape();
     }
     #endregion
 
@@ -935,22 +935,10 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ClearPreviewShape()
     {
-        if (_previewRectangle != null)
-        {
-            _previewRectangle.Visibility = Visibility.Collapsed;
-        }
-        if (_previewEllipse != null)
-        {
-            _previewEllipse.Visibility = Visibility.Collapsed;
-        }
-        if (_previewLine != null)
-        {
-            _previewLine.Visibility = Visibility.Collapsed;
-        }
-        if (_previewArrowHead != null)
-        {
-            _previewArrowHead.Visibility = Visibility.Collapsed;
-        }
+        _previewRectangle?.Visibility = Visibility.Collapsed;
+        _previewEllipse?.Visibility = Visibility.Collapsed;
+        _previewLine?.Visibility = Visibility.Collapsed;
+        _previewArrowHead?.Visibility = Visibility.Collapsed;
         PreviewShapeCanvas.Visibility = Visibility.Collapsed;
     }
     #endregion
@@ -988,50 +976,11 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
-    private bool StatesAreEqual(ModifyShapeOperation.ShapeState state1, ModifyShapeOperation.ShapeState state2)
+    private static bool StatesAreEqual(ModifyShapeOperation.ShapeState state1, ModifyShapeOperation.ShapeState state2)
     {
         return state1.Offset == state2.Offset && 
                state1.Size == state2.Size && 
                state1.EndPoint == state2.EndPoint;
-    }
-
-    private void SelectShape(Point clickPoint)
-    {
-        if (Drawables == null)
-        {
-            return;
-        }
-
-        var drawableList = Drawables.ToList();
-        
-        // Check shapes in reverse order (top to bottom)
-        for (int i = drawableList.Count - 1; i >= 0; i--)
-        {
-            var drawable = drawableList[i];
-            if (IsPointInShape(clickPoint, drawable))
-            {
-                _selectedShape = drawable;
-                _selectedShapeIndex = i;
-                
-                // Capture state before modification
-                _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(drawable);
-                
-                ShowResizeHandles(drawable);
-                UpdatePreviewShapeFromDrawable(drawable);
-                
-                // Ensure preview canvas is visible
-                PreviewShapeCanvas.Visibility = Visibility.Visible;
-                
-                RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
-                
-                // Set focus to enable keyboard events
-                Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
-                return;
-            }
-        }
-
-        // No shape selected
-        DeselectShape();
     }
 
     private void DeselectShape()
@@ -1066,7 +1015,47 @@ public sealed partial class ImageCanvas : UserControlBase
         return null;
     }
 
-    private void SelectShapeDirectly(IDrawable shape)
+
+    private void SelectShape(Point clickPoint)
+    {
+        if (Drawables == null)
+        {
+            return;
+        }
+
+        var drawableList = Drawables.ToList();
+
+        // Check shapes in reverse order (top to bottom)
+        for (int i = drawableList.Count - 1; i >= 0; i--)
+        {
+            var drawable = drawableList[i];
+            if (IsPointInShape(clickPoint, drawable))
+            {
+                _selectedShape = drawable;
+                _selectedShapeIndex = i;
+
+                // Capture state before modification
+                _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(drawable);
+
+                ShowResizeHandles(drawable);
+                UpdatePreviewShapeFromDrawable(drawable);
+
+                // Ensure preview canvas is visible
+                PreviewShapeCanvas.Visibility = Visibility.Visible;
+
+                RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
+
+                // Set focus to enable keyboard events
+                Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+                return;
+            }
+        }
+
+        // No shape selected
+        DeselectShape();
+    }
+
+    private void SelectShape(IDrawable shape)
     {
         if (Drawables == null)
         {
@@ -1086,14 +1075,14 @@ public sealed partial class ImageCanvas : UserControlBase
             
             ShowResizeHandles(shape);
             UpdatePreviewShapeFromDrawable(shape);
-            
+
             // Ensure preview canvas is visible
             PreviewShapeCanvas.Visibility = Visibility.Visible;
             
             RenderCanvas.Invalidate(); // Redraw to hide selected shape from Win2D rendering
             
             // Set focus to enable keyboard events
-            Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+            Focus(FocusState.Programmatic);
         }
     }
 
