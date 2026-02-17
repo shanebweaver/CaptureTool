@@ -266,7 +266,6 @@ public sealed partial class ImageCanvas : UserControlBase
     // Line endpoint manipulation
     private bool _isDraggingLineStart = false;
     private bool _isDraggingLineEnd = false;
-    private Point _lineHandleDragStart;
 
     public ImageCanvas()
     {
@@ -1227,7 +1226,6 @@ public sealed partial class ImageCanvas : UserControlBase
     private void LineStartHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
         _isDraggingLineStart = true;
-        _lineHandleDragStart = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
         
         // Capture state for undo
         if (_selectedShape != null)
@@ -1290,7 +1288,6 @@ public sealed partial class ImageCanvas : UserControlBase
     private void LineEndHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
         _isDraggingLineEnd = true;
-        _lineHandleDragStart = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
         
         // Capture state for undo
         if (_selectedShape != null)
