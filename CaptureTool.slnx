@@ -14,17 +14,12 @@
     <File Path="README.md" />
     <File Path="SECURITY.md" />
   </Folder>
-  <Project Path="src/CaptureInterop.Lib/CaptureInterop.Lib.vcxproj" Id="8B5E7A7C-3D1F-4E9A-9C2B-1F6D8E3A5B4C" />
+  <Project Path="src/CaptureInterop.Lib/CaptureInterop.Lib.vcxproj" Id="8b5e7a7c-3d1f-4e9a-9c2b-1f6d8e3a5b4c" />
   <Project Path="src/CaptureInterop.Tests/CaptureInterop.Tests.vcxproj" />
   <Project Path="src/CaptureInterop/CaptureInterop.vcxproj" Id="e576bd23-e4b5-4a1e-a385-87cb932e6d32" />
   <Project Path="src/CaptureTool.Application.Implementations/CaptureTool.Application.Implementations.csproj" />
   <Project Path="src/CaptureTool.Application.Interfaces/CaptureTool.Application.Interfaces.csproj" />
   <Project Path="src/CaptureTool.Application.Tests/CaptureTool.Application.Tests.csproj" />
-  <Project Path="src/CaptureTool.Domain.Audio.Implementations.Windows/CaptureTool.Domain.Audio.Implementations.Windows.csproj">
-    <Platform Solution="*|ARM64" Project="ARM64" />
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
-  <Project Path="src/CaptureTool.Domain.Audio.Interfaces/CaptureTool.Domain.Audio.Interfaces.csproj" />
   <Project Path="src/CaptureTool.Domain.Capture.Implementations.Windows/CaptureTool.Domain.Capture.Implementations.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
