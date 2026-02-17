@@ -497,10 +497,23 @@ public sealed partial class ImageCanvas : UserControlBase
             var rect = (!IsCropModeEnabled) ? CropRect : IsTurned() ? new Rectangle(0, 0, CanvasSize.Height, CanvasSize.Width) : new Rectangle(0, 0, CanvasSize.Width, CanvasSize.Height);
             ImageCanvasRenderOptions options = new(Orientation, CanvasSize, rect);
             
-            // Render all shapes including selected ones
-            // The preview shape overlay will show the manipulation state
-            Win2DImageCanvasRenderer.Render([.. Drawables], options, args.DrawingSession);
+            // Filter out the selected shape ONLY when it's being actively manipulated
+            // This prevents double rendering during drag operations
+            var drawablesToRender = Drawables;
+            if (_selectedShape != null && _selectedShapeIndex >= 0 && IsShapeBeingManipulated())
+            {
+                drawablesToRender = Drawables.Where((d, i) => i != _selectedShapeIndex);
+            }
+            
+            Win2DImageCanvasRenderer.Render([.. drawablesToRender], options, args.DrawingSession);
         }
+    }
+
+    private bool IsShapeBeingManipulated()
+    {
+        // Check if any manipulation is active (line endpoints, line move, or box resize/move)
+        return _isDraggingLineStart || _isDraggingLineEnd || _isDraggingLineMove || 
+               (_selectedShape is not LineDrawable && _selectedShape is not ArrowDrawable && ShapeResizeOverlay.IsManipulating);
     }
 
     private bool CanCreateResources() => Drawables.Any();
@@ -1215,6 +1228,12 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         LineEndpointHandlesCanvas.Visibility = Visibility.Visible;
         
+        // Position the selection visual line (dashed line)
+        LineSelectionVisual.X1 = x1;
+        LineSelectionVisual.Y1 = y1;
+        LineSelectionVisual.X2 = x2;
+        LineSelectionVisual.Y2 = y2;
+        
         // Position the move handle line (make it cover the entire line for hit testing)
         LineMoveHandle.X1 = x1;
         LineMoveHandle.Y1 = y1;
@@ -1240,6 +1259,7 @@ public sealed partial class ImageCanvas : UserControlBase
             _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
         }
         
+        RenderCanvas.Invalidate(); // Trigger filtering
         LineStartHandle.CapturePointer(e.Pointer);
         e.Handled = true;
     }
@@ -1276,6 +1296,7 @@ public sealed partial class ImageCanvas : UserControlBase
             _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
         }
         
+        RenderCanvas.Invalidate(); // Trigger filtering
         LineEndHandle.CapturePointer(e.Pointer);
         e.Handled = true;
     }
@@ -1299,6 +1320,34 @@ public sealed partial class ImageCanvas : UserControlBase
             LineEndHandle.ReleasePointerCaptures();
             CompleteLineEndpointDrag();
             e.Handled = true;
+        }
+    }
+
+    private void LineStartHandle_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        // Show crosshair cursor for endpoint handles
+        ProtectedCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Cross);
+    }
+
+    private void LineStartHandle_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingLineStart)
+        {
+            ProtectedCursor = null;
+        }
+    }
+
+    private void LineEndHandle_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        // Show crosshair cursor for endpoint handles
+        ProtectedCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Cross);
+    }
+
+    private void LineEndHandle_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingLineEnd)
+        {
+            ProtectedCursor = null;
         }
     }
 
@@ -1393,6 +1442,7 @@ public sealed partial class ImageCanvas : UserControlBase
             _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
         }
         
+        RenderCanvas.Invalidate(); // Trigger filtering
         LineMoveHandle.CapturePointer(e.Pointer);
         e.Handled = true;
     }

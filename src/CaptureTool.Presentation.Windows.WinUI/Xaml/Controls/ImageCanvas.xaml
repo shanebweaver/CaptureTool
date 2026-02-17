@@ -69,6 +69,13 @@
 
                 <!--  Line/Arrow Endpoint Handles  -->
                 <Canvas x:Name="LineEndpointHandlesCanvas" Visibility="Collapsed">
+                    <!--  Dashed selection line visual  -->
+                    <Line
+                        x:Name="LineSelectionVisual"
+                        Stroke="{ThemeResource AccentFillColorDefaultBrush}"
+                        StrokeDashArray="4,4"
+                        StrokeThickness="1"
+                        IsHitTestVisible="False" />
                     <!--  Invisible thick line for hit testing and moving  -->
                     <Line
                         x:Name="LineMoveHandle"
@@ -88,7 +95,9 @@
                         StrokeThickness="2"
                         PointerPressed="LineStartHandle_PointerPressed"
                         PointerMoved="LineStartHandle_PointerMoved"
-                        PointerReleased="LineStartHandle_PointerReleased" />
+                        PointerReleased="LineStartHandle_PointerReleased"
+                        PointerEntered="LineStartHandle_PointerEntered"
+                        PointerExited="LineStartHandle_PointerExited" />
                     <Ellipse
                         x:Name="LineEndHandle"
                         Width="12"
@@ -98,7 +107,9 @@
                         StrokeThickness="2"
                         PointerPressed="LineEndHandle_PointerPressed"
                         PointerMoved="LineEndHandle_PointerMoved"
-                        PointerReleased="LineEndHandle_PointerReleased" />
+                        PointerReleased="LineEndHandle_PointerReleased"
+                        PointerEntered="LineEndHandle_PointerEntered"
+                        PointerExited="LineEndHandle_PointerExited" />
                 </Canvas>
 
                 <!--  Shape Resize Overlay  -->
