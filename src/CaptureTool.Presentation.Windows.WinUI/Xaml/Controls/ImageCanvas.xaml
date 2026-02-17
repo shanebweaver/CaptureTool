@@ -67,6 +67,30 @@
                     IsHitTestVisible="False"
                     Visibility="Collapsed" />
 
+                <!--  Line/Arrow Endpoint Handles  -->
+                <Canvas x:Name="LineEndpointHandlesCanvas" Visibility="Collapsed">
+                    <Ellipse
+                        x:Name="LineStartHandle"
+                        Width="12"
+                        Height="12"
+                        Fill="{ThemeResource AccentFillColorDefaultBrush}"
+                        Stroke="White"
+                        StrokeThickness="2"
+                        PointerPressed="LineStartHandle_PointerPressed"
+                        PointerMoved="LineStartHandle_PointerMoved"
+                        PointerReleased="LineStartHandle_PointerReleased" />
+                    <Ellipse
+                        x:Name="LineEndHandle"
+                        Width="12"
+                        Height="12"
+                        Fill="{ThemeResource AccentFillColorDefaultBrush}"
+                        Stroke="White"
+                        StrokeThickness="2"
+                        PointerPressed="LineEndHandle_PointerPressed"
+                        PointerMoved="LineEndHandle_PointerMoved"
+                        PointerReleased="LineEndHandle_PointerReleased" />
+                </Canvas>
+
                 <!--  Shape Resize Overlay  -->
                 <local:ShapeResizeOverlay
                     x:Name="ShapeResizeOverlay"

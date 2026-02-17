@@ -263,6 +263,11 @@ public sealed partial class ImageCanvas : UserControlBase
     private Color _cachedStrokeColor;
     private Color _cachedFillColor;
 
+    // Line endpoint manipulation
+    private bool _isDraggingLineStart = false;
+    private bool _isDraggingLineEnd = false;
+    private Point _lineHandleDragStart;
+
     public ImageCanvas()
     {
         InitializeComponent();
@@ -1021,6 +1026,7 @@ public sealed partial class ImageCanvas : UserControlBase
         _selectedShape = null;
         _selectedShapeIndex = -1;
         ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+        LineEndpointHandlesCanvas.Visibility = Visibility.Collapsed;
         ClearPreviewShape();
         RenderCanvas.Invalidate(); // Redraw to show all shapes
     }
@@ -1092,6 +1098,7 @@ public sealed partial class ImageCanvas : UserControlBase
         _selectedShape = null;
         _selectedShapeIndex = -1;
         ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+        LineEndpointHandlesCanvas.Visibility = Visibility.Collapsed;
         ClearPreviewShape();
         RenderCanvas.Invalidate();
     }
@@ -1183,18 +1190,163 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ShowResizeHandles(IDrawable drawable)
     {
-        // For lines and arrows, we don't show the box resize overlay
-        // The preview shape itself with its endpoints serves as the resize interface
-        if (drawable is LineDrawable || drawable is ArrowDrawable)
+        // For lines and arrows, show endpoint handles instead of box resize overlay
+        if (drawable is LineDrawable line)
         {
             ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+            ShowLineEndpointHandles(line.Offset.X, line.Offset.Y, line.EndPoint.X, line.EndPoint.Y);
+        }
+        else if (drawable is ArrowDrawable arrow)
+        {
+            ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+            ShowLineEndpointHandles(arrow.Offset.X, arrow.Offset.Y, arrow.EndPoint.X, arrow.EndPoint.Y);
         }
         else
         {
             // For rectangles and ellipses, show the box resize overlay
+            LineEndpointHandlesCanvas.Visibility = Visibility.Collapsed;
             var bounds = GetShapeBounds(drawable);
             ShapeResizeOverlay.ShapeBounds = bounds;
             ShapeResizeOverlay.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void ShowLineEndpointHandles(float x1, float y1, float x2, float y2)
+    {
+        LineEndpointHandlesCanvas.Visibility = Visibility.Visible;
+        
+        // Position start handle
+        Canvas.SetLeft(LineStartHandle, x1 - 6);
+        Canvas.SetTop(LineStartHandle, y1 - 6);
+        
+        // Position end handle
+        Canvas.SetLeft(LineEndHandle, x2 - 6);
+        Canvas.SetTop(LineEndHandle, y2 - 6);
+    }
+
+    private void LineStartHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _isDraggingLineStart = true;
+        _lineHandleDragStart = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
+        
+        // Capture state for undo
+        if (_selectedShape != null)
+        {
+            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+        }
+        
+        LineStartHandle.CapturePointer(e.Pointer);
+        e.Handled = true;
+    }
+
+    private void LineStartHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingLineStart || _selectedShape == null)
+        {
+            return;
+        }
+
+        var currentPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
+        
+        if (_selectedShape is LineDrawable line)
+        {
+            line.Offset = new System.Numerics.Vector2((float)currentPoint.X, (float)currentPoint.Y);
+            UpdatePreviewShapeFromDrawable(line);
+            ShowLineEndpointHandles(line.Offset.X, line.Offset.Y, line.EndPoint.X, line.EndPoint.Y);
+        }
+        else if (_selectedShape is ArrowDrawable arrow)
+        {
+            arrow.Offset = new System.Numerics.Vector2((float)currentPoint.X, (float)currentPoint.Y);
+            UpdatePreviewShapeFromDrawable(arrow);
+            ShowLineEndpointHandles(arrow.Offset.X, arrow.Offset.Y, arrow.EndPoint.X, arrow.EndPoint.Y);
+        }
+        
+        e.Handled = true;
+    }
+
+    private void LineStartHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isDraggingLineStart)
+        {
+            _isDraggingLineStart = false;
+            LineStartHandle.ReleasePointerCaptures();
+            
+            // Fire modification event
+            if (_selectedShape != null && _shapeStateBeforeModification.HasValue)
+            {
+                var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+                if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
+                {
+                    ShapeModified?.Invoke(this, (_selectedShapeIndex, _selectedShape, _selectedShape));
+                }
+                _shapeStateBeforeModification = null;
+                RenderCanvas.Invalidate();
+            }
+            
+            e.Handled = true;
+        }
+    }
+
+    private void LineEndHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _isDraggingLineEnd = true;
+        _lineHandleDragStart = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
+        
+        // Capture state for undo
+        if (_selectedShape != null)
+        {
+            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+        }
+        
+        LineEndHandle.CapturePointer(e.Pointer);
+        e.Handled = true;
+    }
+
+    private void LineEndHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingLineEnd || _selectedShape == null)
+        {
+            return;
+        }
+
+        var currentPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
+        
+        if (_selectedShape is LineDrawable line)
+        {
+            line.EndPoint = new System.Numerics.Vector2((float)currentPoint.X, (float)currentPoint.Y);
+            UpdatePreviewShapeFromDrawable(line);
+            ShowLineEndpointHandles(line.Offset.X, line.Offset.Y, line.EndPoint.X, line.EndPoint.Y);
+        }
+        else if (_selectedShape is ArrowDrawable arrow)
+        {
+            arrow.EndPoint = new System.Numerics.Vector2((float)currentPoint.X, (float)currentPoint.Y);
+            UpdatePreviewShapeFromDrawable(arrow);
+            ShowLineEndpointHandles(arrow.Offset.X, arrow.Offset.Y, arrow.EndPoint.X, arrow.EndPoint.Y);
+        }
+        
+        e.Handled = true;
+    }
+
+    private void LineEndHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isDraggingLineEnd)
+        {
+            _isDraggingLineEnd = false;
+            LineEndHandle.ReleasePointerCaptures();
+            
+            // Fire modification event
+            if (_selectedShape != null && _shapeStateBeforeModification.HasValue)
+            {
+                var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+                if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
+                {
+                    ShapeModified?.Invoke(this, (_selectedShapeIndex, _selectedShape, _selectedShape));
+                }
+                _shapeStateBeforeModification = null;
+                RenderCanvas.Invalidate();
+            }
+            
+            e.Handled = true;
         }
     }
 
