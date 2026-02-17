@@ -240,6 +240,8 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private readonly Lock _zoomUpdateLock = new Lock();
 
+    private const int LineHandleRadius = 6; // Half of handle size (12px)
+
     private bool _isPointerDown;
     private Point _lastPointerPosition;
     private Point? _shapeStartPoint;
@@ -1214,13 +1216,13 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         LineEndpointHandlesCanvas.Visibility = Visibility.Visible;
         
-        // Position start handle
-        Canvas.SetLeft(LineStartHandle, x1 - 6);
-        Canvas.SetTop(LineStartHandle, y1 - 6);
+        // Position start handle (center the handle on the endpoint)
+        Canvas.SetLeft(LineStartHandle, x1 - LineHandleRadius);
+        Canvas.SetTop(LineStartHandle, y1 - LineHandleRadius);
         
-        // Position end handle
-        Canvas.SetLeft(LineEndHandle, x2 - 6);
-        Canvas.SetTop(LineEndHandle, y2 - 6);
+        // Position end handle (center the handle on the endpoint)
+        Canvas.SetLeft(LineEndHandle, x2 - LineHandleRadius);
+        Canvas.SetTop(LineEndHandle, y2 - LineHandleRadius);
     }
 
     private void LineStartHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -1244,8 +1246,7 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        var currentPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
-        UpdateLineEndpoint(true, currentPoint);
+        UpdateLineEndpoint(true, e);
         e.Handled = true;
     }
 
@@ -1281,8 +1282,7 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        var currentPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
-        UpdateLineEndpoint(false, currentPoint);
+        UpdateLineEndpoint(false, e);
         e.Handled = true;
     }
 
@@ -1297,14 +1297,15 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
-    private void UpdateLineEndpoint(bool isStartPoint, Point position)
+    private void UpdateLineEndpoint(bool isStartPoint, PointerRoutedEventArgs e)
     {
         if (_selectedShape == null)
         {
             return;
         }
 
-        var newPoint = new System.Numerics.Vector2((float)position.X, (float)position.Y);
+        var currentPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
+        var newPoint = new System.Numerics.Vector2((float)currentPoint.X, (float)currentPoint.Y);
         
         if (_selectedShape is LineDrawable line)
         {
