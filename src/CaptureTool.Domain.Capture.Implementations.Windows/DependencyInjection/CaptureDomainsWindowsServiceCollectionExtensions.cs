@@ -14,6 +14,7 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
     {
         services.AddSingleton<IScreenCapture, WindowsScreenCapture>();
         services.AddSingleton<IScreenRecorder, WindowsScreenRecorder>();
+        services.AddSingleton<IAudioRecorder, WindowsAudioRecorder>();
 
         // Metadata scanning services
         services.AddSingleton<IMetadataScannerRegistry, MetadataScannerRegistry>();

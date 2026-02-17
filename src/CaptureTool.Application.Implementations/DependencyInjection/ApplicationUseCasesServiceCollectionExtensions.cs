@@ -1,6 +1,7 @@
 using CaptureTool.Application.Implementations.UseCases.About;
 using CaptureTool.Application.Implementations.UseCases.AddOns;
 using CaptureTool.Application.Implementations.UseCases.AppMenu;
+using CaptureTool.Application.Implementations.UseCases.AudioCapture;
 using CaptureTool.Application.Implementations.UseCases.AudioEdit;
 using CaptureTool.Application.Implementations.UseCases.CaptureOverlay;
 using CaptureTool.Application.Implementations.UseCases.Diagnostics;
@@ -12,6 +13,7 @@ using CaptureTool.Application.Implementations.UseCases.VideoEdit;
 using CaptureTool.Application.Interfaces.UseCases.About;
 using CaptureTool.Application.Interfaces.UseCases.AddOns;
 using CaptureTool.Application.Interfaces.UseCases.AppMenu;
+using CaptureTool.Application.Interfaces.UseCases.AudioCapture;
 using CaptureTool.Application.Interfaces.UseCases.AudioEdit;
 using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Application.Interfaces.UseCases.Diagnostics;
@@ -81,6 +83,16 @@ public static class ApplicationUseCasesServiceCollectionExtensions
     {
         services.AddTransient<IAudioEditSaveUseCase, AudioEditSaveUseCase>();
         services.AddTransient<IAudioEditCopyUseCase, AudioEditCopyUseCase>();
+        return services;
+    }
+
+    public static IServiceCollection AddAudioCaptureUseCases(this IServiceCollection services)
+    {
+        services.AddTransient<IAudioCaptureStartUseCase, AudioCaptureStartUseCase>();
+        services.AddTransient<IAudioCaptureStopUseCase, AudioCaptureStopUseCase>();
+        services.AddTransient<IAudioCapturePauseUseCase, AudioCapturePauseUseCase>();
+        services.AddTransient<IAudioCaptureMuteUseCase, AudioCaptureMuteUseCase>();
+        services.AddTransient<IAudioCaptureToggleDesktopAudioUseCase, AudioCaptureToggleDesktopAudioUseCase>();
         return services;
     }
 
