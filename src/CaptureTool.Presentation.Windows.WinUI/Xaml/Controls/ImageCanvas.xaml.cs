@@ -268,6 +268,10 @@ public sealed partial class ImageCanvas : UserControlBase
     // Line endpoint manipulation
     private bool _isDraggingLineStart = false;
     private bool _isDraggingLineEnd = false;
+    private bool _isDraggingLineMove = false;
+    private Point _lineMoveStartPoint;
+    private System.Numerics.Vector2 _lineMoveInitialOffset;
+    private System.Numerics.Vector2 _lineMoveInitialEndPoint;
 
     public ImageCanvas()
     {
@@ -493,14 +497,9 @@ public sealed partial class ImageCanvas : UserControlBase
             var rect = (!IsCropModeEnabled) ? CropRect : IsTurned() ? new Rectangle(0, 0, CanvasSize.Height, CanvasSize.Width) : new Rectangle(0, 0, CanvasSize.Width, CanvasSize.Height);
             ImageCanvasRenderOptions options = new(Orientation, CanvasSize, rect);
             
-            // Filter out the selected shape if it's being manipulated
-            var drawablesToRender = Drawables;
-            if (_selectedShape != null && _selectedShapeIndex >= 0)
-            {
-                drawablesToRender = Drawables.Where((d, i) => i != _selectedShapeIndex);
-            }
-            
-            Win2DImageCanvasRenderer.Render([.. drawablesToRender], options, args.DrawingSession);
+            // Render all shapes including selected ones
+            // The preview shape overlay will show the manipulation state
+            Win2DImageCanvasRenderer.Render([.. Drawables], options, args.DrawingSession);
         }
     }
 
@@ -1216,6 +1215,12 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         LineEndpointHandlesCanvas.Visibility = Visibility.Visible;
         
+        // Position the move handle line (make it cover the entire line for hit testing)
+        LineMoveHandle.X1 = x1;
+        LineMoveHandle.Y1 = y1;
+        LineMoveHandle.X2 = x2;
+        LineMoveHandle.Y2 = y2;
+        
         // Position start handle (center the handle on the endpoint)
         Canvas.SetLeft(LineStartHandle, x1 - LineHandleRadius);
         Canvas.SetTop(LineStartHandle, y1 - LineHandleRadius);
@@ -1347,6 +1352,95 @@ public sealed partial class ImageCanvas : UserControlBase
             }
             _shapeStateBeforeModification = null;
             RenderCanvas.Invalidate();
+        }
+    }
+
+    private void LineMoveHandle_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        // Change cursor to move cursor when hovering over the line
+        ProtectedCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.SizeAll);
+    }
+
+    private void LineMoveHandle_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        // Reset cursor
+        if (!_isDraggingLineMove)
+        {
+            ProtectedCursor = null;
+        }
+    }
+
+    private void LineMoveHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _isDraggingLineMove = true;
+        _lineMoveStartPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
+        
+        // Capture initial positions
+        if (_selectedShape is LineDrawable line)
+        {
+            _lineMoveInitialOffset = line.Offset;
+            _lineMoveInitialEndPoint = line.EndPoint;
+        }
+        else if (_selectedShape is ArrowDrawable arrow)
+        {
+            _lineMoveInitialOffset = arrow.Offset;
+            _lineMoveInitialEndPoint = arrow.EndPoint;
+        }
+        
+        // Capture state for undo
+        if (_selectedShape != null)
+        {
+            _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+        }
+        
+        LineMoveHandle.CapturePointer(e.Pointer);
+        e.Handled = true;
+    }
+
+    private void LineMoveHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingLineMove || _selectedShape == null)
+        {
+            return;
+        }
+
+        var currentPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
+        var deltaX = (float)(currentPoint.X - _lineMoveStartPoint.X);
+        var deltaY = (float)(currentPoint.Y - _lineMoveStartPoint.Y);
+        
+        // Move both offset and endpoint by the same delta
+        if (_selectedShape is LineDrawable line)
+        {
+            line.Offset = new System.Numerics.Vector2(_lineMoveInitialOffset.X + deltaX, _lineMoveInitialOffset.Y + deltaY);
+            line.EndPoint = new System.Numerics.Vector2(_lineMoveInitialEndPoint.X + deltaX, _lineMoveInitialEndPoint.Y + deltaY);
+            UpdatePreviewShapeFromDrawable(line);
+            ShowLineEndpointHandles(line.Offset.X, line.Offset.Y, line.EndPoint.X, line.EndPoint.Y);
+        }
+        else if (_selectedShape is ArrowDrawable arrow)
+        {
+            arrow.Offset = new System.Numerics.Vector2(_lineMoveInitialOffset.X + deltaX, _lineMoveInitialOffset.Y + deltaY);
+            arrow.EndPoint = new System.Numerics.Vector2(_lineMoveInitialEndPoint.X + deltaX, _lineMoveInitialEndPoint.Y + deltaY);
+            UpdatePreviewShapeFromDrawable(arrow);
+            ShowLineEndpointHandles(arrow.Offset.X, arrow.Offset.Y, arrow.EndPoint.X, arrow.EndPoint.Y);
+        }
+        
+        e.Handled = true;
+    }
+
+    private void LineMoveHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isDraggingLineMove)
+        {
+            _isDraggingLineMove = false;
+            LineMoveHandle.ReleasePointerCaptures();
+            
+            // Reset cursor
+            ProtectedCursor = null;
+            
+            // Fire modification event
+            CompleteLineEndpointDrag();
+            
+            e.Handled = true;
         }
     }
 

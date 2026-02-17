@@ -69,6 +69,16 @@
 
                 <!--  Line/Arrow Endpoint Handles  -->
                 <Canvas x:Name="LineEndpointHandlesCanvas" Visibility="Collapsed">
+                    <!--  Invisible thick line for hit testing and moving  -->
+                    <Line
+                        x:Name="LineMoveHandle"
+                        Stroke="Transparent"
+                        StrokeThickness="20"
+                        PointerPressed="LineMoveHandle_PointerPressed"
+                        PointerMoved="LineMoveHandle_PointerMoved"
+                        PointerReleased="LineMoveHandle_PointerReleased"
+                        PointerEntered="LineMoveHandle_PointerEntered"
+                        PointerExited="LineMoveHandle_PointerExited" />
                     <Ellipse
                         x:Name="LineStartHandle"
                         Width="12"
