@@ -4,17 +4,17 @@ using CaptureTool.Infrastructure.Implementations.UseCases;
 
 namespace CaptureTool.Application.Implementations.UseCases.AudioCapture;
 
-public sealed partial class AudioCaptureStopUseCase : UseCase, IAudioCaptureStopUseCase
+public sealed partial class AudioCaptureStartUseCase : UseCase, IAudioCaptureStartUseCase
 {
     private readonly IAudioCaptureHandler _audioCaptureHandler;
 
-    public AudioCaptureStopUseCase(IAudioCaptureHandler audioCaptureHandler)
+    public AudioCaptureStartUseCase(IAudioCaptureHandler audioCaptureHandler)
     {
         _audioCaptureHandler = audioCaptureHandler;
     }
 
     public override void Execute()
     {
-        _audioCaptureHandler.StopCapture();
+        _audioCaptureHandler.StartCapture();
     }
 }

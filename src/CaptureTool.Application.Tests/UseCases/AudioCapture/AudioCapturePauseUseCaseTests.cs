@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Implementations.UseCases.AudioCapture;
-using CaptureTool.Domain.Audio.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.AudioCapture;
@@ -21,13 +21,13 @@ public class AudioCapturePauseUseCaseTests
     public void Execute_ShouldCallPauseOnService()
     {
         // Arrange
-        var service = Fixture.Freeze<Mock<IAudioCaptureService>>();
+        var service = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
         var useCase = Fixture.Create<AudioCapturePauseUseCase>();
 
         // Act
         useCase.Execute();
 
         // Assert
-        service.Verify(s => s.Pause(), Times.Once);
+        service.Verify(s => s.PauseCapture(), Times.Once);
     }
 }

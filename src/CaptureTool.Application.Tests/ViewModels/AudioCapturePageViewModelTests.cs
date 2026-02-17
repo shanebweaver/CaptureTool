@@ -2,7 +2,7 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Implementations.ViewModels;
 using CaptureTool.Application.Interfaces.UseCases.AudioCapture;
-using CaptureTool.Domain.Audio.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
 
@@ -21,13 +21,13 @@ public class AudioCapturePageViewModelTests
         Fixture = new Fixture()
             .Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
-        var audioCaptureService = Fixture.Freeze<Mock<IAudioCaptureService>>();
-        audioCaptureService.Setup(s => s.IsPlaying).Returns(false);
-        audioCaptureService.Setup(s => s.IsPaused).Returns(false);
-        audioCaptureService.Setup(s => s.IsMuted).Returns(false);
-        audioCaptureService.Setup(s => s.IsDesktopAudioEnabled).Returns(false);
+        var audioCaptureHandler = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
+        audioCaptureHandler.Setup(s => s.IsRecording).Returns(false);
+        audioCaptureHandler.Setup(s => s.IsPaused).Returns(false);
+        audioCaptureHandler.Setup(s => s.IsMuted).Returns(false);
+        audioCaptureHandler.Setup(s => s.IsDesktopAudioEnabled).Returns(false);
 
-        Fixture.Freeze<Mock<IAudioCapturePlayUseCase>>();
+        Fixture.Freeze<Mock<IAudioCaptureStartUseCase>>();
         Fixture.Freeze<Mock<IAudioCaptureStopUseCase>>();
         Fixture.Freeze<Mock<IAudioCapturePauseUseCase>>();
         Fixture.Freeze<Mock<IAudioCaptureMuteUseCase>>();
@@ -40,7 +40,7 @@ public class AudioCapturePageViewModelTests
     {
         // Arrange
         var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var playAction = Fixture.Freeze<Mock<IAudioCapturePlayUseCase>>();
+        var playAction = Fixture.Freeze<Mock<IAudioCaptureStartUseCase>>();
         var vm = Create();
 
         // Assert initial state
@@ -128,14 +128,14 @@ public class AudioCapturePageViewModelTests
     public void ViewModel_ShouldSyncStateFromService_WhenPlayingStateChanges()
     {
         // Arrange
-        var audioCaptureService = Fixture.Freeze<Mock<IAudioCaptureService>>();
+        var audioCaptureHandler = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
         var vm = Create();
 
         Assert.IsFalse(vm.IsPlaying);
         Assert.IsTrue(vm.CanPlay);
 
         // Act
-        audioCaptureService.Raise(s => s.PlayingStateChanged += null, audioCaptureService.Object, true);
+        audioCaptureHandler.Raise(s => s.CaptureStateChanged += null, audioCaptureHandler.Object, true);
 
         // Assert
         Assert.IsTrue(vm.IsPlaying);
@@ -146,13 +146,13 @@ public class AudioCapturePageViewModelTests
     public void ViewModel_ShouldSyncStateFromService_WhenPausedStateChanges()
     {
         // Arrange
-        var audioCaptureService = Fixture.Freeze<Mock<IAudioCaptureService>>();
+        var audioCaptureHandler = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
         var vm = Create();
 
         Assert.IsFalse(vm.IsPaused);
 
         // Act
-        audioCaptureService.Raise(s => s.PausedStateChanged += null, audioCaptureService.Object, true);
+        audioCaptureHandler.Raise(s => s.CaptureStateChanged += null, audioCaptureHandler.Object, true);
 
         // Assert
         Assert.IsTrue(vm.IsPaused);
@@ -162,13 +162,13 @@ public class AudioCapturePageViewModelTests
     public void ViewModel_ShouldSyncStateFromService_WhenMutedStateChanges()
     {
         // Arrange
-        var audioCaptureService = Fixture.Freeze<Mock<IAudioCaptureService>>();
+        var audioCaptureHandler = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
         var vm = Create();
 
         Assert.IsFalse(vm.IsMuted);
 
         // Act
-        audioCaptureService.Raise(s => s.MutedStateChanged += null, audioCaptureService.Object, true);
+        audioCaptureHandler.Raise(s => s.MutedStateChanged += null, audioCaptureHandler.Object, true);
 
         // Assert
         Assert.IsTrue(vm.IsMuted);
@@ -178,13 +178,13 @@ public class AudioCapturePageViewModelTests
     public void ViewModel_ShouldSyncStateFromService_WhenDesktopAudioStateChanges()
     {
         // Arrange
-        var audioCaptureService = Fixture.Freeze<Mock<IAudioCaptureService>>();
+        var audioCaptureHandler = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
         var vm = Create();
 
         Assert.IsFalse(vm.IsDesktopAudioEnabled);
 
         // Act
-        audioCaptureService.Raise(s => s.DesktopAudioStateChanged += null, audioCaptureService.Object, true);
+        audioCaptureHandler.Raise(s => s.DesktopAudioStateChanged += null, audioCaptureHandler.Object, true);
 
         // Assert
         Assert.IsTrue(vm.IsDesktopAudioEnabled);

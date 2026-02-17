@@ -1,20 +1,20 @@
 using CaptureTool.Application.Interfaces.UseCases.AudioCapture;
-using CaptureTool.Domain.Audio.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Implementations.UseCases;
 
 namespace CaptureTool.Application.Implementations.UseCases.AudioCapture;
 
 public sealed partial class AudioCaptureToggleDesktopAudioUseCase : UseCase, IAudioCaptureToggleDesktopAudioUseCase
 {
-    private readonly IAudioCaptureService _audioCaptureService;
+    private readonly IAudioCaptureHandler _audioCaptureHandler;
 
-    public AudioCaptureToggleDesktopAudioUseCase(IAudioCaptureService audioCaptureService)
+    public AudioCaptureToggleDesktopAudioUseCase(IAudioCaptureHandler audioCaptureHandler)
     {
-        _audioCaptureService = audioCaptureService;
+        _audioCaptureHandler = audioCaptureHandler;
     }
 
     public override void Execute()
     {
-        _audioCaptureService.ToggleDesktopAudio();
+        _audioCaptureHandler.ToggleDesktopAudio();
     }
 }

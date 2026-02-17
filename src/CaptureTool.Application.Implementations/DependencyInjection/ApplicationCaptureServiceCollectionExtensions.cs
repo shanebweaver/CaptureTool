@@ -10,6 +10,7 @@ public static class ApplicationCaptureServiceCollectionExtensions
     {
         services.AddSingleton<IImageCaptureHandler, CaptureToolImageCaptureHandler>();
         services.AddSingleton<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
+        services.AddSingleton<IAudioCaptureHandler, CaptureToolAudioCaptureHandler>();
         return services;
     }
 }

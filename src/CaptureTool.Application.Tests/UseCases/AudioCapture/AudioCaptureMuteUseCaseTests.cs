@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Implementations.UseCases.AudioCapture;
-using CaptureTool.Domain.Audio.Interfaces;
+using CaptureTool.Domain.Capture.Interfaces;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.AudioCapture;
@@ -21,7 +21,7 @@ public class AudioCaptureMuteUseCaseTests
     public void Execute_ShouldCallToggleMuteOnService()
     {
         // Arrange
-        var service = Fixture.Freeze<Mock<IAudioCaptureService>>();
+        var service = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
         var useCase = Fixture.Create<AudioCaptureMuteUseCase>();
 
         // Act

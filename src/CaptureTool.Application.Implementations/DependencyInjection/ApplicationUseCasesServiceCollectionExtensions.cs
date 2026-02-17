@@ -88,7 +88,7 @@ public static class ApplicationUseCasesServiceCollectionExtensions
 
     public static IServiceCollection AddAudioCaptureUseCases(this IServiceCollection services)
     {
-        services.AddTransient<IAudioCapturePlayUseCase, AudioCapturePlayUseCase>();
+        services.AddTransient<IAudioCaptureStartUseCase, AudioCaptureStartUseCase>();
         services.AddTransient<IAudioCaptureStopUseCase, AudioCaptureStopUseCase>();
         services.AddTransient<IAudioCapturePauseUseCase, AudioCapturePauseUseCase>();
         services.AddTransient<IAudioCaptureMuteUseCase, AudioCaptureMuteUseCase>();
