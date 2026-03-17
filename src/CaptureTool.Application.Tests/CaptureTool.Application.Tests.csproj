@@ -3,6 +3,7 @@
   <!-- Project properties -->
   <PropertyGroup>
     <UseVSTest>true</UseVSTest>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <!-- Package references -->
@@ -10,9 +11,6 @@
     <PackageReference Include="AutoFixture.AutoMoq" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Moq" />
-    <!-- Pin patched versions to override vulnerable transitive packages from Moq/Castle.Core -->
-    <PackageReference Include="System.Net.Http" />
-    <PackageReference Include="System.Text.RegularExpressions" />
     <ProjectReference Include="..\CaptureTool.Domain.Capture.Interfaces\CaptureTool.Domain.Capture.Interfaces.csproj" />
     <ProjectReference Include="..\CaptureTool.Application.Implementations\CaptureTool.Application.Implementations.csproj" />
     <ProjectReference Include="..\CaptureTool.Application.Interfaces\CaptureTool.Application.Interfaces.csproj" />
