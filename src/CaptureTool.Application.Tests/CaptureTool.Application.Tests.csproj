@@ -19,16 +19,6 @@
     <PackageReference Update="MSTest.Analyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <VersionOverride>4.1.0</VersionOverride>
-    </PackageReference>
-    <PackageReference Update="Microsoft.NET.Test.Sdk">
-      <VersionOverride>18.3.0</VersionOverride>
-    </PackageReference>
-    <PackageReference Update="MSTest.TestAdapter">
-      <VersionOverride>4.1.0</VersionOverride>
-    </PackageReference>
-    <PackageReference Update="MSTest.TestFramework">
-      <VersionOverride>4.1.0</VersionOverride>
     </PackageReference>
   </ItemGroup>
 
