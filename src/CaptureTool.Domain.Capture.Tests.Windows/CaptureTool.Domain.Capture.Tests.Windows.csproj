@@ -19,6 +19,9 @@
     <PackageReference Include="AutoFixture.AutoMoq" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Moq" />
+    <!-- Pin patched versions to override vulnerable transitive packages from Moq/Castle.Core -->
+    <PackageReference Include="System.Net.Http" />
+    <PackageReference Include="System.Text.RegularExpressions" />
     <PackageReference Update="MSTest.Analyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
