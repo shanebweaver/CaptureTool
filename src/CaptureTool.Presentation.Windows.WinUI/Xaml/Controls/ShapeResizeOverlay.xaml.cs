@@ -31,6 +31,8 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
     public event EventHandler<RectangleF>? BoundsChanged;
     public event EventHandler? ResizeComplete;
 
+    public bool IsManipulating => _activeHandle != ResizeHandle.None;
+
     private ResizeHandle _activeHandle = ResizeHandle.None;
     private Point _handleStartPoint;
     private RectangleF _initialBounds;
