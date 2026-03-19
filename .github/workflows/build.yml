@@ -39,7 +39,7 @@ jobs:
       shell: pwsh
 
     - name: Restore .NET dependencies
-      run: dotnet restore
+      run: msbuild CaptureTool.slnx /t:Restore /p:Configuration=Release /p:Platform=${{ matrix.platform }}
 
     - name: Build solution
       run: msbuild CaptureTool.slnx /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:UapAppxPackageBuildMode=StoreUpload
