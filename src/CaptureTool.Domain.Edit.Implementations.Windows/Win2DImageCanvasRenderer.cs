@@ -3,6 +3,7 @@ using CaptureTool.Domain.Edit.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces.Drawable;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
+using Microsoft.Graphics.Canvas.Text;
 using Microsoft.UI;
 using System.Numerics;
 using Windows.Foundation;
@@ -75,7 +76,12 @@ public static partial class Win2DImageCanvasRenderer
     {
         Vector2 textPosition = new(drawable.Offset.X, drawable.Offset.Y);
         Color color = Color.FromArgb(drawable.Color.A, drawable.Color.R, drawable.Color.G, drawable.Color.B);
-        drawingSession.DrawText(drawable.Text, textPosition, color);
+        using var textFormat = new CanvasTextFormat
+        {
+            FontFamily = drawable.FontFamily,
+            FontSize = drawable.FontSize,
+        };
+        drawingSession.DrawText(drawable.Text, textPosition, color, textFormat);
     }
 
     private static void DrawRectangle(RectangleDrawable drawable, CanvasDrawingSession drawingSession)

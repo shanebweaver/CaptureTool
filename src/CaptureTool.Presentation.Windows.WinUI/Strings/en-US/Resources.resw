@@ -910,4 +910,32 @@ SOFTWARE.
     <value>Zoom:</value>
     <comment>The label for the zoom slider on the image edit page.</comment>
   </data>
+  <data name="ImageEdit_TextButton.Label" xml:space="preserve">
+    <value>Text</value>
+    <comment>The label for the text button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
+    <value>T</value>
+    <comment>The access key for the text button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Add text</value>
+    <comment>The tooltip for the text button on the image edit page.</comment>
+  </data>
+  <data name="TextToolbar_Content.Text" xml:space="preserve">
+    <value>Text</value>
+    <comment>The label for the text input in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontColor.Text" xml:space="preserve">
+    <value>Font Color</value>
+    <comment>The label for the font color picker in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontFamily.Text" xml:space="preserve">
+    <value>Font Family</value>
+    <comment>The label for the font family input in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontSize.Text" xml:space="preserve">
+    <value>Font Size</value>
+    <comment>The label for the font size control in the text toolbar.</comment>
+  </data>
 </root>

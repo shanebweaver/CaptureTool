@@ -374,4 +374,139 @@ public sealed class ImageEditPageViewModelTests
         // Assert
         vm.Drawables.Count.Should().Be(1, "Drawable should not be removed with invalid index");
     }
+
+    // ------------------------------------------------------------------
+    // TEST: OnTextPlaced — should ignore when text mode is off
+    // ------------------------------------------------------------------
+    [TestMethod]
+    public void OnTextPlaced_ShouldIgnore_WhenTextModeIsOff()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text))
+                     .Returns(true);
+
+        var vm = Create();
+
+        // Text mode is off by default
+        int initialCount = vm.Drawables.Count;
+        vm.UpdateTextContentCommand.Execute("Hello");
+
+        // Act
+        vm.OnTextPlaced(new System.Numerics.Vector2(50, 50));
+
+        // Assert
+        vm.Drawables.Count.Should().Be(initialCount, "No drawable should be added when not in text mode");
+    }
+
+    // ------------------------------------------------------------------
+    // TEST: OnTextPlaced — should ignore when feature is disabled
+    // ------------------------------------------------------------------
+    [TestMethod]
+    public void OnTextPlaced_ShouldIgnore_WhenFeatureIsDisabled()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text))
+                     .Returns(false);
+
+        var vm = Create();
+
+        // Try to toggle text mode (command is disabled when feature is off)
+        int initialCount = vm.Drawables.Count;
+
+        // Act - call directly with position
+        vm.OnTextPlaced(new System.Numerics.Vector2(50, 50));
+
+        // Assert
+        vm.Drawables.Count.Should().Be(initialCount, "No drawable should be added when feature is disabled");
+    }
+
+    // ------------------------------------------------------------------
+    // TEST: OnTextPlaced — should ignore when text content is empty
+    // ------------------------------------------------------------------
+    [TestMethod]
+    public void OnTextPlaced_ShouldIgnore_WhenTextContentIsEmpty()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text))
+                     .Returns(true);
+
+        var vm = Create();
+
+        // Toggle text mode on
+        vm.ToggleTextModeCommand.Execute();
+
+        // Text content is empty by default
+        int initialCount = vm.Drawables.Count;
+
+        // Act
+        vm.OnTextPlaced(new System.Numerics.Vector2(50, 50));
+
+        // Assert
+        vm.Drawables.Count.Should().Be(initialCount, "No drawable should be added when text content is empty");
+    }
+
+    // ------------------------------------------------------------------
+    // TEST: OnTextPlaced — should add TextDrawable and push undo
+    // ------------------------------------------------------------------
+    [TestMethod]
+    public void OnTextPlaced_ShouldAddDrawable_AndPushUndo()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text))
+                     .Returns(true);
+
+        var vm = Create();
+
+        // Toggle text mode on
+        vm.ToggleTextModeCommand.Execute();
+
+        // Set text content
+        vm.UpdateTextContentCommand.Execute("Hello World");
+
+        int initialCount = vm.Drawables.Count;
+
+        // Act
+        vm.OnTextPlaced(new System.Numerics.Vector2(100f, 200f));
+
+        // Assert
+        vm.Drawables.Count.Should().Be(initialCount + 1, "A TextDrawable should be added");
+        vm.Drawables.Last().Should().BeOfType<TextDrawable>("The new drawable should be a TextDrawable");
+        var textDrawable = (TextDrawable)vm.Drawables.Last();
+        textDrawable.Text.Should().Be("Hello World");
+        textDrawable.Offset.X.Should().Be(100f);
+        textDrawable.Offset.Y.Should().Be(200f);
+        vm.HasUndoStack.Should().BeTrue("Undo stack should have an entry after placing text");
+        vm.HasRedoStack.Should().BeFalse("Redo stack should be empty after new action");
+    }
+
+    // ------------------------------------------------------------------
+    // TEST: ToggleTextMode — should disable other modes
+    // ------------------------------------------------------------------
+    [TestMethod]
+    public void ToggleTextMode_ShouldDisableOtherModes()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Text))
+                     .Returns(true);
+        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+                     .Returns(true);
+
+        var vm = Create();
+
+        // Enable crop mode first
+        vm.ToggleCropModeCommand.Execute();
+        vm.IsInCropMode.Should().BeTrue();
+
+        // Act - toggle text mode on
+        vm.ToggleTextModeCommand.Execute();
+
+        // Assert
+        vm.IsInTextMode.Should().BeTrue("Text mode should be enabled");
+        vm.IsInCropMode.Should().BeFalse("Crop mode should be disabled when text mode is enabled");
+    }
 }

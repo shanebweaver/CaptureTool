@@ -25,6 +25,7 @@ public interface IImageEditPageViewModel : IViewModel
     IAsyncAppCommand PrintCommand { get; }
     IAsyncAppCommand ShareCommand { get; }
     IAppCommand ToggleShapesModeCommand { get; }
+    IAppCommand ToggleTextModeCommand { get; }
     IAppCommand<Color> UpdateChromaKeyColorCommand { get; }
     IAppCommand<ImageOrientation> UpdateOrientationCommand { get; }
     IAppCommand<Rectangle> UpdateCropRectCommand { get; }
@@ -36,6 +37,10 @@ public interface IImageEditPageViewModel : IViewModel
     IAppCommand<Color> UpdateShapeStrokeColorCommand { get; }
     IAppCommand<Color> UpdateShapeFillColorCommand { get; }
     IAppCommand<int> UpdateShapeStrokeWidthCommand { get; }
+    IAppCommand<Color> UpdateTextFontColorCommand { get; }
+    IAppCommand<string?> UpdateTextFontFamilyCommand { get; }
+    IAppCommand<int> UpdateTextFontSizeCommand { get; }
+    IAppCommand<string?> UpdateTextContentCommand { get; }
     IAppCommand<int> UpdateZoomPercentageCommand { get; }
     IAppCommand<bool> UpdateAutoZoomLockCommand { get; }
     IAppCommand ZoomAndCenterCommand { get; }
@@ -50,6 +55,11 @@ public interface IImageEditPageViewModel : IViewModel
     string RotationDisplayName { get; }
     bool IsInCropMode { get; }
     bool IsInShapesMode { get; }
+    bool IsInTextMode { get; }
+    string TextContent { get; }
+    Color TextFontColor { get; }
+    string TextFontFamily { get; }
+    int TextFontSize { get; }
     ShapeType SelectedShapeType { get; }
     Color ShapeStrokeColor { get; }
     Color ShapeFillColor { get; }
@@ -63,6 +73,7 @@ public interface IImageEditPageViewModel : IViewModel
     int SelectedChromaKeyColorOption { get; }
     bool IsChromaKeyAddOnOwned { get; }
     bool IsShapesFeatureEnabled { get; }
+    bool IsTextFeatureEnabled { get; }
     int ZoomPercentage { get; }
     bool IsAutoZoomLocked { get; }
 
@@ -71,6 +82,7 @@ public interface IImageEditPageViewModel : IViewModel
     void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint);
     void OnShapeDeleted(int shapeIndex);
     void OnShapeModified(int shapeIndex, IDrawable shape);
+    void OnTextPlaced(Vector2 position);
     
     /// <summary>
     /// Adds a drawable to the canvas. Primarily for testing purposes.

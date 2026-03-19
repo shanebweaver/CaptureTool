@@ -105,6 +105,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.OnShapeModified(e.ShapeIndex, e.OldState);
     }
 
+    private void ImageCanvas_TextPlaced(object? _, System.Numerics.Vector2 e)
+    {
+        ViewModel.OnTextPlaced(e);
+    }
+
     private void ChromaKeyAppBarToggleButton_IsCheckedChanged(object sender, RoutedEventArgs _)
     {
         if (sender is AppBarToggleButton toggleButton)
@@ -150,6 +155,26 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ShapeToolbar_StrokeWidthChanged(object _, int e)
     {
         ViewModel.UpdateShapeStrokeWidthCommand.Execute(e);
+    }
+
+    private void TextToolbar_FontColorChanged(object _, Color e)
+    {
+        ViewModel.UpdateTextFontColorCommand.Execute(e);
+    }
+
+    private void TextToolbar_FontFamilyChanged(object _, string e)
+    {
+        ViewModel.UpdateTextFontFamilyCommand.Execute(e);
+    }
+
+    private void TextToolbar_FontSizeChanged(object _, int e)
+    {
+        ViewModel.UpdateTextFontSizeCommand.Execute(e);
+    }
+
+    private void TextToolbar_TextContentChanged(object _, string e)
+    {
+        ViewModel.UpdateTextContentCommand.Execute(e);
     }
 
     private async void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)

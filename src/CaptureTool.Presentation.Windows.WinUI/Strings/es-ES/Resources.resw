@@ -683,4 +683,25 @@ SOFTWARE.
   <data name="ImageEdit_ZoomLabel.Text" xml:space="preserve">
     <value>Zoom:</value>
   </data>
+  <data name="ImageEdit_TextButton.Label" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
+    <value>T</value>
+  </data>
+  <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Add text</value>
+  </data>
+  <data name="TextToolbar_Content.Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="TextToolbar_FontColor.Text" xml:space="preserve">
+    <value>Font Color</value>
+  </data>
+  <data name="TextToolbar_FontFamily.Text" xml:space="preserve">
+    <value>Font Family</value>
+  </data>
+  <data name="TextToolbar_FontSize.Text" xml:space="preserve">
+    <value>Font Size</value>
+  </data>
 </root>
