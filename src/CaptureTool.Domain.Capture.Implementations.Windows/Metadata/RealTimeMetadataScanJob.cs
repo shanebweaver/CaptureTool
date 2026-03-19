@@ -1,6 +1,7 @@
 using CaptureTool.Application.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
+using CaptureTool.Domain.Capture.Interfaces.Metadata.Grooming;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using System.Collections.Concurrent;
 using System.Text.Json;
@@ -16,6 +17,7 @@ public sealed class RealTimeMetadataScanJob : IRealTimeMetadataScanJob
     private readonly Guid _jobId;
     private readonly string _filePath;
     private readonly IMetadataScannerRegistry _registry;
+    private readonly IMetadataGroomingPipeline? _groomingPipeline;
     private readonly ILogService _logService;
     private readonly ConcurrentBag<MetadataEntry> _entries;
     private readonly Dictionary<string, string> _scannerInfo;
@@ -29,11 +31,13 @@ public sealed class RealTimeMetadataScanJob : IRealTimeMetadataScanJob
         Guid jobId,
         string filePath,
         IMetadataScannerRegistry registry,
-        ILogService logService)
+        ILogService logService,
+        IMetadataGroomingPipeline? groomingPipeline = null)
     {
         _jobId = jobId;
         _filePath = filePath;
         _registry = registry;
+        _groomingPipeline = groomingPipeline;
         _logService = logService;
         _entries = new ConcurrentBag<MetadataEntry>();
         _scannerInfo = new Dictionary<string, string>();
@@ -135,6 +139,7 @@ public sealed class RealTimeMetadataScanJob : IRealTimeMetadataScanJob
 
     /// <summary>
     /// Finalizes the metadata collection and saves to disk.
+    /// If a grooming pipeline is configured, also runs Layer 2 grooming and saves a refined metadata file.
     /// </summary>
     public async Task FinalizeAndSaveAsync()
     {
@@ -150,13 +155,34 @@ public sealed class RealTimeMetadataScanJob : IRealTimeMetadataScanJob
                 _scannerInfo
             );
 
-            // Save metadata file next to the media file
+            // Save raw metadata file next to the media file
             _metadataFilePath = Path.ChangeExtension(_filePath, MetadataFile.FileExtension);
             await SaveMetadataFileAsync(metadataFile, _metadataFilePath);
 
+            _logService.LogInformation($"Saved metadata to: {_metadataFilePath}");
+
+            // Run Layer 2 grooming pipeline if configured
+            if (_groomingPipeline != null)
+            {
+                try
+                {
+                    string? insightsPath = await _groomingPipeline.ProcessAndSaveAsync(
+                        metadataFile,
+                        _metadataFilePath);
+
+                    if (insightsPath != null)
+                    {
+                        _logService.LogInformation($"Saved refined metadata (insights) to: {insightsPath}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logService.LogException(ex, $"Grooming pipeline failed: {ex.Message}");
+                }
+            }
+
             _status = MetadataScanJobStatus.Completed;
             StatusChanged?.Invoke(this, _status);
-            _logService.LogInformation($"Saved metadata to: {_metadataFilePath}");
         }
         catch (Exception ex)
         {

@@ -1,8 +1,11 @@
 using CaptureTool.Application.Interfaces;
 using CaptureTool.Domain.Capture.Implementations.Windows.Metadata;
+using CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Grooming;
+using CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Grooming.Groomers;
 using CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Scanners;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
+using CaptureTool.Domain.Capture.Interfaces.Metadata.Grooming;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,6 +24,10 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
         services.AddSingleton<IMetadataScanningService, MetadataScanningService>();
         services.AddSingleton<IRealTimeMetadataScanJobFactory, RealTimeMetadataScanJobFactory>();
 
+        // Metadata grooming services (Layer 2)
+        services.AddSingleton<IMetadataGroomerRegistry, MetadataGroomerRegistry>();
+        services.AddSingleton<IMetadataGroomingPipeline, MetadataGroomingPipeline>();
+
         // Example scanners
         //services.AddSingleton<IVideoMetadataScanner, BasicVideoFrameScanner>();
         //services.AddSingleton<IAudioMetadataScanner, BasicAudioSampleScanner>();
@@ -28,12 +35,16 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
         // OCR scanner
         services.AddSingleton<IVideoMetadataScanner, WindowsMediaOcrVideoMetadataScanner>();
 
+        // Example groomers (Layer 2)
+        services.AddSingleton<IMetadataGroomer, OcrTextConsolidationGroomer>();
+        services.AddSingleton<IMetadataGroomer, AudioLevelGroomer>();
+
         return services;
     }
 
     /// <summary>
-    /// Registers metadata scanners with the registry.
-    /// Call this after service registration to initialize the registry.
+    /// Registers metadata scanners and groomers with their respective registries.
+    /// Call this after service registration to initialize the registries.
     /// </summary>
     public static IServiceProvider RegisterMetadataScanners(this IServiceProvider serviceProvider)
     {
@@ -67,6 +78,22 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
             catch (InvalidOperationException ex)
             {
                 logService?.LogWarning($"Failed to register audio scanner '{scanner.ScannerId}': {ex.Message}");
+            }
+        }
+
+        // Register all groomers (Layer 2)
+        var groomerRegistry = serviceProvider.GetRequiredService<IMetadataGroomerRegistry>();
+        var groomers = serviceProvider.GetServices<IMetadataGroomer>();
+        foreach (var groomer in groomers)
+        {
+            try
+            {
+                groomerRegistry.Register(groomer);
+                logService?.LogInformation($"Registered metadata groomer: {groomer.Name} ({groomer.GroomerId})");
+            }
+            catch (InvalidOperationException ex)
+            {
+                logService?.LogWarning($"Failed to register groomer '{groomer.GroomerId}': {ex.Message}");
             }
         }
 
