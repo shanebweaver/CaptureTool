@@ -19,6 +19,7 @@ using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.IO;
 using System.Numerics;
 
 namespace CaptureTool.Application.Implementations.ViewModels;
@@ -814,8 +815,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             throw new InvalidOperationException("No image to share");
         }
 
+        ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+        Stream renderedStream = await _imageCanvasExporter.RenderToStreamAsync([.. Drawables], options);
+
         nint hwnd = _windowingService.GetMainWindowHandle();
-        await _shareService.ShareAsync(ImageFile.FilePath, hwnd);
+        await _shareService.ShareStreamAsync(renderedStream, hwnd);
     }
 
     public void OnCropInteractionComplete(Rectangle oldCropRect)

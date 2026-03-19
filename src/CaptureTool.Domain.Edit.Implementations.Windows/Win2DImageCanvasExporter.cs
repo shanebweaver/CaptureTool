@@ -35,6 +35,27 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
         await _clipboardService.CopyStreamAsync(clipboardImage);
     }
 
+    public async Task<Stream> RenderToStreamAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
+    {
+        float renderWidth = options.CropRect.Width;
+        float renderHeight = options.CropRect.Height;
+
+        using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, options.Dpi);
+        using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
+
+        Win2DImageCanvasRenderer.Render(drawables, options, drawingSession);
+        drawingSession.Flush();
+
+        using var winrtStream = new InMemoryRandomAccessStream();
+        await renderTarget.SaveAsync(winrtStream, CanvasBitmapFileFormat.Png);
+
+        var memStream = new MemoryStream();
+        winrtStream.Seek(0);
+        await winrtStream.AsStream().CopyToAsync(memStream);
+        memStream.Seek(0, SeekOrigin.Begin);
+        return memStream;
+    }
+
     public async Task SaveImageAsync(string filePath, IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
         float renderWidth = options.CropRect.Width;
