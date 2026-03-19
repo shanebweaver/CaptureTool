@@ -15,7 +15,7 @@ namespace CaptureTool.Application.Implementations.Capture;
 
 public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 {
-    enum CaptureState
+    internal enum CaptureState
     {
         Idle,
         Recording,
@@ -310,7 +310,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         return $"Capture_{timestamp:yyyy-MM-dd}_{timestamp:FFFFF}.mp4";
     }
 
-    private void UpdateCaptureState(CaptureState newState)
+    internal void UpdateCaptureState(CaptureState newState)
     {
         _captureState = newState;
     }

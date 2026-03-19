@@ -19,12 +19,12 @@
 
         <!--  Toolbar  -->
         <CommandBar DefaultLabelPosition="Right" IsOpen="False">
-            <!--  Play  -->
+            <!--  Start Recording  -->
             <AppBarButton
                 x:Uid="AudioCapture_PlayButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.PlayCommand)}"
+                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.StartCommand)}"
                 Icon="Play"
-                IsEnabled="{x:Bind ViewModel.CanPlay, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.CanStartRecording, Mode=OneWay}"
                 Label="Play" />
 
             <!--  Pause  -->
@@ -32,7 +32,7 @@
                 x:Uid="AudioCapture_PauseButton"
                 Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.PauseCommand)}"
                 Icon="Pause"
-                IsEnabled="{x:Bind ViewModel.IsPlaying, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
                 Label="Pause" />
 
             <!--  Stop  -->
@@ -40,7 +40,7 @@
                 x:Uid="AudioCapture_StopButton"
                 Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.StopCommand)}"
                 Icon="Stop"
-                IsEnabled="{x:Bind ViewModel.IsPlaying, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
                 Label="Stop" />
 
             <AppBarSeparator />

@@ -32,7 +32,7 @@ jobs:
         echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" >> $env:GITHUB_ENV
 
     - name: Restore .NET dependencies
-      run: dotnet restore
+      run: msbuild CaptureTool.slnx /t:Restore /p:Configuration=Release /p:Platform=x64
 
     - name: Build solution
       run: msbuild CaptureTool.slnx /p:Configuration=Release /p:Platform=x64

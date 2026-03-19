@@ -12,7 +12,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
 {
     public readonly struct ActivityIds
     {
-        public static readonly string Play = "Play";
+        public static readonly string Start = "Start";
         public static readonly string Stop = "Stop";
         public static readonly string Pause = "Pause";
         public static readonly string Mute = "Mute";
@@ -21,19 +21,19 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
 
     private const string TelemetryContext = "AudioCapturePage";
 
-    public IAppCommand PlayCommand { get; }
+    public IAppCommand StartCommand { get; }
     public IAppCommand StopCommand { get; }
     public IAppCommand PauseCommand { get; }
     public IAppCommand MuteCommand { get; }
     public IAppCommand ToggleDesktopAudioCommand { get; }
 
-    public bool CanPlay
+    public bool CanStartRecording
     {
         get => field;
         private set => Set(ref field, value);
     }
 
-    public bool IsPlaying
+    public bool IsRecording
     {
         get => field;
         private set => Set(ref field, value);
@@ -58,7 +58,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
     }
 
     private readonly IAudioCaptureHandler _audioCaptureHandler;
-    private readonly IAudioCaptureStartUseCase _playAction;
+    private readonly IAudioCaptureStartUseCase _startAction;
     private readonly IAudioCaptureStopUseCase _stopAction;
     private readonly IAudioCapturePauseUseCase _pauseAction;
     private readonly IAudioCaptureMuteUseCase _muteAction;
@@ -66,7 +66,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
 
     public AudioCapturePageViewModel(
         IAudioCaptureHandler audioCaptureHandler,
-        IAudioCaptureStartUseCase playAction,
+        IAudioCaptureStartUseCase startAction,
         IAudioCaptureStopUseCase stopAction,
         IAudioCapturePauseUseCase pauseAction,
         IAudioCaptureMuteUseCase muteAction,
@@ -74,14 +74,14 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
         ITelemetryService telemetryService)
     {
         _audioCaptureHandler = audioCaptureHandler;
-        _playAction = playAction;
+        _startAction = startAction;
         _stopAction = stopAction;
         _pauseAction = pauseAction;
         _muteAction = muteAction;
         _toggleDesktopAudioAction = toggleDesktopAudioAction;
 
         TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
-        PlayCommand = commandFactory.Create(ActivityIds.Play, Play);
+        StartCommand = commandFactory.Create(ActivityIds.Start, Start);
         StopCommand = commandFactory.Create(ActivityIds.Stop, Stop);
         PauseCommand = commandFactory.Create(ActivityIds.Pause, Pause);
         MuteCommand = commandFactory.Create(ActivityIds.Mute, Mute);
@@ -93,17 +93,21 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
         _audioCaptureHandler.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
 
         // Initialize state from service
-        IsPlaying = _audioCaptureHandler.IsRecording;
+        RefreshAudioCaptureStateProperties();
+    }
+
+    private void RefreshAudioCaptureStateProperties()
+    {
+        CanStartRecording = !_audioCaptureHandler.IsRecording;
+        IsRecording = _audioCaptureHandler.IsRecording;
         IsPaused = _audioCaptureHandler.IsPaused;
         IsMuted = _audioCaptureHandler.IsMuted;
         IsDesktopAudioEnabled = _audioCaptureHandler.IsDesktopAudioEnabled;
-        CanPlay = !_audioCaptureHandler.IsRecording;
     }
 
     private void OnCaptureStateChanged(object? sender, AudioCaptureState value)
     {
-        IsPlaying = value == AudioCaptureState.Recording;
-        CanPlay = value != AudioCaptureState.Recording;
+        RefreshAudioCaptureStateProperties();
     }
 
     private void OnMutedStateChanged(object? sender, bool value)
@@ -116,9 +120,9 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase, IAudioCap
         IsDesktopAudioEnabled = value;
     }
 
-    private void Play()
+    private void Start()
     {
-        _playAction.Execute();
+        _startAction.Execute();
     }
 
     private void Stop()

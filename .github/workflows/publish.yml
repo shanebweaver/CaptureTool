@@ -23,7 +23,7 @@ jobs:
     
     steps:
     - name: Download ${{ matrix.platform }} artifacts
-      uses: actions/download-artifact@v8
+      uses: actions/download-artifact@v7
       with:
         name: StorePackage-${{ matrix.platform }}
         path: packages
