@@ -21,9 +21,9 @@
                 <TextBlock x:Uid="TextToolbar_Content" />
                 <TextBox
                     x:Name="TextContentBox"
+                    x:Uid="TextToolbar_ContentBox"
                     Width="160"
                     MaxLength="500"
-                    PlaceholderText="Enter text..."
                     Text="{x:Bind TextContent, Mode=OneWay}"
                     TextChanged="TextContentBox_TextChanged" />
             </StackPanel>
