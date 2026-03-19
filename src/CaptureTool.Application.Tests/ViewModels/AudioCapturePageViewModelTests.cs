@@ -44,16 +44,16 @@ public class AudioCapturePageViewModelTests
         var vm = Create();
 
         // Assert initial state
-        Assert.IsTrue(vm.CanPlay);
-        Assert.IsFalse(vm.IsPlaying);
+        Assert.IsTrue(vm.CanStartRecording);
+        Assert.IsFalse(vm.IsRecording);
 
         // Act
-        vm.PlayCommand.Execute();
+        vm.StartCommand.Execute();
 
         // Assert
         playAction.Verify(a => a.Execute(), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Play, It.IsAny<string>()), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Play, It.IsAny<string>()), Times.Once);
+        telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Start, It.IsAny<string>()), Times.Once);
+        telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Start, It.IsAny<string>()), Times.Once);
     }
 
     [TestMethod]
@@ -131,15 +131,16 @@ public class AudioCapturePageViewModelTests
         var audioCaptureHandler = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
         var vm = Create();
 
-        Assert.IsFalse(vm.IsPlaying);
-        Assert.IsTrue(vm.CanPlay);
+        Assert.IsFalse(vm.IsRecording);
+        Assert.IsTrue(vm.CanStartRecording);
 
         // Act
-        audioCaptureHandler.Raise(s => s.CaptureStateChanged += null, audioCaptureHandler.Object, true);
+        audioCaptureHandler.Setup(s => s.IsRecording).Returns(true);
+        audioCaptureHandler.Raise(s => s.CaptureStateChanged += null, audioCaptureHandler.Object, AudioCaptureState.Recording);
 
         // Assert
-        Assert.IsTrue(vm.IsPlaying);
-        Assert.IsFalse(vm.CanPlay);
+        Assert.IsTrue(vm.IsRecording);
+        Assert.IsFalse(vm.CanStartRecording);
     }
 
     [TestMethod]
@@ -152,7 +153,8 @@ public class AudioCapturePageViewModelTests
         Assert.IsFalse(vm.IsPaused);
 
         // Act
-        audioCaptureHandler.Raise(s => s.CaptureStateChanged += null, audioCaptureHandler.Object, true);
+        audioCaptureHandler.Setup(s => s.IsPaused).Returns(true);
+        audioCaptureHandler.Raise(s => s.CaptureStateChanged += null, audioCaptureHandler.Object, AudioCaptureState.Paused);
 
         // Assert
         Assert.IsTrue(vm.IsPaused);
@@ -168,6 +170,7 @@ public class AudioCapturePageViewModelTests
         Assert.IsFalse(vm.IsMuted);
 
         // Act
+        audioCaptureHandler.Setup(s => s.IsMuted).Returns(true);
         audioCaptureHandler.Raise(s => s.MutedStateChanged += null, audioCaptureHandler.Object, true);
 
         // Assert

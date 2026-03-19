@@ -1,8 +1,9 @@
-<Project Sdk="MSTest.Sdk/3.6.4">
+﻿<Project Sdk="MSTest.Sdk/3.6.4">
 
   <!-- Project properties -->
   <PropertyGroup>
     <UseVSTest>true</UseVSTest>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <!-- Package references -->
