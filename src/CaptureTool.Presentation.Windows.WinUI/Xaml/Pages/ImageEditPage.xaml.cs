@@ -1,15 +1,20 @@
 using CaptureTool.Domain.Edit.Interfaces.Drawable;
 using CaptureTool.Infrastructure.Interfaces.Loading;
+using CaptureTool.Presentation.Windows.WinUI.Helpers;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Drawing;
+using WinUIPoint = global::Windows.Foundation.Point;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class ImageEditPage : ImageEditPageBase
 {
+    private MenuFlyout? _imageContextMenu;
+    private MenuFlyout? _shapeContextMenu;
+
     public ImageEditPage()
     {
         InitializeComponent();
@@ -17,6 +22,9 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
+        ImageCanvas.ImageContextMenuRequested += ImageCanvas_ImageContextMenuRequested;
+        ImageCanvas.ShapeContextMenuRequested += ImageCanvas_ShapeContextMenuRequested;
+        InitializeContextMenus();
     }
 
     ~ImageEditPage()
@@ -28,6 +36,67 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
         ImageCanvas.ShapeDeleted -= ImageCanvas_ShapeDeleted;
         ImageCanvas.ShapeModified -= ImageCanvas_ShapeModified;
+        ImageCanvas.ImageContextMenuRequested -= ImageCanvas_ImageContextMenuRequested;
+        ImageCanvas.ShapeContextMenuRequested -= ImageCanvas_ShapeContextMenuRequested;
+    }
+
+    private void InitializeContextMenus()
+    {
+        // Image context menu: Save, Copy, Share, Undo, Redo
+        _imageContextMenu = new MenuFlyout();
+
+        _imageContextMenu.Items.Add(new MenuFlyoutItem
+        {
+            Text = "Save",
+            Icon = new SymbolIcon(Symbol.Save),
+            Command = XamlCommandHelpers.ToICommand(ViewModel.SaveCommand)
+        });
+        _imageContextMenu.Items.Add(new MenuFlyoutItem
+        {
+            Text = "Copy",
+            Icon = new SymbolIcon(Symbol.Copy),
+            Command = XamlCommandHelpers.ToICommand(ViewModel.CopyCommand)
+        });
+        _imageContextMenu.Items.Add(new MenuFlyoutItem
+        {
+            Text = "Share",
+            Icon = new SymbolIcon(Symbol.Share),
+            Command = XamlCommandHelpers.ToICommand(ViewModel.ShareCommand)
+        });
+        _imageContextMenu.Items.Add(new MenuFlyoutSeparator());
+        _imageContextMenu.Items.Add(new MenuFlyoutItem
+        {
+            Text = "Undo",
+            Icon = new SymbolIcon(Symbol.Undo),
+            Command = XamlCommandHelpers.ToICommand(ViewModel.UndoCommand)
+        });
+        _imageContextMenu.Items.Add(new MenuFlyoutItem
+        {
+            Text = "Redo",
+            Icon = new SymbolIcon(Symbol.Redo),
+            Command = XamlCommandHelpers.ToICommand(ViewModel.RedoCommand)
+        });
+
+        // Shape context menu: Delete
+        _shapeContextMenu = new MenuFlyout();
+
+        var deleteItem = new MenuFlyoutItem
+        {
+            Text = "Delete",
+            Icon = new SymbolIcon(Symbol.Delete)
+        };
+        deleteItem.Click += (_, _) => ImageCanvas.DeleteSelectedShape();
+        _shapeContextMenu.Items.Add(deleteItem);
+    }
+
+    private void ImageCanvas_ImageContextMenuRequested(object? _, WinUIPoint position)
+    {
+        _imageContextMenu?.ShowAt(ImageCanvas, new FlyoutShowOptions { Position = position });
+    }
+
+    private void ImageCanvas_ShapeContextMenuRequested(object? _, WinUIPoint position)
+    {
+        _shapeContextMenu?.ShowAt(ImageCanvas, new FlyoutShowOptions { Position = position });
     }
 
     private string FormatZoomPercentage(int zoomPercentage)
