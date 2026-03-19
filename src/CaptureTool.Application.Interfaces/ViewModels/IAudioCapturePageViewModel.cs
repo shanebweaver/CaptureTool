@@ -5,14 +5,14 @@ namespace CaptureTool.Application.Interfaces.ViewModels;
 
 public interface IAudioCapturePageViewModel : IViewModel
 {
-    IAppCommand PlayCommand { get; }
+    IAppCommand StartCommand { get; }
     IAppCommand StopCommand { get; }
     IAppCommand PauseCommand { get; }
     IAppCommand MuteCommand { get; }
     IAppCommand ToggleDesktopAudioCommand { get; }
     
-    bool CanPlay { get; }
-    bool IsPlaying { get; }
+    bool CanStartRecording { get; }
+    bool IsRecording { get; }
     bool IsPaused { get; }
     bool IsMuted { get; }
     bool IsDesktopAudioEnabled { get; }
