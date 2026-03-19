@@ -171,6 +171,20 @@ void WindowsDesktopVideoCaptureSource::Stop()
     // Principle #3 (No Nullable Pointers): wil::com_ptr handles Release() automatically
     if (m_captureSession)
     {
+        // Explicitly close the session via IClosable before releasing the reference.
+        // The WinRT GraphicsCaptureSession destructor calls Close() -> StopCapture()
+        // internally. If StopCapture() fails (e.g., the display was disconnected),
+        // the WinRT layer converts the failure into a C++ exception via
+        // winrt::check_hresult, which propagates out of the destructor and crashes.
+        // Calling Close() here via the ABI IClosable interface (which returns HRESULT
+        // instead of throwing) ensures the session is already closed before reset()
+        // releases the last reference, preventing the destructor from calling
+        // StopCapture() in an unknown state.
+        wil::com_ptr<ABI::Windows::Foundation::IClosable> closable;
+        if (SUCCEEDED(m_captureSession->QueryInterface(IID_PPV_ARGS(closable.put()))))
+        {
+            (void)closable->Close(); // Best-effort: ignore HRESULT if close fails
+        }
         m_captureSession.reset();
     }
 

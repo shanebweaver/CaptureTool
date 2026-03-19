@@ -109,6 +109,7 @@
     </ClCompile>
     <ClCompile Include="ResultTests.cpp" />
     <ClCompile Include="ShutdownRaceConditionTests.cpp" />
+    <ClCompile Include="VideoCaptureSourceStopTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
