@@ -237,6 +237,8 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
     public event EventHandler<int>? ShapeDeleted;
     public event EventHandler<(int ShapeIndex, IDrawable OldState, IDrawable NewState)>? ShapeModified;
+    public event EventHandler<Point>? ImageContextMenuRequested;
+    public event EventHandler<Point>? ShapeContextMenuRequested;
 
     private readonly Lock _zoomUpdateLock = new Lock();
 
@@ -547,6 +549,34 @@ public sealed partial class ImageCanvas : UserControlBase
     #region Panning
     private void RootContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        var pointerPoint = e.GetCurrentPoint(this);
+
+        if (pointerPoint.Properties.IsRightButtonPressed)
+        {
+            var position = pointerPoint.Position;
+
+            if (IsShapesModeEnabled)
+            {
+                var canvasPoint = e.GetCurrentPoint(RenderCanvas).Position;
+                var shapeAtPoint = FindShapeAtPoint(canvasPoint);
+
+                if (shapeAtPoint != null)
+                {
+                    // Rule 3: Right-click on shape — select the shape and request shape context menu
+                    SelectShape(shapeAtPoint);
+                    ShapeContextMenuRequested?.Invoke(this, position);
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            // Rule 1: Right-click on image — clear any shape selection and request image context menu
+            DeselectShape();
+            ImageContextMenuRequested?.Invoke(this, position);
+            e.Handled = true;
+            return;
+        }
+
         if (IsShapesModeEnabled)
         {
             // Get position relative to the RenderCanvas
@@ -1086,7 +1116,7 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
-    private void DeleteSelectedShape()
+    public void DeleteSelectedShape()
     {
         if (_selectedShape == null || _selectedShapeIndex < 0)
         {
