@@ -1,25 +1,25 @@
-namespace CaptureTool.Domain.Capture.Interfaces.Metadata.Grooming;
+namespace CaptureTool.Domain.Capture.Interfaces.Metadata.Processing;
 
 /// <summary>
-/// Interface for a metadata groomer that refines raw metadata entries into high-level insights.
-/// Groomers form the second processing layer: they consume raw scan output and produce
+/// Interface for a metadata processor that refines raw metadata entries into high-level insights.
+/// Processors form the second processing layer: they consume raw scan output and produce
 /// intentional, timestamped data that can power an enhanced playback experience.
 /// </summary>
-public interface IMetadataGroomer
+public interface IMetadataProcessor
 {
     /// <summary>
-    /// Gets the unique identifier for this groomer.
+    /// Gets the unique identifier for this processor.
     /// </summary>
-    string GroomerId { get; }
+    string ProcessorId { get; }
 
     /// <summary>
-    /// Gets a human-readable name for this groomer.
+    /// Gets a human-readable name for this processor.
     /// </summary>
     string Name { get; }
 
     /// <summary>
-    /// Gets the raw metadata entry keys this groomer is interested in.
-    /// An empty collection means the groomer will receive all entries.
+    /// Gets the raw metadata entry keys this processor is interested in.
+    /// An empty collection means the processor will receive all entries.
     /// </summary>
     IReadOnlyList<string> SupportedKeys { get; }
 
@@ -29,7 +29,7 @@ public interface IMetadataGroomer
     /// <param name="rawEntries">The raw metadata entries from Layer 1 scanners.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A collection of refined insights, ordered by timestamp.</returns>
-    Task<IReadOnlyList<InsightEntry>> GroomAsync(
+    Task<IReadOnlyList<InsightEntry>> ProcessAsync(
         IReadOnlyList<MetadataEntry> rawEntries,
         CancellationToken cancellationToken = default);
 }

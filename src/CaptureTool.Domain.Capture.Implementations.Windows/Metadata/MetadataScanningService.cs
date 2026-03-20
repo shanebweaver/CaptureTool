@@ -1,5 +1,5 @@
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
-using CaptureTool.Domain.Capture.Interfaces.Metadata.Grooming;
+using CaptureTool.Domain.Capture.Interfaces.Metadata.Processing;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using System.Collections.Concurrent;
@@ -14,7 +14,7 @@ namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata;
 public sealed class MetadataScanningService : IMetadataScanningService, IDisposable
 {
     private readonly IMetadataScannerRegistry _registry;
-    private readonly IMetadataGroomingPipeline? _groomingPipeline;
+    private readonly IMetadataProcessingPipeline? _processingPipeline;
     private readonly ILogService _logService;
     private readonly PersistentJobQueueManager _queueManager;
     private readonly ConcurrentDictionary<Guid, MetadataScanJob> _activeJobs = new();
@@ -26,11 +26,11 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
         IMetadataScannerRegistry registry,
         IStorageService storageService,
         ILogService logService,
-        IMetadataGroomingPipeline? groomingPipeline = null)
+        IMetadataProcessingPipeline? processingPipeline = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _logService = logService ?? throw new ArgumentNullException(nameof(logService));
-        _groomingPipeline = groomingPipeline;
+        _processingPipeline = processingPipeline;
 
         _queueManager = new PersistentJobQueueManager(storageService, logService);
 
@@ -217,13 +217,13 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
             string metadataPath = Path.ChangeExtension(job.FilePath, MetadataFile.FileExtension);
             await SaveMetadataFileAsync(metadataFile, metadataPath, job.CancellationToken);
 
-            // Run Layer 2 grooming pipeline if configured
-            if (_groomingPipeline != null)
+            // Run Layer 2 processing pipeline if configured
+            if (_processingPipeline != null)
             {
                 try
                 {
                     job.UpdateProgress(75);
-                    string? insightsPath = await _groomingPipeline.ProcessAndSaveAsync(
+                    string? insightsPath = await _processingPipeline.ProcessAndSaveAsync(
                         metadataFile,
                         metadataPath,
                         job.CancellationToken);
@@ -239,7 +239,7 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
                 }
                 catch (Exception ex)
                 {
-                    _logService.LogException(ex, $"Grooming pipeline failed for job {job.JobId}: {ex.Message}");
+                    _logService.LogException(ex, $"Processing pipeline failed for job {job.JobId}: {ex.Message}");
                 }
             }
 

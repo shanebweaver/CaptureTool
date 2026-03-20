@@ -1,4 +1,4 @@
-namespace CaptureTool.Domain.Capture.Interfaces.Metadata.Grooming;
+namespace CaptureTool.Domain.Capture.Interfaces.Metadata.Processing;
 
 /// <summary>
 /// Represents a refined, high-level insight derived from one or more raw metadata entries.
@@ -23,9 +23,9 @@ public sealed class InsightEntry
     public string Category { get; }
 
     /// <summary>
-    /// Gets the groomer ID that produced this insight.
+    /// Gets the processor ID that produced this insight.
     /// </summary>
-    public string GroomerId { get; }
+    public string ProcessorId { get; }
 
     /// <summary>
     /// Gets a short, human-readable title for this insight.
@@ -60,7 +60,7 @@ public sealed class InsightEntry
     public InsightEntry(
         long timestamp,
         string category,
-        string groomerId,
+        string processorId,
         string title,
         string? description = null,
         long? duration = null,
@@ -71,7 +71,7 @@ public sealed class InsightEntry
     {
         Timestamp = timestamp;
         Category = category ?? throw new ArgumentNullException(nameof(category));
-        GroomerId = groomerId ?? throw new ArgumentNullException(nameof(groomerId));
+        ProcessorId = processorId ?? throw new ArgumentNullException(nameof(processorId));
         Title = title ?? throw new ArgumentNullException(nameof(title));
         Description = description;
         Duration = duration;

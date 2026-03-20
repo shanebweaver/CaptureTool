@@ -1,20 +1,20 @@
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
-using CaptureTool.Domain.Capture.Interfaces.Metadata.Grooming;
+using CaptureTool.Domain.Capture.Interfaces.Metadata.Processing;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using System.Text.Json;
 
-namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Grooming;
+namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Processing;
 
 /// <summary>
-/// Runs all registered <see cref="IMetadataGroomer"/> instances over raw metadata
+/// Runs all registered <see cref="IMetadataProcessor"/> instances over raw metadata
 /// and produces a <see cref="RefinedMetadataFile"/> with timestamped insights.
 /// </summary>
-public sealed class MetadataGroomingPipeline : IMetadataGroomingPipeline
+public sealed class MetadataProcessingPipeline : IMetadataProcessingPipeline
 {
-    private readonly IMetadataGroomerRegistry _registry;
+    private readonly IMetadataProcessorRegistry _registry;
     private readonly ILogService _logService;
 
-    public MetadataGroomingPipeline(IMetadataGroomerRegistry registry, ILogService logService)
+    public MetadataProcessingPipeline(IMetadataProcessorRegistry registry, ILogService logService)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _logService = logService ?? throw new ArgumentNullException(nameof(logService));
@@ -27,35 +27,35 @@ public sealed class MetadataGroomingPipeline : IMetadataGroomingPipeline
     {
         ArgumentNullException.ThrowIfNull(rawMetadata);
 
-        var groomers = _registry.GetAll();
-        if (groomers.Count == 0)
+        var processors = _registry.GetAll();
+        if (processors.Count == 0)
         {
-            _logService.LogInformation("No groomers registered; skipping metadata grooming pipeline.");
+            _logService.LogInformation("No processors registered; skipping metadata processing pipeline.");
             return null;
         }
 
         var allInsights = new List<InsightEntry>();
-        var groomerInfo = new Dictionary<string, string>();
+        var processorInfo = new Dictionary<string, string>();
 
-        foreach (var groomer in groomers)
+        foreach (var processor in processors)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            groomerInfo[groomer.GroomerId] = groomer.Name;
+            processorInfo[processor.ProcessorId] = processor.Name;
 
-            // Filter entries to only those this groomer cares about
-            var relevantEntries = FilterEntries(rawMetadata.Entries, groomer.SupportedKeys);
+            // Filter entries to only those this processor cares about
+            var relevantEntries = FilterEntries(rawMetadata.Entries, processor.SupportedKeys);
 
             try
             {
                 _logService.LogInformation(
-                    $"Running groomer '{groomer.GroomerId}' over {relevantEntries.Count} entries");
+                    $"Running processor '{processor.ProcessorId}' over {relevantEntries.Count} entries");
 
-                var insights = await groomer.GroomAsync(relevantEntries, cancellationToken);
+                var insights = await processor.ProcessAsync(relevantEntries, cancellationToken);
                 allInsights.AddRange(insights);
 
                 _logService.LogInformation(
-                    $"Groomer '{groomer.GroomerId}' produced {insights.Count} insights");
+                    $"Processor '{processor.ProcessorId}' produced {insights.Count} insights");
             }
             catch (OperationCanceledException)
             {
@@ -63,7 +63,7 @@ public sealed class MetadataGroomingPipeline : IMetadataGroomingPipeline
             }
             catch (Exception ex)
             {
-                _logService.LogException(ex, $"Groomer '{groomer.GroomerId}' failed: {ex.Message}");
+                _logService.LogException(ex, $"Processor '{processor.ProcessorId}' failed: {ex.Message}");
             }
         }
 
@@ -73,9 +73,9 @@ public sealed class MetadataGroomingPipeline : IMetadataGroomingPipeline
         return new RefinedMetadataFile(
             sourceFilePath: rawMetadata.SourceFilePath,
             sourceMetadataFilePath: null,
-            groomingTimestamp: DateTime.UtcNow,
+            processingTimestamp: DateTime.UtcNow,
             insights: allInsights,
-            groomerInfo: groomerInfo);
+            processorInfo: processorInfo);
     }
 
     /// <inheritdoc/>
@@ -87,34 +87,34 @@ public sealed class MetadataGroomingPipeline : IMetadataGroomingPipeline
         ArgumentNullException.ThrowIfNull(rawMetadata);
         ArgumentNullException.ThrowIfNull(rawMetadataFilePath);
 
-        var groomers = _registry.GetAll();
-        if (groomers.Count == 0)
+        var processors = _registry.GetAll();
+        if (processors.Count == 0)
         {
-            _logService.LogInformation("No groomers registered; skipping metadata grooming pipeline.");
+            _logService.LogInformation("No processors registered; skipping metadata processing pipeline.");
             return null;
         }
 
         var allInsights = new List<InsightEntry>();
-        var groomerInfo = new Dictionary<string, string>();
+        var processorInfo = new Dictionary<string, string>();
 
-        foreach (var groomer in groomers)
+        foreach (var processor in processors)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            groomerInfo[groomer.GroomerId] = groomer.Name;
+            processorInfo[processor.ProcessorId] = processor.Name;
 
-            var relevantEntries = FilterEntries(rawMetadata.Entries, groomer.SupportedKeys);
+            var relevantEntries = FilterEntries(rawMetadata.Entries, processor.SupportedKeys);
 
             try
             {
                 _logService.LogInformation(
-                    $"Running groomer '{groomer.GroomerId}' over {relevantEntries.Count} entries");
+                    $"Running processor '{processor.ProcessorId}' over {relevantEntries.Count} entries");
 
-                var insights = await groomer.GroomAsync(relevantEntries, cancellationToken);
+                var insights = await processor.ProcessAsync(relevantEntries, cancellationToken);
                 allInsights.AddRange(insights);
 
                 _logService.LogInformation(
-                    $"Groomer '{groomer.GroomerId}' produced {insights.Count} insights");
+                    $"Processor '{processor.ProcessorId}' produced {insights.Count} insights");
             }
             catch (OperationCanceledException)
             {
@@ -122,7 +122,7 @@ public sealed class MetadataGroomingPipeline : IMetadataGroomingPipeline
             }
             catch (Exception ex)
             {
-                _logService.LogException(ex, $"Groomer '{groomer.GroomerId}' failed: {ex.Message}");
+                _logService.LogException(ex, $"Processor '{processor.ProcessorId}' failed: {ex.Message}");
             }
         }
 
@@ -131,9 +131,9 @@ public sealed class MetadataGroomingPipeline : IMetadataGroomingPipeline
         var refined = new RefinedMetadataFile(
             sourceFilePath: rawMetadata.SourceFilePath,
             sourceMetadataFilePath: rawMetadataFilePath,
-            groomingTimestamp: DateTime.UtcNow,
+            processingTimestamp: DateTime.UtcNow,
             insights: allInsights,
-            groomerInfo: groomerInfo);
+            processorInfo: processorInfo);
 
         string outputPath = Path.ChangeExtension(rawMetadata.SourceFilePath, RefinedMetadataFile.FileExtension);
         await SaveRefinedMetadataFileAsync(refined, outputPath, cancellationToken);
@@ -164,14 +164,14 @@ public sealed class MetadataGroomingPipeline : IMetadataGroomingPipeline
         {
             SourceFilePath = refined.SourceFilePath,
             SourceMetadataFilePath = refined.SourceMetadataFilePath,
-            GroomingTimestamp = refined.GroomingTimestamp,
-            GroomerInfo = new Dictionary<string, string>(refined.GroomerInfo),
+            ProcessingTimestamp = refined.ProcessingTimestamp,
+            ProcessorInfo = new Dictionary<string, string>(refined.ProcessorInfo),
             Insights = refined.Insights.Select(i => new InsightEntryDto
             {
                 Timestamp = i.Timestamp,
                 Duration = i.Duration,
                 Category = i.Category,
-                GroomerId = i.GroomerId,
+                ProcessorId = i.ProcessorId,
                 Title = i.Title,
                 Description = i.Description,
                 Tags = [.. i.Tags],

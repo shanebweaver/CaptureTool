@@ -1,5 +1,5 @@
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
-using CaptureTool.Domain.Capture.Interfaces.Metadata.Grooming;
+using CaptureTool.Domain.Capture.Interfaces.Metadata.Processing;
 using FluentAssertions;
 
 namespace CaptureTool.Application.Tests.Metadata;
@@ -13,16 +13,16 @@ public class InsightEntryTests
         // Arrange
         long timestamp = 10_000_000L;
         string category = "text-segment";
-        string groomerId = "test-groomer";
+        string processorId = "test-processor";
         string title = "Hello world";
 
         // Act
-        var entry = new InsightEntry(timestamp, category, groomerId, title);
+        var entry = new InsightEntry(timestamp, category, processorId, title);
 
         // Assert
         entry.Timestamp.Should().Be(timestamp);
         entry.Category.Should().Be(category);
-        entry.GroomerId.Should().Be(groomerId);
+        entry.ProcessorId.Should().Be(processorId);
         entry.Title.Should().Be(title);
         entry.Description.Should().BeNull();
         entry.Duration.Should().BeNull();
@@ -44,7 +44,7 @@ public class InsightEntryTests
         var entry = new InsightEntry(
             timestamp: 5_000_000L,
             category: "text-segment",
-            groomerId: "groomer",
+            processorId: "processor",
             title: "Title",
             description: "A description",
             duration: 10_000_000L,
@@ -65,14 +65,14 @@ public class InsightEntryTests
     [TestMethod]
     public void Constructor_ShouldClampConfidence_WhenBelowZero()
     {
-        var entry = new InsightEntry(0, "cat", "groomer", "title", confidence: -1.0);
+        var entry = new InsightEntry(0, "cat", "processor", "title", confidence: -1.0);
         entry.Confidence.Should().Be(0.0);
     }
 
     [TestMethod]
     public void Constructor_ShouldClampConfidence_WhenAboveOne()
     {
-        var entry = new InsightEntry(0, "cat", "groomer", "title", confidence: 5.0);
+        var entry = new InsightEntry(0, "cat", "processor", "title", confidence: 5.0);
         entry.Confidence.Should().Be(1.0);
     }
 
@@ -80,11 +80,11 @@ public class InsightEntryTests
     public void Constructor_ShouldThrowException_WhenCategoryIsNull()
     {
         Assert.ThrowsException<ArgumentNullException>(() =>
-            new InsightEntry(0, null!, "groomer", "title"));
+            new InsightEntry(0, null!, "processor", "title"));
     }
 
     [TestMethod]
-    public void Constructor_ShouldThrowException_WhenGroomerIdIsNull()
+    public void Constructor_ShouldThrowException_WhenProcessorIdIsNull()
     {
         Assert.ThrowsException<ArgumentNullException>(() =>
             new InsightEntry(0, "cat", null!, "title"));
@@ -94,6 +94,6 @@ public class InsightEntryTests
     public void Constructor_ShouldThrowException_WhenTitleIsNull()
     {
         Assert.ThrowsException<ArgumentNullException>(() =>
-            new InsightEntry(0, "cat", "groomer", null!));
+            new InsightEntry(0, "cat", "processor", null!));
     }
 }

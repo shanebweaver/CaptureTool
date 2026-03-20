@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Grooming;
+namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Processing;
 
 /// <summary>
 /// DTO for serializing refined metadata files to JSON (AOT-compatible).
@@ -13,11 +13,11 @@ public sealed class RefinedMetadataFileDto
     [JsonPropertyName("sourceMetadataFilePath")]
     public string? SourceMetadataFilePath { get; set; }
 
-    [JsonPropertyName("groomingTimestamp")]
-    public DateTime GroomingTimestamp { get; set; }
+    [JsonPropertyName("processingTimestamp")]
+    public DateTime ProcessingTimestamp { get; set; }
 
-    [JsonPropertyName("groomerInfo")]
-    public Dictionary<string, string> GroomerInfo { get; set; } = new();
+    [JsonPropertyName("processorInfo")]
+    public Dictionary<string, string> ProcessorInfo { get; set; } = new();
 
     [JsonPropertyName("insights")]
     public List<InsightEntryDto> Insights { get; set; } = [];
@@ -37,8 +37,8 @@ public sealed class InsightEntryDto
     [JsonPropertyName("category")]
     public string Category { get; set; } = string.Empty;
 
-    [JsonPropertyName("groomerId")]
-    public string GroomerId { get; set; } = string.Empty;
+    [JsonPropertyName("processorId")]
+    public string ProcessorId { get; set; } = string.Empty;
 
     [JsonPropertyName("title")]
     public string Title { get; set; } = string.Empty;

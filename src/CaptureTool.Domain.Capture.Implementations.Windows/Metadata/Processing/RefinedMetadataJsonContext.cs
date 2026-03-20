@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Grooming;
+namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Processing;
 
 /// <summary>
 /// JSON serialization context for refined metadata files (AOT-compatible).

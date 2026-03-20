@@ -1,15 +1,15 @@
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
-using CaptureTool.Domain.Capture.Interfaces.Metadata.Grooming;
+using CaptureTool.Domain.Capture.Interfaces.Metadata.Processing;
 
-namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Grooming.Groomers;
+namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Processing.Processors;
 
 /// <summary>
-/// Groomer that consolidates raw OCR text entries produced by the Windows OCR scanner
+/// Processor that consolidates raw OCR text entries produced by the Windows OCR scanner
 /// into coherent text-segment insights with merged content and meaningful duration.
 /// Consecutive entries within a similarity threshold and time gap are merged into a
 /// single insight, providing a clean text timeline for enhanced playback.
 /// </summary>
-public sealed class OcrTextConsolidationGroomer : IMetadataGroomer
+public sealed class OcrTextConsolidationProcessor : IMetadataProcessor
 {
     // Group entries within this time window (1 second in 100ns ticks)
     private const long MaxGapTicks = 10_000_000L;
@@ -17,11 +17,11 @@ public sealed class OcrTextConsolidationGroomer : IMetadataGroomer
     // Minimum text length to consider for an insight
     private const int MinTextLength = 3;
 
-    public string GroomerId => "ocr-text-consolidation";
-    public string Name => "OCR Text Consolidation Groomer";
+    public string ProcessorId => "ocr-text-consolidation";
+    public string Name => "OCR Text Consolidation Processor";
     public IReadOnlyList<string> SupportedKeys => ["ocr-text"];
 
-    public Task<IReadOnlyList<InsightEntry>> GroomAsync(
+    public Task<IReadOnlyList<InsightEntry>> ProcessAsync(
         IReadOnlyList<MetadataEntry> rawEntries,
         CancellationToken cancellationToken = default)
     {
@@ -102,7 +102,7 @@ public sealed class OcrTextConsolidationGroomer : IMetadataGroomer
         return new InsightEntry(
             timestamp: firstEntry.Timestamp,
             category: "text-segment",
-            groomerId: GroomerId,
+            processorId: ProcessorId,
             title: title,
             description: representativeText,
             duration: duration > 0 ? duration : null,

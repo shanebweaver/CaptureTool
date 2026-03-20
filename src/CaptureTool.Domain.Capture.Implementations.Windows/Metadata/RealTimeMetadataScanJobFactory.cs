@@ -1,6 +1,6 @@
 using CaptureTool.Application.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
-using CaptureTool.Domain.Capture.Interfaces.Metadata.Grooming;
+using CaptureTool.Domain.Capture.Interfaces.Metadata.Processing;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 
 namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata;
@@ -11,24 +11,24 @@ namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata;
 public sealed class RealTimeMetadataScanJobFactory : IRealTimeMetadataScanJobFactory
 {
     private readonly ILogService _logService;
-    private readonly IMetadataGroomingPipeline? _groomingPipeline;
+    private readonly IMetadataProcessingPipeline? _processingPipeline;
 
     public RealTimeMetadataScanJobFactory(
         ILogService logService,
-        IMetadataGroomingPipeline? groomingPipeline = null)
+        IMetadataProcessingPipeline? processingPipeline = null)
     {
         _logService = logService;
-        _groomingPipeline = groomingPipeline;
+        _processingPipeline = processingPipeline;
     }
 
     public IRealTimeMetadataScanJob CreateJob(
         Guid jobId,
         string filePath,
         IMetadataScannerRegistry registry,
-        IMetadataGroomingPipeline? groomingPipeline = null)
+        IMetadataProcessingPipeline? processingPipeline = null)
     {
         // Caller-supplied pipeline takes precedence over the injected one
-        var pipeline = groomingPipeline ?? _groomingPipeline;
+        var pipeline = processingPipeline ?? _processingPipeline;
         return new RealTimeMetadataScanJob(jobId, filePath, registry, _logService, pipeline);
     }
 }

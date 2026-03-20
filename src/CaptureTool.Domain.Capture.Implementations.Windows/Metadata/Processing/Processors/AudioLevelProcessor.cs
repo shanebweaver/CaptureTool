@@ -1,17 +1,17 @@
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
-using CaptureTool.Domain.Capture.Interfaces.Metadata.Grooming;
+using CaptureTool.Domain.Capture.Interfaces.Metadata.Processing;
 
-namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Grooming.Groomers;
+namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Processing.Processors;
 
 /// <summary>
-/// Groomer that analyzes raw audio-info metadata entries and identifies periods of
+/// Processor that analyzes raw audio-info metadata entries and identifies periods of
 /// significant audio activity versus silence, producing "audio-activity" and
 /// "audio-silence" insights useful for an enhanced playback experience.
 /// Requires audio scanners that emit entries with key "audio-info" and
 /// an "numFrames" value in AdditionalData to function; entries without this
 /// data are treated as silence markers.
 /// </summary>
-public sealed class AudioLevelGroomer : IMetadataGroomer
+public sealed class AudioLevelProcessor : IMetadataProcessor
 {
     // Minimum number of audio frames to be classified as "active" audio
     private const int ActiveFrameThreshold = 256;
@@ -19,11 +19,11 @@ public sealed class AudioLevelGroomer : IMetadataGroomer
     // Time gap after which a new activity segment begins (0.5 s in 100ns ticks)
     private const long ActivityGapTicks = 5_000_000L;
 
-    public string GroomerId => "audio-level";
-    public string Name => "Audio Level Groomer";
+    public string ProcessorId => "audio-level";
+    public string Name => "Audio Level Processor";
     public IReadOnlyList<string> SupportedKeys => ["audio-info"];
 
-    public Task<IReadOnlyList<InsightEntry>> GroomAsync(
+    public Task<IReadOnlyList<InsightEntry>> ProcessAsync(
         IReadOnlyList<MetadataEntry> rawEntries,
         CancellationToken cancellationToken = default)
     {
@@ -85,7 +85,7 @@ public sealed class AudioLevelGroomer : IMetadataGroomer
         return new InsightEntry(
             timestamp: first.Timestamp,
             category: "audio-activity",
-            groomerId: GroomerId,
+            processorId: ProcessorId,
             title: $"Audio activity ({audioFormat})",
             description: $"Audio detected across {group.Count} samples",
             duration: duration > 0 ? duration : null,
