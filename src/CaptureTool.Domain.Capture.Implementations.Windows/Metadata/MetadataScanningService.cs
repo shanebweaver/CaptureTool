@@ -1,4 +1,5 @@
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
+using CaptureTool.Domain.Capture.Interfaces.Metadata.Processing;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using System.Collections.Concurrent;
@@ -13,6 +14,7 @@ namespace CaptureTool.Domain.Capture.Implementations.Windows.Metadata;
 public sealed class MetadataScanningService : IMetadataScanningService, IDisposable
 {
     private readonly IMetadataScannerRegistry _registry;
+    private readonly IMetadataProcessingPipeline? _processingPipeline;
     private readonly ILogService _logService;
     private readonly PersistentJobQueueManager _queueManager;
     private readonly ConcurrentDictionary<Guid, MetadataScanJob> _activeJobs = new();
@@ -23,10 +25,12 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
     public MetadataScanningService(
         IMetadataScannerRegistry registry,
         IStorageService storageService,
-        ILogService logService)
+        ILogService logService,
+        IMetadataProcessingPipeline? processingPipeline = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _logService = logService ?? throw new ArgumentNullException(nameof(logService));
+        _processingPipeline = processingPipeline;
 
         _queueManager = new PersistentJobQueueManager(storageService, logService);
 
@@ -212,6 +216,32 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
             // Save metadata file next to the media file
             string metadataPath = Path.ChangeExtension(job.FilePath, MetadataFile.FileExtension);
             await SaveMetadataFileAsync(metadataFile, metadataPath, job.CancellationToken);
+
+            // Run Layer 2 processing pipeline if configured
+            if (_processingPipeline != null)
+            {
+                try
+                {
+                    job.UpdateProgress(75);
+                    string? insightsPath = await _processingPipeline.ProcessAndSaveAsync(
+                        metadataFile,
+                        metadataPath,
+                        job.CancellationToken);
+
+                    if (insightsPath != null)
+                    {
+                        _logService.LogInformation($"Saved refined metadata (insights) to: {insightsPath}");
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logService.LogException(ex, $"Processing pipeline failed for job {job.JobId}: {ex.Message}");
+                }
+            }
 
             job.Complete(metadataPath);
             _logService.LogInformation($"Completed metadata scan job {job.JobId}. Output: {metadataPath}");
