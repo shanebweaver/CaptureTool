@@ -13,9 +13,11 @@ using CaptureTool.Infrastructure.Interfaces.Shutdown;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Store;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Interfaces.Windowing;
 using FluentAssertions;
 using Moq;
 using System.Drawing;
+using System.IO;
 
 namespace CaptureTool.Application.Tests.ViewModels;
 
@@ -50,6 +52,7 @@ public sealed class ImageEditPageViewModelTests
         Fixture.Freeze<Mock<IChromaKeyService>>();
         Fixture.Freeze<Mock<IFeatureManager>>();
         Fixture.Freeze<Mock<IShareService>>();
+        Fixture.Freeze<Mock<IWindowHandleProvider>>();
     }
 
     // ------------------------------------------------------------------
@@ -177,6 +180,65 @@ public sealed class ImageEditPageViewModelTests
             Times.Once);
 
         telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Share, It.IsAny<string>()), Times.Never);
+    }
+
+    // ------------------------------------------------------------------
+    // TEST: ShareCommand success path — renders drawables before sharing
+    // ------------------------------------------------------------------
+    [TestMethod]
+    public async Task ShareCommand_ShouldRenderDrawables_AndInvokeShareService()
+    {
+        // Arrange
+        var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
+        var exporter = Fixture.Freeze<Mock<IImageCanvasExporter>>();
+        var shareService = Fixture.Freeze<Mock<IShareService>>();
+        var filePicker = Fixture.Freeze<Mock<IFilePickerService>>();
+        var cancel = Fixture.Freeze<Mock<ICancellationService>>();
+        var chromaFeature = Fixture.Freeze<Mock<IFeatureManager>>();
+        var storeService = Fixture.Freeze<Mock<IStoreService>>();
+        var chromaService = Fixture.Freeze<Mock<IChromaKeyService>>();
+        var windowHandleProvider = Fixture.Freeze<Mock<IWindowHandleProvider>>();
+
+        windowHandleProvider.Setup(w => w.GetMainWindowHandle()).Returns((nint)0);
+        chromaFeature.Setup(f => f.IsEnabled(It.IsAny<FeatureFlag>())).Returns(false);
+        storeService.Setup(s => s.IsAddonPurchasedAsync(It.IsAny<string>())).ReturnsAsync(false);
+        chromaService.Setup(s => s.GetTopColorsAsync(It.IsAny<ImageFile>(), It.IsAny<uint>(), It.IsAny<byte>())).ReturnsAsync([]);
+
+        var cts = new CancellationTokenSource();
+        cancel.Setup(c => c.GetLinkedCancellationTokenSource(cts.Token)).Returns(cts);
+
+        var testFile = new ImageFile("test.png");
+        filePicker.Setup(f => f.GetImageFileSize(testFile)).Returns(new Size(100, 200));
+
+        using var renderedStream = new MemoryStream();
+        exporter.Setup(e => e.RenderToStreamAsync(It.IsAny<IDrawable[]>(), It.IsAny<ImageCanvasRenderOptions>()))
+                .ReturnsAsync(renderedStream);
+
+        var vm = Create();
+        await vm.LoadAsync(testFile, cts.Token);
+
+        // Act
+        await vm.ShareCommand.ExecuteAsync();
+
+        // Assert: exporter renders drawables (not the raw file)
+        exporter.Verify(e =>
+            e.RenderToStreamAsync(
+                It.IsAny<IDrawable[]>(),
+                It.IsAny<ImageCanvasRenderOptions>()),
+            Times.Once);
+
+        // Assert: share service receives the rendered stream (not the original file path)
+        shareService.Verify(s =>
+            s.ShareStreamAsync(
+                It.IsAny<Stream>(),
+                It.IsAny<nint>()),
+            Times.Once);
+
+        shareService.Verify(s => s.ShareAsync(It.IsAny<string>(), It.IsAny<nint>()), Times.Never);
+
+        // Assert telemetry
+        telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.Share, It.IsAny<string>()), Times.Once);
+        telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.Share, It.IsAny<string>()), Times.Once);
     }
 
     // ------------------------------------------------------------------
