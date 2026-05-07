@@ -55,6 +55,36 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
+    public static readonly DependencyProperty IsTextModeEnabledProperty = DependencyProperty.Register(
+        nameof(IsTextModeEnabled),
+        typeof(bool),
+        typeof(ImageCanvas),
+        new PropertyMetadata(false));
+
+    public static readonly DependencyProperty TextContentProperty = DependencyProperty.Register(
+       nameof(TextContent),
+       typeof(string),
+       typeof(ImageCanvas),
+       new PropertyMetadata(string.Empty));
+
+    public static readonly DependencyProperty TextFontColorProperty = DependencyProperty.Register(
+       nameof(TextFontColor),
+       typeof(Color),
+       typeof(ImageCanvas),
+       new PropertyMetadata(Color.Black));
+
+    public static readonly DependencyProperty TextFontFamilyProperty = DependencyProperty.Register(
+       nameof(TextFontFamily),
+       typeof(string),
+       typeof(ImageCanvas),
+       new PropertyMetadata("Segoe UI"));
+
+    public static readonly DependencyProperty TextFontSizeProperty = DependencyProperty.Register(
+       nameof(TextFontSize),
+       typeof(int),
+       typeof(ImageCanvas),
+       new PropertyMetadata(24));
+
     public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
        nameof(CropRect),
        typeof(Rectangle),
@@ -195,6 +225,36 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(IsShapesModeEnabledProperty, value);
     }
 
+    public bool IsTextModeEnabled
+    {
+        get => Get<bool>(IsTextModeEnabledProperty);
+        set => Set(IsTextModeEnabledProperty, value);
+    }
+
+    public string TextContent
+    {
+        get => Get<string>(TextContentProperty) ?? string.Empty;
+        set => Set(TextContentProperty, value);
+    }
+
+    public Color TextFontColor
+    {
+        get => Get<Color>(TextFontColorProperty);
+        set => Set(TextFontColorProperty, value);
+    }
+
+    public string TextFontFamily
+    {
+        get => Get<string>(TextFontFamilyProperty) ?? "Segoe UI";
+        set => Set(TextFontFamilyProperty, value);
+    }
+
+    public int TextFontSize
+    {
+        get => Get<int>(TextFontSizeProperty);
+        set => Set(TextFontSizeProperty, value);
+    }
+
     public Rectangle CropRect
     {
         get => Get<Rectangle>(CropRectProperty);
@@ -237,6 +297,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
     public event EventHandler<int>? ShapeDeleted;
     public event EventHandler<(int ShapeIndex, IDrawable OldState, IDrawable NewState)>? ShapeModified;
+    public event EventHandler<System.Numerics.Vector2>? TextPlaced;
 
     private readonly Lock _zoomUpdateLock = new Lock();
 
@@ -581,6 +642,18 @@ public sealed partial class ImageCanvas : UserControlBase
                 return;
             }
         }
+        else if (IsTextModeEnabled)
+        {
+            var point = e.GetCurrentPoint(RenderCanvas);
+            if (point.Properties.IsLeftButtonPressed)
+            {
+                _pointerPressPosition = point.Position;
+                _isPointerDown = true;
+                RootContainer.CapturePointer(e.Pointer);
+                e.Handled = true;
+                return;
+            }
+        }
 
         _isPointerDown = true;
         _lastPointerPosition = e.GetCurrentPoint(RootContainer).Position;
@@ -620,6 +693,12 @@ public sealed partial class ImageCanvas : UserControlBase
                     UpdatePreviewShape(_shapeStartPoint.Value, currentPoint);
                 }
                 
+                e.Handled = true;
+                return;
+            }
+            else if (IsTextModeEnabled && _pointerPressPosition.HasValue)
+            {
+                // In text mode, consume pointer move events — no preview needed
                 e.Handled = true;
                 return;
             }
@@ -678,6 +757,24 @@ public sealed partial class ImageCanvas : UserControlBase
             // Clean up tracking variables
             _shapeUnderPointer = null;
             _pointerPressPosition = null;
+        }
+        else if (IsTextModeEnabled && _pointerPressPosition.HasValue)
+        {
+            var releasePoint = e.GetCurrentPoint(RenderCanvas).Position;
+            const double dragThreshold = 3.0;
+            double distance = Math.Sqrt(
+                Math.Pow(releasePoint.X - _pointerPressPosition.Value.X, 2) +
+                Math.Pow(releasePoint.Y - _pointerPressPosition.Value.Y, 2));
+
+            if (distance < dragThreshold)
+            {
+                // It was a click — place text at this position
+                var position = new System.Numerics.Vector2((float)releasePoint.X, (float)releasePoint.Y);
+                TextPlaced?.Invoke(this, position);
+            }
+
+            _pointerPressPosition = null;
+            e.Handled = true;
         }
 
         _isPointerDown = false;
