@@ -75,8 +75,7 @@
             <Button
                 x:Name="LocalAudioToggleButton"
                 Command="{x:Bind ToggleLocalAudioCommand, Mode=OneWay}"
-                Style="{StaticResource IconButtonStyle}"
-                Visibility="Collapsed">
+                Style="{StaticResource IconButtonStyle}">
                 <Grid>
                     <FontIcon
                         FontFamily="{StaticResource FluentSystemIcons}"

@@ -121,14 +121,7 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
             }
             else if (source.Equals("ScreenRecorderHotKey", StringComparison.InvariantCultureIgnoreCase) || isRecordingType)
             {
-                if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
-                {
-                    _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault);
-                }
-                else
-                {
-                    _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
-                }
+                _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault);
             }
             else if (source.Equals("HotKey", StringComparison.InvariantCultureIgnoreCase))
             {

@@ -60,8 +60,7 @@
                     x:Name="NewVideoCaptureButton"
                     x:Uid="NewCaptureButton_Video"
                     Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewVideoCaptureCommand)}"
-                    Style="{StaticResource NewCaptureButtonStyle}"
-                    Visibility="{x:Bind ViewModel.IsVideoCaptureEnabled}">
+                    Style="{StaticResource NewCaptureButtonStyle}">
                     <StackPanel Spacing="4">
                         <SymbolIcon Symbol="{StaticResource NewVideoCaptureSymbol}" />
                         <TextBlock

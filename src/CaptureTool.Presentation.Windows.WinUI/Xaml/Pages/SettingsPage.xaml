@@ -167,7 +167,7 @@
                 </StackPanel>
 
                 <!--  Video Capture section  -->
-                <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsVideoCaptureFeatureEnabled, Mode=OneWay}">
+                <StackPanel Spacing="4">
                     <TextBlock x:Uid="Settings_VideoCaptureHeaderLabel" Margin="0,4" />
 
                     <!--  Default Local Audio  -->

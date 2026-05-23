@@ -50,7 +50,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase, IAppMenuVi
     public IAppCommand<IRecentCaptureViewModel> OpenRecentCaptureCommand { get; }
 
     public bool ShowAddOnsOption { get; }
-    public bool IsVideoCaptureEnabled { get; }
 
     private ObservableCollection<IRecentCaptureViewModel> _recentCaptures = [];
 
@@ -79,7 +78,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase, IAppMenuVi
 
         TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         NewImageCaptureCommand = commandFactory.Create(ActivityIds.NewImageCapture, NewImageCapture);
-        NewVideoCaptureCommand = commandFactory.Create(ActivityIds.NewVideoCapture, NewVideoCapture, () => IsVideoCaptureEnabled);
+        NewVideoCaptureCommand = commandFactory.Create(ActivityIds.NewVideoCapture, NewVideoCapture);
         OpenFileCommand = commandFactory.CreateAsync(ActivityIds.OpenFile, OpenFileAsync);
         NavigateToSettingsCommand = commandFactory.Create(ActivityIds.NavigateToSettings, NavigateToSettings);
         ShowAboutAppCommand = commandFactory.Create(ActivityIds.ShowAboutApp, ShowAboutApp);
@@ -89,7 +88,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase, IAppMenuVi
         OpenRecentCaptureCommand = commandFactory.Create<IRecentCaptureViewModel>(ActivityIds.OpenRecentCapture, OpenRecentCapture);
 
         ShowAddOnsOption = featureManager.IsEnabled(CaptureToolFeatures.Feature_AddOns_Store);
-        IsVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
         RecentCaptures = [];
     }
 
