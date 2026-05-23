@@ -1,5 +1,4 @@
-using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Application.Interfaces.ViewModels.Options;
+using CaptureTool.Presentation.ViewModels;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 using Microsoft.UI;
@@ -33,7 +32,7 @@ public sealed partial class SelectionOverlayWindow : IDisposable
     private HBITMAP _backgroundBitmap;
     private HBRUSH _backgroundBrush;
 
-    public ISelectionOverlayWindowViewModel? ViewModel => _view?.ViewModel;
+    public SelectionOverlayWindowViewModel? ViewModel => _view?.ViewModel;
     public Rectangle MonitorBounds => _monitorBounds;
     public bool IsClosed => _isClosed == 1;
 

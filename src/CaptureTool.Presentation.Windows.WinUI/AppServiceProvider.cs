@@ -1,10 +1,10 @@
 using CaptureTool.Application.Implementations.DependencyInjection;
-using CaptureTool.Application.Implementations.ViewModels.Factories.DependencyInjection;
 using CaptureTool.Domain.Capture.Implementations.Windows.DependencyInjection;
 using CaptureTool.Domain.Edit.Implementations.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.Implementations.DependencyInjection;
 using CaptureTool.Infrastructure.Implementations.FeatureManagement.DependencyInjection;
 using CaptureTool.Infrastructure.Implementations.Windows.DependencyInjection;
+using CaptureTool.Presentation.DependencyInjection;
 using CaptureTool.Presentation.Windows.WinUI.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -52,9 +52,6 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
 
         // ViewModels
         collection.AddViewModels();
-
-        // ViewModel factories
-        collection.AddViewModelFactories();
 
         // App specific handlers
         collection.AddAppWindowsServices();

@@ -1,7 +1,7 @@
-using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Presentation.ViewModels;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 
-public abstract partial class SelectionOverlayWindowViewBase : ViewBase<ISelectionOverlayWindowViewModel>
+public abstract partial class SelectionOverlayWindowViewBase : ViewBase<SelectionOverlayWindowViewModel>
 {
 }

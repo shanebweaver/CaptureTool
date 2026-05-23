@@ -1,7 +1,7 @@
-using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Presentation.ViewModels;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
-public abstract class SettingsPageBase : PageBase<ISettingsPageViewModel>
+public abstract class SettingsPageBase : PageBase<SettingsPageViewModel>
 {
 }
