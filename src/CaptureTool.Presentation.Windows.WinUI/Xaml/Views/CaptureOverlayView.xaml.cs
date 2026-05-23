@@ -1,4 +1,4 @@
-using CaptureTool.Application.Interfaces.ViewModels.Options;
+using CaptureTool.Application.Implementations.ViewModels;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 using Microsoft.UI;

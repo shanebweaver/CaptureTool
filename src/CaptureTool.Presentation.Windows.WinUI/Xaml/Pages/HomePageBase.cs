@@ -1,7 +1,7 @@
-using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Application.Implementations.ViewModels;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
-public abstract class HomePageBase : PageBase<IHomePageViewModel>
+public abstract class HomePageBase : PageBase<HomePageViewModel>
 {
 }

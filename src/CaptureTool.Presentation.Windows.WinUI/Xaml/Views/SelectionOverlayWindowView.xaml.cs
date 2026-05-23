@@ -1,4 +1,4 @@
-using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Application.Implementations.ViewModels;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Loading;
 using CaptureTool.Infrastructure.Interfaces.Themes;
@@ -104,17 +104,17 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
     {
         switch (e.PropertyName)
         {
-            case nameof(ISelectionOverlayWindowViewModel.SelectedCaptureTypeIndex):
+            case nameof(SelectionOverlayWindowViewModel.SelectedCaptureTypeIndex):
                 var selectedCaptureType = ViewModel.GetSelectedCaptureType();
                 if (selectedCaptureType != null)
                 {
                     SelectionOverlay.CaptureType = selectedCaptureType.Value;
                 }
                 break;
-            case nameof(ISelectionOverlayWindowViewModel.CaptureArea):
+            case nameof(SelectionOverlayWindowViewModel.CaptureArea):
                 SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
                 break;
-            case nameof(ISelectionOverlayWindowViewModel.MonitorWindows):
+            case nameof(SelectionOverlayWindowViewModel.MonitorWindows):
                 SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
                 break;
         }
