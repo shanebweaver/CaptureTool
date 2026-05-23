@@ -29,7 +29,6 @@ public sealed partial class HomePageViewModel : ViewModelBase, IHomePageViewMode
     public IAppCommand NewVideoCaptureCommand { get; }
     public IAppCommand NewAudioCaptureCommand { get; }
 
-    public bool IsVideoCaptureEnabled { get; }
     public bool IsAudioCaptureEnabled { get; }
 
     public HomePageViewModel(
@@ -43,12 +42,11 @@ public sealed partial class HomePageViewModel : ViewModelBase, IHomePageViewMode
         _newVideoCaptureAction = newVideoCaptureAction;
         _newAudioCaptureAction = newAudioCaptureAction;
 
-        IsVideoCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
         IsAudioCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_AudioCapture);
 
         TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         NewImageCaptureCommand = commandFactory.Create(ActivityIds.NewImageCapture, NewImageCapture);
-        NewVideoCaptureCommand = commandFactory.Create(ActivityIds.NewVideoCapture, NewVideoCapture, () => IsVideoCaptureEnabled);
+        NewVideoCaptureCommand = commandFactory.Create(ActivityIds.NewVideoCapture, NewVideoCapture);
         NewAudioCaptureCommand = commandFactory.Create(ActivityIds.NewAudioCapture, NewAudioCapture, () => IsAudioCaptureEnabled);
     }
 

@@ -38,8 +38,6 @@ public class AppMenuUseCasesTests
     public void NewVideoCapture_NavigatesToVideoCapture()
     {
         var navigation = Fixture.Freeze<Mock<IAppNavigation>>();
-        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
-        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(true);
 
         var actions = Fixture.Create<AppMenuUseCases>();
         actions.NewVideoCapture();
@@ -51,8 +49,6 @@ public class AppMenuUseCasesTests
     public void NewVideoCapture_WhenFeatureDisabled_DoesNotNavigate()
     {
         var navigation = Fixture.Freeze<Mock<IAppNavigation>>();
-        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
-        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(false);
 
         var actions = Fixture.Create<AppMenuUseCases>();
         actions.NewVideoCapture();

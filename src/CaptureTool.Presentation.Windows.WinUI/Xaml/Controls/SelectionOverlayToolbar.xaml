@@ -30,8 +30,7 @@
             SelectedIndex="{x:Bind SelectedCaptureModeIndex, Mode=OneWay}"
             SelectionChanged="CaptureModeSegmentedControl_SelectionChanged"
             SelectionMode="Single"
-            SingleSelectionFollowsFocus="True"
-            Visibility="Collapsed">
+            SingleSelectionFollowsFocus="True">
             <toolkit:Segmented.ItemTemplate>
                 <DataTemplate x:DataType="viewmodels:CaptureModeViewModel">
                     <FontIcon

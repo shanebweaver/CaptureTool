@@ -48,8 +48,6 @@ public sealed class HomePageViewModelTests
     public void NewVideoCaptureCommand_ShouldInvokeAction_AndTrackTelemetry_WhenEnabled()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
-        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(true);
 
         var newVideoCaptureAction = Fixture.Freeze<Mock<IHomeNewVideoCaptureUseCase>>();
         newVideoCaptureAction.Setup(a => a.CanExecute()).Returns(true);

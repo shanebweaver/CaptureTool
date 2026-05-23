@@ -153,8 +153,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         private set => Set(ref field, value);
     }
 
-    private bool IsVideoCaptureFeatureEnabled { get; }
-
     public SelectionOverlayWindowViewModel(
         ITelemetryService telemetryService,
         IAppNavigation appNavigation,
@@ -185,15 +183,11 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         UpdateCaptureAreaCommand = commandFactory.Create<Rectangle>(ActivityIds.UpdateCaptureArea, UpdateCaptureArea);
         UpdateCaptureOptionsCommand = commandFactory.Create<CaptureOptions>(ActivityIds.UpdateCaptureOptions, UpdateCaptureOptions);
 
-        IsVideoCaptureFeatureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
-
         ICaptureModeViewModel imageModeVM = captureModeViewModelFactory.Create(CaptureMode.Image);
         _supportedCaptureModes.Add(imageModeVM);
-        if (IsVideoCaptureFeatureEnabled)
-        {
-            ICaptureModeViewModel videoModeVM = captureModeViewModelFactory.Create(CaptureMode.Video);
-            _supportedCaptureModes.Add(videoModeVM);
-        }
+        
+        ICaptureModeViewModel videoModeVM = captureModeViewModelFactory.Create(CaptureMode.Video);
+        _supportedCaptureModes.Add(videoModeVM);
 
         IsDesktopAudioEnabled = true;
     }

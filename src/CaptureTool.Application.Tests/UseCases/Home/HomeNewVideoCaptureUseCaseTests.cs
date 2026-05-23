@@ -21,23 +21,9 @@ public class HomeNewVideoCaptureUseCaseTests
     }
 
     [TestMethod]
-    public void CanExecute_ShouldRespectFeatureFlag()
-    {
-        var fm = Fixture.Freeze<Mock<IFeatureManager>>();
-        fm.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(false);
-        var action = Fixture.Create<HomeNewVideoCaptureUseCase>();
-        Assert.IsFalse(action.CanExecute());
-
-        fm.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(true);
-        Assert.IsTrue(action.CanExecute());
-    }
-
-    [TestMethod]
     public void Execute_ShouldNavigateToVideoCapture()
     {
         var appNav = Fixture.Freeze<Mock<IAppNavigation>>();
-        var fm = Fixture.Freeze<Mock<IFeatureManager>>();
-        fm.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_VideoCapture)).Returns(true);
 
         var action = Fixture.Create<HomeNewVideoCaptureUseCase>();
         action.Execute();

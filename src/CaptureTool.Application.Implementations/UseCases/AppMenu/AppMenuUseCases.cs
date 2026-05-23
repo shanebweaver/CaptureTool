@@ -1,5 +1,4 @@
 using CaptureTool.Application.Interfaces;
-using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.UseCases.AppMenu;
 using CaptureTool.Domain.Capture.Interfaces;
@@ -13,35 +12,26 @@ namespace CaptureTool.Application.Implementations.UseCases.AppMenu;
 public sealed class AppMenuUseCases : IAppMenuUseCases
 {
     private readonly IStorageService _storageService;
-    private readonly IImageCaptureHandler _imageCaptureHandler;
-    private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly IFilePickerService _filePickerService;
     private readonly IAppNavigation _appNavigation;
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IWindowHandleProvider _windowingService;
     private readonly IFileTypeDetector _fileTypeDetector;
-    private readonly IFeatureManager _featureManager;
 
     public AppMenuUseCases(
         IStorageService storageService,
-        IImageCaptureHandler imageCaptureHandler,
-        IVideoCaptureHandler videoCaptureHandler,
         IFilePickerService filePickerService,
         IAppNavigation appNavigation,
         IShutdownHandler shutdownHandler,
         IWindowHandleProvider windowingService,
-        IFileTypeDetector fileTypeDetector,
-        IFeatureManager featureManager)
+        IFileTypeDetector fileTypeDetector)
     {
         _storageService = storageService;
-        _imageCaptureHandler = imageCaptureHandler;
-        _videoCaptureHandler = videoCaptureHandler;
         _filePickerService = filePickerService;
         _appNavigation = appNavigation;
         _shutdownHandler = shutdownHandler;
         _windowingService = windowingService;
         _fileTypeDetector = fileTypeDetector;
-        _featureManager = featureManager;
     }
 
     public Task<IEnumerable<IRecentCapture>> LoadRecentCapturesAsync(CancellationToken ct)
@@ -111,10 +101,6 @@ public sealed class AppMenuUseCases : IAppMenuUseCases
 
     public void NewVideoCapture()
     {
-        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
-        {
-            return;
-        }
         _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault);
     }
 

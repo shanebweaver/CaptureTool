@@ -30,7 +30,6 @@ public interface ISettingsPageViewModel : IViewModel
     ObservableCollection<IAppThemeViewModel> AppThemes { get; }
     int SelectedAppThemeIndex { get; }
     bool ShowAppThemeRestartMessage { get; }
-    bool IsVideoCaptureFeatureEnabled { get; }
     bool IsVideoMetadataFeatureEnabled { get; }
     bool ImageCaptureAutoCopy { get; }
     bool ImageCaptureAutoSave { get; }

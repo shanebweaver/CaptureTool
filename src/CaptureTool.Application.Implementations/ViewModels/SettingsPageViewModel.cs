@@ -144,12 +144,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
         private set => Set(ref field, value);
     }
 
-    public bool IsVideoCaptureFeatureEnabled
-    {
-        get => field;
-        private set => Set(ref field, value);
-    }
-
     public bool IsVideoMetadataFeatureEnabled
     {
         get => field;
@@ -346,7 +340,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase, 
             }
             UpdateShowAppThemeRestartMessage();
 
-            IsVideoCaptureFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture);
             IsVideoMetadataFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MetadataCollection);
 
             ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
