@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations.ViewModels;
+using CaptureTool.Presentation.ViewModels;
 using Microsoft.UI.Xaml;
 using System.ComponentModel;
 using Windows.Media.Core;

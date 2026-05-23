@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations.ViewModels;
+using CaptureTool.Presentation.ViewModels;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 

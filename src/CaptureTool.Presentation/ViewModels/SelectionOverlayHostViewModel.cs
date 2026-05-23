@@ -3,7 +3,7 @@ using CaptureTool.Infrastructure.Implementations.ViewModels;
 using System.ComponentModel;
 using System.Drawing;
 
-namespace CaptureTool.Application.Implementations.ViewModels;
+namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 {

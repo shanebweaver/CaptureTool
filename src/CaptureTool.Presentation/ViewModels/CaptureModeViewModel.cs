@@ -2,7 +2,7 @@ using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 
-namespace CaptureTool.Application.Implementations.ViewModels;
+namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class CaptureModeViewModel : ViewModelBase
 {

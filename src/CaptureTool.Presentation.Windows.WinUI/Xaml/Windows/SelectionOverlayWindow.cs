@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations.ViewModels;
+using CaptureTool.Presentation.ViewModels;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 using Microsoft.UI;

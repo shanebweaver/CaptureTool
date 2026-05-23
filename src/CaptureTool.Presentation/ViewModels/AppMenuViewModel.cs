@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using CaptureTool.Presentation.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.UseCases.AppMenu;
 using CaptureTool.Domain.Capture.Interfaces;
@@ -10,7 +10,7 @@ using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using System.Collections.ObjectModel;
 
-namespace CaptureTool.Application.Implementations.ViewModels;
+namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class AppMenuViewModel : LoadableViewModelBase
 {

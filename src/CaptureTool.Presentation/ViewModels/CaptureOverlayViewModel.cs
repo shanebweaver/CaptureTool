@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using CaptureTool.Presentation.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
 using CaptureTool.Domain.Capture.Interfaces;
@@ -11,7 +11,7 @@ using System.Drawing;
 using System.Timers;
 using Timer = System.Timers.Timer;
 
-namespace CaptureTool.Application.Implementations.ViewModels;
+namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>
 {

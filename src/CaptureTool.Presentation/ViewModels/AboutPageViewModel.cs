@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using CaptureTool.Presentation.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.UseCases.About;
 using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
@@ -6,7 +6,7 @@ using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 
-namespace CaptureTool.Application.Implementations.ViewModels;
+namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class AboutPageViewModel : ViewModelBase
 {

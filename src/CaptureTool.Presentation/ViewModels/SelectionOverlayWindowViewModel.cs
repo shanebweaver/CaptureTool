@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using CaptureTool.Presentation.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
@@ -11,7 +11,7 @@ using CaptureTool.Infrastructure.Interfaces.Themes;
 using System.Collections.ObjectModel;
 using System.Drawing;
 
-namespace CaptureTool.Application.Implementations.ViewModels;
+namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>
 {

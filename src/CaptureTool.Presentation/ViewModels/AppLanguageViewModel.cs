@@ -2,7 +2,7 @@ using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using System.Globalization;
 
-namespace CaptureTool.Application.Implementations.ViewModels;
+namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class AppLanguageViewModel : ViewModelBase
 {

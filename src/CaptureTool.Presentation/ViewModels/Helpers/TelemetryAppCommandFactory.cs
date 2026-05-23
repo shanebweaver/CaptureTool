@@ -2,7 +2,7 @@ using CaptureTool.Infrastructure.Implementations.Commands;
 using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 
-namespace CaptureTool.Application.Implementations.ViewModels.Helpers;
+namespace CaptureTool.Presentation.ViewModels.Helpers;
 
 /// <summary>
 /// Factory for creating platform-agnostic app commands that automatically wrap execution with telemetry tracking.

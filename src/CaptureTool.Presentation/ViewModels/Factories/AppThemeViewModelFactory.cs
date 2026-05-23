@@ -2,7 +2,7 @@ using CaptureTool.Infrastructure.Interfaces.Factories;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 
-namespace CaptureTool.Application.Implementations.ViewModels.Factories;
+namespace CaptureTool.Presentation.ViewModels.Factories;
 
 public sealed partial class AppThemeViewModelFactory : IFactoryServiceWithArgs<AppThemeViewModel, AppTheme>
 {

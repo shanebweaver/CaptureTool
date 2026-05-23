@@ -1,7 +1,7 @@
 using CaptureTool.Application.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Factories;
 
-namespace CaptureTool.Application.Implementations.ViewModels.Factories;
+namespace CaptureTool.Presentation.ViewModels.Factories;
 
 public sealed partial class RecentCaptureViewModelFactory : IFactoryServiceWithArgs<RecentCaptureViewModel, string>
 {

@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using CaptureTool.Presentation.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.UseCases.AddOns;
 using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
@@ -10,7 +10,7 @@ using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
 using static CaptureTool.Application.Interfaces.Store.CaptureToolStoreProducts;
 
-namespace CaptureTool.Application.Implementations.ViewModels;
+namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 {

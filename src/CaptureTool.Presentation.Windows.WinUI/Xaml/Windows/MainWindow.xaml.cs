@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations.ViewModels;
+using CaptureTool.Presentation.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Navigation;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 using CaptureTool.Presentation.Windows.WinUI.Utils;

@@ -1,5 +1,5 @@
 using CaptureTool.Application.Implementations.Settings;
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using CaptureTool.Presentation.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.UseCases.Settings;
 using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
@@ -14,7 +14,7 @@ using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Themes;
 using System.Collections.ObjectModel;
 
-namespace CaptureTool.Application.Implementations.ViewModels;
+namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 {

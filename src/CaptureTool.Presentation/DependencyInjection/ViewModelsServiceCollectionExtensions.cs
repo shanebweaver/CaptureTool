@@ -1,12 +1,18 @@
-using CaptureTool.Application.Implementations.ViewModels;
+using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Infrastructure.Interfaces.Factories;
+using CaptureTool.Infrastructure.Interfaces.Localization;
+using CaptureTool.Infrastructure.Interfaces.Themes;
+using CaptureTool.Presentation.ViewModels;
+using CaptureTool.Presentation.ViewModels.Factories;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CaptureTool.Application.Implementations.DependencyInjection;
+namespace CaptureTool.Presentation.DependencyInjection;
 
 public static class ViewModelsServiceCollectionExtensions
 {
     public static IServiceCollection AddViewModels(this IServiceCollection services)
     {
+        // ViewModels
         services.AddTransient<MainWindowViewModel>();
         services.AddTransient<SelectionOverlayWindowViewModel>();
         services.AddTransient<ErrorPageViewModel>();
@@ -23,6 +29,13 @@ public static class ViewModelsServiceCollectionExtensions
         services.AddTransient<DiagnosticsViewModel>();
         services.AddTransient<SelectionOverlayHostViewModel>();
         services.AddTransient<CaptureOverlayViewModel>();
+
+        // Factories
+        services.AddTransient<IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?>, AppLanguageViewModelFactory>();
+        services.AddTransient<IFactoryServiceWithArgs<AppThemeViewModel, AppTheme>, AppThemeViewModelFactory>();
+        services.AddTransient<IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode>, CaptureModeViewModelFactory>();
+        services.AddTransient<IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType>, CaptureTypeViewModelFactory>();
+        services.AddTransient<IFactoryServiceWithArgs<RecentCaptureViewModel, string>, RecentCaptureViewModelFactory>();
         return services;
     }
 }

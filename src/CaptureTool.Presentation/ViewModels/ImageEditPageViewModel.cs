@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations.ViewModels.Helpers;
+using CaptureTool.Presentation.ViewModels.Helpers;
 using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Store;
 using CaptureTool.Domain.Capture.Interfaces;
@@ -20,7 +20,7 @@ using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Numerics;
 
-namespace CaptureTool.Application.Implementations.ViewModels;
+namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
 {
