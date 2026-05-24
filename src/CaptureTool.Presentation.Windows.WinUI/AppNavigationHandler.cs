@@ -1,6 +1,6 @@
 using CaptureTool.Application.Services.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Interfaces.Navigation;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;
 using CaptureTool.Infrastructure.Interfaces.Windowing;

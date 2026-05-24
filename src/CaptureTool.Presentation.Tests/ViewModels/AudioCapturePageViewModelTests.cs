@@ -2,7 +2,7 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Presentation.ViewModels;
 using CaptureTool.Application.Abstractions.UseCases.AudioCapture;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
 

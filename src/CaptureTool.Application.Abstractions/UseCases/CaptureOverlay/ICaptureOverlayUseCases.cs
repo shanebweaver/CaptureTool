@@ -9,8 +9,8 @@ public interface ICaptureOverlayUseCases
     bool CanToggleDesktopAudio();
     void ToggleDesktopAudio();
     // Start video capture
-    bool CanStartVideoCapture(CaptureTool.Domain.Capture.Interfaces.NewCaptureArgs args);
-    void StartVideoCapture(CaptureTool.Domain.Capture.Interfaces.NewCaptureArgs args);
+    bool CanStartVideoCapture(CaptureTool.Domain.Capture.Abstractions.NewCaptureArgs args);
+    void StartVideoCapture(CaptureTool.Domain.Capture.Abstractions.NewCaptureArgs args);
     // Stop video capture
     bool CanStopVideoCapture();
     void StopVideoCapture();

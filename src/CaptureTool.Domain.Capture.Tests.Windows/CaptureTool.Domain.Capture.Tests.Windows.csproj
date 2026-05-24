@@ -11,8 +11,9 @@
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture.Implementations.Windows\CaptureTool.Domain.Capture.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture.Interfaces\CaptureTool.Domain.Capture.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture.Windows\CaptureTool.Domain.Capture.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture.Abstractions\CaptureTool.Domain.Capture.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit.Implementations.Windows\CaptureTool.Domain.Edit.Implementations.Windows.csproj" />
   </ItemGroup>
 
   <!-- Package references -->

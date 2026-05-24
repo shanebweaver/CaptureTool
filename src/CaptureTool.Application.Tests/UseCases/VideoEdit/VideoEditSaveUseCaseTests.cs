@@ -2,7 +2,7 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Settings;
 using CaptureTool.Application.UseCases.VideoEdit;
-using CaptureTool.Domain.Capture.Interfaces.Metadata;
+using CaptureTool.Domain.Capture.Abstractions.Metadata;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Storage;

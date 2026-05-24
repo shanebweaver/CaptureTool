@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 
