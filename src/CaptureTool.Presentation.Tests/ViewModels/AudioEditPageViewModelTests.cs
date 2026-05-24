@@ -1,9 +1,9 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Presentation.ViewModels;
-using CaptureTool.Application.Interfaces.UseCases.AudioEdit;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Application.Abstractions.UseCases.AudioEdit;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using Moq;
 
 namespace CaptureTool.Application.Tests.ViewModels;

@@ -1,9 +1,9 @@
 using CaptureTool.Presentation.ViewModels.Helpers;
-using CaptureTool.Application.Interfaces.UseCases.AudioCapture;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Implementations.ViewModels;
-using CaptureTool.Infrastructure.Interfaces.Commands;
-using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Application.Abstractions.UseCases.AudioCapture;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Infrastructure.Abstractions.Commands;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 
 namespace CaptureTool.Presentation.ViewModels;
 

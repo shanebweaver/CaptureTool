@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Edit.Interfaces;
+using CaptureTool.Domain.Edit.Abstractions;
 using Microsoft.UI.Xaml.Data;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Converters;

@@ -1,0 +1,12 @@
+using CaptureTool.Infrastructure.Abstractions.Storage;
+
+namespace CaptureTool.Domain.Capture.Abstractions;
+
+public partial interface IImageCaptureHandler
+{
+    event EventHandler<IImageFile>? NewImageCaptured;
+
+    ImageFile PerformImageCapture(NewCaptureArgs args);
+    ImageFile PerformMultiMonitorImageCapture(MonitorCaptureResult[] monitors);
+    ImageFile PerformAllScreensCapture();
+}

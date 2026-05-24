@@ -1,6 +1,6 @@
-using CaptureTool.Infrastructure.Implementations.Commands;
-using CaptureTool.Infrastructure.Interfaces.Commands;
-using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Commands;
+using CaptureTool.Infrastructure.Abstractions.Commands;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 
 namespace CaptureTool.Presentation.ViewModels.Helpers;
 

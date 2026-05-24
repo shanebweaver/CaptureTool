@@ -1,9 +1,9 @@
-using CaptureTool.Application.Implementations.Services.Navigation;
-using CaptureTool.Application.Interfaces.Navigation;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces.Navigation;
-using CaptureTool.Infrastructure.Interfaces.Shutdown;
-using CaptureTool.Infrastructure.Interfaces.Windowing;
+using CaptureTool.Application.Services.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Infrastructure.Abstractions.Shutdown;
+using CaptureTool.Infrastructure.Abstractions.Windowing;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 
 namespace CaptureTool.Presentation.Windows.WinUI;

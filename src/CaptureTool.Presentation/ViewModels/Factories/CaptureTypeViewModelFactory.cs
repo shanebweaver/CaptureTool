@@ -1,6 +1,6 @@
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces.Factories;
-using CaptureTool.Infrastructure.Interfaces.Localization;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.Abstractions.Factories;
+using CaptureTool.Infrastructure.Abstractions.Localization;
 
 namespace CaptureTool.Presentation.ViewModels.Factories;
 

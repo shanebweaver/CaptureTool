@@ -1,6 +1,6 @@
-﻿using CaptureTool.Application.Interfaces;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Implementations.ViewModels;
+﻿using CaptureTool.Application.Abstractions;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.ViewModels;
 
 namespace CaptureTool.Presentation.ViewModels;
 

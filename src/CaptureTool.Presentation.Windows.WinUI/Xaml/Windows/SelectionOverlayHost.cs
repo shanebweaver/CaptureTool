@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Presentation.ViewModels;
-using CaptureTool.Domain.Capture.Implementations.Windows;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Windows;
+using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using System.Drawing;

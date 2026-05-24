@@ -1,5 +1,5 @@
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Implementations.Windows.Commands;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.Windows.Commands;
 using Microsoft.UI.Xaml.Controls;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;

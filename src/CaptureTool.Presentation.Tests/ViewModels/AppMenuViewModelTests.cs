@@ -1,9 +1,9 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Interfaces.UseCases.AppMenu;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Application.Abstractions.UseCases.AppMenu;
+using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Presentation.ViewModels;
 using Moq;
 

@@ -1,11 +1,11 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.Services.Navigation;
-using CaptureTool.Application.Implementations.UseCases.CaptureOverlay;
-using CaptureTool.Application.Interfaces.Navigation;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Implementations.Navigation;
-using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Application.Services.Navigation;
+using CaptureTool.Application.UseCases.CaptureOverlay;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.Navigation;
+using CaptureTool.Infrastructure.Abstractions.Navigation;
 using Moq;
 using System.Drawing;
 

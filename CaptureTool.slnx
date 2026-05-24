@@ -17,34 +17,34 @@
   <Project Path="src/CaptureInterop.Lib/CaptureInterop.Lib.vcxproj" Id="8b5e7a7c-3d1f-4e9a-9c2b-1f6d8e3a5b4c" />
   <Project Path="src/CaptureInterop.Tests/CaptureInterop.Tests.vcxproj" />
   <Project Path="src/CaptureInterop/CaptureInterop.vcxproj" Id="e576bd23-e4b5-4a1e-a385-87cb932e6d32" />
-  <Project Path="src/CaptureTool.Application.Implementations/CaptureTool.Application.Implementations.csproj" />
-  <Project Path="src/CaptureTool.Application.Interfaces/CaptureTool.Application.Interfaces.csproj" />
+  <Project Path="src/CaptureTool.Application.Abstractions/CaptureTool.Application.Abstractions.csproj" />
+  <Project Path="src/CaptureTool.Application/CaptureTool.Application.csproj" />
   <Project Path="src/CaptureTool.Application.Tests/CaptureTool.Application.Tests.csproj" />
-  <Project Path="src/CaptureTool.Domain.Capture.Implementations.Windows/CaptureTool.Domain.Capture.Implementations.Windows.csproj">
+  <Project Path="src/CaptureTool.Domain.Capture.Windows/CaptureTool.Domain.Capture.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domain.Capture.Interfaces/CaptureTool.Domain.Capture.Interfaces.csproj" />
+  <Project Path="src/CaptureTool.Domain.Capture.Abstractions/CaptureTool.Domain.Capture.Abstractions.csproj" />
   <Project Path="src/CaptureTool.Domain.Capture.Tests.Windows/CaptureTool.Domain.Capture.Tests.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domain.Edit.Implementations.Windows/CaptureTool.Domain.Edit.Implementations.Windows.csproj">
+  <Project Path="src/CaptureTool.Domain.Edit.Windows/CaptureTool.Domain.Edit.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domain.Edit.Interfaces/CaptureTool.Domain.Edit.Interfaces.csproj" />
+  <Project Path="src/CaptureTool.Domain.Edit.Abstractions/CaptureTool.Domain.Edit.Abstractions.csproj" />
   <Project Path="src/CaptureTool.Domain.Edit.Tests.Windows/CaptureTool.Domain.Edit.Tests.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Infrastructure.Implementations.FeatureManagement/CaptureTool.FeatureManagement.csproj" />
-  <Project Path="src/CaptureTool.Infrastructure.Implementations.Windows/CaptureTool.Infrastructure.Implementations.Windows.csproj">
+  <Project Path="src/CaptureTool.FeatureManagement/CaptureTool.FeatureManagement.csproj" />
+  <Project Path="src/CaptureTool.Infrastructure.Windows/CaptureTool.Infrastructure.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Infrastructure.Implementations/CaptureTool.Infrastructure.Implementations.csproj" />
-  <Project Path="src/CaptureTool.Infrastructure.Interfaces/CaptureTool.Infrastructure.Interfaces.csproj" />
+  <Project Path="src/CaptureTool.Infrastructure/CaptureTool.Infrastructure.csproj" />
+  <Project Path="src/CaptureTool.Infrastructure.Abstractions/CaptureTool.Infrastructure.Abstractions.csproj" />
   <Project Path="src/CaptureTool.Infrastructure.Tests/CaptureTool.Infrastructure.Tests.csproj" />
   <Project Path="src/CaptureTool.Presentation.Tests/CaptureTool.Presentation.Tests.csproj" Id="b99a732e-0834-4598-a1c5-7030a36a486d" />
   <Project Path="src/CaptureTool.Presentation.Windows.WinUI/CaptureTool.Presentation.Windows.WinUI.csproj">

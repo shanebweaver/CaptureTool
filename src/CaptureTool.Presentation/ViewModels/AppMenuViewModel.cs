@@ -1,11 +1,11 @@
-using CaptureTool.Application.Interfaces.UseCases.AppMenu;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Application.Abstractions.UseCases.AppMenu;
+using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Infrastructure.Implementations.ViewModels;
-using CaptureTool.Infrastructure.Interfaces.Commands;
-using CaptureTool.Infrastructure.Interfaces.Factories;
-using CaptureTool.Infrastructure.Interfaces.Storage;
-using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Infrastructure.Abstractions.Commands;
+using CaptureTool.Infrastructure.Abstractions.Factories;
+using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Presentation.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 

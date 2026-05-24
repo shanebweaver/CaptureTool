@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Implementations.ViewModels;
-using CaptureTool.Infrastructure.Interfaces.Localization;
+using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Infrastructure.Abstractions.Localization;
 using System.Globalization;
 
 namespace CaptureTool.Presentation.ViewModels;

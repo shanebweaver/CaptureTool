@@ -1,11 +1,11 @@
 using CaptureTool.Presentation.ViewModels.Helpers;
-using CaptureTool.Application.Interfaces.UseCases.VideoEdit;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
-using CaptureTool.Infrastructure.Implementations.ViewModels;
-using CaptureTool.Infrastructure.Interfaces.Commands;
-using CaptureTool.Infrastructure.Interfaces.Storage;
-using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Application.Abstractions.UseCases.VideoEdit;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.UseCases.Extensions;
+using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Infrastructure.Abstractions.Commands;
+using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 
 namespace CaptureTool.Presentation.ViewModels;
 

@@ -1,8 +1,8 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.Home;
-using CaptureTool.Application.Interfaces.Navigation;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Application.UseCases.Home;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Domain.Capture.Abstractions;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.Home;
