@@ -1,5 +1,5 @@
 using CaptureTool.Presentation.ViewModels.Helpers;
-using CaptureTool.Application.Interfaces.UseCases.Diagnostics;
+using CaptureTool.Application.Abstractions.UseCases.Diagnostics;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Logging;

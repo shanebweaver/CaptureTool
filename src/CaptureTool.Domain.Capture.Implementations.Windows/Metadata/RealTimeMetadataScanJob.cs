@@ -1,4 +1,4 @@
-using CaptureTool.Application.Interfaces;
+using CaptureTool.Application.Abstractions;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
 using CaptureTool.Infrastructure.Interfaces.Logging;

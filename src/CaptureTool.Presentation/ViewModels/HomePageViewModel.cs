@@ -1,4 +1,4 @@
-using CaptureTool.Application.Interfaces.UseCases.Home;
+using CaptureTool.Application.Abstractions.UseCases.Home;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 using CaptureTool.Infrastructure.Implementations.ViewModels;

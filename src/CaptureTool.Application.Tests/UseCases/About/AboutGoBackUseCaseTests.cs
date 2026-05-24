@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.About;
-using CaptureTool.Application.Interfaces.Navigation;
+using CaptureTool.Application.UseCases.About;
+using CaptureTool.Application.Abstractions.Navigation;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.About;

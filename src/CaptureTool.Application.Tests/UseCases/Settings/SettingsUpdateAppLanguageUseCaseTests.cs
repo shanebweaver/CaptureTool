@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.Settings;
+using CaptureTool.Application.UseCases.Settings;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using Moq;

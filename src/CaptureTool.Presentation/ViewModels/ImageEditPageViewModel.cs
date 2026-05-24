@@ -1,4 +1,4 @@
-using CaptureTool.Application.Interfaces.Store;
+using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces;
 using CaptureTool.Domain.Edit.Interfaces.ChromaKey;

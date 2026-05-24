@@ -1,5 +1,5 @@
-using CaptureTool.Application.Implementations.Settings;
-using CaptureTool.Application.Interfaces.UseCases.Settings;
+using CaptureTool.Application.Settings;
+using CaptureTool.Application.Abstractions.UseCases.Settings;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 using CaptureTool.Infrastructure.Implementations.ViewModels;

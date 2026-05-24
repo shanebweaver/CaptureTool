@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.Error;
+using CaptureTool.Application.UseCases.Error;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;
 using Moq;
 

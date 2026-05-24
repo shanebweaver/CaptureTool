@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Interfaces.UseCases.AppMenu;
+using CaptureTool.Application.Abstractions.UseCases.AppMenu;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;

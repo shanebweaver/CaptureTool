@@ -1,5 +1,5 @@
 using CaptureTool.Presentation.ViewModels.Helpers;
-using CaptureTool.Application.Interfaces.UseCases.AudioCapture;
+using CaptureTool.Application.Abstractions.UseCases.AudioCapture;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
