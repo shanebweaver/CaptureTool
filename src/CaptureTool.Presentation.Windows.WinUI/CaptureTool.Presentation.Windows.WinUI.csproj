@@ -40,8 +40,8 @@
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
     <ProjectReference Include="..\CaptureTool.Application\CaptureTool.Application.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Edit.Implementations.Windows\CaptureTool.Domain.Edit.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Edit.Interfaces\CaptureTool.Domain.Edit.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit.Windows\CaptureTool.Domain.Edit.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit.Abstractions\CaptureTool.Domain.Edit.Abstractions.csproj" />
     <ProjectReference Include="..\CaptureTool.Domain.Capture.Windows\CaptureTool.Domain.Capture.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Domain.Capture.Abstractions\CaptureTool.Domain.Capture.Abstractions.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations.FeatureManagement\CaptureTool.FeatureManagement.csproj" />

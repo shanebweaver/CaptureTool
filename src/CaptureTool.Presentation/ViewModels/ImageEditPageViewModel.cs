@@ -1,9 +1,9 @@
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Domain.Edit.Interfaces;
-using CaptureTool.Domain.Edit.Interfaces.ChromaKey;
-using CaptureTool.Domain.Edit.Interfaces.Drawable;
-using CaptureTool.Domain.Edit.Interfaces.Operations;
+using CaptureTool.Domain.Edit.Abstractions;
+using CaptureTool.Domain.Edit.Abstractions.ChromaKey;
+using CaptureTool.Domain.Edit.Abstractions.Drawable;
+using CaptureTool.Domain.Edit.Abstractions.Operations;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
