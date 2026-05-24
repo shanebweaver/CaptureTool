@@ -1,4 +1,4 @@
-﻿using CaptureTool.Infrastructure.Interfaces.Commands;
+﻿using CaptureTool.Infrastructure.Abstractions.Commands;
 using System.Drawing;
 
 namespace CaptureTool.Domain.Edit.Abstractions.Operations;

@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Abstractions.Navigation;
 
 namespace CaptureTool.Infrastructure.Tests.Navigation;
 

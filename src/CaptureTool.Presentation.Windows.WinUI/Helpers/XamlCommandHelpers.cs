@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Implementations.Windows.Commands;
-using CaptureTool.Infrastructure.Interfaces.Commands;
+using CaptureTool.Infrastructure.Windows.Commands;
+using CaptureTool.Infrastructure.Abstractions.Commands;
 using System.Windows.Input;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Helpers;

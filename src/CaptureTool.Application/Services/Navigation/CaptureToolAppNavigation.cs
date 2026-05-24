@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Interfaces.Navigation;
-using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Infrastructure.Abstractions.Storage;
 
 namespace CaptureTool.Application.Services.Navigation;
 

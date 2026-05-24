@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.UseCases.VideoEdit;
-using CaptureTool.Infrastructure.Interfaces.Clipboard;
+using CaptureTool.Infrastructure.Abstractions.Clipboard;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.VideoEdit;
@@ -32,6 +32,6 @@ public class VideoEditCopyUseCaseTests
     public async Task ExecuteAsync_ShouldThrowWhenVideoPathIsEmpty()
     {
         var action = Fixture.Create<VideoEditCopyUseCase>();
-        await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => action.ExecuteAsync(string.Empty));
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => action.ExecuteAsync(string.Empty));
     }
 }

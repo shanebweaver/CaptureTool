@@ -1,4 +1,4 @@
-<Project Sdk="MSTest.Sdk/3.6.4">
+<Project Sdk="MSTest.Sdk/4.0.2">
 
   <!-- Project properties -->
   <PropertyGroup>
@@ -7,7 +7,7 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations\CaptureTool.Infrastructure.Implementations.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure\CaptureTool.Infrastructure.csproj" />
   </ItemGroup>
 
   <!-- Package references -->

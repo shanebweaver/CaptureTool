@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases.About;
-using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.UseCases;
 
 namespace CaptureTool.Application.UseCases.About;
 

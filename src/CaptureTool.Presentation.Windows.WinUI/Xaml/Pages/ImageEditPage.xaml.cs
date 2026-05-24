@@ -1,5 +1,5 @@
 using CaptureTool.Domain.Edit.Abstractions.Drawable;
-using CaptureTool.Infrastructure.Interfaces.Loading;
+using CaptureTool.Infrastructure.Abstractions.Loading;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;

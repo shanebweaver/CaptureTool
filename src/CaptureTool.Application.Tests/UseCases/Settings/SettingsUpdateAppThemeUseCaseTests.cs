@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.UseCases.Settings;
-using CaptureTool.Infrastructure.Interfaces.Themes;
+using CaptureTool.Infrastructure.Abstractions.Themes;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.Settings;

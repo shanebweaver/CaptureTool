@@ -1,12 +1,12 @@
 using CaptureTool.Application.Settings;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Interfaces.Activation;
-using CaptureTool.Infrastructure.Interfaces.Cancellation;
-using CaptureTool.Infrastructure.Interfaces.Localization;
-using CaptureTool.Infrastructure.Interfaces.Logging;
-using CaptureTool.Infrastructure.Interfaces.Navigation;
-using CaptureTool.Infrastructure.Interfaces.Settings;
+using CaptureTool.Infrastructure.Abstractions.Activation;
+using CaptureTool.Infrastructure.Abstractions.Cancellation;
+using CaptureTool.Infrastructure.Abstractions.Localization;
+using CaptureTool.Infrastructure.Abstractions.Logging;
+using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Infrastructure.Abstractions.Settings;
 using System.Collections.Specialized;
 using System.Web;
 

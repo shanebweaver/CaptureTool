@@ -1,9 +1,9 @@
 using CaptureTool.Application.Abstractions.UseCases.Home;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
-using CaptureTool.Infrastructure.Implementations.ViewModels;
-using CaptureTool.Infrastructure.Interfaces.Commands;
-using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.UseCases.Extensions;
+using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Infrastructure.Abstractions.Commands;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Presentation.ViewModels.Helpers;
 
 namespace CaptureTool.Presentation.ViewModels;

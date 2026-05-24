@@ -1,13 +1,13 @@
 using CaptureTool.Presentation.ViewModels.Helpers;
 using CaptureTool.Application.Abstractions.UseCases.AddOns;
-using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
-using CaptureTool.Infrastructure.Implementations.ViewModels;
-using CaptureTool.Infrastructure.Interfaces.Cancellation;
-using CaptureTool.Infrastructure.Interfaces.Commands;
-using CaptureTool.Infrastructure.Interfaces.Localization;
-using CaptureTool.Infrastructure.Interfaces.Store;
-using CaptureTool.Infrastructure.Interfaces.Telemetry;
-using CaptureTool.Infrastructure.Interfaces.Windowing;
+using CaptureTool.Infrastructure.UseCases.Extensions;
+using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Infrastructure.Abstractions.Cancellation;
+using CaptureTool.Infrastructure.Abstractions.Commands;
+using CaptureTool.Infrastructure.Abstractions.Localization;
+using CaptureTool.Infrastructure.Abstractions.Store;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Infrastructure.Abstractions.Windowing;
 using static CaptureTool.Application.Abstractions.Store.CaptureToolStoreProducts;
 
 namespace CaptureTool.Presentation.ViewModels;

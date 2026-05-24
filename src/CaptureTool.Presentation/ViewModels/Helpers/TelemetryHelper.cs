@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 

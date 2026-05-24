@@ -1,6 +1,6 @@
 using CaptureTool.Domain.Edit.Abstractions;
 using CaptureTool.Domain.Edit.Abstractions.Drawable;
-using CaptureTool.Infrastructure.Interfaces.Clipboard;
+using CaptureTool.Infrastructure.Abstractions.Clipboard;
 using Microsoft.Graphics.Canvas;
 using Windows.Storage;
 using Windows.Storage.Provider;

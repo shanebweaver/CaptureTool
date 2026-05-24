@@ -1,9 +1,9 @@
 using CaptureTool.Application.Settings;
 using CaptureTool.Application.Abstractions.UseCases.Settings;
-using CaptureTool.Infrastructure.Implementations.UseCases;
-using CaptureTool.Infrastructure.Interfaces.Settings;
-using CaptureTool.Infrastructure.Interfaces.Storage;
-using CaptureTool.Infrastructure.Interfaces.Windowing;
+using CaptureTool.Infrastructure.UseCases;
+using CaptureTool.Infrastructure.Abstractions.Settings;
+using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Infrastructure.Abstractions.Windowing;
 
 namespace CaptureTool.Application.UseCases.Settings;
 

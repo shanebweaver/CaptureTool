@@ -1,4 +1,4 @@
-﻿<Project Sdk="MSTest.Sdk/3.6.4">
+﻿<Project Sdk="MSTest.Sdk/4.0.2">
 
   <!-- Project properties -->
   <PropertyGroup>
