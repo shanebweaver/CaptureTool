@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases.Home;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Implementations.UseCases;
+using CaptureTool.Infrastructure.UseCases;
 
 namespace CaptureTool.Application.UseCases.Home;
 

@@ -4,8 +4,8 @@ using CaptureTool.Application.Services.Navigation;
 using CaptureTool.Application.UseCases.CaptureOverlay;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Implementations.Navigation;
-using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Navigation;
+using CaptureTool.Infrastructure.Abstractions.Navigation;
 using Moq;
 using System.Drawing;
 

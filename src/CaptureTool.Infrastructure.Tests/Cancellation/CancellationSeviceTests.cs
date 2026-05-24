@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Implementations.Cancellation;
+using CaptureTool.Infrastructure.Cancellation;
 
 namespace CaptureTool.Infrastructure.Tests.Cancellation;
 
@@ -100,7 +100,7 @@ public sealed class CancellationSeviceTests
 
         service.Dispose();
 
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             service.GetLinkedCancellationTokenSource();
         });

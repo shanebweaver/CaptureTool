@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Interfaces.Logging;
+using CaptureTool.Infrastructure.Abstractions.Logging;
 
 namespace CaptureTool.Application.Abstractions.UseCases.Diagnostics;
 

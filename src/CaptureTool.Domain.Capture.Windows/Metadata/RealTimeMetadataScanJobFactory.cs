@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions;
 using CaptureTool.Domain.Capture.Abstractions.Metadata;
-using CaptureTool.Infrastructure.Interfaces.Logging;
+using CaptureTool.Infrastructure.Abstractions.Logging;
 
 namespace CaptureTool.Domain.Capture.Windows.Metadata;
 

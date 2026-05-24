@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Domain.Capture.Abstractions.Metadata;
-using CaptureTool.Infrastructure.Interfaces.Logging;
+using CaptureTool.Infrastructure.Abstractions.Logging;
 using System.Collections.Concurrent;
 using System.Text.Json;
 

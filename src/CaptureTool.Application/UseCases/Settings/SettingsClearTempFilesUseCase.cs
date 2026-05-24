@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.UseCases.Settings;
-using CaptureTool.Infrastructure.Implementations.UseCases;
-using CaptureTool.Infrastructure.Interfaces.Logging;
+using CaptureTool.Infrastructure.UseCases;
+using CaptureTool.Infrastructure.Abstractions.Logging;
 
 namespace CaptureTool.Application.UseCases.Settings;
 

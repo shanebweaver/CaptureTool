@@ -2,9 +2,9 @@ using CaptureTool.Application.Abstractions;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases.AppMenu;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Interfaces.Shutdown;
-using CaptureTool.Infrastructure.Interfaces.Storage;
-using CaptureTool.Infrastructure.Interfaces.Windowing;
+using CaptureTool.Infrastructure.Abstractions.Shutdown;
+using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Infrastructure.Abstractions.Windowing;
 
 namespace CaptureTool.Application.UseCases.AppMenu;
 

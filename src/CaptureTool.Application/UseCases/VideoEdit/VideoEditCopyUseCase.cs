@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.UseCases.VideoEdit;
-using CaptureTool.Infrastructure.Implementations.UseCases;
-using CaptureTool.Infrastructure.Interfaces.Clipboard;
+using CaptureTool.Infrastructure.UseCases;
+using CaptureTool.Infrastructure.Abstractions.Clipboard;
 
 namespace CaptureTool.Application.UseCases.VideoEdit;
 

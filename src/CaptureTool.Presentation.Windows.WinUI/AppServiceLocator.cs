@@ -1,8 +1,8 @@
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Infrastructure.Interfaces.Logging;
-using CaptureTool.Infrastructure.Interfaces.Shutdown;
+using CaptureTool.Infrastructure.Abstractions.Logging;
+using CaptureTool.Infrastructure.Abstractions.Shutdown;
 
 namespace CaptureTool.Presentation.Windows.WinUI;
 

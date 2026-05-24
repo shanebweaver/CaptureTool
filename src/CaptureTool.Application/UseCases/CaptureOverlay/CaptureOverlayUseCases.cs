@@ -1,6 +1,6 @@
 ﻿using CaptureTool.Application.Abstractions.UseCases.CaptureOverlay;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
+using CaptureTool.Infrastructure.UseCases.Extensions;
 
 namespace CaptureTool.Application.UseCases.CaptureOverlay;
 

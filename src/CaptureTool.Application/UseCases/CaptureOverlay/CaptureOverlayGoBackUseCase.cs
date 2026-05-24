@@ -2,8 +2,8 @@ using CaptureTool.Application.Services.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases.CaptureOverlay;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Implementations.UseCases;
-using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Infrastructure.UseCases;
+using CaptureTool.Infrastructure.Abstractions.Navigation;
 
 namespace CaptureTool.Application.UseCases.CaptureOverlay;
 

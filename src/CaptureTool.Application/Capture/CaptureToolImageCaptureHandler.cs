@@ -1,10 +1,10 @@
 using CaptureTool.Application.Settings;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Interfaces.Clipboard;
-using CaptureTool.Infrastructure.Interfaces.Settings;
-using CaptureTool.Infrastructure.Interfaces.Storage;
-using CaptureTool.Infrastructure.Interfaces.TaskEnvironment;
-using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Infrastructure.Abstractions.Clipboard;
+using CaptureTool.Infrastructure.Abstractions.Settings;
+using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using System.Drawing;
 
 namespace CaptureTool.Application.Capture;

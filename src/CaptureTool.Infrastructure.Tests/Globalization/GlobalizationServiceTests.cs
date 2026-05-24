@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Implementations.Globalization;
+using CaptureTool.Infrastructure.Globalization;
 using System.Globalization;
 
 namespace CaptureTool.Infrastructure.Tests.Globalization;

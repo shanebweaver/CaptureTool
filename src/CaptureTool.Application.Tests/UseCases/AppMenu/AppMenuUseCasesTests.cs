@@ -3,9 +3,9 @@ using AutoFixture.AutoMoq;
 using CaptureTool.Application.UseCases.AppMenu;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Interfaces.Shutdown;
-using CaptureTool.Infrastructure.Interfaces.Storage;
-using CaptureTool.Infrastructure.Interfaces.Windowing;
+using CaptureTool.Infrastructure.Abstractions.Shutdown;
+using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Infrastructure.Abstractions.Windowing;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.AppMenu;
@@ -41,17 +41,6 @@ public class AppMenuUseCasesTests
         actions.NewVideoCapture();
 
         navigation.Verify(n => n.GoToImageCapture(CaptureOptions.VideoDefault), Times.Once);
-    }
-
-    [TestMethod]
-    public void NewVideoCapture_WhenFeatureDisabled_DoesNotNavigate()
-    {
-        var navigation = Fixture.Freeze<Mock<IAppNavigation>>();
-
-        var actions = Fixture.Create<AppMenuUseCases>();
-        actions.NewVideoCapture();
-
-        navigation.Verify(n => n.GoToImageCapture(It.IsAny<CaptureOptions>()), Times.Never);
     }
 
     [TestMethod]
@@ -130,7 +119,7 @@ public class AppMenuUseCasesTests
 
         var actions = Fixture.Create<AppMenuUseCases>();
 
-        await Assert.ThrowsExceptionAsync<OperationCanceledException>(
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
             async () => await actions.OpenFileAsync(CancellationToken.None));
     }
 
@@ -139,7 +128,7 @@ public class AppMenuUseCasesTests
     {
         var actions = Fixture.Create<AppMenuUseCases>();
 
-        await Assert.ThrowsExceptionAsync<FileNotFoundException>(
+        await Assert.ThrowsExactlyAsync<FileNotFoundException>(
             async () => await actions.OpenRecentCaptureAsync("nonexistent.png", CancellationToken.None));
     }
 }

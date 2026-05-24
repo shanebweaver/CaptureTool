@@ -1,5 +1,5 @@
 using CaptureTool.Application.Abstractions;
-using CaptureTool.Infrastructure.Interfaces.Factories;
+using CaptureTool.Infrastructure.Abstractions.Factories;
 
 namespace CaptureTool.Presentation.ViewModels.Factories;
 

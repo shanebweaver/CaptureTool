@@ -1,7 +1,7 @@
 using CaptureTool.Application.Settings;
 using CaptureTool.Application.Abstractions.UseCases.Diagnostics;
-using CaptureTool.Infrastructure.Interfaces.Logging;
-using CaptureTool.Infrastructure.Interfaces.Settings;
+using CaptureTool.Infrastructure.Abstractions.Logging;
+using CaptureTool.Infrastructure.Abstractions.Settings;
 
 namespace CaptureTool.Application.UseCases.Diagnostics;
 

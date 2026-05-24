@@ -1,5 +1,5 @@
 using CaptureTool.Domain.Edit.Abstractions.ChromaKey;
-using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Infrastructure.Abstractions.Storage;
 using System.Drawing;
 
 namespace CaptureTool.Domain.Edit.Windows.ChromaKey;
