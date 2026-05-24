@@ -1,6 +1,4 @@
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
-
-namespace CaptureTool.Application.Interfaces.FeatureManagement;
+namespace CaptureTool.FeatureManagement;
 
 public static partial class CaptureToolFeatures
 {

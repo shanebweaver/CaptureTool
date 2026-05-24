@@ -1,4 +1,4 @@
-namespace CaptureTool.Infrastructure.Interfaces.FeatureManagement;
+namespace CaptureTool.FeatureManagement;
 
 public sealed partial class FeatureFlag
 {

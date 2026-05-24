@@ -1,10 +1,9 @@
 using CaptureTool.Application.Implementations.Settings;
 using CaptureTool.Application.Interfaces;
-using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Clipboard;
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Storage;

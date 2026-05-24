@@ -1,17 +1,16 @@
 using CaptureTool.Application.Implementations.Settings;
-using CaptureTool.Presentation.ViewModels.Helpers;
-using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.UseCases.Settings;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
 using CaptureTool.Infrastructure.Interfaces.Factories;
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Themes;
+using CaptureTool.Presentation.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 
 namespace CaptureTool.Presentation.ViewModels;

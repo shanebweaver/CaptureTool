@@ -38,7 +38,7 @@
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Infrastructure.Implementations.FeatureManagement/CaptureTool.Infrastructure.Implementations.FeatureManagement.csproj" />
+  <Project Path="src/CaptureTool.Infrastructure.Implementations.FeatureManagement/CaptureTool.FeatureManagement.csproj" />
   <Project Path="src/CaptureTool.Infrastructure.Implementations.Windows/CaptureTool.Infrastructure.Implementations.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
