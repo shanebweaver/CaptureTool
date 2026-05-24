@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Edit.Interfaces.Drawable;
+using CaptureTool.Domain.Edit.Abstractions.Drawable;
 using CaptureTool.Infrastructure.Interfaces.Loading;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI.Xaml;
@@ -130,9 +130,9 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void ShapeToolbar_SelectedShapeTypeIndexChanged(object _, int e)
     {
-        if (Enum.IsDefined(typeof(CaptureTool.Domain.Edit.Interfaces.ShapeType), e))
+        if (Enum.IsDefined(typeof(CaptureTool.Domain.Edit.Abstractions.ShapeType), e))
         {
-            var shapeType = (CaptureTool.Domain.Edit.Interfaces.ShapeType)e;
+            var shapeType = (CaptureTool.Domain.Edit.Abstractions.ShapeType)e;
             ViewModel.UpdateSelectedShapeTypeCommand.Execute(shapeType);
         }
     }

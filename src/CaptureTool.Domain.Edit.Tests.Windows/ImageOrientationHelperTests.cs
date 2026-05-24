@@ -1,4 +1,4 @@
-﻿using CaptureTool.Domain.Edit.Interfaces;
+﻿using CaptureTool.Domain.Edit.Abstractions;
 using System.Drawing;
 
 namespace CaptureTool.Domain.Edit.Tests.Windows;

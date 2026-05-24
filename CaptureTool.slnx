@@ -29,11 +29,11 @@
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domain.Edit.Implementations.Windows/CaptureTool.Domain.Edit.Implementations.Windows.csproj">
+  <Project Path="src/CaptureTool.Domain.Edit.Windows/CaptureTool.Domain.Edit.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domain.Edit.Interfaces/CaptureTool.Domain.Edit.Interfaces.csproj" />
+  <Project Path="src/CaptureTool.Domain.Edit.Abstractions/CaptureTool.Domain.Edit.Abstractions.csproj" />
   <Project Path="src/CaptureTool.Domain.Edit.Tests.Windows/CaptureTool.Domain.Edit.Tests.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
