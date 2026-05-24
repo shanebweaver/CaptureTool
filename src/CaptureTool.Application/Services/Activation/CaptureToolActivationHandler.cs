@@ -1,6 +1,6 @@
 using CaptureTool.Application.Settings;
 using CaptureTool.Application.Abstractions.Navigation;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Interfaces.Activation;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
 using CaptureTool.Infrastructure.Interfaces.Localization;

@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Abstractions;
 using System.Drawing;
 
 namespace CaptureTool.Presentation.ViewModels;

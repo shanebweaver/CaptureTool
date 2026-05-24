@@ -1,5 +1,5 @@
 using CaptureTool.Application.Abstractions.Navigation;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;

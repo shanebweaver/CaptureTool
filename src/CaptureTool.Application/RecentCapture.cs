@@ -1,5 +1,5 @@
 using CaptureTool.Application.Abstractions;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Abstractions;
 
 namespace CaptureTool.Application;
 

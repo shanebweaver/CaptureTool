@@ -1,6 +1,6 @@
 using CaptureTool.Application.Settings;
 using CaptureTool.Application.Abstractions.UseCases.VideoEdit;
-using CaptureTool.Domain.Capture.Interfaces.Metadata;
+using CaptureTool.Domain.Capture.Abstractions.Metadata;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Implementations.UseCases;
 using CaptureTool.Infrastructure.Interfaces.Settings;

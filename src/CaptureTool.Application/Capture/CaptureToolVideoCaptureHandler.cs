@@ -1,7 +1,7 @@
 using CaptureTool.Application.Settings;
 using CaptureTool.Application.Abstractions;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Domain.Capture.Interfaces.Metadata;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture.Abstractions.Metadata;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Clipboard;
 using CaptureTool.Infrastructure.Interfaces.Logging;

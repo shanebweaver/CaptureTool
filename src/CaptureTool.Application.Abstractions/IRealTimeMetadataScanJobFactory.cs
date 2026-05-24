@@ -1,5 +1,5 @@
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Domain.Capture.Interfaces.Metadata;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture.Abstractions.Metadata;
 
 namespace CaptureTool.Application.Abstractions;
 
