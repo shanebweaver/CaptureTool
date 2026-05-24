@@ -1,10 +1,10 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Presentation.ViewModels;
 using CaptureTool.Application.Interfaces.UseCases.AppMenu;
 using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Presentation.ViewModels;
 using Moq;
 
 namespace CaptureTool.Application.Tests.ViewModels;

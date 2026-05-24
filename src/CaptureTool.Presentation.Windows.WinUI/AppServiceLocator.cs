@@ -1,6 +1,6 @@
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;
 

@@ -1,7 +1,6 @@
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using Microsoft.Extensions.Configuration;
 
-namespace CaptureTool.Infrastructure.Implementations.FeatureManagement;
+namespace CaptureTool.FeatureManagement;
 
 public sealed partial class MicrosoftFeatureManager : IFeatureManager
 {

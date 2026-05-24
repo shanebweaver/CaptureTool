@@ -1,11 +1,10 @@
-using CaptureTool.Presentation.ViewModels.Helpers;
-using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.UseCases.Home;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
+using CaptureTool.Presentation.ViewModels.Helpers;
 
 namespace CaptureTool.Presentation.ViewModels;
 

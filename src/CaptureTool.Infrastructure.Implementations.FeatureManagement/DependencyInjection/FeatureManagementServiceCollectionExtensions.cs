@@ -1,7 +1,6 @@
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CaptureTool.Infrastructure.Implementations.FeatureManagement.DependencyInjection;
+namespace CaptureTool.FeatureManagement.DependencyInjection;
 
 public static class FeatureManagementServiceCollectionExtensions
 {

@@ -1,10 +1,8 @@
 using CaptureTool.Application.Implementations.Settings;
-using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.Navigation;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Activation;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Logging;
 using CaptureTool.Infrastructure.Interfaces.Navigation;
@@ -23,7 +21,6 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
     private readonly IAppNavigation _appNavigation;
     private readonly INavigationHandler _navigationHandler;
     private readonly INavigationService _navigationService;
-    private readonly IFeatureManager _featureManager;
 
     private readonly SemaphoreSlim _semaphoreActivation = new(1, 1);
     private readonly SemaphoreSlim _semaphoreInit = new(1, 1);
@@ -37,8 +34,7 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
         ILocalizationService localizationService,
         IAppNavigation appNavigation,
         INavigationHandler navigationHandler,
-        INavigationService navigationService,
-        IFeatureManager featureManager)
+        INavigationService navigationService)
     {
         _cancellationService = cancellationService;
         _settingsService = settingsService;
@@ -47,7 +43,6 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
         _appNavigation = appNavigation;
         _navigationHandler = navigationHandler;
         _navigationService = navigationService;
-        _featureManager = featureManager;
     }
 
     private async Task InitializeAsync()

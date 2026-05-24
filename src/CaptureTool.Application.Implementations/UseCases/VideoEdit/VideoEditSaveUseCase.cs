@@ -1,9 +1,8 @@
 using CaptureTool.Application.Implementations.Settings;
-using CaptureTool.Application.Interfaces.FeatureManagement;
 using CaptureTool.Application.Interfaces.UseCases.VideoEdit;
 using CaptureTool.Domain.Capture.Interfaces.Metadata;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Implementations.UseCases;
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
 using CaptureTool.Infrastructure.Interfaces.Settings;
 using CaptureTool.Infrastructure.Interfaces.Storage;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
@@ -28,7 +27,6 @@ public sealed partial class VideoEditSaveUseCase : AsyncUseCase<string>, IVideoE
         _settingsService = settingsService;
         _featureManager = featureManager;
     }
-
 
     public override async Task ExecuteAsync(string videoPath, CancellationToken cancellationToken = default)
     {
