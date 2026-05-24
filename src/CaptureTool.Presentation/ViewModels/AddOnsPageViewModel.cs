@@ -1,5 +1,5 @@
 using CaptureTool.Presentation.ViewModels.Helpers;
-using CaptureTool.Application.Interfaces.UseCases.AddOns;
+using CaptureTool.Application.Abstractions.UseCases.AddOns;
 using CaptureTool.Infrastructure.Implementations.UseCases.Extensions;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Cancellation;
@@ -8,7 +8,7 @@ using CaptureTool.Infrastructure.Interfaces.Localization;
 using CaptureTool.Infrastructure.Interfaces.Store;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using CaptureTool.Infrastructure.Interfaces.Windowing;
-using static CaptureTool.Application.Interfaces.Store.CaptureToolStoreProducts;
+using static CaptureTool.Application.Abstractions.Store.CaptureToolStoreProducts;
 
 namespace CaptureTool.Presentation.ViewModels;
 

@@ -1,6 +1,6 @@
 using CaptureTool.Presentation.ViewModels.Helpers;
-using CaptureTool.Application.Interfaces.Navigation;
-using CaptureTool.Application.Interfaces.UseCases.CaptureOverlay;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.UseCases.CaptureOverlay;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Implementations.ViewModels;
 using CaptureTool.Infrastructure.Interfaces.Commands;

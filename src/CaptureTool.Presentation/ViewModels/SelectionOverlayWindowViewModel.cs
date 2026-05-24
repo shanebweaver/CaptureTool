@@ -1,4 +1,4 @@
-using CaptureTool.Application.Interfaces.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Implementations.ViewModels;

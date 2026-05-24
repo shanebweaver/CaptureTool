@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.AppMenu;
-using CaptureTool.Application.Interfaces.Navigation;
+using CaptureTool.Application.UseCases.AppMenu;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture.Interfaces;
 using CaptureTool.Infrastructure.Interfaces.Shutdown;
 using CaptureTool.Infrastructure.Interfaces.Storage;

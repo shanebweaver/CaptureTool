@@ -1,4 +1,4 @@
-using CaptureTool.Application.Interfaces;
+using CaptureTool.Application.Abstractions;
 using CaptureTool.Domain.Capture.Implementations.Windows.Metadata;
 using CaptureTool.Domain.Capture.Implementations.Windows.Metadata.Scanners;
 using CaptureTool.Domain.Capture.Interfaces;

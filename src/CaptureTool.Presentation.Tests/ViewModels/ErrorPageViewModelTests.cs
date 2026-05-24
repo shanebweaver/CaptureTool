@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Presentation.ViewModels;
-using CaptureTool.Application.Interfaces.UseCases.Error;
+using CaptureTool.Application.Abstractions.UseCases.Error;
 using CaptureTool.Infrastructure.Interfaces.Telemetry;
 using Moq;
 

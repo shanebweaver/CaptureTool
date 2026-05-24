@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.AudioCapture;
+using CaptureTool.Application.UseCases.AudioCapture;
 using CaptureTool.Domain.Capture.Interfaces;
 using Moq;
 

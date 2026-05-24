@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations;
+using CaptureTool.Application;
 using CaptureTool.Domain.Capture.Interfaces;
 using FluentAssertions;
 

@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.CaptureOverlay;
+using CaptureTool.Application.UseCases.CaptureOverlay;
 using CaptureTool.Domain.Capture.Interfaces;
 using Moq;
 

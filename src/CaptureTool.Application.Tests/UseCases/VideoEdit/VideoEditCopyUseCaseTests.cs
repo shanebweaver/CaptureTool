@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.VideoEdit;
+using CaptureTool.Application.UseCases.VideoEdit;
 using CaptureTool.Infrastructure.Interfaces.Clipboard;
 using Moq;
 
