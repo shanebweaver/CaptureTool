@@ -1,28 +1,26 @@
 using CaptureTool.Application.Abstractions.CaptureOverlay;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.VideoCapture;
 using CaptureTool.Application.Navigation;
+using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Shutdown;
 
 namespace CaptureTool.Application.CaptureOverlay;
 
-public sealed partial class CaptureOverlayCloseAppCommand : ICaptureOverlayCloseAppCommand
+public sealed partial class CaptureOverlayGoBackAppCommand : ICaptureOverlayGoBackAppCommand
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly IShowMainWindowAppCommand _showMainWindowAppCommand;
     private readonly INavigationService _navigationService;
-    private readonly IShutdownHandler _shutdownHandler;
+    private readonly IAppNavigation _appNavigation;
 
-    public CaptureOverlayCloseAppCommand(
+    public CaptureOverlayGoBackAppCommand(
         IVideoCaptureHandler videoCaptureHandler,
-        IShowMainWindowAppCommand showMainWindowAppCommand,
         INavigationService navigationService,
-        IShutdownHandler shutdownHandler)
+        IAppNavigation appNavigation)
     {
         _videoCaptureHandler = videoCaptureHandler;
-        _showMainWindowAppCommand = showMainWindowAppCommand;
         _navigationService = navigationService;
-        _shutdownHandler = shutdownHandler;
+        _appNavigation = appNavigation;
     }
 
     public event EventHandler? CanExecuteChanged;
@@ -51,13 +49,9 @@ public sealed partial class CaptureOverlayCloseAppCommand : ICaptureOverlayClose
         }
         catch { }
 
-        if (_showMainWindowAppCommand.CanExecute())
+        if (!_appNavigation.TryGoBack())
         {
-            _showMainWindowAppCommand.Execute();
-        }
-        else
-        {
-            _shutdownHandler.Shutdown();
+            _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault, true);
         }
     }
 }

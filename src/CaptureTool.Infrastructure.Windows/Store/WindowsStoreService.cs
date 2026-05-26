@@ -20,7 +20,7 @@ public sealed partial class WindowsStoreService : IStoreService
     /// <summary>
     /// Checks if the specified add-on is purchased.
     /// </summary>
-    public async Task<bool> IsAddonPurchasedAsync(string storeProductId)
+    public async Task<bool> IsAddonPurchasedAsync(string storeProductId, CancellationToken cancellationToken)
     {
         string activityId = $"{nameof(WindowsStoreService)}.{nameof(IsAddonPurchasedAsync)}";
         try
@@ -60,7 +60,7 @@ public sealed partial class WindowsStoreService : IStoreService
     /// Prompts the user to purchase the specified add-on.
     /// Returns true if the purchase succeeded.
     /// </summary>
-    public async Task<bool> PurchaseAddonAsync(string storeProductId, nint hwnd)
+    public async Task<bool> PurchaseAddonAsync(string storeProductId, nint hwnd, CancellationToken cancellationToken)
     {
         string activityId = $"{nameof(WindowsStoreService)}.{nameof(PurchaseAddonAsync)}";
         try
@@ -98,7 +98,7 @@ public sealed partial class WindowsStoreService : IStoreService
     /// <summary>
     /// Gets the StoreProduct info for a given storeProductId (if available).
     /// </summary>
-    public async Task<IStoreAddOn> GetAddonProductInfoAsync(string storeProductId)
+    public async Task<IStoreAddOn> GetAddonProductInfoAsync(string storeProductId, CancellationToken cancellationToken)
     {
         string activityId = $"{nameof(WindowsStoreService)}.{nameof(GetAddonProductInfoAsync)}";
         WindowsStoreAddOn addOn;

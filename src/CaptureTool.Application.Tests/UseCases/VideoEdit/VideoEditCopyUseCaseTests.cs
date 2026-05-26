@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.UseCases.VideoEdit;
+using CaptureTool.Application.VideoEdit;
 using CaptureTool.Infrastructure.Abstractions.Clipboard;
 using Moq;
 
@@ -21,7 +21,7 @@ public class VideoEditCopyUseCaseTests
     public async Task ExecuteAsync_ShouldCopyFileToClipboard()
     {
         var clipboardService = Fixture.Freeze<Mock<IClipboardService>>();
-        var action = Fixture.Create<VideoEditCopyUseCase>();
+        var action = Fixture.Create<VideoEditCopyAppCommand>();
 
         await action.ExecuteAsync("/test/video.mp4");
 
@@ -31,7 +31,7 @@ public class VideoEditCopyUseCaseTests
     [TestMethod]
     public async Task ExecuteAsync_ShouldThrowWhenVideoPathIsEmpty()
     {
-        var action = Fixture.Create<VideoEditCopyUseCase>();
+        var action = Fixture.Create<VideoEditCopyAppCommand>();
         await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => action.ExecuteAsync(string.Empty));
     }
 }

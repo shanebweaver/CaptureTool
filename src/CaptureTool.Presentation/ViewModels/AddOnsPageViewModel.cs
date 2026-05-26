@@ -13,8 +13,8 @@ public sealed partial class AddOnsPageViewModel : AsyncLoadableViewModelBase
 {
     public AddOnsPageViewModel(
         IGoBackAppCommand goBackAction,
-        IPurchaseChromaKeyAddOnCommand purchaseChromaKeyAddOnCommand,
-        IGetChromaKeyAddOnQuery getChromaKeyAddOnQuery,
+        IPurchaseChromaKeyAddOnAppCommand purchaseChromaKeyAddOnCommand,
+        IGetChromaKeyAddOnAppQuery getChromaKeyAddOnQuery,
         ILocalizationService localizationService,
         ICancellationService cancellationService)
     {

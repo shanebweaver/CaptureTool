@@ -1,132 +1,123 @@
-using CaptureTool.Application.UseCases.About;
-using CaptureTool.Application.UseCases.AddOns;
-using CaptureTool.Application.UseCases.AudioCapture;
-using CaptureTool.Application.UseCases.AudioEdit;
-using CaptureTool.Application.UseCases.CaptureOverlay;
-using CaptureTool.Application.UseCases.Diagnostics;
-using CaptureTool.Application.UseCases.Loading;
-using CaptureTool.Application.UseCases.Settings;
-using CaptureTool.Application.UseCases.VideoEdit;
-using CaptureTool.Application.Abstractions.UseCases.About;
-using CaptureTool.Application.Abstractions.UseCases.AddOns;
-using CaptureTool.Application.Abstractions.UseCases.AppMenu;
-using CaptureTool.Application.Abstractions.UseCases.AudioCapture;
-using CaptureTool.Application.Abstractions.UseCases.CaptureOverlay;
-using CaptureTool.Application.Abstractions.UseCases.Diagnostics;
-using CaptureTool.Application.Abstractions.UseCases.Loading;
-using CaptureTool.Application.Abstractions.UseCases.Settings;
-using CaptureTool.Application.Abstractions.UseCases.VideoEdit;
-using Microsoft.Extensions.DependencyInjection;
-using CaptureTool.Application.AppMenu;
+using CaptureTool.Application.Abstractions.AppMenu;
+using CaptureTool.Application.Abstractions.AudioCapture;
 using CaptureTool.Application.Abstractions.AudioEdit;
-using CaptureTool.Application.Abstractions.Home;
-using CaptureTool.Application.Home;
-using CaptureTool.Application.Error;
+using CaptureTool.Application.Abstractions.CaptureOverlay;
+using CaptureTool.Application.Abstractions.Diagnostics;
 using CaptureTool.Application.Abstractions.Error;
+using CaptureTool.Application.Abstractions.Home;
+using CaptureTool.Application.Abstractions.ImageCapture;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Application.Abstractions.VideoEdit;
+using CaptureTool.Application.Activation;
+using CaptureTool.Application.AppMenu;
+using CaptureTool.Application.AudioCapture;
+using CaptureTool.Application.AudioEdit;
+using CaptureTool.Application.CaptureOverlay;
+using CaptureTool.Application.Diagnostics;
+using CaptureTool.Application.Error;
+using CaptureTool.Application.Home;
+using CaptureTool.Application.ImageCapture;
+using CaptureTool.Application.Navigation;
+using CaptureTool.Application.Settings;
+using CaptureTool.Application.Store;
+using CaptureTool.Application.VideoCapture;
+using CaptureTool.Application.VideoEdit;
+using CaptureTool.Infrastructure.Abstractions.Activation;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.DependencyInjection;
 
-public static class ApplicationUseCasesServiceCollectionExtensions
+public static class ApplicationAppCommandServiceCollectionExtensions
 {
-    public static IServiceCollection AddCaptureOverlayUseCases(this IServiceCollection services)
+    public static IServiceCollection AddApplicationServices(this ServiceCollection services)
     {
-        services.AddTransient<ICaptureOverlayCloseUseCase, CaptureOverlayCloseUseCase>();
-        services.AddTransient<ICaptureOverlayGoBackUseCase, CaptureOverlayGoBackUseCase>();
-        services.AddTransient<ICaptureOverlayToggleDesktopAudioUseCase, CaptureOverlayToggleDesktopAudioUseCase>();
-        services.AddTransient<ICaptureOverlayTogglePauseResumeUseCase, CaptureOverlayTogglePauseResumeUseCase>();
-        services.AddTransient<ICaptureOverlayStartVideoCaptureUseCase, CaptureOverlayStartVideoCaptureUseCase>();
-        services.AddTransient<ICaptureOverlayStopVideoCaptureUseCase, CaptureOverlayStopVideoCaptureUseCase>();
-        services.AddTransient<ICaptureOverlayUseCases, CaptureOverlayUseCases>();
-        return services;
-    }
+        // Activation
+        services.AddTransient<IActivationHandler, CaptureToolActivationHandler>();
 
-    public static IServiceCollection AddAboutUseCases(this IServiceCollection services)
-    {
-        services.AddTransient<IAboutGoBackUseCase, AboutGoBackUseCase>();
-        return services;
-    }
+        // AppMenu
+        services.AddTransient<IExitApplicationAppCommand, ExitApplicationAppCommand>();
+        services.AddTransient<IGetRecentCapturesAppQuery, GetRecentCapturesAppQuery>();
+        services.AddTransient<INewImageCaptureAppCommand, NewImageCaptureAppCommand>();
+        services.AddTransient<INewVideoCaptureAppCommand, NewVideoCaptureAppCommand>();
+        services.AddTransient<IOpenFileAsyncAppCommand, OpenFileAsyncAppCommand>();
+        services.AddTransient<IOpenRecentCaptureAppCommand, OpenRecentCaptureAppCommand>();
+        services.AddTransient<IShowAboutAppCommand, ShowAboutAppCommand>();
+        services.AddTransient<IShowSettingsAppCommand, ShowSettingsAppCommand>();
+        services.AddTransient<IShowStoreAppCommand, ShowStoreAppCommand>();
 
-    public static IServiceCollection AddAddOnsUseCases(this IServiceCollection services)
-    {
-        services.AddTransient<IAddOnsGoBackUseCase, AddOnsGoBackUseCase>();
-        return services;
-    }
+        // AudioCapture
+        services.AddTransient<IAudioCaptureStartAppCommand, AudioCaptureStartAppCommand>();
+        services.AddTransient<IAudioCaptureStopAppCommand, AudioCaptureStopAppCommand>();
+        services.AddTransient<IAudioCapturePauseAppCommand, AudioCapturePauseAppCommand>();
+        services.AddTransient<IAudioCaptureMuteAppCommand, AudioCaptureMuteAppCommand>();
+        services.AddTransient<IAudioCaptureToggleLocalAudioAppCommand, AudioCaptureToggleLocalAudioAppCommand>();
+        services.AddTransient<IAudioCaptureHandler, CaptureToolAudioCaptureHandler>();
 
-    public static IServiceCollection AddErrorUseCases(this IServiceCollection services)
-    {
-        services.AddTransient<IErrorRestartAppUseCase, ErrorRestartAppUseCase>();
-        return services;
-    }
+        // AudioEdit
+        services.AddTransient<IAudioEditSaveAppCommand, AudioEditSaveAppCommand>();
+        services.AddTransient<IAudioEditCopyAppCommand, AudioEditCopyAppCommand>();
 
-    public static IServiceCollection AddLoadingUseCases(this IServiceCollection services)
-    {
-        services.AddTransient<ILoadingGoBackUseCase, LoadingGoBackUseCase>();
-        return services;
-    }
+        // CaptureOverlay
+        services.AddTransient<ICaptureOverlayCloseAppCommand, CaptureOverlayCloseAppCommand>();
+        services.AddTransient<ICaptureOverlayGoBackAppCommand, CaptureOverlayGoBackAppCommand>();
+        services.AddTransient<ICaptureOverlayToggleDesktopAudioAppCommand, CaptureOverlayToggleDesktopAudioAppCommand>();
+        services.AddTransient<ICaptureOverlayTogglePauseResumeAppCommand, CaptureOverlayTogglePauseResumeAppCommand>();
+        services.AddTransient<ICaptureOverlayStartVideoCaptureAppCommand, CaptureOverlayStartVideoCaptureAppCommand>();
+        services.AddTransient<ICaptureOverlayStopVideoCaptureAppCommand, CaptureOverlayStopVideoCaptureAppCommand>();
 
-    public static IServiceCollection AddHomeUseCases(this IServiceCollection services)
-    {
-        services.AddTransient<IHomeNewImageCaptureUseCase, HomeNewImageCaptureUseCase>();
-        services.AddTransient<IHomeNewVideoCaptureUseCase, HomeNewVideoCaptureUseCase>();
-        services.AddTransient<IHomeNewAudioCaptureUseCase, HomeNewAudioCaptureUseCase>();
-        return services;
-    }
+        // Diagnostics
+        services.AddTransient<IDiagnosticsClearLogsAppCommand, DiagnosticsClearLogsAppCommand>();
+        services.AddTransient<IDiagnosticsGetCurrentLogsAppQuery, DiagnosticsGetCurrentLogsAppQuery>();
+        services.AddTransient<IDiagnosticsIsLoggingEnabledAppQuery, DiagnosticsIsLoggingEnabledAppQuery>();
+        services.AddTransient<IDiagnosticsUpdateLoggingStateAppCommand, DiagnosticsUpdateLoggingStateAppCommand>();
 
-    public static IServiceCollection AddVideoEditUseCases(this IServiceCollection services)
-    {
-        services.AddTransient<IVideoEditSaveUseCase, VideoEditSaveUseCase>();
-        services.AddTransient<IVideoEditCopyUseCase, VideoEditCopyUseCase>();
-        return services;
-    }
+        // Error
+        services.AddTransient<IErrorRestartAppCommand, ErrorRestartAppCommand>();
 
-    public static IServiceCollection AddAudioEditUseCases(this IServiceCollection services)
-    {
-        services.AddTransient<IAudioEditSaveUseCase, AudioEditSaveUseCase>();
-        services.AddTransient<IAudioEditCopyUseCase, AudioEditCopyUseCase>();
-        return services;
-    }
+        // Home
+        services.AddTransient<IHomeNewAudioCaptureAppCommand, HomeNewAudioCaptureAppCommand>();
+        services.AddTransient<IHomeNewImageCaptureAppCommand, HomeNewImageCaptureAppCommand>();
+        services.AddTransient<IHomeNewVideoCaptureAppCommand, HomeNewVideoCaptureAppCommand>();
 
-    public static IServiceCollection AddAudioCaptureUseCases(this IServiceCollection services)
-    {
-        services.AddTransient<IAudioCaptureStartUseCase, AudioCaptureStartUseCase>();
-        services.AddTransient<IAudioCaptureStopUseCase, AudioCaptureStopUseCase>();
-        services.AddTransient<IAudioCapturePauseUseCase, AudioCapturePauseUseCase>();
-        services.AddTransient<IAudioCaptureMuteUseCase, AudioCaptureMuteUseCase>();
-        services.AddTransient<IAudioCaptureToggleDesktopAudioUseCase, AudioCaptureToggleDesktopAudioUseCase>();
-        return services;
-    }
+        // ImageCapture
+        services.AddTransient<IImageCaptureHandler, CaptureToolImageCaptureHandler>();
 
-    public static IServiceCollection AddSettingsUseCases(this IServiceCollection services)
-    {
-        services.AddTransient<ISettingsGoBackUseCase, SettingsGoBackUseCase>();
-        services.AddTransient<ISettingsRestartAppUseCase, SettingsRestartAppUseCase>();
-        services.AddTransient<ISettingsUpdateImageAutoCopyUseCase, SettingsUpdateImageAutoCopyUseCase>();
-        services.AddTransient<ISettingsUpdateImageAutoSaveUseCase, SettingsUpdateImageAutoSaveUseCase>();
-        services.AddTransient<ISettingsUpdateVideoCaptureAutoCopyUseCase, SettingsUpdateVideoCaptureAutoCopyUseCase>();
-        services.AddTransient<ISettingsUpdateVideoCaptureAutoSaveUseCase, SettingsUpdateVideoCaptureAutoSaveUseCase>();
-        services.AddTransient<ISettingsUpdateVideoCaptureDefaultLocalAudioUseCase, SettingsUpdateVideoCaptureDefaultLocalAudioUseCase>();
-        services.AddTransient<ISettingsUpdateVideoMetadataAutoSaveUseCase, SettingsUpdateVideoMetadataAutoSaveUseCase>();
-        services.AddTransient<ISettingsUpdateAppLanguageUseCase, SettingsUpdateAppLanguageUseCase>();
-        services.AddTransient<ISettingsUpdateAppThemeUseCase, SettingsUpdateAppThemeUseCase>();
-        services.AddTransient<ISettingsChangeScreenshotsFolderUseCase, SettingsChangeScreenshotsFolderUseCase>();
-        services.AddTransient<ISettingsChangeVideosFolderUseCase, SettingsChangeVideosFolderUseCase>();
-        services.AddTransient<ISettingsClearTempFilesUseCase, SettingsClearTempFilesUseCase>();
-        services.AddTransient<ISettingsRestoreDefaultsUseCase, SettingsRestoreDefaultsUseCase>();
-        services.AddTransient<ISettingsOpenScreenshotsFolderUseCase, SettingsOpenScreenshotsFolderUseCase>();
-        services.AddTransient<ISettingsOpenVideosFolderUseCase, SettingsOpenVideosFolderUseCase>();
-        services.AddTransient<ISettingsOpenTempFolderUseCase, SettingsOpenTempFolderUseCase>();
-        return services;
-    }
+        // Navigation
+        services.AddTransient<IAppNavigation, CaptureToolAppNavigation>();
 
-    public static IServiceCollection AddAppMenuUseCases(this IServiceCollection services)
-    {
-        services.AddTransient<IAppMenuUseCases, AppMenuUseCases>();
-        return services;
-    }
+        // Settings
+        services.AddTransient<ISettingsGoBackAppCommand, SettingsGoBackAppCommand>();
+        services.AddTransient<ISettingsRestartApplicationAppCommand, SettingsRestartApplicationAppCommand>();
+        services.AddTransient<ISettingsUpdateImageAutoCopyAppCommand, SettingsUpdateImageAutoCopyAppCommand>();
+        services.AddTransient<ISettingsUpdateImageAutoSaveAppCommand, SettingsUpdateImageAutoSaveAppCommand>();
+        services.AddTransient<ISettingsUpdateVideoCaptureAutoCopyAppCommand, SettingsUpdateVideoCaptureAutoCopyAppCommand>();
+        services.AddTransient<ISettingsUpdateVideoCaptureAutoSaveAppCommand, SettingsUpdateVideoCaptureAutoSaveAppCommand>();
+        services.AddTransient<ISettingsUpdateVideoCaptureDefaultLocalAudioAppCommand, SettingsUpdateVideoCaptureDefaultLocalAudioAppCommand>();
+        services.AddTransient<ISettingsUpdateVideoMetadataAutoSaveAppCommand, SettingsUpdateVideoMetadataAutoSaveAppCommand>();
+        services.AddTransient<ISettingsUpdateAppLanguageAppCommand, SettingsUpdateAppLanguageAppCommand>();
+        services.AddTransient<ISettingsUpdateAppThemeAppCommand, SettingsUpdateAppThemeAppCommand>();
+        services.AddTransient<ISettingsChangeScreenshotsFolderAppCommand, SettingsChangeScreenshotsFolderAppCommand>();
+        services.AddTransient<ISettingsChangeVideosFolderAppCommand, SettingsChangeVideosFolderAppCommand>();
+        services.AddTransient<ISettingsClearTempFilesAppCommand, SettingsClearTempFilesAppCommand>();
+        services.AddTransient<ISettingsRestoreDefaultsAppCommand, SettingsRestoreDefaultsAppCommand>();
+        services.AddTransient<ISettingsOpenScreenshotsFolderAppCommand, SettingsOpenScreenshotsFolderAppCommand>();
+        services.AddTransient<ISettingsOpenVideosFolderAppCommand, SettingsOpenVideosFolderAppCommand>();
+        services.AddTransient<ISettingsOpenTempFolderAppCommand, SettingsOpenTempFolderAppCommand>();
 
-    public static IServiceCollection AddDiagnosticsUseCases(this IServiceCollection services)
-    {
-        services.AddTransient<IDiagnosticsUseCases, DiagnosticsUseCases>();
+        // Store
+        services.AddTransient<IGetChromaKeyAddOnAppQuery, GetChromaKeyAddOnAppQuery>();
+        services.AddTransient<IPurchaseChromaKeyAddOnAppCommand, PurchaseChromaKeyAddOnAppCommand>();
+
+        // VideoCapture
+        services.AddTransient<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
+
+        // VideoEdit
+        services.AddTransient<IVideoEditCopyAppCommand, VideoEditCopyAppCommand>();
+        services.AddTransient<IVideoEditSaveAppCommand, VideoEditSaveAppCommand>();
+
         return services;
     }
 }

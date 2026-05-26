@@ -1,8 +1,8 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.UseCases.Settings;
 using CaptureTool.Application.Abstractions.Navigation;
 using Moq;
+using CaptureTool.Application.Settings;
 
 namespace CaptureTool.Application.Tests.UseCases.Settings;
 
@@ -21,7 +21,7 @@ public class SettingsGoBackUseCaseTests
     public void Execute_ShouldGoBackOrHome()
     {
         var appNav = Fixture.Freeze<Mock<IAppNavigation>>();
-        var action = Fixture.Create<SettingsGoBackUseCase>();
+        var action = Fixture.Create<SettingsGoBackAppCommand>();
         action.Execute();
         appNav.Verify(a => a.GoBackOrGoHome(), Times.Once);
     }

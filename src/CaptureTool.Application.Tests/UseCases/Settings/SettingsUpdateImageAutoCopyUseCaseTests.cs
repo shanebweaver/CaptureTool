@@ -1,7 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Settings;
-using CaptureTool.Application.UseCases.Settings;
 using CaptureTool.Infrastructure.Abstractions.Settings;
 using Moq;
 
@@ -22,7 +21,7 @@ public class SettingsUpdateImageAutoCopyUseCaseTests
     public async Task ExecuteAsync_ShouldSetSetting_AndSave()
     {
         var settings = Fixture.Freeze<Mock<ISettingsService>>();
-        var action = Fixture.Create<SettingsUpdateImageAutoCopyUseCase>();
+        var action = Fixture.Create<SettingsUpdateImageAutoCopyAppCommand>();
         await action.ExecuteAsync(true);
         settings.Verify(s => s.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, true), Times.Once);
         settings.Verify(s => s.TrySaveAsync(It.IsAny<CancellationToken>()), Times.Once);
