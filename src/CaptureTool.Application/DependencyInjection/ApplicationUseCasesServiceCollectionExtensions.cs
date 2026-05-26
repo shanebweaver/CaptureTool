@@ -1,12 +1,15 @@
+using CaptureTool.Application.About;
+using CaptureTool.Application.Abstractions.About;
 using CaptureTool.Application.Abstractions.AppMenu;
 using CaptureTool.Application.Abstractions.AudioCapture;
 using CaptureTool.Application.Abstractions.AudioEdit;
 using CaptureTool.Application.Abstractions.CaptureOverlay;
 using CaptureTool.Application.Abstractions.Diagnostics;
 using CaptureTool.Application.Abstractions.Error;
-using CaptureTool.Application.Abstractions.Home;
 using CaptureTool.Application.Abstractions.ImageCapture;
+using CaptureTool.Application.Abstractions.ImageEdit;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.VideoCapture;
@@ -18,9 +21,10 @@ using CaptureTool.Application.AudioEdit;
 using CaptureTool.Application.CaptureOverlay;
 using CaptureTool.Application.Diagnostics;
 using CaptureTool.Application.Error;
-using CaptureTool.Application.Home;
 using CaptureTool.Application.ImageCapture;
+using CaptureTool.Application.ImageEdit;
 using CaptureTool.Application.Navigation;
+using CaptureTool.Application.RecentCaptures;
 using CaptureTool.Application.Settings;
 using CaptureTool.Application.Store;
 using CaptureTool.Application.VideoCapture;
@@ -44,49 +48,45 @@ public static class ApplicationAppCommandServiceCollectionExtensions
         services.AddTransient<INewVideoCaptureAppCommand, NewVideoCaptureAppCommand>();
         services.AddTransient<IOpenFileAsyncAppCommand, OpenFileAsyncAppCommand>();
         services.AddTransient<IOpenRecentCaptureAppCommand, OpenRecentCaptureAppCommand>();
-        services.AddTransient<IShowAboutAppCommand, ShowAboutAppCommand>();
-        services.AddTransient<IShowSettingsAppCommand, ShowSettingsAppCommand>();
-        services.AddTransient<IShowStoreAppCommand, ShowStoreAppCommand>();
+        services.AddTransient<IOpenAboutPageAppCommand, OpenAboutPageAppCommand>();
+        services.AddTransient<IOpenSettingsPageAppCommand, OpenSettingsPageAppCommand>();
 
         // AudioCapture
-        services.AddTransient<IAudioCaptureStartAppCommand, AudioCaptureStartAppCommand>();
-        services.AddTransient<IAudioCaptureStopAppCommand, AudioCaptureStopAppCommand>();
-        services.AddTransient<IAudioCapturePauseAppCommand, AudioCapturePauseAppCommand>();
-        services.AddTransient<IAudioCaptureMuteAppCommand, AudioCaptureMuteAppCommand>();
-        services.AddTransient<IAudioCaptureToggleLocalAudioAppCommand, AudioCaptureToggleLocalAudioAppCommand>();
+        services.AddTransient<IStartAudioCaptureAppCommand, StartAudioCaptureAppCommand>();
+        services.AddTransient<IStopAudioCaptureAppCommand, StopAudioCaptureAppCommand>();
+        services.AddTransient<IPauseAudioCaptureAppCommand, PauseAudioCaptureAppCommand>();
+        services.AddTransient<IMuteAudioCaptureAppCommand, MuteAudioCaptureAppCommand>();
+        services.AddTransient<IToggleLocalAudioCaptureAppCommand, ToggleLocalAudioCaptureAppCommand>();
         services.AddTransient<IAudioCaptureHandler, CaptureToolAudioCaptureHandler>();
 
         // AudioEdit
-        services.AddTransient<IAudioEditSaveAppCommand, AudioEditSaveAppCommand>();
-        services.AddTransient<IAudioEditCopyAppCommand, AudioEditCopyAppCommand>();
+        services.AddTransient<ISaveAudioFileAppCommand, SaveAudioFileAppCommand>();
+        services.AddTransient<ICopyAudioFileAppCommand, CopyAudioFileAppCommand>();
+        services.AddTransient<IOpenAudioEditPageAppCommand, OpenAudioEditPageAppCommand>();
 
         // CaptureOverlay
         services.AddTransient<ICaptureOverlayCloseAppCommand, CaptureOverlayCloseAppCommand>();
         services.AddTransient<ICaptureOverlayGoBackAppCommand, CaptureOverlayGoBackAppCommand>();
-        services.AddTransient<ICaptureOverlayToggleDesktopAudioAppCommand, CaptureOverlayToggleDesktopAudioAppCommand>();
-        services.AddTransient<ICaptureOverlayTogglePauseResumeAppCommand, CaptureOverlayTogglePauseResumeAppCommand>();
-        services.AddTransient<ICaptureOverlayStartVideoCaptureAppCommand, CaptureOverlayStartVideoCaptureAppCommand>();
-        services.AddTransient<ICaptureOverlayStopVideoCaptureAppCommand, CaptureOverlayStopVideoCaptureAppCommand>();
+        services.AddTransient<IToggleVideoCaptureDesktopAudioAppCommand, ToggleVideoCaptureDesktopAudioAppCommand>();
+        services.AddTransient<IToggleVideoCapturePauseResumeAppCommand, ToggleVideoCapturePauseResumeAppCommand>();
+        services.AddTransient<IStartVideoCaptureAppCommand, StartVideoCaptureAppCommand>();
+        services.AddTransient<IStopVideoCaptureAppCommand, StopVideoCaptureAppCommand>();
 
         // Diagnostics
-        services.AddTransient<IDiagnosticsClearLogsAppCommand, DiagnosticsClearLogsAppCommand>();
-        services.AddTransient<IDiagnosticsGetCurrentLogsAppQuery, DiagnosticsGetCurrentLogsAppQuery>();
-        services.AddTransient<IDiagnosticsIsLoggingEnabledAppQuery, DiagnosticsIsLoggingEnabledAppQuery>();
-        services.AddTransient<IDiagnosticsUpdateLoggingStateAppCommand, DiagnosticsUpdateLoggingStateAppCommand>();
+        services.AddTransient<IClearLogsAppCommand, ClearLogsAppCommand>();
+        services.AddTransient<IGetCurrentLogsAppQuery, GetCurrentLogsAppQuery>();
+        services.AddTransient<IGetIsLoggingEnabledAppQuery, GetIsLoggingEnabledAppQuery>();
+        services.AddTransient<IUpdateLoggingStateAppCommand, UpdateLoggingStateAppCommand>();
 
         // Error
-        services.AddTransient<IErrorRestartAppCommand, ErrorRestartAppCommand>();
-
-        // Home
-        services.AddTransient<IHomeNewAudioCaptureAppCommand, HomeNewAudioCaptureAppCommand>();
-        services.AddTransient<IHomeNewImageCaptureAppCommand, HomeNewImageCaptureAppCommand>();
-        services.AddTransient<IHomeNewVideoCaptureAppCommand, HomeNewVideoCaptureAppCommand>();
+        services.AddTransient<IRestartApplicationAppCommand, RestartApplicationAppCommand>();
 
         // ImageCapture
         services.AddTransient<IImageCaptureHandler, CaptureToolImageCaptureHandler>();
+        services.AddTransient<INewImageCaptureAppCommand, NewImageCaptureAppCommand>();
 
-        // Navigation
-        services.AddTransient<IAppNavigation, CaptureToolAppNavigation>();
+        // ImageEdit
+        services.AddTransient<IOpenImageEditPageAppCommand, OpenImageEditPageAppCommand>();
 
         // Settings
         services.AddTransient<ISettingsGoBackAppCommand, SettingsGoBackAppCommand>();
@@ -99,24 +99,28 @@ public static class ApplicationAppCommandServiceCollectionExtensions
         services.AddTransient<ISettingsUpdateVideoMetadataAutoSaveAppCommand, SettingsUpdateVideoMetadataAutoSaveAppCommand>();
         services.AddTransient<ISettingsUpdateAppLanguageAppCommand, SettingsUpdateAppLanguageAppCommand>();
         services.AddTransient<ISettingsUpdateAppThemeAppCommand, SettingsUpdateAppThemeAppCommand>();
-        services.AddTransient<ISettingsChangeScreenshotsFolderAppCommand, SettingsChangeScreenshotsFolderAppCommand>();
+        services.AddTransient<IChangeScreenshotsFolderAppCommand, ChangeScreenshotsFolderAppCommand>();
         services.AddTransient<ISettingsChangeVideosFolderAppCommand, SettingsChangeVideosFolderAppCommand>();
         services.AddTransient<ISettingsClearTempFilesAppCommand, SettingsClearTempFilesAppCommand>();
         services.AddTransient<ISettingsRestoreDefaultsAppCommand, SettingsRestoreDefaultsAppCommand>();
         services.AddTransient<ISettingsOpenScreenshotsFolderAppCommand, SettingsOpenScreenshotsFolderAppCommand>();
         services.AddTransient<ISettingsOpenVideosFolderAppCommand, SettingsOpenVideosFolderAppCommand>();
         services.AddTransient<ISettingsOpenTempFolderAppCommand, SettingsOpenTempFolderAppCommand>();
+        services.AddTransient<IOpenSettingsPageAppCommand, OpenSettingsPageAppCommand>();
 
         // Store
         services.AddTransient<IGetChromaKeyAddOnAppQuery, GetChromaKeyAddOnAppQuery>();
         services.AddTransient<IPurchaseChromaKeyAddOnAppCommand, PurchaseChromaKeyAddOnAppCommand>();
+        services.AddTransient<IOpenStorePageAppCommand, OpenStorePageAppCommand>();
 
         // VideoCapture
         services.AddTransient<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
+        services.AddTransient<INewVideoCaptureAppCommand, NewVideoCaptureAppCommand>();
 
         // VideoEdit
-        services.AddTransient<IVideoEditCopyAppCommand, VideoEditCopyAppCommand>();
-        services.AddTransient<IVideoEditSaveAppCommand, VideoEditSaveAppCommand>();
+        services.AddTransient<ICopyVideoFileAppCommand, CopyVideoFileAppCommand>();
+        services.AddTransient<ISaveVideoFileAppCommand, SaveVideoFileAppCommand>();
+        services.AddTransient<IOpenVideoEditPageAppCommand, OpenVideoEditPageAppCommand>();
 
         return services;
     }

@@ -102,13 +102,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public bool HasUndoStack
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public bool HasRedoStack
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
@@ -126,97 +126,97 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public ImageFile? ImageFile
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public Size ImageSize
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public ImageOrientation Orientation
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public string MirroredDisplayName
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public string RotationDisplayName
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public bool IsInCropMode
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public bool IsInShapesMode
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public ShapeType SelectedShapeType
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public Color ShapeStrokeColor
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public Color ShapeFillColor
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public int ShapeStrokeWidth
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public Rectangle CropRect
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public bool ShowChromaKeyOptions
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public int ChromaKeyTolerance
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public int ChromaKeyDesaturation
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public Color ChromaKeyColor
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
@@ -234,31 +234,31 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public int SelectedChromaKeyColorOption
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public bool IsChromaKeyAddOnOwned
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public bool IsShapesFeatureEnabled
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public int ZoomPercentage
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public bool IsAutoZoomLocked
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
@@ -306,7 +306,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _operationsUndoStack = [];
         _operationsRedoStack = [];
 
-        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         CopyCommand = commandFactory.CreateAsync(ActivityIds.Copy, CopyAsync);
         ToggleCropModeCommand = commandFactory.Create(ActivityIds.ToggleCropMode, ToggleCropMode);
         ToggleShapesModeCommand = commandFactory.Create(ActivityIds.ToggleShapesMode, ToggleShapesMode, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));

@@ -19,8 +19,6 @@ internal class PurchaseChromaKeyAddOnAppCommand : IPurchaseChromaKeyAddOnAppComm
 
     public bool IsExecuting { get; protected set; }
 
-    public event EventHandler? CanExecuteChanged;
-
     public bool CanExecute()
     {
         return !IsExecuting;

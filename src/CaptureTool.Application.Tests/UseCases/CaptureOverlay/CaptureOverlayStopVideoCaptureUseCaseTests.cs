@@ -26,7 +26,7 @@ public class CaptureOverlayStopVideoCaptureUseCaseTests
     public void CanExecute_ShouldBeFalse_WhenNotOnVideoCaptureRoute()
     {
         var nav = Fixture.Freeze<Mock<INavigationService>>();
-        nav.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.Home));
+        nav.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(NavigationRoute.Home));
 
         var action = Fixture.Create<CaptureOverlayStopVideoCaptureUseCase>();
         bool can = action.CanExecute();
@@ -37,7 +37,7 @@ public class CaptureOverlayStopVideoCaptureUseCaseTests
     public void CanExecute_ShouldBeTrue_OnVideoCaptureRoute()
     {
         var nav = Fixture.Freeze<Mock<INavigationService>>();
-        nav.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.VideoCapture));
+        nav.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(NavigationRoute.VideoCapture));
 
         var action = Fixture.Create<CaptureOverlayStopVideoCaptureUseCase>();
         bool can = action.CanExecute();

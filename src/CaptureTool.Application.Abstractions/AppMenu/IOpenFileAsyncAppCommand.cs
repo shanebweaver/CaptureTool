@@ -2,6 +2,6 @@
 
 namespace CaptureTool.Application.Abstractions.AppMenu;
 
-public interface IOpenFileAsyncAppCommand : IAsyncAppCommand
+public interface IOpenFileAsyncAppCommand : IAsyncConditionalAppCommand
 {
 }

@@ -71,7 +71,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                 _mainWindowHost.HandleNavigationRequest(request);
                 _activeHost = UXHost.MainWindow;
             }
-            else if (request.Route is CaptureToolNavigationRoute imageRoute && imageRoute == CaptureToolNavigationRoute.ImageCapture)
+            else if (request.Route is NavigationRoute imageRoute && imageRoute == NavigationRoute.ImageCapture)
             {
                 if (request.Parameter is not CaptureOptions options)
                 {
@@ -100,7 +100,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                 await CreateSelectionOverlayHostAsync(options);
                 _activeHost = UXHost.SelectionOverlay;
             }
-            else if (request.Route is CaptureToolNavigationRoute videoRoute && videoRoute == CaptureToolNavigationRoute.VideoCapture)
+            else if (request.Route is NavigationRoute videoRoute && videoRoute == NavigationRoute.VideoCapture)
             {
                 if (request.Parameter is not NewCaptureArgs args)
                 {

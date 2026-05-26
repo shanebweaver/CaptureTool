@@ -35,41 +35,41 @@ public sealed partial class CaptureToolAppNavigation : IAppNavigation
     }
 
     public void GoHome()
-        => _navigationService.Navigate(CaptureToolNavigationRoute.Home, clearHistory: true);
+        => _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
 
     public void GoToLoading()
-        => _navigationService.Navigate(CaptureToolNavigationRoute.Loading, clearHistory: true);
+        => _navigationService.Navigate(NavigationRoute.Loading, clearHistory: true);
 
     public void GoToError(Exception exception)
-        => _navigationService.Navigate(CaptureToolNavigationRoute.Error, exception, true);
+        => _navigationService.Navigate(NavigationRoute.Error, exception, true);
 
     public void GoToSettings()
-        => _navigationService.Navigate(CaptureToolNavigationRoute.Settings);
+        => _navigationService.Navigate(NavigationRoute.Settings);
 
     public void GoToAbout()
-        => _navigationService.Navigate(CaptureToolNavigationRoute.About);
+        => _navigationService.Navigate(NavigationRoute.About);
 
     public void GoToStore()
-        => _navigationService.Navigate(CaptureToolNavigationRoute.Store);
+        => _navigationService.Navigate(NavigationRoute.Store);
 
     public void GoToImageCapture(CaptureOptions captureOptions, bool clearHistory = false)
-        => _navigationService.Navigate(CaptureToolNavigationRoute.ImageCapture, captureOptions, clearHistory);
+        => _navigationService.Navigate(NavigationRoute.ImageCapture, captureOptions, clearHistory);
 
     public void GoToVideoCapture(NewCaptureArgs captureArgs)
-        => _navigationService.Navigate(CaptureToolNavigationRoute.VideoCapture, captureArgs);
+        => _navigationService.Navigate(NavigationRoute.VideoCapture, captureArgs);
 
     public void GoToAudioCapture()
-        => _navigationService.Navigate(CaptureToolNavigationRoute.AudioCapture, clearHistory: true);
+        => _navigationService.Navigate(NavigationRoute.AudioCapture, clearHistory: true);
 
     public void GoToAudioEdit()
-        => _navigationService.Navigate(CaptureToolNavigationRoute.AudioEdit, clearHistory: true);
+        => _navigationService.Navigate(NavigationRoute.AudioEdit, clearHistory: true);
 
     public void GoToAudioEdit(IAudioFile audioFile)
-        => _navigationService.Navigate(CaptureToolNavigationRoute.AudioEdit, audioFile, true);
+        => _navigationService.Navigate(NavigationRoute.AudioEdit, audioFile, true);
 
     public void GoToImageEdit(IImageFile imageFile)
-        => _navigationService.Navigate(CaptureToolNavigationRoute.ImageEdit, imageFile, true);
+        => _navigationService.Navigate(NavigationRoute.ImageEdit, imageFile, true);
 
     public void GoToVideoEdit(IVideoFile videoFile)
-        => _navigationService.Navigate(CaptureToolNavigationRoute.VideoEdit, videoFile, true);
+        => _navigationService.Navigate(NavigationRoute.VideoEdit, videoFile, true);
 }

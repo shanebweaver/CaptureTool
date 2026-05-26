@@ -9,7 +9,6 @@
 
   <!-- Package references -->
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Services.Store.SDK" />
     <PackageReference Include="Microsoft.WindowsAppSDK" />

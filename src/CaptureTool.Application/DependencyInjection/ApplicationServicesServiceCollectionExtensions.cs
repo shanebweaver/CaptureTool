@@ -3,8 +3,8 @@ using CaptureTool.Infrastructure.Abstractions.Activation;
 using Microsoft.Extensions.DependencyInjection;
 using CaptureTool.Application.Activation;
 using CaptureTool.Application.Navigation;
-using CaptureTool.Application.AppMenu;
-using CaptureTool.Application.Abstractions.AppMenu;
+using CaptureTool.Application.Abstractions.RecentCaptures;
+using CaptureTool.Application.RecentCaptures;
 
 namespace CaptureTool.Application.DependencyInjection;
 

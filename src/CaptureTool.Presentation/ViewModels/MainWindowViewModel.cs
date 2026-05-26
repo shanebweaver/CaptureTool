@@ -12,13 +12,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public AppTheme CurrentAppTheme
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public AppTheme DefaultAppTheme
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 

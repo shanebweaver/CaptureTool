@@ -7,7 +7,7 @@ using CaptureTool.Infrastructure.Abstractions.Navigation;
 
 namespace CaptureTool.Application.CaptureOverlay;
 
-public sealed partial class CaptureOverlayGoBackAppCommand : ICaptureOverlayGoBackAppCommand
+internal class CaptureOverlayGoBackAppCommand : ICaptureOverlayGoBackAppCommand
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly INavigationService _navigationService;
@@ -23,8 +23,6 @@ public sealed partial class CaptureOverlayGoBackAppCommand : ICaptureOverlayGoBa
         _appNavigation = appNavigation;
     }
 
-    public event EventHandler? CanExecuteChanged;
-
     public bool CanExecute()
     {
         if (!_navigationService.CanGoBack)
@@ -32,8 +30,8 @@ public sealed partial class CaptureOverlayGoBackAppCommand : ICaptureOverlayGoBa
             return false;
         }
 
-        if (_navigationService.CurrentRequest?.Route is not CaptureToolNavigationRoute route
-            || route != CaptureToolNavigationRoute.VideoCapture)
+        if (_navigationService.CurrentRequest?.Route is not NavigationRoute route
+            || route != NavigationRoute.VideoCapture)
         {
             return false;
         }

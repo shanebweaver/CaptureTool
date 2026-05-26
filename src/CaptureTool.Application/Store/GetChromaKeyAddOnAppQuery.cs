@@ -3,7 +3,7 @@ using CaptureTool.Infrastructure.Abstractions.Store;
 
 namespace CaptureTool.Application.Store;
 
-public class GetChromaKeyAddOnAppQuery : IGetChromaKeyAddOnAppQuery
+internal class GetChromaKeyAddOnAppQuery : IGetChromaKeyAddOnAppQuery
 {
     public GetChromaKeyAddOnAppQuery(IStoreService storeService)
     {
@@ -13,8 +13,6 @@ public class GetChromaKeyAddOnAppQuery : IGetChromaKeyAddOnAppQuery
     private readonly IStoreService _storeService;
 
     public bool IsExecuting { get; protected set; }
-
-    public event EventHandler? CanExecuteChanged;
 
     public async Task<IStoreAddOn> ExecuteAsync(CancellationToken cancellationToken)
     {

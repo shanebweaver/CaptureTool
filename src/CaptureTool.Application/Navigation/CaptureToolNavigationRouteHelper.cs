@@ -4,19 +4,19 @@ public static partial class CaptureToolNavigationRouteHelper
 {
     public static bool IsMainWindowRoute(object route)
     {
-        if (route is CaptureToolNavigationRoute navigationRoute)
+        if (route is NavigationRoute navigationRoute)
         {
             return
-                navigationRoute == CaptureToolNavigationRoute.Home ||
-                navigationRoute == CaptureToolNavigationRoute.Loading ||
-                navigationRoute == CaptureToolNavigationRoute.Store ||
-                navigationRoute == CaptureToolNavigationRoute.Error ||
-                navigationRoute == CaptureToolNavigationRoute.About ||
-                navigationRoute == CaptureToolNavigationRoute.Settings ||
-                navigationRoute == CaptureToolNavigationRoute.ImageEdit ||
-                navigationRoute == CaptureToolNavigationRoute.VideoEdit ||
-                navigationRoute == CaptureToolNavigationRoute.AudioCapture ||
-                navigationRoute == CaptureToolNavigationRoute.AudioEdit;
+                navigationRoute == NavigationRoute.Home ||
+                navigationRoute == NavigationRoute.Loading ||
+                navigationRoute == NavigationRoute.Store ||
+                navigationRoute == NavigationRoute.Error ||
+                navigationRoute == NavigationRoute.About ||
+                navigationRoute == NavigationRoute.Settings ||
+                navigationRoute == NavigationRoute.ImageEdit ||
+                navigationRoute == NavigationRoute.VideoEdit ||
+                navigationRoute == NavigationRoute.AudioCapture ||
+                navigationRoute == NavigationRoute.AudioEdit;
         }
 
         return false;
@@ -24,11 +24,11 @@ public static partial class CaptureToolNavigationRouteHelper
 
     public static bool IsOverlayRoute(object route)
     {
-        if (route is CaptureToolNavigationRoute navigationRoute)
+        if (route is NavigationRoute navigationRoute)
         {
             return
-                navigationRoute == CaptureToolNavigationRoute.ImageCapture ||
-                navigationRoute == CaptureToolNavigationRoute.VideoCapture;
+                navigationRoute == NavigationRoute.ImageCapture ||
+                navigationRoute == NavigationRoute.VideoCapture;
         }
 
         return false;

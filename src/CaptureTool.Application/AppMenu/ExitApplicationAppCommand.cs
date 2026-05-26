@@ -12,11 +12,9 @@ internal class ExitApplicationAppCommand : IExitApplicationAppCommand
         _shutdownHandler = shutdownHandler;
     }
 
-    public event EventHandler? CanExecuteChanged;
-
     public bool CanExecute()
     {
-        return true;
+        return !_shutdownHandler.IsShuttingDown;
     }
 
     public void Execute()

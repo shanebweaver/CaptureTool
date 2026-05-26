@@ -17,7 +17,7 @@ public static class ViewModelsServiceCollectionExtensions
         services.AddTransient<SelectionOverlayWindowViewModel>();
         services.AddTransient<ErrorPageViewModel>();
         services.AddTransient<AboutPageViewModel>();
-        services.AddTransient<AddOnsPageViewModel>();
+        services.AddTransient<StorePageViewModel>();
         services.AddTransient<HomePageViewModel>();
         services.AddTransient<SettingsPageViewModel>();
         services.AddTransient<LoadingPageViewModel>();

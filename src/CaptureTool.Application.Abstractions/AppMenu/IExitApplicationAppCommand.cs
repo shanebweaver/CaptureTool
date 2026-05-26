@@ -2,6 +2,6 @@
 
 namespace CaptureTool.Application.Abstractions.AppMenu;
 
-public interface IExitApplicationAppCommand : IAppCommand
+public interface IExitApplicationAppCommand : IConditionalAppCommand
 {
 }

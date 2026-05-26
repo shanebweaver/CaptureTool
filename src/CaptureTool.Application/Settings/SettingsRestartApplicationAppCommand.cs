@@ -3,7 +3,7 @@ using CaptureTool.Infrastructure.Abstractions.Shutdown;
 
 namespace CaptureTool.Application.Settings;
 
-public sealed partial class SettingsRestartApplicationAppCommand : ISettingsRestartApplicationAppCommand
+internal class SettingsRestartApplicationAppCommand : ISettingsRestartApplicationAppCommand
 {
     private readonly IShutdownHandler _shutdownHandler;
 
@@ -11,8 +11,6 @@ public sealed partial class SettingsRestartApplicationAppCommand : ISettingsRest
     {
         _shutdownHandler = shutdownHandler;
     }
-
-    public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute()
     {

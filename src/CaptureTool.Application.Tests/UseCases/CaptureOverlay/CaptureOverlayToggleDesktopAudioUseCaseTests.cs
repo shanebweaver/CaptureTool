@@ -23,7 +23,7 @@ public class CaptureOverlayToggleDesktopAudioUseCaseTests
         var handler = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
         handler.SetupGet(h => h.IsDesktopAudioEnabled).Returns(false);
 
-        var action = Fixture.Create<CaptureOverlayToggleDesktopAudioAppCommand>();
+        var action = Fixture.Create<ToggleVideoCaptureDesktopAudioAppCommand>();
         action.Execute();
 
         handler.Verify(h => h.SetIsDesktopAudioEnabled(true), Times.Once);

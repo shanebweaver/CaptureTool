@@ -1,62 +1,51 @@
-using CaptureTool.Presentation.ViewModels.Helpers;
-using CaptureTool.Application.Abstractions.UseCases.VideoEdit;
+using CaptureTool.Application.Abstractions.VideoEdit;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.UseCases.Extensions;
-using CaptureTool.Infrastructure.ViewModels;
-using CaptureTool.Infrastructure.Abstractions.Commands;
 using CaptureTool.Infrastructure.Abstractions.Storage;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Presentation.ViewModels.Helpers;
+using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVideoFile>
 {
-    public readonly struct ActivityIds
-    {
-        public static readonly string Load = $"LoadVideoEditPage";
-        public static readonly string Save = $"Save";
-        public static readonly string Copy = $"Copy";
-    }
-
-    private const string TelemetryContext = "VideoEditPage";
-
-    public IAsyncAppCommand SaveCommand { get; }
-    public IAsyncAppCommand CopyCommand { get; }
+    public IAsyncRelayCommand SaveCommand { get; }
+    public IAsyncRelayCommand CopyCommand { get; }
 
     public string? VideoPath
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public bool IsVideoReady
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public bool IsFinalizingVideo
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
-    private readonly IVideoEditSaveUseCase _saveAction;
-    private readonly IVideoEditCopyUseCase _copyAction;
+    private readonly ISaveVideoFileAppCommand _saveAction;
+    private readonly ICopyVideoFileAppCommand _copyAction;
     private readonly ITelemetryService _telemetryService;
 
     public VideoEditPageViewModel(
-        IVideoEditSaveUseCase saveAction,
-        IVideoEditCopyUseCase copyAction,
+        ISaveVideoFileAppCommand saveAction,
+        ICopyVideoFileAppCommand copyAction,
         ITelemetryService telemetryService)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
         _telemetryService = telemetryService;
 
-        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
-        SaveCommand = commandFactory.CreateAsync(ActivityIds.Save, SaveAsync);
-        CopyCommand = commandFactory.CreateAsync(ActivityIds.Copy, CopyAsync);
+        SaveCommand = new AsyncRelayCommand(SaveAsync);
+        CopyCommand = new AsyncRelayCommand(CopyAsync);
 
         IsVideoReady = false;
         IsFinalizingVideo = false;
@@ -64,27 +53,24 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     public override void Load(IVideoFile video)
     {
-        TelemetryHelper.ExecuteActivity(_telemetryService, TelemetryContext, ActivityIds.Load, () =>
+        ThrowIfNotReadyToLoad();
+        StartLoading();
+
+        VideoPath = video.FilePath;
+
+        if (video is PendingVideoFile pendingVideo)
         {
-            ThrowIfNotReadyToLoad();
-            StartLoading();
+            IsVideoReady = false;
+            IsFinalizingVideo = true;
+            _ = WaitForVideoFinalizationAsync(pendingVideo);
+        }
+        else
+        {
+            IsVideoReady = true;
+            IsFinalizingVideo = false;
+        }
 
-            VideoPath = video.FilePath;
-
-            if (video is PendingVideoFile pendingVideo)
-            {
-                IsVideoReady = false;
-                IsFinalizingVideo = true;
-                _ = WaitForVideoFinalizationAsync(pendingVideo);
-            }
-            else
-            {
-                IsVideoReady = true;
-                IsFinalizingVideo = false;
-            }
-
-            base.Load(video);
-        });
+        base.Load(video);
     }
 
     private async Task WaitForVideoFinalizationAsync(PendingVideoFile pendingVideo)
@@ -108,7 +94,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
             throw new InvalidOperationException("Cannot save video without a valid filepath.");
         }
 
-        await _saveAction.ExecuteCommandAsync(VideoPath, CancellationToken.None);
+        await _saveAction.ExecuteAsync(VideoPath, CancellationToken.None);
     }
 
     private async Task CopyAsync()
@@ -118,6 +104,6 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
             throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
         }
 
-        await _copyAction.ExecuteCommandAsync(VideoPath, CancellationToken.None);
+        await _copyAction.ExecuteAsync(VideoPath, CancellationToken.None);
     }
 }

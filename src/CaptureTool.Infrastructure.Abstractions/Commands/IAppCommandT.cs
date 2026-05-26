@@ -5,23 +5,11 @@ namespace CaptureTool.Infrastructure.Abstractions.Commands;
 /// This is a platform-agnostic command interface that can be converted to platform-specific command types.
 /// </summary>
 /// <typeparam name="T">The type of the command parameter.</typeparam>
-public interface IAppCommand<in TParameter>
+public interface IAppCommand<in TParameter> where TParameter : notnull
 {
     /// <summary>
     /// Executes the command with the specified parameter.
     /// </summary>
     /// <param name="parameter">The command parameter.</param>
     void Execute(TParameter parameter);
-
-    /// <summary>
-    /// Determines whether the command can execute with the specified parameter.
-    /// </summary>
-    /// <param name="parameter">The command parameter.</param>
-    /// <returns>True if the command can execute; otherwise, false.</returns>
-    bool CanExecute(TParameter parameter);
-
-    /// <summary>
-    /// Occurs when the ability to execute the command has changed.
-    /// </summary>
-    event EventHandler? CanExecuteChanged;
 }

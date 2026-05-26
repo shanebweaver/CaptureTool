@@ -17,8 +17,6 @@ internal class SettingsUpdateAppLanguageAppCommand : ISettingsUpdateAppLanguageA
 
     public bool IsExecuting { get; protected set; }
 
-    public event EventHandler? CanExecuteChanged;
-
     public bool CanExecute(int parameter)
     {
         throw new NotImplementedException();

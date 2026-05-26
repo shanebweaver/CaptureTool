@@ -14,8 +14,6 @@ internal class SettingsUpdateVideoCaptureDefaultLocalAudioAppCommand : ISettings
 
     public bool IsExecuting { get; protected set; }
 
-    public event EventHandler? CanExecuteChanged;
-
     public bool CanExecute(bool parameter)
     {
         return !IsExecuting;

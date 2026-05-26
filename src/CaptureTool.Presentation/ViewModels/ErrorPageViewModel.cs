@@ -1,39 +1,16 @@
-using CaptureTool.Presentation.ViewModels.Helpers;
-using CaptureTool.Infrastructure.UseCases.Extensions;
-using CaptureTool.Infrastructure.ViewModels;
-using CaptureTool.Infrastructure.Abstractions.Commands;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Error;
+using CaptureTool.Infrastructure.ViewModels;
+using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class ErrorPageViewModel : ViewModelBase
 {
-    public readonly struct ActivityIds
-    {
-        public static readonly string RestartApp = "RestartApp";
-    }
-
-    private const string TelemetryContext = "ErrorPage";
-
-    private readonly IErrorRestartAppUseCase _restartAppAction;
-    private readonly ITelemetryService _telemetryService;
-
-    public IAppCommand RestartAppCommand { get; }
+    public IRelayCommand RestartAppCommand { get; }
 
     public ErrorPageViewModel(
-        IErrorRestartAppUseCase restartAppAction,
-        ITelemetryService telemetryService)
+        IRestartApplicationAppCommand restartAppAction)
     {
-        _restartAppAction = restartAppAction;
-        _telemetryService = telemetryService;
-
-        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
-        RestartAppCommand = commandFactory.Create(ActivityIds.RestartApp, RestartApp);
-    }
-
-    private void RestartApp()
-    {
-        _restartAppAction.ExecuteCommand();
+        RestartAppCommand = restartAppAction.ToRelayCommand();
     }
 }

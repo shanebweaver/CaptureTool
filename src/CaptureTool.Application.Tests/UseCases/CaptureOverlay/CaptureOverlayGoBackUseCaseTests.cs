@@ -38,7 +38,7 @@ public class CaptureOverlayGoBackUseCaseTests
     {
         var navService = Fixture.Freeze<Mock<INavigationService>>();
         navService.SetupGet(n => n.CanGoBack).Returns(true);
-        navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.Home));
+        navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(NavigationRoute.Home));
         var handler = Fixture.Create<CaptureOverlayGoBackUseCase>();
 
         bool can = handler.CanExecute();
@@ -50,7 +50,7 @@ public class CaptureOverlayGoBackUseCaseTests
     {
         var navService = Fixture.Freeze<Mock<INavigationService>>();
         navService.SetupGet(n => n.CanGoBack).Returns(true);
-        navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.VideoCapture));
+        navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(NavigationRoute.VideoCapture));
         var handler = Fixture.Create<CaptureOverlayGoBackUseCase>();
 
         bool can = handler.CanExecute();

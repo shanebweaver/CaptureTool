@@ -3,7 +3,7 @@ using CaptureTool.Application.Abstractions.Settings;
 
 namespace CaptureTool.Application.Settings;
 
-public sealed partial class SettingsGoBackAppCommand : ISettingsGoBackAppCommand
+internal class SettingsGoBackAppCommand : ISettingsGoBackAppCommand
 {
     private readonly IAppNavigation _appNavigation;
 
@@ -11,8 +11,6 @@ public sealed partial class SettingsGoBackAppCommand : ISettingsGoBackAppCommand
     {
         _appNavigation = appNavigation;
     }
-
-    public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute()
     {

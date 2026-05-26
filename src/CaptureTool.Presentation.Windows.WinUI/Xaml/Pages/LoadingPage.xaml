@@ -6,8 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Application.Abstractions.ViewModels"
-    d:DataContext="{d:DesignInstance Type=viewmodels:ILoadingPageViewModel}"
+    xmlns:viewmodels="using:CaptureTool.Application.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:LoadingPageViewModel}"
     mc:Ignorable="d">
 
     <Grid>

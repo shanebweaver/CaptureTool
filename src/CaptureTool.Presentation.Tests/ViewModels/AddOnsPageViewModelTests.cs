@@ -16,7 +16,7 @@ public class AddOnsPageViewModelTests
 {
     public required IFixture Fixture { get; set; }
 
-    private AddOnsPageViewModel Create() => Fixture.Create<AddOnsPageViewModel>();
+    private StorePageViewModel Create() => Fixture.Create<StorePageViewModel>();
 
     [TestInitialize]
     public void Init()
@@ -45,7 +45,7 @@ public class AddOnsPageViewModelTests
 
         // Assert
         goBackAction.Verify(a => a.Execute(), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(AddOnsPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(AddOnsPageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
+        telemetryService.Verify(t => t.ActivityInitiated(StorePageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
+        telemetryService.Verify(t => t.ActivityCompleted(StorePageViewModel.ActivityIds.GoBack, It.IsAny<string>()), Times.Once);
     }
 }

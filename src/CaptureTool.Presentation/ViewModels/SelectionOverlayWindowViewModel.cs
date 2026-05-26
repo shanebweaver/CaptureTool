@@ -111,43 +111,43 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public Rectangle CaptureArea
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public MonitorCaptureResult? Monitor
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public IList<Rectangle> MonitorWindows
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public AppTheme CurrentAppTheme
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public AppTheme DefaultAppTheme
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public bool IsDesktopAudioEnabled
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public bool IsCapturingVideo
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
@@ -173,7 +173,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
 
-        TelemetryAppCommandFactory commandFactory = new(telemetryService, TelemetryContext);
         RequestCaptureCommand = commandFactory.Create(ActivityIds.RequestCapture, RequestCapture);
         CloseOverlayCommand = commandFactory.Create(ActivityIds.CloseOverlay, CloseOverlay);
         UpdateSelectedCaptureModeCommand = commandFactory.Create<(int Index, SelectionUpdateSource Source)>(ActivityIds.UpdateSelectedCaptureMode, UpdateSelectedCaptureMode);

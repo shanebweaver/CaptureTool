@@ -1,34 +1,33 @@
-using CaptureTool.Application.Abstractions.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Commands;
+using CaptureTool.Application.Abstractions.About;
 using CaptureTool.Infrastructure.Abstractions.Localization;
-using CaptureTool.Infrastructure.Commands;
 using CaptureTool.Infrastructure.ViewModels;
+using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class AboutPageViewModel : ViewModelBase
 {
     public AboutPageViewModel(
-        IGoBackAppCommand goBackCommand,
+        ILeaveAboutPageAppCommand goBackCommand,
         ILocalizationService localizationService)
     {
         _localizationService = localizationService;
 
-        GoBackCommand = goBackCommand;
-        ShowThirdPartyCommand = AppCommand.Create(() => ShowDialog("About_ThirdParty_DialogTitle", "About_ThirdParty_DialogContent"));
-        ShowPrivacyPolicyCommand = AppCommand.Create(() => ShowDialog("About_PrivacyPolicy_DialogTitle", "About_PrivacyPolicy_DialogContent"));
-        ShowTermsOfUseCommand = AppCommand.Create(() => ShowDialog("About_TermsOfUse_DialogTitle", "About_TermsOfUse_DialogContent"));
-        ShowDisclaimerOfLiabilityCommand = AppCommand.Create(() => ShowDialog("About_DisclaimerOfLiability_DialogTitle", "About_DisclaimerOfLiability_DialogContent"));
+        GoBackCommand = goBackCommand.ToRelayCommand();
+        ShowThirdPartyCommand = new RelayCommand(() => ShowDialog("About_ThirdParty_DialogTitle", "About_ThirdParty_DialogContent"));
+        ShowPrivacyPolicyCommand = new RelayCommand(() => ShowDialog("About_PrivacyPolicy_DialogTitle", "About_PrivacyPolicy_DialogContent"));
+        ShowTermsOfUseCommand = new RelayCommand(() => ShowDialog("About_TermsOfUse_DialogTitle", "About_TermsOfUse_DialogContent"));
+        ShowDisclaimerOfLiabilityCommand = new RelayCommand(() => ShowDialog("About_DisclaimerOfLiability_DialogTitle", "About_DisclaimerOfLiability_DialogContent"));
     }
 
     private readonly ILocalizationService _localizationService;
     public event EventHandler<(string title, string content)>? ShowDialogRequested;
 
-    public IAppCommand ShowThirdPartyCommand { get; }
-    public IAppCommand ShowPrivacyPolicyCommand { get; }
-    public IAppCommand ShowTermsOfUseCommand { get; }
-    public IAppCommand ShowDisclaimerOfLiabilityCommand { get; }
-    public IAppCommand GoBackCommand { get; }
+    public IRelayCommand ShowThirdPartyCommand { get; }
+    public IRelayCommand ShowPrivacyPolicyCommand { get; }
+    public IRelayCommand ShowTermsOfUseCommand { get; }
+    public IRelayCommand ShowDisclaimerOfLiabilityCommand { get; }
+    public IRelayCommand GoBackCommand { get; }
 
     private void ShowDialog(string titleResourceKey, string contentResourceKey)
     {

@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace CaptureTool.Application.Settings;
 
-public sealed partial class SettingsOpenScreenshotsFolderAppCommand : ISettingsOpenScreenshotsFolderAppCommand
+internal class SettingsOpenScreenshotsFolderAppCommand : ISettingsOpenScreenshotsFolderAppCommand
 {
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
@@ -15,8 +15,6 @@ public sealed partial class SettingsOpenScreenshotsFolderAppCommand : ISettingsO
         _settingsService = settingsService;
         _storageService = storageService;
     }
-
-    public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute()
     {

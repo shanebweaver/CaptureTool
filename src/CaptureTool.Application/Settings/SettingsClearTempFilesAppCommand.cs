@@ -4,7 +4,7 @@ using CaptureTool.Infrastructure.Abstractions.Storage;
 
 namespace CaptureTool.Application.Settings;
 
-public sealed partial class SettingsClearTempFilesAppCommand : ISettingsClearTempFilesAppCommand
+internal class SettingsClearTempFilesAppCommand : ISettingsClearTempFilesAppCommand
 {
     public SettingsClearTempFilesAppCommand(
         ILogService logService,
@@ -16,8 +16,6 @@ public sealed partial class SettingsClearTempFilesAppCommand : ISettingsClearTem
 
     private readonly ILogService _logService;
     private readonly IStorageService _storageService;
-
-    public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute()
     {

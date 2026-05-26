@@ -1,31 +1,27 @@
 using CaptureTool.Application.Abstractions.CaptureOverlay;
 using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Application.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Shutdown;
 
 namespace CaptureTool.Application.CaptureOverlay;
 
-public sealed partial class CaptureOverlayCloseAppCommand : ICaptureOverlayCloseAppCommand
+internal class CaptureOverlayCloseAppCommand : ICaptureOverlayCloseAppCommand
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly IShowMainWindowAppCommand _showMainWindowAppCommand;
     private readonly INavigationService _navigationService;
-    private readonly IShutdownHandler _shutdownHandler;
 
     public CaptureOverlayCloseAppCommand(
         IVideoCaptureHandler videoCaptureHandler,
         IShowMainWindowAppCommand showMainWindowAppCommand,
-        INavigationService navigationService,
-        IShutdownHandler shutdownHandler)
+        INavigationService navigationService)
     {
         _videoCaptureHandler = videoCaptureHandler;
         _showMainWindowAppCommand = showMainWindowAppCommand;
         _navigationService = navigationService;
-        _shutdownHandler = shutdownHandler;
     }
-
-    public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute()
     {
@@ -34,8 +30,8 @@ public sealed partial class CaptureOverlayCloseAppCommand : ICaptureOverlayClose
             return false;
         }
 
-        if (_navigationService.CurrentRequest?.Route is not CaptureToolNavigationRoute route
-            || route != CaptureToolNavigationRoute.VideoCapture)
+        if (_navigationService.CurrentRequest?.Route is not NavigationRoute route
+            || route != NavigationRoute.VideoCapture)
         {
             return false;
         }
@@ -51,13 +47,6 @@ public sealed partial class CaptureOverlayCloseAppCommand : ICaptureOverlayClose
         }
         catch { }
 
-        if (_showMainWindowAppCommand.CanExecute())
-        {
-            _showMainWindowAppCommand.Execute();
-        }
-        else
-        {
-            _shutdownHandler.Shutdown();
-        }
+        _showMainWindowAppCommand.Execute();
     }
 }

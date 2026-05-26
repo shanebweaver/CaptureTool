@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace CaptureTool.Application.Settings;
 
-public sealed partial class SettingsOpenTempFolderAppCommand : ISettingsOpenTempFolderAppCommand
+internal class SettingsOpenTempFolderAppCommand : ISettingsOpenTempFolderAppCommand
 {
     private readonly IStorageService _storageService;
 
@@ -12,8 +12,6 @@ public sealed partial class SettingsOpenTempFolderAppCommand : ISettingsOpenTemp
     {
         _storageService = storageService;
     }
-
-    public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute()
     {

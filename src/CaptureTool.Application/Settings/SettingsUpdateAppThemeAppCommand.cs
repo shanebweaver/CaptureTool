@@ -11,8 +11,6 @@ internal class SettingsUpdateAppThemeAppCommand : ISettingsUpdateAppThemeAppComm
         _themes = themes;
     }
 
-    public event EventHandler? CanExecuteChanged;
-
     public bool CanExecute(int parameter)
     {
         return parameter >= 0 && parameter <= 2;

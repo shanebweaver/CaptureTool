@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.AppMenu;
+﻿using CaptureTool.Application.Abstractions.RecentCaptures;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.ViewModels;
 
@@ -8,19 +8,19 @@ public sealed partial class RecentCaptureViewModel : ViewModelBase
 {
     public string FilePath
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public string FileName
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 
     public CaptureFileType CaptureFileType
     {
-        get => field;
+        get;
         private set => Set(ref field, value);
     }
 

@@ -23,8 +23,6 @@ internal class SettingsChangeVideosFolderAppCommand : ISettingsChangeVideosFolde
 
     public bool IsExecuting { get; protected set; }
 
-    public event EventHandler? CanExecuteChanged;
-
     public bool CanExecute()
     {
         return !IsExecuting;
@@ -44,7 +42,6 @@ internal class SettingsChangeVideosFolderAppCommand : ISettingsChangeVideosFolde
         finally
         {
             IsExecuting = false;
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

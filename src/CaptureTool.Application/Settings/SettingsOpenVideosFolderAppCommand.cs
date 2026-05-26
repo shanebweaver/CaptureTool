@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace CaptureTool.Application.Settings;
 
-public sealed partial class SettingsOpenVideosFolderAppCommand : ISettingsOpenVideosFolderAppCommand
+internal class SettingsOpenVideosFolderAppCommand : ISettingsOpenVideosFolderAppCommand
 {
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
@@ -15,8 +15,6 @@ public sealed partial class SettingsOpenVideosFolderAppCommand : ISettingsOpenVi
         _settingsService = settingsService;
         _storageService = storageService;
     }
-
-    public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute()
     {
