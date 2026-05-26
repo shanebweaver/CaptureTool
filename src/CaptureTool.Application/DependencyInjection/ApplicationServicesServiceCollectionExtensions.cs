@@ -1,9 +1,10 @@
-using CaptureTool.Application.Services.Activation;
-using CaptureTool.Application.Services.Navigation;
-using CaptureTool.Application.Abstractions;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Activation;
 using Microsoft.Extensions.DependencyInjection;
+using CaptureTool.Application.Activation;
+using CaptureTool.Application.Navigation;
+using CaptureTool.Application.AppMenu;
+using CaptureTool.Application.Abstractions.AppMenu;
 
 namespace CaptureTool.Application.DependencyInjection;
 

@@ -1,12 +1,12 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.UseCases.AppMenu;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Shutdown;
 using CaptureTool.Infrastructure.Abstractions.Storage;
 using CaptureTool.Infrastructure.Abstractions.Windowing;
 using Moq;
+using CaptureTool.Application.AppMenu;
 
 namespace CaptureTool.Application.Tests.UseCases.AppMenu;
 
@@ -73,7 +73,7 @@ public class AppMenuUseCasesTests
         var actions = Fixture.Create<AppMenuUseCases>();
         actions.ShowAddOns();
 
-        navigation.Verify(n => n.GoToAddOns(), Times.Once);
+        navigation.Verify(n => n.GoToStore(), Times.Once);
     }
 
     [TestMethod]

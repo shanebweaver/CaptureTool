@@ -10,6 +10,7 @@ using CaptureTool.Infrastructure.Abstractions.Themes;
 using System.Drawing;
 using System.Timers;
 using Timer = System.Timers.Timer;
+using CaptureTool.Application.Abstractions.VideoCapture;
 
 namespace CaptureTool.Presentation.ViewModels;
 

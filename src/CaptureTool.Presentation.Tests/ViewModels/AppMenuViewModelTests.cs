@@ -1,7 +1,8 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using CaptureTool.Application.Abstractions.ImageCapture;
 using CaptureTool.Application.Abstractions.UseCases.AppMenu;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Application.Abstractions.VideoCapture;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Presentation.ViewModels;

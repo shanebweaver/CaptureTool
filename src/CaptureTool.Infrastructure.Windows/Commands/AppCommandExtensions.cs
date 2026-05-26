@@ -29,7 +29,7 @@ public static class AppCommandExtensions
     public static ICommand ToICommand<T>(this IAppCommand<T> appCommand)
     {
         ArgumentNullException.ThrowIfNull(appCommand);
-        return new RelayCommand<T?>(appCommand.Execute, appCommand.CanExecute);
+        return new RelayCommand<T>(appCommand.Execute, appCommand.CanExecute);
     }
 
     /// <summary>

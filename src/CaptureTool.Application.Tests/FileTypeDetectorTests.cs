@@ -1,4 +1,4 @@
-using CaptureTool.Application;
+using CaptureTool.Application.AppMenu;
 using CaptureTool.Domain.Capture.Abstractions;
 using FluentAssertions;
 

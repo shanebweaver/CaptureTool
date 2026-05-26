@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Services.Navigation;
+﻿using CaptureTool.Application.Navigation;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
@@ -6,7 +6,7 @@ internal static partial class PageLocator
 {
     private static readonly Dictionary<object, Type> _routeMappings = new() {
         { CaptureToolNavigationRoute.Home, typeof(HomePage) },
-        { CaptureToolNavigationRoute.AddOns, typeof(AddOnsPage) },
+        { CaptureToolNavigationRoute.Store, typeof(AddOnsPage) },
         { CaptureToolNavigationRoute.About, typeof(AboutPage) },
         { CaptureToolNavigationRoute.Error, typeof(ErrorPage) },
         { CaptureToolNavigationRoute.Settings, typeof(SettingsPage) },

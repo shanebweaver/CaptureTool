@@ -11,7 +11,7 @@ public interface IAppNavigation
     void GoBackToMainWindow();
     void GoHome();
     void GoToAbout();
-    void GoToAddOns();
+    void GoToStore();
     void GoToAudioCapture();
     void GoToAudioEdit();
     void GoToAudioEdit(IAudioFile audioFile);

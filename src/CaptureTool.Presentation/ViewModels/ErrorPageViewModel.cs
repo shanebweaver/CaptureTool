@@ -1,9 +1,9 @@
 using CaptureTool.Presentation.ViewModels.Helpers;
-using CaptureTool.Application.Abstractions.UseCases.Error;
 using CaptureTool.Infrastructure.UseCases.Extensions;
 using CaptureTool.Infrastructure.ViewModels;
 using CaptureTool.Infrastructure.Abstractions.Commands;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Error;
 
 namespace CaptureTool.Presentation.ViewModels;
 

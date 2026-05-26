@@ -6,16 +6,26 @@ namespace CaptureTool.Infrastructure.Commands;
 /// Implementation of <see cref="IAppCommand{T}"/> that executes a delegate with a parameter.
 /// </summary>
 /// <typeparam name="T">The type of the command parameter.</typeparam>
-public sealed class AppCommand<T> : IAppCommand<T>
+public class AppCommand<T> : IAppCommand<T>
 {
-    private readonly Action<T?> _execute;
-    private readonly Predicate<T?>? _canExecute;
+    public static AppCommand<T> Create(Action<T?> execute)
+    {
+        return new AppCommand<T>(execute);
+    }
 
-    public AppCommand(Action<T?> execute, Predicate<T?>? canExecute = null)
+    public static AppCommand<T> Create(Action<T?> execute, Predicate<T?>? canExecute)
+    {
+        return new AppCommand<T>(execute, canExecute);
+    }
+
+    protected AppCommand(Action<T?> execute, Predicate<T?>? canExecute = null)
     {
         _execute = execute ?? throw new ArgumentNullException(nameof(execute));
         _canExecute = canExecute;
     }
+
+    private readonly Action<T?> _execute;
+    private readonly Predicate<T?>? _canExecute;
 
     public event EventHandler? CanExecuteChanged;
 

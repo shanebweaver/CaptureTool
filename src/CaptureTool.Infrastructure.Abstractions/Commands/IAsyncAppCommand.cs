@@ -9,7 +9,7 @@ public interface IAsyncAppCommand
     /// <summary>
     /// Executes the command asynchronously.
     /// </summary>
-    Task ExecuteAsync();
+    Task ExecuteAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Determines whether the command can execute.

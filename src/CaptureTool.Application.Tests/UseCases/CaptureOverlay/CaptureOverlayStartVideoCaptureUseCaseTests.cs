@@ -1,6 +1,5 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Services.Navigation;
 using CaptureTool.Application.UseCases.CaptureOverlay;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
@@ -8,6 +7,8 @@ using CaptureTool.Infrastructure.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
 using Moq;
 using System.Drawing;
+using CaptureTool.Application.Navigation;
+using CaptureTool.Application.Abstractions.VideoCapture;
 
 namespace CaptureTool.Application.Tests.UseCases.CaptureOverlay;
 

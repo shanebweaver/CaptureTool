@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions;
 using CaptureTool.Domain.Capture.Windows.Metadata;
 using CaptureTool.Domain.Capture.Windows.Metadata.Scanners;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Domain.Capture.Abstractions.Metadata;
 using CaptureTool.Infrastructure.Abstractions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using CaptureTool.Application.Abstractions.Metadata;
 
 namespace CaptureTool.Domain.Capture.Windows.DependencyInjection;
 

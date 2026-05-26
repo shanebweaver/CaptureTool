@@ -1,19 +1,18 @@
-using CaptureTool.Application.Services.Navigation;
-using CaptureTool.Application.Abstractions.Navigation;
-using CaptureTool.Application.Abstractions.UseCases.CaptureOverlay;
+using CaptureTool.Application.Abstractions.CaptureOverlay;
+using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Application.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.UseCases;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
 
-namespace CaptureTool.Application.UseCases.CaptureOverlay;
+namespace CaptureTool.Application.AppCommands.CaptureOverlay;
 
-public sealed partial class CaptureOverlayGoBackUseCase : UseCase, ICaptureOverlayGoBackUseCase
+public sealed partial class CaptureOverlayGoBackAppCommand : ICaptureOverlayGoBackAppCommand
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly INavigationService _navigationService;
     private readonly IAppNavigation _appNavigation;
 
-    public CaptureOverlayGoBackUseCase(
+    public CaptureOverlayGoBackAppCommand(
         IVideoCaptureHandler videoCaptureHandler,
         INavigationService navigationService,
         IAppNavigation appNavigation)
@@ -23,7 +22,7 @@ public sealed partial class CaptureOverlayGoBackUseCase : UseCase, ICaptureOverl
         _appNavigation = appNavigation;
     }
 
-    public override bool CanExecute()
+    public bool CanExecute()
     {
         if (!_navigationService.CanGoBack)
         {
@@ -39,7 +38,7 @@ public sealed partial class CaptureOverlayGoBackUseCase : UseCase, ICaptureOverl
         return true;
     }
 
-    public override void Execute()
+    public void Execute()
     {
         try
         {

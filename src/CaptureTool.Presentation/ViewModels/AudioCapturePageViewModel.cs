@@ -4,6 +4,7 @@ using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.ViewModels;
 using CaptureTool.Infrastructure.Abstractions.Commands;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.AudioCapture;
 
 namespace CaptureTool.Presentation.ViewModels;
 

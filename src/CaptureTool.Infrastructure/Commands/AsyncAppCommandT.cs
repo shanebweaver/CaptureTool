@@ -6,17 +6,27 @@ namespace CaptureTool.Infrastructure.Commands;
 /// Implementation of <see cref="IAsyncAppCommand{T}"/> that executes an asynchronous delegate with a parameter.
 /// </summary>
 /// <typeparam name="T">The type of the command parameter.</typeparam>
-public sealed class AsyncAppCommand<T> : IAsyncAppCommand<T>
+public class AsyncAppCommand<T> : IAsyncAppCommand<T>
 {
-    private readonly Func<T?, Task> _execute;
-    private readonly Predicate<T?>? _canExecute;
-    private bool _isExecuting;
+    public static AsyncAppCommand<T> Create(Func<T?, Task> execute)
+    {
+        return new AsyncAppCommand<T>(execute);
+    }
 
-    public AsyncAppCommand(Func<T?, Task> execute, Predicate<T?>? canExecute = null)
+    public static AsyncAppCommand<T> Create(Func<T?, Task> execute, Predicate<T?> canExecute)
+    {
+        return new AsyncAppCommand<T>(execute, canExecute);
+    }
+
+    protected AsyncAppCommand(Func<T?, Task> execute, Predicate<T?>? canExecute = null)
     {
         _execute = execute ?? throw new ArgumentNullException(nameof(execute));
         _canExecute = canExecute;
     }
+
+    private readonly Func<T?, Task> _execute;
+    private readonly Predicate<T?>? _canExecute;
+    private bool _isExecuting;
 
     public event EventHandler? CanExecuteChanged;
 
@@ -33,7 +43,7 @@ public sealed class AsyncAppCommand<T> : IAsyncAppCommand<T>
         }
     }
 
-    public async Task ExecuteAsync(T? parameter)
+    public async Task ExecuteAsync(T? parameter, CancellationToken cancellationToken)
     {
         if (!CanExecute(parameter))
         {
@@ -43,7 +53,8 @@ public sealed class AsyncAppCommand<T> : IAsyncAppCommand<T>
         IsExecuting = true;
         try
         {
-            await _execute(parameter);
+            Task t = _execute(parameter);
+            await t.WaitAsync(cancellationToken);
         }
         finally
         {

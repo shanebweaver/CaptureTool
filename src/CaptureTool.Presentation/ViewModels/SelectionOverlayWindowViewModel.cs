@@ -10,6 +10,7 @@ using CaptureTool.Infrastructure.Abstractions.Themes;
 using CaptureTool.Presentation.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using CaptureTool.Application.Abstractions.ImageCapture;
 
 namespace CaptureTool.Presentation.ViewModels;
 

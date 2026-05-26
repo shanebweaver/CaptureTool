@@ -5,17 +5,27 @@ namespace CaptureTool.Infrastructure.Commands;
 /// <summary>
 /// Implementation of <see cref="IAsyncAppCommand"/> that executes an asynchronous delegate.
 /// </summary>
-public sealed class AsyncAppCommand : IAsyncAppCommand
+public class AsyncAppCommand : IAsyncAppCommand
 {
-    private readonly Func<Task> _execute;
-    private readonly Func<bool>? _canExecute;
-    private bool _isExecuting;
+    public static AsyncAppCommand Create(Func<Task> execute)
+    {
+        return new AsyncAppCommand(execute);
+    }
 
-    public AsyncAppCommand(Func<Task> execute, Func<bool>? canExecute = null)
+    public static AsyncAppCommand Create(Func<Task> execute, Func<bool> canExecute)
+    {
+        return new AsyncAppCommand(execute, canExecute);
+    }
+
+    protected AsyncAppCommand(Func<Task> execute, Func<bool>? canExecute = null)
     {
         _execute = execute ?? throw new ArgumentNullException(nameof(execute));
         _canExecute = canExecute;
     }
+
+    private readonly Func<Task> _execute;
+    private readonly Func<bool>? _canExecute;
+    private bool _isExecuting;
 
     public event EventHandler? CanExecuteChanged;
 
@@ -32,7 +42,7 @@ public sealed class AsyncAppCommand : IAsyncAppCommand
         }
     }
 
-    public async Task ExecuteAsync()
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         if (!CanExecute())
         {
@@ -42,7 +52,8 @@ public sealed class AsyncAppCommand : IAsyncAppCommand
         IsExecuting = true;
         try
         {
-            await _execute();
+            Task t = _execute();
+            await t.WaitAsync(cancellationToken);
         }
         finally
         {

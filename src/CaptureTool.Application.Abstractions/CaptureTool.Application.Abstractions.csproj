@@ -6,5 +6,8 @@
     <ProjectReference Include="..\CaptureTool.Domain.Edit.Abstractions\CaptureTool.Domain.Edit.Abstractions.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Abstractions\CaptureTool.Infrastructure.Abstractions.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Navigation\" />
+  </ItemGroup>
 
 </Project>

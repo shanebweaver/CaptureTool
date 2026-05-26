@@ -1,12 +1,9 @@
 using CaptureTool.Application.UseCases.About;
 using CaptureTool.Application.UseCases.AddOns;
-using CaptureTool.Application.UseCases.AppMenu;
 using CaptureTool.Application.UseCases.AudioCapture;
 using CaptureTool.Application.UseCases.AudioEdit;
 using CaptureTool.Application.UseCases.CaptureOverlay;
 using CaptureTool.Application.UseCases.Diagnostics;
-using CaptureTool.Application.UseCases.Error;
-using CaptureTool.Application.UseCases.Home;
 using CaptureTool.Application.UseCases.Loading;
 using CaptureTool.Application.UseCases.Settings;
 using CaptureTool.Application.UseCases.VideoEdit;
@@ -14,15 +11,18 @@ using CaptureTool.Application.Abstractions.UseCases.About;
 using CaptureTool.Application.Abstractions.UseCases.AddOns;
 using CaptureTool.Application.Abstractions.UseCases.AppMenu;
 using CaptureTool.Application.Abstractions.UseCases.AudioCapture;
-using CaptureTool.Application.Abstractions.UseCases.AudioEdit;
 using CaptureTool.Application.Abstractions.UseCases.CaptureOverlay;
 using CaptureTool.Application.Abstractions.UseCases.Diagnostics;
-using CaptureTool.Application.Abstractions.UseCases.Error;
-using CaptureTool.Application.Abstractions.UseCases.Home;
 using CaptureTool.Application.Abstractions.UseCases.Loading;
 using CaptureTool.Application.Abstractions.UseCases.Settings;
 using CaptureTool.Application.Abstractions.UseCases.VideoEdit;
 using Microsoft.Extensions.DependencyInjection;
+using CaptureTool.Application.AppMenu;
+using CaptureTool.Application.Abstractions.AudioEdit;
+using CaptureTool.Application.Abstractions.Home;
+using CaptureTool.Application.Home;
+using CaptureTool.Application.Error;
+using CaptureTool.Application.Abstractions.Error;
 
 namespace CaptureTool.Application.DependencyInjection;
 

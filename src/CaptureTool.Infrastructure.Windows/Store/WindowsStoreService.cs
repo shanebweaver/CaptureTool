@@ -98,9 +98,10 @@ public sealed partial class WindowsStoreService : IStoreService
     /// <summary>
     /// Gets the StoreProduct info for a given storeProductId (if available).
     /// </summary>
-    public async Task<IStoreAddOn?> GetAddonProductInfoAsync(string storeProductId)
+    public async Task<IStoreAddOn> GetAddonProductInfoAsync(string storeProductId)
     {
         string activityId = $"{nameof(WindowsStoreService)}.{nameof(GetAddonProductInfoAsync)}";
+        WindowsStoreAddOn addOn;
         try
         {
             _telemetryService.ActivityInitiated(activityId);
@@ -109,21 +110,24 @@ public sealed partial class WindowsStoreService : IStoreService
             IList<string> storeIds = [storeProductId];
             StoreProductQueryResult queryResult = await _storeContext.GetStoreProductsAsync(productKinds, storeIds);
 
-            IStoreAddOn? addOn = null;
             if (queryResult.Products.TryGetValue(storeProductId, out var product))
             {
                 StoreImage? logoImage = product.Images.Where(i => i.ImagePurposeTag == "Logo").FirstOrDefault();
                 addOn = new WindowsStoreAddOn(product.InAppOfferToken, product.IsInUserCollection, product.Price.FormattedPrice, logoImage?.Uri);
             }
-
-            _telemetryService.ActivityCompleted(activityId);
-            return addOn;
+            else
+            {
+                throw new Exception($"Failed to get product info for {storeProductId}. Status: {queryResult.ExtendedError?.Message}");
+            }
         }
         catch (Exception e)
         {
             _telemetryService.ActivityError(activityId, e);
-            return null;
+            throw;
         }
+
+        _telemetryService.ActivityCompleted(activityId);
+        return addOn;
     }
 
     /// <summary>

@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.UseCases.AppMenu;
-using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.ViewModels;
 using CaptureTool.Infrastructure.Abstractions.Commands;
@@ -8,6 +7,8 @@ using CaptureTool.Infrastructure.Abstractions.Storage;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Presentation.ViewModels.Helpers;
 using System.Collections.ObjectModel;
+using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Application.Abstractions.ImageCapture;
 
 namespace CaptureTool.Presentation.ViewModels;
 
