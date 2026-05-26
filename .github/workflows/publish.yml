@@ -10,7 +10,7 @@ on:
 
 jobs:
   publish:
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
     strategy:
