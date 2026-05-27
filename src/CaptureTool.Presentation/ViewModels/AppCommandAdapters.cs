@@ -1,4 +1,4 @@
-﻿using CaptureTool.Infrastructure.Abstractions.Commands;
+﻿using CaptureTool.Application.Abstractions.Messaging.Commands;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.ViewModels;

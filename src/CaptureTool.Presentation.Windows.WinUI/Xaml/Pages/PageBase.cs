@@ -1,4 +1,4 @@
-using CaptureTool.Application.Navigation;
+using CaptureTool.Application.UseCases.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Loading;
 using CaptureTool.Infrastructure.Abstractions.ViewModels;
 using Microsoft.UI.Xaml.Controls;

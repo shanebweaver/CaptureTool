@@ -7,8 +7,8 @@ using CaptureTool.Infrastructure.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
 using Moq;
 using System.Drawing;
-using CaptureTool.Application.Navigation;
 using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Application.UseCases.Navigation;
 
 namespace CaptureTool.Application.Tests.UseCases.CaptureOverlay;
 

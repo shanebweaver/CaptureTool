@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Abstractions.VideoCapture;
-using CaptureTool.Application.CaptureOverlay;
+using CaptureTool.Application.UseCases.CaptureOverlay;
 using FluentAssertions;
 using Moq;
 

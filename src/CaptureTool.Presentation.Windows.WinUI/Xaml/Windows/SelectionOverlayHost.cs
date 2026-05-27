@@ -5,7 +5,7 @@ using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using System.Drawing;
 using Windows.Win32;
-using CaptureTool.Application.Navigation;
+using CaptureTool.Application.UseCases.Navigation;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 

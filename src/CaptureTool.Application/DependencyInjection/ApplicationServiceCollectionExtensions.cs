@@ -1,4 +1,3 @@
-using CaptureTool.Application.About;
 using CaptureTool.Application.Abstractions.About;
 using CaptureTool.Application.Abstractions.AppMenu;
 using CaptureTool.Application.Abstractions.AudioCapture;
@@ -15,22 +14,23 @@ using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.VideoCapture;
 using CaptureTool.Application.Abstractions.VideoEdit;
 using CaptureTool.Application.Abstractions.Windowing;
-using CaptureTool.Application.Activation;
-using CaptureTool.Application.AppMenu;
-using CaptureTool.Application.AudioCapture;
-using CaptureTool.Application.AudioEdit;
-using CaptureTool.Application.CaptureOverlay;
-using CaptureTool.Application.Diagnostics;
-using CaptureTool.Application.Error;
-using CaptureTool.Application.Home;
-using CaptureTool.Application.ImageCapture;
-using CaptureTool.Application.ImageEdit;
-using CaptureTool.Application.RecentCaptures;
-using CaptureTool.Application.Settings;
-using CaptureTool.Application.Store;
-using CaptureTool.Application.VideoCapture;
-using CaptureTool.Application.VideoEdit;
-using CaptureTool.Application.Windowing;
+using CaptureTool.Application.UseCases.About;
+using CaptureTool.Application.UseCases.Activation;
+using CaptureTool.Application.UseCases.AppMenu;
+using CaptureTool.Application.UseCases.AudioCapture;
+using CaptureTool.Application.UseCases.AudioEdit;
+using CaptureTool.Application.UseCases.CaptureOverlay;
+using CaptureTool.Application.UseCases.Diagnostics;
+using CaptureTool.Application.UseCases.Error;
+using CaptureTool.Application.UseCases.Home;
+using CaptureTool.Application.UseCases.ImageCapture;
+using CaptureTool.Application.UseCases.ImageEdit;
+using CaptureTool.Application.UseCases.RecentCaptures;
+using CaptureTool.Application.UseCases.Settings;
+using CaptureTool.Application.UseCases.Store;
+using CaptureTool.Application.UseCases.VideoCapture;
+using CaptureTool.Application.UseCases.VideoEdit;
+using CaptureTool.Application.UseCases.Windowing;
 using CaptureTool.Infrastructure.Abstractions.Activation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -43,8 +43,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<IFileTypeDetector, FileTypeDetector>();
 
         // About
-        services.AddTransient<ILeaveAboutPageAppCommand, LeaveAboutPageAppCommand>();
-        services.AddTransient<IOpenAboutPageAppCommand, OpenAboutPageAppCommand>();
+        services.AddTransient<ILeaveAboutPageAppCommand, LeaveAboutPage>();
+        services.AddTransient<IOpenAboutPageAppCommand, OpenAboutPage>();
 
         // Activation
         services.AddSingleton<IActivationHandler, CaptureToolActivationHandler>();
@@ -54,13 +54,13 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IOpenFileAsyncAppCommand, OpenFileAsyncAppCommand>();
 
         // AudioCapture
-        services.AddTransient<IStartAudioCaptureAppCommand, StartAudioCaptureAppCommand>();
-        services.AddTransient<IStopAudioCaptureAppCommand, StopAudioCaptureAppCommand>();
-        services.AddTransient<IPauseAudioCaptureAppCommand, PauseAudioCaptureAppCommand>();
-        services.AddTransient<IMuteAudioCaptureAppCommand, MuteAudioCaptureAppCommand>();
-        services.AddTransient<IToggleLocalAudioCaptureAppCommand, ToggleLocalAudioCaptureAppCommand>();
-        services.AddTransient<IOpenAudioCapturePageAppCommand, OpenAudioCapturePageAppCommand>();
-        services.AddSingleton<IAudioCaptureHandler, CaptureToolAudioCaptureHandler>();
+        services.AddTransient<IStartAudioCaptureAppCommand, StartAudioCapture>();
+        services.AddTransient<IStopAudioCaptureAppCommand, StopAudioCapture>();
+        services.AddTransient<IPauseAudioCaptureAppCommand, PauseAudioCapture>();
+        services.AddTransient<IMuteAudioCaptureAppCommand, MuteAudioCapture>();
+        services.AddTransient<IToggleLocalAudioCaptureAppCommand, ToggleLocalAudioCapture>();
+        services.AddTransient<IOpenAudioCapturePageAppCommand, OpenAudioCapturePage>();
+        services.AddSingleton<IAudioCaptureHandler, AudioCaptureHandler>();
 
         // AudioEdit
         services.AddTransient<ISaveAudioFileAppCommand, SaveAudioFileAppCommand>();
@@ -98,7 +98,7 @@ public static class ApplicationServiceCollectionExtensions
         // RecentCaptures
         services.AddTransient<IGetRecentCapturesAppQuery, GetRecentCapturesAppQuery>();
         services.AddTransient<IOpenRecentCaptureAppCommand, OpenRecentCaptureAppCommand>();
-        services.AddTransient<IOpenAboutPageAppCommand, OpenAboutPageAppCommand>();
+        services.AddTransient<IOpenAboutPageAppCommand, OpenAboutPage>();
         services.AddTransient<IOpenSettingsPageAppCommand, OpenSettingsPageAppCommand>();
 
         // Settings

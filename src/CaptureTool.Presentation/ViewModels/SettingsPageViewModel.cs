@@ -1,5 +1,5 @@
 using CaptureTool.Application.Abstractions.Settings;
-using CaptureTool.Application.Settings;
+using CaptureTool.Application.UseCases.Settings;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Abstractions.Factories;
 using CaptureTool.Infrastructure.Abstractions.Localization;

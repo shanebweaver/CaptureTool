@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.VideoCapture;
 using CaptureTool.Application.Abstractions.Windowing;
-using CaptureTool.Application.Navigation;
+using CaptureTool.Application.UseCases.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Shutdown;
