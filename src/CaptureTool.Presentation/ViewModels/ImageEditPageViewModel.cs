@@ -5,57 +5,23 @@ using CaptureTool.Domain.Edit.Abstractions.ChromaKey;
 using CaptureTool.Domain.Edit.Abstractions.Drawable;
 using CaptureTool.Domain.Edit.Abstractions.Operations;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Infrastructure.ViewModels;
 using CaptureTool.Infrastructure.Abstractions.Cancellation;
-using CaptureTool.Infrastructure.Abstractions.Commands;
 using CaptureTool.Infrastructure.Abstractions.Localization;
 using CaptureTool.Infrastructure.Abstractions.Share;
 using CaptureTool.Infrastructure.Abstractions.Storage;
 using CaptureTool.Infrastructure.Abstractions.Store;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.Abstractions.Windowing;
-using CaptureTool.Presentation.ViewModels.Helpers;
+using CaptureTool.Infrastructure.ViewModels;
+using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Numerics;
-using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
 {
-    public readonly struct ActivityIds
-    {
-        public static readonly string Load = "LoadImageEditPage";
-        public static readonly string Copy = "Copy";
-        public static readonly string ToggleCropMode = "ToggleCropMode";
-        public static readonly string ToggleShapesMode = "ToggleShapesMode";
-        public static readonly string Save = "Save";
-        public static readonly string Undo = "Undo";
-        public static readonly string Redo = "Redo";
-        public static readonly string Rotate = "Rotate";
-        public static readonly string FlipHorizontal = "FlipHorizontal";
-        public static readonly string FlipVertical = "FlipVertical";
-        public static readonly string Print = "Print";
-        public static readonly string Share = "Share";
-        public static readonly string UpdateChromaKeyColor = "UpdateChromaKeyColor";
-        public static readonly string UpdateOrientation = "UpdateOrientation";
-        public static readonly string UpdateCropRect = "UpdateCropRect";
-        public static readonly string UpdateShowChromaKeyOptions = "UpdateShowChromaKeyOptions";
-        public static readonly string UpdateDesaturation = "UpdateDesaturation";
-        public static readonly string UpdateTolerance = "UpdateTolerance";
-        public static readonly string UpdateSelectedColorOptionIndex = "UpdateSelectedColorOptionIndex";
-        public static readonly string UpdateSelectedShapeType = "UpdateSelectedShapeType";
-        public static readonly string UpdateShapeStrokeColor = "UpdateShapeStrokeColor";
-        public static readonly string UpdateShapeFillColor = "UpdateShapeFillColor";
-        public static readonly string UpdateShapeStrokeWidth = "UpdateShapeStrokeWidth";
-        public static readonly string UpdateZoomPercentage = "UpdateZoomPercentage";
-        public static readonly string UpdateAutoZoomLock = "UpdateAutoZoomLock";
-        public static readonly string ZoomAndCenter = "ZoomAndCenter";
-    }
-
-    private const string TelemetryContext = "ImageEditPage";
-
     private readonly ILocalizationService _localizationService;
     private readonly IStoreService _storeService;
     private readonly IWindowHandleProvider _windowingService;
@@ -334,54 +300,51 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
     }
 
-    public override Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
+    public override async Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
     {
-        return TelemetryHelper.ExecuteActivityAsync(_telemetryService, TelemetryContext, ActivityIds.Load, async () =>
+        ThrowIfNotReadyToLoad();
+        StartLoading();
+
+        var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
+        try
         {
-            ThrowIfNotReadyToLoad();
-            StartLoading();
+            Vector2 topLeft = Vector2.Zero;
+            ImageFile = imageFile;
+            ImageSize = _filePickerService.GetImageFileSize(imageFile);
+            CropRect = new(Point.Empty, ImageSize);
 
-            var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
-            try
+            _imageDrawable = new(topLeft, imageFile, ImageSize);
+            _drawables.Add(_imageDrawable);
+
+            if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
             {
-                Vector2 topLeft = Vector2.Zero;
-                ImageFile = imageFile;
-                ImageSize = _filePickerService.GetImageFileSize(imageFile);
-                CropRect = new(Point.Empty, ImageSize);
-
-                _imageDrawable = new(topLeft, imageFile, ImageSize);
-                _drawables.Add(_imageDrawable);
-
-                if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
+                bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
+                IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
+                if (isChromaKeyAddOnOwned)
                 {
-                    bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
-                    IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
-                    if (isChromaKeyAddOnOwned)
-                    {
-                        // Empty option disables the effect.
-                        _chromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
+                    // Empty option disables the effect.
+                    _chromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
 
-                        // Add top detected colors
-                        var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 5, 4);
-                        foreach (var topColor in topColors)
-                        {
-                            ChromaKeyColorOption colorOption = new(topColor);
-                            _chromaKeyColorOptions.Add(colorOption);
-                        }
+                    // Add top detected colors
+                    var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 5, 4);
+                    foreach (var topColor in topColors)
+                    {
+                        ChromaKeyColorOption colorOption = new(topColor);
+                        _chromaKeyColorOptions.Add(colorOption);
                     }
                 }
-
-                IsShapesFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes);
-
-                InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
-            }
-            finally
-            {
-                cts.Dispose();
             }
 
-            await base.LoadAsync(imageFile, cancellationToken);
-        });
+            IsShapesFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes);
+
+            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        }
+        finally
+        {
+            cts.Dispose();
+        }
+
+        await base.LoadAsync(imageFile, cancellationToken);
     }
 
     public override void Dispose()
@@ -721,8 +684,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private async Task SaveAsync()
     {
         nint hwnd = _windowingService.GetMainWindowHandle();
-        IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures)
-            ?? throw new OperationCanceledException("User cancelled the save file picker.");
+        IFile? file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures);
+
+        if (file is null)
+        {
+            return;
+        }
+
         ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
         await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
     }

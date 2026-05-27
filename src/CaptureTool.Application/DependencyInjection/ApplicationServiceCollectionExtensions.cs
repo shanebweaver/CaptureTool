@@ -47,7 +47,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IOpenAboutPageAppCommand, OpenAboutPageAppCommand>();
 
         // Activation
-        services.AddTransient<IActivationHandler, CaptureToolActivationHandler>();
+        services.AddSingleton<IActivationHandler, CaptureToolActivationHandler>();
 
         // AppMenu
         services.AddTransient<IExitApplicationAppCommand, ExitApplicationAppCommand>();
@@ -60,7 +60,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IMuteAudioCaptureAppCommand, MuteAudioCaptureAppCommand>();
         services.AddTransient<IToggleLocalAudioCaptureAppCommand, ToggleLocalAudioCaptureAppCommand>();
         services.AddTransient<IOpenAudioCapturePageAppCommand, OpenAudioCapturePageAppCommand>();
-        services.AddTransient<IAudioCaptureHandler, CaptureToolAudioCaptureHandler>();
+        services.AddSingleton<IAudioCaptureHandler, CaptureToolAudioCaptureHandler>();
 
         // AudioEdit
         services.AddTransient<ISaveAudioFileAppCommand, SaveAudioFileAppCommand>();
@@ -90,7 +90,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IShowHomePageAppCommand, ShowHomePageAppCommand>();
 
         // ImageCapture
-        services.AddTransient<IImageCaptureHandler, CaptureToolImageCaptureHandler>();
+        services.AddSingleton<IImageCaptureHandler, CaptureToolImageCaptureHandler>();
 
         // ImageEdit
         services.AddTransient<IOpenImageEditPageAppCommand, OpenImageEditPageAppCommand>();
@@ -127,7 +127,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IOpenStorePageAppCommand, OpenStorePageAppCommand>();
 
         // VideoCapture
-        services.AddTransient<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
+        services.AddSingleton<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
 
         // VideoEdit
         services.AddTransient<ICopyVideoFileAppCommand, CopyVideoFileAppCommand>();

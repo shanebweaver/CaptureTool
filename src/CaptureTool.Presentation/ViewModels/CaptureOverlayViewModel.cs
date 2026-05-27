@@ -2,7 +2,6 @@ using CaptureTool.Application.Abstractions.CaptureOverlay;
 using CaptureTool.Application.Abstractions.VideoCapture;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.Abstractions.Themes;
 using CaptureTool.Infrastructure.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -14,7 +13,6 @@ namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>
 {
-
     private readonly IStartVideoCaptureAppCommand _startVideoCaptureAppCommand;
     private readonly IStopVideoCaptureAppCommand _stopVideoCaptureAppCommand;
     private readonly IToggleVideoCapturePauseResumeAppCommand _toggleVideoCapturePauseResumeAppCommand;
@@ -82,7 +80,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IToggleVideoCapturePauseResumeAppCommand toggleVideoCapturePauseResumeAppCommand,
         IThemeService themeService,
         IVideoCaptureHandler videoCaptureHandler,
-        ITelemetryService telemetryService,
         ITaskEnvironment taskEnvironment)
     {
         _startVideoCaptureAppCommand = startVideoCaptureAppCommand;

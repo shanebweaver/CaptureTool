@@ -1,16 +1,12 @@
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Settings;
 using CaptureTool.FeatureManagement;
-using CaptureTool.Infrastructure.Abstractions.Commands;
 using CaptureTool.Infrastructure.Abstractions.Factories;
 using CaptureTool.Infrastructure.Abstractions.Localization;
 using CaptureTool.Infrastructure.Abstractions.Settings;
 using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.Abstractions.Themes;
-using CaptureTool.Infrastructure.Commands;
 using CaptureTool.Infrastructure.ViewModels;
-using CaptureTool.Presentation.ViewModels.Helpers;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 
