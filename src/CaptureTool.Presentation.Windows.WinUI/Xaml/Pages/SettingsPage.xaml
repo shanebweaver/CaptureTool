@@ -26,7 +26,7 @@
                     AutomationProperties.Name="Back"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.GoBackCommand), Mode=OneWay}">
+                    Command="{x:Bind ViewModel.GoBackCommand), Mode=OneWay}">
                     <SymbolIcon Symbol="Back" />
                 </Button>
                 <TextBlock
@@ -139,7 +139,7 @@
                                     MaxLines="2"
                                     TextTrimming="WordEllipsis"
                                     TextWrapping="NoWrap" />
-                                <HyperlinkButton Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.OpenScreenshotsFolderCommand), Mode=OneWay}">
+                                <HyperlinkButton Command="{x:Bind ViewModel.OpenScreenshotsFolderCommand), Mode=OneWay}">
                                     <TextBlock
                                         MaxLines="2"
                                         Style="{StaticResource CaptionTextBlockStyle}"
@@ -153,7 +153,7 @@
                                 Grid.Column="1"
                                 Orientation="Horizontal"
                                 Spacing="4">
-                                <Button Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ChangeScreenshotsFolderCommand), Mode=OneWay}">
+                                <Button Command="{x:Bind ViewModel.ChangeScreenshotsFolderCommand), Mode=OneWay}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <Viewbox Height="16">
                                             <SymbolIcon Symbol="Folder" />
@@ -305,7 +305,7 @@
                                     MaxLines="2"
                                     TextTrimming="WordEllipsis"
                                     TextWrapping="NoWrap" />
-                                <HyperlinkButton Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.OpenVideosFolderCommand), Mode=OneWay}">
+                                <HyperlinkButton Command="{x:Bind ViewModel.OpenVideosFolderCommand), Mode=OneWay}">
                                     <TextBlock
                                         MaxLines="2"
                                         Style="{StaticResource CaptionTextBlockStyle}"
@@ -319,7 +319,7 @@
                                 Grid.Column="1"
                                 Orientation="Horizontal"
                                 Spacing="4">
-                                <Button Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ChangeVideosFolderCommand), Mode=OneWay}">
+                                <Button Command="{x:Bind ViewModel.ChangeVideosFolderCommand), Mode=OneWay}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <Viewbox Height="16">
                                             <SymbolIcon Symbol="Folder" />
@@ -452,7 +452,7 @@
                                 <Button
                                     x:Uid="Settings_RestartAppButton"
                                     VerticalAlignment="Center"
-                                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RestartAppCommand), Mode=OneWay}">
+                                    Command="{x:Bind ViewModel.RestartAppCommand), Mode=OneWay}">
                                     <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
                                 </Button>
                                 <TextBlock
@@ -546,7 +546,7 @@
                                 <Button
                                     x:Uid="Settings_RestartAppButton"
                                     VerticalAlignment="Center"
-                                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RestartAppCommand), Mode=OneWay}">
+                                    Command="{x:Bind ViewModel.RestartAppCommand), Mode=OneWay}">
                                     <TextBlock x:Uid="Settings_RestartAppButtonLabel" />
                                 </Button>
                                 <TextBlock
@@ -612,7 +612,7 @@
                                     MaxLines="2"
                                     TextTrimming="WordEllipsis"
                                     TextWrapping="NoWrap" />
-                                <HyperlinkButton Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.OpenTemporaryFilesFolderCommand), Mode=OneWay}">
+                                <HyperlinkButton Command="{x:Bind ViewModel.OpenTemporaryFilesFolderCommand), Mode=OneWay}">
                                     <TextBlock
                                         MaxLines="2"
                                         Style="{StaticResource CaptionTextBlockStyle}"
@@ -626,7 +626,7 @@
                                 Grid.Column="1"
                                 Orientation="Horizontal"
                                 Spacing="4">
-                                <Button Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ClearTemporaryFilesCommand), Mode=OneWay}">
+                                <Button Command="{x:Bind ViewModel.ClearTemporaryFilesCommand), Mode=OneWay}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <Viewbox Height="16">
                                             <SymbolIcon Symbol="Delete" />
@@ -640,7 +640,7 @@
                 </StackPanel>
 
                 <!--  Restore defaults  -->
-                <Button Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RestoreDefaultSettingsCommand), Mode=OneWay}">
+                <Button Command="{x:Bind ViewModel.RestoreDefaultSettingsCommand), Mode=OneWay}">
                     <TextBlock x:Uid="Settings_RestoreDefaults_Button" />
                     <ToolTipService.ToolTip>
                         <ToolTip>

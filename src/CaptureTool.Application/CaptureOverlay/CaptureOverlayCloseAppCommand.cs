@@ -3,7 +3,6 @@ using CaptureTool.Application.Abstractions.VideoCapture;
 using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Application.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Shutdown;
 
 namespace CaptureTool.Application.CaptureOverlay;
 
@@ -31,7 +30,7 @@ internal class CaptureOverlayCloseAppCommand : ICaptureOverlayCloseAppCommand
         }
 
         if (_navigationService.CurrentRequest?.Route is not NavigationRoute route
-            || route != NavigationRoute.VideoCapture)
+            || route != NavigationRoute.CaptureOverlay)
         {
             return false;
         }

@@ -21,4 +21,9 @@ internal class ShowMainWindowAppCommand : IShowMainWindowAppCommand
             _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
         }
     }
+
+    public bool CanExecute()
+    {
+       return _navigationService.CanGoBack;
+    }
 }

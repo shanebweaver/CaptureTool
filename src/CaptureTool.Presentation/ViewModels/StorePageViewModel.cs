@@ -5,6 +5,7 @@ using CaptureTool.Infrastructure.Abstractions.Localization;
 using CaptureTool.Infrastructure.Abstractions.Queries;
 using CaptureTool.Infrastructure.Abstractions.Store;
 using CaptureTool.Infrastructure.ViewModels;
+using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.ViewModels;
 
@@ -21,17 +22,17 @@ public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
         _cancellationService = cancellationService;
 
         ChromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
-        GoBackCommand = leaveStorePageCommand;
-        PurchaseChromaKeyAddOnCommand = purchaseChromaKeyAddOnCommand;
-        GetChromaKeyAddOnQuery = getChromaKeyAddOnQuery;
+        GoBackCommand = leaveStorePageCommand.ToRelayCommand();
+        PurchaseChromaKeyAddOnCommand = purchaseChromaKeyAddOnCommand.ToAsyncRelayCommand();
+        _getChromaKeyAddOnQuery = getChromaKeyAddOnQuery;
     }
 
     private readonly ILocalizationService _localizationService;
     private readonly ICancellationService _cancellationService;
+    private readonly IGetChromaKeyAddOnAppQuery _getChromaKeyAddOnQuery;
 
-    public IAsyncAppCommand PurchaseChromaKeyAddOnCommand { get; }
-    public IAsyncAppQuery<IStoreAddOn> GetChromaKeyAddOnQuery { get; }
-    public IAppCommand GoBackCommand { get; }
+    public IAsyncRelayCommand PurchaseChromaKeyAddOnCommand { get; }
+    public IRelayCommand GoBackCommand { get; }
 
     public bool IsChromaKeyAddOnOwned
     {
@@ -65,7 +66,7 @@ public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            IStoreAddOn? addOn = await GetChromaKeyAddOnQuery.ExecuteAsync(cancellationToken);
+            IStoreAddOn? addOn = await _getChromaKeyAddOnQuery.ExecuteAsync(cancellationToken);
             if (addOn != null)
             {
                 bool isOwned = addOn.IsOwned;

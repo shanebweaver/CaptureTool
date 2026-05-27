@@ -1,5 +1,9 @@
+using CaptureTool.Application.Abstractions.AudioCapture;
+using CaptureTool.Application.Abstractions.CaptureOverlay;
+using CaptureTool.Application.Abstractions.Home;
+using CaptureTool.Application.Abstractions.ImageCapture;
+using CaptureTool.Application.Abstractions.VideoCapture;
 using CaptureTool.Application.Settings;
-using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Activation;
 using CaptureTool.Infrastructure.Abstractions.Cancellation;
@@ -14,11 +18,12 @@ namespace CaptureTool.Application.Activation;
 
 public sealed partial class CaptureToolActivationHandler : IActivationHandler
 {
+    private readonly IOpenSelectionOverlayAppCommand _openImageCaptureOverlayAppCommand;
+    private readonly IShowHomePageAppCommand _showHomePageAppCommand;
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
     private readonly ILogService _logService;
     private readonly ILocalizationService _localizationService;
-    private readonly IAppNavigation _appNavigation;
     private readonly INavigationHandler _navigationHandler;
     private readonly INavigationService _navigationService;
 
@@ -28,19 +33,21 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
     private bool _isInitialized;
 
     public CaptureToolActivationHandler(
+        IOpenSelectionOverlayAppCommand openImageCaptureOverlayAppCommand,
+        IShowHomePageAppCommand showHomePageAppCommand,
         ICancellationService cancellationService,
         ISettingsService settingsService,
         ILogService logService,
         ILocalizationService localizationService,
-        IAppNavigation appNavigation,
         INavigationHandler navigationHandler,
         INavigationService navigationService)
     {
+        _openImageCaptureOverlayAppCommand = openImageCaptureOverlayAppCommand;
+        _showHomePageAppCommand = showHomePageAppCommand;
         _cancellationService = cancellationService;
         _settingsService = settingsService;
         _logService = logService;
         _localizationService = localizationService;
-        _appNavigation = appNavigation;
         _navigationHandler = navigationHandler;
         _navigationService = navigationService;
     }
@@ -85,7 +92,7 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
         try
         {
             await InitializeAsync();
-            _appNavigation.GoHome();
+            _showHomePageAppCommand.Execute();
         }
         finally
         {
@@ -112,19 +119,19 @@ public sealed partial class CaptureToolActivationHandler : IActivationHandler
             string source = queryParams.Get("source") ?? string.Empty;
             if (source.Equals("PrintScreen", StringComparison.InvariantCultureIgnoreCase))
             {
-                _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
+                _openImageCaptureOverlayAppCommand.Execute(CaptureOptions.ImageDefault);
             }
             else if (source.Equals("ScreenRecorderHotKey", StringComparison.InvariantCultureIgnoreCase) || isRecordingType)
             {
-                _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault);
+                _openImageCaptureOverlayAppCommand.Execute(CaptureOptions.VideoDefault);
             }
             else if (source.Equals("HotKey", StringComparison.InvariantCultureIgnoreCase))
             {
-                _appNavigation.GoToImageCapture(CaptureOptions.ImageDefault);
+                _openImageCaptureOverlayAppCommand.Execute(CaptureOptions.ImageDefault);
             }
             else
             {
-                _appNavigation.GoHome();
+                _showHomePageAppCommand.Execute();
             }
         }
         catch (Exception ex)

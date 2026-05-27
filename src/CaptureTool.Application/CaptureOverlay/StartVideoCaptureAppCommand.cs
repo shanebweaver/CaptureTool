@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.CaptureOverlay;
-using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.VideoCapture;
 using CaptureTool.Application.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
@@ -10,16 +9,13 @@ namespace CaptureTool.Application.CaptureOverlay;
 internal class StartVideoCaptureAppCommand : IStartVideoCaptureAppCommand
 {
     private readonly INavigationService _navigationService;
-    private readonly IAppNavigation _appNavigation;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
 
     public StartVideoCaptureAppCommand(
         INavigationService navigationService,
-        IAppNavigation appNavigation,
         IVideoCaptureHandler videoCaptureHandler)
     {
         _navigationService = navigationService;
-        _appNavigation = appNavigation;
         _videoCaptureHandler = videoCaptureHandler;
     }
 
@@ -27,7 +23,7 @@ internal class StartVideoCaptureAppCommand : IStartVideoCaptureAppCommand
     {
         // Only allow starting when current route is VideoCapture overlay
         if (_navigationService.CurrentRequest?.Route is not NavigationRoute route
-            || route != NavigationRoute.VideoCapture)
+            || route != NavigationRoute.CaptureOverlay)
         {
             return false;
         }
@@ -38,6 +34,6 @@ internal class StartVideoCaptureAppCommand : IStartVideoCaptureAppCommand
     public void Execute(NewCaptureArgs args)
     {
         _videoCaptureHandler.StartVideoCapture(args);
-        _appNavigation.GoToVideoCapture(args);
+        _navigationService.Navigate(NavigationRoute.CaptureOverlay, args);
     }
 }

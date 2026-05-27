@@ -2,6 +2,6 @@
 
 namespace CaptureTool.Application.Abstractions.Windowing;
 
-public interface IShowMainWindowAppCommand : IAppCommand
+public interface IShowMainWindowAppCommand : IConditionalAppCommand
 {
 }

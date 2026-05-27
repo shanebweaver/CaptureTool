@@ -2,6 +2,6 @@
 
 namespace CaptureTool.Application.Abstractions.AudioCapture;
 
-public interface INewAudioCaptureAppCommand : IAppCommand
+public interface IOpenAudioCapturePageAppCommand : IAppCommand
 {
 }

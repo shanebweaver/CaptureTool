@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.CaptureOverlay;
-using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.VideoCapture;
 using CaptureTool.Application.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
@@ -11,16 +10,13 @@ internal class CaptureOverlayGoBackAppCommand : ICaptureOverlayGoBackAppCommand
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly INavigationService _navigationService;
-    private readonly IAppNavigation _appNavigation;
 
     public CaptureOverlayGoBackAppCommand(
         IVideoCaptureHandler videoCaptureHandler,
-        INavigationService navigationService,
-        IAppNavigation appNavigation)
+        INavigationService navigationService)
     {
         _videoCaptureHandler = videoCaptureHandler;
         _navigationService = navigationService;
-        _appNavigation = appNavigation;
     }
 
     public bool CanExecute()
@@ -31,7 +27,7 @@ internal class CaptureOverlayGoBackAppCommand : ICaptureOverlayGoBackAppCommand
         }
 
         if (_navigationService.CurrentRequest?.Route is not NavigationRoute route
-            || route != NavigationRoute.VideoCapture)
+            || route != NavigationRoute.CaptureOverlay)
         {
             return false;
         }
@@ -47,9 +43,9 @@ internal class CaptureOverlayGoBackAppCommand : ICaptureOverlayGoBackAppCommand
         }
         catch { }
 
-        if (!_appNavigation.TryGoBack())
+        if (!_navigationService.TryGoBack())
         {
-            _appNavigation.GoToImageCapture(CaptureOptions.VideoDefault, true);
+            _navigationService.Navigate(NavigationRoute.SelectionOverlay, CaptureOptions.VideoDefault, true);
         }
     }
 }

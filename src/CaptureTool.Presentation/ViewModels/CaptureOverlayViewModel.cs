@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.CaptureOverlay;
-using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.VideoCapture;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
@@ -19,9 +18,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IStartVideoCaptureAppCommand _startVideoCaptureAppCommand;
     private readonly IStopVideoCaptureAppCommand _stopVideoCaptureAppCommand;
     private readonly IToggleVideoCapturePauseResumeAppCommand _toggleVideoCapturePauseResumeAppCommand;
-    private readonly IAppNavigation _appNavigation;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly ITelemetryService _telemetryService;
     private readonly ITaskEnvironment _taskEnvironment;
 
     private MonitorCaptureResult? _monitorCaptureResult;
@@ -83,7 +80,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IStopVideoCaptureAppCommand stopVideoCaptureAppCommand,
         IToggleVideoCaptureDesktopAudioAppCommand toggleVideoCaptureDesktopAudioAppCommand,
         IToggleVideoCapturePauseResumeAppCommand toggleVideoCapturePauseResumeAppCommand,
-        IAppNavigation appNavigation,
         IThemeService themeService,
         IVideoCaptureHandler videoCaptureHandler,
         ITelemetryService telemetryService,
@@ -92,9 +88,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _startVideoCaptureAppCommand = startVideoCaptureAppCommand;
         _stopVideoCaptureAppCommand = stopVideoCaptureAppCommand;
         _toggleVideoCapturePauseResumeAppCommand = toggleVideoCapturePauseResumeAppCommand;
-        _appNavigation = appNavigation;
         _videoCaptureHandler = videoCaptureHandler;
-        _telemetryService = telemetryService;
         _taskEnvironment = taskEnvironment;
 
         DefaultAppTheme = themeService.DefaultTheme;

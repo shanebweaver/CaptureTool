@@ -1,27 +1,28 @@
-﻿using CaptureTool.Infrastructure.Abstractions.Commands;
-
-namespace CaptureTool.Domain.Edit.Abstractions.Operations;
+﻿namespace CaptureTool.Domain.Edit.Abstractions.Operations;
 
 public sealed partial class OrientationOperation : CanvasOperation
 {
-    private readonly IAppCommand<ImageOrientation> _command;
+    private readonly Action<ImageOrientation> _action;
     private readonly ImageOrientation _oldOrientation;
     private readonly ImageOrientation _newOrientation;
 
-    public OrientationOperation(IAppCommand<ImageOrientation> command, ImageOrientation oldOrientation, ImageOrientation newOrientation)
+    public OrientationOperation(
+        Action<ImageOrientation> action, 
+        ImageOrientation oldOrientation, 
+        ImageOrientation newOrientation)
     {
-        _command = command;
+        _action = action;
         _oldOrientation = oldOrientation;
         _newOrientation = newOrientation;
     }
 
     public override void Undo()
     {
-        _command.Execute(_oldOrientation);
+        _action(_oldOrientation);
     }
 
     public override void Redo()
     {
-        _command.Execute(_newOrientation);
+        _action(_newOrientation);
     }
 }

@@ -46,7 +46,7 @@
                 <Button
                     x:Name="NewImageCaptureButton"
                     x:Uid="NewCaptureButton_Image"
-                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewImageCaptureCommand)}"
+                    Command="{x:Bind ViewModel.NewImageCaptureCommand}"
                     Style="{StaticResource NewCaptureButtonStyle}">
                     <StackPanel Spacing="4">
                         <SymbolIcon Symbol="{StaticResource NewImageCaptureSymbol}" />
@@ -59,7 +59,7 @@
                 <Button
                     x:Name="NewVideoCaptureButton"
                     x:Uid="NewCaptureButton_Video"
-                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewVideoCaptureCommand)}"
+                    Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
                     Style="{StaticResource NewCaptureButtonStyle}">
                     <StackPanel Spacing="4">
                         <SymbolIcon Symbol="{StaticResource NewVideoCaptureSymbol}" />
@@ -72,7 +72,7 @@
                 <Button
                     x:Name="NewAudioCaptureButton"
                     x:Uid="NewCaptureButton_Audio"
-                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewAudioCaptureCommand)}"
+                    Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
                     Style="{StaticResource NewCaptureButtonStyle}"
                     Visibility="{x:Bind ViewModel.IsAudioCaptureEnabled}">
                     <StackPanel Spacing="4">

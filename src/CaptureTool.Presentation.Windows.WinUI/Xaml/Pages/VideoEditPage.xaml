@@ -22,7 +22,7 @@
             <!--  Copy  -->
             <AppBarButton
                 x:Uid="VideoEdit_CopyButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.CopyCommand)}"
+                Command="{x:Bind ViewModel.CopyCommand}"
                 Icon="Copy"
                 IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
@@ -33,7 +33,7 @@
             <!--  Save  -->
             <AppBarButton
                 x:Uid="VideoEdit_SaveButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.SaveCommand)}"
+                Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
                 IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>

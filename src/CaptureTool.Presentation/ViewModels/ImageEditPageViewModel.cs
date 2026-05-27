@@ -18,6 +18,7 @@ using CaptureTool.Presentation.ViewModels.Helpers;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Numerics;
+using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.ViewModels;
 
@@ -74,31 +75,31 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public event EventHandler? InvalidateCanvasRequested;
     public event EventHandler? ForceZoomAndCenterRequested;
 
-    public IAsyncAppCommand CopyCommand { get; }
-    public IAppCommand ToggleCropModeCommand { get; }
-    public IAppCommand ToggleShapesModeCommand { get; }
-    public IAsyncAppCommand SaveCommand { get; }
-    public IAppCommand UndoCommand { get; }
-    public IAppCommand RedoCommand { get; }
-    public IAppCommand RotateCommand { get; }
-    public IAppCommand FlipHorizontalCommand { get; }
-    public IAppCommand FlipVerticalCommand { get; }
-    public IAsyncAppCommand PrintCommand { get; }
-    public IAsyncAppCommand ShareCommand { get; }
-    public IAppCommand<Color> UpdateChromaKeyColorCommand { get; }
-    public IAppCommand<ImageOrientation> UpdateOrientationCommand { get; }
-    public IAppCommand<Rectangle> UpdateCropRectCommand { get; }
-    public IAppCommand<bool> UpdateShowChromaKeyOptionsCommand { get; }
-    public IAppCommand<int> UpdateDesaturationCommand { get; }
-    public IAppCommand<int> UpdateToleranceCommand { get; }
-    public IAppCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
-    public IAppCommand<ShapeType> UpdateSelectedShapeTypeCommand { get; }
-    public IAppCommand<Color> UpdateShapeStrokeColorCommand { get; }
-    public IAppCommand<Color> UpdateShapeFillColorCommand { get; }
-    public IAppCommand<int> UpdateShapeStrokeWidthCommand { get; }
-    public IAppCommand<int> UpdateZoomPercentageCommand { get; }
-    public IAppCommand<bool> UpdateAutoZoomLockCommand { get; }
-    public IAppCommand ZoomAndCenterCommand { get; }
+    public IAsyncRelayCommand CopyCommand { get; }
+    public IRelayCommand ToggleCropModeCommand { get; }
+    public IRelayCommand ToggleShapesModeCommand { get; }
+    public IAsyncRelayCommand SaveCommand { get; }
+    public IRelayCommand UndoCommand { get; }
+    public IRelayCommand RedoCommand { get; }
+    public IRelayCommand RotateCommand { get; }
+    public IRelayCommand FlipHorizontalCommand { get; }
+    public IRelayCommand FlipVerticalCommand { get; }
+    public IAsyncRelayCommand PrintCommand { get; }
+    public IAsyncRelayCommand ShareCommand { get; }
+    public IRelayCommand<Color> UpdateChromaKeyColorCommand { get; }
+    public IRelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
+    public IRelayCommand<Rectangle> UpdateCropRectCommand { get; }
+    public IRelayCommand<bool> UpdateShowChromaKeyOptionsCommand { get; }
+    public IRelayCommand<int> UpdateDesaturationCommand { get; }
+    public IRelayCommand<int> UpdateToleranceCommand { get; }
+    public IRelayCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
+    public IRelayCommand<ShapeType> UpdateSelectedShapeTypeCommand { get; }
+    public IRelayCommand<Color> UpdateShapeStrokeColorCommand { get; }
+    public IRelayCommand<Color> UpdateShapeFillColorCommand { get; }
+    public IRelayCommand<int> UpdateShapeStrokeWidthCommand { get; }
+    public IRelayCommand<int> UpdateZoomPercentageCommand { get; }
+    public IRelayCommand<bool> UpdateAutoZoomLockCommand { get; }
+    public IRelayCommand ZoomAndCenterCommand { get; }
 
     public bool HasUndoStack
     {
@@ -306,31 +307,31 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _operationsUndoStack = [];
         _operationsRedoStack = [];
 
-        CopyCommand = commandFactory.CreateAsync(ActivityIds.Copy, CopyAsync);
-        ToggleCropModeCommand = commandFactory.Create(ActivityIds.ToggleCropMode, ToggleCropMode);
-        ToggleShapesModeCommand = commandFactory.Create(ActivityIds.ToggleShapesMode, ToggleShapesMode, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
-        SaveCommand = commandFactory.CreateAsync(ActivityIds.Save, SaveAsync);
-        UndoCommand = commandFactory.Create(ActivityIds.Undo, Undo);
-        RedoCommand = commandFactory.Create(ActivityIds.Redo, Redo);
-        RotateCommand = commandFactory.Create(ActivityIds.Rotate, Rotate);
-        FlipHorizontalCommand = commandFactory.Create(ActivityIds.FlipHorizontal, () => Flip(FlipDirection.Horizontal));
-        FlipVerticalCommand = commandFactory.Create(ActivityIds.FlipVertical, () => Flip(FlipDirection.Vertical));
-        PrintCommand = commandFactory.CreateAsync(ActivityIds.Print, PrintAsync);
-        ShareCommand = commandFactory.CreateAsync(ActivityIds.Share, ShareAsync);
-        UpdateChromaKeyColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateChromaKeyColor, UpdateChromaKeyColor, (c) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
-        UpdateOrientationCommand = commandFactory.Create<ImageOrientation>(ActivityIds.UpdateOrientation, UpdateOrientation);
-        UpdateCropRectCommand = commandFactory.Create<Rectangle>(ActivityIds.UpdateCropRect, UpdateCropRect);
-        UpdateShowChromaKeyOptionsCommand = commandFactory.Create<bool>(ActivityIds.UpdateShowChromaKeyOptions, UpdateShowChromaKeyOptions);
-        UpdateDesaturationCommand = commandFactory.Create<int>(ActivityIds.UpdateDesaturation, UpdateDesaturation);
-        UpdateToleranceCommand = commandFactory.Create<int>(ActivityIds.UpdateTolerance, UpdateTolerance);
-        UpdateSelectedColorOptionIndexCommand = commandFactory.Create<int>(ActivityIds.UpdateSelectedColorOptionIndex, UpdateSelectedColorOptionIndex);
-        UpdateSelectedShapeTypeCommand = commandFactory.Create<ShapeType>(ActivityIds.UpdateSelectedShapeType, UpdateSelectedShapeType, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
-        UpdateShapeStrokeColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeStrokeColor, UpdateShapeStrokeColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
-        UpdateShapeFillColorCommand = commandFactory.Create<Color>(ActivityIds.UpdateShapeFillColor, UpdateShapeFillColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
-        UpdateShapeStrokeWidthCommand = commandFactory.Create<int>(ActivityIds.UpdateShapeStrokeWidth, UpdateShapeStrokeWidth, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
-        UpdateZoomPercentageCommand = commandFactory.Create<int>(ActivityIds.UpdateZoomPercentage, UpdateZoomPercentage);
-        UpdateAutoZoomLockCommand = commandFactory.Create<bool>(ActivityIds.UpdateAutoZoomLock, UpdateAutoZoomLock);
-        ZoomAndCenterCommand = commandFactory.Create(ActivityIds.ZoomAndCenter, RequestZoomAndCenter);
+        CopyCommand = new AsyncRelayCommand(CopyAsync);
+        ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
+        ToggleShapesModeCommand = new RelayCommand(ToggleShapesMode, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        SaveCommand =   new AsyncRelayCommand(SaveAsync);
+        UndoCommand = new RelayCommand(Undo);
+        RedoCommand = new RelayCommand(Redo);
+        RotateCommand = new RelayCommand(Rotate);
+        FlipHorizontalCommand = new RelayCommand(() => Flip(FlipDirection.Horizontal));
+        FlipVerticalCommand = new RelayCommand(() => Flip(FlipDirection.Vertical));
+        PrintCommand = new AsyncRelayCommand(PrintAsync);
+        ShareCommand = new AsyncRelayCommand(ShareAsync);
+        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, (c) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
+        UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
+        UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
+        UpdateShowChromaKeyOptionsCommand = new RelayCommand<bool>(UpdateShowChromaKeyOptions);
+        UpdateDesaturationCommand = new RelayCommand<int>(UpdateDesaturation);
+        UpdateToleranceCommand = new RelayCommand<int>(UpdateTolerance);
+        UpdateSelectedColorOptionIndexCommand = new RelayCommand<int>(UpdateSelectedColorOptionIndex);
+        UpdateSelectedShapeTypeCommand = new RelayCommand<ShapeType>(UpdateSelectedShapeType, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeStrokeColorCommand = new RelayCommand<Color>(UpdateShapeStrokeColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeFillColorCommand = new RelayCommand<Color>(UpdateShapeFillColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
+        UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
+        ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
     }
 
     public override Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
@@ -353,7 +354,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
                 if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
                 {
-                    bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval);
+                    bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
                     IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
                     if (isChromaKeyAddOnOwned)
                     {
@@ -771,7 +772,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         RotationDisplayName = GetRotationDisplayName(Orientation);
 
         _operationsRedoStack.Clear();
-        _operationsUndoStack.Push(new OrientationOperation(UpdateOrientationCommand, oldOrientation, newOrientation));
+        _operationsUndoStack.Push(new OrientationOperation(UpdateOrientation, oldOrientation, newOrientation));
         UpdateUndoRedoStackProperties();
     }
 
@@ -788,7 +789,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         RotationDisplayName = GetRotationDisplayName(Orientation);
 
         _operationsRedoStack.Clear();
-        _operationsUndoStack.Push(new OrientationOperation(UpdateOrientationCommand, oldOrientation, newOrientation));
+        _operationsUndoStack.Push(new OrientationOperation(UpdateOrientation, oldOrientation, newOrientation));
         UpdateUndoRedoStackProperties();
     }
 
@@ -821,7 +822,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (newCropRect != oldCropRect)
         {
             _operationsRedoStack.Clear();
-            _operationsUndoStack.Push(new CropOperation(UpdateCropRectCommand, oldCropRect, newCropRect));
+            _operationsUndoStack.Push(new CropOperation(UpdateCropRect, oldCropRect, newCropRect));
             UpdateUndoRedoStackProperties();
         }
     }

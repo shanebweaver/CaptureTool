@@ -18,7 +18,7 @@ namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 {
-    private readonly ISettingsGoBackAppCommand _goBackAction;
+    private readonly ILeaveSettingsPageAppCommand _goBackAction;
     private readonly ISettingsRestartApplicationAppCommand _restartAppAction;
     private readonly ISettingsUpdateImageAutoCopyAppCommand _updateImageAutoCopyAction;
     private readonly ISettingsUpdateImageAutoSaveAppCommand _updateImageAutoSaveAction;
@@ -35,7 +35,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly ISettingsOpenTempFolderAppCommand _openTempFolderAction;
     private readonly ISettingsClearTempFilesAppCommand _clearTempFilesAction;
     private readonly ISettingsRestoreDefaultsAppCommand _restoreDefaultsAction;
-    private readonly ITelemetryService _telemetryService;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
@@ -178,7 +177,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public SettingsPageViewModel(
-        ISettingsGoBackAppCommand goBackAction,
+        ILeaveSettingsPageAppCommand goBackAction,
         ISettingsRestartApplicationAppCommand restartAppAction,
         ISettingsUpdateImageAutoCopyAppCommand updateImageAutoCopyAction,
         ISettingsUpdateImageAutoSaveAppCommand updateImageAutoSaveAction,
@@ -195,7 +194,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         ISettingsOpenTempFolderAppCommand openTempFolderAction,
         ISettingsClearTempFilesAppCommand clearTempFilesAction,
         ISettingsRestoreDefaultsAppCommand restoreDefaultsAction,
-        ITelemetryService telemetryService,
         ILocalizationService localizationService,
         IThemeService themeService,
         ISettingsService settingsService,
@@ -221,7 +219,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _openTempFolderAction = openTempFolderAction;
         _clearTempFilesAction = clearTempFilesAction;
         _restoreDefaultsAction = restoreDefaultsAction;
-        _telemetryService = telemetryService;
         _localizationService = localizationService;
         _themeService = themeService;
         _settingsService = settingsService;

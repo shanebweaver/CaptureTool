@@ -50,7 +50,7 @@ public class CaptureOverlayGoBackUseCaseTests
     {
         var navService = Fixture.Freeze<Mock<INavigationService>>();
         navService.SetupGet(n => n.CanGoBack).Returns(true);
-        navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(NavigationRoute.VideoCapture));
+        navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(NavigationRoute.CaptureOverlay));
         var handler = Fixture.Create<CaptureOverlayGoBackUseCase>();
 
         bool can = handler.CanExecute();

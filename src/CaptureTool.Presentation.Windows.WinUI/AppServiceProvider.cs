@@ -24,10 +24,6 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         // Generic services
         collection.AddGenericServices();
 
-        // Application services
-        collection.AddApplicationServices();
-        collection.AddApplicationCaptureServices();
-
         // Windows services
         collection.AddWindowsServices(App.Current.DispatcherQueue);
 
@@ -35,20 +31,8 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddWindowsCaptureDomains();
         collection.AddWindowsEditDomains();
 
-        // Action handlers
-        collection
-            .AddCaptureOverlayUseCases()
-            .AddAboutUseCases()
-            .AddAddOnsUseCases()
-            .AddErrorUseCases()
-            .AddLoadingUseCases()
-            .AddHomeUseCases()
-            .AddSettingsUseCases()
-            .AddVideoEditUseCases()
-            .AddAudioEditUseCases()
-            .AddAudioCaptureUseCases()
-            .AddAppMenuUseCases()
-            .AddDiagnosticsUseCases();
+        // Application layer
+        collection.AddApplicationServices();
 
         // ViewModels
         collection.AddViewModels();

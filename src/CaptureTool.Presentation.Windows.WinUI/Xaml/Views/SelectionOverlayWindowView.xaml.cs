@@ -150,7 +150,7 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
         if (captureArea.Height >= 40 && captureArea.Width >= 40)
         {
-            ViewModel.RequestCaptureCommand.Execute();
+            ViewModel.RequestCaptureCommand.Execute(_);
         }
     }
 

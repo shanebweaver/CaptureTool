@@ -4,11 +4,10 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Application.Abstractions.ViewModels"
-    d:DataContext="{d:DesignInstance Type=viewmodels:IAboutPageViewModel}"
+    xmlns:viewmodels="using:CaptureTool.Presentation.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:AboutPageViewModel}"
     mc:Ignorable="d">
 
     <ScrollView>
@@ -25,7 +24,7 @@
                     AutomationProperties.Name="Back"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.GoBackCommand)}">
+                    Command="{x:Bind ViewModel.GoBackCommand}">
                     <SymbolIcon Symbol="Back" />
                 </Button>
                 <TextBlock
@@ -49,19 +48,19 @@
                 </StackPanel>
 
                 <StackPanel Spacing="4">
-                    <HyperlinkButton Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ShowDisclaimerOfLiabilityCommand)}">
+                    <HyperlinkButton Command="{x:Bind ViewModel.ShowDisclaimerOfLiabilityCommand}">
                         <TextBlock x:Uid="About_DisclaimerOfLiability_ButtonLabel" TextWrapping="WrapWholeWords" />
                     </HyperlinkButton>
 
-                    <HyperlinkButton Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ShowTermsOfUseCommand)}">
+                    <HyperlinkButton Command="{x:Bind ViewModel.ShowTermsOfUseCommand}">
                         <TextBlock x:Uid="About_TermsOfUse_ButtonLabel" TextWrapping="WrapWholeWords" />
                     </HyperlinkButton>
 
-                    <HyperlinkButton Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ShowPrivacyPolicyCommand)}">
+                    <HyperlinkButton Command="{x:Bind ViewModel.ShowPrivacyPolicyCommand}">
                         <TextBlock x:Uid="About_PrivacyPolicy_ButtonLabel" TextWrapping="WrapWholeWords" />
                     </HyperlinkButton>
 
-                    <HyperlinkButton Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ShowThirdPartyCommand)}">
+                    <HyperlinkButton Command="{x:Bind ViewModel.ShowThirdPartyCommand}">
                         <TextBlock x:Uid="About_ThirdParty_ButtonLabel" TextWrapping="WrapWholeWords" />
                     </HyperlinkButton>
                 </StackPanel>

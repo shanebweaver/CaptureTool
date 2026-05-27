@@ -1,10 +1,12 @@
 using CaptureTool.Application.Abstractions.About;
 using CaptureTool.Application.Abstractions.AppMenu;
+using CaptureTool.Application.Abstractions.CaptureOverlay;
 using CaptureTool.Application.Abstractions.ImageCapture;
 using CaptureTool.Application.Abstractions.RecentCaptures;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Abstractions.Factories;
 using CaptureTool.Infrastructure.Abstractions.Storage;
@@ -49,8 +51,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     }
 
     public AppMenuViewModel(
-        INewImageCaptureAppCommand newImageCaptureAppCommand,
-        INewVideoCaptureAppCommand newVideoCaptureAppCommand,
+        IOpenSelectionOverlayAppCommand openImageCaptureOverlayAppCommand,
         IOpenSettingsPageAppCommand openSettingsPageAppCommand,
         IOpenAboutPageAppCommand openAboutPageAppCommand,
         IOpenStorePageAppCommand openStorePageAppCommand,
@@ -69,8 +70,8 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _getRecentCapturesAppQuery = getRecentCapturesAppQuery;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
 
-        NewImageCaptureCommand = newImageCaptureAppCommand.ToRelayCommand();
-        NewVideoCaptureCommand = newVideoCaptureAppCommand.ToRelayCommand();
+        NewImageCaptureCommand = new RelayCommand(() => openImageCaptureOverlayAppCommand.Execute(CaptureOptions.ImageDefault));
+        NewVideoCaptureCommand = new RelayCommand(() => openImageCaptureOverlayAppCommand.Execute(CaptureOptions.VideoDefault));
         OpenFileCommand = openFileAsyncAppCommand.ToAsyncRelayCommand();
         NavigateToSettingsCommand = openSettingsPageAppCommand.ToRelayCommand();
         ShowAboutAppCommand = openAboutPageAppCommand.ToRelayCommand();

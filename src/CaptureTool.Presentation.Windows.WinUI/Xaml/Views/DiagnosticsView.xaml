@@ -22,7 +22,7 @@
                 Header="Logging"
                 IsOn="{x:Bind ViewModel.IsLoggingEnabled, Mode=OneWay}"
                 Toggled="ToggleSwitch_Toggled" />
-            <Button Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ClearLogsCommand)}">
+            <Button Command="{x:Bind ViewModel.ClearLogsCommand}">
                 <TextBlock Text="Clear logs" />
             </Button>
         </StackPanel>

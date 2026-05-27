@@ -22,7 +22,7 @@
             <!--  Start Recording  -->
             <AppBarButton
                 x:Uid="AudioCapture_PlayButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.StartCommand)}"
+                Command="{x:Bind ViewModel.StartCommand}"
                 Icon="Play"
                 IsEnabled="{x:Bind ViewModel.CanStartRecording, Mode=OneWay}"
                 Label="Play" />
@@ -30,7 +30,7 @@
             <!--  Pause  -->
             <AppBarButton
                 x:Uid="AudioCapture_PauseButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.PauseCommand)}"
+                Command="{x:Bind ViewModel.PauseCommand}"
                 Icon="Pause"
                 IsEnabled="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
                 Label="Pause" />
@@ -38,7 +38,7 @@
             <!--  Stop  -->
             <AppBarButton
                 x:Uid="AudioCapture_StopButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.StopCommand)}"
+                Command="{x:Bind ViewModel.StopCommand}"
                 Icon="Stop"
                 IsEnabled="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
                 Label="Stop" />
@@ -48,7 +48,7 @@
             <!--  Mute  -->
             <AppBarToggleButton
                 x:Uid="AudioCapture_MuteButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.MuteCommand)}"
+                Command="{x:Bind ViewModel.MuteCommand}"
                 Icon="Volume"
                 IsChecked="{x:Bind ViewModel.IsMuted, Mode=OneWay}"
                 Label="Mute" />
@@ -56,7 +56,7 @@
             <!--  Desktop Audio  -->
             <AppBarToggleButton
                 x:Uid="AudioCapture_DesktopAudioButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ToggleDesktopAudioCommand)}"
+                Command="{x:Bind ViewModel.ToggleDesktopAudioCommand}"
                 Icon="Audio"
                 IsChecked="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=OneWay}"
                 Label="Desktop Audio" />

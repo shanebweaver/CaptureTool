@@ -27,8 +27,8 @@ public static partial class CaptureToolNavigationRouteHelper
         if (route is NavigationRoute navigationRoute)
         {
             return
-                navigationRoute == NavigationRoute.ImageCapture ||
-                navigationRoute == NavigationRoute.VideoCapture;
+                navigationRoute == NavigationRoute.SelectionOverlay ||
+                navigationRoute == NavigationRoute.CaptureOverlay;
         }
 
         return false;

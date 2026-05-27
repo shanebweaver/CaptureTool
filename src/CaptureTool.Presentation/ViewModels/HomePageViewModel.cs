@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.AudioCapture;
-using CaptureTool.Application.Abstractions.ImageCapture;
-using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Application.Abstractions.CaptureOverlay;
+using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -16,15 +16,14 @@ public sealed partial class HomePageViewModel : ViewModelBase
     public bool IsAudioCaptureEnabled { get; }
 
     public HomePageViewModel(
-        INewImageCaptureAppCommand newImageCaptureAction,
-        INewVideoCaptureAppCommand newVideoCaptureAction,
-        INewAudioCaptureAppCommand newAudioCaptureAction,
+        IOpenSelectionOverlayAppCommand openSelectionOverlayAppCommand,
+        IOpenAudioCapturePageAppCommand openAudioCapturePageAppCommand,
         IFeatureManager featureManager)
     {
         IsAudioCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_AudioCapture);
 
-        NewImageCaptureCommand = newImageCaptureAction.ToRelayCommand();
-        NewVideoCaptureCommand = newVideoCaptureAction.ToRelayCommand();
-        NewAudioCaptureCommand = newAudioCaptureAction.ToRelayCommand();
+        NewImageCaptureCommand = new RelayCommand(() => openSelectionOverlayAppCommand.Execute(CaptureOptions.ImageDefault));
+        NewVideoCaptureCommand = new RelayCommand(() => openSelectionOverlayAppCommand.Execute(CaptureOptions.VideoDefault));
+        NewAudioCaptureCommand = openAudioCapturePageAppCommand.ToRelayCommand();
     }
 }
