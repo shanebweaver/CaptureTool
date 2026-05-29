@@ -320,7 +320,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         }
         UpdateShowAppThemeRestartMessage();
 
-        IsVideoMetadataFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MetadataCollection);
+        IsVideoMetadataFeatureEnabled = _featureManager.IsEnabled(AppFeatures.Feature_VideoCapture_MetadataCollection);
 
         ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
         ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);

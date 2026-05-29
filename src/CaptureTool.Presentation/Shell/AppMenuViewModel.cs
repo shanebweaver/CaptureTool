@@ -84,7 +84,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         RefreshRecentCapturesCommand = new RelayCommand(RefreshRecentCaptures);
         OpenRecentCaptureCommand = new RelayCommand<RecentCaptureViewModel>(OpenRecentCapture);
 
-        ShowAddOnsOption = featureManager.IsEnabled(CaptureToolFeatures.Feature_AddOns_Store);
+        ShowAddOnsOption = featureManager.IsEnabled(AppFeatures.Feature_AddOns_Store);
         RecentCaptures = [];
     }
 

@@ -275,7 +275,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         CopyCommand = new AsyncRelayCommand(CopyAsync);
         ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
-        ToggleShapesModeCommand = new RelayCommand(ToggleShapesMode, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        ToggleShapesModeCommand = new RelayCommand(ToggleShapesMode, () => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         UndoCommand = new RelayCommand(Undo);
         RedoCommand = new RelayCommand(Redo);
@@ -284,17 +284,17 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         FlipVerticalCommand = new RelayCommand(() => Flip(FlipDirection.Vertical));
         PrintCommand = new AsyncRelayCommand(PrintAsync);
         ShareCommand = new AsyncRelayCommand(ShareAsync);
-        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, (c) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey));
+        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, (c) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_ChromaKey));
         UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
         UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
         UpdateShowChromaKeyOptionsCommand = new RelayCommand<bool>(UpdateShowChromaKeyOptions);
         UpdateDesaturationCommand = new RelayCommand<int>(UpdateDesaturation);
         UpdateToleranceCommand = new RelayCommand<int>(UpdateTolerance);
         UpdateSelectedColorOptionIndexCommand = new RelayCommand<int>(UpdateSelectedColorOptionIndex);
-        UpdateSelectedShapeTypeCommand = new RelayCommand<ShapeType>(UpdateSelectedShapeType, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
-        UpdateShapeStrokeColorCommand = new RelayCommand<Color>(UpdateShapeStrokeColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
-        UpdateShapeFillColorCommand = new RelayCommand<Color>(UpdateShapeFillColor, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
-        UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth, (_) => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
+        UpdateSelectedShapeTypeCommand = new RelayCommand<ShapeType>(UpdateSelectedShapeType, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeStrokeColorCommand = new RelayCommand<Color>(UpdateShapeStrokeColor, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeFillColorCommand = new RelayCommand<Color>(UpdateShapeFillColor, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
@@ -316,7 +316,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             _imageDrawable = new(topLeft, imageFile, ImageSize);
             _drawables.Add(_imageDrawable);
 
-            if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
+            if (_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_ChromaKey))
             {
                 bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
                 IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
@@ -335,7 +335,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 }
             }
 
-            IsShapesFeatureEnabled = _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes);
+            IsShapesFeatureEnabled = _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes);
 
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
@@ -443,7 +443,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateSelectedShapeType(ShapeType value)
     {
-        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
         {
             return;
         }
@@ -452,7 +452,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateShapeStrokeColor(Color value)
     {
-        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
         {
             return;
         }
@@ -461,7 +461,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateShapeFillColor(Color value)
     {
-        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
         {
             return;
         }
@@ -470,7 +470,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateShapeStrokeWidth(int value)
     {
-        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
         {
             return;
         }
@@ -479,7 +479,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint)
     {
-        if (!IsInShapesMode || !_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        if (!IsInShapesMode || !_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
         {
             return;
         }
@@ -575,7 +575,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnShapeDeleted(int shapeIndex)
     {
-        if (!IsInShapesMode || !_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        if (!IsInShapesMode || !_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
         {
             return;
         }
@@ -602,7 +602,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnShapeModified(int shapeIndex, IDrawable shape)
     {
-        if (!IsInShapesMode || !_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes))
+        if (!IsInShapesMode || !_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
         {
             return;
         }
@@ -672,7 +672,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateChromaKeyColor(Color color)
     {
-        if (!_featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_ChromaKey))
         {
             return;
         }
