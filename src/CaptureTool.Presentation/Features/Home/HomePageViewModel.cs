@@ -22,7 +22,7 @@ public sealed partial class HomePageViewModel : ViewModelBase
         IUseCase<OpenAudioCapturePageRequest, OpenAudioCapturePageResponse> openAudioCapturePageCommand,
         IFeatureManager featureManager)
     {
-        IsAudioCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_AudioCapture);
+        IsAudioCaptureEnabled = featureManager.IsEnabled(AppFeatures.Feature_AudioCapture);
 
         NewImageCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault));
         NewVideoCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault));

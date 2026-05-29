@@ -1,11 +1,14 @@
 namespace CaptureTool.FeatureManagement;
 
-public sealed partial class FeatureFlag
+public sealed class FeatureFlag
 {
-    public FeatureFlag(string id)
+    internal FeatureFlag(string id, bool isEnabled)
     {
         Id = id;
+        IsEnabled = isEnabled;
     }
 
-    public string Id { get; }
+    internal string Id { get; }
+
+    internal bool IsEnabled { get; }
 }

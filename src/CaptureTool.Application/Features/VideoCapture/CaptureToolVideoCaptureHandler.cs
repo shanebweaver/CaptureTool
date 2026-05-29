@@ -92,7 +92,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         );
 
         // Start metadata collection if feature is enabled and factory/registry are available
-        if (_featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MetadataCollection) &&
+        if (_featureManager.IsEnabled(AppFeatures.Feature_VideoCapture_MetadataCollection) &&
             _scanJobFactory != null &&
             _metadataScannerRegistry != null)
         {
@@ -287,7 +287,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             // Copy metadata file if it exists and the setting is enabled
             if (!string.IsNullOrWhiteSpace(metadataFilePath) &&
                 File.Exists(metadataFilePath) &&
-                _featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MetadataCollection))
+                _featureManager.IsEnabled(AppFeatures.Feature_VideoCapture_MetadataCollection))
             {
                 bool autoSaveMetadata = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_MetadataAutoSave);
                 if (autoSaveMetadata)

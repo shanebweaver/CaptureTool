@@ -49,7 +49,7 @@ public sealed class SaveVideoFileUseCase : IUseCase<SaveVideoFileRequest, SaveVi
 
         string metadataFilePath = Path.ChangeExtension(request.VideoPath, MetadataFile.FileExtension);
         if (File.Exists(metadataFilePath) &&
-            _featureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_MetadataCollection) &&
+            _featureManager.IsEnabled(AppFeatures.Feature_VideoCapture_MetadataCollection) &&
             _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_MetadataAutoSave))
         {
             string newMetadataFilePath = Path.ChangeExtension(file.FilePath, MetadataFile.FileExtension);
