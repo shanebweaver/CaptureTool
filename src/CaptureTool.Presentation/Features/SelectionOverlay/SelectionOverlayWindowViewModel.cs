@@ -169,13 +169,13 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         RequestCaptureCommand = new RelayCommand(RequestCapture);
         CloseOverlayCommand = new RelayCommand(CloseOverlay);
         UpdateSelectedCaptureModeCommand = new RelayCommand<(int Index, SelectionUpdateSource Source)>(UpdateSelectedCaptureMode);
-        UpdateSelectedCaptureTypeCommand = new RelayCommand< (int Index, SelectionUpdateSource Source)>(UpdateSelectedCaptureType);
-        UpdateCaptureAreaCommand = new RelayCommand< Rectangle>(UpdateCaptureArea);
+        UpdateSelectedCaptureTypeCommand = new RelayCommand<(int Index, SelectionUpdateSource Source)>(UpdateSelectedCaptureType);
+        UpdateCaptureAreaCommand = new RelayCommand<Rectangle>(UpdateCaptureArea);
         UpdateCaptureOptionsCommand = new RelayCommand<CaptureOptions>(UpdateCaptureOptions);
 
         CaptureModeViewModel imageModeVM = captureModeViewModelFactory.Create(CaptureMode.Image);
         _supportedCaptureModes.Add(imageModeVM);
-        
+
         CaptureModeViewModel videoModeVM = captureModeViewModelFactory.Create(CaptureMode.Video);
         _supportedCaptureModes.Add(videoModeVM);
 

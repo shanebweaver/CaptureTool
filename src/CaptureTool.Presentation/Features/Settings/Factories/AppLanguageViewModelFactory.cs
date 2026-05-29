@@ -1,4 +1,3 @@
-using CaptureTool.Presentation.Features.Settings;
 using CaptureTool.Infrastructure.Abstractions.Factories;
 using CaptureTool.Infrastructure.Abstractions.Localization;
 

@@ -1,15 +1,15 @@
-using CaptureTool.Infrastructure.Cancellation;
-using CaptureTool.Infrastructure.Globalization;
-using CaptureTool.Infrastructure.Logging;
-using CaptureTool.Infrastructure.Navigation;
-using CaptureTool.Infrastructure.Settings;
-using CaptureTool.Infrastructure.Telemetry;
 using CaptureTool.Infrastructure.Abstractions.Cancellation;
 using CaptureTool.Infrastructure.Abstractions.Globalization;
 using CaptureTool.Infrastructure.Abstractions.Logging;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Settings;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Infrastructure.Cancellation;
+using CaptureTool.Infrastructure.Globalization;
+using CaptureTool.Infrastructure.Logging;
+using CaptureTool.Infrastructure.Navigation;
+using CaptureTool.Infrastructure.Settings;
+using CaptureTool.Infrastructure.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Infrastructure.DependencyInjection;

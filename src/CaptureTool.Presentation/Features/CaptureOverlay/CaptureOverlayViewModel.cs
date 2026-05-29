@@ -1,4 +1,3 @@
-using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.CaptureOverlay.CloseCaptureOverlay;
@@ -11,6 +10,7 @@ using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
 using CaptureTool.Infrastructure.Abstractions.Themes;
 using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Presentation.Shared.Commands;
 using CommunityToolkit.Mvvm.Input;
 using System.Drawing;
 using System.Timers;
@@ -102,7 +102,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         GoBackCommand = goBackCommand.ToRelayCommand(() => new GoBackFromCaptureOverlayRequest());
         StartVideoCaptureCommand = new RelayCommand(StartVideoCapture);
         StopVideoCaptureCommand = new RelayCommand(StopVideoCapture);
-        ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand.ToRelayCommand(() => new ToggleVideoCaptureDesktopAudioRequest()); 
+        ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand.ToRelayCommand(() => new ToggleVideoCaptureDesktopAudioRequest());
         TogglePauseResumeCommand = new RelayCommand(TogglePauseResume);
     }
 

@@ -1,12 +1,12 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.Navigation;
+using CaptureTool.Application.Features.Windowing.ShowMainWindow;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Shutdown;
 using CaptureTool.Infrastructure.Abstractions.Windowing;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
-using CaptureTool.Application.Features.Windowing.ShowMainWindow;
 
 namespace CaptureTool.Presentation.Windows.WinUI;
 

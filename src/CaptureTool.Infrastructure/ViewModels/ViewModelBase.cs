@@ -1,6 +1,6 @@
-﻿using CaptureTool.Infrastructure.Loading;
-using CaptureTool.Infrastructure.Abstractions.Loading;
+﻿using CaptureTool.Infrastructure.Abstractions.Loading;
 using CaptureTool.Infrastructure.Abstractions.ViewModels;
+using CaptureTool.Infrastructure.Loading;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 

@@ -1,6 +1,4 @@
-using CaptureTool.Presentation.Features.RecentCaptures;
 using CaptureTool.Application.Abstractions.Files;
-using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Infrastructure.Abstractions.Factories;
 
 namespace CaptureTool.Presentation.Features.RecentCaptures.Factories;
