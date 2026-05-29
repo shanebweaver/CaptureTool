@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Dispatching;
+using Microsoft.UI.Dispatching;
 using Microsoft.Win32.SafeHandles;
 using Microsoft.Windows.AppLifecycle;
 using System.Diagnostics;

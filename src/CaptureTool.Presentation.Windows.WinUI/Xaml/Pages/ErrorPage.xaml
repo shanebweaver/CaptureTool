@@ -7,7 +7,7 @@
     xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Application.Interfaces.ViewModels"
+    xmlns:viewmodels="using:CaptureTool.Application.Abstractions.ViewModels"
     d:DataContext="{d:DesignInstance Type=viewmodels:IErrorPageViewModel}"
     mc:Ignorable="d">
 
@@ -31,7 +31,7 @@
                 Foreground="Red"
                 TextAlignment="Center"
                 TextWrapping="WrapWholeWords" />
-            <Button HorizontalAlignment="Center" Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RestartAppCommand)}">
+            <Button HorizontalAlignment="Center" Command="{x:Bind ViewModel.RestartAppCommand}">
                 <TextBlock x:Uid="ErrorPage_RestartAppButtonLabel" />
             </Button>
         </StackPanel>

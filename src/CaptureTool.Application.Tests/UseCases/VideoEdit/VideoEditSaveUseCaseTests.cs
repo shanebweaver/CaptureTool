@@ -1,13 +1,12 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.Settings;
-using CaptureTool.Application.Implementations.UseCases.VideoEdit;
-using CaptureTool.Application.Interfaces.FeatureManagement;
-using CaptureTool.Domain.Capture.Interfaces.Metadata;
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
-using CaptureTool.Infrastructure.Interfaces.Settings;
-using CaptureTool.Infrastructure.Interfaces.Storage;
-using CaptureTool.Infrastructure.Interfaces.Windowing;
+using CaptureTool.Application.Features.Settings;
+using CaptureTool.Application.UseCases.VideoEdit;
+using CaptureTool.Domain.Capture.Abstractions.Metadata;
+using CaptureTool.FeatureManagement;
+using CaptureTool.Infrastructure.Abstractions.Settings;
+using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Infrastructure.Abstractions.Windowing;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.VideoEdit;
@@ -65,7 +64,7 @@ public class VideoEditSaveUseCaseTests
     public async Task ExecuteAsync_ShouldThrowWhenVideoPathIsEmpty()
     {
         var action = Fixture.Create<VideoEditSaveUseCase>();
-        await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => action.ExecuteAsync(string.Empty));
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => action.ExecuteAsync(string.Empty));
     }
 
     [TestMethod]

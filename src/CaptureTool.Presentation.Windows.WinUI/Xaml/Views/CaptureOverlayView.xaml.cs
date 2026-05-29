@@ -1,6 +1,6 @@
-using CaptureTool.Application.Interfaces.ViewModels.Options;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces.Themes;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.Abstractions.Themes;
+using CaptureTool.Presentation.Features.CaptureOverlay;
 using Microsoft.UI;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
@@ -59,11 +59,8 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
                 _shadowVisual = null;
             }
 
-            if (_shadow != null)
-            {
-                _shadow.Dispose();
-                _shadow = null;
-            }
+            _shadow?.Dispose();
+            _shadow = null;
         }
         catch { }
     }
@@ -93,10 +90,7 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
 
     private void Toolbar_SizeChanged(object s, SizeChangedEventArgs e)
     {
-        if (_shadowVisual != null)
-        {
-            _shadowVisual.Size = new Vector2((float)e.NewSize.Width, (float)e.NewSize.Height);
-        }
+        _shadowVisual?.Size = new Vector2((float)e.NewSize.Width, (float)e.NewSize.Height);
     }
 
     private void UpdateRequestedAppTheme()

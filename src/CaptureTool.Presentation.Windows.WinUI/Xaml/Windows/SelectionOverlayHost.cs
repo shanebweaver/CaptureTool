@@ -1,7 +1,7 @@
-﻿using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Application.Interfaces.ViewModels.Options;
-using CaptureTool.Domain.Capture.Implementations.Windows;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Application.Features.Navigation;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture.Windows;
+using CaptureTool.Presentation.Features.SelectionOverlay;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using System.Drawing;
@@ -18,7 +18,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private readonly HashSet<MonitorCaptureResult> _monitors = [];
     private readonly HashSet<SelectionOverlayWindow> _windows = [];
     private readonly HashSet<nint> _windowHandles = [];
-    private ISelectionOverlayHostViewModel? _viewModel;
+    private SelectionOverlayHostViewModel? _viewModel;
     private DispatcherTimer? _foregroundTimer;
     private SelectionOverlayWindow? _primaryWindow;
     private bool _disposed;
@@ -41,7 +41,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         {
             return;
         }
-        _viewModel = ViewModelLocator.GetViewModel<ISelectionOverlayHostViewModel>();
+        _viewModel = ViewModelLocator.GetViewModel<SelectionOverlayHostViewModel>();
         _viewModel.AllScreensCaptureRequested += OnAllScreensCaptureRequested;
 
         var allWindows = WindowInfoHelper.GetAllWindows();
@@ -94,7 +94,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private void OnAllScreensCaptureRequested(object? sender, EventArgs e)
     {
         ImageFile image = AppServiceLocator.ImageCapture.PerformMultiMonitorImageCapture([.. _monitors]);
-        AppServiceLocator.Navigation.GoToImageEdit(image);
+        AppServiceLocator.Navigation.Navigate(NavigationRoute.ImageEdit, image, true);
     }
 
     public void Activate()

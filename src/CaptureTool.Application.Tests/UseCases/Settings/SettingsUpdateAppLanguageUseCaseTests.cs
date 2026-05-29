@@ -1,8 +1,8 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.Settings;
-using CaptureTool.Infrastructure.Interfaces.Localization;
-using CaptureTool.Infrastructure.Interfaces.Settings;
+using CaptureTool.Application.Features.Settings;
+using CaptureTool.Infrastructure.Abstractions.Localization;
+using CaptureTool.Infrastructure.Abstractions.Settings;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.Settings;
@@ -26,7 +26,7 @@ public class SettingsUpdateAppLanguageUseCaseTests
 
         localization.SetupGet(l => l.SupportedLanguages).Returns(new[] { Fixture.Create<IAppLanguage>(), Fixture.Create<IAppLanguage>() });
 
-        var action = Fixture.Create<SettingsUpdateAppLanguageUseCase>();
+        var action = Fixture.Create<SettingsUpdateAppLanguageAppCommand>();
         await action.ExecuteAsync(0);
 
         localization.Verify(l => l.OverrideLanguage(It.IsAny<IAppLanguage?>()), Times.Once);

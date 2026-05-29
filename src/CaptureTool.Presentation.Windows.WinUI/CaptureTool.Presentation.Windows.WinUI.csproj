@@ -38,16 +38,17 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Application.Interfaces\CaptureTool.Application.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Application.Implementations\CaptureTool.Application.Implementations.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Edit.Implementations.Windows\CaptureTool.Domain.Edit.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Edit.Interfaces\CaptureTool.Domain.Edit.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture.Implementations.Windows\CaptureTool.Domain.Capture.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture.Interfaces\CaptureTool.Domain.Capture.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations.FeatureManagement\CaptureTool.Infrastructure.Implementations.FeatureManagement.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations.Windows\CaptureTool.Infrastructure.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations\CaptureTool.Infrastructure.Implementations.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Interfaces\CaptureTool.Infrastructure.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.Application\CaptureTool.Application.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit.Windows\CaptureTool.Domain.Edit.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit.Abstractions\CaptureTool.Domain.Edit.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture.Windows\CaptureTool.Domain.Capture.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture.Abstractions\CaptureTool.Domain.Capture.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Windows\CaptureTool.Infrastructure.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure\CaptureTool.Infrastructure.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Abstractions\CaptureTool.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.Presentation\CaptureTool.Presentation.csproj" />
   </ItemGroup>
 
   <!-- Content files -->

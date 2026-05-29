@@ -7,7 +7,7 @@
     xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Application.Interfaces.ViewModels"
+    xmlns:viewmodels="using:CaptureTool.Application.Abstractions.ViewModels"
     d:DataContext="{d:DesignInstance Type=viewmodels:IVideoEditPageViewModel}"
     mc:Ignorable="d">
 
@@ -22,7 +22,7 @@
             <!--  Copy  -->
             <AppBarButton
                 x:Uid="VideoEdit_CopyButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.CopyCommand)}"
+                Command="{x:Bind ViewModel.CopyCommand}"
                 Icon="Copy"
                 IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
@@ -33,7 +33,7 @@
             <!--  Save  -->
             <AppBarButton
                 x:Uid="VideoEdit_SaveButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.SaveCommand)}"
+                Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
                 IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>

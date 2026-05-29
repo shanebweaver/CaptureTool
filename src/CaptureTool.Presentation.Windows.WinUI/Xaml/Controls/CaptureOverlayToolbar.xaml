@@ -3,7 +3,7 @@
     x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.CaptureOverlayToolbar"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:capture="using:CaptureTool.Domain.Capture.Interfaces"
+    xmlns:capture="using:CaptureTool.Domain.Capture.Abstractions"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -75,8 +75,7 @@
             <Button
                 x:Name="LocalAudioToggleButton"
                 Command="{x:Bind ToggleLocalAudioCommand, Mode=OneWay}"
-                Style="{StaticResource IconButtonStyle}"
-                Visibility="Collapsed">
+                Style="{StaticResource IconButtonStyle}">
                 <Grid>
                     <FontIcon
                         FontFamily="{StaticResource FluentSystemIcons}"

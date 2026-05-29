@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
+
+public sealed record OpenSelectionOverlayResponse;

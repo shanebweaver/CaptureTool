@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
 
     strategy:
       matrix:
@@ -24,7 +24,7 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Setup vcpkg
       run: |

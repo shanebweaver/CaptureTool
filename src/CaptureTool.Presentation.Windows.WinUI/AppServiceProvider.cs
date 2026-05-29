@@ -1,10 +1,10 @@
-using CaptureTool.Application.Implementations.DependencyInjection;
-using CaptureTool.Application.Implementations.ViewModels.Factories.DependencyInjection;
-using CaptureTool.Domain.Capture.Implementations.Windows.DependencyInjection;
-using CaptureTool.Domain.Edit.Implementations.Windows.DependencyInjection;
-using CaptureTool.Infrastructure.Implementations.DependencyInjection;
-using CaptureTool.Infrastructure.Implementations.FeatureManagement.DependencyInjection;
-using CaptureTool.Infrastructure.Implementations.Windows.DependencyInjection;
+using CaptureTool.Application.DependencyInjection;
+using CaptureTool.Domain.Capture.Windows.DependencyInjection;
+using CaptureTool.Domain.Edit.Windows.DependencyInjection;
+using CaptureTool.FeatureManagement.DependencyInjection;
+using CaptureTool.Infrastructure.DependencyInjection;
+using CaptureTool.Infrastructure.Windows.DependencyInjection;
+using CaptureTool.Presentation.DependencyInjection;
 using CaptureTool.Presentation.Windows.WinUI.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -24,10 +24,6 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         // Generic services
         collection.AddGenericServices();
 
-        // Application services
-        collection.AddApplicationServices();
-        collection.AddApplicationCaptureServices();
-
         // Windows services
         collection.AddWindowsServices(App.Current.DispatcherQueue);
 
@@ -35,26 +31,11 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddWindowsCaptureDomains();
         collection.AddWindowsEditDomains();
 
-        // Action handlers
-        collection
-            .AddCaptureOverlayUseCases()
-            .AddAboutUseCases()
-            .AddAddOnsUseCases()
-            .AddErrorUseCases()
-            .AddLoadingUseCases()
-            .AddHomeUseCases()
-            .AddSettingsUseCases()
-            .AddVideoEditUseCases()
-            .AddAudioEditUseCases()
-            .AddAudioCaptureUseCases()
-            .AddAppMenuUseCases()
-            .AddDiagnosticsUseCases();
+        // Application layer
+        collection.AddApplicationServices();
 
         // ViewModels
         collection.AddViewModels();
-
-        // ViewModel factories
-        collection.AddViewModelFactories();
 
         // App specific handlers
         collection.AddAppWindowsServices();

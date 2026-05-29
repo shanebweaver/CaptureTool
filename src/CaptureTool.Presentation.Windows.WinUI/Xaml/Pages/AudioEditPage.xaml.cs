@@ -1,4 +1,4 @@
-using CaptureTool.Application.Implementations.ViewModels;
+using CaptureTool.Presentation.Features.AudioEdit;
 using Microsoft.UI.Xaml;
 using System.ComponentModel;
 using Windows.Media.Core;
@@ -59,10 +59,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         {
             StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
             var mediaSource = MediaSource.CreateFromStorageFile(file);
-            if (_mediaPlayer is not null)
-            {
-                _mediaPlayer.Source = mediaSource;
-            }
+            _mediaPlayer?.Source = mediaSource;
         }
         catch (Exception)
         {

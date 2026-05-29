@@ -1,8 +1,8 @@
-using CaptureTool.Application.Interfaces.Navigation;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces.FeatureManagement;
-using CaptureTool.Infrastructure.Interfaces.Logging;
-using CaptureTool.Infrastructure.Interfaces.Shutdown;
+using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Infrastructure.Abstractions.Logging;
+using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Infrastructure.Abstractions.Shutdown;
 
 namespace CaptureTool.Presentation.Windows.WinUI;
 
@@ -10,8 +10,7 @@ internal class AppServiceLocator
 {
     public static IShutdownHandler ShutdownHandler => GetService<IShutdownHandler>();
     public static ILogService Logging => GetService<ILogService>();
-    public static IAppNavigation Navigation => GetService<IAppNavigation>();
-    public static IFeatureManager FeatureManager => GetService<IFeatureManager>();
+    public static INavigationService Navigation => GetService<INavigationService>();
     public static IImageCaptureHandler ImageCapture => GetService<IImageCaptureHandler>();
     private static T GetService<T>() where T : notnull => App.Current.ServiceProvider.GetService<T>();
 }

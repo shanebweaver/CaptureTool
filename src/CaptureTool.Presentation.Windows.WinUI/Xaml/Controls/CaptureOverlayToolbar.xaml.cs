@@ -1,4 +1,3 @@
-using CaptureTool.Application.Interfaces.FeatureManagement;
 using Microsoft.UI.Xaml;
 using System.Windows.Input;
 
@@ -69,11 +68,6 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     public CaptureOverlayToolbar()
     {
         InitializeComponent();
-
-        if (AppServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_LocalAudio))
-        {
-            LocalAudioToggleButton.Visibility = Visibility.Visible;
-        }
     }
 
     public bool IsRunning => IsRecording && !IsPaused;

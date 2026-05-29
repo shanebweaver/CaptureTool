@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.Settings;
-using CaptureTool.Infrastructure.Interfaces.Shutdown;
+using CaptureTool.Application.Features.Settings;
+using CaptureTool.Infrastructure.Abstractions.Shutdown;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.Settings;
@@ -21,7 +21,7 @@ public class SettingsRestartAppUseCaseTests
     public void Execute_ShouldRestartApp()
     {
         var shutdown = Fixture.Freeze<Mock<IShutdownHandler>>();
-        var action = Fixture.Create<SettingsRestartAppUseCase>();
+        var action = Fixture.Create<SettingsRestartApplicationAppCommand>();
         action.Execute();
         shutdown.Verify(s => s.TryRestart(), Times.Once);
     }

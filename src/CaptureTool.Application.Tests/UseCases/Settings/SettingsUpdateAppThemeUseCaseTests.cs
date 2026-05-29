@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.Settings;
-using CaptureTool.Infrastructure.Interfaces.Themes;
+using CaptureTool.Application.Features.Settings;
+using CaptureTool.Infrastructure.Abstractions.Themes;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.Settings;
@@ -21,7 +21,7 @@ public class SettingsUpdateAppThemeUseCaseTests
     public void Execute_ShouldUpdateTheme_WhenIndexValid()
     {
         var themes = Fixture.Freeze<Mock<IThemeService>>();
-        var action = Fixture.Create<SettingsUpdateAppThemeUseCase>();
+        var action = Fixture.Create<SettingsUpdateAppThemeAppCommand>();
         action.Execute(1);
         themes.Verify(t => t.UpdateCurrentTheme(It.IsAny<AppTheme>()), Times.Once);
     }

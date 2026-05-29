@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Implementations.Navigation;
-using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Infrastructure.Navigation;
+using CaptureTool.Infrastructure.Abstractions.Navigation;
 
 namespace CaptureTool.Infrastructure.Tests.Navigation;
 
@@ -24,7 +24,7 @@ public class NavigationServiceTests
 
         Assert.IsNotNull(service.CurrentRequest);
         Assert.AreEqual(TestRoute.Home, service.CurrentRequest?.Route);
-        Assert.AreEqual(1, handler.HandledRequests.Count);
+        Assert.HasCount(1, handler.HandledRequests);
     }
 
     [TestMethod]
@@ -37,7 +37,7 @@ public class NavigationServiceTests
         service.Navigate(TestRoute.Home);
         service.Navigate(TestRoute.Home);
 
-        Assert.AreEqual(1, handler.HandledRequests.Count);
+        Assert.HasCount(1, handler.HandledRequests);
     }
 
     [TestMethod]
@@ -70,7 +70,7 @@ public class NavigationServiceTests
 
         Assert.IsTrue(result);
         Assert.AreEqual(TestRoute.Home, service.CurrentRequest?.Route);
-        Assert.AreEqual(3, handler.HandledRequests.Count);
+        Assert.HasCount(3, handler.HandledRequests);
     }
 
     [TestMethod]
@@ -86,7 +86,7 @@ public class NavigationServiceTests
 
         Assert.IsFalse(result);
         Assert.AreEqual(TestRoute.Home, service.CurrentRequest?.Route);
-        Assert.AreEqual(1, handler.HandledRequests.Count);
+        Assert.HasCount(1, handler.HandledRequests);
     }
 
     [TestMethod]
@@ -99,7 +99,7 @@ public class NavigationServiceTests
         service.Navigate(TestRoute.Home);
         service.Navigate(TestRoute.Home);
 
-        Assert.AreEqual(1, handler.HandledRequests.Count);
+        Assert.HasCount(1, handler.HandledRequests);
         Assert.IsFalse(service.CanGoBack);
     }
 
@@ -173,12 +173,11 @@ public class NavigationServiceTests
     }
 
     [TestMethod]
-    [ExpectedException(typeof(InvalidOperationException))]
     public void Navigate_Throws_WhenNoHandlerSet()
     {
         var service = new NavigationService();
 
-        service.Navigate(TestRoute.Home); // no handler -> error
+        Assert.ThrowsExactly<InvalidOperationException>(() => service.Navigate(TestRoute.Home));
     }
 
     [TestMethod]

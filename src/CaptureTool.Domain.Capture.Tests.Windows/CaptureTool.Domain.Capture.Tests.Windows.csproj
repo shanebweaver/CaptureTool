@@ -1,4 +1,4 @@
-﻿<Project Sdk="MSTest.Sdk/3.6.4">
+﻿<Project Sdk="MSTest.Sdk/4.0.2">
 
   <!-- Project properties -->
   <PropertyGroup>
@@ -11,8 +11,9 @@
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture.Implementations.Windows\CaptureTool.Domain.Capture.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture.Interfaces\CaptureTool.Domain.Capture.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture.Windows\CaptureTool.Domain.Capture.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture.Abstractions\CaptureTool.Domain.Capture.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit.Windows\CaptureTool.Domain.Edit.Windows.csproj" />
   </ItemGroup>
 
   <!-- Package references -->

@@ -1,8 +1,8 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.Capture;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces.Storage;
+using CaptureTool.Application.Features.VideoCapture;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.Abstractions.Storage;
 using FluentAssertions;
 using Moq;
 

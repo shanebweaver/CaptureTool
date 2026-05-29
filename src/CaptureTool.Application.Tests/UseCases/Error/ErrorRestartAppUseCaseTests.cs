@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.Error;
-using CaptureTool.Infrastructure.Interfaces.Shutdown;
+using CaptureTool.Application.Error;
+using CaptureTool.Infrastructure.Abstractions.Shutdown;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.Error;

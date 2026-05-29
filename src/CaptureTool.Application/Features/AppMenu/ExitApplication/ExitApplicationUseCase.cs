@@ -1,0 +1,26 @@
+using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Infrastructure.Abstractions.Shutdown;
+
+namespace CaptureTool.Application.Features.AppMenu.ExitApplication;
+
+public sealed class ExitApplicationUseCase : IUseCase<ExitApplicationRequest, ExitApplicationResponse>, IConditional<ExitApplicationRequest>
+{
+    private readonly IShutdownHandler _shutdownHandler;
+
+    public ExitApplicationUseCase(IShutdownHandler shutdownHandler)
+    {
+        _shutdownHandler = shutdownHandler;
+    }
+
+    public bool CanExecute(ExitApplicationRequest request)
+    {
+        bool result = !_shutdownHandler.IsShuttingDown;
+        return result;
+    }
+
+    public Task<ExitApplicationResponse> ExecuteAsync(ExitApplicationRequest request, CancellationToken cancellationToken = default)
+    {
+        _shutdownHandler.Shutdown();
+        return Task.FromResult(new ExitApplicationResponse());
+    }
+}

@@ -1,5 +1,4 @@
-using CaptureTool.Application.Interfaces.FeatureManagement;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Capture.Abstractions;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -75,11 +74,6 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
     public SelectionOverlayToolbar()
     {
         InitializeComponent();
-
-        if (AppServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
-        {
-            CaptureModeSegmentedControl.Visibility = Visibility.Visible;
-        }
     }
 
     // Function converters for {x:Bind} - maps enum to glyph resource key

@@ -9,7 +9,7 @@
     xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Application.Interfaces.ViewModels"
+    xmlns:viewmodels="using:CaptureTool.Application.Abstractions.ViewModels"
     d:DataContext="{d:DesignInstance Type=viewmodels:IImageEditPageViewModel}"
     mc:Ignorable="d">
 
@@ -46,13 +46,13 @@
             <!--  Crop and orientation  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_CropButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ToggleCropModeCommand)}"
+                Command="{x:Bind ViewModel.ToggleCropModeCommand}"
                 Icon="Crop"
                 IsChecked="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
             <AppBarToggleButton
                 x:Uid="ImageEdit_ShapesButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ToggleShapesModeCommand)}"
+                Command="{x:Bind ViewModel.ToggleShapesModeCommand}"
                 IsChecked="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
                 Visibility="{x:Bind ViewModel.IsShapesFeatureEnabled, Mode=OneWay}">
@@ -62,12 +62,12 @@
             </AppBarToggleButton>
             <AppBarButton
                 x:Uid="ImageEdit_RotateButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RotateCommand)}"
+                Command="{x:Bind ViewModel.RotateCommand}"
                 Icon="Rotate"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
             <AppBarButton
                 x:Uid="ImageEdit_FlipXButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.FlipHorizontalCommand)}"
+                Command="{x:Bind ViewModel.FlipHorizontalCommand}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.Icon>
                     <FontIcon
@@ -78,7 +78,7 @@
             </AppBarButton>
             <AppBarButton
                 x:Uid="ImageEdit_FlipYButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.FlipVerticalCommand)}"
+                Command="{x:Bind ViewModel.FlipVerticalCommand}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.Icon>
                     <FontIcon
@@ -91,12 +91,12 @@
             <AppBarSeparator />
             <AppBarButton
                 x:Uid="ImageEdit_UndoButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.UndoCommand)}"
+                Command="{x:Bind ViewModel.UndoCommand}"
                 Icon="Undo"
                 IsEnabled="{x:Bind ViewModel.HasUndoStack, Mode=OneWay}" />
             <AppBarButton
                 x:Uid="ImageEdit_RedoButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RedoCommand)}"
+                Command="{x:Bind ViewModel.RedoCommand}"
                 Icon="Redo"
                 IsEnabled="{x:Bind ViewModel.HasRedoStack, Mode=OneWay}" />
             <!--  Export  -->
@@ -104,7 +104,7 @@
             <!--  Copy  -->
             <AppBarButton
                 x:Uid="ImageEdit_CopyButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.CopyCommand)}"
+                Command="{x:Bind ViewModel.CopyCommand}"
                 Icon="Copy"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
@@ -114,7 +114,7 @@
             <!--  Save  -->
             <AppBarButton
                 x:Uid="ImageEdit_SaveButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.SaveCommand)}"
+                Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
@@ -124,7 +124,7 @@
             <!--  Print  -->
             <AppBarButton
                 x:Uid="ImageEdit_PrintButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.PrintCommand)}"
+                Command="{x:Bind ViewModel.PrintCommand}"
                 Icon="Print"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
@@ -134,7 +134,7 @@
             <!--  Share  -->
             <AppBarButton
                 x:Uid="ImageEdit_ShareButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ShareCommand)}"
+                Command="{x:Bind ViewModel.ShareCommand}"
                 Icon="Share"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
         </CommandBar>
@@ -286,7 +286,7 @@
                     x:Uid="ImageEdit_ZoomAndCenterButton"
                     MinWidth="32"
                     Padding="8,4"
-                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ZoomAndCenterCommand)}"
+                    Command="{x:Bind ViewModel.ZoomAndCenterCommand}"
                     IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                     <FontIcon FontSize="16" Glyph="&#xE71E;" />
                 </Button>

@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Interfaces.Activation;
-using CaptureTool.Infrastructure.Interfaces.Themes;
+using CaptureTool.Infrastructure.Abstractions.Activation;
+using CaptureTool.Infrastructure.Abstractions.Themes;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;

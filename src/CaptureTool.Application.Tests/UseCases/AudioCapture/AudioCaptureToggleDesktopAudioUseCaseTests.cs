@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Implementations.UseCases.AudioCapture;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Application.Abstractions.AudioCapture;
+using CaptureTool.Application.UseCases.AudioCapture;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.AudioCapture;
@@ -28,6 +28,6 @@ public class AudioCaptureToggleDesktopAudioUseCaseTests
         useCase.Execute();
 
         // Assert
-        service.Verify(s => s.ToggleDesktopAudio(), Times.Once);
+        service.Verify(s => s.ToggleLocalAudio(), Times.Once);
     }
 }

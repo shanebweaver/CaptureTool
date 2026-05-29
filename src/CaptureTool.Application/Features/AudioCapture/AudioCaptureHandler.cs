@@ -1,0 +1,91 @@
+using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.Abstractions.Storage;
+
+namespace CaptureTool.Application.Features.AudioCapture;
+
+public sealed class AudioCaptureHandler : IAudioCaptureHandler
+{
+    private readonly IAudioRecorder _audioRecorder;
+
+    public event EventHandler<AudioCaptureState>? CaptureStateChanged;
+    public event EventHandler<bool>? MutedStateChanged;
+    public event EventHandler<bool>? DesktopAudioStateChanged;
+
+    public bool IsRecording => CaptureState == AudioCaptureState.Recording;
+    public bool IsPaused => CaptureState == AudioCaptureState.Paused;
+    public bool IsMuted { get; private set; }
+    public bool IsDesktopAudioEnabled { get; private set; }
+
+    public AudioCaptureState CaptureState { get; private set; }
+
+    public AudioCaptureHandler(
+        IAudioRecorder audioRecorder)
+    {
+        _audioRecorder = audioRecorder;
+    }
+
+    public void PauseCapture()
+    {
+        if (!IsRecording)
+        {
+            throw new InvalidOperationException("Audio capture is not in progress.");
+        }
+
+        _audioRecorder.Pause();
+
+        UpdateCaptureState(AudioCaptureState.Paused);
+    }
+
+    public void StartCapture()
+    {
+        if (IsRecording)
+        {
+            throw new InvalidOperationException("Audio capture is already in progress.");
+        }
+
+        _audioRecorder.StartCapture();
+
+        UpdateCaptureState(AudioCaptureState.Recording);
+    }
+
+    public IAudioFile StopCapture()
+    {
+        if (!IsRecording)
+        {
+            throw new InvalidOperationException("Audio capture is not in progress.");
+        }
+
+        _audioRecorder.StopCapture();
+
+        UpdateCaptureState(AudioCaptureState.Stopped);
+
+        throw new NotImplementedException();
+    }
+
+    public void ToggleLocalAudio()
+    {
+        _audioRecorder.ToggleDesktopAudio();
+
+        IsDesktopAudioEnabled = !IsDesktopAudioEnabled;
+        DesktopAudioStateChanged?.Invoke(this, IsDesktopAudioEnabled);
+    }
+
+    public void ToggleMute()
+    {
+        _audioRecorder.ToggleMute();
+
+        IsMuted = !IsMuted;
+        MutedStateChanged?.Invoke(this, IsMuted);
+    }
+
+    private void UpdateCaptureState(AudioCaptureState newState)
+    {
+        if (CaptureState != newState)
+        {
+            CaptureState = newState;
+            CaptureStateChanged?.Invoke(this, newState);
+        }
+    }
+}

@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Presentation.Windows.WinUI.Utils;
+namespace CaptureTool.Presentation.Windows.WinUI.Utils;
 
 internal static partial class ResourceUtility
 {

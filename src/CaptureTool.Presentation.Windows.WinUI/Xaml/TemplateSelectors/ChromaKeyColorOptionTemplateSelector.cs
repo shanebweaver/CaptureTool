@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Edit.Interfaces.ChromaKey;
+using CaptureTool.Domain.Edit.Abstractions.ChromaKey;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 

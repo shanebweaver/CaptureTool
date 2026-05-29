@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using System.Drawing;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Utils;
