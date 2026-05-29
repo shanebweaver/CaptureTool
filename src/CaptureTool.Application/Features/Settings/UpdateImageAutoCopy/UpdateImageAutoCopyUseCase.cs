@@ -12,7 +12,7 @@ public sealed class UpdateImageAutoCopyUseCase : IUseCase<UpdateImageAutoCopyReq
         _settingsService = settingsService;
     }
 
-    public Task<bool> CanExecuteAsync(UpdateImageAutoCopyRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(UpdateImageAutoCopyRequest request) => true;
 
     public async Task<UpdateImageAutoCopyResponse> ExecuteAsync(UpdateImageAutoCopyRequest request, CancellationToken cancellationToken = default)
     {

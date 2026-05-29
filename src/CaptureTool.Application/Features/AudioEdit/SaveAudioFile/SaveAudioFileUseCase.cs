@@ -17,11 +17,11 @@ public sealed class SaveAudioFileUseCase : IUseCase<SaveAudioFileRequest, SaveAu
         _windowingService = windowingService;
     }
 
-    public Task<bool> CanExecuteAsync(SaveAudioFileRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(SaveAudioFileRequest request)
     {
         string filePath = request.AudioFilePath;
         bool canExecute = !string.IsNullOrEmpty(filePath) && File.Exists(filePath);
-        return Task.FromResult(canExecute);
+        return canExecute;
     }
 
     public async Task<SaveAudioFileResponse> ExecuteAsync(SaveAudioFileRequest request, CancellationToken cancellationToken = default)

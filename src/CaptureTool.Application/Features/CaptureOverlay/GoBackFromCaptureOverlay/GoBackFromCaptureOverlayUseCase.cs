@@ -19,12 +19,12 @@ public sealed class GoBackFromCaptureOverlayUseCase : IUseCase<GoBackFromCapture
         _navigationService = navigationService;
     }
 
-    public Task<bool> CanExecuteAsync(GoBackFromCaptureOverlayRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(GoBackFromCaptureOverlayRequest request)
     {
         bool canExecute = _navigationService.CanGoBack
             && _navigationService.CurrentRequest?.Route is NavigationRoute.CaptureOverlay;
 
-        return Task.FromResult(canExecute);
+        return canExecute;
     }
 
     public Task<GoBackFromCaptureOverlayResponse> ExecuteAsync(GoBackFromCaptureOverlayRequest request, CancellationToken cancellationToken = default)

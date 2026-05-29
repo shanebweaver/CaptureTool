@@ -26,9 +26,9 @@ public sealed class OpenRecentCaptureUseCase : IUseCase<OpenRecentCaptureRequest
         _goToVideoEdit = goToVideoEdit;
     }
 
-    public Task<bool> CanExecuteAsync(OpenRecentCaptureRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(OpenRecentCaptureRequest request)
     {
-        return Task.FromResult(!string.IsNullOrWhiteSpace(request.FilePath));
+        return !string.IsNullOrWhiteSpace(request.FilePath);
     }
 
     public async Task<OpenRecentCaptureResponse> ExecuteAsync(OpenRecentCaptureRequest request, CancellationToken cancellationToken = default)

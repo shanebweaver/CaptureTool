@@ -15,7 +15,7 @@ public sealed class RestoreDefaultsUseCase : IUseCase<RestoreDefaultsRequest, Re
         _localizationService = localizationService;
     }
 
-    public Task<bool> CanExecuteAsync(RestoreDefaultsRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(RestoreDefaultsRequest request) => true;
 
     public async Task<RestoreDefaultsResponse> ExecuteAsync(RestoreDefaultsRequest request, CancellationToken cancellationToken = default)
     {

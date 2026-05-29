@@ -31,4 +31,3 @@ DeleteObject
 FillRect
 CreateSolidBrush
 GetStockObject
-

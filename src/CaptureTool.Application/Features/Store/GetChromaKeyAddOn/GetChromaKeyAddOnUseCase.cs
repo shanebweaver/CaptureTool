@@ -12,9 +12,9 @@ public sealed class GetChromaKeyAddOnUseCase : IUseCase<GetChromaKeyAddOnRequest
         _storeService = storeService;
     }
 
-    public Task<bool> CanExecuteAsync(GetChromaKeyAddOnRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(GetChromaKeyAddOnRequest request)
     {
-        return Task.FromResult(true);
+        return true;
     }
 
     public async Task<GetChromaKeyAddOnResponse> ExecuteAsync(GetChromaKeyAddOnRequest request, CancellationToken cancellationToken = default)

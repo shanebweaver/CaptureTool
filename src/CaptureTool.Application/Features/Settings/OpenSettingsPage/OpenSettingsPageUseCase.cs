@@ -13,7 +13,7 @@ public sealed class OpenSettingsPageUseCase : IUseCase<OpenSettingsPageRequest, 
         _navigationService = navigationService;
     }
 
-    public Task<bool> CanExecuteAsync(OpenSettingsPageRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(OpenSettingsPageRequest request) => true;
 
     public Task<OpenSettingsPageResponse> ExecuteAsync(OpenSettingsPageRequest request, CancellationToken cancellationToken = default)
     {

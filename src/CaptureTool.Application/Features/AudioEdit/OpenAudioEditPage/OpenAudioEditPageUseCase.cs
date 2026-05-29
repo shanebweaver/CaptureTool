@@ -13,10 +13,10 @@ public sealed class OpenAudioEditPageUseCase : IUseCase<OpenAudioEditPageRequest
         _navigationService = navigationService;
     }
 
-    public Task<bool> CanExecuteAsync(OpenAudioEditPageRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(OpenAudioEditPageRequest request)
     {
         bool canExecute = File.Exists(request.AudioFile.FilePath);
-        return Task.FromResult(canExecute);
+        return canExecute;
     }
 
     public Task<OpenAudioEditPageResponse> ExecuteAsync(OpenAudioEditPageRequest request, CancellationToken cancellationToken = default)

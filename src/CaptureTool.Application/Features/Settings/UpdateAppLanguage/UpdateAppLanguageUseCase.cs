@@ -15,10 +15,10 @@ public sealed class UpdateAppLanguageUseCase : IUseCase<UpdateAppLanguageRequest
         _settings = settings;
     }
 
-    public Task<bool> CanExecuteAsync(UpdateAppLanguageRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(UpdateAppLanguageRequest request)
     {
         var languages = _localization.SupportedLanguages;
-        return Task.FromResult(request.LanguageIndex >= 0 && request.LanguageIndex <= languages.Length);
+        return request.LanguageIndex >= 0 && request.LanguageIndex <= languages.Length;
     }
 
     public async Task<UpdateAppLanguageResponse> ExecuteAsync(UpdateAppLanguageRequest request, CancellationToken cancellationToken = default)

@@ -18,10 +18,10 @@ public sealed class StopVideoCaptureUseCase : IUseCase<StopVideoCaptureRequest, 
         _videoCaptureHandler = videoCaptureHandler;
     }
 
-    public Task<bool> CanExecuteAsync(StopVideoCaptureRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(StopVideoCaptureRequest request)
     {
         bool canExecute = _navigationService.CurrentRequest?.Route is NavigationRoute.CaptureOverlay;
-        return Task.FromResult(canExecute);
+        return canExecute;
     }
 
     public Task<StopVideoCaptureResponse> ExecuteAsync(StopVideoCaptureRequest request, CancellationToken cancellationToken = default)

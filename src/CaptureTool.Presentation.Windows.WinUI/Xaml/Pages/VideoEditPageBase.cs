@@ -1,4 +1,4 @@
-using CaptureTool.Presentation.ViewModels;
+using CaptureTool.Presentation.Features.VideoEdit;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 

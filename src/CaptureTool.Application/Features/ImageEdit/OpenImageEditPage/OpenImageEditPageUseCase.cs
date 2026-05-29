@@ -13,9 +13,9 @@ public sealed class OpenImageEditPageUseCase : IUseCase<OpenImageEditPageRequest
         _navigationService = navigationService;
     }
 
-    public Task<bool> CanExecuteAsync(OpenImageEditPageRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(OpenImageEditPageRequest request)
     {
-        return Task.FromResult(true);
+        return true;
     }
 
     public Task<OpenImageEditPageResponse> ExecuteAsync(OpenImageEditPageRequest request, CancellationToken cancellationToken = default)

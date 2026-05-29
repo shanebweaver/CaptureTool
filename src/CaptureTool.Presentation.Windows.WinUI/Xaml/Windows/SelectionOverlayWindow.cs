@@ -1,4 +1,4 @@
-using CaptureTool.Presentation.ViewModels;
+using CaptureTool.Presentation.Features.SelectionOverlay;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 using Microsoft.UI;

@@ -17,9 +17,9 @@ public sealed class PurchaseChromaKeyAddOnUseCase : IUseCase<PurchaseChromaKeyAd
         _windowingService = windowingService;
     }
 
-    public Task<bool> CanExecuteAsync(PurchaseChromaKeyAddOnRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(PurchaseChromaKeyAddOnRequest request)
     {
-        return Task.FromResult(true);
+        return true;
     }
 
     public async Task<PurchaseChromaKeyAddOnResponse> ExecuteAsync(PurchaseChromaKeyAddOnRequest request, CancellationToken cancellationToken = default)

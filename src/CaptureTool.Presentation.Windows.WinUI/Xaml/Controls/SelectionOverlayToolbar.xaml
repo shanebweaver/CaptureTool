@@ -10,7 +10,7 @@
     xmlns:templateselectors="using:CaptureTool.Presentation.Windows.WinUI.Xaml.TemplateSelectors"
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
     xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
-    xmlns:viewmodels="using:CaptureTool.Presentation.ViewModels"
+    xmlns:viewmodels="using:CaptureTool.Presentation.Features.SelectionOverlay"
     d:DataContext="{d:DesignInstance Type=local:SelectionOverlayToolbar}"
     mc:Ignorable="d">
     <StackPanel

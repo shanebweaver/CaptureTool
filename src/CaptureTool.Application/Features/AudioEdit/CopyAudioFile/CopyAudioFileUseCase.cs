@@ -12,11 +12,11 @@ public sealed class CopyAudioFileUseCase : IUseCase<CopyAudioFileRequest, CopyAu
         _clipboardService = clipboardService;
     }
 
-    public Task<bool> CanExecuteAsync(CopyAudioFileRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(CopyAudioFileRequest request)
     {
         string audioPath = request.AudioPath;
         bool canExecute = !string.IsNullOrEmpty(audioPath) && File.Exists(audioPath);
-        return Task.FromResult(canExecute);
+        return canExecute;
     }
 
     public async Task<CopyAudioFileResponse> ExecuteAsync(CopyAudioFileRequest request, CancellationToken cancellationToken = default)

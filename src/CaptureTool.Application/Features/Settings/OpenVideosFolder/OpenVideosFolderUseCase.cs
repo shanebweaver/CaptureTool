@@ -16,7 +16,7 @@ public sealed class OpenVideosFolderUseCase : IUseCase<OpenVideosFolderRequest, 
         _storageService = storageService;
     }
 
-    public Task<bool> CanExecuteAsync(OpenVideosFolderRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(OpenVideosFolderRequest request) => true;
 
     public Task<OpenVideosFolderResponse> ExecuteAsync(OpenVideosFolderRequest request, CancellationToken cancellationToken = default)
     {

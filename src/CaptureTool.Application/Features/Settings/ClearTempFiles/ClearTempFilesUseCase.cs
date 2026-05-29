@@ -15,7 +15,7 @@ public sealed class ClearTempFilesUseCase : IUseCase<ClearTempFilesRequest, Clea
         _storageService = storageService;
     }
 
-    public Task<bool> CanExecuteAsync(ClearTempFilesRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(ClearTempFilesRequest request) => true;
 
     public Task<ClearTempFilesResponse> ExecuteAsync(ClearTempFilesRequest request, CancellationToken cancellationToken = default)
     {

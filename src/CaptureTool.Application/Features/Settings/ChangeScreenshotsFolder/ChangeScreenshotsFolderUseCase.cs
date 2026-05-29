@@ -18,7 +18,7 @@ public sealed class ChangeScreenshotsFolderUseCase : IUseCase<ChangeScreenshotsF
         _settings = settings;
     }
 
-    public Task<bool> CanExecuteAsync(ChangeScreenshotsFolderRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(ChangeScreenshotsFolderRequest request) => true;
 
     public async Task<ChangeScreenshotsFolderResponse> ExecuteAsync(ChangeScreenshotsFolderRequest request, CancellationToken cancellationToken = default)
     {

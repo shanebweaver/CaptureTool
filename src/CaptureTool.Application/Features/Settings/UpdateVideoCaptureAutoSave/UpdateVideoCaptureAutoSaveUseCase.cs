@@ -12,7 +12,7 @@ public sealed class UpdateVideoCaptureAutoSaveUseCase : IUseCase<UpdateVideoCapt
         _settingsService = settingsService;
     }
 
-    public Task<bool> CanExecuteAsync(UpdateVideoCaptureAutoSaveRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(UpdateVideoCaptureAutoSaveRequest request) => true;
 
     public async Task<UpdateVideoCaptureAutoSaveResponse> ExecuteAsync(UpdateVideoCaptureAutoSaveRequest request, CancellationToken cancellationToken = default)
     {

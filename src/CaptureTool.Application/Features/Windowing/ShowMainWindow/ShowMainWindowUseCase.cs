@@ -13,9 +13,9 @@ public sealed class ShowMainWindowUseCase : IUseCase<ShowMainWindowRequest, Show
         _navigationService = navigationService;
     }
 
-    public Task<bool> CanExecuteAsync(ShowMainWindowRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(ShowMainWindowRequest request)
     {
-        return Task.FromResult(_navigationService.CanGoBack);
+        return _navigationService.CanGoBack;
     }
 
     public Task<ShowMainWindowResponse> ExecuteAsync(ShowMainWindowRequest request, CancellationToken cancellationToken = default)

@@ -1,4 +1,4 @@
-using CaptureTool.Presentation.ViewModels;
+using CaptureTool.Presentation.Features.CaptureOverlay;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 

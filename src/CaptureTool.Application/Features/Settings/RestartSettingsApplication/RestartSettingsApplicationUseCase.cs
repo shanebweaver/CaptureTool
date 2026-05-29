@@ -12,7 +12,7 @@ public sealed class RestartSettingsApplicationUseCase : IUseCase<RestartSettings
         _shutdownHandler = shutdownHandler;
     }
 
-    public Task<bool> CanExecuteAsync(RestartSettingsApplicationRequest request, CancellationToken cancellationToken = default) => Task.FromResult(!_shutdownHandler.IsShuttingDown);
+    public bool CanExecute(RestartSettingsApplicationRequest request) => !_shutdownHandler.IsShuttingDown;
 
     public Task<RestartSettingsApplicationResponse> ExecuteAsync(RestartSettingsApplicationRequest request, CancellationToken cancellationToken = default)
     {

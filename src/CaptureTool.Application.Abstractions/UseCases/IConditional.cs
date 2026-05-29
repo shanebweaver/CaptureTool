@@ -2,5 +2,5 @@ namespace CaptureTool.Application.Abstractions.UseCases;
 
 public interface IConditional<TRequest>
 {
-    Task<bool> CanExecuteAsync(TRequest request, CancellationToken cancellationToken = default);
+    bool CanExecute(TRequest request);
 }

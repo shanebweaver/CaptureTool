@@ -12,9 +12,9 @@ public sealed class CopyVideoFileUseCase : IUseCase<CopyVideoFileRequest, CopyVi
         _clipboardService = clipboardService;
     }
 
-    public Task<bool> CanExecuteAsync(CopyVideoFileRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(CopyVideoFileRequest request)
     {
-        return Task.FromResult(!string.IsNullOrWhiteSpace(request.VideoPath));
+        return !string.IsNullOrWhiteSpace(request.VideoPath);
     }
 
     public async Task<CopyVideoFileResponse> ExecuteAsync(CopyVideoFileRequest request, CancellationToken cancellationToken = default)

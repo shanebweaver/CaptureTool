@@ -12,7 +12,7 @@ public sealed class UpdateImageAutoSaveUseCase : IUseCase<UpdateImageAutoSaveReq
         _settingsService = settingsService;
     }
 
-    public Task<bool> CanExecuteAsync(UpdateImageAutoSaveRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(UpdateImageAutoSaveRequest request) => true;
 
     public async Task<UpdateImageAutoSaveResponse> ExecuteAsync(UpdateImageAutoSaveRequest request, CancellationToken cancellationToken = default)
     {

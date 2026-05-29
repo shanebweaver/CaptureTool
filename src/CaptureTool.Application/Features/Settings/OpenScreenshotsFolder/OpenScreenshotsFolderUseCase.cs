@@ -16,7 +16,7 @@ public sealed class OpenScreenshotsFolderUseCase : IUseCase<OpenScreenshotsFolde
         _storageService = storageService;
     }
 
-    public Task<bool> CanExecuteAsync(OpenScreenshotsFolderRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(OpenScreenshotsFolderRequest request) => true;
 
     public Task<OpenScreenshotsFolderResponse> ExecuteAsync(OpenScreenshotsFolderRequest request, CancellationToken cancellationToken = default)
     {

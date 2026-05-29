@@ -13,7 +13,7 @@ public sealed class OpenTempFolderUseCase : IUseCase<OpenTempFolderRequest, Open
         _storageService = storageService;
     }
 
-    public Task<bool> CanExecuteAsync(OpenTempFolderRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(OpenTempFolderRequest request) => true;
 
     public Task<OpenTempFolderResponse> ExecuteAsync(OpenTempFolderRequest request, CancellationToken cancellationToken = default)
     {

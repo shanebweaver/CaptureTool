@@ -12,9 +12,9 @@ public sealed class ToggleVideoCapturePauseResumeUseCase : IUseCase<ToggleVideoC
         _videoCaptureHandler = videoCaptureHandler;
     }
 
-    public Task<bool> CanExecuteAsync(ToggleVideoCapturePauseResumeRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(ToggleVideoCapturePauseResumeRequest request)
     {
-        return Task.FromResult(_videoCaptureHandler.IsRecording);
+        return _videoCaptureHandler.IsRecording;
     }
 
     public Task<ToggleVideoCapturePauseResumeResponse> ExecuteAsync(ToggleVideoCapturePauseResumeRequest request, CancellationToken cancellationToken = default)

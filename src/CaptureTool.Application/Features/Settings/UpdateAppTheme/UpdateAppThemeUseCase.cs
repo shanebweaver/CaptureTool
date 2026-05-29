@@ -13,9 +13,9 @@ public sealed class UpdateAppThemeUseCase : IUseCase<UpdateAppThemeRequest, Upda
         _themes = themes;
     }
 
-    public Task<bool> CanExecuteAsync(UpdateAppThemeRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(UpdateAppThemeRequest request)
     {
-        return Task.FromResult(request.ThemeIndex >= 0 && request.ThemeIndex < SupportedThemes.Length);
+        return request.ThemeIndex >= 0 && request.ThemeIndex < SupportedThemes.Length;
     }
 
     public Task<UpdateAppThemeResponse> ExecuteAsync(UpdateAppThemeRequest request, CancellationToken cancellationToken = default)

@@ -17,9 +17,9 @@ public sealed class GetRecentCapturesUseCase : IUseCase<GetRecentCapturesRequest
         _fileTypeDetector = fileTypeDetector;
     }
 
-    public Task<bool> CanExecuteAsync(GetRecentCapturesRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(GetRecentCapturesRequest request)
     {
-        return Task.FromResult(true);
+        return true;
     }
 
     public Task<GetRecentCapturesResponse> ExecuteAsync(GetRecentCapturesRequest request, CancellationToken cancellationToken = default)

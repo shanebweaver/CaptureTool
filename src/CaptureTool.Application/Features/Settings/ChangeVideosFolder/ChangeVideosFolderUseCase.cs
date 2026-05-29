@@ -18,7 +18,7 @@ public sealed class ChangeVideosFolderUseCase : IUseCase<ChangeVideosFolderReque
         _settings = settings;
     }
 
-    public Task<bool> CanExecuteAsync(ChangeVideosFolderRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(ChangeVideosFolderRequest request) => true;
 
     public async Task<ChangeVideosFolderResponse> ExecuteAsync(ChangeVideosFolderRequest request, CancellationToken cancellationToken = default)
     {

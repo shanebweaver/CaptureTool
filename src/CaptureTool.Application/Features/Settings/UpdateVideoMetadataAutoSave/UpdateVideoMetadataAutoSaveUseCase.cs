@@ -12,7 +12,7 @@ public sealed class UpdateVideoMetadataAutoSaveUseCase : IUseCase<UpdateVideoMet
         _settingsService = settingsService;
     }
 
-    public Task<bool> CanExecuteAsync(UpdateVideoMetadataAutoSaveRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(UpdateVideoMetadataAutoSaveRequest request) => true;
 
     public async Task<UpdateVideoMetadataAutoSaveResponse> ExecuteAsync(UpdateVideoMetadataAutoSaveRequest request, CancellationToken cancellationToken = default)
     {

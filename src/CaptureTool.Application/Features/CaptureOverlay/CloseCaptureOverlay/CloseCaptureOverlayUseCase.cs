@@ -22,12 +22,12 @@ public sealed class CloseCaptureOverlayUseCase : IUseCase<CloseCaptureOverlayReq
         _navigationService = navigationService;
     }
 
-    public Task<bool> CanExecuteAsync(CloseCaptureOverlayRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(CloseCaptureOverlayRequest request)
     {
         bool canExecute = _navigationService.CanGoBack
             && _navigationService.CurrentRequest?.Route is NavigationRoute.CaptureOverlay;
 
-        return Task.FromResult(canExecute);
+        return canExecute;
     }
 
     public async Task<CloseCaptureOverlayResponse> ExecuteAsync(CloseCaptureOverlayRequest request, CancellationToken cancellationToken = default)

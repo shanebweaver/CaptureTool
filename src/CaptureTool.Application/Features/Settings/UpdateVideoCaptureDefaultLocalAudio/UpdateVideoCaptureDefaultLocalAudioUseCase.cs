@@ -12,7 +12,7 @@ public sealed class UpdateVideoCaptureDefaultLocalAudioUseCase : IUseCase<Update
         _settingsService = settingsService;
     }
 
-    public Task<bool> CanExecuteAsync(UpdateVideoCaptureDefaultLocalAudioRequest request, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public bool CanExecute(UpdateVideoCaptureDefaultLocalAudioRequest request) => true;
 
     public async Task<UpdateVideoCaptureDefaultLocalAudioResponse> ExecuteAsync(UpdateVideoCaptureDefaultLocalAudioRequest request, CancellationToken cancellationToken = default)
     {

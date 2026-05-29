@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Presentation.ViewModels"
+    xmlns:viewmodels="using:CaptureTool.Presentation.Features.About"
     d:DataContext="{d:DesignInstance Type=viewmodels:AboutPageViewModel}"
     mc:Ignorable="d">
 

@@ -27,9 +27,9 @@ public sealed class SaveVideoFileUseCase : IUseCase<SaveVideoFileRequest, SaveVi
         _featureManager = featureManager;
     }
 
-    public Task<bool> CanExecuteAsync(SaveVideoFileRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(SaveVideoFileRequest request)
     {
-        return Task.FromResult(!string.IsNullOrWhiteSpace(request.VideoPath));
+        return !string.IsNullOrWhiteSpace(request.VideoPath);
     }
 
     public async Task<SaveVideoFileResponse> ExecuteAsync(SaveVideoFileRequest request, CancellationToken cancellationToken = default)

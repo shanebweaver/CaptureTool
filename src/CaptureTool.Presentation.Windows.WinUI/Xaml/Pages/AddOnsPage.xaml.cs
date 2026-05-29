@@ -1,4 +1,4 @@
-using CaptureTool.Presentation.ViewModels;
+using CaptureTool.Presentation.Features.Store;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System.ComponentModel;
 

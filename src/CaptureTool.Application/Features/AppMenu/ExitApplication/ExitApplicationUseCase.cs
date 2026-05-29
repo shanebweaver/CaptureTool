@@ -12,10 +12,10 @@ public sealed class ExitApplicationUseCase : IUseCase<ExitApplicationRequest, Ex
         _shutdownHandler = shutdownHandler;
     }
 
-    public Task<bool> CanExecuteAsync(ExitApplicationRequest request, CancellationToken cancellationToken = default)
+    public bool CanExecute(ExitApplicationRequest request)
     {
         bool result = !_shutdownHandler.IsShuttingDown;
-        return Task.FromResult(result);
+        return result;
     }
 
     public Task<ExitApplicationResponse> ExecuteAsync(ExitApplicationRequest request, CancellationToken cancellationToken = default)
