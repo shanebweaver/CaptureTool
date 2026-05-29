@@ -6,6 +6,10 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="UseCases\**\*.cs" />
+  </ItemGroup>
+
   <!-- Project references -->
   <ItemGroup>
 	<PackageReference Include="AutoFixture.AutoMoq" />

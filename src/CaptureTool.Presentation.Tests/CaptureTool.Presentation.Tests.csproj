@@ -5,6 +5,10 @@
     <UseVSTest>true</UseVSTest>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="ViewModels\**\*.cs" />
+  </ItemGroup>
 	
   <!-- Project references -->
   <ItemGroup>
