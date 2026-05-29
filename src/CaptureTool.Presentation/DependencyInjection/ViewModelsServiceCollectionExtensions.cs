@@ -18,7 +18,6 @@ using CaptureTool.Presentation.Features.Settings.Factories;
 using CaptureTool.Presentation.Features.Store;
 using CaptureTool.Presentation.Features.VideoEdit;
 using CaptureTool.Presentation.Shell;
-using CaptureTool.Presentation.Shared.Commands;
 
 using Microsoft.Extensions.DependencyInjection;
 

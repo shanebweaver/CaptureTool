@@ -9,8 +9,8 @@ public sealed partial class CropOperation : CanvasOperation
     private readonly Rectangle _newRectangle;
 
     public CropOperation(
-        Action<Rectangle> action, 
-        Rectangle oldRectangle, 
+        Action<Rectangle> action,
+        Rectangle oldRectangle,
         Rectangle newRectangle)
     {
         _action = action;

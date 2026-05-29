@@ -1,8 +1,8 @@
-using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.About.LeaveAboutPage;
 using CaptureTool.Infrastructure.Abstractions.Localization;
 using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Presentation.Shared.Commands;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.About;

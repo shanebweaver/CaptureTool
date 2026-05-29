@@ -7,8 +7,8 @@ public sealed partial class OrientationOperation : CanvasOperation
     private readonly ImageOrientation _newOrientation;
 
     public OrientationOperation(
-        Action<ImageOrientation> action, 
-        ImageOrientation oldOrientation, 
+        Action<ImageOrientation> action,
+        ImageOrientation oldOrientation,
         ImageOrientation newOrientation)
     {
         _action = action;

@@ -276,7 +276,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CopyCommand = new AsyncRelayCommand(CopyAsync);
         ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
         ToggleShapesModeCommand = new RelayCommand(ToggleShapesMode, () => _featureManager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_Shapes));
-        SaveCommand =   new AsyncRelayCommand(SaveAsync);
+        SaveCommand = new AsyncRelayCommand(SaveAsync);
         UndoCommand = new RelayCommand(Undo);
         RedoCommand = new RelayCommand(Redo);
         RotateCommand = new RelayCommand(Rotate);
@@ -560,14 +560,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             // Add to undo stack
             var operation = new AddShapeOperation(
-                _drawables, 
-                newShape, 
+                _drawables,
+                newShape,
                 () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
-            
+
             _operationsUndoStack.Push(operation);
             _operationsRedoStack.Clear(); // Clear redo stack on new action
             UpdateUndoRedoStackProperties();
-            
+
             // Execute the operation
             operation.Redo();
         }
@@ -583,18 +583,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (shapeIndex >= 0 && shapeIndex < _drawables.Count)
         {
             var shape = _drawables[shapeIndex];
-            
+
             // Add to undo stack
             var operation = new DeleteShapeOperation(
-                _drawables, 
-                shape, 
+                _drawables,
+                shape,
                 shapeIndex,
                 () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
-            
+
             _operationsUndoStack.Push(operation);
             _operationsRedoStack.Clear(); // Clear redo stack on new action
             UpdateUndoRedoStackProperties();
-            
+
             // Execute the operation
             operation.Redo();
         }
@@ -612,14 +612,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             var currentShape = _drawables[shapeIndex];
             var oldState = new ModifyShapeOperation.ShapeState(shape);
             var newState = new ModifyShapeOperation.ShapeState(currentShape);
-            
+
             // Add to undo stack
             var operation = new ModifyShapeOperation(
-                currentShape, 
-                oldState, 
+                currentShape,
+                oldState,
                 newState,
                 () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
-            
+
             _operationsUndoStack.Push(operation);
             _operationsRedoStack.Clear(); // Clear redo stack on new action
             UpdateUndoRedoStackProperties();

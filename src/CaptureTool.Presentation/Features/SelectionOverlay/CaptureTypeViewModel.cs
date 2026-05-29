@@ -1,6 +1,6 @@
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.ViewModels;
 using CaptureTool.Infrastructure.Abstractions.Localization;
+using CaptureTool.Infrastructure.ViewModels;
 
 namespace CaptureTool.Presentation.Features.SelectionOverlay;
 
