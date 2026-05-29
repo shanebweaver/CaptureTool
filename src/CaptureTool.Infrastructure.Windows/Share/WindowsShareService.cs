@@ -19,4 +19,19 @@ public sealed partial class WindowsShareService : IShareService
 
         DataTransferManagerInterop.ShowShareUIForWindow(hwnd);
     }
+
+    public async Task ShareStreamAsync(Stream stream, nint hwnd)
+    {
+        if (!DataTransferManager.IsSupported())
+        {
+            throw new NotSupportedException("Sharing is not supported.");
+        }
+
+        var share = new BitmapStreamShare(stream);
+
+        DataTransferManager manager = DataTransferManagerInterop.GetForWindow(hwnd);
+        await share.InitializeAsync(manager);
+
+        DataTransferManagerInterop.ShowShareUIForWindow(hwnd);
+    }
 }

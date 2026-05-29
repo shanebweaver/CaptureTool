@@ -19,36 +19,26 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
 
     public async Task CopyImageToClipboardAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
-        float renderWidth = options.CropRect.Width;
-        float renderHeight = options.CropRect.Height;
-
-        using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, options.Dpi);
-        using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
-
-        Win2DImageCanvasRenderer.Render(drawables, options, drawingSession);
-        drawingSession.Flush();
-
-        using var stream = new InMemoryRandomAccessStream();
-        await renderTarget.SaveAsync(stream, CanvasBitmapFileFormat.Png);
-
-        SimpleClipboardStreamSource clipboardImage = new(stream.AsStream());
+        using MemoryStream stream = await RenderToStreamAsync(drawables, options);
+        SimpleClipboardStreamSource clipboardImage = new(stream);
         await _clipboardService.CopyStreamAsync(clipboardImage);
+    }
+
+    public async Task<MemoryStream> RenderToStreamAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
+    {
+        using InMemoryRandomAccessStream stream = await RenderToRandomAccessStreamAsync(drawables, options);
+
+        var memoryStream = new MemoryStream();
+        stream.Seek(0);
+        await stream.AsStream().CopyToAsync(memoryStream);
+        memoryStream.Position = 0;
+
+        return memoryStream;
     }
 
     public async Task SaveImageAsync(string filePath, IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
-        float renderWidth = options.CropRect.Width;
-        float renderHeight = options.CropRect.Height;
-
-        using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, options.Dpi);
-        using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
-
-        Win2DImageCanvasRenderer.Render(drawables, options, drawingSession);
-
-        drawingSession.Flush();
-
-        using var stream = new InMemoryRandomAccessStream();
-        await renderTarget.SaveAsync(stream, CanvasBitmapFileFormat.Png);
+        using InMemoryRandomAccessStream stream = await RenderToRandomAccessStreamAsync(drawables, options);
 
         StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
         CachedFileManager.DeferUpdates(file);
@@ -64,5 +54,23 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
         {
             throw new Exception("File could not be saved.");
         }
+    }
+
+    private static async Task<InMemoryRandomAccessStream> RenderToRandomAccessStreamAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
+    {
+        float renderWidth = options.CropRect.Width;
+        float renderHeight = options.CropRect.Height;
+
+        using CanvasRenderTarget renderTarget = new(CanvasDevice.GetSharedDevice(), renderWidth, renderHeight, options.Dpi);
+        using CanvasDrawingSession drawingSession = renderTarget.CreateDrawingSession();
+
+        Win2DImageCanvasRenderer.Render(drawables, options, drawingSession);
+
+        drawingSession.Flush();
+
+        var stream = new InMemoryRandomAccessStream();
+        await renderTarget.SaveAsync(stream, CanvasBitmapFileFormat.Png);
+
+        return stream;
     }
 }
