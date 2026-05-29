@@ -51,7 +51,7 @@ public sealed class ImageEditPageViewModelShareTests
             .Returns(linkedCts);
 
         featureManager
-            .Setup(manager => manager.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
+            .Setup(manager => manager.IsEnabled(AppFeatures.Feature_ImageEdit_ChromaKey))
             .Returns(false);
 
         filePicker
