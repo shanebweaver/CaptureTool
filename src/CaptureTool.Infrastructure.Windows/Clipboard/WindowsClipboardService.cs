@@ -21,22 +21,7 @@ public partial class WindowsClipboardService : IClipboardService
         // Open the file as a stream
         using IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.Read);
 
-        // Decode the bitmap
-        BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
-        SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync();
-
-        // Convert to a compatible format (Clipboard requires BGRA8 with premultiplied alpha)
-        SoftwareBitmap converted = SoftwareBitmap.Convert(
-            softwareBitmap,
-            BitmapPixelFormat.Bgra8,
-            BitmapAlphaMode.Premultiplied
-        );
-
-        // Encode to PNG into a stream
-        InMemoryRandomAccessStream inMemoryStream = new();
-        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, inMemoryStream);
-        encoder.SetSoftwareBitmap(converted);
-        await encoder.FlushAsync();
+        InMemoryRandomAccessStream inMemoryStream = await CreateClipboardBitmapStreamAsync(stream);
 
         // Prepare clipboard content
         DataPackage dataPackage = new();
@@ -45,18 +30,22 @@ public partial class WindowsClipboardService : IClipboardService
         global::Windows.ApplicationModel.DataTransfer.Clipboard.Flush();
     }
 
-    public Task CopyStreamAsync(IClipboardStreamSource streamSource)
+    public async Task CopyStreamAsync(IClipboardStreamSource streamSource)
     {
         using var stream = streamSource.GetStream();
-        var randomAccessStream = stream.AsRandomAccessStream();
+        if (stream.CanSeek)
+        {
+            stream.Position = 0;
+        }
 
-        var bitmap = RandomAccessStreamReference.CreateFromStream(randomAccessStream);
+        using IRandomAccessStream randomAccessStream = stream.AsRandomAccessStream();
+        InMemoryRandomAccessStream inMemoryStream = await CreateClipboardBitmapStreamAsync(randomAccessStream);
+
+        var bitmap = RandomAccessStreamReference.CreateFromStream(inMemoryStream);
         var package = new DataPackage();
         package.SetBitmap(bitmap);
         global::Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
         global::Windows.ApplicationModel.DataTransfer.Clipboard.Flush();
-
-        return Task.CompletedTask;
     }
 
     public async Task CopyFileAsync(ClipboardFile clipboardFile)
@@ -72,5 +61,25 @@ public partial class WindowsClipboardService : IClipboardService
         package.SetStorageItems(items);
         global::Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
         global::Windows.ApplicationModel.DataTransfer.Clipboard.Flush();
+    }
+
+    private static async Task<InMemoryRandomAccessStream> CreateClipboardBitmapStreamAsync(IRandomAccessStream stream)
+    {
+        stream.Seek(0);
+
+        BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
+        using SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+        using SoftwareBitmap converted = SoftwareBitmap.Convert(
+            softwareBitmap,
+            BitmapPixelFormat.Bgra8,
+            BitmapAlphaMode.Premultiplied);
+
+        InMemoryRandomAccessStream inMemoryStream = new();
+        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, inMemoryStream);
+        encoder.SetSoftwareBitmap(converted);
+        await encoder.FlushAsync();
+        inMemoryStream.Seek(0);
+
+        return inMemoryStream;
     }
 }
