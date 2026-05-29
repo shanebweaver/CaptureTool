@@ -18,7 +18,7 @@
             <!--  New capture  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_NewCaptureItem"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewImageCaptureCommand)}"
+                Command="{x:Bind ViewModel.NewImageCaptureCommand}"
                 Icon="Camera">
                 <MenuFlyoutItem.KeyboardAccelerators>
                     <KeyboardAccelerator x:Uid="AppMenu_NewCaptureItem_KeyboardAccelerator" />
@@ -28,7 +28,7 @@
             <!--  New video capture  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_NewVideoCaptureItem"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewVideoCaptureCommand)}"
+                Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
                 Icon="Video">
                 <MenuFlyoutItem.KeyboardAccelerators>
                     <KeyboardAccelerator x:Uid="AppMenu_NewVideoCaptureItem_KeyboardAccelerator" />
@@ -38,7 +38,7 @@
             <!--  Open  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_OpenFileItem"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.OpenFileCommand)}"
+                Command="{x:Bind ViewModel.OpenFileCommand}"
                 Icon="Folder">
                 <MenuFlyoutItem.KeyboardAccelerators>
                     <KeyboardAccelerator x:Uid="AppMenu_OpenFileItem_KeyboardAccelerator" />
@@ -56,7 +56,7 @@
             <!--  Add-ons  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_AddOnsItem"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ShowAddOnsCommand)}"
+                Command="{x:Bind ViewModel.ShowAddOnsCommand}"
                 Icon="Shop"
                 IsEnabled="{x:Bind ViewModel.ShowAddOnsOption}"
                 Visibility="{x:Bind ViewModel.ShowAddOnsOption}" />
@@ -64,13 +64,13 @@
             <!--  Settings  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_SettingsItem"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NavigateToSettingsCommand)}"
+                Command="{x:Bind ViewModel.NavigateToSettingsCommand}"
                 Icon="Setting" />
 
             <!--  Exit  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_ExitItem"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ExitApplicationCommand)}"
+                Command="{x:Bind ViewModel.ExitApplicationCommand}"
                 Icon="Cancel">
                 <MenuFlyoutItem.KeyboardAccelerators>
                     <KeyboardAccelerator x:Uid="AppMenu_ExitItem_KeyboardAccelerator" />
@@ -83,7 +83,7 @@
             <!--  About  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_AboutItem"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ShowAboutAppCommand)}"
+                Command="{x:Bind ViewModel.ShowAboutAppCommand}"
                 Icon="Help" />
         </MenuBarItem>
     </MenuBar>

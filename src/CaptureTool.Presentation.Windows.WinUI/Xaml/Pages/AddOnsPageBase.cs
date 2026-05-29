@@ -1,7 +1,7 @@
-using CaptureTool.Presentation.ViewModels;
+using CaptureTool.Presentation.Features.Store;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
-public abstract class AddOnsPageBase : PageBase<AddOnsPageViewModel>
+public abstract class AddOnsPageBase : PageBase<StorePageViewModel>
 {
 }

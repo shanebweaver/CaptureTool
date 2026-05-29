@@ -1,4 +1,4 @@
-using CaptureTool.Presentation.ViewModels;
+using CaptureTool.Presentation.Features.VideoEdit;
 using Microsoft.UI.Xaml;
 using System.ComponentModel;
 using Windows.Media.Core;

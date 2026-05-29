@@ -1,7 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Settings;
-using CaptureTool.Application.UseCases.Settings;
+using CaptureTool.Application.Features.Settings;
 using CaptureTool.Infrastructure.Abstractions.Settings;
 using Moq;
 
@@ -22,7 +21,7 @@ public class SettingsUpdateVideoCaptureDefaultLocalAudioUseCaseTests
     public async Task ExecuteAsync_ShouldSetSetting_AndSave()
     {
         var settings = Fixture.Freeze<Mock<ISettingsService>>();
-        var action = Fixture.Create<SettingsUpdateVideoCaptureDefaultLocalAudioUseCase>();
+        var action = Fixture.Create<SettingsUpdateVideoCaptureDefaultLocalAudioAppCommand>();
         await action.ExecuteAsync(true);
         settings.Verify(s => s.Set(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled, true), Times.Once);
         settings.Verify(s => s.TrySaveAsync(It.IsAny<CancellationToken>()), Times.Once);

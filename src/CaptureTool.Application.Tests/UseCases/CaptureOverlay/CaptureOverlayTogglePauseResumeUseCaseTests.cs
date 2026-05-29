@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.UseCases.CaptureOverlay;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Application.Features.CaptureOverlay;
 using FluentAssertions;
 using Moq;
 
@@ -25,7 +25,7 @@ public class CaptureOverlayTogglePauseResumeUseCaseTests
         handler.SetupGet(h => h.IsPaused).Returns(false);
         handler.SetupGet(h => h.IsRecording).Returns(true);
 
-        var action = Fixture.Create<CaptureOverlayTogglePauseResumeUseCase>();
+        var action = Fixture.Create<ToggleVideoCapturePauseResumeAppCommand>();
         action.Execute();
 
         handler.Verify(h => h.ToggleIsPaused(true), Times.Once);
@@ -38,7 +38,7 @@ public class CaptureOverlayTogglePauseResumeUseCaseTests
         handler.SetupGet(h => h.IsPaused).Returns(true);
         handler.SetupGet(h => h.IsRecording).Returns(true);
 
-        var action = Fixture.Create<CaptureOverlayTogglePauseResumeUseCase>();
+        var action = Fixture.Create<ToggleVideoCapturePauseResumeAppCommand>();
         action.Execute();
 
         handler.Verify(h => h.ToggleIsPaused(false), Times.Once);
@@ -50,7 +50,7 @@ public class CaptureOverlayTogglePauseResumeUseCaseTests
         var handler = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
         handler.SetupGet(h => h.IsRecording).Returns(true);
 
-        var action = Fixture.Create<CaptureOverlayTogglePauseResumeUseCase>();
+        var action = Fixture.Create<ToggleVideoCapturePauseResumeAppCommand>();
         bool result = action.CanExecute();
 
         result.Should().BeTrue();
@@ -62,7 +62,7 @@ public class CaptureOverlayTogglePauseResumeUseCaseTests
         var handler = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
         handler.SetupGet(h => h.IsRecording).Returns(false);
 
-        var action = Fixture.Create<CaptureOverlayTogglePauseResumeUseCase>();
+        var action = Fixture.Create<ToggleVideoCapturePauseResumeAppCommand>();
         bool result = action.CanExecute();
 
         result.Should().BeFalse();

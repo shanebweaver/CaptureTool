@@ -1,7 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.UseCases.CaptureOverlay;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Application.Features.CaptureOverlay;
 using Moq;
 
 namespace CaptureTool.Application.Tests.UseCases.CaptureOverlay;
@@ -23,7 +23,7 @@ public class CaptureOverlayToggleDesktopAudioUseCaseTests
         var handler = Fixture.Freeze<Mock<IVideoCaptureHandler>>();
         handler.SetupGet(h => h.IsDesktopAudioEnabled).Returns(false);
 
-        var action = Fixture.Create<CaptureOverlayToggleDesktopAudioUseCase>();
+        var action = Fixture.Create<ToggleVideoCaptureDesktopAudioAppCommand>();
         action.Execute();
 
         handler.Verify(h => h.SetIsDesktopAudioEnabled(true), Times.Once);

@@ -1,7 +1,7 @@
-using CaptureTool.Presentation.ViewModels;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Loading;
 using CaptureTool.Infrastructure.Abstractions.Themes;
+using CaptureTool.Presentation.Features.SelectionOverlay;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
@@ -150,7 +150,7 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
         if (captureArea.Height >= 40 && captureArea.Width >= 40)
         {
-            ViewModel.RequestCaptureCommand.Execute();
+            ViewModel.RequestCaptureCommand.Execute(_);
         }
     }
 
@@ -164,12 +164,12 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
         ViewModel.UpdateSelectedCaptureTypeCommand.Execute((e, SelectionUpdateSource.UserInteraction));
     }
 
-    private void SelectionOverlayContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
+    private void SelectionOverlayContainer_PointerMoved(object _, PointerRoutedEventArgs __)
     {
         ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Cross, 1));
     }
 
-    private void ToolbarContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
+    private void ToolbarContainer_PointerMoved(object _, PointerRoutedEventArgs __)
     {
         ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(0, 1));
     }

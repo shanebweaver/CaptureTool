@@ -1,6 +1,7 @@
-﻿using CaptureTool.Presentation.ViewModels;
-using CaptureTool.Domain.Capture.Windows;
+using CaptureTool.Application.Features.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture.Windows;
+using CaptureTool.Presentation.Features.SelectionOverlay;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using System.Drawing;
@@ -93,7 +94,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private void OnAllScreensCaptureRequested(object? sender, EventArgs e)
     {
         ImageFile image = AppServiceLocator.ImageCapture.PerformMultiMonitorImageCapture([.. _monitors]);
-        AppServiceLocator.Navigation.GoToImageEdit(image);
+        AppServiceLocator.Navigation.Navigate(NavigationRoute.ImageEdit, image, true);
     }
 
     public void Activate()

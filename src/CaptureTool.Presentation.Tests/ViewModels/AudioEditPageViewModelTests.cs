@@ -1,10 +1,10 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Presentation.ViewModels;
-using CaptureTool.Application.Abstractions.UseCases.AudioEdit;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using Moq;
+using CaptureTool.Application.Abstractions.AudioEdit;
 
 namespace CaptureTool.Application.Tests.ViewModels;
 

@@ -1,4 +1,4 @@
-using CaptureTool.Presentation.ViewModels;
+using CaptureTool.Presentation.Features.Store;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System.ComponentModel;
 
@@ -16,7 +16,7 @@ public sealed partial class AddOnsPage : AddOnsPageBase
     {
         switch (e.PropertyName)
         {
-            case nameof(AddOnsPageViewModel.ChromaKeyAddOnLogoImage):
+            case nameof(StorePageViewModel.ChromaKeyAddOnLogoImage):
                 if (ViewModel.ChromaKeyAddOnLogoImage != null)
                 {
                     ChromaKeyAddOnLogoImage.Source = new BitmapImage(ViewModel.ChromaKeyAddOnLogoImage);

@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.UseCases.AudioCapture;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using Moq;
+using CaptureTool.Application.Abstractions.AudioCapture;
 
 namespace CaptureTool.Application.Tests.ViewModels;
 

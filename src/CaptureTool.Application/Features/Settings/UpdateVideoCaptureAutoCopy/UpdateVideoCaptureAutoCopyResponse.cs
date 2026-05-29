@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoCopy;
+
+public sealed record UpdateVideoCaptureAutoCopyResponse;

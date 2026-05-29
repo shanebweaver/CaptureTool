@@ -1,12 +1,12 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Services.Navigation;
 using CaptureTool.Application.UseCases.CaptureOverlay;
 using CaptureTool.Application.Abstractions.Navigation;
-using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
 using Moq;
+using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Application.Features.Navigation;
 
 namespace CaptureTool.Application.Tests.UseCases.CaptureOverlay;
 
@@ -37,7 +37,7 @@ public class CaptureOverlayCloseUseCaseTests
     {
         var navService = Fixture.Freeze<Mock<INavigationService>>();
         navService.SetupGet(n => n.CanGoBack).Returns(true);
-        navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.Home));
+        navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(NavigationRoute.Home));
         var handler = Fixture.Create<CaptureOverlayCloseUseCase>();
 
         bool can = handler.CanExecute();
@@ -49,7 +49,7 @@ public class CaptureOverlayCloseUseCaseTests
     {
         var navService = Fixture.Freeze<Mock<INavigationService>>();
         navService.SetupGet(n => n.CanGoBack).Returns(true);
-        navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(CaptureToolNavigationRoute.VideoCapture));
+        navService.SetupGet(n => n.CurrentRequest).Returns(new NavigationRequest(NavigationRoute.CaptureOverlay));
         var handler = Fixture.Create<CaptureOverlayCloseUseCase>();
 
         bool can = handler.CanExecute();
