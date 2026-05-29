@@ -1,6 +1,6 @@
-using CaptureTool.Infrastructure.ViewModels;
 using CaptureTool.Infrastructure.Abstractions.Localization;
 using CaptureTool.Infrastructure.Abstractions.Themes;
+using CaptureTool.Infrastructure.ViewModels;
 
 namespace CaptureTool.Presentation.Features.Settings;
 

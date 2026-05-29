@@ -1,4 +1,3 @@
-using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.About.OpenAboutPage;
@@ -9,12 +8,13 @@ using CaptureTool.Application.Features.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Features.RecentCaptures.OpenRecentCapture;
 using CaptureTool.Application.Features.Settings.OpenSettingsPage;
 using CaptureTool.Application.Features.Store.OpenStorePage;
-using CaptureTool.Presentation.Features.RecentCaptures;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Abstractions.Factories;
 using CaptureTool.Infrastructure.Abstractions.Storage;
 using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Presentation.Features.RecentCaptures;
+using CaptureTool.Presentation.Shared.Commands;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 

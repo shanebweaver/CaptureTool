@@ -1,6 +1,6 @@
-using CaptureTool.Domain.Edit.Windows.ChromaKey;
 using CaptureTool.Domain.Edit.Abstractions;
 using CaptureTool.Domain.Edit.Abstractions.ChromaKey;
+using CaptureTool.Domain.Edit.Windows.ChromaKey;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Domain.Edit.Windows.DependencyInjection;

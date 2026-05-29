@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Files;
-using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture.Abstractions;
 
 namespace CaptureTool.Application.Features.RecentCaptures;
