@@ -781,7 +781,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
 
         nint hwnd = _windowingService.GetMainWindowHandle();
-        await _shareService.ShareAsync(ImageFile.FilePath, hwnd);
+        ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+        using MemoryStream renderedStream = await _imageCanvasExporter.RenderToStreamAsync([.. Drawables], options);
+        await _shareService.ShareStreamAsync(renderedStream, hwnd);
     }
 
     public void OnCropInteractionComplete(Rectangle oldCropRect)
