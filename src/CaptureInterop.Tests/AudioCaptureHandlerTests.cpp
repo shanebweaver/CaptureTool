@@ -105,9 +105,14 @@ namespace CaptureInteropTests
                 Assert::IsNotNull(format);
                 Assert::IsTrue(format->nSamplesPerSec > 0);
                 
-                // Sample rate should be standard (typically 48000 Hz or 44100 Hz)
-                Assert::IsTrue(format->nSamplesPerSec == 48000 || 
-                             format->nSamplesPerSec == 44100);
+                char msg[128];
+                sprintf_s(msg, "Detected audio sample rate: %u Hz", format->nSamplesPerSec);
+                Logger::WriteMessage(msg);
+
+                // WASAPI returns the default render device mix format, which can vary
+                // by machine and user audio settings (for example, 44.1k, 48k, or 96k).
+                Assert::IsTrue(format->nSamplesPerSec >= 8000 &&
+                             format->nSamplesPerSec <= 384000);
             }
         }
 
