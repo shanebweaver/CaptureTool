@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Infrastructure.Abstractions.Clipboard;
 
 namespace CaptureTool.Application.Features.AudioEdit.CopyAudioFile;

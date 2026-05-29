@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.Error.RestartApplication;
 using CaptureTool.Infrastructure.ViewModels;
 using CommunityToolkit.Mvvm.Input;

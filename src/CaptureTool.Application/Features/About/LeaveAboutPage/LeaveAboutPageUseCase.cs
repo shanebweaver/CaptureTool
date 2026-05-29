@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
 

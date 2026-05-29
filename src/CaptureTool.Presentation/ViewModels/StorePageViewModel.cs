@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.Store.GetChromaKeyAddOn;
 using CaptureTool.Application.Features.Store.LeaveStorePage;
 using CaptureTool.Application.Features.Store.PurchaseChromaKeyAddOn;

@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Application.Abstractions;
+namespace CaptureTool.Application.Abstractions.UseCases;
 
 public interface IUseCase<TRequest, TResponse>
 {

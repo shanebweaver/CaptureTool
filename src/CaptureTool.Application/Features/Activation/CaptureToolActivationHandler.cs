@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
 using CaptureTool.Application.Features.Home.ShowHomePage;
 using CaptureTool.Application.Features.Settings;

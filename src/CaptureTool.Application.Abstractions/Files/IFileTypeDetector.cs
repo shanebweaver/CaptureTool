@@ -1,6 +1,6 @@
 using CaptureTool.Domain.Capture.Abstractions;
 
-namespace CaptureTool.Application.Abstractions;
+namespace CaptureTool.Application.Abstractions.Files;
 
 public interface IFileTypeDetector
 {

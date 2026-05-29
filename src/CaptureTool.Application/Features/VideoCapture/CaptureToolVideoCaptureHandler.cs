@@ -1,4 +1,5 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Abstractions.Metadata;
 using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture.Abstractions;

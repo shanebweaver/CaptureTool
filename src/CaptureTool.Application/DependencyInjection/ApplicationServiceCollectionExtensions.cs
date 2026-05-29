@@ -1,4 +1,6 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.About.LeaveAboutPage;
 using CaptureTool.Application.Features.About.OpenAboutPage;
 using CaptureTool.Application.Features.Activation;

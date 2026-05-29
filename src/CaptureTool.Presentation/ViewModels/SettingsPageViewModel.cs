@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.Settings;
 using CaptureTool.Application.Features.Settings.ChangeScreenshotsFolder;
 using CaptureTool.Application.Features.Settings.ChangeVideosFolder;

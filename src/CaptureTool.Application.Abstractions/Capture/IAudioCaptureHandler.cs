@@ -1,7 +1,7 @@
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Storage;
 
-namespace CaptureTool.Application.Abstractions;
+namespace CaptureTool.Application.Abstractions.Capture;
 
 public interface IAudioCaptureHandler
 {

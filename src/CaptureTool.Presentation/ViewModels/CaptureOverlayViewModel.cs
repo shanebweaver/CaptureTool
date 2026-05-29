@@ -1,4 +1,5 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.CaptureOverlay.CloseCaptureOverlay;
 using CaptureTool.Application.Features.CaptureOverlay.GoBackFromCaptureOverlay;
 using CaptureTool.Application.Features.CaptureOverlay.StartVideoCapture;

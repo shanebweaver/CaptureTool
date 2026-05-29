@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.Settings;
 using CaptureTool.Infrastructure.Abstractions.Logging;
 using CaptureTool.Infrastructure.Abstractions.Settings;

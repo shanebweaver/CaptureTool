@@ -1,4 +1,5 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.CaptureOverlay.OpenCaptureOverlay;
 using CaptureTool.Application.Features.ImageEdit.OpenImageEditPage;
 using CaptureTool.Application.Features.Windowing.ShowMainWindow;

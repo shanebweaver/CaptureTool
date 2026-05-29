@@ -1,4 +1,5 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.About.OpenAboutPage;
 using CaptureTool.Application.Features.AppMenu.ExitApplication;
 using CaptureTool.Application.Features.AppMenu.OpenFile;

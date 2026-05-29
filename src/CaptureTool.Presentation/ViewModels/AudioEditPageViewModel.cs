@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.AudioEdit.CopyAudioFile;
 using CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
 using CaptureTool.Infrastructure.Abstractions.Storage;

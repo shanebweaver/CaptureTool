@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Infrastructure.Abstractions.Logging;
 
 namespace CaptureTool.Application.Features.Diagnostics.ClearLogs;

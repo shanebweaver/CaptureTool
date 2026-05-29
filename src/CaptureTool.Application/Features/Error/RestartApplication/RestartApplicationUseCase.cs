@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Infrastructure.Abstractions.Shutdown;
 
 namespace CaptureTool.Application.Features.Error.RestartApplication;

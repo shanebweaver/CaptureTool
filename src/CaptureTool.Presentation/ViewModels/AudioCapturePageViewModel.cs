@@ -1,4 +1,5 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.AudioCapture.MuteAudioCapture;
 using CaptureTool.Application.Features.AudioCapture.PauseAudioCapture;
 using CaptureTool.Application.Features.AudioCapture.StartAudioCapture;

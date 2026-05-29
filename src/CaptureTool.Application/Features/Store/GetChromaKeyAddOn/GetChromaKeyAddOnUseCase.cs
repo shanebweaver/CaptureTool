@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Infrastructure.Abstractions.Store;
 
 namespace CaptureTool.Application.Features.Store.GetChromaKeyAddOn;
