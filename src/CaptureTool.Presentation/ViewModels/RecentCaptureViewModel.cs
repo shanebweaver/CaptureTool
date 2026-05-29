@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.Abstractions.RecentCaptures;
+using CaptureTool.Application.Abstractions;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.ViewModels;
 

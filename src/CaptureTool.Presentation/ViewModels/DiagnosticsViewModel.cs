@@ -1,4 +1,8 @@
-using CaptureTool.Application.Abstractions.Diagnostics;
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.Diagnostics.ClearLogs;
+using CaptureTool.Application.Features.Diagnostics.GetCurrentLogs;
+using CaptureTool.Application.Features.Diagnostics.GetIsLoggingEnabled;
+using CaptureTool.Application.Features.Diagnostics.UpdateLoggingState;
 using CaptureTool.Infrastructure.Abstractions.Logging;
 using CaptureTool.Infrastructure.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -7,8 +11,8 @@ namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class DiagnosticsViewModel : ViewModelBase
 {
-    private readonly IClearLogsAppCommand _clearLogsAppCommand;
-    private readonly IUpdateLoggingStateAppCommand _updateLoggingStateAppCommand;
+    private readonly IUseCase<ClearLogsRequest, ClearLogsResponse> _clearLogsCommand;
+    private readonly IUseCase<UpdateLoggingStateRequest, UpdateLoggingStateResponse> _updateLoggingStateCommand;
     private readonly ILogService _logService;
 
     public IRelayCommand ClearLogsCommand { get; }
@@ -27,14 +31,14 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     }
 
     public DiagnosticsViewModel(
-        IClearLogsAppCommand clearLogsCommand,
-        IUpdateLoggingStateAppCommand updateLoggingEnablementCommand,
-        IGetIsLoggingEnabledAppQuery getIsLoggingEnabledQuery,
-        IGetCurrentLogsAppQuery getCurrentLogsQuery,
+        IUseCase<ClearLogsRequest, ClearLogsResponse> clearLogsCommand,
+        IUseCase<UpdateLoggingStateRequest, UpdateLoggingStateResponse> updateLoggingEnablementCommand,
+        IUseCase<GetIsLoggingEnabledRequest, GetIsLoggingEnabledResponse> getIsLoggingEnabledQuery,
+        IUseCase<GetCurrentLogsRequest, GetCurrentLogsResponse> getCurrentLogsQuery,
         ILogService logService)
     {
-        _clearLogsAppCommand = clearLogsCommand;
-        _updateLoggingStateAppCommand = updateLoggingEnablementCommand;
+        _clearLogsCommand = clearLogsCommand;
+        _updateLoggingStateCommand = updateLoggingEnablementCommand;
 
         _logService = logService;
         _logService.LogAdded += OnLogAdded;
@@ -42,8 +46,8 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         ClearLogsCommand = new RelayCommand(ClearLogs);
         UpdateLoggingEnablementCommand = new AsyncRelayCommand<bool>(UpdateLoggingEnablementAsync);
 
-        IsLoggingEnabled = getIsLoggingEnabledQuery.Execute();
-        Logs = string.Join(Environment.NewLine, getCurrentLogsQuery.Execute().Select(log => log.ToString()));
+        IsLoggingEnabled = getIsLoggingEnabledQuery.ExecuteAsync(new GetIsLoggingEnabledRequest()).GetAwaiter().GetResult().IsEnabled;
+        Logs = string.Join(Environment.NewLine, getCurrentLogsQuery.ExecuteAsync(new GetCurrentLogsRequest()).GetAwaiter().GetResult().Logs.Select(log => log.ToString()));
     }
 
     ~DiagnosticsViewModel()
@@ -59,12 +63,12 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     private async Task UpdateLoggingEnablementAsync(bool newValue)
     {
         IsLoggingEnabled = newValue;
-        await _updateLoggingStateAppCommand.ExecuteAsync(newValue, CancellationToken.None);
+        await _updateLoggingStateCommand.ExecuteAsync(new UpdateLoggingStateRequest(newValue), CancellationToken.None);
     }
 
     private void ClearLogs()
     {
         Logs = string.Empty;
-        _clearLogsAppCommand.Execute();
+        _clearLogsCommand.ExecuteAsync(new ClearLogsRequest()).GetAwaiter().GetResult();
     }
 }

@@ -1,5 +1,6 @@
-using CaptureTool.Application.Abstractions.AudioCapture;
-using CaptureTool.Application.Abstractions.CaptureOverlay;
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.AudioCapture.OpenAudioCapturePage;
+using CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.ViewModels;
@@ -16,14 +17,14 @@ public sealed partial class HomePageViewModel : ViewModelBase
     public bool IsAudioCaptureEnabled { get; }
 
     public HomePageViewModel(
-        IOpenSelectionOverlayAppCommand openSelectionOverlayAppCommand,
-        IOpenAudioCapturePageAppCommand openAudioCapturePageAppCommand,
+        IUseCase<OpenSelectionOverlayRequest, OpenSelectionOverlayResponse> openSelectionOverlayCommand,
+        IUseCase<OpenAudioCapturePageRequest, OpenAudioCapturePageResponse> openAudioCapturePageCommand,
         IFeatureManager featureManager)
     {
         IsAudioCaptureEnabled = featureManager.IsEnabled(CaptureToolFeatures.Feature_AudioCapture);
 
-        NewImageCaptureCommand = new RelayCommand(() => openSelectionOverlayAppCommand.Execute(CaptureOptions.ImageDefault));
-        NewVideoCaptureCommand = new RelayCommand(() => openSelectionOverlayAppCommand.Execute(CaptureOptions.VideoDefault));
-        NewAudioCaptureCommand = openAudioCapturePageAppCommand.ToRelayCommand();
+        NewImageCaptureCommand = new RelayCommand(() => openSelectionOverlayCommand.ExecuteAsync(new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault)).GetAwaiter().GetResult());
+        NewVideoCaptureCommand = new RelayCommand(() => openSelectionOverlayCommand.ExecuteAsync(new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault)).GetAwaiter().GetResult());
+        NewAudioCaptureCommand = openAudioCapturePageCommand.ToRelayCommand(() => new OpenAudioCapturePageRequest());
     }
 }

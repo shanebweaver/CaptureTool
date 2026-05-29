@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Features.AudioCapture.ToggleLocalAudioCapture;
+
+public sealed record ToggleLocalAudioCaptureResponse;

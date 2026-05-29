@@ -1,11 +1,12 @@
-using CaptureTool.Application.Abstractions.About;
-using CaptureTool.Application.Abstractions.AppMenu;
-using CaptureTool.Application.Abstractions.CaptureOverlay;
-using CaptureTool.Application.Abstractions.ImageCapture;
-using CaptureTool.Application.Abstractions.RecentCaptures;
-using CaptureTool.Application.Abstractions.Settings;
-using CaptureTool.Application.Abstractions.Store;
-using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.About.OpenAboutPage;
+using CaptureTool.Application.Features.AppMenu.ExitApplication;
+using CaptureTool.Application.Features.AppMenu.OpenFile;
+using CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
+using CaptureTool.Application.Features.RecentCaptures.GetRecentCaptures;
+using CaptureTool.Application.Features.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Features.Settings.OpenSettingsPage;
+using CaptureTool.Application.Features.Store.OpenStorePage;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Abstractions.Factories;
@@ -20,8 +21,8 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 {
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly IOpenRecentCaptureAppCommand _openRecentCaptureAppCommand;
-    private readonly IGetRecentCapturesAppQuery _getRecentCapturesAppQuery;
+    private readonly IUseCase<OpenRecentCaptureRequest, OpenRecentCaptureResponse> _openRecentCaptureCommand;
+    private readonly IUseCase<GetRecentCapturesRequest, GetRecentCapturesResponse> _getRecentCapturesQuery;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
 
     public event EventHandler? RecentCapturesUpdated;
@@ -51,14 +52,14 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     }
 
     public AppMenuViewModel(
-        IOpenSelectionOverlayAppCommand openImageCaptureOverlayAppCommand,
-        IOpenSettingsPageAppCommand openSettingsPageAppCommand,
-        IOpenAboutPageAppCommand openAboutPageAppCommand,
-        IOpenStorePageAppCommand openStorePageAppCommand,
-        IOpenFileAsyncAppCommand openFileAsyncAppCommand,
-        IExitApplicationAppCommand exitApplicationAppCommand,
-        IOpenRecentCaptureAppCommand openRecentCaptureAppCommand,
-        IGetRecentCapturesAppQuery getRecentCapturesAppQuery,
+        IUseCase<OpenSelectionOverlayRequest, OpenSelectionOverlayResponse> openSelectionOverlayCommand,
+        IUseCase<OpenSettingsPageRequest, OpenSettingsPageResponse> openSettingsPageCommand,
+        IUseCase<OpenAboutPageRequest, OpenAboutPageResponse> openAboutPageCommand,
+        IUseCase<OpenStorePageRequest, OpenStorePageResponse> openStorePageCommand,
+        IUseCase<OpenFileRequest, OpenFileResponse> openFileCommand,
+        IUseCase<ExitApplicationRequest, ExitApplicationResponse> exitApplicationCommand,
+        IUseCase<OpenRecentCaptureRequest, OpenRecentCaptureResponse> openRecentCaptureCommand,
+        IUseCase<GetRecentCapturesRequest, GetRecentCapturesResponse> getRecentCapturesQuery,
         IFeatureManager featureManager,
         IImageCaptureHandler imageCaptureHandler,
         IVideoCaptureHandler videoCaptureHandler,
@@ -66,17 +67,17 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         _imageCaptureHandler = imageCaptureHandler;
         _videoCaptureHandler = videoCaptureHandler;
-        _openRecentCaptureAppCommand = openRecentCaptureAppCommand;
-        _getRecentCapturesAppQuery = getRecentCapturesAppQuery;
+        _openRecentCaptureCommand = openRecentCaptureCommand;
+        _getRecentCapturesQuery = getRecentCapturesQuery;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
 
-        NewImageCaptureCommand = new RelayCommand(() => openImageCaptureOverlayAppCommand.Execute(CaptureOptions.ImageDefault));
-        NewVideoCaptureCommand = new RelayCommand(() => openImageCaptureOverlayAppCommand.Execute(CaptureOptions.VideoDefault));
-        OpenFileCommand = openFileAsyncAppCommand.ToAsyncRelayCommand();
-        NavigateToSettingsCommand = openSettingsPageAppCommand.ToRelayCommand();
-        ShowAboutAppCommand = openAboutPageAppCommand.ToRelayCommand();
-        ShowAddOnsCommand = openStorePageAppCommand.ToRelayCommand();
-        ExitApplicationCommand = exitApplicationAppCommand.ToRelayCommand();
+        NewImageCaptureCommand = new RelayCommand(() => openSelectionOverlayCommand.ExecuteAsync(new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault)).GetAwaiter().GetResult());
+        NewVideoCaptureCommand = new RelayCommand(() => openSelectionOverlayCommand.ExecuteAsync(new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault)).GetAwaiter().GetResult());
+        OpenFileCommand = openFileCommand.ToAsyncRelayCommand(() => new OpenFileRequest());
+        NavigateToSettingsCommand = openSettingsPageCommand.ToRelayCommand(() => new OpenSettingsPageRequest());
+        ShowAboutAppCommand = openAboutPageCommand.ToRelayCommand(() => new OpenAboutPageRequest());
+        ShowAddOnsCommand = openStorePageCommand.ToRelayCommand(() => new OpenStorePageRequest());
+        ExitApplicationCommand = exitApplicationCommand.ToRelayCommand(() => new ExitApplicationRequest());
         RefreshRecentCapturesCommand = new RelayCommand(RefreshRecentCaptures);
         OpenRecentCaptureCommand = new RelayCommand<RecentCaptureViewModel>(OpenRecentCapture);
 
@@ -123,7 +124,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
             }
             else
             {
-                _openRecentCaptureAppCommand.Execute(model.FilePath);
+                _openRecentCaptureCommand.ExecuteAsync(new OpenRecentCaptureRequest(model.FilePath)).GetAwaiter().GetResult();
             }
         }
     }
@@ -132,7 +133,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         // Execute async operation synchronously since this needs to be callable from non-async contexts
         // ConfigureAwait(false) helps avoid potential deadlocks
-        var recentCaptures = _getRecentCapturesAppQuery.Execute();
+        var recentCaptures = _getRecentCapturesQuery.ExecuteAsync(new GetRecentCapturesRequest()).GetAwaiter().GetResult().Captures;
 
         _recentCaptures.Clear();
         foreach (var recentCapture in recentCaptures)

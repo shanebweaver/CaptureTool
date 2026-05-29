@@ -1,11 +1,11 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.UseCases.Settings;
 using CaptureTool.Application.UseCases.Diagnostics;
 using CaptureTool.Infrastructure.Abstractions.Logging;
 using CaptureTool.Infrastructure.Abstractions.Settings;
 using FluentAssertions;
 using Moq;
+using CaptureTool.Application.Features.Settings;
 
 namespace CaptureTool.Application.Tests.UseCases.Diagnostics;
 

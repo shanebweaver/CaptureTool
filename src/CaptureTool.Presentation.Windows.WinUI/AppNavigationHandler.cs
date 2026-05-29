@@ -1,11 +1,11 @@
-using CaptureTool.Application.Abstractions.VideoCapture;
-using CaptureTool.Application.Abstractions.Windowing;
-using CaptureTool.Application.UseCases.Navigation;
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Shutdown;
 using CaptureTool.Infrastructure.Abstractions.Windowing;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
+using CaptureTool.Application.Features.Windowing.ShowMainWindow;
 
 namespace CaptureTool.Presentation.Windows.WinUI;
 
@@ -22,7 +22,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly INavigationService _navigationService;
-    private readonly IShowMainWindowAppCommand _showMainWindowAppCommand;
+    private readonly IUseCase<ShowMainWindowRequest, ShowMainWindowResponse> _showMainWindowCommand;
 
     private readonly SemaphoreSlim _semaphoreNavigation = new(1, 1);
     private SelectionOverlayHost? _selectionOverlayHost;
@@ -35,12 +35,12 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
         IShutdownHandler shutdownHandler,
         IVideoCaptureHandler videoCaptureHandler,
         INavigationService navigationService,
-        IShowMainWindowAppCommand showMainWindowAppCommand)
+        IUseCase<ShowMainWindowRequest, ShowMainWindowResponse> showMainWindowCommand)
     {
         _shutdownHandler = shutdownHandler;
         _videoCaptureHandler = videoCaptureHandler;
         _navigationService = navigationService;
-        _showMainWindowAppCommand = showMainWindowAppCommand;
+        _showMainWindowCommand = showMainWindowCommand;
     }
 
     public async void HandleNavigationRequest(INavigationRequest request)
@@ -223,7 +223,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
     {
         if (_navigationService.CanGoBack)
         {
-            _showMainWindowAppCommand.Execute();
+            _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest()).GetAwaiter().GetResult();
         }
         else
         {

@@ -1,4 +1,5 @@
-using CaptureTool.Application.Abstractions.Error;
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.Error.RestartApplication;
 using CaptureTool.Infrastructure.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
@@ -9,8 +10,8 @@ public sealed partial class ErrorPageViewModel : ViewModelBase
     public IRelayCommand RestartAppCommand { get; }
 
     public ErrorPageViewModel(
-        IRestartApplicationAppCommand restartAppAction)
+        IUseCase<RestartApplicationRequest, RestartApplicationResponse> restartAppAction)
     {
-        RestartAppCommand = restartAppAction.ToRelayCommand();
+        RestartAppCommand = restartAppAction.ToRelayCommand(() => new RestartApplicationRequest());
     }
 }

@@ -1,0 +1,44 @@
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.Navigation;
+using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.Abstractions.Navigation;
+
+namespace CaptureTool.Application.Features.CaptureOverlay.GoBackFromCaptureOverlay;
+
+public sealed class GoBackFromCaptureOverlayUseCase : IUseCase<GoBackFromCaptureOverlayRequest, GoBackFromCaptureOverlayResponse>, IConditional<GoBackFromCaptureOverlayRequest>
+{
+    private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly INavigationService _navigationService;
+
+    public GoBackFromCaptureOverlayUseCase(
+        IVideoCaptureHandler videoCaptureHandler,
+        INavigationService navigationService)
+    {
+        _videoCaptureHandler = videoCaptureHandler;
+        _navigationService = navigationService;
+    }
+
+    public Task<bool> CanExecuteAsync(GoBackFromCaptureOverlayRequest request, CancellationToken cancellationToken = default)
+    {
+        bool canExecute = _navigationService.CanGoBack
+            && _navigationService.CurrentRequest?.Route is NavigationRoute.CaptureOverlay;
+
+        return Task.FromResult(canExecute);
+    }
+
+    public Task<GoBackFromCaptureOverlayResponse> ExecuteAsync(GoBackFromCaptureOverlayRequest request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _videoCaptureHandler.CancelVideoCapture();
+        }
+        catch { }
+
+        if (!_navigationService.TryGoBack())
+        {
+            _navigationService.Navigate(NavigationRoute.SelectionOverlay, CaptureOptions.VideoDefault, true);
+        }
+
+        return Task.FromResult(new GoBackFromCaptureOverlayResponse());
+    }
+}

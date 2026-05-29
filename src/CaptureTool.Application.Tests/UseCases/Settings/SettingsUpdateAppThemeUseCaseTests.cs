@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.UseCases.Settings;
+using CaptureTool.Application.Features.Settings;
 using CaptureTool.Infrastructure.Abstractions.Themes;
 using Moq;
 

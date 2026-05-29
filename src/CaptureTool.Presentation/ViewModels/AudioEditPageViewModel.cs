@@ -1,4 +1,6 @@
-using CaptureTool.Application.Abstractions.AudioEdit;
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.AudioEdit.CopyAudioFile;
+using CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
 using CaptureTool.Infrastructure.Abstractions.Storage;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.ViewModels;
@@ -23,13 +25,13 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<IAudi
         private set => Set(ref field, value);
     }
 
-    private readonly ISaveAudioFileAppCommand _saveAction;
-    private readonly ICopyAudioFileAppCommand _copyAction;
+    private readonly IUseCase<SaveAudioFileRequest, SaveAudioFileResponse> _saveAction;
+    private readonly IUseCase<CopyAudioFileRequest, CopyAudioFileResponse> _copyAction;
     private readonly ITelemetryService _telemetryService;
 
     public AudioEditPageViewModel(
-        ISaveAudioFileAppCommand saveAction,
-        ICopyAudioFileAppCommand copyAction,
+        IUseCase<SaveAudioFileRequest, SaveAudioFileResponse> saveAction,
+        IUseCase<CopyAudioFileRequest, CopyAudioFileResponse> copyAction,
         ITelemetryService telemetryService)
     {
         _saveAction = saveAction;
@@ -60,7 +62,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<IAudi
             throw new InvalidOperationException("Cannot save audio without a valid filepath.");
         }
 
-        await _saveAction.ExecuteAsync(AudioPath, CancellationToken.None);
+        await _saveAction.ExecuteAsync(new SaveAudioFileRequest(AudioPath), CancellationToken.None);
     }
 
     private async Task CopyAsync()
@@ -70,6 +72,6 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<IAudi
             throw new InvalidOperationException("Cannot copy audio to clipboard without a valid filepath.");
         }
 
-        await _copyAction.ExecuteAsync(AudioPath, CancellationToken.None);
+        await _copyAction.ExecuteAsync(new CopyAudioFileRequest(AudioPath), CancellationToken.None);
     }
 }

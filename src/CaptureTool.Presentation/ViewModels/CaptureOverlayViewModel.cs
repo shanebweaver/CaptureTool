@@ -1,5 +1,10 @@
-using CaptureTool.Application.Abstractions.CaptureOverlay;
-using CaptureTool.Application.Abstractions.VideoCapture;
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.CaptureOverlay.CloseCaptureOverlay;
+using CaptureTool.Application.Features.CaptureOverlay.GoBackFromCaptureOverlay;
+using CaptureTool.Application.Features.CaptureOverlay.StartVideoCapture;
+using CaptureTool.Application.Features.CaptureOverlay.StopVideoCapture;
+using CaptureTool.Application.Features.CaptureOverlay.ToggleVideoCaptureDesktopAudio;
+using CaptureTool.Application.Features.CaptureOverlay.ToggleVideoCapturePauseResume;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
 using CaptureTool.Infrastructure.Abstractions.Themes;
@@ -13,9 +18,9 @@ namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>
 {
-    private readonly IStartVideoCaptureAppCommand _startVideoCaptureAppCommand;
-    private readonly IStopVideoCaptureAppCommand _stopVideoCaptureAppCommand;
-    private readonly IToggleVideoCapturePauseResumeAppCommand _toggleVideoCapturePauseResumeAppCommand;
+    private readonly IUseCase<StartVideoCaptureRequest, StartVideoCaptureResponse> _startVideoCaptureCommand;
+    private readonly IUseCase<StopVideoCaptureRequest, StopVideoCaptureResponse> _stopVideoCaptureCommand;
+    private readonly IUseCase<ToggleVideoCapturePauseResumeRequest, ToggleVideoCapturePauseResumeResponse> _toggleVideoCapturePauseResumeCommand;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ITaskEnvironment _taskEnvironment;
 
@@ -72,30 +77,30 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public IRelayCommand TogglePauseResumeCommand { get; }
 
     public CaptureOverlayViewModel(
-        ICaptureOverlayCloseAppCommand closeOverlayCommand,
-        ICaptureOverlayGoBackAppCommand goBackCommand,
-        IStartVideoCaptureAppCommand startVideoCaptureAppCommand,
-        IStopVideoCaptureAppCommand stopVideoCaptureAppCommand,
-        IToggleVideoCaptureDesktopAudioAppCommand toggleVideoCaptureDesktopAudioAppCommand,
-        IToggleVideoCapturePauseResumeAppCommand toggleVideoCapturePauseResumeAppCommand,
+        IUseCase<CloseCaptureOverlayRequest, CloseCaptureOverlayResponse> closeOverlayCommand,
+        IUseCase<GoBackFromCaptureOverlayRequest, GoBackFromCaptureOverlayResponse> goBackCommand,
+        IUseCase<StartVideoCaptureRequest, StartVideoCaptureResponse> startVideoCaptureCommand,
+        IUseCase<StopVideoCaptureRequest, StopVideoCaptureResponse> stopVideoCaptureCommand,
+        IUseCase<ToggleVideoCaptureDesktopAudioRequest, ToggleVideoCaptureDesktopAudioResponse> toggleVideoCaptureDesktopAudioCommand,
+        IUseCase<ToggleVideoCapturePauseResumeRequest, ToggleVideoCapturePauseResumeResponse> toggleVideoCapturePauseResumeCommand,
         IThemeService themeService,
         IVideoCaptureHandler videoCaptureHandler,
         ITaskEnvironment taskEnvironment)
     {
-        _startVideoCaptureAppCommand = startVideoCaptureAppCommand;
-        _stopVideoCaptureAppCommand = stopVideoCaptureAppCommand;
-        _toggleVideoCapturePauseResumeAppCommand = toggleVideoCapturePauseResumeAppCommand;
+        _startVideoCaptureCommand = startVideoCaptureCommand;
+        _stopVideoCaptureCommand = stopVideoCaptureCommand;
+        _toggleVideoCapturePauseResumeCommand = toggleVideoCapturePauseResumeCommand;
         _videoCaptureHandler = videoCaptureHandler;
         _taskEnvironment = taskEnvironment;
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
 
-        CloseOverlayCommand = closeOverlayCommand.ToRelayCommand();
-        GoBackCommand = goBackCommand.ToRelayCommand();
+        CloseOverlayCommand = closeOverlayCommand.ToRelayCommand(() => new CloseCaptureOverlayRequest());
+        GoBackCommand = goBackCommand.ToRelayCommand(() => new GoBackFromCaptureOverlayRequest());
         StartVideoCaptureCommand = new RelayCommand(StartVideoCapture);
         StopVideoCaptureCommand = new RelayCommand(StopVideoCapture);
-        ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioAppCommand.ToRelayCommand(); 
+        ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand.ToRelayCommand(() => new ToggleVideoCaptureDesktopAudioRequest()); 
         TogglePauseResumeCommand = new RelayCommand(TogglePauseResume);
     }
 
@@ -168,7 +173,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             StartTimer();
             NewCaptureArgs args = new(_monitorCaptureResult.Value, _captureArea.Value);
 
-            _startVideoCaptureAppCommand.Execute(args);
+            _startVideoCaptureCommand.ExecuteAsync(new StartVideoCaptureRequest(args)).GetAwaiter().GetResult();
         }
         else
         {
@@ -182,7 +187,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         {
             IsRecording = false;
             StopTimer();
-            _stopVideoCaptureAppCommand.Execute();
+            _stopVideoCaptureCommand.ExecuteAsync(new StopVideoCaptureRequest()).GetAwaiter().GetResult();
         }
         else
         {
@@ -204,7 +209,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             _pauseStartTime = null;
         }
 
-        _toggleVideoCapturePauseResumeAppCommand.Execute();
+        _toggleVideoCapturePauseResumeCommand.ExecuteAsync(new ToggleVideoCapturePauseResumeRequest()).GetAwaiter().GetResult();
     }
 
     private void StartTimer()

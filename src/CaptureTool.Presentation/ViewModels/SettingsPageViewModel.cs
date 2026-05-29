@@ -1,5 +1,22 @@
-using CaptureTool.Application.Abstractions.Settings;
-using CaptureTool.Application.UseCases.Settings;
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.Settings;
+using CaptureTool.Application.Features.Settings.ChangeScreenshotsFolder;
+using CaptureTool.Application.Features.Settings.ChangeVideosFolder;
+using CaptureTool.Application.Features.Settings.ClearTempFiles;
+using CaptureTool.Application.Features.Settings.LeaveSettingsPage;
+using CaptureTool.Application.Features.Settings.OpenScreenshotsFolder;
+using CaptureTool.Application.Features.Settings.OpenTempFolder;
+using CaptureTool.Application.Features.Settings.OpenVideosFolder;
+using CaptureTool.Application.Features.Settings.RestartSettingsApplication;
+using CaptureTool.Application.Features.Settings.RestoreDefaults;
+using CaptureTool.Application.Features.Settings.UpdateAppLanguage;
+using CaptureTool.Application.Features.Settings.UpdateAppTheme;
+using CaptureTool.Application.Features.Settings.UpdateImageAutoCopy;
+using CaptureTool.Application.Features.Settings.UpdateImageAutoSave;
+using CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoCopy;
+using CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoSave;
+using CaptureTool.Application.Features.Settings.UpdateVideoCaptureDefaultLocalAudio;
+using CaptureTool.Application.Features.Settings.UpdateVideoMetadataAutoSave;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Abstractions.Factories;
 using CaptureTool.Infrastructure.Abstractions.Localization;
@@ -14,23 +31,23 @@ namespace CaptureTool.Presentation.ViewModels;
 
 public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 {
-    private readonly ILeaveSettingsPageAppCommand _goBackAction;
-    private readonly ISettingsRestartApplicationAppCommand _restartAppAction;
-    private readonly ISettingsUpdateImageAutoCopyAppCommand _updateImageAutoCopyAction;
-    private readonly ISettingsUpdateImageAutoSaveAppCommand _updateImageAutoSaveAction;
-    private readonly ISettingsUpdateVideoCaptureAutoCopyAppCommand _updateVideoCaptureAutoCopyAction;
-    private readonly ISettingsUpdateVideoCaptureAutoSaveAppCommand _updateVideoCaptureAutoSaveAction;
-    private readonly ISettingsUpdateVideoCaptureDefaultLocalAudioAppCommand _updateVideoCaptureDefaultLocalAudioAction;
-    private readonly ISettingsUpdateVideoMetadataAutoSaveAppCommand _updateVideoMetadataAutoSaveAction;
-    private readonly ISettingsUpdateAppLanguageAppCommand _updateAppLanguageAction;
-    private readonly ISettingsUpdateAppThemeAppCommand _updateAppThemeAction;
-    private readonly IChangeScreenshotsFolderAppCommand _changeScreenshotsFolderAction;
-    private readonly ISettingsOpenScreenshotsFolderAppCommand _openScreenshotsFolderAction;
-    private readonly ISettingsChangeVideosFolderAppCommand _changeVideosFolderAction;
-    private readonly ISettingsOpenVideosFolderAppCommand _openVideosFolderAction;
-    private readonly ISettingsOpenTempFolderAppCommand _openTempFolderAction;
-    private readonly ISettingsClearTempFilesAppCommand _clearTempFilesAction;
-    private readonly ISettingsRestoreDefaultsAppCommand _restoreDefaultsAction;
+    private readonly IUseCase<LeaveSettingsPageRequest, LeaveSettingsPageResponse> _goBackAction;
+    private readonly IUseCase<RestartSettingsApplicationRequest, RestartSettingsApplicationResponse> _restartAppAction;
+    private readonly IUseCase<UpdateImageAutoCopyRequest, UpdateImageAutoCopyResponse> _updateImageAutoCopyAction;
+    private readonly IUseCase<UpdateImageAutoSaveRequest, UpdateImageAutoSaveResponse> _updateImageAutoSaveAction;
+    private readonly IUseCase<UpdateVideoCaptureAutoCopyRequest, UpdateVideoCaptureAutoCopyResponse> _updateVideoCaptureAutoCopyAction;
+    private readonly IUseCase<UpdateVideoCaptureAutoSaveRequest, UpdateVideoCaptureAutoSaveResponse> _updateVideoCaptureAutoSaveAction;
+    private readonly IUseCase<UpdateVideoCaptureDefaultLocalAudioRequest, UpdateVideoCaptureDefaultLocalAudioResponse> _updateVideoCaptureDefaultLocalAudioAction;
+    private readonly IUseCase<UpdateVideoMetadataAutoSaveRequest, UpdateVideoMetadataAutoSaveResponse> _updateVideoMetadataAutoSaveAction;
+    private readonly IUseCase<UpdateAppLanguageRequest, UpdateAppLanguageResponse> _updateAppLanguageAction;
+    private readonly IUseCase<UpdateAppThemeRequest, UpdateAppThemeResponse> _updateAppThemeAction;
+    private readonly IUseCase<ChangeScreenshotsFolderRequest, ChangeScreenshotsFolderResponse> _changeScreenshotsFolderAction;
+    private readonly IUseCase<OpenScreenshotsFolderRequest, OpenScreenshotsFolderResponse> _openScreenshotsFolderAction;
+    private readonly IUseCase<ChangeVideosFolderRequest, ChangeVideosFolderResponse> _changeVideosFolderAction;
+    private readonly IUseCase<OpenVideosFolderRequest, OpenVideosFolderResponse> _openVideosFolderAction;
+    private readonly IUseCase<OpenTempFolderRequest, OpenTempFolderResponse> _openTempFolderAction;
+    private readonly IUseCase<ClearTempFilesRequest, ClearTempFilesResponse> _clearTempFilesAction;
+    private readonly IUseCase<RestoreDefaultsRequest, RestoreDefaultsResponse> _restoreDefaultsAction;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
@@ -173,23 +190,23 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public SettingsPageViewModel(
-        ILeaveSettingsPageAppCommand goBackAction,
-        ISettingsRestartApplicationAppCommand restartAppAction,
-        ISettingsUpdateImageAutoCopyAppCommand updateImageAutoCopyAction,
-        ISettingsUpdateImageAutoSaveAppCommand updateImageAutoSaveAction,
-        ISettingsUpdateVideoCaptureAutoCopyAppCommand updateVideoCaptureAutoCopyAction,
-        ISettingsUpdateVideoCaptureAutoSaveAppCommand updateVideoCaptureAutoSaveAction,
-        ISettingsUpdateVideoCaptureDefaultLocalAudioAppCommand updateVideoCaptureDefaultLocalAudioAction,
-        ISettingsUpdateVideoMetadataAutoSaveAppCommand updateVideoMetadataAutoSaveAction,
-        ISettingsUpdateAppLanguageAppCommand updateAppLanguageAction,
-        ISettingsUpdateAppThemeAppCommand updateAppThemeAction,
-        IChangeScreenshotsFolderAppCommand changeScreenshotsFolderAction,
-        ISettingsOpenScreenshotsFolderAppCommand openScreenshotsFolderAction,
-        ISettingsChangeVideosFolderAppCommand changeVideosFolderAction,
-        ISettingsOpenVideosFolderAppCommand openVideosFolderAction,
-        ISettingsOpenTempFolderAppCommand openTempFolderAction,
-        ISettingsClearTempFilesAppCommand clearTempFilesAction,
-        ISettingsRestoreDefaultsAppCommand restoreDefaultsAction,
+        IUseCase<LeaveSettingsPageRequest, LeaveSettingsPageResponse> goBackAction,
+        IUseCase<RestartSettingsApplicationRequest, RestartSettingsApplicationResponse> restartAppAction,
+        IUseCase<UpdateImageAutoCopyRequest, UpdateImageAutoCopyResponse> updateImageAutoCopyAction,
+        IUseCase<UpdateImageAutoSaveRequest, UpdateImageAutoSaveResponse> updateImageAutoSaveAction,
+        IUseCase<UpdateVideoCaptureAutoCopyRequest, UpdateVideoCaptureAutoCopyResponse> updateVideoCaptureAutoCopyAction,
+        IUseCase<UpdateVideoCaptureAutoSaveRequest, UpdateVideoCaptureAutoSaveResponse> updateVideoCaptureAutoSaveAction,
+        IUseCase<UpdateVideoCaptureDefaultLocalAudioRequest, UpdateVideoCaptureDefaultLocalAudioResponse> updateVideoCaptureDefaultLocalAudioAction,
+        IUseCase<UpdateVideoMetadataAutoSaveRequest, UpdateVideoMetadataAutoSaveResponse> updateVideoMetadataAutoSaveAction,
+        IUseCase<UpdateAppLanguageRequest, UpdateAppLanguageResponse> updateAppLanguageAction,
+        IUseCase<UpdateAppThemeRequest, UpdateAppThemeResponse> updateAppThemeAction,
+        IUseCase<ChangeScreenshotsFolderRequest, ChangeScreenshotsFolderResponse> changeScreenshotsFolderAction,
+        IUseCase<OpenScreenshotsFolderRequest, OpenScreenshotsFolderResponse> openScreenshotsFolderAction,
+        IUseCase<ChangeVideosFolderRequest, ChangeVideosFolderResponse> changeVideosFolderAction,
+        IUseCase<OpenVideosFolderRequest, OpenVideosFolderResponse> openVideosFolderAction,
+        IUseCase<OpenTempFolderRequest, OpenTempFolderResponse> openTempFolderAction,
+        IUseCase<ClearTempFilesRequest, ClearTempFilesResponse> clearTempFilesAction,
+        IUseCase<RestoreDefaultsRequest, RestoreDefaultsResponse> restoreDefaultsAction,
         ILocalizationService localizationService,
         IThemeService themeService,
         ISettingsService settingsService,
@@ -347,7 +364,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             return;
         }
 
-        await _updateAppLanguageAction.ExecuteAsync(index, CancellationToken.None);
+        await _updateAppLanguageAction.ExecuteAsync(new UpdateAppLanguageRequest(index), CancellationToken.None);
         UpdateShowAppLanguageRestartMessage();
     }
 
@@ -366,7 +383,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             return;
         }
 
-        _updateAppThemeAction.Execute(index);
+        _updateAppThemeAction.ExecuteAsync(new UpdateAppThemeRequest(index)).GetAwaiter().GetResult();
         UpdateShowAppThemeRestartMessage();
     }
 
@@ -394,42 +411,42 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private async Task UpdateImageCaptureAutoSaveAsync(bool value)
     {
         ImageCaptureAutoSave = value;
-        await _updateImageAutoSaveAction.ExecuteAsync(value, CancellationToken.None);
+        await _updateImageAutoSaveAction.ExecuteAsync(new UpdateImageAutoSaveRequest(value), CancellationToken.None);
     }
 
     private async Task UpdateImageCaptureAutoCopyAsync(bool value)
     {
         ImageCaptureAutoCopy = value;
-        await _updateImageAutoCopyAction.ExecuteAsync(value, CancellationToken.None);
+        await _updateImageAutoCopyAction.ExecuteAsync(new UpdateImageAutoCopyRequest(value), CancellationToken.None);
     }
 
     private async Task UpdateVideoCaptureAutoSaveAsync(bool value)
     {
         VideoCaptureAutoSave = value;
-        await _updateVideoCaptureAutoSaveAction.ExecuteAsync(value, CancellationToken.None);
+        await _updateVideoCaptureAutoSaveAction.ExecuteAsync(new UpdateVideoCaptureAutoSaveRequest(value), CancellationToken.None);
     }
 
     private async Task UpdateVideoCaptureAutoCopyAsync(bool value)
     {
         VideoCaptureAutoCopy = value;
-        await _updateVideoCaptureAutoCopyAction.ExecuteAsync(value, CancellationToken.None);
+        await _updateVideoCaptureAutoCopyAction.ExecuteAsync(new UpdateVideoCaptureAutoCopyRequest(value), CancellationToken.None);
     }
 
     private async Task UpdateVideoMetadataAutoSaveAsync(bool value)
     {
         VideoMetadataAutoSave = value;
-        await _updateVideoMetadataAutoSaveAction.ExecuteAsync(value, CancellationToken.None);
+        await _updateVideoMetadataAutoSaveAction.ExecuteAsync(new UpdateVideoMetadataAutoSaveRequest(value), CancellationToken.None);
     }
 
     private async Task UpdateVideoCaptureDefaultLocalAudioAsync(bool value)
     {
         VideoCaptureDefaultLocalAudio = value;
-        await _updateVideoCaptureDefaultLocalAudioAction.ExecuteAsync(value, CancellationToken.None);
+        await _updateVideoCaptureDefaultLocalAudioAction.ExecuteAsync(new UpdateVideoCaptureDefaultLocalAudioRequest(value), CancellationToken.None);
     }
 
     private async Task ChangeScreenshotsFolderAsync()
     {
-        await _changeScreenshotsFolderAction.ExecuteAsync(CancellationToken.None);
+        await _changeScreenshotsFolderAction.ExecuteAsync(new ChangeScreenshotsFolderRequest(), CancellationToken.None);
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
         if (string.IsNullOrWhiteSpace(screenshotsFolder))
@@ -441,7 +458,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private async Task ChangeVideosFolderAsync()
     {
-        await _changeVideosFolderAction.ExecuteAsync(CancellationToken.None);
+        await _changeVideosFolderAction.ExecuteAsync(new ChangeVideosFolderRequest(), CancellationToken.None);
 
         var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
         if (string.IsNullOrWhiteSpace(videosFolder))
@@ -453,37 +470,37 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private void OpenScreenshotsFolder()
     {
-        _openScreenshotsFolderAction.Execute();
+        _openScreenshotsFolderAction.ExecuteAsync(new OpenScreenshotsFolderRequest()).GetAwaiter().GetResult();
     }
 
     private void OpenVideosFolder()
     {
-        _openVideosFolderAction.Execute();
+        _openVideosFolderAction.ExecuteAsync(new OpenVideosFolderRequest()).GetAwaiter().GetResult();
     }
 
     private void RestartApp()
     {
-        _restartAppAction.Execute();
+        _restartAppAction.ExecuteAsync(new RestartSettingsApplicationRequest()).GetAwaiter().GetResult();
     }
 
     private void GoBack()
     {
-        _goBackAction.Execute();
+        _goBackAction.ExecuteAsync(new LeaveSettingsPageRequest()).GetAwaiter().GetResult();
     }
 
     private void ClearTemporaryFiles()
     {
-        _clearTempFilesAction.Execute();
+        _clearTempFilesAction.ExecuteAsync(new ClearTempFilesRequest()).GetAwaiter().GetResult();
     }
 
     private void OpenTemporaryFilesFolder()
     {
-        _openTempFolderAction.Execute();
+        _openTempFolderAction.ExecuteAsync(new OpenTempFolderRequest()).GetAwaiter().GetResult();
     }
 
     private async Task RestoreDefaultSettingsAsync()
     {
-        await _restoreDefaultsAction.ExecuteAsync(CancellationToken.None);
+        await _restoreDefaultsAction.ExecuteAsync(new RestoreDefaultsRequest(), CancellationToken.None);
 
         ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
         ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);

@@ -1,4 +1,5 @@
-using CaptureTool.Application.Abstractions.About;
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.About.LeaveAboutPage;
 using CaptureTool.Infrastructure.Abstractions.Localization;
 using CaptureTool.Infrastructure.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -8,12 +9,12 @@ namespace CaptureTool.Presentation.ViewModels;
 public sealed partial class AboutPageViewModel : ViewModelBase
 {
     public AboutPageViewModel(
-        ILeaveAboutPageAppCommand goBackCommand,
+        IUseCase<LeaveAboutPageRequest, LeaveAboutPageResponse> goBackCommand,
         ILocalizationService localizationService)
     {
         _localizationService = localizationService;
 
-        GoBackCommand = goBackCommand.ToRelayCommand();
+        GoBackCommand = goBackCommand.ToRelayCommand(() => new LeaveAboutPageRequest());
         ShowThirdPartyCommand = new RelayCommand(() => ShowDialog("About_ThirdParty_DialogTitle", "About_ThirdParty_DialogContent"));
         ShowPrivacyPolicyCommand = new RelayCommand(() => ShowDialog("About_PrivacyPolicy_DialogTitle", "About_PrivacyPolicy_DialogContent"));
         ShowTermsOfUseCommand = new RelayCommand(() => ShowDialog("About_TermsOfUse_DialogTitle", "About_TermsOfUse_DialogContent"));

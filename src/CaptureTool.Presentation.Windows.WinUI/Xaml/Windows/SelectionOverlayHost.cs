@@ -1,11 +1,11 @@
-﻿using CaptureTool.Presentation.ViewModels;
+using CaptureTool.Presentation.ViewModels;
 using CaptureTool.Domain.Capture.Windows;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using System.Drawing;
 using Windows.Win32;
-using CaptureTool.Application.UseCases.Navigation;
+using CaptureTool.Application.Features.Navigation;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 

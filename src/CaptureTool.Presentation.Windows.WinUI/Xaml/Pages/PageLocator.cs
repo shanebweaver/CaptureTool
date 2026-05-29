@@ -1,4 +1,4 @@
-﻿using CaptureTool.Application.UseCases.Navigation;
+using CaptureTool.Application.Features.Navigation;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 

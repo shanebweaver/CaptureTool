@@ -5,7 +5,7 @@ using CaptureTool.Application.Abstractions.UseCases.About;
 using CaptureTool.Infrastructure.Abstractions.Localization;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using Moq;
-using CaptureTool.Application.Abstractions.Messaging.Commands;
+using CaptureTool.Application.Abstractions;
 
 namespace CaptureTool.Application.Tests.ViewModels;
 

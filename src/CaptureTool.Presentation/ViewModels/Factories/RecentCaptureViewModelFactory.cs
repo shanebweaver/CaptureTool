@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.RecentCaptures;
+using CaptureTool.Application.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Factories;
 
 namespace CaptureTool.Presentation.ViewModels.Factories;

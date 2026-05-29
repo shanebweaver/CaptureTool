@@ -1,4 +1,4 @@
-﻿namespace CaptureTool.Presentation.ViewModels;
+namespace CaptureTool.Presentation.ViewModels;
 
 /// <summary>
 /// Tracks the source of capture mode/type updates to prevent event loops and enable intelligent propagation.

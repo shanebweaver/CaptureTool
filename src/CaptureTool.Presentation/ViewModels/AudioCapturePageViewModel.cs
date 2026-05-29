@@ -1,4 +1,9 @@
-using CaptureTool.Application.Abstractions.AudioCapture;
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.AudioCapture.MuteAudioCapture;
+using CaptureTool.Application.Features.AudioCapture.PauseAudioCapture;
+using CaptureTool.Application.Features.AudioCapture.StartAudioCapture;
+using CaptureTool.Application.Features.AudioCapture.StopAudioCapture;
+using CaptureTool.Application.Features.AudioCapture.ToggleLocalAudioCapture;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -47,19 +52,19 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
 
     public AudioCapturePageViewModel(
         IAudioCaptureHandler audioCaptureHandler,
-        IStartAudioCaptureAppCommand startAction,
-        IStopAudioCaptureAppCommand stopAction,
-        IPauseAudioCaptureAppCommand pauseAction,
-        IMuteAudioCaptureAppCommand muteAction,
-        IToggleLocalAudioCaptureAppCommand toggleDesktopAudioAction)
+        IUseCase<StartAudioCaptureRequest, StartAudioCaptureResponse> startAction,
+        IUseCase<StopAudioCaptureRequest, StopAudioCaptureResponse> stopAction,
+        IUseCase<PauseAudioCaptureRequest, PauseAudioCaptureResponse> pauseAction,
+        IUseCase<MuteAudioCaptureRequest, MuteAudioCaptureResponse> muteAction,
+        IUseCase<ToggleLocalAudioCaptureRequest, ToggleLocalAudioCaptureResponse> toggleDesktopAudioAction)
     {
         _audioCaptureHandler = audioCaptureHandler;
 
-        StartCommand = startAction.ToRelayCommand();
-        StopCommand = stopAction.ToRelayCommand();
-        PauseCommand = pauseAction.ToRelayCommand();
-        MuteCommand = muteAction.ToRelayCommand();
-        ToggleDesktopAudioCommand = toggleDesktopAudioAction.ToRelayCommand();
+        StartCommand = startAction.ToRelayCommand(() => new StartAudioCaptureRequest());
+        StopCommand = stopAction.ToRelayCommand(() => new StopAudioCaptureRequest());
+        PauseCommand = pauseAction.ToRelayCommand(() => new PauseAudioCaptureRequest());
+        MuteCommand = muteAction.ToRelayCommand(() => new MuteAudioCaptureRequest());
+        ToggleDesktopAudioCommand = toggleDesktopAudioAction.ToRelayCommand(() => new ToggleLocalAudioCaptureRequest());
 
         // Subscribe to service events for state synchronization
         _audioCaptureHandler.CaptureStateChanged += OnCaptureStateChanged;

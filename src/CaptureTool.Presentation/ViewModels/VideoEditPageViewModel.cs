@@ -1,4 +1,6 @@
-using CaptureTool.Application.Abstractions.VideoEdit;
+using CaptureTool.Application.Abstractions;
+using CaptureTool.Application.Features.VideoEdit.CopyVideoFile;
+using CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Storage;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
@@ -30,13 +32,13 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         private set => Set(ref field, value);
     }
 
-    private readonly ISaveVideoFileAppCommand _saveAction;
-    private readonly ICopyVideoFileAppCommand _copyAction;
+    private readonly IUseCase<SaveVideoFileRequest, SaveVideoFileResponse> _saveAction;
+    private readonly IUseCase<CopyVideoFileRequest, CopyVideoFileResponse> _copyAction;
     private readonly ITelemetryService _telemetryService;
 
     public VideoEditPageViewModel(
-        ISaveVideoFileAppCommand saveAction,
-        ICopyVideoFileAppCommand copyAction,
+        IUseCase<SaveVideoFileRequest, SaveVideoFileResponse> saveAction,
+        IUseCase<CopyVideoFileRequest, CopyVideoFileResponse> copyAction,
         ITelemetryService telemetryService)
     {
         _saveAction = saveAction;
@@ -93,7 +95,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
             throw new InvalidOperationException("Cannot save video without a valid filepath.");
         }
 
-        await _saveAction.ExecuteAsync(VideoPath, CancellationToken.None);
+        await _saveAction.ExecuteAsync(new SaveVideoFileRequest(VideoPath), CancellationToken.None);
     }
 
     private async Task CopyAsync()
@@ -103,6 +105,6 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
             throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
         }
 
-        await _copyAction.ExecuteAsync(VideoPath, CancellationToken.None);
+        await _copyAction.ExecuteAsync(new CopyVideoFileRequest(VideoPath), CancellationToken.None);
     }
 }

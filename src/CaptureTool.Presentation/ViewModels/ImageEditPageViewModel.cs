@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Features.Store;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Domain.Edit.Abstractions;
 using CaptureTool.Domain.Edit.Abstractions.ChromaKey;

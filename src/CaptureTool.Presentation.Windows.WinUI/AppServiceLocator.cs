@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.ImageCapture;
+using CaptureTool.Application.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Logging;
 using CaptureTool.Infrastructure.Abstractions.Navigation;
 using CaptureTool.Infrastructure.Abstractions.Shutdown;
