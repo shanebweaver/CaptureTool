@@ -41,6 +41,20 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
 
         switch (fileType)
         {
+            case FilePickerType.AnyCapture:
+                filePicker.FileTypeFilter.Add(".png");
+                filePicker.FileTypeFilter.Add(".jpg");
+                filePicker.FileTypeFilter.Add(".jpeg");
+                filePicker.FileTypeFilter.Add(".bmp");
+                filePicker.FileTypeFilter.Add(".mp3");
+                filePicker.FileTypeFilter.Add(".wav");
+                filePicker.FileTypeFilter.Add(".flac");
+                filePicker.FileTypeFilter.Add(".mp4");
+                filePicker.FileTypeFilter.Add(".avi");
+                filePicker.FileTypeFilter.Add(".mov");
+                filePicker.FileTypeFilter.Add(".wmv");
+                break;
+
             case FilePickerType.Image:
                 filePicker.FileTypeFilter.Add(".png");
                 filePicker.FileTypeFilter.Add(".jpg");
@@ -59,6 +73,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
                 filePicker.FileTypeFilter.Add(".mp4");
                 filePicker.FileTypeFilter.Add(".avi");
                 filePicker.FileTypeFilter.Add(".mov");
+                filePicker.FileTypeFilter.Add(".wmv");
                 break;
 
             default:

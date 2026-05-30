@@ -39,6 +39,13 @@
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
+
+            <!--  Scan metadata  -->
+            <AppBarButton
+                Command="{x:Bind ViewModel.ScanMetadataCommand}"
+                Icon="Find"
+                IsEnabled="{x:Bind ViewModel.CanScanMetadata, Mode=OneWay}"
+                Label="Scan metadata" />
         </CommandBar>
 
         <!--  Content  -->
@@ -66,6 +73,24 @@
                         Text="Finalizing video..." />
                 </StackPanel>
             </Grid>
+
+            <!--  Metadata scan progress  -->
+            <StackPanel
+                Margin="16"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                MinWidth="260"
+                Spacing="8"
+                Visibility="{x:Bind ViewModel.HasMetadataScanStatus, Mode=OneWay}">
+                <ProgressBar
+                    Minimum="0"
+                    Maximum="100"
+                    Value="{x:Bind ViewModel.MetadataScanProgress, Mode=OneWay}" />
+                <TextBlock
+                    FontSize="12"
+                    Opacity="0.7"
+                    Text="{x:Bind ViewModel.MetadataScanStatus, Mode=OneWay}" />
+            </StackPanel>
         </Grid>
     </Grid>
 </local:VideoEditPageBase>

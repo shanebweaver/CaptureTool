@@ -1,8 +1,11 @@
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
+using CaptureTool.Application.Features.VideoEdit.ScanVideoMetadata;
 using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture.Abstractions.Metadata;
 using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -13,6 +16,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 {
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand CopyCommand { get; }
+    public IAsyncRelayCommand ScanMetadataCommand { get; }
 
     public string? VideoPath
     {
@@ -32,24 +36,65 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         private set => Set(ref field, value);
     }
 
+    public bool IsScanningMetadata
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool CanScanMetadata
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool HasMetadataScanStatus
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public double MetadataScanProgress
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public string? MetadataScanStatus
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     private readonly IUseCase<SaveVideoFileRequest, SaveVideoFileResponse> _saveAction;
     private readonly IUseCase<CopyVideoFileRequest, CopyVideoFileResponse> _copyAction;
+    private readonly IUseCase<ScanVideoMetadataRequest, ScanVideoMetadataResponse> _scanMetadataAction;
+    private readonly ITaskEnvironment _taskEnvironment;
     private readonly ITelemetryService _telemetryService;
+    private IMetadataScanJob? _metadataScanJob;
 
     public VideoEditPageViewModel(
         IUseCase<SaveVideoFileRequest, SaveVideoFileResponse> saveAction,
         IUseCase<CopyVideoFileRequest, CopyVideoFileResponse> copyAction,
+        IUseCase<ScanVideoMetadataRequest, ScanVideoMetadataResponse> scanMetadataAction,
+        ITaskEnvironment taskEnvironment,
         ITelemetryService telemetryService)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
+        _scanMetadataAction = scanMetadataAction;
+        _taskEnvironment = taskEnvironment;
         _telemetryService = telemetryService;
 
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         CopyCommand = new AsyncRelayCommand(CopyAsync);
+        ScanMetadataCommand = new AsyncRelayCommand(ScanMetadataAsync);
 
         IsVideoReady = false;
         IsFinalizingVideo = false;
+        IsScanningMetadata = false;
+        CanScanMetadata = false;
+        HasMetadataScanStatus = false;
     }
 
     public override void Load(IVideoFile video)
@@ -57,18 +102,24 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         ThrowIfNotReadyToLoad();
         StartLoading();
 
+        UnsubscribeFromMetadataScanJob();
+        HasMetadataScanStatus = false;
+        MetadataScanStatus = null;
+        MetadataScanProgress = 0;
         VideoPath = video.FilePath;
 
         if (video is PendingVideoFile pendingVideo)
         {
             IsVideoReady = false;
             IsFinalizingVideo = true;
+            CanScanMetadata = false;
             _ = WaitForVideoFinalizationAsync(pendingVideo);
         }
         else
         {
             IsVideoReady = true;
             IsFinalizingVideo = false;
+            CanScanMetadata = true;
         }
 
         base.Load(video);
@@ -81,10 +132,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
             await pendingVideo.WhenReadyAsync();
             IsVideoReady = true;
             IsFinalizingVideo = false;
+            CanScanMetadata = true;
         }
         catch (Exception)
         {
             IsFinalizingVideo = false;
+            CanScanMetadata = false;
         }
     }
 
@@ -106,5 +159,67 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         }
 
         await _copyAction.ExecuteAsync(new CopyVideoFileRequest(VideoPath), CancellationToken.None);
+    }
+
+    private async Task ScanMetadataAsync()
+    {
+        if (string.IsNullOrEmpty(VideoPath))
+        {
+            throw new InvalidOperationException("Cannot scan video metadata without a valid filepath.");
+        }
+
+        UnsubscribeFromMetadataScanJob();
+        MetadataScanProgress = 0;
+        MetadataScanStatus = "Queued metadata scan";
+        HasMetadataScanStatus = true;
+        IsScanningMetadata = true;
+        CanScanMetadata = false;
+
+        ScanVideoMetadataResponse response = await _scanMetadataAction.ExecuteAsync(new ScanVideoMetadataRequest(VideoPath), CancellationToken.None);
+        _metadataScanJob = response.ScanJob;
+        _metadataScanJob.StatusChanged += MetadataScanJob_StatusChanged;
+        _metadataScanJob.ProgressChanged += MetadataScanJob_ProgressChanged;
+
+        MetadataScanProgress = _metadataScanJob.Progress;
+        UpdateMetadataScanStatus(_metadataScanJob.Status);
+    }
+
+    private void MetadataScanJob_StatusChanged(object? sender, MetadataScanJobStatus status)
+    {
+        _taskEnvironment.TryExecute(() => UpdateMetadataScanStatus(status));
+    }
+
+    private void MetadataScanJob_ProgressChanged(object? sender, double progress)
+    {
+        _taskEnvironment.TryExecute(() => MetadataScanProgress = progress);
+    }
+
+    private void UpdateMetadataScanStatus(MetadataScanJobStatus status)
+    {
+        MetadataScanStatus = status switch
+        {
+            MetadataScanJobStatus.Queued => "Queued metadata scan",
+            MetadataScanJobStatus.Processing => "Scanning metadata",
+            MetadataScanJobStatus.Completed => $"Metadata saved: {_metadataScanJob?.MetadataFilePath}",
+            MetadataScanJobStatus.Failed => $"Metadata scan failed: {_metadataScanJob?.ErrorMessage}",
+            MetadataScanJobStatus.Cancelled => "Metadata scan cancelled",
+            _ => null
+        };
+
+        IsScanningMetadata = status is MetadataScanJobStatus.Queued or MetadataScanJobStatus.Processing;
+        CanScanMetadata = IsVideoReady && !IsScanningMetadata;
+        HasMetadataScanStatus = MetadataScanStatus is not null;
+    }
+
+    private void UnsubscribeFromMetadataScanJob()
+    {
+        if (_metadataScanJob is null)
+        {
+            return;
+        }
+
+        _metadataScanJob.StatusChanged -= MetadataScanJob_StatusChanged;
+        _metadataScanJob.ProgressChanged -= MetadataScanJob_ProgressChanged;
+        _metadataScanJob = null;
     }
 }

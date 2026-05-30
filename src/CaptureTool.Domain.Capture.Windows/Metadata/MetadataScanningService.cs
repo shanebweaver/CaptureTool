@@ -90,18 +90,9 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
         var jobId = Guid.NewGuid();
         var request = new ScanJobRequest(jobId, filePath);
 
-        // Save job request to disk first (async without blocking)
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await _queueManager.SaveJobRequestAsync(request);
-            }
-            catch (Exception ex)
-            {
-                _logService.LogException(ex, $"Failed to save job request for {filePath}: {ex.Message}");
-            }
-        });
+        // Persist the request before queueing so a fast job cannot complete
+        // while its queue file is still being written.
+        _queueManager.SaveJobRequest(request);
 
         // Create and queue the job immediately
         var job = new MetadataScanJob(jobId, filePath);

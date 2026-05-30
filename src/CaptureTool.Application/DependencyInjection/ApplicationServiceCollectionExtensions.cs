@@ -61,6 +61,7 @@ using CaptureTool.Application.Features.VideoCapture;
 using CaptureTool.Application.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
+using CaptureTool.Application.Features.VideoEdit.ScanVideoMetadata;
 using CaptureTool.Application.Features.Windowing.ShowMainWindow;
 using CaptureTool.Infrastructure.Abstractions.Activation;
 using Microsoft.Extensions.DependencyInjection;
@@ -178,6 +179,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IConditional<CopyVideoFileRequest>, CopyVideoFileUseCase>();
         services.AddTransient<IUseCase<SaveVideoFileRequest, SaveVideoFileResponse>, SaveVideoFileUseCase>();
         services.AddTransient<IConditional<SaveVideoFileRequest>, SaveVideoFileUseCase>();
+        services.AddTransient<IUseCase<ScanVideoMetadataRequest, ScanVideoMetadataResponse>, ScanVideoMetadataUseCase>();
+        services.AddTransient<IConditional<ScanVideoMetadataRequest>, ScanVideoMetadataUseCase>();
         services.AddTransient<IUseCase<OpenVideoEditPageRequest, OpenVideoEditPageResponse>, OpenVideoEditPageUseCase>();
 
         services.AddTransient<IUseCase<ShowMainWindowRequest, ShowMainWindowResponse>, ShowMainWindowUseCase>();

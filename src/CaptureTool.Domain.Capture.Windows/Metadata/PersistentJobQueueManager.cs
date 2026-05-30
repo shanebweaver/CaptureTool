@@ -40,21 +40,56 @@ internal sealed class PersistentJobQueueManager
     /// <summary>
     /// Saves a job request to the queue folder.
     /// </summary>
+    public void SaveJobRequest(ScanJobRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        string fileName = GetJobFileName(request.JobId);
+        string filePath = Path.Combine(_queueFolderPath, fileName);
+        string tempFilePath = Path.Combine(_queueFolderPath, $"{fileName}.tmp");
+
+        try
+        {
+            using (var stream = File.Create(tempFilePath))
+            {
+                JsonSerializer.Serialize(stream, request, MetadataJsonContext.Default.ScanJobRequest);
+            }
+
+            File.Move(tempFilePath, filePath, true);
+            _logService.LogInformation($"Saved job request {request.JobId} to queue: {filePath}");
+        }
+        catch (Exception ex)
+        {
+            TryDeleteTempFile(tempFilePath);
+            _logService.LogException(ex, $"Failed to save job request {request.JobId}: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Saves a job request to the queue folder.
+    /// </summary>
     public async Task SaveJobRequestAsync(ScanJobRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         string fileName = GetJobFileName(request.JobId);
         string filePath = Path.Combine(_queueFolderPath, fileName);
+        string tempFilePath = Path.Combine(_queueFolderPath, $"{fileName}.tmp");
 
         try
         {
-            using var stream = File.Create(filePath);
-            await JsonSerializer.SerializeAsync(stream, request, MetadataJsonContext.Default.ScanJobRequest, cancellationToken);
+            await using (var stream = File.Create(tempFilePath))
+            {
+                await JsonSerializer.SerializeAsync(stream, request, MetadataJsonContext.Default.ScanJobRequest, cancellationToken);
+            }
+
+            File.Move(tempFilePath, filePath, true);
             _logService.LogInformation($"Saved job request {request.JobId} to queue: {filePath}");
         }
         catch (Exception ex)
         {
+            TryDeleteTempFile(tempFilePath);
             _logService.LogException(ex, $"Failed to save job request {request.JobId}: {ex.Message}");
             throw;
         }
@@ -109,17 +144,46 @@ internal sealed class PersistentJobQueueManager
         string fileName = GetJobFileName(jobId);
         string filePath = Path.Combine(_queueFolderPath, fileName);
 
-        try
+        for (int attempt = 1; attempt <= 3; attempt++)
         {
-            if (File.Exists(filePath))
+            try
             {
-                File.Delete(filePath);
-                _logService.LogInformation($"Deleted job request file for {jobId}");
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                    _logService.LogInformation($"Deleted job request file for {jobId}");
+                }
+                return;
+            }
+            catch (IOException ex) when (attempt < 3)
+            {
+                _logService.LogWarning($"Retrying delete for job request file {jobId}: {ex.Message}");
+                Thread.Sleep(TimeSpan.FromMilliseconds(100 * attempt));
+            }
+            catch (UnauthorizedAccessException ex) when (attempt < 3)
+            {
+                _logService.LogWarning($"Retrying delete for job request file {jobId}: {ex.Message}");
+                Thread.Sleep(TimeSpan.FromMilliseconds(100 * attempt));
+            }
+            catch (Exception ex)
+            {
+                _logService.LogWarning($"Failed to delete job request file for {jobId}: {ex.Message}");
+                return;
             }
         }
-        catch (Exception ex)
+    }
+
+    private static void TryDeleteTempFile(string tempFilePath)
+    {
+        try
         {
-            _logService.LogWarning($"Failed to delete job request file for {jobId}: {ex.Message}");
+            if (File.Exists(tempFilePath))
+            {
+                File.Delete(tempFilePath);
+            }
+        }
+        catch
+        {
         }
     }
 
