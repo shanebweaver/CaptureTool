@@ -6,8 +6,10 @@
     xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:converters="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:imageedit="using:CaptureTool.Presentation.Features.ImageEdit"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=imageedit:ImageEditPageViewModel}"
     mc:Ignorable="d">
 
     <Page.Resources>

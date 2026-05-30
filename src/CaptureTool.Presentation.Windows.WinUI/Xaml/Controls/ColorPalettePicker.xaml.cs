@@ -8,6 +8,8 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
 public sealed partial class ColorPalettePicker : UserControlBase
 {
+    private const double ColorItemSize = 48;
+
     public static readonly DependencyProperty ColorOptionsProperty = DependencyProperty.Register(
         nameof(ColorOptions),
         typeof(IEnumerable<Color>),
@@ -104,7 +106,14 @@ public sealed partial class ColorPalettePicker : UserControlBase
         InitializeComponent();
         ColorGridView.ItemsSource = _colorItems;
         RefreshColorItems();
+        UpdateColorGridSize();
+        Loading += ColorPalettePicker_Loading;
         Loaded += ColorPalettePicker_Loaded;
+    }
+
+    private void ColorPalettePicker_Loading(FrameworkElement sender, object args)
+    {
+        UpdateColorGridSize();
     }
 
     private static void OnColorOptionsPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -112,6 +121,7 @@ public sealed partial class ColorPalettePicker : UserControlBase
         if (d is ColorPalettePicker colorPalettePicker)
         {
             colorPalettePicker.RefreshColorItems();
+            colorPalettePicker.UpdateColorGridSize();
             colorPalettePicker.UpdateSelectedItem();
         }
     }
@@ -126,7 +136,14 @@ public sealed partial class ColorPalettePicker : UserControlBase
 
     private static void OnLayoutPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is ColorPalettePicker colorPalettePicker && colorPalettePicker.IsLoaded)
+        if (d is not ColorPalettePicker colorPalettePicker)
+        {
+            return;
+        }
+
+        colorPalettePicker.UpdateColorGridSize();
+
+        if (colorPalettePicker.IsLoaded)
         {
             colorPalettePicker.UpdateItemsPanelLayout();
         }
@@ -135,6 +152,7 @@ public sealed partial class ColorPalettePicker : UserControlBase
     private void ColorPalettePicker_Loaded(object sender, RoutedEventArgs e)
     {
         UpdateItemsPanelLayout();
+        UpdateColorGridSize();
         UpdateSelectedItem();
     }
 
@@ -155,6 +173,32 @@ public sealed partial class ColorPalettePicker : UserControlBase
             itemsWrapGrid.MaximumRowsOrColumns = MaximumRowsOrColumns;
             itemsWrapGrid.Orientation = PaletteOrientation;
         }
+    }
+
+    private void UpdateColorGridSize()
+    {
+        int colorCount = Math.Max(1, _colorItems.Count);
+        int maximumRowsOrColumns = Math.Max(1, MaximumRowsOrColumns);
+        int rows;
+        int columns;
+
+        if (PaletteOrientation == Orientation.Horizontal)
+        {
+            rows = Math.Min(colorCount, maximumRowsOrColumns);
+            columns = (int)Math.Ceiling((double)colorCount / rows);
+        }
+        else
+        {
+            columns = Math.Min(colorCount, maximumRowsOrColumns);
+            rows = (int)Math.Ceiling((double)colorCount / columns);
+        }
+
+        ColorGridView.Width = columns * ColorItemSize;
+        ColorGridView.Height = rows * ColorItemSize;
+        ColorGridView.MinWidth = ColorGridView.Width;
+        ColorGridView.MinHeight = ColorGridView.Height;
+        ColorGridView.MaxWidth = ColorGridView.Width;
+        ColorGridView.MaxHeight = ColorGridView.Height;
     }
 
     private void UpdateSelectedItem()
