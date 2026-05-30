@@ -1,9 +1,8 @@
 using CaptureTool.Domain.Edit.Abstractions.Drawable;
-using System.Drawing;
 
 namespace CaptureTool.Domain.Edit.Abstractions.Operations;
 
-public sealed class ModifyShapeOperation : CanvasOperation
+public sealed partial class ModifyShapeOperation : CanvasOperation
 {
     private readonly IDrawable _shape;
     private readonly ShapeState _oldState;
@@ -37,65 +36,32 @@ public sealed class ModifyShapeOperation : CanvasOperation
             case RectangleDrawable rect:
                 rect.Offset = state.Offset;
                 rect.Size = state.Size;
+                rect.StrokeColor = state.StrokeColor;
+                rect.FillColor = state.FillColor;
+                rect.StrokeWidth = state.StrokeWidth;
                 break;
 
             case EllipseDrawable ellipse:
                 ellipse.Offset = state.Offset;
                 ellipse.Size = state.Size;
+                ellipse.StrokeColor = state.StrokeColor;
+                ellipse.FillColor = state.FillColor;
+                ellipse.StrokeWidth = state.StrokeWidth;
                 break;
 
             case LineDrawable line:
                 line.Offset = state.Offset;
                 line.EndPoint = state.EndPoint;
+                line.StrokeColor = state.StrokeColor;
+                line.StrokeWidth = state.StrokeWidth;
                 break;
 
             case ArrowDrawable arrow:
                 arrow.Offset = state.Offset;
                 arrow.EndPoint = state.EndPoint;
+                arrow.StrokeColor = state.StrokeColor;
+                arrow.StrokeWidth = state.StrokeWidth;
                 break;
-        }
-    }
-
-    public readonly struct ShapeState
-    {
-        public System.Numerics.Vector2 Offset { get; init; }
-        public Size Size { get; init; }
-        public System.Numerics.Vector2 EndPoint { get; init; }
-
-        public ShapeState(IDrawable shape)
-        {
-            switch (shape)
-            {
-                case RectangleDrawable rect:
-                    Offset = rect.Offset;
-                    Size = rect.Size;
-                    EndPoint = default;
-                    break;
-
-                case EllipseDrawable ellipse:
-                    Offset = ellipse.Offset;
-                    Size = ellipse.Size;
-                    EndPoint = default;
-                    break;
-
-                case LineDrawable line:
-                    Offset = line.Offset;
-                    Size = default;
-                    EndPoint = line.EndPoint;
-                    break;
-
-                case ArrowDrawable arrow:
-                    Offset = arrow.Offset;
-                    Size = default;
-                    EndPoint = arrow.EndPoint;
-                    break;
-
-                default:
-                    Offset = default;
-                    Size = default;
-                    EndPoint = default;
-                    break;
-            }
         }
     }
 }

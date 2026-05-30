@@ -1058,7 +1058,10 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         return state1.Offset == state2.Offset &&
                state1.Size == state2.Size &&
-               state1.EndPoint == state2.EndPoint;
+               state1.EndPoint == state2.EndPoint &&
+               state1.StrokeColor == state2.StrokeColor &&
+               state1.FillColor == state2.FillColor &&
+               state1.StrokeWidth == state2.StrokeWidth;
     }
 
     private void DeselectShape()
@@ -1649,25 +1652,24 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        switch (_selectedShape)
+        UpdateSelectedShapeStyle(() =>
         {
-            case RectangleDrawable rect:
-                rect.StrokeColor = color;
-                break;
-            case EllipseDrawable ellipse:
-                ellipse.StrokeColor = color;
-                break;
-            case LineDrawable line:
-                line.StrokeColor = color;
-                break;
-            case ArrowDrawable arrow:
-                arrow.StrokeColor = color;
-                break;
-        }
-
-        // Update preview to reflect the new color
-        UpdatePreviewShapeFromDrawable(_selectedShape);
-        RenderCanvas.Invalidate();
+            switch (_selectedShape)
+            {
+                case RectangleDrawable rect:
+                    rect.StrokeColor = color;
+                    break;
+                case EllipseDrawable ellipse:
+                    ellipse.StrokeColor = color;
+                    break;
+                case LineDrawable line:
+                    line.StrokeColor = color;
+                    break;
+                case ArrowDrawable arrow:
+                    arrow.StrokeColor = color;
+                    break;
+            }
+        });
     }
 
     private void UpdateSelectedShapeFillColor(Color color)
@@ -1677,20 +1679,19 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        switch (_selectedShape)
+        UpdateSelectedShapeStyle(() =>
         {
-            case RectangleDrawable rect:
-                rect.FillColor = color;
-                break;
-            case EllipseDrawable ellipse:
-                ellipse.FillColor = color;
-                break;
-                // Lines and arrows don't have fill color
-        }
-
-        // Update preview to reflect the new color
-        UpdatePreviewShapeFromDrawable(_selectedShape);
-        RenderCanvas.Invalidate();
+            switch (_selectedShape)
+            {
+                case RectangleDrawable rect:
+                    rect.FillColor = color;
+                    break;
+                case EllipseDrawable ellipse:
+                    ellipse.FillColor = color;
+                    break;
+                    // Lines and arrows don't have fill color
+            }
+        });
     }
 
     private void UpdateSelectedShapeStrokeWidth(int width)
@@ -1700,23 +1701,42 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        switch (_selectedShape)
+        UpdateSelectedShapeStyle(() =>
         {
-            case RectangleDrawable rect:
-                rect.StrokeWidth = width;
-                break;
-            case EllipseDrawable ellipse:
-                ellipse.StrokeWidth = width;
-                break;
-            case LineDrawable line:
-                line.StrokeWidth = width;
-                break;
-            case ArrowDrawable arrow:
-                arrow.StrokeWidth = width;
-                break;
+            switch (_selectedShape)
+            {
+                case RectangleDrawable rect:
+                    rect.StrokeWidth = width;
+                    break;
+                case EllipseDrawable ellipse:
+                    ellipse.StrokeWidth = width;
+                    break;
+                case LineDrawable line:
+                    line.StrokeWidth = width;
+                    break;
+                case ArrowDrawable arrow:
+                    arrow.StrokeWidth = width;
+                    break;
+            }
+        });
+    }
+
+    private void UpdateSelectedShapeStyle(Action updateStyle)
+    {
+        if (_selectedShape == null)
+        {
+            return;
         }
 
-        // Update preview to reflect the new width
+        var oldState = new ModifyShapeOperation.ShapeState(_selectedShape);
+        updateStyle();
+        var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+
+        if (!StatesAreEqual(oldState, newState))
+        {
+            ShapeModified?.Invoke(this, (_selectedShapeIndex, oldState, newState));
+        }
+
         UpdatePreviewShapeFromDrawable(_selectedShape);
         RenderCanvas.Invalidate();
     }
