@@ -337,19 +337,19 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
     <value>Formtyp</value>
     <comment>The header for the shape type selector in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_RectangleItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_RectangleItem.Text" xml:space="preserve">
     <value>Rechteck</value>
     <comment>The rectangle shape option in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_EllipseItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_EllipseItem.Text" xml:space="preserve">
     <value>Ellipse</value>
     <comment>The ellipse shape option in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_LineItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_LineItem.Text" xml:space="preserve">
     <value>Linie</value>
     <comment>The line shape option in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_ArrowItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_ArrowItem.Text" xml:space="preserve">
     <value>Pfeil</value>
     <comment>The arrow shape option in the shape toolbar.</comment>
   </data>

@@ -445,19 +445,19 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Shape Type</value>
     <comment>The header for the shape type selector in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_RectangleItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_RectangleItem.Text" xml:space="preserve">
     <value>Rectangle</value>
     <comment>The rectangle shape option in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_EllipseItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_EllipseItem.Text" xml:space="preserve">
     <value>Ellipse</value>
     <comment>The ellipse shape option in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_LineItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_LineItem.Text" xml:space="preserve">
     <value>Line</value>
     <comment>The line shape option in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_ArrowItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_ArrowItem.Text" xml:space="preserve">
     <value>Arrow</value>
     <comment>The arrow shape option in the shape toolbar.</comment>
   </data>

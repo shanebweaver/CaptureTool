@@ -15,21 +15,75 @@
         <Style x:Key="ColorPaletteFlyoutPresenterStyle" TargetType="FlyoutPresenter">
             <Setter Property="Background" Value="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" />
         </Style>
+        <Style x:Key="ShapeTypeComboBoxIconStyle" TargetType="Shape">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="Stroke" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+            <Setter Property="StrokeThickness" Value="1.6" />
+        </Style>
+        <Style x:Key="ShapeTypeComboBoxLineIconStyle" TargetType="Line">
+            <Setter Property="Stroke" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+            <Setter Property="StrokeThickness" Value="1.8" />
+            <Setter Property="StrokeStartLineCap" Value="Round" />
+            <Setter Property="StrokeEndLineCap" Value="Round" />
+        </Style>
     </UserControl.Resources>
 
     <Grid>
-        <StackPanel Orientation="Horizontal" Spacing="12">
+        <StackPanel Orientation="Horizontal" Spacing="4">
             <!--  Shape Type  -->
             <ComboBox
                 x:Name="ShapeTypeComboBox"
                 x:Uid="ShapeToolbar_ShapeTypeComboBox"
-                Width="120"
+                MinWidth="140"
+                MinHeight="34"
+                Background="Transparent"
+                BorderBrush="Transparent"
                 SelectedIndex="{x:Bind SelectedShapeTypeIndex, Mode=OneWay}"
                 SelectionChanged="ShapeTypeComboBox_SelectionChanged">
-                <ComboBoxItem x:Uid="ShapeToolbar_RectangleItem" Tag="0" />
-                <ComboBoxItem x:Uid="ShapeToolbar_EllipseItem" Tag="1" />
-                <ComboBoxItem x:Uid="ShapeToolbar_LineItem" Tag="2" />
-                <ComboBoxItem x:Uid="ShapeToolbar_ArrowItem" Tag="3" />
+                <ComboBoxItem Tag="0">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Rectangle Style="{StaticResource ShapeTypeComboBoxIconStyle}" />
+                        <TextBlock x:Uid="ShapeToolbar_RectangleItem" Text="Rectangle" />
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem Tag="1">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Style="{StaticResource ShapeTypeComboBoxIconStyle}" />
+                        <TextBlock x:Uid="ShapeToolbar_EllipseItem" Text="Ellipse" />
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem Tag="2">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Line
+                            Style="{StaticResource ShapeTypeComboBoxLineIconStyle}"
+                            X1="1"
+                            X2="15"
+                            Y1="15"
+                            Y2="1" />
+                        <TextBlock x:Uid="ShapeToolbar_LineItem" Text="Line" />
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem Tag="3">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Grid Width="16" Height="16">
+                            <Line
+                                Style="{StaticResource ShapeTypeComboBoxLineIconStyle}"
+                                X1="1"
+                                X2="14"
+                                Y1="14"
+                                Y2="1" />
+                            <Polyline
+                                Points="8,1 14,1 14,7"
+                                Stroke="{ThemeResource TextFillColorPrimaryBrush}"
+                                StrokeEndLineCap="Round"
+                                StrokeLineJoin="Round"
+                                StrokeStartLineCap="Round"
+                                StrokeThickness="1.8" />
+                        </Grid>
+                        <TextBlock x:Uid="ShapeToolbar_ArrowItem" Text="Arrow" />
+                    </StackPanel>
+                </ComboBoxItem>
             </ComboBox>
 
             <!--  Stroke Color  -->
@@ -37,7 +91,10 @@
                 x:Name="StrokeColorButton"
                 x:Uid="ShapeToolbar_StrokeColorButton"
                 MinWidth="68"
-                Padding="8,4">
+                MinHeight="34"
+                Padding="8,4"
+                Background="Transparent"
+                BorderBrush="Transparent">
                 <Grid VerticalAlignment="Center" ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -89,7 +146,10 @@
                 x:Name="FillColorButton"
                 x:Uid="ShapeToolbar_FillColorButton"
                 MinWidth="68"
-                Padding="8,4">
+                MinHeight="34"
+                Padding="8,4"
+                Background="Transparent"
+                BorderBrush="Transparent">
                 <Grid VerticalAlignment="Center" ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
