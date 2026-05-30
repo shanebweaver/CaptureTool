@@ -80,37 +80,66 @@ public static partial class Win2DImageCanvasRenderer
 
     private static void DrawRectangle(RectangleDrawable drawable, CanvasDrawingSession drawingSession)
     {
-        Rect rectangleRect = new(drawable.Offset.X, drawable.Offset.Y, drawable.Size.Width, drawable.Size.Height);
+        float strokeWidth = Math.Max(0, drawable.StrokeWidth);
+        float halfStrokeWidth = strokeWidth / 2f;
+        Rect strokeRect = InsetRect(
+            new Rect(drawable.Offset.X, drawable.Offset.Y, drawable.Size.Width, drawable.Size.Height),
+            halfStrokeWidth);
 
         // Draw fill if FillColor is not transparent
         if (drawable.FillColor.A > 0)
         {
+            Rect fillRect = InsetRect(
+                new Rect(drawable.Offset.X, drawable.Offset.Y, drawable.Size.Width, drawable.Size.Height),
+                strokeWidth);
             Color fillColor = Color.FromArgb(drawable.FillColor.A, drawable.FillColor.R, drawable.FillColor.G, drawable.FillColor.B);
-            drawingSession.FillRectangle(rectangleRect, fillColor);
+            if (fillRect.Width > 0 && fillRect.Height > 0)
+            {
+                drawingSession.FillRectangle(fillRect, fillColor);
+            }
         }
 
         // Draw stroke
         Color strokeColor = Color.FromArgb(drawable.StrokeColor.A, drawable.StrokeColor.R, drawable.StrokeColor.G, drawable.StrokeColor.B);
-        drawingSession.DrawRectangle(rectangleRect, strokeColor, drawable.StrokeWidth);
+        if (strokeRect.Width > 0 && strokeRect.Height > 0 && strokeWidth > 0)
+        {
+            drawingSession.DrawRectangle(strokeRect, strokeColor, strokeWidth);
+        }
     }
 
     private static void DrawEllipse(EllipseDrawable drawable, CanvasDrawingSession drawingSession)
     {
+        float strokeWidth = Math.Max(0, drawable.StrokeWidth);
         float centerX = drawable.Offset.X + drawable.Size.Width / 2f;
         float centerY = drawable.Offset.Y + drawable.Size.Height / 2f;
-        float radiusX = drawable.Size.Width / 2f;
-        float radiusY = drawable.Size.Height / 2f;
+        float strokeRadiusX = Math.Max(0, (drawable.Size.Width - strokeWidth) / 2f);
+        float strokeRadiusY = Math.Max(0, (drawable.Size.Height - strokeWidth) / 2f);
 
         // Draw fill if FillColor is not transparent
         if (drawable.FillColor.A > 0)
         {
+            float fillRadiusX = Math.Max(0, (drawable.Size.Width - strokeWidth * 2f) / 2f);
+            float fillRadiusY = Math.Max(0, (drawable.Size.Height - strokeWidth * 2f) / 2f);
             Color fillColor = Color.FromArgb(drawable.FillColor.A, drawable.FillColor.R, drawable.FillColor.G, drawable.FillColor.B);
-            drawingSession.FillEllipse(centerX, centerY, radiusX, radiusY, fillColor);
+            if (fillRadiusX > 0 && fillRadiusY > 0)
+            {
+                drawingSession.FillEllipse(centerX, centerY, fillRadiusX, fillRadiusY, fillColor);
+            }
         }
 
         // Draw stroke
         Color strokeColor = Color.FromArgb(drawable.StrokeColor.A, drawable.StrokeColor.R, drawable.StrokeColor.G, drawable.StrokeColor.B);
-        drawingSession.DrawEllipse(centerX, centerY, radiusX, radiusY, strokeColor, drawable.StrokeWidth);
+        if (strokeRadiusX > 0 && strokeRadiusY > 0 && strokeWidth > 0)
+        {
+            drawingSession.DrawEllipse(centerX, centerY, strokeRadiusX, strokeRadiusY, strokeColor, strokeWidth);
+        }
+    }
+
+    private static Rect InsetRect(Rect rect, float inset)
+    {
+        double width = Math.Max(0, rect.Width - inset * 2);
+        double height = Math.Max(0, rect.Height - inset * 2);
+        return new Rect(rect.X + inset, rect.Y + inset, width, height);
     }
 
     private static void DrawLine(LineDrawable drawable, CanvasDrawingSession drawingSession)

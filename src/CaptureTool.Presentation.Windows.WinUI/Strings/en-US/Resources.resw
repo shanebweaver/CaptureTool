@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -445,19 +445,19 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Shape Type</value>
     <comment>The header for the shape type selector in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_RectangleItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_RectangleItem.Text" xml:space="preserve">
     <value>Rectangle</value>
     <comment>The rectangle shape option in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_EllipseItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_EllipseItem.Text" xml:space="preserve">
     <value>Ellipse</value>
     <comment>The ellipse shape option in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_LineItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_LineItem.Text" xml:space="preserve">
     <value>Line</value>
     <comment>The line shape option in the shape toolbar.</comment>
   </data>
-  <data name="ShapeToolbar_ArrowItem.Content" xml:space="preserve">
+  <data name="ShapeToolbar_ArrowItem.Text" xml:space="preserve">
     <value>Arrow</value>
     <comment>The arrow shape option in the shape toolbar.</comment>
   </data>
@@ -909,5 +909,60 @@ SOFTWARE.
   <data name="ImageEdit_ZoomLabel.Text" xml:space="preserve">
     <value>Zoom:</value>
     <comment>The label for the zoom slider on the image edit page.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose outline color, thickness, and opacity</value>
+    <comment />
+    <comment>The tooltip for the outline color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeColorButtonLabel.Text" xml:space="preserve">
+    <value>Outline</value>
+    <comment />
+    <comment>The visible label inside the outline color button in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_ShapeTypeComboBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Shape type</value>
+    <comment />
+    <comment>The accessibility name for the shape type selector in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColorButtonLabel.Text" xml:space="preserve">
+    <value>Fill</value>
+    <comment />
+    <comment>The visible label inside the fill color button in the shape toolbar.</comment>
+  </data>
+  <data name="ColorPalettePicker_ThicknessSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Thickness</value>
+    <comment />
+    <comment>The accessibility name for the thickness slider in the color palette picker.</comment>
+  </data>
+  <data name="ColorPalettePicker_ThicknessLabel.Text" xml:space="preserve">
+    <value>Thickness</value>
+    <comment />
+    <comment>The label for the thickness slider in the color palette picker.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColorButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Fill color</value>
+    <comment />
+    <comment>The accessibility name for the fill color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="ColorPalettePicker_OpacityLabel.Text" xml:space="preserve">
+    <value>Opacity</value>
+    <comment />
+    <comment>The label for the opacity slider in the color palette picker.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeColorButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Outline color</value>
+    <comment />
+    <comment>The accessibility name for the outline color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="ColorPalettePicker_OpacitySlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Opacity</value>
+    <comment />
+    <comment>The accessibility name for the opacity slider in the color palette picker.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose fill color and opacity</value>
+    <comment />
+    <comment>The tooltip for the fill color picker button in the shape toolbar.</comment>
   </data>
 </root>

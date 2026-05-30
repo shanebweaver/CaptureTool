@@ -6,11 +6,10 @@
     xmlns:capture="using:CaptureTool.Domain.Capture.Abstractions"
     xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Application.Abstractions.ViewModels"
-    d:DataContext="{d:DesignInstance Type=viewmodels:ISelectionOverlayWindowViewModel}"
+    xmlns:selectionoverlay="using:CaptureTool.Presentation.Features.SelectionOverlay"
+    d:DataContext="{d:DesignInstance Type=selectionoverlay:SelectionOverlayWindowViewModel}"
     mc:Ignorable="d">
 
     <local:SelectionOverlayWindowViewBase.Resources>

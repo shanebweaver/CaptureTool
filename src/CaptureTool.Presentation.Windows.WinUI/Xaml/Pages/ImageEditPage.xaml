@@ -6,11 +6,10 @@
     xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:converters="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
+    xmlns:imageedit="using:CaptureTool.Presentation.Features.ImageEdit"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Application.Abstractions.ViewModels"
-    d:DataContext="{d:DesignInstance Type=viewmodels:IImageEditPageViewModel}"
+    d:DataContext="{d:DesignInstance Type=imageedit:ImageEditPageViewModel}"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -139,48 +138,52 @@
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
         </CommandBar>
 
-        <!--  Chroma key options  -->
-        <Grid
-            Margin="0,8"
-            HorizontalAlignment="Stretch"
-            Row="1"
-            Visibility="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}">
-            <controls:ChromaKeyToolbar
-                HorizontalAlignment="Stretch"
-                ColorOptions="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
-                Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=OneWay}"
-                DesaturationChanged="ChromaKeyToolbar_DesaturationChanged"
-                SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=OneWay}"
-                SelectedColorOptionIndexChanged="ChromaKeyToolbar_SelectedColorOptionIndexChanged"
-                Tolerance="{x:Bind ViewModel.ChromaKeyTolerance, Mode=OneWay}"
-                ToleranceChanged="ChromaKeyToolbar_ToleranceChanged" />
-        </Grid>
+        <Grid Padding="12,0" Row="1">
+            <!--  Chroma key options  -->
+            <Grid
+                Margin="0,0,0,6"
+                HorizontalAlignment="Center"
+                Visibility="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}">
+                <controls:ChromaKeyToolbar
+                    HorizontalAlignment="Stretch"
+                    ColorOptions="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
+                    Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=OneWay}"
+                    DesaturationChanged="ChromaKeyToolbar_DesaturationChanged"
+                    SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=OneWay}"
+                    SelectedColorOptionIndexChanged="ChromaKeyToolbar_SelectedColorOptionIndexChanged"
+                    Tolerance="{x:Bind ViewModel.ChromaKeyTolerance, Mode=OneWay}"
+                    ToleranceChanged="ChromaKeyToolbar_ToleranceChanged" />
+            </Grid>
 
-        <!--  Shapes options  -->
-        <Grid
-            Margin="0,8"
-            Padding="12,8"
-            HorizontalAlignment="Center"
-            Row="1"
-            Visibility="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}">
-            <controls:ShapeToolbar
-                FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
-                FillColorChanged="ShapeToolbar_FillColorChanged"
-                SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay, Converter={StaticResource ShapeTypeToIntConverter}}"
-                SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
-                StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
-                StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
-                StrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
-                StrokeWidthChanged="ShapeToolbar_StrokeWidthChanged" />
+            <!--  Shapes options  -->
+            <Grid
+                Margin="0,0,0,6"
+                HorizontalAlignment="Center"
+                Visibility="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}">
+                <controls:ShapeToolbar
+                    FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
+                    FillColorChanged="ShapeToolbar_FillColorChanged"
+                    FillColorOptions="{x:Bind ViewModel.ShapeFillColorOptions, Mode=OneWay}"
+                    FillOpacity="{x:Bind ViewModel.ShapeFillOpacity, Mode=OneWay}"
+                    FillOpacityChanged="ShapeToolbar_FillOpacityChanged"
+                    SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay, Converter={StaticResource ShapeTypeToIntConverter}}"
+                    SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
+                    StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
+                    StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
+                    StrokeColorOptions="{x:Bind ViewModel.ShapeStrokeColorOptions, Mode=OneWay}"
+                    StrokeOpacity="{x:Bind ViewModel.ShapeStrokeOpacity, Mode=OneWay}"
+                    StrokeOpacityChanged="ShapeToolbar_StrokeOpacityChanged"
+                    StrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
+                    StrokeWidthChanged="ShapeToolbar_StrokeWidthChanged" />
+            </Grid>
         </Grid>
 
         <!--  Canvas  -->
         <Grid
             x:Name="CanvasContainer"
-            Margin="0,-1,0,0"
             Background="{ThemeResource ImageEditCanvasBackgroundBrush}"
             BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
-            BorderThickness="0,1,0,0"
+            BorderThickness="0,1"
             Row="2">
             <controls:ImageCanvas
                 x:Name="ImageCanvas"

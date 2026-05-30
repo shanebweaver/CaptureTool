@@ -12,65 +12,187 @@
 
     <UserControl.Resources>
         <converters:ColorTypeConverter x:Key="ColorTypeConverter" />
+        <Style x:Key="ColorPaletteFlyoutPresenterStyle" TargetType="FlyoutPresenter">
+            <Setter Property="Background" Value="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" />
+        </Style>
+        <Style x:Key="ShapeTypeComboBoxIconStyle" TargetType="Shape">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="Stroke" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+            <Setter Property="StrokeThickness" Value="1.6" />
+        </Style>
+        <Style x:Key="ShapeTypeComboBoxLineIconStyle" TargetType="Line">
+            <Setter Property="Stroke" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+            <Setter Property="StrokeThickness" Value="1.8" />
+            <Setter Property="StrokeStartLineCap" Value="Round" />
+            <Setter Property="StrokeEndLineCap" Value="Round" />
+        </Style>
     </UserControl.Resources>
 
     <Grid>
-        <StackPanel Orientation="Horizontal" Spacing="12">
+        <StackPanel Orientation="Horizontal" Spacing="4">
             <!--  Shape Type  -->
             <ComboBox
                 x:Name="ShapeTypeComboBox"
-                x:Uid="ShapeToolbar_ShapeType"
-                Width="120"
+                x:Uid="ShapeToolbar_ShapeTypeComboBox"
+                MinWidth="140"
+                MinHeight="34"
+                Background="Transparent"
+                BorderBrush="Transparent"
                 SelectedIndex="{x:Bind SelectedShapeTypeIndex, Mode=OneWay}"
                 SelectionChanged="ShapeTypeComboBox_SelectionChanged">
-                <ComboBoxItem x:Uid="ShapeToolbar_RectangleItem" Tag="0" />
-                <ComboBoxItem x:Uid="ShapeToolbar_EllipseItem" Tag="1" />
-                <ComboBoxItem x:Uid="ShapeToolbar_LineItem" Tag="2" />
-                <ComboBoxItem x:Uid="ShapeToolbar_ArrowItem" Tag="3" />
+                <ComboBoxItem Tag="0">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Rectangle Style="{StaticResource ShapeTypeComboBoxIconStyle}" />
+                        <TextBlock x:Uid="ShapeToolbar_RectangleItem" Text="Rectangle" />
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem Tag="1">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Style="{StaticResource ShapeTypeComboBoxIconStyle}" />
+                        <TextBlock x:Uid="ShapeToolbar_EllipseItem" Text="Ellipse" />
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem Tag="2">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Line
+                            Style="{StaticResource ShapeTypeComboBoxLineIconStyle}"
+                            X1="1"
+                            X2="15"
+                            Y1="15"
+                            Y2="1" />
+                        <TextBlock x:Uid="ShapeToolbar_LineItem" Text="Line" />
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem Tag="3">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Grid Width="16" Height="16">
+                            <Line
+                                Style="{StaticResource ShapeTypeComboBoxLineIconStyle}"
+                                X1="1"
+                                X2="14"
+                                Y1="14"
+                                Y2="1" />
+                            <Polyline
+                                Points="8,1 14,1 14,7"
+                                Stroke="{ThemeResource TextFillColorPrimaryBrush}"
+                                StrokeEndLineCap="Round"
+                                StrokeLineJoin="Round"
+                                StrokeStartLineCap="Round"
+                                StrokeThickness="1.8" />
+                        </Grid>
+                        <TextBlock x:Uid="ShapeToolbar_ArrowItem" Text="Arrow" />
+                    </StackPanel>
+                </ComboBoxItem>
             </ComboBox>
 
             <!--  Stroke Color  -->
-            <StackPanel Spacing="4">
-                <TextBlock x:Uid="ShapeToolbar_StrokeColor" />
-                <ColorPicker
-                    x:Name="StrokeColorPicker"
-                    ColorSpectrumShape="Ring"
-                    IsAlphaEnabled="False"
-                    IsColorChannelTextInputVisible="False"
-                    IsColorSliderVisible="True"
-                    IsHexInputVisible="True"
-                    Color="{x:Bind StrokeColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}"
-                    ColorChanged="StrokeColorPicker_ColorChanged" />
-            </StackPanel>
+            <Button
+                x:Name="StrokeColorButton"
+                x:Uid="ShapeToolbar_StrokeColorButton"
+                MinWidth="68"
+                MinHeight="34"
+                Padding="8,4"
+                Background="Transparent"
+                BorderBrush="Transparent">
+                <Grid VerticalAlignment="Center" ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Width="24"
+                        Height="24"
+                        VerticalAlignment="Center"
+                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="4">
+                        <Rectangle RadiusX="3" RadiusY="3">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="{x:Bind StrokeColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                    </Border>
+                    <TextBlock
+                        x:Uid="ShapeToolbar_StrokeColorButtonLabel"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Text="Outline" />
+                    <FontIcon
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Glyph="&#xE70D;" />
+                </Grid>
+                <Button.Flyout>
+                    <Flyout FlyoutPresenterStyle="{StaticResource ColorPaletteFlyoutPresenterStyle}">
+                        <local:ColorPalettePicker
+                            ColorOptions="{x:Bind StrokeColorOptions, Mode=OneWay}"
+                            IsThicknessVisible="True"
+                            MaximumRowsOrColumns="4"
+                            OpacityPercentage="{x:Bind StrokeOpacity, Mode=OneWay}"
+                            OpacityPercentageChanged="StrokeColorPalette_OpacityPercentageChanged"
+                            SelectedColor="{x:Bind StrokeColor, Mode=OneWay}"
+                            SelectedColorChanged="StrokeColorPalette_SelectedColorChanged"
+                            Thickness="{x:Bind StrokeWidth, Mode=OneWay}"
+                            ThicknessChanged="StrokeColorPalette_ThicknessChanged" />
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
 
             <!--  Fill Color  -->
-            <StackPanel Spacing="4">
-                <TextBlock x:Uid="ShapeToolbar_FillColor" />
-                <ColorPicker
-                    x:Name="FillColorPicker"
-                    ColorSpectrumShape="Ring"
-                    IsAlphaEnabled="True"
-                    IsColorChannelTextInputVisible="False"
-                    IsColorSliderVisible="True"
-                    IsHexInputVisible="True"
-                    Color="{x:Bind FillColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}"
-                    ColorChanged="FillColorPicker_ColorChanged" />
-            </StackPanel>
-
-            <!--  Stroke Width  -->
-            <StackPanel Spacing="4">
-                <TextBlock x:Uid="ShapeToolbar_StrokeWidth" />
-                <NumberBox
-                    x:Name="StrokeWidthNumberBox"
-                    Width="100"
-                    LargeChange="1"
-                    Maximum="20"
-                    Minimum="1"
-                    SmallChange="1"
-                    SpinButtonPlacementMode="Inline"
-                    Value="{x:Bind StrokeWidth, Mode=OneWay}"
-                    ValueChanged="StrokeWidthNumberBox_ValueChanged" />
-            </StackPanel>
+            <Button
+                x:Name="FillColorButton"
+                x:Uid="ShapeToolbar_FillColorButton"
+                MinWidth="68"
+                MinHeight="34"
+                Padding="8,4"
+                Background="Transparent"
+                BorderBrush="Transparent">
+                <Grid VerticalAlignment="Center" ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Width="24"
+                        Height="24"
+                        VerticalAlignment="Center"
+                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="4">
+                        <Rectangle RadiusX="3" RadiusY="3">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="{x:Bind FillColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                    </Border>
+                    <TextBlock
+                        x:Uid="ShapeToolbar_FillColorButtonLabel"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Text="Fill" />
+                    <FontIcon
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Glyph="&#xE70D;" />
+                </Grid>
+                <Button.Flyout>
+                    <Flyout FlyoutPresenterStyle="{StaticResource ColorPaletteFlyoutPresenterStyle}">
+                        <local:ColorPalettePicker
+                            ColorOptions="{x:Bind FillColorOptions, Mode=OneWay}"
+                            IsThicknessVisible="False"
+                            MaximumRowsOrColumns="4"
+                            OpacityPercentage="{x:Bind FillOpacity, Mode=OneWay}"
+                            OpacityPercentageChanged="FillColorPalette_OpacityPercentageChanged"
+                            SelectedColor="{x:Bind FillColor, Mode=OneWay}"
+                            SelectedColorChanged="FillColorPalette_SelectedColorChanged" />
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
         </StackPanel>
     </Grid>
 </local:UserControlBase>

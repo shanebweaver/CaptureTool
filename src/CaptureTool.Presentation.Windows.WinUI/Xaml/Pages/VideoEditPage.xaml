@@ -4,11 +4,10 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Application.Abstractions.ViewModels"
-    d:DataContext="{d:DesignInstance Type=viewmodels:IVideoEditPageViewModel}"
+    xmlns:videoedit="using:CaptureTool.Presentation.Features.VideoEdit"
+    d:DataContext="{d:DesignInstance Type=videoedit:VideoEditPageViewModel}"
     mc:Ignorable="d">
 
     <Grid>

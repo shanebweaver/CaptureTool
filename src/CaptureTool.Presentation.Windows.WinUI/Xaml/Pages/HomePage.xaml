@@ -5,12 +5,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
+    xmlns:home="using:CaptureTool.Presentation.Features.Home"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Application.Abstractions.ViewModels"
     xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
-    d:DataContext="{d:DesignInstance Type=viewmodels:IHomePageViewModel}"
+    d:DataContext="{d:DesignInstance Type=home:HomePageViewModel}"
     mc:Ignorable="d">
 
     <Page.Resources>

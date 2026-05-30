@@ -29,6 +29,7 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
     }
 
     public event EventHandler<RectangleF>? BoundsChanged;
+    public event EventHandler? ResizeStarted;
     public event EventHandler? ResizeComplete;
 
     public bool IsManipulating => _activeHandle != ResizeHandle.None;
@@ -128,6 +129,7 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         _activeHandle = handle;
         _handleStartPoint = e.GetCurrentPoint(this).Position;
         _initialBounds = ShapeBounds;
+        ResizeStarted?.Invoke(this, EventArgs.Empty);
 
         var element = e.OriginalSource as UIElement;
         element?.CapturePointer(e.Pointer);

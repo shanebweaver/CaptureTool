@@ -22,11 +22,29 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
 {
+    private static readonly Color[] ShapesColorPalette = [
+        Color.Transparent,
+        Color.FromArgb(31, 41, 55),
+        Color.FromArgb(249, 250, 251),
+        Color.FromArgb(239, 68, 68),
+        Color.FromArgb(249, 115, 22),
+        Color.FromArgb(245, 158, 11),
+        Color.FromArgb(234, 179, 8),
+        Color.FromArgb(132, 204, 22),
+        Color.FromArgb(34, 197, 94),
+        Color.FromArgb(20, 184, 166),
+        Color.FromArgb(6, 182, 212),
+        Color.FromArgb(59, 130, 246),
+        Color.FromArgb(99, 102, 241),
+        Color.FromArgb(139, 92, 246),
+        Color.FromArgb(236, 72, 153),
+        Color.FromArgb(244, 63, 94),
+    ];
+
     private readonly ILocalizationService _localizationService;
     private readonly IStoreService _storeService;
     private readonly IWindowHandleProvider _windowingService;
     private readonly ICancellationService _cancellationService;
-    private readonly ITelemetryService _telemetryService;
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
     private readonly IImageCanvasExporter _imageCanvasExporter;
     private readonly IChromaKeyService _chromaKeyService;
@@ -63,6 +81,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IRelayCommand<Color> UpdateShapeStrokeColorCommand { get; }
     public IRelayCommand<Color> UpdateShapeFillColorCommand { get; }
     public IRelayCommand<int> UpdateShapeStrokeWidthCommand { get; }
+    public IRelayCommand<int> UpdateShapeStrokeOpacityCommand { get; }
+    public IRelayCommand<int> UpdateShapeFillOpacityCommand { get; }
     public IRelayCommand<int> UpdateZoomPercentageCommand { get; }
     public IRelayCommand<bool> UpdateAutoZoomLockCommand { get; }
     public IRelayCommand ZoomAndCenterCommand { get; }
@@ -151,7 +171,23 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public IReadOnlyList<Color> ShapeStrokeColorOptions { get; }
+
+    public IReadOnlyList<Color> ShapeFillColorOptions { get; }
+
     public int ShapeStrokeWidth
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public int ShapeStrokeOpacity
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public int ShapeFillOpacity
     {
         get;
         private set => Set(ref field, value);
@@ -246,7 +282,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _storeService = storeService;
         _windowingService = windowingService;
         _cancellationService = cancellationService;
-        _telemetryService = telemetryService;
         _imageCanvasPrinter = imageCanvasPrinter;
         _chromaKeyService = chromaKeyService;
         _filePickerService = filePickerService;
@@ -265,9 +300,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyColor = Color.Empty;
         ChromaKeyColorOptions = [];
         SelectedShapeType = ShapeType.Rectangle;
-        ShapeStrokeColor = Color.Black;
-        ShapeFillColor = Color.Transparent;
+        ShapeStrokeColor = ShapesColorPalette[3]; // Red
+        ShapeFillColor = ShapesColorPalette[0]; // Transparent
+        ShapeStrokeColorOptions = ShapesColorPalette;
+        ShapeFillColorOptions = ShapesColorPalette;
         ShapeStrokeWidth = 3;
+        ShapeStrokeOpacity = 100;
+        ShapeFillOpacity = 100;
         ZoomPercentage = 100;
         IsAutoZoomLocked = false;
         _operationsUndoStack = [];
@@ -295,6 +334,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateShapeStrokeColorCommand = new RelayCommand<Color>(UpdateShapeStrokeColor, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
         UpdateShapeFillColorCommand = new RelayCommand<Color>(UpdateShapeFillColor, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
         UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeStrokeOpacityCommand = new RelayCommand<int>(UpdateShapeStrokeOpacity, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeFillOpacityCommand = new RelayCommand<int>(UpdateShapeFillOpacity, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
@@ -456,7 +497,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             return;
         }
-        ShapeStrokeColor = value;
+        ShapeStrokeColor = ApplyOpacity(value, ShapeStrokeOpacity);
     }
 
     private void UpdateShapeFillColor(Color value)
@@ -465,7 +506,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             return;
         }
-        ShapeFillColor = value;
+        ShapeFillColor = ApplyOpacity(value, ShapeFillOpacity);
     }
 
     private void UpdateShapeStrokeWidth(int value)
@@ -475,6 +516,39 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
         ShapeStrokeWidth = value;
+    }
+
+    private void UpdateShapeStrokeOpacity(int value)
+    {
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
+
+        ShapeStrokeOpacity = Math.Clamp(value, 0, 100);
+        ShapeStrokeColor = ApplyOpacity(ShapeStrokeColor, ShapeStrokeOpacity);
+    }
+
+    private void UpdateShapeFillOpacity(int value)
+    {
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
+
+        ShapeFillOpacity = Math.Clamp(value, 0, 100);
+        ShapeFillColor = ApplyOpacity(ShapeFillColor, ShapeFillOpacity);
+    }
+
+    private static Color ApplyOpacity(Color color, int opacityPercentage)
+    {
+        if (color.Equals(Color.Transparent))
+        {
+            return Color.Transparent;
+        }
+
+        int alpha = (int)Math.Round(Math.Clamp(opacityPercentage, 0, 100) / 100d * byte.MaxValue);
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 
     public void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint)
@@ -600,7 +674,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
-    public void OnShapeModified(int shapeIndex, IDrawable shape)
+    public void OnShapeModified(int shapeIndex, ModifyShapeOperation.ShapeState oldState, ModifyShapeOperation.ShapeState newState)
     {
         if (!IsInShapesMode || !_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
         {
@@ -610,8 +684,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (shapeIndex >= 0 && shapeIndex < _drawables.Count)
         {
             var currentShape = _drawables[shapeIndex];
-            var oldState = new ModifyShapeOperation.ShapeState(shape);
-            var newState = new ModifyShapeOperation.ShapeState(currentShape);
 
             // Add to undo stack
             var operation = new ModifyShapeOperation(
