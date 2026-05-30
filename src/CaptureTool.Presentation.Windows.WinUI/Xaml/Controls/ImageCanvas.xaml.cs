@@ -271,7 +271,9 @@ public sealed partial class ImageCanvas : UserControlBase
 
     // Cached preview elements for performance
     private Microsoft.UI.Xaml.Shapes.Rectangle? _previewRectangle;
+    private Microsoft.UI.Xaml.Shapes.Rectangle? _previewRectangleFill;
     private Microsoft.UI.Xaml.Shapes.Ellipse? _previewEllipse;
+    private Microsoft.UI.Xaml.Shapes.Ellipse? _previewEllipseFill;
     private Microsoft.UI.Xaml.Shapes.Line? _previewLine;
     private Microsoft.UI.Xaml.Shapes.Polyline? _previewArrowHead;
     private Microsoft.UI.Xaml.Media.SolidColorBrush? _previewStrokeBrush;
@@ -810,22 +812,7 @@ public sealed partial class ImageCanvas : UserControlBase
                         return;
                     }
 
-                    // Create rectangle on first use
-                    if (_previewRectangle == null)
-                    {
-                        _previewRectangle = new Microsoft.UI.Xaml.Shapes.Rectangle();
-                        PreviewShapeCanvas.Children.Add(_previewRectangle);
-                    }
-
-                    // Update properties
-                    _previewRectangle.Width = width;
-                    _previewRectangle.Height = height;
-                    _previewRectangle.Stroke = _previewStrokeBrush;
-                    _previewRectangle.Fill = ShapeFillColor.A > 0 ? _previewFillBrush : null;
-                    _previewRectangle.StrokeThickness = ShapeStrokeWidth;
-                    Canvas.SetLeft(_previewRectangle, x);
-                    Canvas.SetTop(_previewRectangle, y);
-                    _previewRectangle.Visibility = Visibility.Visible;
+                    UpdateRectanglePreview(x, y, width, height, ShapeStrokeWidth, ShapeFillColor.A > 0);
 
                     // Hide other shapes
                     HideOtherPreviewShapes(ShapeType.Rectangle);
@@ -841,22 +828,7 @@ public sealed partial class ImageCanvas : UserControlBase
                         return;
                     }
 
-                    // Create ellipse on first use
-                    if (_previewEllipse == null)
-                    {
-                        _previewEllipse = new Microsoft.UI.Xaml.Shapes.Ellipse();
-                        PreviewShapeCanvas.Children.Add(_previewEllipse);
-                    }
-
-                    // Update properties
-                    _previewEllipse.Width = width;
-                    _previewEllipse.Height = height;
-                    _previewEllipse.Stroke = _previewStrokeBrush;
-                    _previewEllipse.Fill = ShapeFillColor.A > 0 ? _previewFillBrush : null;
-                    _previewEllipse.StrokeThickness = ShapeStrokeWidth;
-                    Canvas.SetLeft(_previewEllipse, x);
-                    Canvas.SetTop(_previewEllipse, y);
-                    _previewEllipse.Visibility = Visibility.Visible;
+                    UpdateEllipsePreview(x, y, width, height, ShapeStrokeWidth, ShapeFillColor.A > 0);
 
                     // Hide other shapes
                     HideOtherPreviewShapes(ShapeType.Ellipse);
@@ -986,9 +958,17 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             _previewRectangle.Visibility = Visibility.Collapsed;
         }
+        if (activeType != ShapeType.Rectangle && _previewRectangleFill != null)
+        {
+            _previewRectangleFill.Visibility = Visibility.Collapsed;
+        }
         if (activeType != ShapeType.Ellipse && _previewEllipse != null)
         {
             _previewEllipse.Visibility = Visibility.Collapsed;
+        }
+        if (activeType != ShapeType.Ellipse && _previewEllipseFill != null)
+        {
+            _previewEllipseFill.Visibility = Visibility.Collapsed;
         }
         if (activeType != ShapeType.Line && activeType != ShapeType.Arrow && _previewLine != null)
         {
@@ -1003,10 +983,106 @@ public sealed partial class ImageCanvas : UserControlBase
     private void ClearPreviewShape()
     {
         _previewRectangle?.Visibility = Visibility.Collapsed;
+        _previewRectangleFill?.Visibility = Visibility.Collapsed;
         _previewEllipse?.Visibility = Visibility.Collapsed;
+        _previewEllipseFill?.Visibility = Visibility.Collapsed;
         _previewLine?.Visibility = Visibility.Collapsed;
         _previewArrowHead?.Visibility = Visibility.Collapsed;
         PreviewShapeCanvas.Visibility = Visibility.Collapsed;
+    }
+
+    private void UpdateRectanglePreview(float x, float y, float width, float height, int strokeWidth, bool hasFill)
+    {
+        EnsureRectanglePreview();
+
+        float normalizedStrokeWidth = Math.Max(0, strokeWidth);
+        double strokeWidthValue = Math.Max(0, width);
+        double strokeHeightValue = Math.Max(0, height);
+
+        _previewRectangle!.Width = strokeWidthValue;
+        _previewRectangle.Height = strokeHeightValue;
+        _previewRectangle.Stroke = _previewStrokeBrush;
+        _previewRectangle.Fill = null;
+        _previewRectangle.StrokeThickness = normalizedStrokeWidth;
+        Canvas.SetLeft(_previewRectangle, x);
+        Canvas.SetTop(_previewRectangle, y);
+        _previewRectangle.Visibility = strokeWidthValue > 0 && strokeHeightValue > 0 && normalizedStrokeWidth > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        double fillWidth = Math.Max(0, width - normalizedStrokeWidth * 2);
+        double fillHeight = Math.Max(0, height - normalizedStrokeWidth * 2);
+        _previewRectangleFill!.Width = fillWidth;
+        _previewRectangleFill.Height = fillHeight;
+        _previewRectangleFill.Stroke = null;
+        _previewRectangleFill.Fill = hasFill ? _previewFillBrush : null;
+        Canvas.SetLeft(_previewRectangleFill, x + normalizedStrokeWidth);
+        Canvas.SetTop(_previewRectangleFill, y + normalizedStrokeWidth);
+        _previewRectangleFill.Visibility = hasFill && fillWidth > 0 && fillHeight > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private void UpdateEllipsePreview(float x, float y, float width, float height, int strokeWidth, bool hasFill)
+    {
+        EnsureEllipsePreview();
+
+        float normalizedStrokeWidth = Math.Max(0, strokeWidth);
+        double strokeWidthValue = Math.Max(0, width);
+        double strokeHeightValue = Math.Max(0, height);
+
+        _previewEllipse!.Width = strokeWidthValue;
+        _previewEllipse.Height = strokeHeightValue;
+        _previewEllipse.Stroke = _previewStrokeBrush;
+        _previewEllipse.Fill = null;
+        _previewEllipse.StrokeThickness = normalizedStrokeWidth;
+        Canvas.SetLeft(_previewEllipse, x);
+        Canvas.SetTop(_previewEllipse, y);
+        _previewEllipse.Visibility = strokeWidthValue > 0 && strokeHeightValue > 0 && normalizedStrokeWidth > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        double fillWidth = Math.Max(0, width - normalizedStrokeWidth * 2);
+        double fillHeight = Math.Max(0, height - normalizedStrokeWidth * 2);
+        _previewEllipseFill!.Width = fillWidth;
+        _previewEllipseFill.Height = fillHeight;
+        _previewEllipseFill.Stroke = null;
+        _previewEllipseFill.Fill = hasFill ? _previewFillBrush : null;
+        Canvas.SetLeft(_previewEllipseFill, x + normalizedStrokeWidth);
+        Canvas.SetTop(_previewEllipseFill, y + normalizedStrokeWidth);
+        _previewEllipseFill.Visibility = hasFill && fillWidth > 0 && fillHeight > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private void EnsureRectanglePreview()
+    {
+        if (_previewRectangleFill == null)
+        {
+            _previewRectangleFill = new Microsoft.UI.Xaml.Shapes.Rectangle();
+            PreviewShapeCanvas.Children.Add(_previewRectangleFill);
+        }
+
+        if (_previewRectangle == null)
+        {
+            _previewRectangle = new Microsoft.UI.Xaml.Shapes.Rectangle();
+            PreviewShapeCanvas.Children.Add(_previewRectangle);
+        }
+    }
+
+    private void EnsureEllipsePreview()
+    {
+        if (_previewEllipseFill == null)
+        {
+            _previewEllipseFill = new Microsoft.UI.Xaml.Shapes.Ellipse();
+            PreviewShapeCanvas.Children.Add(_previewEllipseFill);
+        }
+
+        if (_previewEllipse == null)
+        {
+            _previewEllipse = new Microsoft.UI.Xaml.Shapes.Ellipse();
+            PreviewShapeCanvas.Children.Add(_previewEllipse);
+        }
     }
     #endregion
 
@@ -1747,17 +1823,6 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             case RectangleDrawable rect:
                 {
-                    // Create rectangle on first use
-                    if (_previewRectangle == null)
-                    {
-                        _previewRectangle = new Microsoft.UI.Xaml.Shapes.Rectangle();
-                        PreviewShapeCanvas.Children.Add(_previewRectangle);
-                    }
-
-                    // Update properties from drawable
-                    _previewRectangle.Width = rect.Size.Width;
-                    _previewRectangle.Height = rect.Size.Height;
-
                     // Update stroke brush
                     if (_previewStrokeBrush == null)
                     {
@@ -1768,10 +1833,10 @@ public sealed partial class ImageCanvas : UserControlBase
                         rect.StrokeColor.R,
                         rect.StrokeColor.G,
                         rect.StrokeColor.B);
-                    _previewRectangle.Stroke = _previewStrokeBrush;
 
                     // Update fill brush
-                    if (rect.FillColor.A > 0)
+                    bool hasFill = rect.FillColor.A > 0;
+                    if (hasFill)
                     {
                         if (_previewFillBrush == null)
                         {
@@ -1782,17 +1847,9 @@ public sealed partial class ImageCanvas : UserControlBase
                             rect.FillColor.R,
                             rect.FillColor.G,
                             rect.FillColor.B);
-                        _previewRectangle.Fill = _previewFillBrush;
-                    }
-                    else
-                    {
-                        _previewRectangle.Fill = null;
                     }
 
-                    _previewRectangle.StrokeThickness = rect.StrokeWidth;
-                    Canvas.SetLeft(_previewRectangle, rect.Offset.X);
-                    Canvas.SetTop(_previewRectangle, rect.Offset.Y);
-                    _previewRectangle.Visibility = Visibility.Visible;
+                    UpdateRectanglePreview(rect.Offset.X, rect.Offset.Y, rect.Size.Width, rect.Size.Height, rect.StrokeWidth, hasFill);
 
                     // Hide other shapes
                     HideOtherPreviewShapes(ShapeType.Rectangle);
@@ -1801,17 +1858,6 @@ public sealed partial class ImageCanvas : UserControlBase
 
             case EllipseDrawable ellipse:
                 {
-                    // Create ellipse on first use
-                    if (_previewEllipse == null)
-                    {
-                        _previewEllipse = new Microsoft.UI.Xaml.Shapes.Ellipse();
-                        PreviewShapeCanvas.Children.Add(_previewEllipse);
-                    }
-
-                    // Update properties from drawable
-                    _previewEllipse.Width = ellipse.Size.Width;
-                    _previewEllipse.Height = ellipse.Size.Height;
-
                     // Update stroke brush
                     if (_previewStrokeBrush == null)
                     {
@@ -1822,10 +1868,10 @@ public sealed partial class ImageCanvas : UserControlBase
                         ellipse.StrokeColor.R,
                         ellipse.StrokeColor.G,
                         ellipse.StrokeColor.B);
-                    _previewEllipse.Stroke = _previewStrokeBrush;
 
                     // Update fill brush
-                    if (ellipse.FillColor.A > 0)
+                    bool hasFill = ellipse.FillColor.A > 0;
+                    if (hasFill)
                     {
                         if (_previewFillBrush == null)
                         {
@@ -1836,17 +1882,9 @@ public sealed partial class ImageCanvas : UserControlBase
                             ellipse.FillColor.R,
                             ellipse.FillColor.G,
                             ellipse.FillColor.B);
-                        _previewEllipse.Fill = _previewFillBrush;
-                    }
-                    else
-                    {
-                        _previewEllipse.Fill = null;
                     }
 
-                    _previewEllipse.StrokeThickness = ellipse.StrokeWidth;
-                    Canvas.SetLeft(_previewEllipse, ellipse.Offset.X);
-                    Canvas.SetTop(_previewEllipse, ellipse.Offset.Y);
-                    _previewEllipse.Visibility = Visibility.Visible;
+                    UpdateEllipsePreview(ellipse.Offset.X, ellipse.Offset.Y, ellipse.Size.Width, ellipse.Size.Height, ellipse.StrokeWidth, hasFill);
 
                     // Hide other shapes
                     HideOtherPreviewShapes(ShapeType.Ellipse);
