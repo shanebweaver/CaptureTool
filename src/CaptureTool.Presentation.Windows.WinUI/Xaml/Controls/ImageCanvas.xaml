@@ -117,6 +117,7 @@
                     x:Name="ShapeResizeOverlay"
                     BoundsChanged="ShapeResizeOverlay_BoundsChanged"
                     ResizeComplete="ShapeResizeOverlay_ResizeComplete"
+                    ResizeStarted="ShapeResizeOverlay_ResizeStarted"
                     Visibility="Collapsed" />
             </Grid>
         </ScrollView>

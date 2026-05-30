@@ -674,7 +674,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
-    public void OnShapeModified(int shapeIndex, IDrawable shape)
+    public void OnShapeModified(int shapeIndex, ModifyShapeOperation.ShapeState oldState, ModifyShapeOperation.ShapeState newState)
     {
         if (!IsInShapesMode || !_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
         {
@@ -684,8 +684,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         if (shapeIndex >= 0 && shapeIndex < _drawables.Count)
         {
             var currentShape = _drawables[shapeIndex];
-            var oldState = new ModifyShapeOperation.ShapeState(shape);
-            var newState = new ModifyShapeOperation.ShapeState(currentShape);
 
             // Add to undo stack
             var operation = new ModifyShapeOperation(

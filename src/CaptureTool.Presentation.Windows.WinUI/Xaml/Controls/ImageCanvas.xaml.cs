@@ -7,6 +7,7 @@ using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using System.Collections.Specialized;
 using System.Drawing;
 using Windows.System;
 using Point = global::Windows.Foundation.Point;
@@ -20,7 +21,19 @@ public sealed partial class ImageCanvas : UserControlBase
         nameof(Drawables),
         typeof(IEnumerable<IDrawable>),
         typeof(ImageCanvas),
-        new PropertyMetadata(null));
+        new PropertyMetadata(null, OnDrawablesPropertyChanged));
+
+    private static void OnDrawablesPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not ImageCanvas control)
+        {
+            return;
+        }
+
+        control.SetObservableDrawables(e.NewValue as INotifyCollectionChanged);
+        control.ReconcileSelectedShape();
+        control.InvalidateCanvas();
+    }
 
     public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(
         nameof(Orientation),
@@ -236,7 +249,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<(System.Numerics.Vector2 Start, System.Numerics.Vector2 End)>? ShapeDrawn;
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
     public event EventHandler<int>? ShapeDeleted;
-    public event EventHandler<(int ShapeIndex, IDrawable OldState, IDrawable NewState)>? ShapeModified;
+    public event EventHandler<(int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState)>? ShapeModified;
 
     private readonly Lock _zoomUpdateLock = new Lock();
 
@@ -250,6 +263,7 @@ public sealed partial class ImageCanvas : UserControlBase
     private IDrawable? _selectedShape;
     private int _selectedShapeIndex = -1;
     private ModifyShapeOperation.ShapeState? _shapeStateBeforeModification;
+    private INotifyCollectionChanged? _observableDrawables;
 
     // Track if we're in a potential selection scenario
     private IDrawable? _shapeUnderPointer;
@@ -311,6 +325,8 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             CanvasScrollView.ViewChanged += CanvasScrollView_ViewChanged;
         }
+
+        SetObservableDrawables(Drawables as INotifyCollectionChanged);
     }
 
     private void ImageCanvas_Unloaded(object sender, RoutedEventArgs e)
@@ -320,6 +336,55 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             CanvasScrollView.ViewChanged -= CanvasScrollView_ViewChanged;
         }
+
+        SetObservableDrawables(null);
+    }
+
+    private void SetObservableDrawables(INotifyCollectionChanged? drawables)
+    {
+        if (ReferenceEquals(_observableDrawables, drawables))
+        {
+            return;
+        }
+
+        if (_observableDrawables != null)
+        {
+            _observableDrawables.CollectionChanged -= Drawables_CollectionChanged;
+        }
+
+        _observableDrawables = drawables;
+
+        if (_observableDrawables != null)
+        {
+            _observableDrawables.CollectionChanged += Drawables_CollectionChanged;
+        }
+    }
+
+    private void Drawables_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        ReconcileSelectedShape();
+        RenderCanvas.Invalidate();
+    }
+
+    private void ReconcileSelectedShape()
+    {
+        if (_selectedShape == null || Drawables == null)
+        {
+            return;
+        }
+
+        var drawableList = Drawables.ToList();
+        int selectedShapeIndex = drawableList.IndexOf(_selectedShape);
+
+        if (selectedShapeIndex < 0)
+        {
+            DeselectShape();
+            return;
+        }
+
+        _selectedShapeIndex = selectedShapeIndex;
+        ShowResizeHandles(_selectedShape);
+        UpdatePreviewShapeFromDrawable(_selectedShape);
     }
 
     private void CanvasScrollView_ViewChanged(ScrollView? sender, object args)
@@ -478,6 +543,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public void InvalidateCanvas()
     {
         UpdateDrawingCanvasSize();
+        ReconcileSelectedShape();
         if (!IsAutoZoomLocked)
         {
             ZoomAndCenter();
@@ -945,6 +1011,17 @@ public sealed partial class ImageCanvas : UserControlBase
     #endregion
 
     #region Shape Selection and Manipulation
+    private void ShapeResizeOverlay_ResizeStarted(object? sender, EventArgs e)
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        _shapeStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+        RenderCanvas.Invalidate();
+    }
+
     private void ShapeResizeOverlay_BoundsChanged(object? sender, RectangleF newBounds)
     {
         if (_selectedShape == null)
@@ -969,7 +1046,7 @@ public sealed partial class ImageCanvas : UserControlBase
             // Only fire event if the shape actually changed
             if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
             {
-                ShapeModified?.Invoke(this, (_selectedShapeIndex, _selectedShape, _selectedShape));
+                ShapeModified?.Invoke(this, (_selectedShapeIndex, _shapeStateBeforeModification.Value, newState));
             }
 
             _shapeStateBeforeModification = null;
@@ -1387,7 +1464,7 @@ public sealed partial class ImageCanvas : UserControlBase
             var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
             if (!StatesAreEqual(_shapeStateBeforeModification.Value, newState))
             {
-                ShapeModified?.Invoke(this, (_selectedShapeIndex, _selectedShape, _selectedShape));
+                ShapeModified?.Invoke(this, (_selectedShapeIndex, _shapeStateBeforeModification.Value, newState));
             }
             _shapeStateBeforeModification = null;
             RenderCanvas.Invalidate();

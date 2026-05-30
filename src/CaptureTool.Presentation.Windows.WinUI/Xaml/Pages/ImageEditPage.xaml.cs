@@ -1,4 +1,5 @@
 using CaptureTool.Domain.Edit.Abstractions.Drawable;
+using CaptureTool.Domain.Edit.Abstractions.Operations;
 using CaptureTool.Infrastructure.Abstractions.Loading;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI.Xaml;
@@ -100,9 +101,9 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.OnShapeDeleted(shapeIndex);
     }
 
-    private void ImageCanvas_ShapeModified(object? _, (int ShapeIndex, IDrawable OldState, IDrawable NewState) e)
+    private void ImageCanvas_ShapeModified(object? _, (int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState) e)
     {
-        ViewModel.OnShapeModified(e.ShapeIndex, e.OldState);
+        ViewModel.OnShapeModified(e.ShapeIndex, e.OldState, e.NewState);
     }
 
     private void ChromaKeyAppBarToggleButton_IsCheckedChanged(object sender, RoutedEventArgs _)
