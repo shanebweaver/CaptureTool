@@ -30,46 +30,99 @@
             </ComboBox>
 
             <!--  Stroke Color  -->
-            <StackPanel Spacing="4">
+            <StackPanel Spacing="8">
                 <TextBlock x:Uid="ShapeToolbar_StrokeColor" />
-                <ColorPicker
-                    x:Name="StrokeColorPicker"
-                    ColorSpectrumShape="Ring"
-                    IsAlphaEnabled="False"
-                    IsColorChannelTextInputVisible="False"
-                    IsColorSliderVisible="True"
-                    IsHexInputVisible="True"
-                    Color="{x:Bind StrokeColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}"
-                    ColorChanged="StrokeColorPicker_ColorChanged" />
+                <Button
+                    x:Name="StrokeColorButton"
+                    MinWidth="68"
+                    Padding="8,4">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            Width="24"
+                            Height="24"
+                            BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                            <Rectangle RadiusX="3" RadiusY="3">
+                                <Rectangle.Fill>
+                                    <SolidColorBrush Color="{x:Bind StrokeColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}" />
+                                </Rectangle.Fill>
+                            </Rectangle>
+                        </Border>
+                        <FontIcon
+                            Grid.Column="1"
+                            FontSize="12"
+                            Glyph="&#xE70D;" />
+                    </Grid>
+                    <Button.Flyout>
+                        <Flyout>
+                            <local:ColorPalettePicker
+                                ColorOptions="{x:Bind StrokeColorOptions, Mode=OneWay}"
+                                MaximumRowsOrColumns="6"
+                                SelectedColor="{x:Bind StrokeColor, Mode=OneWay}"
+                                SelectedColorChanged="StrokeColorPalette_SelectedColorChanged" />
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
             </StackPanel>
 
             <!--  Fill Color  -->
-            <StackPanel Spacing="4">
+            <StackPanel Spacing="8">
                 <TextBlock x:Uid="ShapeToolbar_FillColor" />
-                <ColorPicker
-                    x:Name="FillColorPicker"
-                    ColorSpectrumShape="Ring"
-                    IsAlphaEnabled="True"
-                    IsColorChannelTextInputVisible="False"
-                    IsColorSliderVisible="True"
-                    IsHexInputVisible="True"
-                    Color="{x:Bind FillColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}"
-                    ColorChanged="FillColorPicker_ColorChanged" />
+                <Button
+                    x:Name="FillColorButton"
+                    MinWidth="68"
+                    Padding="8,4">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            Width="24"
+                            Height="24"
+                            BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                            <Rectangle RadiusX="3" RadiusY="3">
+                                <Rectangle.Fill>
+                                    <SolidColorBrush Color="{x:Bind FillColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}" />
+                                </Rectangle.Fill>
+                            </Rectangle>
+                        </Border>
+                        <FontIcon
+                            Grid.Column="1"
+                            FontSize="12"
+                            Glyph="&#xE70D;" />
+                    </Grid>
+                    <Button.Flyout>
+                        <Flyout>
+                            <local:ColorPalettePicker
+                                ColorOptions="{x:Bind FillColorOptions, Mode=OneWay}"
+                                MaximumRowsOrColumns="6"
+                                SelectedColor="{x:Bind FillColor, Mode=OneWay}"
+                                SelectedColorChanged="FillColorPalette_SelectedColorChanged" />
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
             </StackPanel>
 
             <!--  Stroke Width  -->
-            <StackPanel Spacing="4">
+            <StackPanel Spacing="8">
                 <TextBlock x:Uid="ShapeToolbar_StrokeWidth" />
                 <NumberBox
                     x:Name="StrokeWidthNumberBox"
-                    Width="100"
                     LargeChange="1"
                     Maximum="20"
                     Minimum="1"
                     SmallChange="1"
                     SpinButtonPlacementMode="Inline"
-                    Value="{x:Bind StrokeWidth, Mode=OneWay}"
-                    ValueChanged="StrokeWidthNumberBox_ValueChanged" />
+                    ValueChanged="StrokeWidthNumberBox_ValueChanged"
+                    Value="{x:Bind StrokeWidth, Mode=OneWay}" />
             </StackPanel>
         </StackPanel>
     </Grid>

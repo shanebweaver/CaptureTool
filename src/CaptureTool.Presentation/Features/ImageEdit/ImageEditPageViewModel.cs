@@ -26,7 +26,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IStoreService _storeService;
     private readonly IWindowHandleProvider _windowingService;
     private readonly ICancellationService _cancellationService;
-    private readonly ITelemetryService _telemetryService;
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
     private readonly IImageCanvasExporter _imageCanvasExporter;
     private readonly IChromaKeyService _chromaKeyService;
@@ -151,6 +150,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public IReadOnlyList<Color> ShapeStrokeColorOptions { get; }
+
+    public IReadOnlyList<Color> ShapeFillColorOptions { get; }
+
     public int ShapeStrokeWidth
     {
         get;
@@ -234,7 +237,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IStoreService storeService,
         IWindowHandleProvider windowingService,
         ICancellationService cancellationService,
-        ITelemetryService telemetryService,
         IImageCanvasPrinter imageCanvasPrinter,
         IImageCanvasExporter imageCanvasExporter,
         IFilePickerService filePickerService,
@@ -246,7 +248,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _storeService = storeService;
         _windowingService = windowingService;
         _cancellationService = cancellationService;
-        _telemetryService = telemetryService;
         _imageCanvasPrinter = imageCanvasPrinter;
         _chromaKeyService = chromaKeyService;
         _filePickerService = filePickerService;
@@ -264,9 +265,31 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyTolerance = 30;
         ChromaKeyColor = Color.Empty;
         ChromaKeyColorOptions = [];
-        SelectedShapeType = ShapeType.Rectangle;
-        ShapeStrokeColor = Color.Black;
+        SelectedShapeType = ShapeType.Line;
+        ShapeStrokeColor = Color.Red;
         ShapeFillColor = Color.Transparent;
+        ShapeStrokeColorOptions =
+        [
+            Color.Transparent,
+            Color.Black,
+            Color.White,
+            Color.Red,
+            Color.Orange,
+            Color.Yellow,
+            Color.Green,
+            Color.Magenta,
+        ];
+        ShapeFillColorOptions =
+        [
+            Color.Transparent,
+            Color.White,
+            Color.Black,
+            Color.Red,
+            Color.Orange,
+            Color.Yellow,
+            Color.Green,
+            Color.Magenta,
+        ];
         ShapeStrokeWidth = 3;
         ZoomPercentage = 100;
         IsAutoZoomLocked = false;

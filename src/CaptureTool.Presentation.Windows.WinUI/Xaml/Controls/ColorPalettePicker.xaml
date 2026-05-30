@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.ColorPalettePicker"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Name="Root"
+    d:DataContext="{d:DesignInstance Type=local:ColorPalettePicker}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ColorTypeConverter x:Key="ColorTypeConverter" />
+        <converters:ColorHexStringConverter x:Key="ColorHexStringConverter" />
+    </UserControl.Resources>
+
+    <Grid>
+        <GridView
+            x:Name="ColorGridView"
+            Padding="4"
+            Background="Transparent"
+            IsItemClickEnabled="True"
+            SelectionChanged="ColorGridView_SelectionChanged"
+            SelectionMode="Single"
+            SingleSelectionFollowsFocus="False">
+            <GridView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsWrapGrid />
+                </ItemsPanelTemplate>
+            </GridView.ItemsPanel>
+            <GridView.ItemContainerStyle>
+                <Style TargetType="GridViewItem">
+                    <Setter Property="Width" Value="40" />
+                    <Setter Property="Height" Value="40" />
+                    <Setter Property="Margin" Value="2" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                </Style>
+            </GridView.ItemContainerStyle>
+            <GridView.ItemTemplate>
+                <DataTemplate>
+                    <Grid ToolTipService.ToolTip="{Binding Converter={StaticResource ColorHexStringConverter}}">
+                        <Border
+                            Margin="4"
+                            BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                            <Rectangle RadiusX="3" RadiusY="3">
+                                <Rectangle.Fill>
+                                    <SolidColorBrush Color="{Binding Converter={StaticResource ColorTypeConverter}}" />
+                                </Rectangle.Fill>
+                            </Rectangle>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
+    </Grid>
+</local:UserControlBase>

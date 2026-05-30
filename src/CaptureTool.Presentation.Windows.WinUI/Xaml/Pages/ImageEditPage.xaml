@@ -166,10 +166,12 @@
             <controls:ShapeToolbar
                 FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
                 FillColorChanged="ShapeToolbar_FillColorChanged"
+                FillColorOptions="{x:Bind ViewModel.ShapeFillColorOptions, Mode=OneWay}"
                 SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay, Converter={StaticResource ShapeTypeToIntConverter}}"
                 SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
                 StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
                 StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
+                StrokeColorOptions="{x:Bind ViewModel.ShapeStrokeColorOptions, Mode=OneWay}"
                 StrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
                 StrokeWidthChanged="ShapeToolbar_StrokeWidthChanged" />
         </Grid>

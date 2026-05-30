@@ -24,6 +24,18 @@ public sealed partial class ShapeToolbar : UserControlBase
         typeof(ShapeToolbar),
         new PropertyMetadata(Color.Transparent));
 
+    public static readonly DependencyProperty StrokeColorOptionsProperty = DependencyProperty.Register(
+        nameof(StrokeColorOptions),
+        typeof(IEnumerable<Color>),
+        typeof(ShapeToolbar),
+        new PropertyMetadata(Array.Empty<Color>()));
+
+    public static readonly DependencyProperty FillColorOptionsProperty = DependencyProperty.Register(
+        nameof(FillColorOptions),
+        typeof(IEnumerable<Color>),
+        typeof(ShapeToolbar),
+        new PropertyMetadata(Array.Empty<Color>()));
+
     public static readonly DependencyProperty StrokeWidthProperty = DependencyProperty.Register(
         nameof(StrokeWidth),
         typeof(int),
@@ -46,6 +58,18 @@ public sealed partial class ShapeToolbar : UserControlBase
     {
         get => Get<Color>(FillColorProperty);
         set => Set(FillColorProperty, value);
+    }
+
+    public IEnumerable<Color> StrokeColorOptions
+    {
+        get => Get<IEnumerable<Color>>(StrokeColorOptionsProperty);
+        set => Set(StrokeColorOptionsProperty, value);
+    }
+
+    public IEnumerable<Color> FillColorOptions
+    {
+        get => Get<IEnumerable<Color>>(FillColorOptionsProperty);
+        set => Set(FillColorOptionsProperty, value);
     }
 
     public int StrokeWidth
@@ -116,22 +140,16 @@ public sealed partial class ShapeToolbar : UserControlBase
         }
     }
 
-    private void StrokeColorPicker_ColorChanged(ColorPicker sender, ColorChangedEventArgs args)
+    private void StrokeColorPalette_SelectedColorChanged(object? sender, Color color)
     {
-        if (sender is ColorPicker colorPicker)
-        {
-            var color = colorPicker.Color;
-            UpdateStrokeColor(Color.FromArgb(color.A, color.R, color.G, color.B));
-        }
+        UpdateStrokeColor(color);
+        StrokeColorButton.Flyout?.Hide();
     }
 
-    private void FillColorPicker_ColorChanged(ColorPicker sender, ColorChangedEventArgs args)
+    private void FillColorPalette_SelectedColorChanged(object? sender, Color color)
     {
-        if (sender is ColorPicker colorPicker)
-        {
-            var color = colorPicker.Color;
-            UpdateFillColor(Color.FromArgb(color.A, color.R, color.G, color.B));
-        }
+        UpdateFillColor(color);
+        FillColorButton.Flyout?.Hide();
     }
 
     private void StrokeWidthNumberBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
