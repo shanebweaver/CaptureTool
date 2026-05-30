@@ -6,18 +6,30 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Drawing;
+using Point = global::Windows.Foundation.Point;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class ImageEditPage : ImageEditPageBase
 {
+    private MenuFlyout? _imageContextMenu;
+    private MenuFlyout? _shapeContextMenu;
+    private MenuFlyoutItem? _saveMenuItem;
+    private MenuFlyoutItem? _copyMenuItem;
+    private MenuFlyoutItem? _shareMenuItem;
+    private MenuFlyoutItem? _undoMenuItem;
+    private MenuFlyoutItem? _redoMenuItem;
+
     public ImageEditPage()
     {
         InitializeComponent();
+        InitializeContextMenus();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
+        ImageCanvas.ImageContextMenuRequested += ImageCanvas_ImageContextMenuRequested;
+        ImageCanvas.ShapeContextMenuRequested += ImageCanvas_ShapeContextMenuRequested;
     }
 
     ~ImageEditPage()
@@ -29,6 +41,72 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
         ImageCanvas.ShapeDeleted -= ImageCanvas_ShapeDeleted;
         ImageCanvas.ShapeModified -= ImageCanvas_ShapeModified;
+        ImageCanvas.ImageContextMenuRequested -= ImageCanvas_ImageContextMenuRequested;
+        ImageCanvas.ShapeContextMenuRequested -= ImageCanvas_ShapeContextMenuRequested;
+    }
+
+    private void InitializeContextMenus()
+    {
+        _imageContextMenu = new MenuFlyout();
+        _saveMenuItem = CreateMenuItem(
+            "Save",
+            new SymbolIcon(Symbol.Save),
+            ViewModel.SaveCommand);
+        _copyMenuItem = CreateMenuItem(
+            "Copy",
+            new SymbolIcon(Symbol.Copy),
+            ViewModel.CopyCommand);
+        _shareMenuItem = CreateMenuItem(
+            "Share",
+            new SymbolIcon(Symbol.Share),
+            ViewModel.ShareCommand);
+        _undoMenuItem = CreateMenuItem(
+            "Undo",
+            new SymbolIcon(Symbol.Undo),
+            ViewModel.UndoCommand);
+        _redoMenuItem = CreateMenuItem(
+            "Redo",
+            new SymbolIcon(Symbol.Redo),
+            ViewModel.RedoCommand);
+
+        _imageContextMenu.Items.Add(_saveMenuItem!);
+        _imageContextMenu.Items.Add(_copyMenuItem!);
+        _imageContextMenu.Items.Add(_shareMenuItem!);
+        _imageContextMenu.Items.Add(new MenuFlyoutSeparator());
+        _imageContextMenu.Items.Add(_undoMenuItem!);
+        _imageContextMenu.Items.Add(_redoMenuItem!);
+
+        _shapeContextMenu = new MenuFlyout();
+        var deleteMenuItem = new MenuFlyoutItem
+        {
+            Text = "Delete",
+            Icon = new SymbolIcon(Symbol.Delete)
+        };
+        deleteMenuItem.Click += (_, _) => ImageCanvas.DeleteSelectedShape();
+        _shapeContextMenu.Items.Add(deleteMenuItem);
+    }
+
+    private void UpdateImageContextMenuState()
+    {
+        _saveMenuItem?.IsEnabled = ViewModel.IsLoaded;
+
+        _copyMenuItem?.IsEnabled = ViewModel.IsLoaded;
+
+        _shareMenuItem?.IsEnabled = ViewModel.IsLoaded;
+
+        _undoMenuItem?.IsEnabled = ViewModel.HasUndoStack;
+
+        _redoMenuItem?.IsEnabled = ViewModel.HasRedoStack;
+    }
+
+    private static MenuFlyoutItem CreateMenuItem(string text, IconElement icon, System.Windows.Input.ICommand command)
+    {
+        return new()
+        {
+            Text = text,
+            Icon = icon,
+            Command = command
+        };
     }
 
     private string FormatZoomPercentage(int zoomPercentage)
@@ -104,6 +182,17 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ImageCanvas_ShapeModified(object? _, (int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState) e)
     {
         ViewModel.OnShapeModified(e.ShapeIndex, e.OldState, e.NewState);
+    }
+
+    private void ImageCanvas_ImageContextMenuRequested(object? _, Point position)
+    {
+        UpdateImageContextMenuState();
+        _imageContextMenu?.ShowAt(ImageCanvas, new FlyoutShowOptions { Position = position });
+    }
+
+    private void ImageCanvas_ShapeContextMenuRequested(object? _, Point position)
+    {
+        _shapeContextMenu?.ShowAt(ImageCanvas, new FlyoutShowOptions { Position = position });
     }
 
     private void ChromaKeyAppBarToggleButton_IsCheckedChanged(object sender, RoutedEventArgs _)
