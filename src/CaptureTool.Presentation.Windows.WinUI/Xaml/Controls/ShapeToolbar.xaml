@@ -12,6 +12,9 @@
 
     <UserControl.Resources>
         <converters:ColorTypeConverter x:Key="ColorTypeConverter" />
+        <Style x:Key="ColorPaletteFlyoutPresenterStyle" TargetType="FlyoutPresenter">
+            <Setter Property="Background" Value="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" />
+        </Style>
     </UserControl.Resources>
 
     <Grid>
@@ -66,7 +69,7 @@
                         Glyph="&#xE70D;" />
                 </Grid>
                 <Button.Flyout>
-                    <Flyout>
+                    <Flyout FlyoutPresenterStyle="{StaticResource ColorPaletteFlyoutPresenterStyle}">
                         <local:ColorPalettePicker
                             ColorOptions="{x:Bind StrokeColorOptions, Mode=OneWay}"
                             IsThicknessVisible="True"
@@ -118,7 +121,7 @@
                         Glyph="&#xE70D;" />
                 </Grid>
                 <Button.Flyout>
-                    <Flyout>
+                    <Flyout FlyoutPresenterStyle="{StaticResource ColorPaletteFlyoutPresenterStyle}">
                         <local:ColorPalettePicker
                             ColorOptions="{x:Bind FillColorOptions, Mode=OneWay}"
                             IsThicknessVisible="False"

@@ -31,6 +31,7 @@
             MinHeight="0"
             Padding="0"
             Background="Transparent"
+            ContainerContentChanging="ColorGridView_ContainerContentChanging"
             IsItemClickEnabled="True"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             ScrollViewer.HorizontalScrollMode="Disabled"
@@ -55,7 +56,14 @@
                 <DataTemplate>
                     <Grid ToolTipService.ToolTip="{Binding Converter={StaticResource ColorHexStringConverter}}">
                         <Border
-                            Margin="4"
+                            x:Name="SelectionBorder"
+                            Margin="2"
+                            BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                            BorderThickness="2"
+                            CornerRadius="6"
+                            Visibility="Collapsed" />
+                        <Border
+                            Margin="6"
                             BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
                             BorderThickness="1"
                             CornerRadius="4">

@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Media;
 using System.Collections.ObjectModel;
 using System.Drawing;
 
@@ -219,14 +220,15 @@ public sealed partial class ColorPalettePicker : UserControlBase
                     continue;
                 }
 
-                if (color.Equals(SelectedColor) || IsMatchingVisibleColor(color, SelectedColor))
+                bool isSelected = color.Equals(SelectedColor) || IsMatchingVisibleColor(color, SelectedColor);
+                if (isSelected && selectedItem == null)
                 {
-                    selectedItem = color;
-                    break;
+                    selectedItem = colorItem;
                 }
             }
 
             ColorGridView.SelectedItem = selectedItem;
+            UpdateSelectionVisuals();
         }
         finally
         {
@@ -242,7 +244,18 @@ public sealed partial class ColorPalettePicker : UserControlBase
         }
 
         SelectedColor = color;
+        UpdateSelectedItem();
         SelectedColorChanged?.Invoke(this, color);
+    }
+
+    private void ColorGridView_ContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+    {
+        if (args.ItemContainer is not GridViewItem item)
+        {
+            return;
+        }
+
+        _ = DispatcherQueue.TryEnqueue(() => UpdateSelectionVisual(item, args.Item));
     }
 
     private void ThicknessSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
@@ -290,5 +303,51 @@ public sealed partial class ColorPalettePicker : UserControlBase
             selectedColor.R == colorOption.R &&
             selectedColor.G == colorOption.G &&
             selectedColor.B == colorOption.B;
+    }
+
+    private void UpdateSelectionVisuals()
+    {
+        foreach (object colorItem in _colorItems)
+        {
+            if (ColorGridView.ContainerFromItem(colorItem) is GridViewItem item)
+            {
+                UpdateSelectionVisual(item, colorItem);
+            }
+        }
+    }
+
+    private void UpdateSelectionVisual(GridViewItem item, object colorItem)
+    {
+        Border? selectionBorder = FindDescendantByName<Border>(item, "SelectionBorder");
+        if (selectionBorder == null || colorItem is not Color color)
+        {
+            return;
+        }
+
+        selectionBorder.Visibility = color.Equals(SelectedColor) || IsMatchingVisibleColor(color, SelectedColor)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private static T? FindDescendantByName<T>(DependencyObject root, string name)
+        where T : FrameworkElement
+    {
+        int childCount = VisualTreeHelper.GetChildrenCount(root);
+        for (int i = 0; i < childCount; i++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(root, i);
+            if (child is T element && element.Name == name)
+            {
+                return element;
+            }
+
+            T? descendant = FindDescendantByName<T>(child, name);
+            if (descendant != null)
+            {
+                return descendant;
+            }
+        }
+
+        return null;
     }
 }
