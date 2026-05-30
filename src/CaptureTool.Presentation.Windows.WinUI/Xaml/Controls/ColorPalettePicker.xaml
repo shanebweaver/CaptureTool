@@ -17,10 +17,15 @@
         <converters:ColorHexStringConverter x:Key="ColorHexStringConverter" />
     </UserControl.Resources>
 
-    <StackPanel
-        MinWidth="260"
+    <Grid
+        MinWidth="300"
         Padding="4"
-        Spacing="12">
+        ColumnSpacing="12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
         <GridView
             x:Name="ColorGridView"
             Background="Transparent"
@@ -63,47 +68,70 @@
         </GridView>
 
         <StackPanel
-            Spacing="4"
-            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsThicknessVisible), Mode=OneWay}">
-            <Grid ColumnSpacing="12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock VerticalAlignment="Center" Text="Thickness" />
+            Grid.Column="1"
+            Orientation="Horizontal"
+            Spacing="10">
+            <Grid
+                Width="58"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsThicknessVisible), Mode=OneWay}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <TextBlock
-                    Grid.Column="1"
-                    HorizontalAlignment="Right"
+                    x:Uid="ColorPalettePicker_ThicknessLabel"
+                    HorizontalAlignment="Center"
+                    Text="Thickness"
+                    TextAlignment="Center"
+                    TextWrapping="WrapWholeWords" />
+                <Slider
+                    Grid.Row="1"
+                    Height="150"
+                    HorizontalAlignment="Center"
+                    Maximum="20"
+                    Minimum="1"
+                    x:Uid="ColorPalettePicker_ThicknessSlider"
+                    Orientation="Vertical"
+                    StepFrequency="1"
+                    TickFrequency="1"
+                    Value="{x:Bind Thickness, Mode=OneWay}"
+                    ValueChanged="ThicknessSlider_ValueChanged" />
+                <TextBlock
+                    Grid.Row="2"
+                    HorizontalAlignment="Center"
                     Text="{x:Bind FormatThickness(Thickness), Mode=OneWay}" />
             </Grid>
-            <Slider
-                Maximum="20"
-                Minimum="1"
-                StepFrequency="1"
-                TickFrequency="1"
-                Value="{x:Bind Thickness, Mode=OneWay}"
-                ValueChanged="ThicknessSlider_ValueChanged" />
-        </StackPanel>
 
-        <StackPanel Spacing="4">
-            <Grid ColumnSpacing="12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock VerticalAlignment="Center" Text="Opacity" />
+            <Grid Width="58">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <TextBlock
-                    Grid.Column="1"
-                    HorizontalAlignment="Right"
+                    x:Uid="ColorPalettePicker_OpacityLabel"
+                    HorizontalAlignment="Center"
+                    Text="Opacity"
+                    TextAlignment="Center"
+                    TextWrapping="WrapWholeWords" />
+                <Slider
+                    Grid.Row="1"
+                    Height="150"
+                    HorizontalAlignment="Center"
+                    Maximum="100"
+                    Minimum="0"
+                    x:Uid="ColorPalettePicker_OpacitySlider"
+                    Orientation="Vertical"
+                    StepFrequency="1"
+                    TickFrequency="10"
+                    Value="{x:Bind OpacityPercentage, Mode=OneWay}"
+                    ValueChanged="OpacitySlider_ValueChanged" />
+                <TextBlock
+                    Grid.Row="2"
+                    HorizontalAlignment="Center"
                     Text="{x:Bind FormatOpacity(OpacityPercentage), Mode=OneWay}" />
             </Grid>
-            <Slider
-                Maximum="100"
-                Minimum="0"
-                StepFrequency="1"
-                TickFrequency="10"
-                Value="{x:Bind OpacityPercentage, Mode=OneWay}"
-                ValueChanged="OpacitySlider_ValueChanged" />
         </StackPanel>
-    </StackPanel>
+    </Grid>
 </local:UserControlBase>

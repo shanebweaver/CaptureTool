@@ -22,6 +22,25 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
 {
+    private static readonly Color[] ShapesColorPalette = [
+        Color.Transparent,
+        Color.FromArgb(31, 41, 55),
+        Color.FromArgb(249, 250, 251),
+        Color.FromArgb(239, 68, 68),
+        Color.FromArgb(249, 115, 22),
+        Color.FromArgb(245, 158, 11),
+        Color.FromArgb(234, 179, 8),
+        Color.FromArgb(132, 204, 22),
+        Color.FromArgb(34, 197, 94),
+        Color.FromArgb(20, 184, 166),
+        Color.FromArgb(6, 182, 212),
+        Color.FromArgb(59, 130, 246),
+        Color.FromArgb(99, 102, 241),
+        Color.FromArgb(139, 92, 246),
+        Color.FromArgb(236, 72, 153),
+        Color.FromArgb(244, 63, 94),
+    ];
+
     private readonly ILocalizationService _localizationService;
     private readonly IStoreService _storeService;
     private readonly IWindowHandleProvider _windowingService;
@@ -283,28 +302,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         SelectedShapeType = ShapeType.Line;
         ShapeStrokeColor = Color.Red;
         ShapeFillColor = Color.Transparent;
-        ShapeStrokeColorOptions =
-        [
-            Color.Transparent,
-            Color.Black,
-            Color.White,
-            Color.Red,
-            Color.Orange,
-            Color.Yellow,
-            Color.Green,
-            Color.Magenta,
-        ];
-        ShapeFillColorOptions =
-        [
-            Color.Transparent,
-            Color.White,
-            Color.Black,
-            Color.Red,
-            Color.Orange,
-            Color.Yellow,
-            Color.Green,
-            Color.Magenta,
-        ];
+        ShapeStrokeColorOptions = ShapesColorPalette;
+        ShapeFillColorOptions = ShapesColorPalette;
         ShapeStrokeWidth = 3;
         ShapeStrokeOpacity = 100;
         ShapeFillOpacity = 100;

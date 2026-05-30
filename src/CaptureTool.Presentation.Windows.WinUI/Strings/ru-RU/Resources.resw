@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -682,5 +682,60 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_ZoomLabel.Text" xml:space="preserve">
     <value>Масштаб:</value>
+  </data>
+  <data name="ShapeToolbar_StrokeColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Выбрать цвет, толщину и непрозрачность контура</value>
+    <comment />
+    <comment>The tooltip for the outline color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeColorButtonLabel.Text" xml:space="preserve">
+    <value>Контур</value>
+    <comment />
+    <comment>The visible label inside the outline color button in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_ShapeTypeComboBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Тип фигуры</value>
+    <comment />
+    <comment>The accessibility name for the shape type selector in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColorButtonLabel.Text" xml:space="preserve">
+    <value>Заливка</value>
+    <comment />
+    <comment>The visible label inside the fill color button in the shape toolbar.</comment>
+  </data>
+  <data name="ColorPalettePicker_ThicknessSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Толщина</value>
+    <comment />
+    <comment>The accessibility name for the thickness slider in the color palette picker.</comment>
+  </data>
+  <data name="ColorPalettePicker_ThicknessLabel.Text" xml:space="preserve">
+    <value>Толщина</value>
+    <comment />
+    <comment>The label for the thickness slider in the color palette picker.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColorButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Цвет заливки</value>
+    <comment />
+    <comment>The accessibility name for the fill color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="ColorPalettePicker_OpacityLabel.Text" xml:space="preserve">
+    <value>Непрозрачность</value>
+    <comment />
+    <comment>The label for the opacity slider in the color palette picker.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeColorButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Цвет контура</value>
+    <comment />
+    <comment>The accessibility name for the outline color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="ColorPalettePicker_OpacitySlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Непрозрачность</value>
+    <comment />
+    <comment>The accessibility name for the opacity slider in the color palette picker.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Выбрать цвет и непрозрачность заливки</value>
+    <comment />
+    <comment>The tooltip for the fill color picker button in the shape toolbar.</comment>
   </data>
 </root>
