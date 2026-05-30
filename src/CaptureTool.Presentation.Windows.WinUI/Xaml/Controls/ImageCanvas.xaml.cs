@@ -251,6 +251,8 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
     public event EventHandler<int>? ShapeDeleted;
     public event EventHandler<(int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState)>? ShapeModified;
+    public event EventHandler<Point>? ImageContextMenuRequested;
+    public event EventHandler<Point>? ShapeContextMenuRequested;
 
     private readonly Lock _zoomUpdateLock = new Lock();
 
@@ -675,6 +677,11 @@ public sealed partial class ImageCanvas : UserControlBase
     #region Panning
     private void RootContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (TryHandleContextMenuRequest(e))
+        {
+            return;
+        }
+
         if (IsShapesModeEnabled)
         {
             // Get position relative to the RenderCanvas
@@ -713,6 +720,34 @@ public sealed partial class ImageCanvas : UserControlBase
         _isPointerDown = true;
         _lastPointerPosition = e.GetCurrentPoint(RootContainer).Position;
         RootContainer.CapturePointer(e.Pointer);
+    }
+
+    private bool TryHandleContextMenuRequest(PointerRoutedEventArgs e)
+    {
+        var point = e.GetCurrentPoint(RenderCanvas);
+        if (!point.Properties.IsRightButtonPressed)
+        {
+            return false;
+        }
+
+        var menuPosition = e.GetCurrentPoint(this).Position;
+
+        if (IsShapesModeEnabled)
+        {
+            var shape = FindShapeAtPoint(point.Position);
+            if (shape != null)
+            {
+                SelectShape(shape);
+                ShapeContextMenuRequested?.Invoke(this, menuPosition);
+                e.Handled = true;
+                return true;
+            }
+        }
+
+        DeselectShape();
+        ImageContextMenuRequested?.Invoke(this, menuPosition);
+        e.Handled = true;
+        return true;
     }
 
     private void RootContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
@@ -1303,7 +1338,7 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
-    private void DeleteSelectedShape()
+    public void DeleteSelectedShape()
     {
         if (_selectedShape == null || _selectedShapeIndex < 0)
         {
