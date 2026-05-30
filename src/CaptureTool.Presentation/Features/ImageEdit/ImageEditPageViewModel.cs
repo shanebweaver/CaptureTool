@@ -62,6 +62,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IRelayCommand<Color> UpdateShapeStrokeColorCommand { get; }
     public IRelayCommand<Color> UpdateShapeFillColorCommand { get; }
     public IRelayCommand<int> UpdateShapeStrokeWidthCommand { get; }
+    public IRelayCommand<int> UpdateShapeStrokeOpacityCommand { get; }
+    public IRelayCommand<int> UpdateShapeFillOpacityCommand { get; }
     public IRelayCommand<int> UpdateZoomPercentageCommand { get; }
     public IRelayCommand<bool> UpdateAutoZoomLockCommand { get; }
     public IRelayCommand ZoomAndCenterCommand { get; }
@@ -160,6 +162,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public int ShapeStrokeOpacity
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public int ShapeFillOpacity
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public Rectangle CropRect
     {
         get;
@@ -237,6 +251,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IStoreService storeService,
         IWindowHandleProvider windowingService,
         ICancellationService cancellationService,
+        ITelemetryService telemetryService,
         IImageCanvasPrinter imageCanvasPrinter,
         IImageCanvasExporter imageCanvasExporter,
         IFilePickerService filePickerService,
@@ -291,6 +306,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             Color.Magenta,
         ];
         ShapeStrokeWidth = 3;
+        ShapeStrokeOpacity = 100;
+        ShapeFillOpacity = 100;
         ZoomPercentage = 100;
         IsAutoZoomLocked = false;
         _operationsUndoStack = [];
@@ -318,6 +335,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateShapeStrokeColorCommand = new RelayCommand<Color>(UpdateShapeStrokeColor, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
         UpdateShapeFillColorCommand = new RelayCommand<Color>(UpdateShapeFillColor, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
         UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeStrokeOpacityCommand = new RelayCommand<int>(UpdateShapeStrokeOpacity, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
+        UpdateShapeFillOpacityCommand = new RelayCommand<int>(UpdateShapeFillOpacity, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
@@ -479,7 +498,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             return;
         }
-        ShapeStrokeColor = value;
+        ShapeStrokeColor = ApplyOpacity(value, ShapeStrokeOpacity);
     }
 
     private void UpdateShapeFillColor(Color value)
@@ -488,7 +507,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             return;
         }
-        ShapeFillColor = value;
+        ShapeFillColor = ApplyOpacity(value, ShapeFillOpacity);
     }
 
     private void UpdateShapeStrokeWidth(int value)
@@ -498,6 +517,39 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
         ShapeStrokeWidth = value;
+    }
+
+    private void UpdateShapeStrokeOpacity(int value)
+    {
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
+
+        ShapeStrokeOpacity = Math.Clamp(value, 0, 100);
+        ShapeStrokeColor = ApplyOpacity(ShapeStrokeColor, ShapeStrokeOpacity);
+    }
+
+    private void UpdateShapeFillOpacity(int value)
+    {
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
+        {
+            return;
+        }
+
+        ShapeFillOpacity = Math.Clamp(value, 0, 100);
+        ShapeFillColor = ApplyOpacity(ShapeFillColor, ShapeFillOpacity);
+    }
+
+    private static Color ApplyOpacity(Color color, int opacityPercentage)
+    {
+        if (color.Equals(Color.Transparent))
+        {
+            return Color.Transparent;
+        }
+
+        int alpha = (int)Math.Round(Math.Clamp(opacityPercentage, 0, 100) / 100d * byte.MaxValue);
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 
     public void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint)

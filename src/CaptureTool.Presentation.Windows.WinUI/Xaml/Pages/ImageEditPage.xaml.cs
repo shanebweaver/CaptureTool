@@ -152,6 +152,16 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.UpdateShapeStrokeWidthCommand.Execute(e);
     }
 
+    private void ShapeToolbar_StrokeOpacityChanged(object _, int e)
+    {
+        ViewModel.UpdateShapeStrokeOpacityCommand.Execute(e);
+    }
+
+    private void ShapeToolbar_FillOpacityChanged(object _, int e)
+    {
+        ViewModel.UpdateShapeFillOpacityCommand.Execute(e);
+    }
+
     private async void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         int newPercentage = (int)e.NewValue;

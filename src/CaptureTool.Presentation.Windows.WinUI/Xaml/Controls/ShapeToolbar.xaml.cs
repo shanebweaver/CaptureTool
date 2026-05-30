@@ -42,6 +42,18 @@ public sealed partial class ShapeToolbar : UserControlBase
         typeof(ShapeToolbar),
         new PropertyMetadata(3));
 
+    public static readonly DependencyProperty StrokeOpacityProperty = DependencyProperty.Register(
+        nameof(StrokeOpacity),
+        typeof(int),
+        typeof(ShapeToolbar),
+        new PropertyMetadata(100));
+
+    public static readonly DependencyProperty FillOpacityProperty = DependencyProperty.Register(
+        nameof(FillOpacity),
+        typeof(int),
+        typeof(ShapeToolbar),
+        new PropertyMetadata(100));
+
     public int SelectedShapeTypeIndex
     {
         get => Get<int>(SelectedShapeTypeIndexProperty);
@@ -78,10 +90,24 @@ public sealed partial class ShapeToolbar : UserControlBase
         set => Set(StrokeWidthProperty, value);
     }
 
+    public int StrokeOpacity
+    {
+        get => Get<int>(StrokeOpacityProperty);
+        set => Set(StrokeOpacityProperty, value);
+    }
+
+    public int FillOpacity
+    {
+        get => Get<int>(FillOpacityProperty);
+        set => Set(FillOpacityProperty, value);
+    }
+
     public event EventHandler<int>? SelectedShapeTypeIndexChanged;
     public event EventHandler<Color>? StrokeColorChanged;
     public event EventHandler<Color>? FillColorChanged;
     public event EventHandler<int>? StrokeWidthChanged;
+    public event EventHandler<int>? StrokeOpacityChanged;
+    public event EventHandler<int>? FillOpacityChanged;
 
     public ShapeToolbar()
     {
@@ -132,6 +158,28 @@ public sealed partial class ShapeToolbar : UserControlBase
         StrokeWidthChanged?.Invoke(this, value);
     }
 
+    private void UpdateStrokeOpacity(int value)
+    {
+        if (StrokeOpacity == value)
+        {
+            return;
+        }
+
+        StrokeOpacity = value;
+        StrokeOpacityChanged?.Invoke(this, value);
+    }
+
+    private void UpdateFillOpacity(int value)
+    {
+        if (FillOpacity == value)
+        {
+            return;
+        }
+
+        FillOpacity = value;
+        FillOpacityChanged?.Invoke(this, value);
+    }
+
     private void ShapeTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (sender is ComboBox comboBox)
@@ -143,20 +191,25 @@ public sealed partial class ShapeToolbar : UserControlBase
     private void StrokeColorPalette_SelectedColorChanged(object? sender, Color color)
     {
         UpdateStrokeColor(color);
-        StrokeColorButton.Flyout?.Hide();
     }
 
     private void FillColorPalette_SelectedColorChanged(object? sender, Color color)
     {
         UpdateFillColor(color);
-        FillColorButton.Flyout?.Hide();
     }
 
-    private void StrokeWidthNumberBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    private void StrokeColorPalette_ThicknessChanged(object? sender, int thickness)
     {
-        if (sender is NumberBox numberBox && !double.IsNaN(numberBox.Value))
-        {
-            UpdateStrokeWidth((int)numberBox.Value);
-        }
+        UpdateStrokeWidth(thickness);
+    }
+
+    private void StrokeColorPalette_OpacityPercentageChanged(object? sender, int opacityPercentage)
+    {
+        UpdateStrokeOpacity(opacityPercentage);
+    }
+
+    private void FillColorPalette_OpacityPercentageChanged(object? sender, int opacityPercentage)
+    {
+        UpdateFillOpacity(opacityPercentage);
     }
 }

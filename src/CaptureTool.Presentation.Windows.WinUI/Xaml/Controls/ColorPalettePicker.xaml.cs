@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Collections.ObjectModel;
 using System.Drawing;
 
@@ -31,6 +32,24 @@ public sealed partial class ColorPalettePicker : UserControlBase
         typeof(ColorPalettePicker),
         new PropertyMetadata(Orientation.Horizontal, OnLayoutPropertyChanged));
 
+    public static readonly DependencyProperty IsThicknessVisibleProperty = DependencyProperty.Register(
+        nameof(IsThicknessVisible),
+        typeof(bool),
+        typeof(ColorPalettePicker),
+        new PropertyMetadata(false));
+
+    public static readonly DependencyProperty ThicknessProperty = DependencyProperty.Register(
+        nameof(Thickness),
+        typeof(int),
+        typeof(ColorPalettePicker),
+        new PropertyMetadata(3));
+
+    public static readonly DependencyProperty OpacityPercentageProperty = DependencyProperty.Register(
+        nameof(OpacityPercentage),
+        typeof(int),
+        typeof(ColorPalettePicker),
+        new PropertyMetadata(100));
+
     private readonly ObservableCollection<object> _colorItems = [];
     private bool _isUpdatingSelection;
 
@@ -58,7 +77,27 @@ public sealed partial class ColorPalettePicker : UserControlBase
         set => Set(PaletteOrientationProperty, value);
     }
 
+    public bool IsThicknessVisible
+    {
+        get => Get<bool>(IsThicknessVisibleProperty);
+        set => Set(IsThicknessVisibleProperty, value);
+    }
+
+    public int Thickness
+    {
+        get => Get<int>(ThicknessProperty);
+        set => Set(ThicknessProperty, value);
+    }
+
+    public int OpacityPercentage
+    {
+        get => Get<int>(OpacityPercentageProperty);
+        set => Set(OpacityPercentageProperty, value);
+    }
+
     public event EventHandler<Color>? SelectedColorChanged;
+    public event EventHandler<int>? ThicknessChanged;
+    public event EventHandler<int>? OpacityPercentageChanged;
 
     public ColorPalettePicker()
     {
@@ -136,7 +175,7 @@ public sealed partial class ColorPalettePicker : UserControlBase
                     continue;
                 }
 
-                if (color.Equals(SelectedColor))
+                if (color.Equals(SelectedColor) || IsMatchingVisibleColor(color, SelectedColor))
                 {
                     selectedItem = color;
                     break;
@@ -160,5 +199,52 @@ public sealed partial class ColorPalettePicker : UserControlBase
 
         SelectedColor = color;
         SelectedColorChanged?.Invoke(this, color);
+    }
+
+    private void ThicknessSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        int thickness = (int)Math.Round(e.NewValue);
+        if (Thickness == thickness)
+        {
+            return;
+        }
+
+        Thickness = thickness;
+        ThicknessChanged?.Invoke(this, thickness);
+    }
+
+    private void OpacitySlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        int opacityPercentage = (int)Math.Round(e.NewValue);
+        if (OpacityPercentage == opacityPercentage)
+        {
+            return;
+        }
+
+        OpacityPercentage = opacityPercentage;
+        OpacityPercentageChanged?.Invoke(this, opacityPercentage);
+    }
+
+    private string FormatThickness(int thickness)
+    {
+        return thickness.ToString();
+    }
+
+    private string FormatOpacity(int opacityPercentage)
+    {
+        return $"{opacityPercentage}%";
+    }
+
+    private static bool IsMatchingVisibleColor(Color colorOption, Color selectedColor)
+    {
+        if (selectedColor.Equals(Color.Transparent))
+        {
+            return false;
+        }
+
+        return colorOption.A > 0 &&
+            selectedColor.R == colorOption.R &&
+            selectedColor.G == colorOption.G &&
+            selectedColor.B == colorOption.B;
     }
 }

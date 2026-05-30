@@ -167,11 +167,15 @@
                 FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
                 FillColorChanged="ShapeToolbar_FillColorChanged"
                 FillColorOptions="{x:Bind ViewModel.ShapeFillColorOptions, Mode=OneWay}"
+                FillOpacity="{x:Bind ViewModel.ShapeFillOpacity, Mode=OneWay}"
+                FillOpacityChanged="ShapeToolbar_FillOpacityChanged"
                 SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay, Converter={StaticResource ShapeTypeToIntConverter}}"
                 SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
                 StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
                 StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
                 StrokeColorOptions="{x:Bind ViewModel.ShapeStrokeColorOptions, Mode=OneWay}"
+                StrokeOpacity="{x:Bind ViewModel.ShapeStrokeOpacity, Mode=OneWay}"
+                StrokeOpacityChanged="ShapeToolbar_StrokeOpacityChanged"
                 StrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
                 StrokeWidthChanged="ShapeToolbar_StrokeWidthChanged" />
         </Grid>

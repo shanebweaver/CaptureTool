@@ -62,9 +62,14 @@
                         <Flyout>
                             <local:ColorPalettePicker
                                 ColorOptions="{x:Bind StrokeColorOptions, Mode=OneWay}"
+                                IsThicknessVisible="True"
                                 MaximumRowsOrColumns="6"
+                                OpacityPercentage="{x:Bind StrokeOpacity, Mode=OneWay}"
+                                OpacityPercentageChanged="StrokeColorPalette_OpacityPercentageChanged"
                                 SelectedColor="{x:Bind StrokeColor, Mode=OneWay}"
-                                SelectedColorChanged="StrokeColorPalette_SelectedColorChanged" />
+                                SelectedColorChanged="StrokeColorPalette_SelectedColorChanged"
+                                Thickness="{x:Bind StrokeWidth, Mode=OneWay}"
+                                ThicknessChanged="StrokeColorPalette_ThicknessChanged" />
                         </Flyout>
                     </Button.Flyout>
                 </Button>
@@ -103,26 +108,15 @@
                         <Flyout>
                             <local:ColorPalettePicker
                                 ColorOptions="{x:Bind FillColorOptions, Mode=OneWay}"
+                                IsThicknessVisible="False"
                                 MaximumRowsOrColumns="6"
+                                OpacityPercentage="{x:Bind FillOpacity, Mode=OneWay}"
+                                OpacityPercentageChanged="FillColorPalette_OpacityPercentageChanged"
                                 SelectedColor="{x:Bind FillColor, Mode=OneWay}"
                                 SelectedColorChanged="FillColorPalette_SelectedColorChanged" />
                         </Flyout>
                     </Button.Flyout>
                 </Button>
-            </StackPanel>
-
-            <!--  Stroke Width  -->
-            <StackPanel Spacing="8">
-                <TextBlock x:Uid="ShapeToolbar_StrokeWidth" />
-                <NumberBox
-                    x:Name="StrokeWidthNumberBox"
-                    LargeChange="1"
-                    Maximum="20"
-                    Minimum="1"
-                    SmallChange="1"
-                    SpinButtonPlacementMode="Inline"
-                    ValueChanged="StrokeWidthNumberBox_ValueChanged"
-                    Value="{x:Bind StrokeWidth, Mode=OneWay}" />
             </StackPanel>
         </StackPanel>
     </Grid>
