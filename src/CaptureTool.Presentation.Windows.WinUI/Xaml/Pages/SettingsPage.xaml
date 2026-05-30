@@ -4,12 +4,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Presentation.Features.Settings"
+    xmlns:settings="using:CaptureTool.Presentation.Features.Settings"
     xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
-    d:DataContext="{d:DesignInstance Type=viewmodels:SettingsPageViewModel}"
+    d:DataContext="{d:DesignInstance Type=settings:SettingsPageViewModel}"
     mc:Ignorable="d">
 
     <ScrollView>
@@ -424,7 +423,7 @@
                                 SelectedIndex="{x:Bind ViewModel.SelectedAppThemeIndex, Mode=OneWay}"
                                 SelectionChanged="AppThemeRadioButtons_SelectionChanged">
                                 <RadioButtons.ItemTemplate>
-                                    <DataTemplate x:DataType="viewmodels:AppThemeViewModel">
+                                    <DataTemplate x:DataType="settings:AppThemeViewModel">
                                         <RadioButton AutomationProperties.Name="{x:Bind AutomationName}">
                                             <TextBlock
                                                 Margin="12,0,0,0"
@@ -518,7 +517,7 @@
                                 SelectedIndex="{x:Bind ViewModel.SelectedAppLanguageIndex, Mode=OneWay}"
                                 SelectionChanged="AppLanguageRadioButtons_SelectionChanged">
                                 <RadioButtons.ItemTemplate>
-                                    <DataTemplate x:DataType="viewmodels:AppLanguageViewModel">
+                                    <DataTemplate x:DataType="settings:AppLanguageViewModel">
                                         <RadioButton AutomationProperties.Name="{x:Bind AutomationName}">
                                             <TextBlock
                                                 Margin="12,0,0,0"

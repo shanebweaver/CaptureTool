@@ -299,9 +299,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyTolerance = 30;
         ChromaKeyColor = Color.Empty;
         ChromaKeyColorOptions = [];
-        SelectedShapeType = ShapeType.Line;
-        ShapeStrokeColor = Color.Red;
-        ShapeFillColor = Color.Transparent;
+        SelectedShapeType = ShapeType.Rectangle;
+        ShapeStrokeColor = ShapesColorPalette[3]; // Red
+        ShapeFillColor = ShapesColorPalette[0]; // Transparent
         ShapeStrokeColorOptions = ShapesColorPalette;
         ShapeFillColorOptions = ShapesColorPalette;
         ShapeStrokeWidth = 3;
