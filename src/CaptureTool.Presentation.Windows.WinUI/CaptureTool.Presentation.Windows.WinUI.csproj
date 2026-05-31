@@ -54,6 +54,9 @@
   <!-- Content files -->
   <ItemGroup>
     <Content Include="Fonts\FluentSystemIcons-Regular.ttf" />
+    <Content Include="MetadataModels\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <!-- Native DLL references for MSIX packaging -->

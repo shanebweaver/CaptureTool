@@ -1,7 +1,10 @@
 using CaptureTool.Application.Abstractions.Metadata;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Domain.Capture.Abstractions.Metadata;
+using CaptureTool.Domain.Capture.Abstractions.Metadata.Processing;
 using CaptureTool.Domain.Capture.Windows.Metadata;
+using CaptureTool.Domain.Capture.Windows.Metadata.Processing;
+using CaptureTool.Domain.Capture.Windows.Metadata.Processing.Processors;
 using CaptureTool.Domain.Capture.Windows.Metadata.Scanners;
 using CaptureTool.Infrastructure.Abstractions.Logging;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +23,8 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
         services.AddSingleton<IMetadataScannerRegistry, MetadataScannerRegistry>();
         services.AddSingleton<IMetadataScanningService, MetadataScanningService>();
         services.AddSingleton<IRealTimeMetadataScanJobFactory, RealTimeMetadataScanJobFactory>();
+        services.AddSingleton<IMetadataProcessorRegistry, MetadataProcessorRegistry>();
+        services.AddSingleton<IMetadataProcessingPipeline, MetadataProcessingPipeline>();
 
         // Example scanners
         //services.AddSingleton<IVideoMetadataScanner, BasicVideoFrameScanner>();
@@ -27,6 +32,11 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
 
         // OCR scanner
         services.AddSingleton<IVideoMetadataScanner, WindowsMediaOcrVideoMetadataScanner>();
+        services.AddSingleton<IVideoMetadataScanner, ObjectDetectionVideoMetadataScanner>();
+
+        // Metadata processors
+        services.AddSingleton<IMetadataProcessor, OcrTextConsolidationProcessor>();
+        services.AddSingleton<IMetadataProcessor, AudioLevelProcessor>();
 
         return services;
     }
@@ -74,6 +84,21 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
             catch (InvalidOperationException ex)
             {
                 logService?.LogWarning($"Failed to register audio scanner '{scanner.ScannerId}': {ex.Message}");
+            }
+        }
+
+        var processorRegistry = serviceProvider.GetRequiredService<IMetadataProcessorRegistry>();
+        var processors = serviceProvider.GetServices<IMetadataProcessor>();
+        foreach (var processor in processors)
+        {
+            try
+            {
+                processorRegistry.Register(processor);
+                logService?.LogInformation($"Registered metadata processor: {processor.Name} ({processor.ProcessorId})");
+            }
+            catch (InvalidOperationException ex)
+            {
+                logService?.LogWarning($"Failed to register metadata processor '{processor.ProcessorId}': {ex.Message}");
             }
         }
 

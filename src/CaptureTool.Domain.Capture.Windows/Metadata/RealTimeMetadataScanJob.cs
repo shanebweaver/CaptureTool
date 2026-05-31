@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Metadata;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Domain.Capture.Abstractions.Metadata;
+using CaptureTool.Domain.Capture.Abstractions.Metadata.Processing;
 using CaptureTool.Infrastructure.Abstractions.Logging;
 using System.Collections.Concurrent;
 using System.Text.Json;
@@ -17,6 +18,7 @@ public sealed class RealTimeMetadataScanJob : IRealTimeMetadataScanJob
     private readonly string _filePath;
     private readonly IMetadataScannerRegistry _registry;
     private readonly ILogService _logService;
+    private readonly IMetadataProcessingPipeline? _processingPipeline;
     private readonly ConcurrentBag<MetadataEntry> _entries;
     private readonly Dictionary<string, string> _scannerInfo;
     private MetadataScanJobStatus _status;
@@ -29,12 +31,14 @@ public sealed class RealTimeMetadataScanJob : IRealTimeMetadataScanJob
         Guid jobId,
         string filePath,
         IMetadataScannerRegistry registry,
-        ILogService logService)
+        ILogService logService,
+        IMetadataProcessingPipeline? processingPipeline = null)
     {
         _jobId = jobId;
         _filePath = filePath;
         _registry = registry;
         _logService = logService;
+        _processingPipeline = processingPipeline;
         _entries = new ConcurrentBag<MetadataEntry>();
         _scannerInfo = new Dictionary<string, string>();
         _status = MetadataScanJobStatus.Processing;
@@ -153,6 +157,29 @@ public sealed class RealTimeMetadataScanJob : IRealTimeMetadataScanJob
             // Save metadata file next to the media file
             _metadataFilePath = Path.ChangeExtension(_filePath, MetadataFile.FileExtension);
             await SaveMetadataFileAsync(metadataFile, _metadataFilePath);
+
+            if (_processingPipeline is not null)
+            {
+                try
+                {
+                    string? insightsPath = await _processingPipeline.ProcessAndSaveAsync(
+                        metadataFile,
+                        _metadataFilePath);
+
+                    if (insightsPath is not null)
+                    {
+                        _logService.LogInformation($"Saved metadata insights to: {insightsPath}");
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logService.LogException(ex, $"Metadata insight processing failed: {ex.Message}");
+                }
+            }
 
             _status = MetadataScanJobStatus.Completed;
             StatusChanged?.Invoke(this, _status);

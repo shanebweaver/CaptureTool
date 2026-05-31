@@ -155,12 +155,18 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     private async Task SaveAsync()
     {
-        if (string.IsNullOrEmpty(VideoPath))
+        try
         {
-            throw new InvalidOperationException("Cannot save video without a valid filepath.");
-        }
+            if (string.IsNullOrEmpty(VideoPath))
+            {
+                throw new InvalidOperationException("Cannot save video without a valid filepath.");
+            }
 
-        await _saveAction.ExecuteAsync(new SaveVideoFileRequest(VideoPath), CancellationToken.None);
+            await _saveAction.ExecuteAsync(new SaveVideoFileRequest(VideoPath), CancellationToken.None);
+        }
+        catch
+        {
+        }
     }
 
     private async Task CopyAsync()

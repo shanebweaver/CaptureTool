@@ -2,7 +2,6 @@ using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.AudioEdit.OpenAudioEditPage;
 using CaptureTool.Application.Features.ImageEdit.OpenImageEditPage;
-using CaptureTool.Application.Features.RecentCaptures;
 using CaptureTool.Application.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Infrastructure.Abstractions.Storage;

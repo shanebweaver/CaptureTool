@@ -26,6 +26,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly IUseCase<OpenRecentCaptureRequest, OpenRecentCaptureResponse> _openRecentCaptureCommand;
     private readonly IUseCase<GetRecentCapturesRequest, GetRecentCapturesResponse> _getRecentCapturesQuery;
+    private readonly IUseCase<OpenFileRequest, OpenFileResponse> _openFileCommand;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
 
     public event EventHandler? RecentCapturesUpdated;
@@ -72,11 +73,12 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _videoCaptureHandler = videoCaptureHandler;
         _openRecentCaptureCommand = openRecentCaptureCommand;
         _getRecentCapturesQuery = getRecentCapturesQuery;
+        _openFileCommand = openFileCommand;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
 
         NewImageCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault));
         NewVideoCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault));
-        OpenFileCommand = openFileCommand.ToAsyncRelayCommand(() => new OpenFileRequest());
+        OpenFileCommand = new AsyncRelayCommand(OpenFileAsync);
         NavigateToSettingsCommand = openSettingsPageCommand.ToRelayCommand(() => new OpenSettingsPageRequest());
         ShowAboutAppCommand = openAboutPageCommand.ToRelayCommand(() => new OpenAboutPageRequest());
         ShowAddOnsCommand = openStorePageCommand.ToRelayCommand(() => new OpenStorePageRequest());
@@ -115,6 +117,17 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private void OnNewVideoCaptured(object? sender, IVideoFile e)
     {
         RefreshRecentCaptures();
+    }
+
+    private async Task OpenFileAsync()
+    {
+        try
+        {
+            await _openFileCommand.ExecuteAsync(new OpenFileRequest());
+        }
+        catch
+        {
+        }
     }
 
     private void OpenRecentCapture(RecentCaptureViewModel? model)

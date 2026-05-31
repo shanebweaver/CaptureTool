@@ -1,4 +1,5 @@
 using CaptureTool.Domain.Capture.Abstractions.Metadata;
+using CaptureTool.Domain.Capture.Windows.Metadata.Scanners;
 using System.Text.Json.Serialization;
 
 namespace CaptureTool.Domain.Capture.Windows.Metadata;
@@ -12,6 +13,9 @@ namespace CaptureTool.Domain.Capture.Windows.Metadata;
 [JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(List<MetadataEntryDto>))]
+[JsonSerializable(typeof(ObjectDetectionMetadataDto))]
+[JsonSerializable(typeof(ObjectDetectionBoxMetadataDto))]
+[JsonSerializable(typeof(List<ObjectDetectionMetadataDto>))]
 [JsonSourceGenerationOptions(
     WriteIndented = true,
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
