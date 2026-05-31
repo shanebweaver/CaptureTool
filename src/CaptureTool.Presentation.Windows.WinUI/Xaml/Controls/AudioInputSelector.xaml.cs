@@ -20,8 +20,20 @@ public sealed partial class AudioInputSelector : UserControlBase
         typeof(AudioInputSelector),
         new PropertyMetadata(null, OnBindablePropertyChanged));
 
+    public static readonly DependencyProperty SelectedAudioInputSourceIndexProperty = DependencyProperty.Register(
+        nameof(SelectedAudioInputSourceIndex),
+        typeof(int),
+        typeof(AudioInputSelector),
+        new PropertyMetadata(-1, OnBindablePropertyChanged));
+
     public static readonly DependencyProperty IsAvailableProperty = DependencyProperty.Register(
         nameof(IsAvailable),
+        typeof(bool),
+        typeof(AudioInputSelector),
+        new PropertyMetadata(false, OnBindablePropertyChanged));
+
+    public static readonly DependencyProperty IsMutedProperty = DependencyProperty.Register(
+        nameof(IsMuted),
         typeof(bool),
         typeof(AudioInputSelector),
         new PropertyMetadata(false, OnBindablePropertyChanged));
@@ -37,6 +49,12 @@ public sealed partial class AudioInputSelector : UserControlBase
         typeof(ICommand),
         typeof(AudioInputSelector),
         new PropertyMetadata(null));
+
+    public static readonly DependencyProperty ToggleMuteCommandProperty = DependencyProperty.Register(
+        nameof(ToggleMuteCommand),
+        typeof(ICommand),
+        typeof(AudioInputSelector),
+        new PropertyMetadata(null, OnBindablePropertyChanged));
 
     public AudioInputSelector()
     {
@@ -55,10 +73,22 @@ public sealed partial class AudioInputSelector : UserControlBase
         set => Set(SelectedAudioInputSourceProperty, value);
     }
 
+    public int SelectedAudioInputSourceIndex
+    {
+        get => Get<int>(SelectedAudioInputSourceIndexProperty);
+        set => Set(SelectedAudioInputSourceIndexProperty, value);
+    }
+
     public bool IsAvailable
     {
         get => Get<bool>(IsAvailableProperty);
         set => Set(IsAvailableProperty, value);
+    }
+
+    public bool IsMuted
+    {
+        get => Get<bool>(IsMutedProperty);
+        set => Set(IsMutedProperty, value);
     }
 
     public string StatusText
@@ -73,6 +103,12 @@ public sealed partial class AudioInputSelector : UserControlBase
     {
         get => Get<ICommand>(SelectionChangedCommandProperty);
         set => Set(SelectionChangedCommandProperty, value);
+    }
+
+    public ICommand ToggleMuteCommand
+    {
+        get => Get<ICommand>(ToggleMuteCommandProperty);
+        set => Set(ToggleMuteCommandProperty, value);
     }
 
     private static void OnStatusTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -97,6 +133,7 @@ public sealed partial class AudioInputSelector : UserControlBase
         if (e.AddedItems.FirstOrDefault() is AudioInputSource source &&
             SelectionChangedCommand?.CanExecute(source) == true)
         {
+            SelectedAudioInputSourceIndex = AudioInputComboBox.SelectedIndex;
             SelectionChangedCommand.Execute(source);
         }
     }
@@ -113,9 +150,24 @@ public sealed partial class AudioInputSelector : UserControlBase
             return nameof(SelectedAudioInputSource);
         }
 
+        if (property == SelectedAudioInputSourceIndexProperty)
+        {
+            return nameof(SelectedAudioInputSourceIndex);
+        }
+
         if (property == IsAvailableProperty)
         {
             return nameof(IsAvailable);
+        }
+
+        if (property == IsMutedProperty)
+        {
+            return nameof(IsMuted);
+        }
+
+        if (property == ToggleMuteCommandProperty)
+        {
+            return nameof(ToggleMuteCommand);
         }
 
         return string.Empty;

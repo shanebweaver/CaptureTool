@@ -21,11 +21,21 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <FontIcon
-                VerticalAlignment="Center"
-                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                FontSize="18"
-                Glyph="{StaticResource Microphone}" />
+            <Button
+                Command="{x:Bind ToggleMuteCommand, Mode=OneWay}"
+                IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
+                Style="{StaticResource IconButtonStyle}">
+                <Grid>
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="{StaticResource Microphone}"
+                        Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsMuted), Mode=OneWay}" />
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="{StaticResource Cancel}"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsMuted), Mode=OneWay}" />
+                </Grid>
+            </Button>
 
             <ComboBox
                 x:Name="AudioInputComboBox"
@@ -34,7 +44,7 @@
                 IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
                 ItemsSource="{x:Bind AudioInputSources, Mode=OneWay}"
                 PlaceholderText="No microphone"
-                SelectedItem="{x:Bind SelectedAudioInputSource, Mode=TwoWay}"
+                SelectedIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
                 SelectionChanged="AudioInputComboBox_SelectionChanged"
                 ToolTipService.ToolTip="{x:Bind StatusText, Mode=OneWay}">
                 <ComboBox.ItemTemplate>

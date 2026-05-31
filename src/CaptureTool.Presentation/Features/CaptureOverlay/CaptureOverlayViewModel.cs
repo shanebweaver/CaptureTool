@@ -41,6 +41,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private DateTime _captureStartTime;
     private TimeSpan _pausedDuration;
     private DateTime? _pauseStartTime;
+    private bool _hasInitializedAudioInputSelection;
 
     public bool IsRecording
     {
@@ -78,6 +79,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
+    public bool IsAudioInputMuted
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public ObservableCollection<AudioInputSource> AudioInputSources { get; } = [];
 
     public AudioInputSource? SelectedAudioInputSource
@@ -85,6 +92,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         get;
         private set => Set(ref field, value);
     }
+
+    public int SelectedAudioInputSourceIndex
+    {
+        get;
+        private set => Set(ref field, value);
+    } = -1;
 
     public bool IsAudioInputSelectionAvailable
     {
@@ -103,6 +116,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public IRelayCommand StartVideoCaptureCommand { get; }
     public IRelayCommand StopVideoCaptureCommand { get; }
     public IRelayCommand ToggleDesktopAudioCommand { get; }
+    public IRelayCommand ToggleAudioInputMuteCommand { get; }
     public IRelayCommand TogglePauseResumeCommand { get; }
     public IRelayCommand<AudioInputSource> SelectAudioInputSourceCommand { get; }
 
@@ -137,6 +151,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         StartVideoCaptureCommand = new RelayCommand(StartVideoCapture);
         StopVideoCaptureCommand = new RelayCommand(StopVideoCapture);
         ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand.ToRelayCommand(() => new ToggleVideoCaptureDesktopAudioRequest());
+        ToggleAudioInputMuteCommand = new RelayCommand(ToggleAudioInputMute);
         TogglePauseResumeCommand = new RelayCommand(TogglePauseResume);
         SelectAudioInputSourceCommand = new RelayCommand<AudioInputSource>(SelectAudioInputSource);
     }
@@ -198,6 +213,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         {
             AudioInputSources.Clear();
             SelectedAudioInputSource = null;
+            SelectedAudioInputSourceIndex = -1;
             IsAudioInputSelectionAvailable = false;
             AudioInputSelectionStatus = "Audio inputs unavailable";
         }
@@ -302,6 +318,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             {
                 AudioInputSources.Clear();
                 SelectedAudioInputSource = null;
+                SelectedAudioInputSourceIndex = -1;
                 IsAudioInputSelectionAvailable = false;
                 AudioInputSelectionStatus = "Audio inputs unavailable";
             });
@@ -330,18 +347,41 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         if (!IsAudioInputSelectionAvailable)
         {
             SelectedAudioInputSource = null;
+            SelectedAudioInputSourceIndex = -1;
             AudioInputSelectionStatus = "No audio inputs found";
+            _hasInitializedAudioInputSelection = false;
             return;
         }
 
-        SelectedAudioInputSource =
-            AudioInputSources.FirstOrDefault(source => string.Equals(source.Id, selectedSourceId, StringComparison.OrdinalIgnoreCase)) ??
-            AudioInputSources.FirstOrDefault(source => source.IsDefault) ??
-            AudioInputSources[0];
+        SelectedAudioInputSource = GetAudioInputSourceToSelect(selectedSourceId, selectedSourceRemoved);
+        SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(SelectedAudioInputSource);
+
+        _hasInitializedAudioInputSelection = true;
 
         AudioInputSelectionStatus = selectedSourceRemoved
             ? "Selected audio input was removed"
             : string.Empty;
+    }
+
+    private AudioInputSource GetAudioInputSourceToSelect(string? selectedSourceId, bool selectedSourceRemoved)
+    {
+        if (_hasInitializedAudioInputSelection && !selectedSourceRemoved)
+        {
+            AudioInputSource? existingSelection = AudioInputSources.FirstOrDefault(source => string.Equals(source.Id, selectedSourceId, StringComparison.OrdinalIgnoreCase));
+            if (existingSelection != null)
+            {
+                return existingSelection;
+            }
+        }
+
+        return
+            AudioInputSources.FirstOrDefault(source => source.IsDefault) ??
+            AudioInputSources[0];
+    }
+
+    private void ToggleAudioInputMute()
+    {
+        IsAudioInputMuted = !IsAudioInputMuted;
     }
 
     private async void SelectAudioInputSource(AudioInputSource? source)
@@ -360,6 +400,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             if (response.IsAvailable)
             {
                 SelectedAudioInputSource = source;
+                SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(source);
                 AudioInputSelectionStatus = string.Empty;
             }
             else if (response.WasRemoved)

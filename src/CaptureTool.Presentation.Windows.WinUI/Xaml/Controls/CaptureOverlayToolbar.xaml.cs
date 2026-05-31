@@ -79,8 +79,20 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(null, OnAudioInputBindablePropertyChanged));
 
+    public static readonly DependencyProperty SelectedAudioInputSourceIndexProperty = DependencyProperty.Register(
+        nameof(SelectedAudioInputSourceIndex),
+        typeof(int),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(-1, OnAudioInputBindablePropertyChanged));
+
     public static readonly DependencyProperty IsAudioInputSelectionAvailableProperty = DependencyProperty.Register(
         nameof(IsAudioInputSelectionAvailable),
+        typeof(bool),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(false, OnAudioInputBindablePropertyChanged));
+
+    public static readonly DependencyProperty IsAudioInputMutedProperty = DependencyProperty.Register(
+        nameof(IsAudioInputMuted),
         typeof(bool),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(false, OnAudioInputBindablePropertyChanged));
@@ -96,6 +108,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(ICommand),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(null));
+
+    public static readonly DependencyProperty ToggleAudioInputMuteCommandProperty = DependencyProperty.Register(
+        nameof(ToggleAudioInputMuteCommand),
+        typeof(ICommand),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(null, OnAudioInputBindablePropertyChanged));
 
     public CaptureOverlayToolbar()
     {
@@ -184,10 +202,22 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         set => Set(SelectedAudioInputSourceProperty, value);
     }
 
+    public int SelectedAudioInputSourceIndex
+    {
+        get => Get<int>(SelectedAudioInputSourceIndexProperty);
+        set => Set(SelectedAudioInputSourceIndexProperty, value);
+    }
+
     public bool IsAudioInputSelectionAvailable
     {
         get => Get<bool>(IsAudioInputSelectionAvailableProperty);
         set => Set(IsAudioInputSelectionAvailableProperty, value);
+    }
+
+    public bool IsAudioInputMuted
+    {
+        get => Get<bool>(IsAudioInputMutedProperty);
+        set => Set(IsAudioInputMutedProperty, value);
     }
 
     public string AudioInputSelectionStatus
@@ -200,6 +230,12 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     {
         get => Get<ICommand>(SelectAudioInputSourceCommandProperty);
         set => Set(SelectAudioInputSourceCommandProperty, value);
+    }
+
+    public ICommand ToggleAudioInputMuteCommand
+    {
+        get => Get<ICommand>(ToggleAudioInputMuteCommandProperty);
+        set => Set(ToggleAudioInputMuteCommandProperty, value);
     }
 
     private static void OnAudioInputBindablePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -222,14 +258,29 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
             return nameof(SelectedAudioInputSource);
         }
 
+        if (property == SelectedAudioInputSourceIndexProperty)
+        {
+            return nameof(SelectedAudioInputSourceIndex);
+        }
+
         if (property == IsAudioInputSelectionAvailableProperty)
         {
             return nameof(IsAudioInputSelectionAvailable);
         }
 
+        if (property == IsAudioInputMutedProperty)
+        {
+            return nameof(IsAudioInputMuted);
+        }
+
         if (property == AudioInputSelectionStatusProperty)
         {
             return nameof(AudioInputSelectionStatus);
+        }
+
+        if (property == ToggleAudioInputMuteCommandProperty)
+        {
+            return nameof(ToggleAudioInputMuteCommand);
         }
 
         return string.Empty;
