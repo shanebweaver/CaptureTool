@@ -17,13 +17,22 @@
             <controls:CaptureOverlayToolbar
                 x:Name="Toolbar"
                 CaptureTime="{x:Bind ViewModel.CaptureTime, Mode=OneWay}"
+                AudioInputSelectionStatus="{x:Bind ViewModel.AudioInputSelectionStatus, Mode=OneWay}"
+                AudioInputSources="{x:Bind ViewModel.AudioInputSources, Mode=OneWay}"
                 CloseCommand="{x:Bind ViewModel.CloseOverlayCommand}"
                 GoBackCommand="{x:Bind ViewModel.GoBackCommand}"
+                IsAudioInputSelectionAvailable="{x:Bind ViewModel.IsAudioInputSelectionAvailable, Mode=OneWay}"
+                IsAudioInputSelectionFeatureEnabled="{x:Bind ViewModel.IsAudioInputSelectionFeatureEnabled, Mode=OneWay}"
+                IsAudioInputMuted="{x:Bind ViewModel.IsAudioInputMuted, Mode=OneWay}"
                 IsLocalAudioEnabled="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=OneWay}"
                 IsPaused="{x:Bind ViewModel.IsPaused, Mode=OneWay}"
                 IsRecording="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
+                SelectedAudioInputSource="{x:Bind ViewModel.SelectedAudioInputSource, Mode=OneWay}"
+                SelectedAudioInputSourceIndex="{x:Bind ViewModel.SelectedAudioInputSourceIndex, Mode=OneWay}"
+                SelectAudioInputSourceCommand="{x:Bind ViewModel.SelectAudioInputSourceCommand}"
                 StartVideoCaptureCommand="{x:Bind ViewModel.StartVideoCaptureCommand}"
                 StopVideoCaptureCommand="{x:Bind ViewModel.StopVideoCaptureCommand}"
+                ToggleAudioInputMuteCommand="{x:Bind ViewModel.ToggleAudioInputMuteCommand}"
                 ToggleLocalAudioCommand="{x:Bind ViewModel.ToggleDesktopAudioCommand}"
                 TogglePauseResumeCommand="{x:Bind ViewModel.TogglePauseResumeCommand}" />
         </Grid>

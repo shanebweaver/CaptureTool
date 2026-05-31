@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.AudioInputSelector"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:audio="using:CaptureTool.Infrastructure.Abstractions.Audio"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
+    d:DataContext="{d:DesignInstance Type=local:AudioInputSelector}"
+    mc:Ignorable="d">
+    <StackPanel
+        MinWidth="220"
+        MaxWidth="260"
+        Orientation="Vertical"
+        Spacing="2">
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Button
+                Command="{x:Bind ToggleMuteCommand, Mode=OneWay}"
+                IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
+                Style="{StaticResource IconButtonStyle}">
+                <Grid>
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="{StaticResource Microphone}"
+                        Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsMuted), Mode=OneWay}" />
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="{StaticResource Cancel}"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsMuted), Mode=OneWay}" />
+                </Grid>
+            </Button>
+
+            <ComboBox
+                x:Name="AudioInputComboBox"
+                Grid.Column="1"
+                HorizontalAlignment="Stretch"
+                IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
+                ItemsSource="{x:Bind AudioInputSources, Mode=OneWay}"
+                PlaceholderText="No microphone"
+                SelectedIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
+                SelectionChanged="AudioInputComboBox_SelectionChanged"
+                ToolTipService.ToolTip="{x:Bind StatusText, Mode=OneWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="audio:AudioInputSource">
+                        <TextBlock
+                            MaxLines="1"
+                            Text="{x:Bind DisplayName}"
+                            TextTrimming="CharacterEllipsis" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+
+        <TextBlock
+            FontSize="10"
+            MaxLines="1"
+            Text="{x:Bind StatusText, Mode=OneWay}"
+            TextTrimming="CharacterEllipsis"
+            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasStatusText), Mode=OneWay}" />
+    </StackPanel>
+</local:UserControlBase>

@@ -1,4 +1,5 @@
 using CaptureTool.Infrastructure.Abstractions.Clipboard;
+using CaptureTool.Infrastructure.Abstractions.Audio;
 using CaptureTool.Infrastructure.Abstractions.Localization;
 using CaptureTool.Infrastructure.Abstractions.Media;
 using CaptureTool.Infrastructure.Abstractions.Share;
@@ -8,6 +9,7 @@ using CaptureTool.Infrastructure.Abstractions.Store;
 using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
 using CaptureTool.Infrastructure.Abstractions.Themes;
 using CaptureTool.Infrastructure.Windows.Clipboard;
+using CaptureTool.Infrastructure.Windows.Audio;
 using CaptureTool.Infrastructure.Windows.Localization;
 using CaptureTool.Infrastructure.Windows.Media;
 using CaptureTool.Infrastructure.Windows.Share;
@@ -36,6 +38,7 @@ public static class WindowsServicesServiceCollectionExtensions
         services.AddSingleton<IShutdownHandler, WindowsShutdownHandler>();
         services.AddSingleton<IFilePickerService, WindowsFilePickerService>();
         services.AddSingleton<IVideoFileTrimmer, WindowsVideoFileTrimmer>();
+        services.AddSingleton<IAudioInputDetectionService, WindowsAudioInputDetectionService>();
         return services;
     }
 }
