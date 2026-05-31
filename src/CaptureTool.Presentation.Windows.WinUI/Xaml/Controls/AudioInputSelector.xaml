@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.AudioInputSelector"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
+    d:DataContext="{d:DesignInstance Type=local:AudioInputSelector}"
+    mc:Ignorable="d">
+    <StackPanel
+        MinWidth="220"
+        MaxWidth="260"
+        Orientation="Vertical"
+        Spacing="2">
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <FontIcon
+                VerticalAlignment="Center"
+                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                FontSize="18"
+                Glyph="{StaticResource Microphone}" />
+
+            <ComboBox
+                x:Name="AudioInputComboBox"
+                Grid.Column="1"
+                HorizontalAlignment="Stretch"
+                DisplayMemberPath="DisplayName"
+                IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
+                ItemsSource="{x:Bind AudioInputSources, Mode=OneWay}"
+                PlaceholderText="No microphone"
+                SelectedItem="{x:Bind SelectedAudioInputSource, Mode=TwoWay}"
+                SelectionChanged="AudioInputComboBox_SelectionChanged"
+                ToolTipService.ToolTip="{x:Bind StatusText, Mode=OneWay}" />
+        </Grid>
+
+        <TextBlock
+            MaxLines="1"
+            FontSize="10"
+            Text="{x:Bind StatusText, Mode=OneWay}"
+            TextTrimming="CharacterEllipsis"
+            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasStatusText), Mode=OneWay}" />
+    </StackPanel>
+</local:UserControlBase>

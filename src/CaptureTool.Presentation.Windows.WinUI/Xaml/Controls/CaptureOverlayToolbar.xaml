@@ -88,6 +88,13 @@
                 </Grid>
             </Button>
 
+            <local:AudioInputSelector
+                AudioInputSources="{x:Bind AudioInputSources, Mode=OneWay}"
+                IsAvailable="{x:Bind IsAudioInputSelectionAvailable, Mode=OneWay}"
+                SelectedAudioInputSource="{x:Bind SelectedAudioInputSource, Mode=OneWay}"
+                SelectionChangedCommand="{x:Bind SelectAudioInputSourceCommand, Mode=OneWay}"
+                StatusText="{x:Bind AudioInputSelectionStatus, Mode=OneWay}" />
+
             <Button
                 x:Uid="SelectionOverlay_CloseButton"
                 Command="{x:Bind CloseCommand, Mode=OneWay}"

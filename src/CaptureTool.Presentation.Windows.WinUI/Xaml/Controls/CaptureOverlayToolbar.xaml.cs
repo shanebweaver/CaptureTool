@@ -1,4 +1,6 @@
 using Microsoft.UI.Xaml;
+using CaptureTool.Infrastructure.Abstractions.Audio;
+using System.Collections;
 using System.Windows.Input;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
@@ -64,6 +66,36 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(TimeSpan),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(TimeSpan.Zero));
+
+    public static readonly DependencyProperty AudioInputSourcesProperty = DependencyProperty.Register(
+        nameof(AudioInputSources),
+        typeof(IEnumerable),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(Array.Empty<AudioInputSource>()));
+
+    public static readonly DependencyProperty SelectedAudioInputSourceProperty = DependencyProperty.Register(
+        nameof(SelectedAudioInputSource),
+        typeof(AudioInputSource),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(null));
+
+    public static readonly DependencyProperty IsAudioInputSelectionAvailableProperty = DependencyProperty.Register(
+        nameof(IsAudioInputSelectionAvailable),
+        typeof(bool),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(false));
+
+    public static readonly DependencyProperty AudioInputSelectionStatusProperty = DependencyProperty.Register(
+        nameof(AudioInputSelectionStatus),
+        typeof(string),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(string.Empty));
+
+    public static readonly DependencyProperty SelectAudioInputSourceCommandProperty = DependencyProperty.Register(
+        nameof(SelectAudioInputSourceCommand),
+        typeof(ICommand),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(null));
 
     public CaptureOverlayToolbar()
     {
@@ -138,5 +170,35 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     {
         get => Get<TimeSpan>(CaptureTimeProperty);
         set => Set(CaptureTimeProperty, value);
+    }
+
+    public IEnumerable AudioInputSources
+    {
+        get => Get<IEnumerable>(AudioInputSourcesProperty);
+        set => Set(AudioInputSourcesProperty, value);
+    }
+
+    public AudioInputSource? SelectedAudioInputSource
+    {
+        get => Get<AudioInputSource?>(SelectedAudioInputSourceProperty);
+        set => Set(SelectedAudioInputSourceProperty, value);
+    }
+
+    public bool IsAudioInputSelectionAvailable
+    {
+        get => Get<bool>(IsAudioInputSelectionAvailableProperty);
+        set => Set(IsAudioInputSelectionAvailableProperty, value);
+    }
+
+    public string AudioInputSelectionStatus
+    {
+        get => Get<string>(AudioInputSelectionStatusProperty);
+        set => Set(AudioInputSelectionStatusProperty, value);
+    }
+
+    public ICommand SelectAudioInputSourceCommand
+    {
+        get => Get<ICommand>(SelectAudioInputSourceCommandProperty);
+        set => Set(SelectAudioInputSourceCommandProperty, value);
     }
 }
