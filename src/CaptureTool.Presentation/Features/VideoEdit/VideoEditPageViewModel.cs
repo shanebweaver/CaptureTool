@@ -4,6 +4,7 @@ using CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Features.VideoEdit.ScanVideoMetadata;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Domain.Capture.Abstractions.Metadata;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Abstractions.Storage;
 using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
@@ -48,6 +49,12 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         private set => Set(ref field, value);
     }
 
+    public bool IsMetadataScanningFeatureEnabled
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public bool HasMetadataScanStatus
     {
         get;
@@ -69,6 +76,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
     private readonly IUseCase<SaveVideoFileRequest, SaveVideoFileResponse> _saveAction;
     private readonly IUseCase<CopyVideoFileRequest, CopyVideoFileResponse> _copyAction;
     private readonly IUseCase<ScanVideoMetadataRequest, ScanVideoMetadataResponse> _scanMetadataAction;
+    private readonly IFeatureManager _featureManager;
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ITelemetryService _telemetryService;
     private IMetadataScanJob? _metadataScanJob;
@@ -77,12 +85,14 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         IUseCase<SaveVideoFileRequest, SaveVideoFileResponse> saveAction,
         IUseCase<CopyVideoFileRequest, CopyVideoFileResponse> copyAction,
         IUseCase<ScanVideoMetadataRequest, ScanVideoMetadataResponse> scanMetadataAction,
+        IFeatureManager featureManager,
         ITaskEnvironment taskEnvironment,
         ITelemetryService telemetryService)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
         _scanMetadataAction = scanMetadataAction;
+        _featureManager = featureManager;
         _taskEnvironment = taskEnvironment;
         _telemetryService = telemetryService;
 
@@ -93,6 +103,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         IsVideoReady = false;
         IsFinalizingVideo = false;
         IsScanningMetadata = false;
+        IsMetadataScanningFeatureEnabled = false;
         CanScanMetadata = false;
         HasMetadataScanStatus = false;
     }
@@ -106,6 +117,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         HasMetadataScanStatus = false;
         MetadataScanStatus = null;
         MetadataScanProgress = 0;
+        IsMetadataScanningFeatureEnabled = _featureManager.IsEnabled(AppFeatures.Feature_VideoCapture_MetadataCollection);
         VideoPath = video.FilePath;
 
         if (video is PendingVideoFile pendingVideo)
@@ -119,7 +131,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         {
             IsVideoReady = true;
             IsFinalizingVideo = false;
-            CanScanMetadata = true;
+            CanScanMetadata = IsMetadataScanningFeatureEnabled;
         }
 
         base.Load(video);
@@ -132,7 +144,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
             await pendingVideo.WhenReadyAsync();
             IsVideoReady = true;
             IsFinalizingVideo = false;
-            CanScanMetadata = true;
+            CanScanMetadata = IsMetadataScanningFeatureEnabled;
         }
         catch (Exception)
         {
@@ -166,6 +178,11 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         if (string.IsNullOrEmpty(VideoPath))
         {
             throw new InvalidOperationException("Cannot scan video metadata without a valid filepath.");
+        }
+
+        if (!IsMetadataScanningFeatureEnabled)
+        {
+            throw new InvalidOperationException("Cannot scan video metadata when metadata collection is disabled.");
         }
 
         UnsubscribeFromMetadataScanJob();
@@ -207,7 +224,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         };
 
         IsScanningMetadata = status is MetadataScanJobStatus.Queued or MetadataScanJobStatus.Processing;
-        CanScanMetadata = IsVideoReady && !IsScanningMetadata;
+        CanScanMetadata = IsMetadataScanningFeatureEnabled && IsVideoReady && !IsScanningMetadata;
         HasMetadataScanStatus = MetadataScanStatus is not null;
     }
 

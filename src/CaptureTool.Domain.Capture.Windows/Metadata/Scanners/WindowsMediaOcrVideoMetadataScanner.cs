@@ -141,7 +141,7 @@ public sealed class WindowsMediaOcrVideoMetadataScanner : IVideoMetadataScanner,
 
         _textDetectedFrames++;
 
-        System.Diagnostics.Debug.WriteLine($"[OCR Scanner] Text detected: {allText.Substring(0, Math.Min(50, allText.Length))}...");
+        System.Diagnostics.Debug.WriteLine($"[OCR Scanner] Text detected: {allText[..Math.Min(50, allText.Length)]}...");
 
         return new MetadataEntry(
             timestamp: timestamp,

@@ -45,7 +45,8 @@
                 Command="{x:Bind ViewModel.ScanMetadataCommand}"
                 Icon="Find"
                 IsEnabled="{x:Bind ViewModel.CanScanMetadata, Mode=OneWay}"
-                Label="Scan metadata" />
+                Label="Scan metadata"
+                Visibility="{x:Bind ViewModel.IsMetadataScanningFeatureEnabled, Mode=OneWay}" />
         </CommandBar>
 
         <!--  Content  -->
@@ -76,15 +77,15 @@
 
             <!--  Metadata scan progress  -->
             <StackPanel
+                MinWidth="260"
                 Margin="16"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
-                MinWidth="260"
                 Spacing="8"
                 Visibility="{x:Bind ViewModel.HasMetadataScanStatus, Mode=OneWay}">
                 <ProgressBar
-                    Minimum="0"
                     Maximum="100"
+                    Minimum="0"
                     Value="{x:Bind ViewModel.MetadataScanProgress, Mode=OneWay}" />
                 <TextBlock
                     FontSize="12"

@@ -35,10 +35,17 @@ public static class CaptureDomainsWindowsServiceCollectionExtensions
     /// Registers metadata scanners with the registry.
     /// Call this after service registration to initialize the registry.
     /// </summary>
-    public static IServiceProvider RegisterMetadataScanners(this IServiceProvider serviceProvider)
+    public static IServiceProvider RegisterMetadataScanners(this IServiceProvider serviceProvider, bool metadataCollectionEnabled = true)
     {
-        var registry = serviceProvider.GetRequiredService<IMetadataScannerRegistry>();
         var logService = serviceProvider.GetService<ILogService>();
+
+        if (!metadataCollectionEnabled)
+        {
+            logService?.LogInformation("Metadata scanner registration skipped because metadata collection is disabled.");
+            return serviceProvider;
+        }
+
+        var registry = serviceProvider.GetRequiredService<IMetadataScannerRegistry>();
 
         // Register all video scanners
         var videoScanners = serviceProvider.GetServices<IVideoMetadataScanner>();

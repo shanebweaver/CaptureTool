@@ -7,9 +7,9 @@ namespace CaptureTool.Domain.Capture.Windows.Metadata;
 /// </summary>
 public sealed class MetadataScannerRegistry : IMetadataScannerRegistry
 {
-    private readonly Dictionary<string, IVideoMetadataScanner> _videoScanners = new();
-    private readonly Dictionary<string, IAudioMetadataScanner> _audioScanners = new();
-    private readonly object _lock = new();
+    private readonly Dictionary<string, IVideoMetadataScanner> _videoScanners = [];
+    private readonly Dictionary<string, IAudioMetadataScanner> _audioScanners = [];
+    private readonly Lock _lock = new();
 
     public void RegisterVideoScanner(IVideoMetadataScanner scanner)
     {
@@ -55,7 +55,7 @@ public sealed class MetadataScannerRegistry : IMetadataScannerRegistry
     {
         lock (_lock)
         {
-            return _videoScanners.Values.ToList();
+            return [.. _videoScanners.Values];
         }
     }
 
@@ -63,7 +63,7 @@ public sealed class MetadataScannerRegistry : IMetadataScannerRegistry
     {
         lock (_lock)
         {
-            return _audioScanners.Values.ToList();
+            return [.. _audioScanners.Values];
         }
     }
 

@@ -32,8 +32,6 @@ public sealed partial class MainWindow : Window
 
         InitializeComponent();
 
-        AppTitleBar.Loaded += AppTitleBar_Loaded;
-        AppTitleBar.SizeChanged += AppTitleBar_SizeChanged;
         ExtendsContentIntoTitleBar = true;
         UpdateAppTitle();
 
@@ -125,6 +123,8 @@ public sealed partial class MainWindow : Window
     {
         if (args.WindowActivationState == WindowActivationState.CodeActivated)
         {
+            AppTitleBar.Loaded += AppTitleBar_Loaded;
+            AppTitleBar.SizeChanged += AppTitleBar_SizeChanged;
             Activated -= OnActivated;
             RestoreAppWindowSizeAndPosition();
         }

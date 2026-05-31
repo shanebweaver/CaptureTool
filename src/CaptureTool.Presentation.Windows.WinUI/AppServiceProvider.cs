@@ -1,6 +1,7 @@
 using CaptureTool.Application.DependencyInjection;
 using CaptureTool.Domain.Capture.Windows.DependencyInjection;
 using CaptureTool.Domain.Edit.Windows.DependencyInjection;
+using CaptureTool.FeatureManagement;
 using CaptureTool.FeatureManagement.DependencyInjection;
 using CaptureTool.Infrastructure.DependencyInjection;
 using CaptureTool.Infrastructure.Windows.DependencyInjection;
@@ -43,7 +44,8 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         _serviceProvider = collection.BuildServiceProvider();
 
         // Register metadata scanners with the registry
-        _serviceProvider.RegisterMetadataScanners();
+        var featureManager = _serviceProvider.GetRequiredService<IFeatureManager>();
+        _serviceProvider.RegisterMetadataScanners(featureManager.IsEnabled(AppFeatures.Feature_VideoCapture_MetadataCollection));
     }
 
     public T GetService<T>() where T : notnull => _serviceProvider.GetRequiredService<T>();
