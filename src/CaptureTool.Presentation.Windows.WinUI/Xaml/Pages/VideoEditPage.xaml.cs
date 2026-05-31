@@ -19,6 +19,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     private string? _originalVideoPath;
     private string? _renderedTrimPreviewPath;
     private bool _hasLoadedOriginalDuration;
+    private bool _isRenderedTrimPlayerActive;
     private bool _isUpdatingPlayheadFromMedia;
     private bool _isSyncingMediaPosition;
     private int _renderedTrimPreviewVersion;
@@ -183,7 +184,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
     {
-        if (_isSyncingMediaPosition || sender != ActiveMediaPlayer?.PlaybackSession)
+        if (_isSyncingMediaPosition || sender != ActivePlaybackSession)
         {
             return;
         }
@@ -442,6 +443,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     private void ShowOriginalPlayer()
     {
         _renderedTrimMediaPlayer?.Pause();
+        _isRenderedTrimPlayerActive = false;
         OriginalVideoPlayer.Visibility = ViewModel.IsVideoReady ? Visibility.Visible : Visibility.Collapsed;
         RenderedTrimVideoPlayer.Visibility = Visibility.Collapsed;
         SyncMediaPositionToPlayhead();
@@ -450,6 +452,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     private void ShowRenderedTrimPlayer()
     {
         _originalMediaPlayer?.Pause();
+        _isRenderedTrimPlayerActive = true;
         OriginalVideoPlayer.Visibility = Visibility.Collapsed;
         RenderedTrimVideoPlayer.Visibility = ViewModel.IsVideoReady ? Visibility.Visible : Visibility.Collapsed;
         SyncMediaPositionToPlayhead();
@@ -491,24 +494,26 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         }
     }
 
-    private bool IsRenderedTrimPlayerVisible => RenderedTrimVideoPlayer.Visibility == Visibility.Visible;
+    private MediaPlayer? ActiveMediaPlayer => _isRenderedTrimPlayerActive ? _renderedTrimMediaPlayer : _originalMediaPlayer;
 
-    private MediaPlayer? ActiveMediaPlayer => IsRenderedTrimPlayerVisible ? _renderedTrimMediaPlayer : _originalMediaPlayer;
+    private MediaPlaybackSession? ActivePlaybackSession => _isRenderedTrimPlayerActive
+        ? _renderedTrimMediaPlayer?.PlaybackSession
+        : _originalMediaPlayer?.PlaybackSession;
 
-    private double PlaybackStartSeconds => IsRenderedTrimPlayerVisible ? 0 : ViewModel.TrimStartSeconds;
+    private double PlaybackStartSeconds => _isRenderedTrimPlayerActive ? 0 : ViewModel.TrimStartSeconds;
 
-    private double PlaybackEndSeconds => IsRenderedTrimPlayerVisible
+    private double PlaybackEndSeconds => _isRenderedTrimPlayerActive
         ? Math.Max(0, ViewModel.TrimEndSeconds - ViewModel.TrimStartSeconds)
         : ViewModel.TrimEndSeconds;
 
     private double GetOriginalSecondsFromPlaybackSeconds(double seconds)
     {
-        return IsRenderedTrimPlayerVisible ? seconds + ViewModel.TrimStartSeconds : seconds;
+        return _isRenderedTrimPlayerActive ? seconds + ViewModel.TrimStartSeconds : seconds;
     }
 
     private double GetPlaybackSecondsFromOriginalSeconds(double seconds)
     {
-        return IsRenderedTrimPlayerVisible ? seconds - ViewModel.TrimStartSeconds : seconds;
+        return _isRenderedTrimPlayerActive ? seconds - ViewModel.TrimStartSeconds : seconds;
     }
 
     private void UpdateTrimPreviewPlayIcon(bool isPlaying)
