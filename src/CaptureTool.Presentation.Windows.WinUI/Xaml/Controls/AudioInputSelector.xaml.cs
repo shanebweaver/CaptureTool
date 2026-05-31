@@ -61,6 +61,8 @@ public sealed partial class AudioInputSelector : UserControlBase
         InitializeComponent();
     }
 
+    private bool _isApplyingSelection;
+
     public IEnumerable AudioInputSources
     {
         get => Get<IEnumerable>(AudioInputSourcesProperty);
@@ -125,16 +127,48 @@ public sealed partial class AudioInputSelector : UserControlBase
         if (d is AudioInputSelector selector)
         {
             selector.RaisePropertyChanged(GetPropertyName(e.Property));
+
+            if (e.Property == AudioInputSourcesProperty || e.Property == SelectedAudioInputSourceIndexProperty)
+            {
+                selector.ApplySelectedAudioInputSourceIndex();
+            }
         }
     }
 
     private void AudioInputComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (_isApplyingSelection)
+        {
+            return;
+        }
+
         if (e.AddedItems.FirstOrDefault() is AudioInputSource source &&
             SelectionChangedCommand?.CanExecute(source) == true)
         {
             SelectedAudioInputSourceIndex = AudioInputComboBox.SelectedIndex;
             SelectionChangedCommand.Execute(source);
+        }
+    }
+
+    private void ApplySelectedAudioInputSourceIndex()
+    {
+        _ = DispatcherQueue.TryEnqueue(ApplySelectedAudioInputSourceIndexCore);
+    }
+
+    private void ApplySelectedAudioInputSourceIndexCore()
+    {
+        _isApplyingSelection = true;
+
+        try
+        {
+            int selectedIndex = SelectedAudioInputSourceIndex;
+            AudioInputComboBox.SelectedIndex = selectedIndex >= 0 && selectedIndex < AudioInputComboBox.Items.Count
+                ? selectedIndex
+                : -1;
+        }
+        finally
+        {
+            _isApplyingSelection = false;
         }
     }
 
