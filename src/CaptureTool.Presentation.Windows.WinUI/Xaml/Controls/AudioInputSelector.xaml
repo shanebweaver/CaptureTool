@@ -59,8 +59,8 @@
         </Grid>
 
         <TextBlock
-            MaxLines="1"
             FontSize="10"
+            MaxLines="1"
             Text="{x:Bind StatusText, Mode=OneWay}"
             TextTrimming="CharacterEllipsis"
             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(HasStatusText), Mode=OneWay}" />

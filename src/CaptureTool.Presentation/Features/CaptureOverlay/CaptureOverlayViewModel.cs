@@ -9,6 +9,7 @@ using CaptureTool.Application.Features.CaptureOverlay.StopVideoCapture;
 using CaptureTool.Application.Features.CaptureOverlay.ToggleVideoCaptureDesktopAudio;
 using CaptureTool.Application.Features.CaptureOverlay.ToggleVideoCapturePauseResume;
 using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Abstractions.Audio;
 using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
 using CaptureTool.Infrastructure.Abstractions.Themes;
@@ -30,6 +31,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IUseCase<GetAudioInputSourcesRequest, GetAudioInputSourcesResponse> _getAudioInputSourcesCommand;
     private readonly IUseCase<SelectAudioInputSourceRequest, SelectAudioInputSourceResponse> _selectAudioInputSourceCommand;
     private readonly IAudioInputDetectionService _audioInputDetectionService;
+    private readonly IFeatureManager _featureManager;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ITaskEnvironment _taskEnvironment;
 
@@ -85,6 +87,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
+    public bool IsAudioInputSelectionFeatureEnabled
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public ObservableCollection<AudioInputSource> AudioInputSources { get; } = [];
 
     public AudioInputSource? SelectedAudioInputSource
@@ -130,6 +138,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IUseCase<GetAudioInputSourcesRequest, GetAudioInputSourcesResponse> getAudioInputSourcesCommand,
         IUseCase<SelectAudioInputSourceRequest, SelectAudioInputSourceResponse> selectAudioInputSourceCommand,
         IAudioInputDetectionService audioInputDetectionService,
+        IFeatureManager featureManager,
         IThemeService themeService,
         IVideoCaptureHandler videoCaptureHandler,
         ITaskEnvironment taskEnvironment)
@@ -140,6 +149,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _getAudioInputSourcesCommand = getAudioInputSourcesCommand;
         _selectAudioInputSourceCommand = selectAudioInputSourceCommand;
         _audioInputDetectionService = audioInputDetectionService;
+        _featureManager = featureManager;
         _videoCaptureHandler = videoCaptureHandler;
         _taskEnvironment = taskEnvironment;
 
@@ -169,8 +179,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IsPaused = _videoCaptureHandler.IsPaused;
         _videoCaptureHandler.PausedStateChanged += OnPausedStateChanged;
 
-        _audioInputDetectionService.AudioInputSourcesChanged += OnAudioInputSourcesChanged;
-        StartAudioInputDetection();
+        IsAudioInputSelectionFeatureEnabled = _featureManager.IsEnabled(AppFeatures.Feature_AudioInputSelection);
+        if (IsAudioInputSelectionFeatureEnabled)
+        {
+            _audioInputDetectionService.AudioInputSourcesChanged += OnAudioInputSourcesChanged;
+            StartAudioInputDetection();
+        }
 
         _monitorCaptureResult = options.Monitor;
         _captureArea = options.Area;
@@ -223,14 +237,17 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         _videoCaptureHandler.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
         _videoCaptureHandler.PausedStateChanged -= OnPausedStateChanged;
-        _audioInputDetectionService.AudioInputSourcesChanged -= OnAudioInputSourcesChanged;
-        try
+        if (IsAudioInputSelectionFeatureEnabled)
         {
-            _audioInputDetectionService.StopWatching();
-        }
-        catch
-        {
-            // The capture overlay can still close if the platform watcher is already gone.
+            _audioInputDetectionService.AudioInputSourcesChanged -= OnAudioInputSourcesChanged;
+            try
+            {
+                _audioInputDetectionService.StopWatching();
+            }
+            catch
+            {
+                // The capture overlay can still close if the platform watcher is already gone.
+            }
         }
 
         StopTimer();

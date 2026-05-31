@@ -22,6 +22,7 @@
                 CloseCommand="{x:Bind ViewModel.CloseOverlayCommand}"
                 GoBackCommand="{x:Bind ViewModel.GoBackCommand}"
                 IsAudioInputSelectionAvailable="{x:Bind ViewModel.IsAudioInputSelectionAvailable, Mode=OneWay}"
+                IsAudioInputSelectionFeatureEnabled="{x:Bind ViewModel.IsAudioInputSelectionFeatureEnabled, Mode=OneWay}"
                 IsAudioInputMuted="{x:Bind ViewModel.IsAudioInputMuted, Mode=OneWay}"
                 IsLocalAudioEnabled="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=OneWay}"
                 IsPaused="{x:Bind ViewModel.IsPaused, Mode=OneWay}"

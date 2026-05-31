@@ -96,7 +96,8 @@
                 SelectedAudioInputSourceIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
                 SelectionChangedCommand="{x:Bind SelectAudioInputSourceCommand, Mode=OneWay}"
                 StatusText="{x:Bind AudioInputSelectionStatus, Mode=OneWay}"
-                ToggleMuteCommand="{x:Bind ToggleAudioInputMuteCommand, Mode=OneWay}" />
+                ToggleMuteCommand="{x:Bind ToggleAudioInputMuteCommand, Mode=OneWay}"
+                Visibility="{x:Bind IsAudioInputSelectionFeatureEnabled, Mode=OneWay}" />
 
             <Button
                 x:Uid="SelectionOverlay_CloseButton"
