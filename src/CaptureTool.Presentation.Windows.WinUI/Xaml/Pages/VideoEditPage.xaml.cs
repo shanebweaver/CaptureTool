@@ -9,9 +9,10 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class VideoEditPage : VideoEditPageBase
 {
-    private readonly DispatcherTimer _trimPlaybackTimer;
+    private readonly DispatcherTimer _boundedPlaybackTimer;
     private MediaPlayer? _mediaPlayer;
     private bool _isUpdatingPlayheadFromMedia;
+    private bool _isSyncingMediaPosition;
 
     public VideoEditPage()
     {
@@ -19,25 +20,29 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         _mediaPlayer = new MediaPlayer();
         _mediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
         _mediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
+        _mediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
+        _mediaPlayer.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
         VideoPlayer.SetMediaPlayer(_mediaPlayer);
         VideoPlayer.Loaded += VideoPlayer_Loaded;
         VideoPlayer.Unloaded += VideoPlayer_Unloaded;
 
-        _trimPlaybackTimer = new DispatcherTimer
+        _boundedPlaybackTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(50),
         };
-        _trimPlaybackTimer.Tick += TrimPlaybackTimer_Tick;
+        _boundedPlaybackTimer.Tick += BoundedPlaybackTimer_Tick;
     }
 
     private void VideoPlayer_Unloaded(object sender, RoutedEventArgs e)
     {
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
-        _trimPlaybackTimer.Stop();
+        _boundedPlaybackTimer.Stop();
         if (_mediaPlayer is not null)
         {
             _mediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
             _mediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
+            _mediaPlayer.PlaybackSession.PlaybackStateChanged -= PlaybackSession_PlaybackStateChanged;
+            _mediaPlayer.PlaybackSession.PositionChanged -= PlaybackSession_PositionChanged;
             _mediaPlayer.Dispose();
             _mediaPlayer = null;
         }
@@ -104,7 +109,66 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private void MediaPlayer_MediaEnded(MediaPlayer sender, object args)
     {
-        DispatcherQueue.TryEnqueue(StopTrimPreviewAtEnd);
+        DispatcherQueue.TryEnqueue(StopPlaybackAtTrimEnd);
+    }
+
+    private void PlaybackSession_PlaybackStateChanged(MediaPlaybackSession sender, object args)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (sender.PlaybackState == MediaPlaybackState.Playing)
+            {
+                EnsurePlaybackIsInsideTrimRange();
+                _boundedPlaybackTimer.Start();
+                UpdateTrimPreviewPlayIcon(true);
+            }
+            else
+            {
+                _boundedPlaybackTimer.Stop();
+                UpdateTrimPreviewPlayIcon(false);
+            }
+        });
+    }
+
+    private void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
+    {
+        if (_isSyncingMediaPosition)
+        {
+            return;
+        }
+
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_mediaPlayer is null || _isSyncingMediaPosition)
+            {
+                return;
+            }
+
+            double currentSeconds = sender.Position.TotalSeconds;
+            if (currentSeconds < ViewModel.TrimStartSeconds)
+            {
+                UpdatePlayheadFromMedia(ViewModel.TrimStartSeconds);
+                SetMediaPosition(TimeSpan.FromSeconds(ViewModel.TrimStartSeconds));
+                return;
+            }
+
+            if (currentSeconds > ViewModel.TrimEndSeconds)
+            {
+                if (sender.PlaybackState == MediaPlaybackState.Playing)
+                {
+                    StopPlaybackAtTrimEnd();
+                }
+                else
+                {
+                    UpdatePlayheadFromMedia(ViewModel.TrimEndSeconds);
+                    SetMediaPosition(TimeSpan.FromSeconds(ViewModel.TrimEndSeconds));
+                }
+
+                return;
+            }
+
+            UpdatePlayheadFromMedia(currentSeconds);
+        });
     }
 
     private void TrimPreviewPlayButton_Click(object sender, RoutedEventArgs e)
@@ -127,34 +191,33 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
         SyncMediaPositionToPlayhead();
         _mediaPlayer.Play();
-        _trimPlaybackTimer.Start();
+        _boundedPlaybackTimer.Start();
         UpdateTrimPreviewPlayIcon(true);
     }
 
-    private void TrimPlaybackTimer_Tick(object? sender, object e)
+    private void BoundedPlaybackTimer_Tick(object? sender, object e)
     {
         if (_mediaPlayer is null)
         {
-            _trimPlaybackTimer.Stop();
+            _boundedPlaybackTimer.Stop();
             return;
         }
 
         double currentSeconds = _mediaPlayer.PlaybackSession.Position.TotalSeconds;
-        if (currentSeconds >= ViewModel.TrimEndSeconds)
+        if (currentSeconds < ViewModel.TrimStartSeconds)
         {
-            StopTrimPreviewAtEnd();
+            UpdatePlayheadFromMedia(ViewModel.TrimStartSeconds);
+            SetMediaPosition(TimeSpan.FromSeconds(ViewModel.TrimStartSeconds));
             return;
         }
 
-        _isUpdatingPlayheadFromMedia = true;
-        try
+        if (currentSeconds >= ViewModel.TrimEndSeconds)
         {
-            ViewModel.UpdatePlayhead(currentSeconds);
+            StopPlaybackAtTrimEnd();
+            return;
         }
-        finally
-        {
-            _isUpdatingPlayheadFromMedia = false;
-        }
+
+        UpdatePlayheadFromMedia(currentSeconds);
     }
 
     private void VideoTrimRangeSlider_StartSecondsChanged(object sender, double seconds)
@@ -182,14 +245,14 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         if (_mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing &&
             ViewModel.PlayheadSeconds >= ViewModel.TrimEndSeconds)
         {
-            StopTrimPreviewAtEnd();
+            StopPlaybackAtTrimEnd();
             return;
         }
 
-        _mediaPlayer.PlaybackSession.Position = TimeSpan.FromSeconds(ViewModel.PlayheadSeconds);
+        SetMediaPosition(TimeSpan.FromSeconds(ViewModel.PlayheadSeconds));
     }
 
-    private void StopTrimPreviewAtEnd()
+    private void StopPlaybackAtTrimEnd()
     {
         PauseTrimPreview();
         ViewModel.UpdatePlayhead(ViewModel.TrimEndSeconds);
@@ -198,8 +261,58 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     private void PauseTrimPreview()
     {
         _mediaPlayer?.Pause();
-        _trimPlaybackTimer.Stop();
+        _boundedPlaybackTimer.Stop();
         UpdateTrimPreviewPlayIcon(false);
+    }
+
+    private void EnsurePlaybackIsInsideTrimRange()
+    {
+        if (_mediaPlayer is null)
+        {
+            return;
+        }
+
+        double currentSeconds = _mediaPlayer.PlaybackSession.Position.TotalSeconds;
+        if (currentSeconds < ViewModel.TrimStartSeconds || currentSeconds >= ViewModel.TrimEndSeconds)
+        {
+            ViewModel.UpdatePlayhead(ViewModel.TrimStartSeconds);
+            SetMediaPosition(TimeSpan.FromSeconds(ViewModel.TrimStartSeconds));
+        }
+        else
+        {
+            ViewModel.UpdatePlayhead(currentSeconds);
+        }
+    }
+
+    private void UpdatePlayheadFromMedia(double seconds)
+    {
+        _isUpdatingPlayheadFromMedia = true;
+        try
+        {
+            ViewModel.UpdatePlayhead(seconds);
+        }
+        finally
+        {
+            _isUpdatingPlayheadFromMedia = false;
+        }
+    }
+
+    private void SetMediaPosition(TimeSpan position)
+    {
+        if (_mediaPlayer is null)
+        {
+            return;
+        }
+
+        _isSyncingMediaPosition = true;
+        try
+        {
+            _mediaPlayer.PlaybackSession.Position = position;
+        }
+        finally
+        {
+            _isSyncingMediaPosition = false;
+        }
     }
 
     private void UpdateTrimPreviewPlayIcon(bool isPlaying)

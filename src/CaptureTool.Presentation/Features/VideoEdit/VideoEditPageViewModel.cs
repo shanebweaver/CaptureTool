@@ -11,6 +11,8 @@ namespace CaptureTool.Presentation.Features.VideoEdit;
 
 public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVideoFile>
 {
+    private const double TrimComparisonToleranceSeconds = 0.01;
+
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand CopyCommand { get; }
     public IRelayCommand ToggleTrimModeCommand { get; }
@@ -62,6 +64,10 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         get;
         private set => Set(ref field, value);
     }
+
+    public bool IsTrimmed => VideoDurationSeconds > 0 &&
+        (TrimStartSeconds > TrimComparisonToleranceSeconds ||
+            TrimEndSeconds < VideoDurationSeconds - TrimComparisonToleranceSeconds);
 
     private readonly IUseCase<SaveVideoFileRequest, SaveVideoFileResponse> _saveAction;
     private readonly IUseCase<CopyVideoFileRequest, CopyVideoFileResponse> _copyAction;
@@ -136,12 +142,14 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
     {
         TrimStartSeconds = Math.Clamp(seconds, 0, TrimEndSeconds);
         KeepPlayheadInTrimRange();
+        RaisePropertyChanged(nameof(IsTrimmed));
     }
 
     public void UpdateTrimEnd(double seconds)
     {
         TrimEndSeconds = Math.Clamp(seconds, TrimStartSeconds, VideoDurationSeconds);
         KeepPlayheadInTrimRange();
+        RaisePropertyChanged(nameof(IsTrimmed));
     }
 
     public void UpdatePlayhead(double seconds)
@@ -161,6 +169,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         TrimStartSeconds = 0;
         TrimEndSeconds = durationSeconds;
         PlayheadSeconds = 0;
+        RaisePropertyChanged(nameof(IsTrimmed));
     }
 
     private void KeepPlayheadInTrimRange()
@@ -180,7 +189,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
             throw new InvalidOperationException("Cannot save video without a valid filepath.");
         }
 
-        await _saveAction.ExecuteAsync(new SaveVideoFileRequest(VideoPath), CancellationToken.None);
+        await _saveAction.ExecuteAsync(
+            new SaveVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
+            CancellationToken.None);
     }
 
     private async Task CopyAsync()
@@ -190,6 +201,18 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
             throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
         }
 
-        await _copyAction.ExecuteAsync(new CopyVideoFileRequest(VideoPath), CancellationToken.None);
+        await _copyAction.ExecuteAsync(
+            new CopyVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
+            CancellationToken.None);
+    }
+
+    private TimeSpan? GetTrimStartForRequest()
+    {
+        return IsTrimmed ? TimeSpan.FromSeconds(TrimStartSeconds) : null;
+    }
+
+    private TimeSpan? GetTrimEndForRequest()
+    {
+        return IsTrimmed ? TimeSpan.FromSeconds(TrimEndSeconds) : null;
     }
 }

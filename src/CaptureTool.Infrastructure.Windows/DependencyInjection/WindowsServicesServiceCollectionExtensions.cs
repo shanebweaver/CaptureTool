@@ -1,5 +1,6 @@
 using CaptureTool.Infrastructure.Abstractions.Clipboard;
 using CaptureTool.Infrastructure.Abstractions.Localization;
+using CaptureTool.Infrastructure.Abstractions.Media;
 using CaptureTool.Infrastructure.Abstractions.Share;
 using CaptureTool.Infrastructure.Abstractions.Shutdown;
 using CaptureTool.Infrastructure.Abstractions.Storage;
@@ -8,6 +9,7 @@ using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
 using CaptureTool.Infrastructure.Abstractions.Themes;
 using CaptureTool.Infrastructure.Windows.Clipboard;
 using CaptureTool.Infrastructure.Windows.Localization;
+using CaptureTool.Infrastructure.Windows.Media;
 using CaptureTool.Infrastructure.Windows.Share;
 using CaptureTool.Infrastructure.Windows.Shutdown;
 using CaptureTool.Infrastructure.Windows.Storage;
@@ -33,6 +35,7 @@ public static class WindowsServicesServiceCollectionExtensions
         services.AddSingleton<ITaskEnvironment>(_ => new WinUITaskEnvironment(dispatcherQueue));
         services.AddSingleton<IShutdownHandler, WindowsShutdownHandler>();
         services.AddSingleton<IFilePickerService, WindowsFilePickerService>();
+        services.AddSingleton<IVideoFileTrimmer, WindowsVideoFileTrimmer>();
         return services;
     }
 }
