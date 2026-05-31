@@ -155,8 +155,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _videoCaptureHandler.PausedStateChanged += OnPausedStateChanged;
 
         _audioInputDetectionService.AudioInputSourcesChanged += OnAudioInputSourcesChanged;
-        _audioInputDetectionService.StartWatching();
-        _ = RefreshAudioInputSourcesAsync();
+        StartAudioInputDetection();
 
         _monitorCaptureResult = options.Monitor;
         _captureArea = options.Area;
@@ -188,12 +187,35 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         });
     }
 
+    private void StartAudioInputDetection()
+    {
+        try
+        {
+            _audioInputDetectionService.StartWatching();
+            _ = RefreshAudioInputSourcesAsync();
+        }
+        catch
+        {
+            AudioInputSources.Clear();
+            SelectedAudioInputSource = null;
+            IsAudioInputSelectionAvailable = false;
+            AudioInputSelectionStatus = "Audio inputs unavailable";
+        }
+    }
+
     public override void Dispose()
     {
         _videoCaptureHandler.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
         _videoCaptureHandler.PausedStateChanged -= OnPausedStateChanged;
         _audioInputDetectionService.AudioInputSourcesChanged -= OnAudioInputSourcesChanged;
-        _audioInputDetectionService.StopWatching();
+        try
+        {
+            _audioInputDetectionService.StopWatching();
+        }
+        catch
+        {
+            // The capture overlay can still close if the platform watcher is already gone.
+        }
 
         StopTimer();
 

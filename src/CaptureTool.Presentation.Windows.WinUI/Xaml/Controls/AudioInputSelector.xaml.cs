@@ -12,19 +12,19 @@ public sealed partial class AudioInputSelector : UserControlBase
         nameof(AudioInputSources),
         typeof(IEnumerable),
         typeof(AudioInputSelector),
-        new PropertyMetadata(Array.Empty<AudioInputSource>()));
+        new PropertyMetadata(Array.Empty<AudioInputSource>(), OnBindablePropertyChanged));
 
     public static readonly DependencyProperty SelectedAudioInputSourceProperty = DependencyProperty.Register(
         nameof(SelectedAudioInputSource),
         typeof(AudioInputSource),
         typeof(AudioInputSelector),
-        new PropertyMetadata(null));
+        new PropertyMetadata(null, OnBindablePropertyChanged));
 
     public static readonly DependencyProperty IsAvailableProperty = DependencyProperty.Register(
         nameof(IsAvailable),
         typeof(bool),
         typeof(AudioInputSelector),
-        new PropertyMetadata(false));
+        new PropertyMetadata(false, OnBindablePropertyChanged));
 
     public static readonly DependencyProperty StatusTextProperty = DependencyProperty.Register(
         nameof(StatusText),
@@ -79,7 +79,16 @@ public sealed partial class AudioInputSelector : UserControlBase
     {
         if (d is AudioInputSelector selector)
         {
+            selector.RaisePropertyChanged(nameof(StatusText));
             selector.RaisePropertyChanged(nameof(HasStatusText));
+        }
+    }
+
+    private static void OnBindablePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is AudioInputSelector selector)
+        {
+            selector.RaisePropertyChanged(GetPropertyName(e.Property));
         }
     }
 
@@ -90,5 +99,25 @@ public sealed partial class AudioInputSelector : UserControlBase
         {
             SelectionChangedCommand.Execute(source);
         }
+    }
+
+    private static string GetPropertyName(DependencyProperty property)
+    {
+        if (property == AudioInputSourcesProperty)
+        {
+            return nameof(AudioInputSources);
+        }
+
+        if (property == SelectedAudioInputSourceProperty)
+        {
+            return nameof(SelectedAudioInputSource);
+        }
+
+        if (property == IsAvailableProperty)
+        {
+            return nameof(IsAvailable);
+        }
+
+        return string.Empty;
     }
 }
