@@ -834,6 +834,18 @@ SOFTWARE.
     <value>C</value>
     <comment>The access key for the copy button on the video edit page.</comment>
   </data>
+  <data name="VideoEdit_TrimButton.Label" xml:space="preserve">
+    <value>Trim</value>
+    <comment>The label for the trim button on the video edit page.</comment>
+  </data>
+  <data name="VideoEdit_TrimButton.AccessKey" xml:space="preserve">
+    <value>T</value>
+    <comment>The access key for the trim button on the video edit page.</comment>
+  </data>
+  <data name="VideoEdit_TrimPreviewPlayButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Play trim preview</value>
+    <comment>The accessible name for the play button in the video trim controls.</comment>
+  </data>
   <data name="StartVideoCaptureButtonTextBlock.Text" xml:space="preserve">
     <value>Record</value>
     <comment>The label for the button that starts video capture.</comment>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.VideoTrimRangeSlider"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    MinHeight="64">
+
+    <Grid Padding="8">
+        <Canvas
+            x:Name="TimelineCanvas"
+            Height="48"
+            MinWidth="120"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Background="Transparent"
+            PointerPressed="TimelineCanvas_PointerPressed"
+            SizeChanged="TimelineCanvas_SizeChanged">
+            <Border
+                x:Name="Track"
+                Height="8"
+                Background="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
+                CornerRadius="4"
+                Opacity="0.45" />
+            <Border
+                x:Name="SelectedRange"
+                Height="8"
+                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                CornerRadius="4" />
+            <Border
+                x:Name="StartThumb"
+                Width="14"
+                Height="34"
+                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="3"
+                PointerCanceled="Thumb_PointerReleased"
+                PointerMoved="Thumb_PointerMoved"
+                PointerPressed="StartThumb_PointerPressed"
+                PointerReleased="Thumb_PointerReleased" />
+            <Border
+                x:Name="EndThumb"
+                Width="14"
+                Height="34"
+                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="3"
+                PointerCanceled="Thumb_PointerReleased"
+                PointerMoved="Thumb_PointerMoved"
+                PointerPressed="EndThumb_PointerPressed"
+                PointerReleased="Thumb_PointerReleased" />
+            <Border
+                x:Name="Playhead"
+                Width="4"
+                Height="44"
+                Background="{ThemeResource TextFillColorPrimaryBrush}"
+                CornerRadius="2"
+                PointerCanceled="Thumb_PointerReleased"
+                PointerMoved="Thumb_PointerMoved"
+                PointerPressed="Playhead_PointerPressed"
+                PointerReleased="Thumb_PointerReleased" />
+        </Canvas>
+    </Grid>
+</local:UserControlBase>

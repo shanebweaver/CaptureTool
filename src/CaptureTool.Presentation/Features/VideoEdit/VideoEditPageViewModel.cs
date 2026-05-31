@@ -13,6 +13,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 {
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand CopyCommand { get; }
+    public IRelayCommand ToggleTrimModeCommand { get; }
 
     public string? VideoPath
     {
@@ -27,6 +28,36 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
     }
 
     public bool IsFinalizingVideo
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsInTrimMode
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public double VideoDurationSeconds
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public double TrimStartSeconds
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public double TrimEndSeconds
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public double PlayheadSeconds
     {
         get;
         private set => Set(ref field, value);
@@ -47,9 +78,15 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         CopyCommand = new AsyncRelayCommand(CopyAsync);
+        ToggleTrimModeCommand = new RelayCommand(ToggleTrimMode);
 
         IsVideoReady = false;
         IsFinalizingVideo = false;
+        IsInTrimMode = false;
+        VideoDurationSeconds = 0;
+        TrimStartSeconds = 0;
+        TrimEndSeconds = 0;
+        PlayheadSeconds = 0;
     }
 
     public override void Load(IVideoFile video)
@@ -58,6 +95,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         StartLoading();
 
         VideoPath = video.FilePath;
+        ResetTrimRange(0);
 
         if (video is PendingVideoFile pendingVideo)
         {
@@ -86,6 +124,53 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         {
             IsFinalizingVideo = false;
         }
+    }
+
+    public void SetVideoDuration(TimeSpan duration)
+    {
+        double durationSeconds = Math.Max(0, duration.TotalSeconds);
+        ResetTrimRange(durationSeconds);
+    }
+
+    public void UpdateTrimStart(double seconds)
+    {
+        TrimStartSeconds = Math.Clamp(seconds, 0, TrimEndSeconds);
+        KeepPlayheadInTrimRange();
+    }
+
+    public void UpdateTrimEnd(double seconds)
+    {
+        TrimEndSeconds = Math.Clamp(seconds, TrimStartSeconds, VideoDurationSeconds);
+        KeepPlayheadInTrimRange();
+    }
+
+    public void UpdatePlayhead(double seconds)
+    {
+        PlayheadSeconds = ClampToTrimRange(seconds);
+    }
+
+    private void ToggleTrimMode()
+    {
+        IsInTrimMode = !IsInTrimMode;
+        KeepPlayheadInTrimRange();
+    }
+
+    private void ResetTrimRange(double durationSeconds)
+    {
+        VideoDurationSeconds = durationSeconds;
+        TrimStartSeconds = 0;
+        TrimEndSeconds = durationSeconds;
+        PlayheadSeconds = 0;
+    }
+
+    private void KeepPlayheadInTrimRange()
+    {
+        PlayheadSeconds = ClampToTrimRange(PlayheadSeconds);
+    }
+
+    private double ClampToTrimRange(double seconds)
+    {
+        return Math.Clamp(seconds, TrimStartSeconds, TrimEndSeconds);
     }
 
     private async Task SaveAsync()
