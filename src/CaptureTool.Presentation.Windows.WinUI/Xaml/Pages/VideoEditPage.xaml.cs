@@ -14,13 +14,14 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     private readonly DispatcherTimer _boundedPlaybackTimer;
     private readonly IStorageService _storageService;
     private readonly IVideoFileTrimmer _videoFileTrimmer;
-    private MediaPlayer? _mediaPlayer;
+    private MediaPlayer? _originalMediaPlayer;
+    private MediaPlayer? _renderedTrimMediaPlayer;
     private string? _originalVideoPath;
     private string? _renderedTrimPreviewPath;
-    private bool _isUsingRenderedTrimPreview;
     private bool _hasLoadedOriginalDuration;
     private bool _isUpdatingPlayheadFromMedia;
     private bool _isSyncingMediaPosition;
+    private int _renderedTrimPreviewVersion;
 
     public VideoEditPage()
     {
@@ -28,14 +29,14 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         _storageService = App.Current.ServiceProvider.GetService<IStorageService>();
         _videoFileTrimmer = App.Current.ServiceProvider.GetService<IVideoFileTrimmer>();
 
-        _mediaPlayer = new MediaPlayer();
-        _mediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
-        _mediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
-        _mediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
-        _mediaPlayer.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
-        VideoPlayer.SetMediaPlayer(_mediaPlayer);
-        VideoPlayer.Loaded += VideoPlayer_Loaded;
-        VideoPlayer.Unloaded += VideoPlayer_Unloaded;
+        _originalMediaPlayer = CreateMediaPlayer();
+        OriginalVideoPlayer.SetMediaPlayer(_originalMediaPlayer);
+
+        _renderedTrimMediaPlayer = CreateMediaPlayer();
+        RenderedTrimVideoPlayer.SetMediaPlayer(_renderedTrimMediaPlayer);
+
+        OriginalVideoPlayer.Loaded += VideoPlayer_Loaded;
+        OriginalVideoPlayer.Unloaded += VideoPlayer_Unloaded;
 
         _boundedPlaybackTimer = new DispatcherTimer
         {
@@ -44,20 +45,38 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         _boundedPlaybackTimer.Tick += BoundedPlaybackTimer_Tick;
     }
 
+    private MediaPlayer CreateMediaPlayer()
+    {
+        var mediaPlayer = new MediaPlayer();
+        mediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
+        mediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
+        mediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
+        mediaPlayer.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
+        return mediaPlayer;
+    }
+
     private void VideoPlayer_Unloaded(object sender, RoutedEventArgs e)
     {
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         _boundedPlaybackTimer.Stop();
-        if (_mediaPlayer is not null)
-        {
-            _mediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
-            _mediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
-            _mediaPlayer.PlaybackSession.PlaybackStateChanged -= PlaybackSession_PlaybackStateChanged;
-            _mediaPlayer.PlaybackSession.PositionChanged -= PlaybackSession_PositionChanged;
-            _mediaPlayer.Dispose();
-            _mediaPlayer = null;
-        }
+        DisposeMediaPlayer(ref _originalMediaPlayer);
+        DisposeMediaPlayer(ref _renderedTrimMediaPlayer);
         DeleteRenderedTrimPreview();
+    }
+
+    private void DisposeMediaPlayer(ref MediaPlayer? mediaPlayer)
+    {
+        if (mediaPlayer is null)
+        {
+            return;
+        }
+
+        mediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
+        mediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
+        mediaPlayer.PlaybackSession.PlaybackStateChanged -= PlaybackSession_PlaybackStateChanged;
+        mediaPlayer.PlaybackSession.PositionChanged -= PlaybackSession_PositionChanged;
+        mediaPlayer.Dispose();
+        mediaPlayer = null;
     }
 
     private void VideoPlayer_Loaded(object sender, RoutedEventArgs e)
@@ -76,16 +95,17 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
         if (e.PropertyName == nameof(VideoEditPageViewModel.IsInTrimMode))
         {
-            _ = UpdateRenderedTrimPreviewSourceAsync();
+            _ = UpdateRenderedTrimPreviewAsync();
         }
 
         if (e.PropertyName == nameof(VideoEditPageViewModel.TrimStartSeconds) ||
             e.PropertyName == nameof(VideoEditPageViewModel.TrimEndSeconds))
         {
+            _renderedTrimPreviewVersion++;
             DeleteRenderedTrimPreview();
-            if (ViewModel.IsInTrimMode && _isUsingRenderedTrimPreview)
+            if (ViewModel.IsInTrimMode)
             {
-                _ = LoadOriginalVideoAsync();
+                ShowOriginalPlayer();
             }
             SyncMediaPositionToPlayhead();
         }
@@ -113,12 +133,14 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         {
             _originalVideoPath = filePath;
             _hasLoadedOriginalDuration = false;
+            _renderedTrimPreviewVersion++;
             DeleteRenderedTrimPreview();
-            await LoadMediaSourceAsync(filePath, isRenderedTrimPreview: false);
+            await LoadMediaSourceAsync(_originalMediaPlayer, filePath);
+            ShowOriginalPlayer();
         }
         catch (Exception)
         {
-            // Video not ready yet or file doesn't exist
+            // Video not ready yet or file doesn't exist.
         }
     }
 
@@ -126,7 +148,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            if (!_isUsingRenderedTrimPreview && !_hasLoadedOriginalDuration)
+            if (sender == _originalMediaPlayer && !_hasLoadedOriginalDuration)
             {
                 ViewModel.SetVideoDuration(sender.PlaybackSession.NaturalDuration);
                 _hasLoadedOriginalDuration = true;
@@ -146,11 +168,12 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         {
             if (sender.PlaybackState == MediaPlaybackState.Playing)
             {
+                PauseInactivePlayer();
                 EnsurePlaybackIsInsideTrimRange();
                 _boundedPlaybackTimer.Start();
                 UpdateTrimPreviewPlayIcon(true);
             }
-            else
+            else if (ActiveMediaPlayer?.PlaybackSession.PlaybackState != MediaPlaybackState.Playing)
             {
                 _boundedPlaybackTimer.Stop();
                 UpdateTrimPreviewPlayIcon(false);
@@ -160,14 +183,14 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
     {
-        if (_isSyncingMediaPosition)
+        if (_isSyncingMediaPosition || sender != ActiveMediaPlayer?.PlaybackSession)
         {
             return;
         }
 
         DispatcherQueue.TryEnqueue(() =>
         {
-            if (_mediaPlayer is null || _isSyncingMediaPosition)
+            if (ActiveMediaPlayer is null || _isSyncingMediaPosition)
             {
                 return;
             }
@@ -191,7 +214,6 @@ public sealed partial class VideoEditPage : VideoEditPageBase
                     UpdatePlayheadFromMedia(PlaybackEndSeconds);
                     SetMediaPosition(TimeSpan.FromSeconds(PlaybackEndSeconds));
                 }
-
                 return;
             }
 
@@ -201,12 +223,12 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private void TrimPreviewPlayButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_mediaPlayer is null)
+        if (ActiveMediaPlayer is null)
         {
             return;
         }
 
-        if (_mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
+        if (ActiveMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
         {
             PauseTrimPreview();
             return;
@@ -218,20 +240,20 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         }
 
         SyncMediaPositionToPlayhead();
-        _mediaPlayer.Play();
+        ActiveMediaPlayer.Play();
         _boundedPlaybackTimer.Start();
         UpdateTrimPreviewPlayIcon(true);
     }
 
     private void BoundedPlaybackTimer_Tick(object? sender, object e)
     {
-        if (_mediaPlayer is null)
+        if (ActiveMediaPlayer is null)
         {
             _boundedPlaybackTimer.Stop();
             return;
         }
 
-        double currentSeconds = _mediaPlayer.PlaybackSession.Position.TotalSeconds;
+        double currentSeconds = ActiveMediaPlayer.PlaybackSession.Position.TotalSeconds;
         if (currentSeconds < PlaybackStartSeconds)
         {
             UpdatePlayheadFromMedia(PlaybackStartSeconds);
@@ -265,12 +287,12 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private void SyncMediaPositionToPlayhead()
     {
-        if (_mediaPlayer is null || _isUpdatingPlayheadFromMedia)
+        if (ActiveMediaPlayer is null || _isUpdatingPlayheadFromMedia)
         {
             return;
         }
 
-        if (_mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing &&
+        if (ActiveMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing &&
             GetPlaybackSecondsFromOriginalSeconds(ViewModel.PlayheadSeconds) >= PlaybackEndSeconds)
         {
             StopPlaybackAtTrimEnd();
@@ -288,19 +310,32 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private void PauseTrimPreview()
     {
-        _mediaPlayer?.Pause();
+        _originalMediaPlayer?.Pause();
+        _renderedTrimMediaPlayer?.Pause();
         _boundedPlaybackTimer.Stop();
         UpdateTrimPreviewPlayIcon(false);
     }
 
+    private void PauseInactivePlayer()
+    {
+        if (ActiveMediaPlayer == _originalMediaPlayer)
+        {
+            _renderedTrimMediaPlayer?.Pause();
+        }
+        else
+        {
+            _originalMediaPlayer?.Pause();
+        }
+    }
+
     private void EnsurePlaybackIsInsideTrimRange()
     {
-        if (_mediaPlayer is null)
+        if (ActiveMediaPlayer is null)
         {
             return;
         }
 
-        double currentSeconds = _mediaPlayer.PlaybackSession.Position.TotalSeconds;
+        double currentSeconds = ActiveMediaPlayer.PlaybackSession.Position.TotalSeconds;
         if (currentSeconds < PlaybackStartSeconds || currentSeconds >= PlaybackEndSeconds)
         {
             ViewModel.UpdatePlayhead(ViewModel.TrimStartSeconds);
@@ -327,7 +362,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
 
     private void SetMediaPosition(TimeSpan position)
     {
-        if (_mediaPlayer is null)
+        if (ActiveMediaPlayer is null)
         {
             return;
         }
@@ -335,7 +370,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         _isSyncingMediaPosition = true;
         try
         {
-            _mediaPlayer.PlaybackSession.Position = position;
+            ActiveMediaPlayer.PlaybackSession.Position = position;
         }
         finally
         {
@@ -343,29 +378,26 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         }
     }
 
-    private async Task UpdateRenderedTrimPreviewSourceAsync()
+    private async Task UpdateRenderedTrimPreviewAsync()
     {
         if (ViewModel.IsInTrimMode)
         {
-            if (_isUsingRenderedTrimPreview)
-            {
-                await LoadOriginalVideoAsync();
-            }
+            ShowOriginalPlayer();
             return;
         }
 
         if (!ViewModel.IsTrimmed || string.IsNullOrEmpty(_originalVideoPath))
         {
-            if (_isUsingRenderedTrimPreview)
-            {
-                await LoadOriginalVideoAsync();
-            }
+            ShowOriginalPlayer();
             return;
         }
 
+        int renderVersion = ++_renderedTrimPreviewVersion;
         try
         {
             PauseTrimPreview();
+            SetTrimPreviewLoading(true);
+
             _renderedTrimPreviewPath ??= GetRenderedTrimPreviewPath();
             await _videoFileTrimmer.TrimAsync(
                 _originalVideoPath,
@@ -373,39 +405,59 @@ public sealed partial class VideoEditPage : VideoEditPageBase
                 TimeSpan.FromSeconds(ViewModel.TrimStartSeconds),
                 TimeSpan.FromSeconds(ViewModel.TrimEndSeconds));
 
-            await LoadMediaSourceAsync(_renderedTrimPreviewPath, isRenderedTrimPreview: true);
+            if (renderVersion != _renderedTrimPreviewVersion || ViewModel.IsInTrimMode)
+            {
+                return;
+            }
+
+            await LoadMediaSourceAsync(_renderedTrimMediaPlayer, _renderedTrimPreviewPath);
             ViewModel.UpdatePlayhead(ViewModel.TrimStartSeconds);
+            ShowRenderedTrimPlayer();
         }
         catch (Exception ex)
         {
             AppServiceLocator.Logging.LogException(ex, "Failed to render trimmed video preview.");
-            if (_isUsingRenderedTrimPreview)
+            ShowOriginalPlayer();
+        }
+        finally
+        {
+            if (renderVersion == _renderedTrimPreviewVersion)
             {
-                await LoadOriginalVideoAsync();
+                SetTrimPreviewLoading(false);
             }
         }
     }
 
-    private async Task LoadOriginalVideoAsync()
+    private static async Task LoadMediaSourceAsync(MediaPlayer? mediaPlayer, string filePath)
     {
-        if (string.IsNullOrEmpty(_originalVideoPath))
+        if (mediaPlayer is null)
         {
             return;
         }
 
-        await LoadMediaSourceAsync(_originalVideoPath, isRenderedTrimPreview: false);
+        StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
+        mediaPlayer.Source = MediaSource.CreateFromStorageFile(file);
+    }
+
+    private void ShowOriginalPlayer()
+    {
+        _renderedTrimMediaPlayer?.Pause();
+        OriginalVideoPlayer.Visibility = ViewModel.IsVideoReady ? Visibility.Visible : Visibility.Collapsed;
+        RenderedTrimVideoPlayer.Visibility = Visibility.Collapsed;
         SyncMediaPositionToPlayhead();
     }
 
-    private async Task LoadMediaSourceAsync(string filePath, bool isRenderedTrimPreview)
+    private void ShowRenderedTrimPlayer()
     {
-        StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
-        var mediaSource = MediaSource.CreateFromStorageFile(file);
-        if (_mediaPlayer is not null)
-        {
-            _isUsingRenderedTrimPreview = isRenderedTrimPreview;
-            _mediaPlayer.Source = mediaSource;
-        }
+        _originalMediaPlayer?.Pause();
+        OriginalVideoPlayer.Visibility = Visibility.Collapsed;
+        RenderedTrimVideoPlayer.Visibility = ViewModel.IsVideoReady ? Visibility.Visible : Visibility.Collapsed;
+        SyncMediaPositionToPlayhead();
+    }
+
+    private void SetTrimPreviewLoading(bool isLoading)
+    {
+        TrimPreviewLoadingOverlay.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private string GetRenderedTrimPreviewPath()
@@ -439,20 +491,24 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         }
     }
 
-    private double PlaybackStartSeconds => _isUsingRenderedTrimPreview ? 0 : ViewModel.TrimStartSeconds;
+    private bool IsRenderedTrimPlayerVisible => RenderedTrimVideoPlayer.Visibility == Visibility.Visible;
 
-    private double PlaybackEndSeconds => _isUsingRenderedTrimPreview
+    private MediaPlayer? ActiveMediaPlayer => IsRenderedTrimPlayerVisible ? _renderedTrimMediaPlayer : _originalMediaPlayer;
+
+    private double PlaybackStartSeconds => IsRenderedTrimPlayerVisible ? 0 : ViewModel.TrimStartSeconds;
+
+    private double PlaybackEndSeconds => IsRenderedTrimPlayerVisible
         ? Math.Max(0, ViewModel.TrimEndSeconds - ViewModel.TrimStartSeconds)
         : ViewModel.TrimEndSeconds;
 
     private double GetOriginalSecondsFromPlaybackSeconds(double seconds)
     {
-        return _isUsingRenderedTrimPreview ? seconds + ViewModel.TrimStartSeconds : seconds;
+        return IsRenderedTrimPlayerVisible ? seconds + ViewModel.TrimStartSeconds : seconds;
     }
 
     private double GetPlaybackSecondsFromOriginalSeconds(double seconds)
     {
-        return _isUsingRenderedTrimPreview ? seconds - ViewModel.TrimStartSeconds : seconds;
+        return IsRenderedTrimPlayerVisible ? seconds - ViewModel.TrimStartSeconds : seconds;
     }
 
     private void UpdateTrimPreviewPlayIcon(bool isPlaying)

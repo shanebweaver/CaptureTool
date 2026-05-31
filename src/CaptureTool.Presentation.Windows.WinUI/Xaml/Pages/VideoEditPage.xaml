@@ -56,9 +56,34 @@
         <!--  Content  -->
         <Grid Grid.Row="1" Padding="8,0,8,8">
             <MediaPlayerElement
-                x:Name="VideoPlayer"
+                x:Name="OriginalVideoPlayer"
                 AreTransportControlsEnabled="True"
                 Visibility="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}" />
+            <MediaPlayerElement
+                x:Name="RenderedTrimVideoPlayer"
+                AreTransportControlsEnabled="True"
+                Visibility="Collapsed" />
+
+            <Grid
+                x:Name="TrimPreviewLoadingOverlay"
+                Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
+                Visibility="Collapsed">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="16">
+                    <ProgressRing
+                        Width="48"
+                        Height="48"
+                        IsActive="True" />
+                    <TextBlock
+                        x:Uid="VideoEdit_RenderingTrimPreviewText"
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        Opacity="0.7"
+                        Text="Preparing preview..." />
+                </StackPanel>
+            </Grid>
 
             <!--  Loading indicator for video finalization  -->
             <Grid Visibility="{x:Bind ViewModel.IsFinalizingVideo, Mode=OneWay}">
