@@ -1,4 +1,5 @@
 using CaptureTool.Infrastructure.Abstractions.Clipboard;
+using CaptureTool.Infrastructure.Abstractions.Audio;
 using CaptureTool.Infrastructure.Abstractions.Localization;
 using CaptureTool.Infrastructure.Abstractions.Share;
 using CaptureTool.Infrastructure.Abstractions.Shutdown;
@@ -7,6 +8,7 @@ using CaptureTool.Infrastructure.Abstractions.Store;
 using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
 using CaptureTool.Infrastructure.Abstractions.Themes;
 using CaptureTool.Infrastructure.Windows.Clipboard;
+using CaptureTool.Infrastructure.Windows.Audio;
 using CaptureTool.Infrastructure.Windows.Localization;
 using CaptureTool.Infrastructure.Windows.Share;
 using CaptureTool.Infrastructure.Windows.Shutdown;
@@ -33,6 +35,7 @@ public static class WindowsServicesServiceCollectionExtensions
         services.AddSingleton<ITaskEnvironment>(_ => new WinUITaskEnvironment(dispatcherQueue));
         services.AddSingleton<IShutdownHandler, WindowsShutdownHandler>();
         services.AddSingleton<IFilePickerService, WindowsFilePickerService>();
+        services.AddSingleton<IAudioInputDetectionService, WindowsAudioInputDetectionService>();
         return services;
     }
 }

@@ -17,9 +17,11 @@ using CaptureTool.Application.Features.AudioEdit.CopyAudioFile;
 using CaptureTool.Application.Features.AudioEdit.OpenAudioEditPage;
 using CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
 using CaptureTool.Application.Features.CaptureOverlay.CloseCaptureOverlay;
+using CaptureTool.Application.Features.CaptureOverlay.GetAudioInputSources;
 using CaptureTool.Application.Features.CaptureOverlay.GoBackFromCaptureOverlay;
 using CaptureTool.Application.Features.CaptureOverlay.OpenCaptureOverlay;
 using CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
+using CaptureTool.Application.Features.CaptureOverlay.SelectAudioInputSource;
 using CaptureTool.Application.Features.CaptureOverlay.StartVideoCapture;
 using CaptureTool.Application.Features.CaptureOverlay.StopVideoCapture;
 using CaptureTool.Application.Features.CaptureOverlay.ToggleVideoCaptureDesktopAudio;
@@ -97,10 +99,12 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IConditional<OpenAudioEditPageRequest>, OpenAudioEditPageUseCase>();
 
         services.AddTransient<IUseCase<CloseCaptureOverlayRequest, CloseCaptureOverlayResponse>, CloseCaptureOverlayUseCase>();
+        services.AddTransient<IUseCase<GetAudioInputSourcesRequest, GetAudioInputSourcesResponse>, GetAudioInputSourcesUseCase>();
         services.AddTransient<IUseCase<GoBackFromCaptureOverlayRequest, GoBackFromCaptureOverlayResponse>, GoBackFromCaptureOverlayUseCase>();
         services.AddTransient<IConditional<GoBackFromCaptureOverlayRequest>, GoBackFromCaptureOverlayUseCase>();
         services.AddTransient<IUseCase<OpenCaptureOverlayRequest, OpenCaptureOverlayResponse>, OpenCaptureOverlayUseCase>();
         services.AddTransient<IUseCase<OpenSelectionOverlayRequest, OpenSelectionOverlayResponse>, OpenSelectionOverlayUseCase>();
+        services.AddTransient<IUseCase<SelectAudioInputSourceRequest, SelectAudioInputSourceResponse>, SelectAudioInputSourceUseCase>();
         services.AddTransient<IUseCase<StartVideoCaptureRequest, StartVideoCaptureResponse>, StartVideoCaptureUseCase>();
         services.AddTransient<IConditional<StartVideoCaptureRequest>, StartVideoCaptureUseCase>();
         services.AddTransient<IUseCase<StopVideoCaptureRequest, StopVideoCaptureResponse>, StopVideoCaptureUseCase>();
