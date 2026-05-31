@@ -11,7 +11,7 @@ namespace CaptureTool.Domain.Capture.Windows.Metadata.Scanners;
 /// Video metadata scanner that uses Windows OCR to extract text from video frames.
 /// Uses native C++ texture conversion for better reliability and performance.
 /// </summary>
-public sealed class WindowsMediaOcrVideoMetadataScanner : IVideoMetadataScanner
+public sealed class WindowsMediaOcrVideoMetadataScanner : IVideoMetadataScanner, ISoftwareBitmapVideoMetadataScanner
 {
     private readonly OcrEngine? _ocrEngine;
     private int _frameCounter = 0;
@@ -66,51 +66,14 @@ public sealed class WindowsMediaOcrVideoMetadataScanner : IVideoMetadataScanner
             _processedFrames++;
 
             // Convert D3D11 texture to SoftwareBitmap using native helper
-            var softwareBitmap = ConvertTextureToSoftwareBitmap(frameData);
+            using var softwareBitmap = ConvertTextureToSoftwareBitmap(frameData);
             if (softwareBitmap == null)
             {
                 _lastError = new InvalidOperationException("Failed to convert texture to SoftwareBitmap");
                 return null;
             }
 
-            // Run OCR on the bitmap
-            var ocrResult = await _ocrEngine.RecognizeAsync(softwareBitmap);
-
-            // Dispose the bitmap
-            softwareBitmap.Dispose();
-
-            // If no text found, return null
-            if (ocrResult == null || ocrResult.Lines.Count == 0)
-                return null;
-
-            // Extract all text
-            var allText = string.Join(" ", ocrResult.Lines.Select(line => line.Text));
-
-            // Only create metadata entry if we found meaningful text
-            if (string.IsNullOrWhiteSpace(allText))
-                return null;
-
-            _textDetectedFrames++;
-
-            System.Diagnostics.Debug.WriteLine($"[OCR Scanner] Text detected: {allText.Substring(0, Math.Min(50, allText.Length))}...");
-
-            // Create metadata with detected text
-            return new MetadataEntry(
-                timestamp: frameData.Timestamp,
-                scannerId: ScannerId,
-                key: "ocr-text",
-                value: allText.Trim(),
-                additionalData: new Dictionary<string, object?>
-                {
-                    ["lineCount"] = ocrResult.Lines.Count,
-                    ["wordCount"] = ocrResult.Lines.Sum(line => line.Words.Count),
-                    ["textAngle"] = ocrResult.TextAngle,
-                    ["frameWidth"] = frameData.Width,
-                    ["frameHeight"] = frameData.Height,
-                    ["processedFrames"] = _processedFrames,
-                    ["textDetectedFrames"] = _textDetectedFrames
-                }
-            );
+            return await RecognizeBitmapAsync(softwareBitmap, frameData.Timestamp, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -128,6 +91,74 @@ public sealed class WindowsMediaOcrVideoMetadataScanner : IVideoMetadataScanner
                     $"[OCR Scanner] Stats: Frames={_frameCounter}, Processed={_processedFrames}, Text Detected={_textDetectedFrames}");
             }
         }
+    }
+
+    public async Task<MetadataEntry?> ScanBitmapAsync(
+        SoftwareBitmap softwareBitmap,
+        long timestamp,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (_ocrEngine == null)
+                return null;
+
+            if (softwareBitmap.PixelWidth < 100 || softwareBitmap.PixelHeight < 100)
+                return null;
+
+            _processedFrames++;
+            return await RecognizeBitmapAsync(softwareBitmap, timestamp, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _lastError = ex;
+            System.Diagnostics.Debug.WriteLine($"[OCR Scanner] Error in ScanBitmapAsync: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[OCR Scanner] Stack trace: {ex.StackTrace}");
+            return null;
+        }
+    }
+
+    private async Task<MetadataEntry?> RecognizeBitmapAsync(
+        SoftwareBitmap softwareBitmap,
+        long timestamp,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        using SoftwareBitmap bitmapForOcr = softwareBitmap.BitmapPixelFormat == BitmapPixelFormat.Bgra8 &&
+                                           softwareBitmap.BitmapAlphaMode == BitmapAlphaMode.Premultiplied
+            ? SoftwareBitmap.Copy(softwareBitmap)
+            : SoftwareBitmap.Convert(softwareBitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
+
+        var ocrResult = await _ocrEngine!.RecognizeAsync(bitmapForOcr);
+
+        if (ocrResult == null || ocrResult.Lines.Count == 0)
+            return null;
+
+        var allText = string.Join(" ", ocrResult.Lines.Select(line => line.Text));
+        if (string.IsNullOrWhiteSpace(allText))
+            return null;
+
+        _textDetectedFrames++;
+
+        System.Diagnostics.Debug.WriteLine($"[OCR Scanner] Text detected: {allText.Substring(0, Math.Min(50, allText.Length))}...");
+
+        return new MetadataEntry(
+            timestamp: timestamp,
+            scannerId: ScannerId,
+            key: "ocr-text",
+            value: allText.Trim(),
+            additionalData: new Dictionary<string, object?>
+            {
+                ["lineCount"] = ocrResult.Lines.Count,
+                ["wordCount"] = ocrResult.Lines.Sum(line => line.Words.Count),
+                ["textAngle"] = ocrResult.TextAngle,
+                ["frameWidth"] = bitmapForOcr.PixelWidth,
+                ["frameHeight"] = bitmapForOcr.PixelHeight,
+                ["processedFrames"] = _processedFrames,
+                ["textDetectedFrames"] = _textDetectedFrames
+            }
+        );
     }
 
     private SoftwareBitmap? ConvertTextureToSoftwareBitmap(VideoFrameData frameData)

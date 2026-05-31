@@ -3,6 +3,9 @@ using CaptureTool.Infrastructure.Abstractions.Logging;
 using CaptureTool.Infrastructure.Abstractions.Storage;
 using System.Collections.Concurrent;
 using System.Text.Json;
+using Windows.Graphics.Imaging;
+using Windows.Media.Editing;
+using Windows.Storage;
 
 namespace CaptureTool.Domain.Capture.Windows.Metadata;
 
@@ -169,13 +172,6 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
             var metadataEntries = new List<MetadataEntry>();
             var scannerInfo = new Dictionary<string, string>();
 
-            // For now, this is a placeholder that would process the actual file
-            // In a real implementation, you would:
-            // 1. Open the video file
-            // 2. Iterate through frames/samples
-            // 3. Call registered scanners
-            // 4. Collect metadata entries
-
             var videoScanners = _registry.GetVideoScanners();
             var audioScanners = _registry.GetAudioScanners();
 
@@ -190,7 +186,9 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
             }
 
             // Update progress during processing
-            job.UpdateProgress(50);
+            job.UpdateProgress(5);
+
+            await ScanVideoFileFramesAsync(job, videoScanners, metadataEntries);
 
             // Create metadata file
             var metadataFile = new MetadataFile(
@@ -235,6 +233,76 @@ public sealed class MetadataScanningService : IMetadataScanningService, IDisposa
 
             // Keep the job request file so it can be retried on next startup
             // Optionally, delete it after multiple failures
+        }
+    }
+
+    private async Task ScanVideoFileFramesAsync(
+        MetadataScanJob job,
+        IReadOnlyList<IVideoMetadataScanner> videoScanners,
+        List<MetadataEntry> metadataEntries)
+    {
+        var bitmapScanners = videoScanners
+            .OfType<ISoftwareBitmapVideoMetadataScanner>()
+            .ToList();
+
+        if (bitmapScanners.Count == 0)
+        {
+            _logService.LogInformation("No software bitmap video metadata scanners are registered for file scanning.");
+            job.UpdateProgress(50);
+            return;
+        }
+
+        StorageFile file = await StorageFile.GetFileFromPathAsync(job.FilePath);
+        MediaClip clip = await MediaClip.CreateFromFileAsync(file);
+        var composition = new MediaComposition();
+        composition.Clips.Add(clip);
+
+        TimeSpan duration = clip.OriginalDuration;
+        if (duration <= TimeSpan.Zero)
+        {
+            _logService.LogWarning($"Could not determine duration for metadata scan file: {job.FilePath}");
+            job.UpdateProgress(50);
+            return;
+        }
+
+        const int sampleIntervalSeconds = 1;
+        int sampleCount = Math.Max(1, (int)Math.Ceiling(duration.TotalSeconds / sampleIntervalSeconds));
+        _logService.LogInformation($"Scanning {sampleCount} video frame sample(s) from {Path.GetFileName(job.FilePath)}");
+
+        for (int sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++)
+        {
+            job.CancellationToken.ThrowIfCancellationRequested();
+
+            TimeSpan timestamp = TimeSpan.FromSeconds(sampleIndex * sampleIntervalSeconds);
+            if (timestamp >= duration)
+            {
+                timestamp = duration - TimeSpan.FromMilliseconds(1);
+            }
+
+            using var frameStream = await composition.GetThumbnailAsync(
+                timestamp,
+                0,
+                0,
+                VideoFramePrecision.NearestFrame);
+
+            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(frameStream);
+            using SoftwareBitmap frameBitmap = await decoder.GetSoftwareBitmapAsync();
+
+            foreach (ISoftwareBitmapVideoMetadataScanner scanner in bitmapScanners)
+            {
+                MetadataEntry? entry = await scanner.ScanBitmapAsync(
+                    frameBitmap,
+                    timestamp.Ticks,
+                    job.CancellationToken);
+
+                if (entry is not null)
+                {
+                    metadataEntries.Add(entry);
+                }
+            }
+
+            double progress = 5 + (sampleIndex + 1) * 90d / sampleCount;
+            job.UpdateProgress(progress);
         }
     }
 
