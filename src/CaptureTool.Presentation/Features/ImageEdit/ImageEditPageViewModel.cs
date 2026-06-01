@@ -247,12 +247,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
-    public bool IsShapesFeatureEnabled
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
     public int ZoomPercentage
     {
         get;
@@ -314,7 +308,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         CopyCommand = new AsyncRelayCommand(CopyAsync);
         ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
-        ToggleShapesModeCommand = new RelayCommand(ToggleShapesMode, () => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
+        ToggleShapesModeCommand = new RelayCommand(ToggleShapesMode);
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         UndoCommand = new RelayCommand(Undo);
         RedoCommand = new RelayCommand(Redo);
@@ -330,12 +324,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateDesaturationCommand = new RelayCommand<int>(UpdateDesaturation);
         UpdateToleranceCommand = new RelayCommand<int>(UpdateTolerance);
         UpdateSelectedColorOptionIndexCommand = new RelayCommand<int>(UpdateSelectedColorOptionIndex);
-        UpdateSelectedShapeTypeCommand = new RelayCommand<ShapeType>(UpdateSelectedShapeType, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
-        UpdateShapeStrokeColorCommand = new RelayCommand<Color>(UpdateShapeStrokeColor, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
-        UpdateShapeFillColorCommand = new RelayCommand<Color>(UpdateShapeFillColor, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
-        UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
-        UpdateShapeStrokeOpacityCommand = new RelayCommand<int>(UpdateShapeStrokeOpacity, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
-        UpdateShapeFillOpacityCommand = new RelayCommand<int>(UpdateShapeFillOpacity, (_) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes));
+        UpdateSelectedShapeTypeCommand = new RelayCommand<ShapeType>(UpdateSelectedShapeType);
+        UpdateShapeStrokeColorCommand = new RelayCommand<Color>(UpdateShapeStrokeColor);
+        UpdateShapeFillColorCommand = new RelayCommand<Color>(UpdateShapeFillColor);
+        UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth);
+        UpdateShapeStrokeOpacityCommand = new RelayCommand<int>(UpdateShapeStrokeOpacity);
+        UpdateShapeFillOpacityCommand = new RelayCommand<int>(UpdateShapeFillOpacity);
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
@@ -375,8 +369,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                     }
                 }
             }
-
-            IsShapesFeatureEnabled = _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes);
 
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
@@ -484,58 +476,32 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateSelectedShapeType(ShapeType value)
     {
-        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
-        {
-            return;
-        }
         SelectedShapeType = value;
     }
 
     private void UpdateShapeStrokeColor(Color value)
     {
-        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
-        {
-            return;
-        }
         ShapeStrokeColor = ApplyOpacity(value, ShapeStrokeOpacity);
     }
 
     private void UpdateShapeFillColor(Color value)
     {
-        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
-        {
-            return;
-        }
         ShapeFillColor = ApplyOpacity(value, ShapeFillOpacity);
     }
 
     private void UpdateShapeStrokeWidth(int value)
     {
-        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
-        {
-            return;
-        }
         ShapeStrokeWidth = value;
     }
 
     private void UpdateShapeStrokeOpacity(int value)
     {
-        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
-        {
-            return;
-        }
-
         ShapeStrokeOpacity = Math.Clamp(value, 0, 100);
         ShapeStrokeColor = ApplyOpacity(ShapeStrokeColor, ShapeStrokeOpacity);
     }
 
     private void UpdateShapeFillOpacity(int value)
     {
-        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
-        {
-            return;
-        }
-
         ShapeFillOpacity = Math.Clamp(value, 0, 100);
         ShapeFillColor = ApplyOpacity(ShapeFillColor, ShapeFillOpacity);
     }
@@ -553,7 +519,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint)
     {
-        if (!IsInShapesMode || !_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
+        if (!IsInShapesMode)
         {
             return;
         }
@@ -649,7 +615,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnShapeDeleted(int shapeIndex)
     {
-        if (!IsInShapesMode || !_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
+        if (!IsInShapesMode)
         {
             return;
         }
@@ -676,7 +642,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnShapeModified(int shapeIndex, ModifyShapeOperation.ShapeState oldState, ModifyShapeOperation.ShapeState newState)
     {
-        if (!IsInShapesMode || !_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Shapes))
+        if (!IsInShapesMode)
         {
             return;
         }

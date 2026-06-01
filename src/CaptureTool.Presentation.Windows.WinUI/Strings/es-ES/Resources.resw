@@ -231,6 +231,9 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="ImageEdit_CropButton.Label" xml:space="preserve">
     <value>Recortar</value>
   </data>
+  <data name="ImageEdit_ShapesButton.Label" xml:space="preserve">
+    <value>Formas</value>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Imprimir</value>
   </data>
@@ -242,6 +245,9 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   </data>
   <data name="ImageEdit_CropButton.AccessKey" xml:space="preserve">
     <value>I</value>
+  </data>
+  <data name="ImageEdit_ShapesButton.AccessKey" xml:space="preserve">
+    <value>H</value>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -367,6 +373,9 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Recortar imagen</value>
+  </data>
+  <data name="ImageEdit_ShapesButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Dibujar formas</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Girar imagen</value>
