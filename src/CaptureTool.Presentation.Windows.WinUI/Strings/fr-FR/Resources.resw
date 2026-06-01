@@ -365,6 +365,22 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>Flèche</value>
     <comment>The arrow shape option in the shape toolbar.</comment>
   </data>
+  <data name="ShapeToolbar_RectangleOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Forme rectangle</value>
+    <comment>The tooltip for the rectangle shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_EllipseOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Forme ellipse</value>
+    <comment>The tooltip for the ellipse shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_LineOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Forme ligne</value>
+    <comment>The tooltip for the line shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_ArrowOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Forme flèche</value>
+    <comment>The tooltip for the arrow shape option in the shape toolbar.</comment>
+  </data>
   <data name="ShapeToolbar_StrokeColor.Text" xml:space="preserve">
     <value>Couleur du contour</value>
     <comment>The label for the stroke color picker in the shape toolbar.</comment>
@@ -707,6 +723,11 @@ SOFTWARE.
     <comment />
     <comment>The accessibility name for the shape type selector in the shape toolbar.</comment>
   </data>
+  <data name="ShapeToolbar_ShapeTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choisir le type de forme</value>
+    <comment />
+    <comment>The tooltip for the shape type selector in the shape toolbar.</comment>
+  </data>
   <data name="ShapeToolbar_FillColorButtonLabel.Text" xml:space="preserve">
     <value>Remplissage</value>
     <comment />
@@ -716,6 +737,11 @@ SOFTWARE.
     <value>Épaisseur</value>
     <comment />
     <comment>The accessibility name for the thickness slider in the color palette picker.</comment>
+  </data>
+  <data name="ColorPalettePicker_ThicknessSlider.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ajuster l'épaisseur du contour</value>
+    <comment />
+    <comment>The tooltip for the thickness slider in the color palette picker.</comment>
   </data>
   <data name="ColorPalettePicker_ThicknessLabel.Text" xml:space="preserve">
     <value>Épaisseur</value>
@@ -741,6 +767,11 @@ SOFTWARE.
     <value>Opacité</value>
     <comment />
     <comment>The accessibility name for the opacity slider in the color palette picker.</comment>
+  </data>
+  <data name="ColorPalettePicker_OpacitySlider.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ajuster l'opacité</value>
+    <comment />
+    <comment>The tooltip for the opacity slider in the color palette picker.</comment>
   </data>
   <data name="ShapeToolbar_FillColorButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Choisir la couleur et l’opacité du remplissage</value>

@@ -37,23 +37,34 @@
                 x:Uid="ShapeToolbar_ShapeTypeComboBox"
                 MinWidth="140"
                 MinHeight="34"
+                AutomationProperties.Name="Shape type"
                 Background="Transparent"
                 BorderBrush="Transparent"
                 SelectedIndex="{x:Bind SelectedShapeTypeIndex, Mode=OneWay}"
-                SelectionChanged="ShapeTypeComboBox_SelectionChanged">
-                <ComboBoxItem Tag="0">
+                SelectionChanged="ShapeTypeComboBox_SelectionChanged"
+                ToolTipService.ToolTip="Choose shape type">
+                <ComboBoxItem
+                    x:Uid="ShapeToolbar_RectangleOption"
+                    Tag="0"
+                    ToolTipService.ToolTip="Rectangle shape">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Rectangle Style="{StaticResource ShapeTypeComboBoxIconStyle}" />
                         <TextBlock x:Uid="ShapeToolbar_RectangleItem" Text="Rectangle" />
                     </StackPanel>
                 </ComboBoxItem>
-                <ComboBoxItem Tag="1">
+                <ComboBoxItem
+                    x:Uid="ShapeToolbar_EllipseOption"
+                    Tag="1"
+                    ToolTipService.ToolTip="Ellipse shape">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Ellipse Style="{StaticResource ShapeTypeComboBoxIconStyle}" />
                         <TextBlock x:Uid="ShapeToolbar_EllipseItem" Text="Ellipse" />
                     </StackPanel>
                 </ComboBoxItem>
-                <ComboBoxItem Tag="2">
+                <ComboBoxItem
+                    x:Uid="ShapeToolbar_LineOption"
+                    Tag="2"
+                    ToolTipService.ToolTip="Line shape">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Line
                             Style="{StaticResource ShapeTypeComboBoxLineIconStyle}"
@@ -64,7 +75,10 @@
                         <TextBlock x:Uid="ShapeToolbar_LineItem" Text="Line" />
                     </StackPanel>
                 </ComboBoxItem>
-                <ComboBoxItem Tag="3">
+                <ComboBoxItem
+                    x:Uid="ShapeToolbar_ArrowOption"
+                    Tag="3"
+                    ToolTipService.ToolTip="Arrow shape">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Grid Width="16" Height="16">
                             <Line

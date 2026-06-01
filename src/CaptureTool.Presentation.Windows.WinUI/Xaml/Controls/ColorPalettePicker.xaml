@@ -108,6 +108,7 @@
                     Orientation="Vertical"
                     StepFrequency="1"
                     TickFrequency="1"
+                    ToolTipService.ToolTip="Adjust outline thickness"
                     ValueChanged="ThicknessSlider_ValueChanged"
                     Value="{x:Bind Thickness, Mode=OneWay}" />
                 <TextBlock
@@ -138,6 +139,7 @@
                     Orientation="Vertical"
                     StepFrequency="1"
                     TickFrequency="10"
+                    ToolTipService.ToolTip="Adjust opacity"
                     ValueChanged="OpacitySlider_ValueChanged"
                     Value="{x:Bind OpacityPercentage, Mode=OneWay}" />
                 <TextBlock
