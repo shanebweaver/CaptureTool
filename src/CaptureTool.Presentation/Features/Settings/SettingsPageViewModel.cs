@@ -20,6 +20,7 @@ using CaptureTool.Infrastructure.Abstractions.Factories;
 using CaptureTool.Infrastructure.Abstractions.Localization;
 using CaptureTool.Infrastructure.Abstractions.Settings;
 using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.Abstractions.Themes;
 using CaptureTool.Infrastructure.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -49,6 +50,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
     private readonly IStorageService _storageService;
+    private readonly ITelemetryService _telemetryService;
     private readonly IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> _appLanguageViewModelFactory;
     private readonly IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> _appThemeViewModelFactory;
 
@@ -60,20 +62,20 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
 
     public IAsyncRelayCommand ChangeScreenshotsFolderCommand { get; }
-    public IRelayCommand OpenScreenshotsFolderCommand { get; }
+    public IAsyncRelayCommand OpenScreenshotsFolderCommand { get; }
     public IAsyncRelayCommand ChangeVideosFolderCommand { get; }
-    public IRelayCommand OpenVideosFolderCommand { get; }
-    public IRelayCommand RestartAppCommand { get; }
-    public IRelayCommand GoBackCommand { get; }
+    public IAsyncRelayCommand OpenVideosFolderCommand { get; }
+    public IAsyncRelayCommand RestartAppCommand { get; }
+    public IAsyncRelayCommand GoBackCommand { get; }
     public IAsyncRelayCommand<bool> UpdateImageCaptureAutoCopyCommand { get; }
     public IAsyncRelayCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
     public IAsyncRelayCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
     public IAsyncRelayCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
     public IAsyncRelayCommand<bool> UpdateVideoCaptureDefaultLocalAudioCommand { get; }
     public IAsyncRelayCommand<int> UpdateAppLanguageCommand { get; }
-    public IRelayCommand<int> UpdateAppThemeCommand { get; }
-    public IRelayCommand OpenTemporaryFilesFolderCommand { get; }
-    public IRelayCommand ClearTemporaryFilesCommand { get; }
+    public IAsyncRelayCommand<int> UpdateAppThemeCommand { get; }
+    public IAsyncRelayCommand OpenTemporaryFilesFolderCommand { get; }
+    public IAsyncRelayCommand ClearTemporaryFilesCommand { get; }
     public IAsyncRelayCommand RestoreDefaultSettingsCommand { get; }
 
     private ObservableCollection<AppLanguageViewModel> _appLanguages = [];
@@ -193,6 +195,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IThemeService themeService,
         ISettingsService settingsService,
         IStorageService storageService,
+        ITelemetryService telemetryService,
         IFactoryServiceWithArgs<AppLanguageViewModel, IAppLanguage?> appLanguageViewModelFactory,
         IFactoryServiceWithArgs<AppThemeViewModel, AppTheme> appThemeViewModelFactory)
     {
@@ -216,6 +219,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _themeService = themeService;
         _settingsService = settingsService;
         _storageService = storageService;
+        _telemetryService = telemetryService;
         _appLanguageViewModelFactory = appLanguageViewModelFactory;
         _appThemeViewModelFactory = appThemeViewModelFactory;
 
@@ -226,20 +230,20 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         TemporaryFilesFolderPath = string.Empty;
 
         ChangeScreenshotsFolderCommand = new AsyncRelayCommand(ChangeScreenshotsFolderAsync);
-        OpenScreenshotsFolderCommand = new RelayCommand(OpenScreenshotsFolder);
+        OpenScreenshotsFolderCommand = new AsyncRelayCommand(OpenScreenshotsFolderAsync);
         ChangeVideosFolderCommand = new AsyncRelayCommand(ChangeVideosFolderAsync);
-        OpenVideosFolderCommand = new RelayCommand(OpenVideosFolder);
-        RestartAppCommand = new RelayCommand(RestartApp);
-        GoBackCommand = new RelayCommand(GoBack);
+        OpenVideosFolderCommand = new AsyncRelayCommand(OpenVideosFolderAsync);
+        RestartAppCommand = new AsyncRelayCommand(RestartAppAsync);
+        GoBackCommand = new AsyncRelayCommand(GoBackAsync);
         UpdateImageCaptureAutoCopyCommand = new AsyncRelayCommand<bool>(UpdateImageCaptureAutoCopyAsync);
         UpdateImageCaptureAutoSaveCommand = new AsyncRelayCommand<bool>(UpdateImageCaptureAutoSaveAsync);
         UpdateVideoCaptureAutoCopyCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureAutoCopyAsync);
         UpdateVideoCaptureAutoSaveCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureAutoSaveAsync);
         UpdateVideoCaptureDefaultLocalAudioCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureDefaultLocalAudioAsync);
         UpdateAppLanguageCommand = new AsyncRelayCommand<int>(UpdateAppLanguageAsync);
-        UpdateAppThemeCommand = new RelayCommand<int>(UpdateAppTheme);
-        OpenTemporaryFilesFolderCommand = new RelayCommand(OpenTemporaryFilesFolder);
-        ClearTemporaryFilesCommand = new RelayCommand(ClearTemporaryFiles);
+        UpdateAppThemeCommand = new AsyncRelayCommand<int>(UpdateAppThemeAsync);
+        OpenTemporaryFilesFolderCommand = new AsyncRelayCommand(OpenTemporaryFilesFolderAsync);
+        ClearTemporaryFilesCommand = new AsyncRelayCommand(ClearTemporaryFilesAsync);
         RestoreDefaultSettingsCommand = new AsyncRelayCommand(RestoreDefaultSettingsAsync);
     }
 
@@ -327,20 +331,31 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private async Task UpdateAppLanguageAsync(int index)
     {
-        SelectedAppLanguageIndex = index;
-        if (SelectedAppLanguageIndex == -1)
+        try
         {
-            return;
-        }
+            SelectedAppLanguageIndex = index;
+            if (SelectedAppLanguageIndex == -1)
+            {
+                return;
+            }
 
-        AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
-        if (vm.Language == _localizationService.LanguageOverride)
+            AppLanguageViewModel vm = AppLanguages[SelectedAppLanguageIndex];
+            if (vm.Language == _localizationService.LanguageOverride)
+            {
+                return;
+            }
+
+            await _updateAppLanguageAction.ExecuteAsync(new UpdateAppLanguageRequest(index), CancellationToken.None);
+            UpdateShowAppLanguageRestartMessage();
+        }
+        catch (OperationCanceledException exception)
         {
-            return;
+            TrackCommandCancellation(nameof(UpdateAppLanguageAsync), exception);
         }
-
-        await _updateAppLanguageAction.ExecuteAsync(new UpdateAppLanguageRequest(index), CancellationToken.None);
-        UpdateShowAppLanguageRestartMessage();
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(UpdateAppLanguageAsync), exception);
+        }
     }
 
     private void UpdateShowAppLanguageRestartMessage()
@@ -350,16 +365,27 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
             (_localizationService.LanguageOverride == null && _localizationService.StartupLanguage != _localizationService.DefaultLanguage);
     }
 
-    private void UpdateAppTheme(int index)
+    private async Task UpdateAppThemeAsync(int index)
     {
-        SelectedAppThemeIndex = index;
-        if (SelectedAppThemeIndex == -1)
+        try
         {
-            return;
-        }
+            SelectedAppThemeIndex = index;
+            if (SelectedAppThemeIndex == -1)
+            {
+                return;
+            }
 
-        _updateAppThemeAction.ExecuteAsync(new UpdateAppThemeRequest(index)).GetAwaiter().GetResult();
-        UpdateShowAppThemeRestartMessage();
+            await _updateAppThemeAction.ExecuteAsync(new UpdateAppThemeRequest(index), CancellationToken.None);
+            UpdateShowAppThemeRestartMessage();
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(UpdateAppThemeAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(UpdateAppThemeAsync), exception);
+        }
     }
 
     private void UpdateShowAppThemeRestartMessage()
@@ -385,109 +411,273 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     private async Task UpdateImageCaptureAutoSaveAsync(bool value)
     {
-        ImageCaptureAutoSave = value;
-        await _updateImageAutoSaveAction.ExecuteAsync(new UpdateImageAutoSaveRequest(value), CancellationToken.None);
+        try
+        {
+            ImageCaptureAutoSave = value;
+            await _updateImageAutoSaveAction.ExecuteAsync(new UpdateImageAutoSaveRequest(value), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(UpdateImageCaptureAutoSaveAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(UpdateImageCaptureAutoSaveAsync), exception);
+        }
     }
 
     private async Task UpdateImageCaptureAutoCopyAsync(bool value)
     {
-        ImageCaptureAutoCopy = value;
-        await _updateImageAutoCopyAction.ExecuteAsync(new UpdateImageAutoCopyRequest(value), CancellationToken.None);
+        try
+        {
+            ImageCaptureAutoCopy = value;
+            await _updateImageAutoCopyAction.ExecuteAsync(new UpdateImageAutoCopyRequest(value), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(UpdateImageCaptureAutoCopyAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(UpdateImageCaptureAutoCopyAsync), exception);
+        }
     }
 
     private async Task UpdateVideoCaptureAutoSaveAsync(bool value)
     {
-        VideoCaptureAutoSave = value;
-        await _updateVideoCaptureAutoSaveAction.ExecuteAsync(new UpdateVideoCaptureAutoSaveRequest(value), CancellationToken.None);
+        try
+        {
+            VideoCaptureAutoSave = value;
+            await _updateVideoCaptureAutoSaveAction.ExecuteAsync(new UpdateVideoCaptureAutoSaveRequest(value), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(UpdateVideoCaptureAutoSaveAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(UpdateVideoCaptureAutoSaveAsync), exception);
+        }
     }
 
     private async Task UpdateVideoCaptureAutoCopyAsync(bool value)
     {
-        VideoCaptureAutoCopy = value;
-        await _updateVideoCaptureAutoCopyAction.ExecuteAsync(new UpdateVideoCaptureAutoCopyRequest(value), CancellationToken.None);
+        try
+        {
+            VideoCaptureAutoCopy = value;
+            await _updateVideoCaptureAutoCopyAction.ExecuteAsync(new UpdateVideoCaptureAutoCopyRequest(value), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(UpdateVideoCaptureAutoCopyAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(UpdateVideoCaptureAutoCopyAsync), exception);
+        }
     }
 
     private async Task UpdateVideoCaptureDefaultLocalAudioAsync(bool value)
     {
-        VideoCaptureDefaultLocalAudio = value;
-        await _updateVideoCaptureDefaultLocalAudioAction.ExecuteAsync(new UpdateVideoCaptureDefaultLocalAudioRequest(value), CancellationToken.None);
+        try
+        {
+            VideoCaptureDefaultLocalAudio = value;
+            await _updateVideoCaptureDefaultLocalAudioAction.ExecuteAsync(new UpdateVideoCaptureDefaultLocalAudioRequest(value), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(UpdateVideoCaptureDefaultLocalAudioAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(UpdateVideoCaptureDefaultLocalAudioAsync), exception);
+        }
     }
 
     private async Task ChangeScreenshotsFolderAsync()
     {
-        await _changeScreenshotsFolderAction.ExecuteAsync(new ChangeScreenshotsFolderRequest(), CancellationToken.None);
-
-        var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
-        if (string.IsNullOrWhiteSpace(screenshotsFolder))
+        try
         {
-            screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
+            await _changeScreenshotsFolderAction.ExecuteAsync(new ChangeScreenshotsFolderRequest(), CancellationToken.None);
+
+            var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
+            if (string.IsNullOrWhiteSpace(screenshotsFolder))
+            {
+                screenshotsFolder = _storageService.GetSystemDefaultScreenshotsFolderPath();
+            }
+            ScreenshotsFolderPath = screenshotsFolder;
         }
-        ScreenshotsFolderPath = screenshotsFolder;
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(ChangeScreenshotsFolderAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(ChangeScreenshotsFolderAsync), exception);
+        }
     }
 
     private async Task ChangeVideosFolderAsync()
     {
-        await _changeVideosFolderAction.ExecuteAsync(new ChangeVideosFolderRequest(), CancellationToken.None);
-
-        var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
-        if (string.IsNullOrWhiteSpace(videosFolder))
+        try
         {
-            videosFolder = _storageService.GetSystemDefaultVideosFolderPath();
+            await _changeVideosFolderAction.ExecuteAsync(new ChangeVideosFolderRequest(), CancellationToken.None);
+
+            var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
+            if (string.IsNullOrWhiteSpace(videosFolder))
+            {
+                videosFolder = _storageService.GetSystemDefaultVideosFolderPath();
+            }
+            VideosFolderPath = videosFolder;
         }
-        VideosFolderPath = videosFolder;
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(ChangeVideosFolderAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(ChangeVideosFolderAsync), exception);
+        }
     }
 
-    private void OpenScreenshotsFolder()
+    private async Task OpenScreenshotsFolderAsync()
     {
-        _openScreenshotsFolderAction.ExecuteAsync(new OpenScreenshotsFolderRequest()).GetAwaiter().GetResult();
+        try
+        {
+            await _openScreenshotsFolderAction.ExecuteAsync(new OpenScreenshotsFolderRequest(), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(OpenScreenshotsFolderAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(OpenScreenshotsFolderAsync), exception);
+        }
     }
 
-    private void OpenVideosFolder()
+    private async Task OpenVideosFolderAsync()
     {
-        _openVideosFolderAction.ExecuteAsync(new OpenVideosFolderRequest()).GetAwaiter().GetResult();
+        try
+        {
+            await _openVideosFolderAction.ExecuteAsync(new OpenVideosFolderRequest(), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(OpenVideosFolderAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(OpenVideosFolderAsync), exception);
+        }
     }
 
-    private void RestartApp()
+    private async Task RestartAppAsync()
     {
-        _restartAppAction.ExecuteAsync(new RestartSettingsApplicationRequest()).GetAwaiter().GetResult();
+        try
+        {
+            await _restartAppAction.ExecuteAsync(new RestartSettingsApplicationRequest(), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(RestartAppAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(RestartAppAsync), exception);
+        }
     }
 
-    private void GoBack()
+    private async Task GoBackAsync()
     {
-        _goBackAction.ExecuteAsync(new LeaveSettingsPageRequest()).GetAwaiter().GetResult();
+        try
+        {
+            await _goBackAction.ExecuteAsync(new LeaveSettingsPageRequest(), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(GoBackAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(GoBackAsync), exception);
+        }
     }
 
-    private void ClearTemporaryFiles()
+    private async Task ClearTemporaryFilesAsync()
     {
-        _clearTempFilesAction.ExecuteAsync(new ClearTempFilesRequest()).GetAwaiter().GetResult();
+        try
+        {
+            await _clearTempFilesAction.ExecuteAsync(new ClearTempFilesRequest(), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(ClearTemporaryFilesAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(ClearTemporaryFilesAsync), exception);
+        }
     }
 
-    private void OpenTemporaryFilesFolder()
+    private async Task OpenTemporaryFilesFolderAsync()
     {
-        _openTempFolderAction.ExecuteAsync(new OpenTempFolderRequest()).GetAwaiter().GetResult();
+        try
+        {
+            await _openTempFolderAction.ExecuteAsync(new OpenTempFolderRequest(), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(OpenTemporaryFilesFolderAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(OpenTemporaryFilesFolderAsync), exception);
+        }
     }
 
     private async Task RestoreDefaultSettingsAsync()
     {
-        await _restoreDefaultsAction.ExecuteAsync(new RestoreDefaultsRequest(), CancellationToken.None);
+        try
+        {
+            await _restoreDefaultsAction.ExecuteAsync(new RestoreDefaultsRequest(), CancellationToken.None);
 
-        ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
-        ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
+            ImageCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoCopy);
+            ImageCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSave);
 
-        VideoCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
-        VideoCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
-        VideoCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
+            VideoCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
+            VideoCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
+            VideoCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
 
-        var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
-        ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _storageService.GetSystemDefaultScreenshotsFolderPath();
+            var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
+            ScreenshotsFolderPath = !string.IsNullOrEmpty(screenshotsFolder) ? screenshotsFolder : _storageService.GetSystemDefaultScreenshotsFolderPath();
 
-        var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
-        VideosFolderPath = !string.IsNullOrEmpty(videosFolder) ? videosFolder : _storageService.GetSystemDefaultVideosFolderPath();
+            var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
+            VideosFolderPath = !string.IsNullOrEmpty(videosFolder) ? videosFolder : _storageService.GetSystemDefaultVideosFolderPath();
 
-        SelectedAppLanguageIndex = AppLanguages.Count - 1;
-        SelectedAppThemeIndex = AppThemes.Count - 1;
+            SelectedAppLanguageIndex = AppLanguages.Count - 1;
+            SelectedAppThemeIndex = AppThemes.Count - 1;
 
-        UpdateShowAppLanguageRestartMessage();
-        UpdateShowAppThemeRestartMessage();
+            UpdateShowAppLanguageRestartMessage();
+            UpdateShowAppThemeRestartMessage();
+        }
+        catch (OperationCanceledException exception)
+        {
+            TrackCommandCancellation(nameof(RestoreDefaultSettingsAsync), exception);
+        }
+        catch (Exception exception)
+        {
+            TrackCommandError(nameof(RestoreDefaultSettingsAsync), exception);
+        }
+    }
+
+    private void TrackCommandCancellation(string activityId, OperationCanceledException exception)
+    {
+        _telemetryService.ActivityCanceled(activityId, exception.Message);
+    }
+
+    private void TrackCommandError(string activityId, Exception exception)
+    {
+        _telemetryService.ActivityError(activityId, exception);
     }
 }

@@ -6,6 +6,7 @@ using CaptureTool.Application.Features.AudioCapture.StartAudioCapture;
 using CaptureTool.Application.Features.AudioCapture.StopAudioCapture;
 using CaptureTool.Application.Features.AudioCapture.ToggleLocalAudioCapture;
 using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.ViewModels;
 using CaptureTool.Presentation.Shared.Commands;
 using CommunityToolkit.Mvvm.Input;
@@ -58,15 +59,16 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         StopAudioCaptureUseCase stopAction,
         PauseAudioCaptureUseCase pauseAction,
         MuteAudioCaptureUseCase muteAction,
-        ToggleLocalAudioCaptureUseCase toggleDesktopAudioAction)
+        ToggleLocalAudioCaptureUseCase toggleDesktopAudioAction,
+        ITelemetryService telemetryService)
     {
         _audioCaptureHandler = audioCaptureHandler;
 
-        StartCommand = startAction.ToRelayCommand(() => new StartAudioCaptureRequest());
-        StopCommand = stopAction.ToRelayCommand(() => new StopAudioCaptureRequest());
-        PauseCommand = pauseAction.ToRelayCommand(() => new PauseAudioCaptureRequest());
-        MuteCommand = muteAction.ToRelayCommand(() => new MuteAudioCaptureRequest());
-        ToggleDesktopAudioCommand = toggleDesktopAudioAction.ToRelayCommand(() => new ToggleLocalAudioCaptureRequest());
+        StartCommand = startAction.ToRelayCommand(() => new StartAudioCaptureRequest(), telemetryService);
+        StopCommand = stopAction.ToRelayCommand(() => new StopAudioCaptureRequest(), telemetryService);
+        PauseCommand = pauseAction.ToRelayCommand(() => new PauseAudioCaptureRequest(), telemetryService);
+        MuteCommand = muteAction.ToRelayCommand(() => new MuteAudioCaptureRequest(), telemetryService);
+        ToggleDesktopAudioCommand = toggleDesktopAudioAction.ToRelayCommand(() => new ToggleLocalAudioCaptureRequest(), telemetryService);
 
         // Subscribe to service events for state synchronization
         _audioCaptureHandler.CaptureStateChanged += OnCaptureStateChanged;
