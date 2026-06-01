@@ -107,33 +107,28 @@
 
         <Grid
             Grid.Row="2"
-            MinHeight="96"
-            Padding="12,8"
             BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
             BorderThickness="0,1,0,0"
             Visibility="{x:Bind ViewModel.IsInTrimMode, Mode=OneWay}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
 
-            <Button
-                x:Name="TrimPreviewPlayButton"
-                x:Uid="VideoEdit_TrimPreviewPlayButton"
-                Grid.Column="0"
-                Width="40"
-                Height="40"
-                Margin="0,0,12,0"
-                Padding="0"
-                VerticalAlignment="Center"
-                Click="TrimPreviewPlayButton_Click"
-                IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
-                <FontIcon x:Name="TrimPreviewPlayIcon" Glyph="&#xE768;" />
-            </Button>
+            <Grid
+                Grid.Row="2"
+                MinHeight="96"
+                MaxWidth="800"
+                Padding="12,8"
+                HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="56" />
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="56" />
+                </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="1" Spacing="4">
-                <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Column="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition />
@@ -156,24 +151,45 @@
                         TextAlignment="Right" />
                 </Grid>
 
-                <controls:VideoTrimRangeSlider
-                    DurationSeconds="{x:Bind ViewModel.VideoDurationSeconds, Mode=OneWay}"
-                    EndSeconds="{x:Bind ViewModel.TrimEndSeconds, Mode=OneWay}"
-                    PlayheadSeconds="{x:Bind ViewModel.PlayheadSeconds, Mode=OneWay}"
-                    PlayheadSecondsChanged="VideoTrimRangeSlider_PlayheadSecondsChanged"
-                    StartSeconds="{x:Bind ViewModel.TrimStartSeconds, Mode=OneWay}"
-                    StartSecondsChanged="VideoTrimRangeSlider_StartSecondsChanged"
-                    EndSecondsChanged="VideoTrimRangeSlider_EndSecondsChanged" />
-            </StackPanel>
+                <Button
+                    x:Name="TrimPreviewPlayButton"
+                    x:Uid="VideoEdit_TrimPreviewPlayButton"
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Width="40"
+                    Height="40"
+                    Margin="0,0,12,0"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    Click="TrimPreviewPlayButton_Click"
+                    IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
+                    <FontIcon x:Name="TrimPreviewPlayIcon" Glyph="&#xE768;" />
+                </Button>
 
-            <TextBlock
-                Grid.Column="2"
-                MinWidth="56"
-                Margin="12,0,0,0"
-                VerticalAlignment="Center"
-                FontSize="12"
-                Text="{x:Bind FormatTime(ViewModel.PlayheadSeconds), Mode=OneWay}"
-                TextAlignment="Right" />
+                <Grid
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    ColumnSpacing="4">
+                    <controls:VideoTrimRangeSlider
+                        DurationSeconds="{x:Bind ViewModel.VideoDurationSeconds, Mode=OneWay}"
+                        EndSeconds="{x:Bind ViewModel.TrimEndSeconds, Mode=OneWay}"
+                        EndSecondsChanged="VideoTrimRangeSlider_EndSecondsChanged"
+                        PlayheadSeconds="{x:Bind ViewModel.PlayheadSeconds, Mode=OneWay}"
+                        PlayheadSecondsChanged="VideoTrimRangeSlider_PlayheadSecondsChanged"
+                        StartSeconds="{x:Bind ViewModel.TrimStartSeconds, Mode=OneWay}"
+                        StartSecondsChanged="VideoTrimRangeSlider_StartSecondsChanged" />
+                </Grid>
+
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    MinWidth="56"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Text="{x:Bind FormatTime(ViewModel.PlayheadSeconds), Mode=OneWay}"
+                    TextAlignment="Left" />
+            </Grid>
         </Grid>
     </Grid>
 </local:VideoEditPageBase>

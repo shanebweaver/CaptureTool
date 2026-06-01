@@ -6,7 +6,7 @@
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     MinHeight="64">
 
-    <Grid Padding="8">
+    <Grid Padding="8,0">
         <Canvas
             x:Name="TimelineCanvas"
             Height="48"
