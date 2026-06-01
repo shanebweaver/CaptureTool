@@ -38,8 +38,16 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
     public bool IsInTrimMode
     {
         get;
-        private set => Set(ref field, value);
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                RaisePropertyChanged(nameof(AreTransportControlsVisible));
+            }
+        }
     }
+
+    public bool AreTransportControlsVisible => !IsInTrimMode;
 
     public double VideoDurationSeconds
     {

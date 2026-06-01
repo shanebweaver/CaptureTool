@@ -57,11 +57,11 @@
         <Grid Grid.Row="1" Padding="8,0,8,8">
             <MediaPlayerElement
                 x:Name="OriginalVideoPlayer"
-                AreTransportControlsEnabled="True"
+                AreTransportControlsEnabled="{x:Bind ViewModel.AreTransportControlsVisible, Mode=OneWay}"
                 Visibility="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}" />
             <MediaPlayerElement
                 x:Name="RenderedTrimVideoPlayer"
-                AreTransportControlsEnabled="True"
+                AreTransportControlsEnabled="{x:Bind ViewModel.AreTransportControlsVisible, Mode=OneWay}"
                 Visibility="Collapsed" />
 
             <Grid
