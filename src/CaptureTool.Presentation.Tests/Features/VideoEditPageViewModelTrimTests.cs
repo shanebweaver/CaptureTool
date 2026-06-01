@@ -163,8 +163,6 @@ public class VideoEditPageViewModelTrimTests
         return new SaveVideoFileUseCase(
             filePicker.Object,
             Mock.Of<IWindowHandleProvider>(),
-            Mock.Of<ISettingsService>(),
-            Mock.Of<IFeatureManager>(),
             (trimmer ?? new Mock<IVideoFileTrimmer>()).Object);
     }
 

@@ -47,6 +47,11 @@
   <Project Path="src/CaptureTool.Infrastructure/CaptureTool.Infrastructure.csproj" />
   <Project Path="src/CaptureTool.Infrastructure.Abstractions/CaptureTool.Infrastructure.Abstractions.csproj" />
   <Project Path="src/CaptureTool.Infrastructure.Tests/CaptureTool.Infrastructure.Tests.csproj" />
+  <Project Path="src/CaptureTool.MetadataScanner.Windows.WinUI/CaptureTool.MetadataScanner.Windows.WinUI.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Deploy />
+  </Project>
   <Project Path="src/CaptureTool.Presentation.Tests/CaptureTool.Presentation.Tests.csproj" Id="b99a732e-0834-4598-a1c5-7030a36a486d" />
   <Project Path="src/CaptureTool.Presentation.Windows.WinUI/CaptureTool.Presentation.Windows.WinUI.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />

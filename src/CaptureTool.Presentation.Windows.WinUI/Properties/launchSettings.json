@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "CaptureTool (Package)": {
+    "CaptureTool (Packaged)": {
       "commandName": "MsixPackage"
     },
     "CaptureTool (Unpackaged)": {

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MetadataScanner (Packaged)": {
+      "commandName": "MsixPackage"
+    },
+    "MetadataScanner (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

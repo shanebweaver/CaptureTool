@@ -54,7 +54,6 @@ using CaptureTool.Application.Features.Settings.UpdateImageAutoSave;
 using CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoCopy;
 using CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoSave;
 using CaptureTool.Application.Features.Settings.UpdateVideoCaptureDefaultLocalAudio;
-using CaptureTool.Application.Features.Settings.UpdateVideoMetadataAutoSave;
 using CaptureTool.Application.Features.Store.GetChromaKeyAddOn;
 using CaptureTool.Application.Features.Store.LeaveStorePage;
 using CaptureTool.Application.Features.Store.OpenStorePage;
@@ -129,7 +128,6 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<UpdateVideoCaptureAutoCopyUseCase>();
         services.AddTransient<UpdateVideoCaptureAutoSaveUseCase>();
         services.AddTransient<UpdateVideoCaptureDefaultLocalAudioUseCase>();
-        services.AddTransient<UpdateVideoMetadataAutoSaveUseCase>();
         services.AddTransient<UpdateAppLanguageUseCase>();
         services.AddTransient<UpdateAppThemeUseCase>();
         services.AddTransient<ChangeScreenshotsFolderUseCase>();
