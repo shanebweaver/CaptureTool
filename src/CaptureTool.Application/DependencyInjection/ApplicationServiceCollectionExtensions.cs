@@ -54,7 +54,6 @@ using CaptureTool.Application.Features.Settings.UpdateImageAutoSave;
 using CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoCopy;
 using CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoSave;
 using CaptureTool.Application.Features.Settings.UpdateVideoCaptureDefaultLocalAudio;
-using CaptureTool.Application.Features.Settings.UpdateVideoMetadataAutoSave;
 using CaptureTool.Application.Features.Store.GetChromaKeyAddOn;
 using CaptureTool.Application.Features.Store.LeaveStorePage;
 using CaptureTool.Application.Features.Store.OpenStorePage;
@@ -146,8 +145,6 @@ public static class ApplicationServiceCollectionExtensions
         services.AddTransient<IConditional<UpdateVideoCaptureAutoSaveRequest>, UpdateVideoCaptureAutoSaveUseCase>();
         services.AddTransient<IUseCase<UpdateVideoCaptureDefaultLocalAudioRequest, UpdateVideoCaptureDefaultLocalAudioResponse>, UpdateVideoCaptureDefaultLocalAudioUseCase>();
         services.AddTransient<IConditional<UpdateVideoCaptureDefaultLocalAudioRequest>, UpdateVideoCaptureDefaultLocalAudioUseCase>();
-        services.AddTransient<IUseCase<UpdateVideoMetadataAutoSaveRequest, UpdateVideoMetadataAutoSaveResponse>, UpdateVideoMetadataAutoSaveUseCase>();
-        services.AddTransient<IConditional<UpdateVideoMetadataAutoSaveRequest>, UpdateVideoMetadataAutoSaveUseCase>();
         services.AddTransient<IUseCase<UpdateAppLanguageRequest, UpdateAppLanguageResponse>, UpdateAppLanguageUseCase>();
         services.AddTransient<IConditional<UpdateAppLanguageRequest>, UpdateAppLanguageUseCase>();
         services.AddTransient<IUseCase<UpdateAppThemeRequest, UpdateAppThemeResponse>, UpdateAppThemeUseCase>();

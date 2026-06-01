@@ -1,10 +1,7 @@
 using System.Text.Json.Serialization;
 
-namespace CaptureTool.Domain.Capture.Windows.Metadata;
+namespace CaptureTool.MetadataScanner.Windows.WinUI.Metadata;
 
-/// <summary>
-/// DTO for serializing metadata files to JSON (AOT-compatible).
-/// </summary>
 public sealed class MetadataFileDto
 {
     [JsonPropertyName("sourceFilePath")]
@@ -20,9 +17,6 @@ public sealed class MetadataFileDto
     public List<MetadataEntryDto> Entries { get; set; } = new();
 }
 
-/// <summary>
-/// DTO for serializing metadata entries to JSON (AOT-compatible).
-/// </summary>
 public sealed class MetadataEntryDto
 {
     [JsonPropertyName("timestamp")]

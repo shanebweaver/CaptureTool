@@ -1,3 +1,5 @@
+using CaptureTool.MetadataScanner.Windows.WinUI.Metadata;
+using CaptureTool.MetadataScanner.Windows.WinUI.Metadata.Scanners;
 using CaptureTool.MetadataScanner.Windows.WinUI.Services;
 using CaptureTool.MetadataScanner.Windows.WinUI.ViewModels;
 using CaptureTool.MetadataScanner.Windows.WinUI.Xaml.Windows;
@@ -28,9 +30,15 @@ public partial class App : Application
 
         services.AddSingleton<IWindowHandleProvider, WindowHandleProvider>();
         services.AddSingleton<IMediaFilePicker, MediaFilePicker>();
+        services.AddSingleton<IMetadataScannerRegistry, MetadataScannerRegistry>();
+        services.AddSingleton<IMetadataScanningService, MetadataScanningService>();
+        services.AddSingleton<IMediaFileMetadataScanner, BasicMediaFileScanner>();
         services.AddTransient<MainPageViewModel>();
         services.AddSingleton<MainWindow>();
 
-        return services.BuildServiceProvider();
+        IServiceProvider serviceProvider = services.BuildServiceProvider();
+        serviceProvider.RegisterMetadataScanners();
+
+        return serviceProvider;
     }
 }

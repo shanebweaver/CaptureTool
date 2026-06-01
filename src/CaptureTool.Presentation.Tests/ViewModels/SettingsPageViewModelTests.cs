@@ -26,7 +26,6 @@ public sealed class SettingsPageViewModelTests
         Fixture.Freeze<Mock<ISettingsUpdateImageAutoSaveUseCase>>();
         Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoCopyUseCase>>();
         Fixture.Freeze<Mock<ISettingsUpdateVideoCaptureAutoSaveUseCase>>();
-        Fixture.Freeze<Mock<ISettingsUpdateVideoMetadataAutoSaveUseCase>>();
         Fixture.Freeze<Mock<ISettingsUpdateAppLanguageUseCase>>();
         Fixture.Freeze<Mock<ISettingsUpdateAppThemeUseCase>>();
         Fixture.Freeze<Mock<ISettingsChangeScreenshotsFolderUseCase>>();

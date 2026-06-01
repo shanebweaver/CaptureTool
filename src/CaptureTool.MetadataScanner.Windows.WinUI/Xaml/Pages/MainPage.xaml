@@ -15,21 +15,46 @@
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <Grid ColumnSpacing="12">
+        <Grid ColumnSpacing="12" RowSpacing="8">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
             <Button
                 Command="{x:Bind ViewModel.OpenMediaFileCommand, Mode=OneWay}"
                 Content="Open media file" />
 
-            <TextBlock
+            <Button
                 Grid.Column="1"
+                Command="{x:Bind ViewModel.ScanMetadataCommand, Mode=OneWay}"
+                Content="Scan metadata" />
+
+            <TextBlock
+                Grid.Column="2"
                 VerticalAlignment="Center"
                 Style="{StaticResource BodyTextBlockStyle}"
                 Text="{x:Bind ViewModel.SelectedFileName, Mode=OneWay}"
+                TextTrimming="CharacterEllipsis" />
+
+            <ProgressBar
+                Grid.Row="1"
+                Grid.ColumnSpan="3"
+                Maximum="100"
+                Minimum="0"
+                Value="{x:Bind ViewModel.ScanProgress, Mode=OneWay}" />
+
+            <TextBlock
+                Grid.Row="2"
+                Grid.ColumnSpan="3"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="{x:Bind ViewModel.ScanStatus, Mode=OneWay}"
                 TextTrimming="CharacterEllipsis" />
         </Grid>
 

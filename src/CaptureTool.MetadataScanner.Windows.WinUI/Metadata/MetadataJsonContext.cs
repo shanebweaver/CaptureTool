@@ -1,11 +1,7 @@
-using CaptureTool.Domain.Capture.Abstractions.Metadata;
 using System.Text.Json.Serialization;
 
-namespace CaptureTool.Domain.Capture.Windows.Metadata;
+namespace CaptureTool.MetadataScanner.Windows.WinUI.Metadata;
 
-/// <summary>
-/// JSON serialization context for metadata files (AOT-compatible).
-/// </summary>
 [JsonSerializable(typeof(MetadataFileDto))]
 [JsonSerializable(typeof(MetadataEntryDto))]
 [JsonSerializable(typeof(ScanJobRequest))]
