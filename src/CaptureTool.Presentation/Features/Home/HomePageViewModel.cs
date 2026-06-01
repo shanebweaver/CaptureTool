@@ -3,6 +3,7 @@ using CaptureTool.Application.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.ViewModels;
 using CaptureTool.Presentation.Shared.Commands;
 using CommunityToolkit.Mvvm.Input;
@@ -20,12 +21,13 @@ public sealed partial class HomePageViewModel : ViewModelBase
     public HomePageViewModel(
         OpenSelectionOverlayUseCase openSelectionOverlayCommand,
         OpenAudioCapturePageUseCase openAudioCapturePageCommand,
-        IFeatureManager featureManager)
+        IFeatureManager featureManager,
+        ITelemetryService telemetryService)
     {
         IsAudioCaptureEnabled = featureManager.IsEnabled(AppFeatures.Feature_AudioCapture);
 
-        NewImageCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault));
-        NewVideoCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault));
-        NewAudioCaptureCommand = openAudioCapturePageCommand.ToRelayCommand(() => new OpenAudioCapturePageRequest());
+        NewImageCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault), telemetryService);
+        NewVideoCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault), telemetryService);
+        NewAudioCaptureCommand = openAudioCapturePageCommand.ToRelayCommand(() => new OpenAudioCapturePageRequest(), telemetryService);
     }
 }

@@ -51,6 +51,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IFilePickerService _filePickerService;
     private readonly IFeatureManager _featureManager;
     private readonly IShareService _shareService;
+    private readonly ITelemetryService _telemetryService;
 
     private ImageDrawable? _imageDrawable;
     private readonly Stack<CanvasOperation> _operationsUndoStack;
@@ -282,6 +283,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _featureManager = featureManager;
         _shareService = shareService;
         _imageCanvasExporter = imageCanvasExporter;
+        _telemetryService = telemetryService;
 
         Drawables = [];
         ImageSize = new();
@@ -443,8 +445,19 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task CopyAsync()
     {
-        ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
-        await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
+        try
+        {
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+            await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
+        }
+        catch (OperationCanceledException exception)
+        {
+            _telemetryService.ActivityCanceled(nameof(CopyAsync), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(CopyAsync), exception);
+        }
     }
 
     private void ToggleCropMode()
@@ -721,16 +734,27 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task SaveAsync()
     {
-        nint hwnd = _windowingService.GetMainWindowHandle();
-        IFile? file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures);
-
-        if (file is null)
+        try
         {
-            return;
-        }
+            nint hwnd = _windowingService.GetMainWindowHandle();
+            IFile? file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures);
 
-        ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
-        await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
+            if (file is null)
+            {
+                return;
+            }
+
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+            await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
+        }
+        catch (OperationCanceledException exception)
+        {
+            _telemetryService.ActivityCanceled(nameof(SaveAsync), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(SaveAsync), exception);
+        }
     }
 
     private ImageCanvasRenderOptions GetImageCanvasRenderOptions()
@@ -740,63 +764,91 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void Undo()
     {
-        if (_operationsUndoStack.Count == 0)
+        try
         {
-            throw new InvalidOperationException("Cannot undo, the stack is empty.");
+            if (_operationsUndoStack.Count == 0)
+            {
+                throw new InvalidOperationException("Cannot undo, the stack is empty.");
+            }
+
+            var operation = _operationsUndoStack.Pop();
+            _operationsRedoStack.Push(operation);
+            UpdateUndoRedoStackProperties();
+
+            operation.Undo();
         }
-
-        var operation = _operationsUndoStack.Pop();
-        _operationsRedoStack.Push(operation);
-        UpdateUndoRedoStackProperties();
-
-        operation.Undo();
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(Undo), exception);
+        }
     }
 
     private void Redo()
     {
-        if (_operationsRedoStack.Count == 0)
+        try
         {
-            throw new InvalidOperationException("Cannot undo, the stack is empty.");
+            if (_operationsRedoStack.Count == 0)
+            {
+                throw new InvalidOperationException("Cannot undo, the stack is empty.");
+            }
+
+            var operation = _operationsRedoStack.Pop();
+            _operationsUndoStack.Push(operation);
+            UpdateUndoRedoStackProperties();
+
+            operation.Redo();
         }
-
-        var operation = _operationsRedoStack.Pop();
-        _operationsUndoStack.Push(operation);
-        UpdateUndoRedoStackProperties();
-
-        operation.Redo();
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(Redo), exception);
+        }
     }
 
     private void Rotate()
     {
-        ImageOrientation oldOrientation = Orientation;
-        ImageOrientation newOrientation = ImageOrientationHelper.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
-        Rectangle newCropRect = ImageOrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
+        try
+        {
+            ImageOrientation oldOrientation = Orientation;
+            ImageOrientation newOrientation = ImageOrientationHelper.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
+            Rectangle newCropRect = ImageOrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
 
-        CropRect = newCropRect;
-        Orientation = newOrientation;
-        MirroredDisplayName = GetMirroredDisplayName(Orientation);
-        RotationDisplayName = GetRotationDisplayName(Orientation);
+            CropRect = newCropRect;
+            Orientation = newOrientation;
+            MirroredDisplayName = GetMirroredDisplayName(Orientation);
+            RotationDisplayName = GetRotationDisplayName(Orientation);
 
-        _operationsRedoStack.Clear();
-        _operationsUndoStack.Push(new OrientationOperation(UpdateOrientation, oldOrientation, newOrientation));
-        UpdateUndoRedoStackProperties();
+            _operationsRedoStack.Clear();
+            _operationsUndoStack.Push(new OrientationOperation(UpdateOrientation, oldOrientation, newOrientation));
+            UpdateUndoRedoStackProperties();
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(Rotate), exception);
+        }
     }
 
     private void Flip(FlipDirection flipDirection)
     {
-        ImageOrientation oldOrientation = Orientation;
-        ImageOrientation newOrientation = ImageOrientationHelper.GetFlippedOrientation(Orientation, flipDirection);
-        Size imageSize = ImageOrientationHelper.GetOrientedImageSize(ImageSize, Orientation);
-        Rectangle newCropRect = ImageOrientationHelper.GetFlippedCropRect(CropRect, imageSize, flipDirection);
+        try
+        {
+            ImageOrientation oldOrientation = Orientation;
+            ImageOrientation newOrientation = ImageOrientationHelper.GetFlippedOrientation(Orientation, flipDirection);
+            Size imageSize = ImageOrientationHelper.GetOrientedImageSize(ImageSize, Orientation);
+            Rectangle newCropRect = ImageOrientationHelper.GetFlippedCropRect(CropRect, imageSize, flipDirection);
 
-        CropRect = newCropRect;
-        Orientation = newOrientation;
-        MirroredDisplayName = GetMirroredDisplayName(newOrientation);
-        RotationDisplayName = GetRotationDisplayName(Orientation);
+            CropRect = newCropRect;
+            Orientation = newOrientation;
+            MirroredDisplayName = GetMirroredDisplayName(newOrientation);
+            RotationDisplayName = GetRotationDisplayName(Orientation);
 
-        _operationsRedoStack.Clear();
-        _operationsUndoStack.Push(new OrientationOperation(UpdateOrientation, oldOrientation, newOrientation));
-        UpdateUndoRedoStackProperties();
+            _operationsRedoStack.Clear();
+            _operationsUndoStack.Push(new OrientationOperation(UpdateOrientation, oldOrientation, newOrientation));
+            UpdateUndoRedoStackProperties();
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(Flip), exception);
+        }
     }
 
     private void UpdateUndoRedoStackProperties()
@@ -807,21 +859,43 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task PrintAsync()
     {
-        nint hwnd = _windowingService.GetMainWindowHandle();
-        await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
+        try
+        {
+            nint hwnd = _windowingService.GetMainWindowHandle();
+            await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
+        }
+        catch (OperationCanceledException exception)
+        {
+            _telemetryService.ActivityCanceled(nameof(PrintAsync), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(PrintAsync), exception);
+        }
     }
 
     private async Task ShareAsync()
     {
-        if (ImageFile == null)
+        try
         {
-            throw new InvalidOperationException("No image to share");
-        }
+            if (ImageFile == null)
+            {
+                throw new InvalidOperationException("No image to share");
+            }
 
-        nint hwnd = _windowingService.GetMainWindowHandle();
-        ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
-        using MemoryStream renderedStream = await _imageCanvasExporter.RenderToStreamAsync([.. Drawables], options);
-        await _shareService.ShareStreamAsync(renderedStream, hwnd);
+            nint hwnd = _windowingService.GetMainWindowHandle();
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+            using MemoryStream renderedStream = await _imageCanvasExporter.RenderToStreamAsync([.. Drawables], options);
+            await _shareService.ShareStreamAsync(renderedStream, hwnd);
+        }
+        catch (OperationCanceledException exception)
+        {
+            _telemetryService.ActivityCanceled(nameof(ShareAsync), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(ShareAsync), exception);
+        }
     }
 
     public void OnCropInteractionComplete(Rectangle oldCropRect)

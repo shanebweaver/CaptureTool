@@ -192,26 +192,48 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     private async Task SaveAsync()
     {
-        if (string.IsNullOrEmpty(VideoPath))
+        try
         {
-            throw new InvalidOperationException("Cannot save video without a valid filepath.");
-        }
+            if (string.IsNullOrEmpty(VideoPath))
+            {
+                throw new InvalidOperationException("Cannot save video without a valid filepath.");
+            }
 
-        await _saveAction.ExecuteAsync(
-            new SaveVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
-            CancellationToken.None);
+            await _saveAction.ExecuteAsync(
+                new SaveVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
+                CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            _telemetryService.ActivityCanceled(nameof(SaveAsync), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(SaveAsync), exception);
+        }
     }
 
     private async Task CopyAsync()
     {
-        if (string.IsNullOrEmpty(VideoPath))
+        try
         {
-            throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
-        }
+            if (string.IsNullOrEmpty(VideoPath))
+            {
+                throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
+            }
 
-        await _copyAction.ExecuteAsync(
-            new CopyVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
-            CancellationToken.None);
+            await _copyAction.ExecuteAsync(
+                new CopyVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
+                CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            _telemetryService.ActivityCanceled(nameof(CopyAsync), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(CopyAsync), exception);
+        }
     }
 
     private TimeSpan? GetTrimStartForRequest()

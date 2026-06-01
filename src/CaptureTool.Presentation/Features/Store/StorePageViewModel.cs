@@ -5,6 +5,7 @@ using CaptureTool.Application.Features.Store.PurchaseChromaKeyAddOn;
 using CaptureTool.Infrastructure.Abstractions.Cancellation;
 using CaptureTool.Infrastructure.Abstractions.Localization;
 using CaptureTool.Infrastructure.Abstractions.Store;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.ViewModels;
 using CaptureTool.Presentation.Shared.Commands;
 using CommunityToolkit.Mvvm.Input;
@@ -18,20 +19,23 @@ public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
         PurchaseChromaKeyAddOnUseCase purchaseChromaKeyAddOnCommand,
         GetChromaKeyAddOnUseCase getChromaKeyAddOnQuery,
         ILocalizationService localizationService,
-        ICancellationService cancellationService)
+        ICancellationService cancellationService,
+        ITelemetryService telemetryService)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
+        _telemetryService = telemetryService;
 
         ChromaKeyAddOnPrice = localizationService.GetString("AddOns_ItemUnknown");
-        GoBackCommand = leaveStorePageCommand.ToRelayCommand(() => new LeaveStorePageRequest());
-        PurchaseChromaKeyAddOnCommand = purchaseChromaKeyAddOnCommand.ToAsyncRelayCommand(() => new PurchaseChromaKeyAddOnRequest());
+        GoBackCommand = leaveStorePageCommand.ToRelayCommand(() => new LeaveStorePageRequest(), telemetryService);
+        PurchaseChromaKeyAddOnCommand = purchaseChromaKeyAddOnCommand.ToAsyncRelayCommand(() => new PurchaseChromaKeyAddOnRequest(), telemetryService);
         _getChromaKeyAddOnQuery = getChromaKeyAddOnQuery;
     }
 
     private readonly ILocalizationService _localizationService;
     private readonly ICancellationService _cancellationService;
     private readonly GetChromaKeyAddOnUseCase _getChromaKeyAddOnQuery;
+    private readonly ITelemetryService _telemetryService;
 
     public IAsyncRelayCommand PurchaseChromaKeyAddOnCommand { get; }
     public IRelayCommand GoBackCommand { get; }
@@ -68,7 +72,20 @@ public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            IStoreAddOn? addOn = (await _getChromaKeyAddOnQuery.ExecuteAsync(new GetChromaKeyAddOnRequest(), cancellationToken)).AddOn;
+            IStoreAddOn? addOn = null;
+            try
+            {
+                addOn = (await _getChromaKeyAddOnQuery.ExecuteAsync(new GetChromaKeyAddOnRequest(), cancellationToken)).AddOn;
+            }
+            catch (OperationCanceledException exception)
+            {
+                _telemetryService.ActivityCanceled(nameof(LoadAsync), exception.Message);
+            }
+            catch (Exception exception)
+            {
+                _telemetryService.ActivityError(nameof(LoadAsync), exception);
+            }
+
             if (addOn != null)
             {
                 bool isOwned = addOn.IsOwned;

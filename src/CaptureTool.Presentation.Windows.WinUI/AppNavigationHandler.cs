@@ -220,11 +220,11 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
         });
     }
 
-    private void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
+    private async void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
     {
         if (_navigationService.CanGoBack)
         {
-            _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest()).GetAwaiter().GetResult();
+            await _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest());
         }
         else
         {
