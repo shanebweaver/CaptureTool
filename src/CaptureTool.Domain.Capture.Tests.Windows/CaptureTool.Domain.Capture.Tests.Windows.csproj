@@ -10,7 +10,6 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj" />
     <ProjectReference Include="..\CaptureTool.Domain.Capture.Windows\CaptureTool.Domain.Capture.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Domain.Capture.Abstractions\CaptureTool.Domain.Capture.Abstractions.csproj" />
     <ProjectReference Include="..\CaptureTool.Domain.Edit.Windows\CaptureTool.Domain.Edit.Windows.csproj" />
@@ -27,14 +26,4 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
-  <!-- Copy CaptureInterop.dll to test output directory -->
-  <Target Name="CopyNativeDllToTestOutput" AfterTargets="Build">
-    <PropertyGroup>
-      <NativeDllSourcePath>$(SolutionDir)bin\$(Configuration)\$(Platform)\CaptureInterop.dll</NativeDllSourcePath>
-    </PropertyGroup>
-    <Message Text="Copying CaptureInterop.dll from $(NativeDllSourcePath) to $(OutDir)" Importance="high" />
-    <Copy SourceFiles="$(NativeDllSourcePath)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" Condition="Exists('$(NativeDllSourcePath)')" />
-  </Target>
-
 </Project>
