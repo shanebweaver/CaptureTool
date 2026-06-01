@@ -25,11 +25,11 @@ namespace CaptureTool.Presentation.Features.CaptureOverlay;
 
 public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<CaptureOverlayViewModelOptions>
 {
-    private readonly IUseCase<StartVideoCaptureRequest, StartVideoCaptureResponse> _startVideoCaptureCommand;
-    private readonly IUseCase<StopVideoCaptureRequest, StopVideoCaptureResponse> _stopVideoCaptureCommand;
-    private readonly IUseCase<ToggleVideoCapturePauseResumeRequest, ToggleVideoCapturePauseResumeResponse> _toggleVideoCapturePauseResumeCommand;
-    private readonly IUseCase<GetAudioInputSourcesRequest, GetAudioInputSourcesResponse> _getAudioInputSourcesCommand;
-    private readonly IUseCase<SelectAudioInputSourceRequest, SelectAudioInputSourceResponse> _selectAudioInputSourceCommand;
+    private readonly StartVideoCaptureUseCase _startVideoCaptureCommand;
+    private readonly StopVideoCaptureUseCase _stopVideoCaptureCommand;
+    private readonly ToggleVideoCapturePauseResumeUseCase _toggleVideoCapturePauseResumeCommand;
+    private readonly GetAudioInputSourcesUseCase _getAudioInputSourcesCommand;
+    private readonly SelectAudioInputSourceUseCase _selectAudioInputSourceCommand;
     private readonly IAudioInputDetectionService _audioInputDetectionService;
     private readonly IFeatureManager _featureManager;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
@@ -129,14 +129,14 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public IRelayCommand<AudioInputSource> SelectAudioInputSourceCommand { get; }
 
     public CaptureOverlayViewModel(
-        IUseCase<CloseCaptureOverlayRequest, CloseCaptureOverlayResponse> closeOverlayCommand,
-        IUseCase<GoBackFromCaptureOverlayRequest, GoBackFromCaptureOverlayResponse> goBackCommand,
-        IUseCase<StartVideoCaptureRequest, StartVideoCaptureResponse> startVideoCaptureCommand,
-        IUseCase<StopVideoCaptureRequest, StopVideoCaptureResponse> stopVideoCaptureCommand,
-        IUseCase<ToggleVideoCaptureDesktopAudioRequest, ToggleVideoCaptureDesktopAudioResponse> toggleVideoCaptureDesktopAudioCommand,
-        IUseCase<ToggleVideoCapturePauseResumeRequest, ToggleVideoCapturePauseResumeResponse> toggleVideoCapturePauseResumeCommand,
-        IUseCase<GetAudioInputSourcesRequest, GetAudioInputSourcesResponse> getAudioInputSourcesCommand,
-        IUseCase<SelectAudioInputSourceRequest, SelectAudioInputSourceResponse> selectAudioInputSourceCommand,
+        CloseCaptureOverlayUseCase closeOverlayCommand,
+        GoBackFromCaptureOverlayUseCase goBackCommand,
+        StartVideoCaptureUseCase startVideoCaptureCommand,
+        StopVideoCaptureUseCase stopVideoCaptureCommand,
+        ToggleVideoCaptureDesktopAudioUseCase toggleVideoCaptureDesktopAudioCommand,
+        ToggleVideoCapturePauseResumeUseCase toggleVideoCapturePauseResumeCommand,
+        GetAudioInputSourcesUseCase getAudioInputSourcesCommand,
+        SelectAudioInputSourceUseCase selectAudioInputSourceCommand,
         IAudioInputDetectionService audioInputDetectionService,
         IFeatureManager featureManager,
         IThemeService themeService,

@@ -54,11 +54,11 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
 
     public AudioCapturePageViewModel(
         IAudioCaptureHandler audioCaptureHandler,
-        IUseCase<StartAudioCaptureRequest, StartAudioCaptureResponse> startAction,
-        IUseCase<StopAudioCaptureRequest, StopAudioCaptureResponse> stopAction,
-        IUseCase<PauseAudioCaptureRequest, PauseAudioCaptureResponse> pauseAction,
-        IUseCase<MuteAudioCaptureRequest, MuteAudioCaptureResponse> muteAction,
-        IUseCase<ToggleLocalAudioCaptureRequest, ToggleLocalAudioCaptureResponse> toggleDesktopAudioAction)
+        StartAudioCaptureUseCase startAction,
+        StopAudioCaptureUseCase stopAction,
+        PauseAudioCaptureUseCase pauseAction,
+        MuteAudioCaptureUseCase muteAction,
+        ToggleLocalAudioCaptureUseCase toggleDesktopAudioAction)
     {
         _audioCaptureHandler = audioCaptureHandler;
 

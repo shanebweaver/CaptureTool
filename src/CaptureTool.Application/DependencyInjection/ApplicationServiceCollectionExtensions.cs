@@ -74,115 +74,83 @@ public static class ApplicationServiceCollectionExtensions
     {
         services.AddSingleton<IFileTypeDetector, FileTypeDetector>();
 
-        services.AddTransient<IUseCase<LeaveAboutPageRequest, LeaveAboutPageResponse>, LeaveAboutPageUseCase>();
-        services.AddTransient<IUseCase<OpenAboutPageRequest, OpenAboutPageResponse>, OpenAboutPageUseCase>();
+        services.AddTransient<LeaveAboutPageUseCase>();
+        services.AddTransient<OpenAboutPageUseCase>();
 
         services.AddSingleton<IActivationHandler, CaptureToolActivationHandler>();
 
-        services.AddTransient<IUseCase<ExitApplicationRequest, ExitApplicationResponse>, ExitApplicationUseCase>();
-        services.AddTransient<IUseCase<OpenFileRequest, OpenFileResponse>, OpenFileUseCase>();
+        services.AddTransient<ExitApplicationUseCase>();
+        services.AddTransient<OpenFileUseCase>();
 
-        services.AddTransient<IUseCase<StartAudioCaptureRequest, StartAudioCaptureResponse>, StartAudioCaptureUseCase>();
-        services.AddTransient<IUseCase<StopAudioCaptureRequest, StopAudioCaptureResponse>, StopAudioCaptureUseCase>();
-        services.AddTransient<IUseCase<PauseAudioCaptureRequest, PauseAudioCaptureResponse>, PauseAudioCaptureUseCase>();
-        services.AddTransient<IUseCase<MuteAudioCaptureRequest, MuteAudioCaptureResponse>, MuteAudioCaptureUseCase>();
-        services.AddTransient<IUseCase<ToggleLocalAudioCaptureRequest, ToggleLocalAudioCaptureResponse>, ToggleLocalAudioCaptureUseCase>();
-        services.AddTransient<IUseCase<OpenAudioCapturePageRequest, OpenAudioCapturePageResponse>, OpenAudioCapturePageUseCase>();
+        services.AddTransient<StartAudioCaptureUseCase>();
+        services.AddTransient<StopAudioCaptureUseCase>();
+        services.AddTransient<PauseAudioCaptureUseCase>();
+        services.AddTransient<MuteAudioCaptureUseCase>();
+        services.AddTransient<ToggleLocalAudioCaptureUseCase>();
+        services.AddTransient<OpenAudioCapturePageUseCase>();
         services.AddSingleton<IAudioCaptureHandler, AudioCaptureHandler>();
 
-        services.AddTransient<IUseCase<SaveAudioFileRequest, SaveAudioFileResponse>, SaveAudioFileUseCase>();
-        services.AddTransient<IConditional<SaveAudioFileRequest>, SaveAudioFileUseCase>();
-        services.AddTransient<IUseCase<CopyAudioFileRequest, CopyAudioFileResponse>, CopyAudioFileUseCase>();
-        services.AddTransient<IConditional<CopyAudioFileRequest>, CopyAudioFileUseCase>();
-        services.AddTransient<IUseCase<OpenAudioEditPageRequest, OpenAudioEditPageResponse>, OpenAudioEditPageUseCase>();
-        services.AddTransient<IConditional<OpenAudioEditPageRequest>, OpenAudioEditPageUseCase>();
+        services.AddTransient<SaveAudioFileUseCase>();
+        services.AddTransient<CopyAudioFileUseCase>();
+        services.AddTransient<OpenAudioEditPageUseCase>();
 
-        services.AddTransient<IUseCase<CloseCaptureOverlayRequest, CloseCaptureOverlayResponse>, CloseCaptureOverlayUseCase>();
-        services.AddTransient<IUseCase<GetAudioInputSourcesRequest, GetAudioInputSourcesResponse>, GetAudioInputSourcesUseCase>();
-        services.AddTransient<IUseCase<GoBackFromCaptureOverlayRequest, GoBackFromCaptureOverlayResponse>, GoBackFromCaptureOverlayUseCase>();
-        services.AddTransient<IConditional<GoBackFromCaptureOverlayRequest>, GoBackFromCaptureOverlayUseCase>();
-        services.AddTransient<IUseCase<OpenCaptureOverlayRequest, OpenCaptureOverlayResponse>, OpenCaptureOverlayUseCase>();
-        services.AddTransient<IUseCase<OpenSelectionOverlayRequest, OpenSelectionOverlayResponse>, OpenSelectionOverlayUseCase>();
-        services.AddTransient<IUseCase<SelectAudioInputSourceRequest, SelectAudioInputSourceResponse>, SelectAudioInputSourceUseCase>();
-        services.AddTransient<IUseCase<StartVideoCaptureRequest, StartVideoCaptureResponse>, StartVideoCaptureUseCase>();
-        services.AddTransient<IConditional<StartVideoCaptureRequest>, StartVideoCaptureUseCase>();
-        services.AddTransient<IUseCase<StopVideoCaptureRequest, StopVideoCaptureResponse>, StopVideoCaptureUseCase>();
-        services.AddTransient<IConditional<StopVideoCaptureRequest>, StopVideoCaptureUseCase>();
-        services.AddTransient<IUseCase<ToggleVideoCaptureDesktopAudioRequest, ToggleVideoCaptureDesktopAudioResponse>, ToggleVideoCaptureDesktopAudioUseCase>();
-        services.AddTransient<IUseCase<ToggleVideoCapturePauseResumeRequest, ToggleVideoCapturePauseResumeResponse>, ToggleVideoCapturePauseResumeUseCase>();
-        services.AddTransient<IConditional<ToggleVideoCapturePauseResumeRequest>, ToggleVideoCapturePauseResumeUseCase>();
+        services.AddTransient<CloseCaptureOverlayUseCase>();
+        services.AddTransient<GetAudioInputSourcesUseCase>();
+        services.AddTransient<GoBackFromCaptureOverlayUseCase>();
+        services.AddTransient<OpenCaptureOverlayUseCase>();
+        services.AddTransient<OpenSelectionOverlayUseCase>();
+        services.AddTransient<SelectAudioInputSourceUseCase>();
+        services.AddTransient<StartVideoCaptureUseCase>();
+        services.AddTransient<StopVideoCaptureUseCase>();
+        services.AddTransient<ToggleVideoCaptureDesktopAudioUseCase>();
+        services.AddTransient<ToggleVideoCapturePauseResumeUseCase>();
 
-        services.AddTransient<IUseCase<ClearLogsRequest, ClearLogsResponse>, ClearLogsUseCase>();
-        services.AddTransient<IUseCase<GetCurrentLogsRequest, GetCurrentLogsResponse>, GetCurrentLogsUseCase>();
-        services.AddTransient<IUseCase<GetIsLoggingEnabledRequest, GetIsLoggingEnabledResponse>, GetIsLoggingEnabledUseCase>();
-        services.AddTransient<IUseCase<UpdateLoggingStateRequest, UpdateLoggingStateResponse>, UpdateLoggingStateUseCase>();
+        services.AddTransient<ClearLogsUseCase>();
+        services.AddTransient<GetCurrentLogsUseCase>();
+        services.AddTransient<GetIsLoggingEnabledUseCase>();
+        services.AddTransient<UpdateLoggingStateUseCase>();
 
-        services.AddTransient<IUseCase<RestartApplicationRequest, RestartApplicationResponse>, RestartApplicationUseCase>();
-        services.AddTransient<IConditional<RestartApplicationRequest>, RestartApplicationUseCase>();
+        services.AddTransient<RestartApplicationUseCase>();
 
-        services.AddTransient<IUseCase<ShowHomePageRequest, ShowHomePageResponse>, ShowHomePageUseCase>();
+        services.AddTransient<ShowHomePageUseCase>();
 
         services.AddSingleton<IImageCaptureHandler, CaptureToolImageCaptureHandler>();
 
-        services.AddTransient<IUseCase<OpenImageEditPageRequest, OpenImageEditPageResponse>, OpenImageEditPageUseCase>();
-        services.AddTransient<IConditional<OpenImageEditPageRequest>, OpenImageEditPageUseCase>();
+        services.AddTransient<OpenImageEditPageUseCase>();
 
-        services.AddTransient<IUseCase<GetRecentCapturesRequest, GetRecentCapturesResponse>, GetRecentCapturesUseCase>();
-        services.AddTransient<IConditional<GetRecentCapturesRequest>, GetRecentCapturesUseCase>();
-        services.AddTransient<IUseCase<OpenRecentCaptureRequest, OpenRecentCaptureResponse>, OpenRecentCaptureUseCase>();
-        services.AddTransient<IConditional<OpenRecentCaptureRequest>, OpenRecentCaptureUseCase>();
+        services.AddTransient<GetRecentCapturesUseCase>();
+        services.AddTransient<OpenRecentCaptureUseCase>();
 
-        services.AddTransient<IUseCase<LeaveSettingsPageRequest, LeaveSettingsPageResponse>, LeaveSettingsPageUseCase>();
-        services.AddTransient<IUseCase<RestartSettingsApplicationRequest, RestartSettingsApplicationResponse>, RestartSettingsApplicationUseCase>();
-        services.AddTransient<IConditional<RestartSettingsApplicationRequest>, RestartSettingsApplicationUseCase>();
-        services.AddTransient<IUseCase<UpdateImageAutoCopyRequest, UpdateImageAutoCopyResponse>, UpdateImageAutoCopyUseCase>();
-        services.AddTransient<IConditional<UpdateImageAutoCopyRequest>, UpdateImageAutoCopyUseCase>();
-        services.AddTransient<IUseCase<UpdateImageAutoSaveRequest, UpdateImageAutoSaveResponse>, UpdateImageAutoSaveUseCase>();
-        services.AddTransient<IConditional<UpdateImageAutoSaveRequest>, UpdateImageAutoSaveUseCase>();
-        services.AddTransient<IUseCase<UpdateVideoCaptureAutoCopyRequest, UpdateVideoCaptureAutoCopyResponse>, UpdateVideoCaptureAutoCopyUseCase>();
-        services.AddTransient<IConditional<UpdateVideoCaptureAutoCopyRequest>, UpdateVideoCaptureAutoCopyUseCase>();
-        services.AddTransient<IUseCase<UpdateVideoCaptureAutoSaveRequest, UpdateVideoCaptureAutoSaveResponse>, UpdateVideoCaptureAutoSaveUseCase>();
-        services.AddTransient<IConditional<UpdateVideoCaptureAutoSaveRequest>, UpdateVideoCaptureAutoSaveUseCase>();
-        services.AddTransient<IUseCase<UpdateVideoCaptureDefaultLocalAudioRequest, UpdateVideoCaptureDefaultLocalAudioResponse>, UpdateVideoCaptureDefaultLocalAudioUseCase>();
-        services.AddTransient<IConditional<UpdateVideoCaptureDefaultLocalAudioRequest>, UpdateVideoCaptureDefaultLocalAudioUseCase>();
-        services.AddTransient<IUseCase<UpdateAppLanguageRequest, UpdateAppLanguageResponse>, UpdateAppLanguageUseCase>();
-        services.AddTransient<IConditional<UpdateAppLanguageRequest>, UpdateAppLanguageUseCase>();
-        services.AddTransient<IUseCase<UpdateAppThemeRequest, UpdateAppThemeResponse>, UpdateAppThemeUseCase>();
-        services.AddTransient<IConditional<UpdateAppThemeRequest>, UpdateAppThemeUseCase>();
-        services.AddTransient<IUseCase<ChangeScreenshotsFolderRequest, ChangeScreenshotsFolderResponse>, ChangeScreenshotsFolderUseCase>();
-        services.AddTransient<IConditional<ChangeScreenshotsFolderRequest>, ChangeScreenshotsFolderUseCase>();
-        services.AddTransient<IUseCase<ChangeVideosFolderRequest, ChangeVideosFolderResponse>, ChangeVideosFolderUseCase>();
-        services.AddTransient<IConditional<ChangeVideosFolderRequest>, ChangeVideosFolderUseCase>();
-        services.AddTransient<IUseCase<ClearTempFilesRequest, ClearTempFilesResponse>, ClearTempFilesUseCase>();
-        services.AddTransient<IConditional<ClearTempFilesRequest>, ClearTempFilesUseCase>();
-        services.AddTransient<IUseCase<RestoreDefaultsRequest, RestoreDefaultsResponse>, RestoreDefaultsUseCase>();
-        services.AddTransient<IConditional<RestoreDefaultsRequest>, RestoreDefaultsUseCase>();
-        services.AddTransient<IUseCase<OpenScreenshotsFolderRequest, OpenScreenshotsFolderResponse>, OpenScreenshotsFolderUseCase>();
-        services.AddTransient<IConditional<OpenScreenshotsFolderRequest>, OpenScreenshotsFolderUseCase>();
-        services.AddTransient<IUseCase<OpenVideosFolderRequest, OpenVideosFolderResponse>, OpenVideosFolderUseCase>();
-        services.AddTransient<IConditional<OpenVideosFolderRequest>, OpenVideosFolderUseCase>();
-        services.AddTransient<IUseCase<OpenTempFolderRequest, OpenTempFolderResponse>, OpenTempFolderUseCase>();
-        services.AddTransient<IConditional<OpenTempFolderRequest>, OpenTempFolderUseCase>();
-        services.AddTransient<IUseCase<OpenSettingsPageRequest, OpenSettingsPageResponse>, OpenSettingsPageUseCase>();
-        services.AddTransient<IConditional<OpenSettingsPageRequest>, OpenSettingsPageUseCase>();
+        services.AddTransient<LeaveSettingsPageUseCase>();
+        services.AddTransient<RestartSettingsApplicationUseCase>();
+        services.AddTransient<UpdateImageAutoCopyUseCase>();
+        services.AddTransient<UpdateImageAutoSaveUseCase>();
+        services.AddTransient<UpdateVideoCaptureAutoCopyUseCase>();
+        services.AddTransient<UpdateVideoCaptureAutoSaveUseCase>();
+        services.AddTransient<UpdateVideoCaptureDefaultLocalAudioUseCase>();
+        services.AddTransient<UpdateAppLanguageUseCase>();
+        services.AddTransient<UpdateAppThemeUseCase>();
+        services.AddTransient<ChangeScreenshotsFolderUseCase>();
+        services.AddTransient<ChangeVideosFolderUseCase>();
+        services.AddTransient<ClearTempFilesUseCase>();
+        services.AddTransient<RestoreDefaultsUseCase>();
+        services.AddTransient<OpenScreenshotsFolderUseCase>();
+        services.AddTransient<OpenVideosFolderUseCase>();
+        services.AddTransient<OpenTempFolderUseCase>();
+        services.AddTransient<OpenSettingsPageUseCase>();
 
-        services.AddTransient<IUseCase<GetChromaKeyAddOnRequest, GetChromaKeyAddOnResponse>, GetChromaKeyAddOnUseCase>();
-        services.AddTransient<IConditional<GetChromaKeyAddOnRequest>, GetChromaKeyAddOnUseCase>();
-        services.AddTransient<IUseCase<PurchaseChromaKeyAddOnRequest, PurchaseChromaKeyAddOnResponse>, PurchaseChromaKeyAddOnUseCase>();
-        services.AddTransient<IConditional<PurchaseChromaKeyAddOnRequest>, PurchaseChromaKeyAddOnUseCase>();
-        services.AddTransient<IUseCase<OpenStorePageRequest, OpenStorePageResponse>, OpenStorePageUseCase>();
-        services.AddTransient<IUseCase<LeaveStorePageRequest, LeaveStorePageResponse>, LeaveStorePageUseCase>();
+        services.AddTransient<GetChromaKeyAddOnUseCase>();
+        services.AddTransient<PurchaseChromaKeyAddOnUseCase>();
+        services.AddTransient<OpenStorePageUseCase>();
+        services.AddTransient<LeaveStorePageUseCase>();
 
         services.AddSingleton<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
 
-        services.AddTransient<IUseCase<CopyVideoFileRequest, CopyVideoFileResponse>, CopyVideoFileUseCase>();
-        services.AddTransient<IConditional<CopyVideoFileRequest>, CopyVideoFileUseCase>();
-        services.AddTransient<IUseCase<SaveVideoFileRequest, SaveVideoFileResponse>, SaveVideoFileUseCase>();
-        services.AddTransient<IConditional<SaveVideoFileRequest>, SaveVideoFileUseCase>();
-        services.AddTransient<IUseCase<OpenVideoEditPageRequest, OpenVideoEditPageResponse>, OpenVideoEditPageUseCase>();
+        services.AddTransient<CopyVideoFileUseCase>();
+        services.AddTransient<SaveVideoFileUseCase>();
+        services.AddTransient<OpenVideoEditPageUseCase>();
 
-        services.AddTransient<IUseCase<ShowMainWindowRequest, ShowMainWindowResponse>, ShowMainWindowUseCase>();
-        services.AddTransient<IConditional<ShowMainWindowRequest>, ShowMainWindowUseCase>();
+        services.AddTransient<ShowMainWindowUseCase>();
 
         return services;
     }

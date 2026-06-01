@@ -24,8 +24,8 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 {
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly IUseCase<OpenRecentCaptureRequest, OpenRecentCaptureResponse> _openRecentCaptureCommand;
-    private readonly IUseCase<GetRecentCapturesRequest, GetRecentCapturesResponse> _getRecentCapturesQuery;
+    private readonly OpenRecentCaptureUseCase _openRecentCaptureCommand;
+    private readonly GetRecentCapturesUseCase _getRecentCapturesQuery;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
 
     public event EventHandler? RecentCapturesUpdated;
@@ -55,14 +55,14 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     }
 
     public AppMenuViewModel(
-        IUseCase<OpenSelectionOverlayRequest, OpenSelectionOverlayResponse> openSelectionOverlayCommand,
-        IUseCase<OpenSettingsPageRequest, OpenSettingsPageResponse> openSettingsPageCommand,
-        IUseCase<OpenAboutPageRequest, OpenAboutPageResponse> openAboutPageCommand,
-        IUseCase<OpenStorePageRequest, OpenStorePageResponse> openStorePageCommand,
-        IUseCase<OpenFileRequest, OpenFileResponse> openFileCommand,
-        IUseCase<ExitApplicationRequest, ExitApplicationResponse> exitApplicationCommand,
-        IUseCase<OpenRecentCaptureRequest, OpenRecentCaptureResponse> openRecentCaptureCommand,
-        IUseCase<GetRecentCapturesRequest, GetRecentCapturesResponse> getRecentCapturesQuery,
+        OpenSelectionOverlayUseCase openSelectionOverlayCommand,
+        OpenSettingsPageUseCase openSettingsPageCommand,
+        OpenAboutPageUseCase openAboutPageCommand,
+        OpenStorePageUseCase openStorePageCommand,
+        OpenFileUseCase openFileCommand,
+        ExitApplicationUseCase exitApplicationCommand,
+        OpenRecentCaptureUseCase openRecentCaptureCommand,
+        GetRecentCapturesUseCase getRecentCapturesQuery,
         IFeatureManager featureManager,
         IImageCaptureHandler imageCaptureHandler,
         IVideoCaptureHandler videoCaptureHandler,
