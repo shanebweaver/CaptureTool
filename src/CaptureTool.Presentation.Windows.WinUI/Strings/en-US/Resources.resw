@@ -461,6 +461,22 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Arrow</value>
     <comment>The arrow shape option in the shape toolbar.</comment>
   </data>
+  <data name="ShapeToolbar_RectangleOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Rectangle shape</value>
+    <comment>The tooltip for the rectangle shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_EllipseOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ellipse shape</value>
+    <comment>The tooltip for the ellipse shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_LineOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Line shape</value>
+    <comment>The tooltip for the line shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_ArrowOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Arrow shape</value>
+    <comment>The tooltip for the arrow shape option in the shape toolbar.</comment>
+  </data>
   <data name="ShapeToolbar_StrokeColor.Text" xml:space="preserve">
     <value>Stroke Color</value>
     <comment>The label for the stroke color picker in the shape toolbar.</comment>
@@ -941,6 +957,11 @@ SOFTWARE.
     <comment />
     <comment>The accessibility name for the shape type selector in the shape toolbar.</comment>
   </data>
+  <data name="ShapeToolbar_ShapeTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose shape type</value>
+    <comment />
+    <comment>The tooltip for the shape type selector in the shape toolbar.</comment>
+  </data>
   <data name="ShapeToolbar_FillColorButtonLabel.Text" xml:space="preserve">
     <value>Fill</value>
     <comment />
@@ -950,6 +971,11 @@ SOFTWARE.
     <value>Thickness</value>
     <comment />
     <comment>The accessibility name for the thickness slider in the color palette picker.</comment>
+  </data>
+  <data name="ColorPalettePicker_ThicknessSlider.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Adjust outline thickness</value>
+    <comment />
+    <comment>The tooltip for the thickness slider in the color palette picker.</comment>
   </data>
   <data name="ColorPalettePicker_ThicknessLabel.Text" xml:space="preserve">
     <value>Thickness</value>
@@ -975,6 +1001,11 @@ SOFTWARE.
     <value>Opacity</value>
     <comment />
     <comment>The accessibility name for the opacity slider in the color palette picker.</comment>
+  </data>
+  <data name="ColorPalettePicker_OpacitySlider.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Adjust opacity</value>
+    <comment />
+    <comment>The tooltip for the opacity slider in the color palette picker.</comment>
   </data>
   <data name="ShapeToolbar_FillColorButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Choose fill color and opacity</value>
