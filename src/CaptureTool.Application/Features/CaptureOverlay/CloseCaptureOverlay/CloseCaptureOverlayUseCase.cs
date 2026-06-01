@@ -9,12 +9,12 @@ namespace CaptureTool.Application.Features.CaptureOverlay.CloseCaptureOverlay;
 public sealed class CloseCaptureOverlayUseCase : IUseCase<CloseCaptureOverlayRequest, CloseCaptureOverlayResponse>, IConditional<CloseCaptureOverlayRequest>
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly IUseCase<ShowMainWindowRequest, ShowMainWindowResponse> _showMainWindow;
+    private readonly ShowMainWindowUseCase _showMainWindow;
     private readonly INavigationService _navigationService;
 
     public CloseCaptureOverlayUseCase(
         IVideoCaptureHandler videoCaptureHandler,
-        IUseCase<ShowMainWindowRequest, ShowMainWindowResponse> showMainWindow,
+        ShowMainWindowUseCase showMainWindow,
         INavigationService navigationService)
     {
         _videoCaptureHandler = videoCaptureHandler;

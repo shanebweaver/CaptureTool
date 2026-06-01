@@ -31,23 +31,23 @@ namespace CaptureTool.Presentation.Features.Settings;
 
 public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 {
-    private readonly IUseCase<LeaveSettingsPageRequest, LeaveSettingsPageResponse> _goBackAction;
-    private readonly IUseCase<RestartSettingsApplicationRequest, RestartSettingsApplicationResponse> _restartAppAction;
-    private readonly IUseCase<UpdateImageAutoCopyRequest, UpdateImageAutoCopyResponse> _updateImageAutoCopyAction;
-    private readonly IUseCase<UpdateImageAutoSaveRequest, UpdateImageAutoSaveResponse> _updateImageAutoSaveAction;
-    private readonly IUseCase<UpdateVideoCaptureAutoCopyRequest, UpdateVideoCaptureAutoCopyResponse> _updateVideoCaptureAutoCopyAction;
-    private readonly IUseCase<UpdateVideoCaptureAutoSaveRequest, UpdateVideoCaptureAutoSaveResponse> _updateVideoCaptureAutoSaveAction;
-    private readonly IUseCase<UpdateVideoCaptureDefaultLocalAudioRequest, UpdateVideoCaptureDefaultLocalAudioResponse> _updateVideoCaptureDefaultLocalAudioAction;
-    private readonly IUseCase<UpdateVideoMetadataAutoSaveRequest, UpdateVideoMetadataAutoSaveResponse> _updateVideoMetadataAutoSaveAction;
-    private readonly IUseCase<UpdateAppLanguageRequest, UpdateAppLanguageResponse> _updateAppLanguageAction;
-    private readonly IUseCase<UpdateAppThemeRequest, UpdateAppThemeResponse> _updateAppThemeAction;
-    private readonly IUseCase<ChangeScreenshotsFolderRequest, ChangeScreenshotsFolderResponse> _changeScreenshotsFolderAction;
-    private readonly IUseCase<OpenScreenshotsFolderRequest, OpenScreenshotsFolderResponse> _openScreenshotsFolderAction;
-    private readonly IUseCase<ChangeVideosFolderRequest, ChangeVideosFolderResponse> _changeVideosFolderAction;
-    private readonly IUseCase<OpenVideosFolderRequest, OpenVideosFolderResponse> _openVideosFolderAction;
-    private readonly IUseCase<OpenTempFolderRequest, OpenTempFolderResponse> _openTempFolderAction;
-    private readonly IUseCase<ClearTempFilesRequest, ClearTempFilesResponse> _clearTempFilesAction;
-    private readonly IUseCase<RestoreDefaultsRequest, RestoreDefaultsResponse> _restoreDefaultsAction;
+    private readonly LeaveSettingsPageUseCase _goBackAction;
+    private readonly RestartSettingsApplicationUseCase _restartAppAction;
+    private readonly UpdateImageAutoCopyUseCase _updateImageAutoCopyAction;
+    private readonly UpdateImageAutoSaveUseCase _updateImageAutoSaveAction;
+    private readonly UpdateVideoCaptureAutoCopyUseCase _updateVideoCaptureAutoCopyAction;
+    private readonly UpdateVideoCaptureAutoSaveUseCase _updateVideoCaptureAutoSaveAction;
+    private readonly UpdateVideoCaptureDefaultLocalAudioUseCase _updateVideoCaptureDefaultLocalAudioAction;
+    private readonly UpdateVideoMetadataAutoSaveUseCase _updateVideoMetadataAutoSaveAction;
+    private readonly UpdateAppLanguageUseCase _updateAppLanguageAction;
+    private readonly UpdateAppThemeUseCase _updateAppThemeAction;
+    private readonly ChangeScreenshotsFolderUseCase _changeScreenshotsFolderAction;
+    private readonly OpenScreenshotsFolderUseCase _openScreenshotsFolderAction;
+    private readonly ChangeVideosFolderUseCase _changeVideosFolderAction;
+    private readonly OpenVideosFolderUseCase _openVideosFolderAction;
+    private readonly OpenTempFolderUseCase _openTempFolderAction;
+    private readonly ClearTempFilesUseCase _clearTempFilesAction;
+    private readonly RestoreDefaultsUseCase _restoreDefaultsAction;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
@@ -190,23 +190,23 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public SettingsPageViewModel(
-        IUseCase<LeaveSettingsPageRequest, LeaveSettingsPageResponse> goBackAction,
-        IUseCase<RestartSettingsApplicationRequest, RestartSettingsApplicationResponse> restartAppAction,
-        IUseCase<UpdateImageAutoCopyRequest, UpdateImageAutoCopyResponse> updateImageAutoCopyAction,
-        IUseCase<UpdateImageAutoSaveRequest, UpdateImageAutoSaveResponse> updateImageAutoSaveAction,
-        IUseCase<UpdateVideoCaptureAutoCopyRequest, UpdateVideoCaptureAutoCopyResponse> updateVideoCaptureAutoCopyAction,
-        IUseCase<UpdateVideoCaptureAutoSaveRequest, UpdateVideoCaptureAutoSaveResponse> updateVideoCaptureAutoSaveAction,
-        IUseCase<UpdateVideoCaptureDefaultLocalAudioRequest, UpdateVideoCaptureDefaultLocalAudioResponse> updateVideoCaptureDefaultLocalAudioAction,
-        IUseCase<UpdateVideoMetadataAutoSaveRequest, UpdateVideoMetadataAutoSaveResponse> updateVideoMetadataAutoSaveAction,
-        IUseCase<UpdateAppLanguageRequest, UpdateAppLanguageResponse> updateAppLanguageAction,
-        IUseCase<UpdateAppThemeRequest, UpdateAppThemeResponse> updateAppThemeAction,
-        IUseCase<ChangeScreenshotsFolderRequest, ChangeScreenshotsFolderResponse> changeScreenshotsFolderAction,
-        IUseCase<OpenScreenshotsFolderRequest, OpenScreenshotsFolderResponse> openScreenshotsFolderAction,
-        IUseCase<ChangeVideosFolderRequest, ChangeVideosFolderResponse> changeVideosFolderAction,
-        IUseCase<OpenVideosFolderRequest, OpenVideosFolderResponse> openVideosFolderAction,
-        IUseCase<OpenTempFolderRequest, OpenTempFolderResponse> openTempFolderAction,
-        IUseCase<ClearTempFilesRequest, ClearTempFilesResponse> clearTempFilesAction,
-        IUseCase<RestoreDefaultsRequest, RestoreDefaultsResponse> restoreDefaultsAction,
+        LeaveSettingsPageUseCase goBackAction,
+        RestartSettingsApplicationUseCase restartAppAction,
+        UpdateImageAutoCopyUseCase updateImageAutoCopyAction,
+        UpdateImageAutoSaveUseCase updateImageAutoSaveAction,
+        UpdateVideoCaptureAutoCopyUseCase updateVideoCaptureAutoCopyAction,
+        UpdateVideoCaptureAutoSaveUseCase updateVideoCaptureAutoSaveAction,
+        UpdateVideoCaptureDefaultLocalAudioUseCase updateVideoCaptureDefaultLocalAudioAction,
+        UpdateVideoMetadataAutoSaveUseCase updateVideoMetadataAutoSaveAction,
+        UpdateAppLanguageUseCase updateAppLanguageAction,
+        UpdateAppThemeUseCase updateAppThemeAction,
+        ChangeScreenshotsFolderUseCase changeScreenshotsFolderAction,
+        OpenScreenshotsFolderUseCase openScreenshotsFolderAction,
+        ChangeVideosFolderUseCase changeVideosFolderAction,
+        OpenVideosFolderUseCase openVideosFolderAction,
+        OpenTempFolderUseCase openTempFolderAction,
+        ClearTempFilesUseCase clearTempFilesAction,
+        RestoreDefaultsUseCase restoreDefaultsAction,
         ILocalizationService localizationService,
         IThemeService themeService,
         ISettingsService settingsService,

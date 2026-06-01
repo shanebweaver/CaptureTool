@@ -18,8 +18,8 @@ public sealed partial class HomePageViewModel : ViewModelBase
     public bool IsAudioCaptureEnabled { get; }
 
     public HomePageViewModel(
-        IUseCase<OpenSelectionOverlayRequest, OpenSelectionOverlayResponse> openSelectionOverlayCommand,
-        IUseCase<OpenAudioCapturePageRequest, OpenAudioCapturePageResponse> openAudioCapturePageCommand,
+        OpenSelectionOverlayUseCase openSelectionOverlayCommand,
+        OpenAudioCapturePageUseCase openAudioCapturePageCommand,
         IFeatureManager featureManager)
     {
         IsAudioCaptureEnabled = featureManager.IsEnabled(AppFeatures.Feature_AudioCapture);

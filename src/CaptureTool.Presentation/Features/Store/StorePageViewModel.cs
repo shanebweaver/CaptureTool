@@ -14,9 +14,9 @@ namespace CaptureTool.Presentation.Features.Store;
 public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
 {
     public StorePageViewModel(
-        IUseCase<LeaveStorePageRequest, LeaveStorePageResponse> leaveStorePageCommand,
-        IUseCase<PurchaseChromaKeyAddOnRequest, PurchaseChromaKeyAddOnResponse> purchaseChromaKeyAddOnCommand,
-        IUseCase<GetChromaKeyAddOnRequest, GetChromaKeyAddOnResponse> getChromaKeyAddOnQuery,
+        LeaveStorePageUseCase leaveStorePageCommand,
+        PurchaseChromaKeyAddOnUseCase purchaseChromaKeyAddOnCommand,
+        GetChromaKeyAddOnUseCase getChromaKeyAddOnQuery,
         ILocalizationService localizationService,
         ICancellationService cancellationService)
     {
@@ -31,7 +31,7 @@ public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
 
     private readonly ILocalizationService _localizationService;
     private readonly ICancellationService _cancellationService;
-    private readonly IUseCase<GetChromaKeyAddOnRequest, GetChromaKeyAddOnResponse> _getChromaKeyAddOnQuery;
+    private readonly GetChromaKeyAddOnUseCase _getChromaKeyAddOnQuery;
 
     public IAsyncRelayCommand PurchaseChromaKeyAddOnCommand { get; }
     public IRelayCommand GoBackCommand { get; }

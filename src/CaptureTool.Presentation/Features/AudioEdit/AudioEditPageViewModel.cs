@@ -25,13 +25,13 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<IAudi
         private set => Set(ref field, value);
     }
 
-    private readonly IUseCase<SaveAudioFileRequest, SaveAudioFileResponse> _saveAction;
-    private readonly IUseCase<CopyAudioFileRequest, CopyAudioFileResponse> _copyAction;
+    private readonly SaveAudioFileUseCase _saveAction;
+    private readonly CopyAudioFileUseCase _copyAction;
     private readonly ITelemetryService _telemetryService;
 
     public AudioEditPageViewModel(
-        IUseCase<SaveAudioFileRequest, SaveAudioFileResponse> saveAction,
-        IUseCase<CopyAudioFileRequest, CopyAudioFileResponse> copyAction,
+        SaveAudioFileUseCase saveAction,
+        CopyAudioFileUseCase copyAction,
         ITelemetryService telemetryService)
     {
         _saveAction = saveAction;

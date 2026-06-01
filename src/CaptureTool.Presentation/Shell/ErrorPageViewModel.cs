@@ -11,7 +11,7 @@ public sealed partial class ErrorPageViewModel : ViewModelBase
     public IRelayCommand RestartAppCommand { get; }
 
     public ErrorPageViewModel(
-        IUseCase<RestartApplicationRequest, RestartApplicationResponse> restartAppAction)
+        RestartApplicationUseCase restartAppAction)
     {
         RestartAppCommand = restartAppAction.ToRelayCommand(() => new RestartApplicationRequest());
     }

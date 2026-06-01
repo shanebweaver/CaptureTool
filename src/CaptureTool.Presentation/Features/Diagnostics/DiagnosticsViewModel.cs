@@ -11,8 +11,8 @@ namespace CaptureTool.Presentation.Features.Diagnostics;
 
 public sealed partial class DiagnosticsViewModel : ViewModelBase
 {
-    private readonly IUseCase<ClearLogsRequest, ClearLogsResponse> _clearLogsCommand;
-    private readonly IUseCase<UpdateLoggingStateRequest, UpdateLoggingStateResponse> _updateLoggingStateCommand;
+    private readonly ClearLogsUseCase _clearLogsCommand;
+    private readonly UpdateLoggingStateUseCase _updateLoggingStateCommand;
     private readonly ILogService _logService;
 
     public IRelayCommand ClearLogsCommand { get; }
@@ -31,10 +31,10 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     }
 
     public DiagnosticsViewModel(
-        IUseCase<ClearLogsRequest, ClearLogsResponse> clearLogsCommand,
-        IUseCase<UpdateLoggingStateRequest, UpdateLoggingStateResponse> updateLoggingEnablementCommand,
-        IUseCase<GetIsLoggingEnabledRequest, GetIsLoggingEnabledResponse> getIsLoggingEnabledQuery,
-        IUseCase<GetCurrentLogsRequest, GetCurrentLogsResponse> getCurrentLogsQuery,
+        ClearLogsUseCase clearLogsCommand,
+        UpdateLoggingStateUseCase updateLoggingEnablementCommand,
+        GetIsLoggingEnabledUseCase getIsLoggingEnabledQuery,
+        GetCurrentLogsUseCase getCurrentLogsQuery,
         ILogService logService)
     {
         _clearLogsCommand = clearLogsCommand;
