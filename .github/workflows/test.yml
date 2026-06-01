@@ -37,15 +37,28 @@ jobs:
     - name: Build solution
       run: msbuild CaptureTool.slnx /p:Configuration=Release /p:Platform=x64
 
+    - name: Install coverage tools
+      run: |
+        dotnet tool install --global dotnet-coverage
+
     - name: Run C++ native tests
       run: |
         $vsTestPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Workload.NativeDesktop -property installationPath
         $vsTestExe = Join-Path $vsTestPath "Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
         & $vsTestExe "${{ github.workspace }}\x64\Release\CaptureInterop.Tests.dll" /Platform:x64
 
-    - name: Run .NET tests
+    - name: Run .NET tests with coverage
       run: |
-        dotnet test src\CaptureTool.Application.Tests\CaptureTool.Application.Tests.csproj -p:Platform=x64 --configuration Release
-        dotnet test src\CaptureTool.Domain.Capture.Tests.Windows\CaptureTool.Domain.Capture.Tests.Windows.csproj -p:Platform=x64 --configuration Release
-        dotnet test src\CaptureTool.Domain.Edit.Tests.Windows\CaptureTool.Domain.Edit.Tests.Windows.csproj -p:Platform=x64 --configuration Release
-        dotnet test src\CaptureTool.Infrastructure.Tests\CaptureTool.Infrastructure.Tests.csproj -p:Platform=x64 --configuration Release
+        dotnet-coverage collect "powershell -NoProfile -ExecutionPolicy Bypass -File .github\scripts\run-managed-tests.ps1" -f cobertura -o coverage.cobertura.xml
+
+    - name: Enforce coverage threshold
+      run: |
+        [xml]$coverage = Get-Content coverage.cobertura.xml
+        $lineRate = [double]$coverage.coverage.'line-rate'
+        $coveragePercent = [math]::Round($lineRate * 100, 2)
+        $minimumCoveragePercent = 25
+        "Line coverage: $coveragePercent%" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+        "Minimum line coverage: $minimumCoveragePercent%" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+        if ($coveragePercent -lt $minimumCoveragePercent) {
+          throw "Line coverage $coveragePercent% is below the required $minimumCoveragePercent%."
+        }
