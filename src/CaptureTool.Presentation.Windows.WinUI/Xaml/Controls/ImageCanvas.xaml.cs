@@ -69,6 +69,12 @@ public sealed partial class ImageCanvas : UserControlBase
         }
     }
 
+    public static readonly DependencyProperty IsTextModeEnabledProperty = DependencyProperty.Register(
+        nameof(IsTextModeEnabled),
+        typeof(bool),
+        typeof(ImageCanvas),
+        new PropertyMetadata(false));
+
     public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
        nameof(CropRect),
        typeof(Rectangle),
@@ -209,6 +215,12 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(IsShapesModeEnabledProperty, value);
     }
 
+    public bool IsTextModeEnabled
+    {
+        get => Get<bool>(IsTextModeEnabledProperty);
+        set => Set(IsTextModeEnabledProperty, value);
+    }
+
     public Rectangle CropRect
     {
         get => Get<Rectangle>(CropRectProperty);
@@ -248,6 +260,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<Rectangle>? InteractionComplete;
     public event EventHandler<Rectangle>? CropRectChanged;
     public event EventHandler<(System.Numerics.Vector2 Start, System.Numerics.Vector2 End)>? ShapeDrawn;
+    public event EventHandler<System.Numerics.Vector2>? TextPlaced;
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
     public event EventHandler<int>? ShapeDeleted;
     public event EventHandler<(int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState)>? ShapeModified;
@@ -716,6 +729,18 @@ public sealed partial class ImageCanvas : UserControlBase
                 return;
             }
         }
+        else if (IsTextModeEnabled)
+        {
+            var point = e.GetCurrentPoint(RenderCanvas);
+            if (point.Properties.IsLeftButtonPressed)
+            {
+                _pointerPressPosition = point.Position;
+                _isPointerDown = true;
+                RootContainer.CapturePointer(e.Pointer);
+                e.Handled = true;
+                return;
+            }
+        }
 
         _isPointerDown = true;
         _lastPointerPosition = e.GetCurrentPoint(RootContainer).Position;
@@ -786,6 +811,11 @@ public sealed partial class ImageCanvas : UserControlBase
                 e.Handled = true;
                 return;
             }
+            else if (IsTextModeEnabled && _pointerPressPosition.HasValue)
+            {
+                e.Handled = true;
+                return;
+            }
 
             var currentPosition = e.GetCurrentPoint(RootContainer).Position;
             double deltaX = _lastPointerPosition.X - currentPosition.X;
@@ -842,6 +872,22 @@ public sealed partial class ImageCanvas : UserControlBase
             // Clean up tracking variables
             _shapeUnderPointer = null;
             _pointerPressPosition = null;
+        }
+        else if (IsTextModeEnabled && _pointerPressPosition.HasValue)
+        {
+            var releasePoint = e.GetCurrentPoint(RenderCanvas).Position;
+            const double clickThreshold = 3.0;
+            double distance = Math.Sqrt(
+                Math.Pow(releasePoint.X - _pointerPressPosition.Value.X, 2) +
+                Math.Pow(releasePoint.Y - _pointerPressPosition.Value.Y, 2));
+
+            if (distance <= clickThreshold)
+            {
+                TextPlaced?.Invoke(this, DisplayPointToCanvasPoint(releasePoint));
+            }
+
+            _pointerPressPosition = null;
+            e.Handled = true;
         }
 
         _isPointerDown = false;

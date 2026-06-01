@@ -30,6 +30,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
         ImageCanvas.ImageContextMenuRequested += ImageCanvas_ImageContextMenuRequested;
         ImageCanvas.ShapeContextMenuRequested += ImageCanvas_ShapeContextMenuRequested;
+        ImageCanvas.TextPlaced += ImageCanvas_TextPlaced;
     }
 
     ~ImageEditPage()
@@ -41,6 +42,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
         ImageCanvas.ShapeDeleted -= ImageCanvas_ShapeDeleted;
         ImageCanvas.ShapeModified -= ImageCanvas_ShapeModified;
+        ImageCanvas.TextPlaced -= ImageCanvas_TextPlaced;
         ImageCanvas.ImageContextMenuRequested -= ImageCanvas_ImageContextMenuRequested;
         ImageCanvas.ShapeContextMenuRequested -= ImageCanvas_ShapeContextMenuRequested;
     }
@@ -184,6 +186,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.OnShapeModified(e.ShapeIndex, e.OldState, e.NewState);
     }
 
+    private void ImageCanvas_TextPlaced(object? _, System.Numerics.Vector2 e)
+    {
+        ViewModel.OnTextPlaced(e);
+    }
+
     private void ImageCanvas_ImageContextMenuRequested(object? _, Point position)
     {
         UpdateImageContextMenuState();
@@ -250,6 +257,31 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ShapeToolbar_FillOpacityChanged(object _, int e)
     {
         ViewModel.UpdateShapeFillOpacityCommand.Execute(e);
+    }
+
+    private void TextToolbar_TextContentChanged(object _, string e)
+    {
+        ViewModel.UpdateTextContentCommand.Execute(e);
+    }
+
+    private void TextToolbar_FontColorChanged(object _, Color e)
+    {
+        ViewModel.UpdateTextFontColorCommand.Execute(e);
+    }
+
+    private void TextToolbar_FontColorOpacityChanged(object _, int e)
+    {
+        ViewModel.UpdateTextFontColorOpacityCommand.Execute(e);
+    }
+
+    private void TextToolbar_FontFamilyChanged(object _, string e)
+    {
+        ViewModel.UpdateTextFontFamilyCommand.Execute(e);
+    }
+
+    private void TextToolbar_FontSizeChanged(object _, int e)
+    {
+        ViewModel.UpdateTextFontSizeCommand.Execute(e);
     }
 
     private async void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)

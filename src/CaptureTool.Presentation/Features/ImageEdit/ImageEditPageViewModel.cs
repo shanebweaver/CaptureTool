@@ -63,6 +63,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IAsyncRelayCommand CopyCommand { get; }
     public IRelayCommand ToggleCropModeCommand { get; }
     public IRelayCommand ToggleShapesModeCommand { get; }
+    public IRelayCommand ToggleTextModeCommand { get; }
     public IAsyncRelayCommand SaveCommand { get; }
     public IRelayCommand UndoCommand { get; }
     public IRelayCommand RedoCommand { get; }
@@ -84,6 +85,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IRelayCommand<int> UpdateShapeStrokeWidthCommand { get; }
     public IRelayCommand<int> UpdateShapeStrokeOpacityCommand { get; }
     public IRelayCommand<int> UpdateShapeFillOpacityCommand { get; }
+    public IRelayCommand<Color> UpdateTextFontColorCommand { get; }
+    public IRelayCommand<int> UpdateTextFontColorOpacityCommand { get; }
+    public IRelayCommand<string?> UpdateTextFontFamilyCommand { get; }
+    public IRelayCommand<int> UpdateTextFontSizeCommand { get; }
+    public IRelayCommand<string?> UpdateTextContentCommand { get; }
     public IRelayCommand<int> UpdateZoomPercentageCommand { get; }
     public IRelayCommand<bool> UpdateAutoZoomLockCommand { get; }
     public IRelayCommand ZoomAndCenterCommand { get; }
@@ -154,6 +160,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public bool IsInTextMode
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public ShapeType SelectedShapeType
     {
         get;
@@ -189,6 +201,44 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     }
 
     public int ShapeFillOpacity
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public string TextContent
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public Color TextFontColor
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public IReadOnlyList<Color> TextFontColorOptions { get; }
+
+    public int TextFontColorOpacity
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public string TextFontFamily
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public int TextFontSize
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsTextFeatureEnabled
     {
         get;
         private set => Set(ref field, value);
@@ -300,9 +350,15 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ShapeFillColor = ShapesColorPalette[0]; // Transparent
         ShapeStrokeColorOptions = ShapesColorPalette;
         ShapeFillColorOptions = ShapesColorPalette;
+        TextFontColorOptions = ShapesColorPalette.Where(c => !c.Equals(Color.Transparent)).ToArray();
         ShapeStrokeWidth = 3;
         ShapeStrokeOpacity = 100;
         ShapeFillOpacity = 100;
+        TextContent = string.Empty;
+        TextFontColor = ShapesColorPalette[1];
+        TextFontColorOpacity = 100;
+        TextFontFamily = TextDrawable.DefaultFontFamily;
+        TextFontSize = (int)TextDrawable.DefaultFontSize;
         ZoomPercentage = 100;
         IsAutoZoomLocked = false;
         _operationsUndoStack = [];
@@ -311,6 +367,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CopyCommand = new AsyncRelayCommand(CopyAsync);
         ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
         ToggleShapesModeCommand = new RelayCommand(ToggleShapesMode);
+        ToggleTextModeCommand = new RelayCommand(ToggleTextMode, () => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text));
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         UndoCommand = new RelayCommand(Undo);
         RedoCommand = new RelayCommand(Redo);
@@ -332,6 +389,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth);
         UpdateShapeStrokeOpacityCommand = new RelayCommand<int>(UpdateShapeStrokeOpacity);
         UpdateShapeFillOpacityCommand = new RelayCommand<int>(UpdateShapeFillOpacity);
+        UpdateTextFontColorCommand = new RelayCommand<Color>(UpdateTextFontColor, _ => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text));
+        UpdateTextFontColorOpacityCommand = new RelayCommand<int>(UpdateTextFontColorOpacity, _ => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text));
+        UpdateTextFontFamilyCommand = new RelayCommand<string?>(UpdateTextFontFamily, _ => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text));
+        UpdateTextFontSizeCommand = new RelayCommand<int>(UpdateTextFontSize, _ => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text));
+        UpdateTextContentCommand = new RelayCommand<string?>(UpdateTextContent, _ => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text));
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
@@ -349,6 +411,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             ImageFile = imageFile;
             ImageSize = _filePickerService.GetImageFileSize(imageFile);
             CropRect = new(Point.Empty, ImageSize);
+            IsTextFeatureEnabled = _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text);
 
             _imageDrawable = new(topLeft, imageFile, ImageSize);
             _drawables.Add(_imageDrawable);
@@ -424,6 +487,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             {
                 IsInShapesMode = false;
             }
+            if (IsInTextMode)
+            {
+                IsInTextMode = false;
+            }
         }
     }
 
@@ -439,6 +506,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             if (IsInShapesMode)
             {
                 IsInShapesMode = false;
+            }
+            if (IsInTextMode)
+            {
+                IsInTextMode = false;
             }
         }
     }
@@ -470,6 +541,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateIsInShapesMode(!IsInShapesMode);
     }
 
+    private void ToggleTextMode()
+    {
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text))
+        {
+            return;
+        }
+
+        UpdateIsInTextMode(!IsInTextMode);
+    }
+
     private void UpdateIsInShapesMode(bool value)
     {
         IsInShapesMode = value;
@@ -479,6 +560,30 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             if (IsInCropMode)
             {
                 IsInCropMode = false;
+            }
+            if (ShowChromaKeyOptions)
+            {
+                ShowChromaKeyOptions = false;
+            }
+            if (IsInTextMode)
+            {
+                IsInTextMode = false;
+            }
+        }
+    }
+
+    private void UpdateIsInTextMode(bool value)
+    {
+        IsInTextMode = value && _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text);
+        if (IsInTextMode)
+        {
+            if (IsInCropMode)
+            {
+                IsInCropMode = false;
+            }
+            if (IsInShapesMode)
+            {
+                IsInShapesMode = false;
             }
             if (ShowChromaKeyOptions)
             {
@@ -517,6 +622,57 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         ShapeFillOpacity = Math.Clamp(value, 0, 100);
         ShapeFillColor = ApplyOpacity(ShapeFillColor, ShapeFillOpacity);
+    }
+
+    private void UpdateTextFontColor(Color value)
+    {
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text))
+        {
+            return;
+        }
+
+        TextFontColor = ApplyOpacity(value, TextFontColorOpacity);
+    }
+
+    private void UpdateTextFontColorOpacity(int value)
+    {
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text))
+        {
+            return;
+        }
+
+        TextFontColorOpacity = Math.Clamp(value, 0, 100);
+        TextFontColor = ApplyOpacity(TextFontColor, TextFontColorOpacity);
+    }
+
+    private void UpdateTextFontFamily(string? value)
+    {
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text) || string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        TextFontFamily = value;
+    }
+
+    private void UpdateTextFontSize(int value)
+    {
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text))
+        {
+            return;
+        }
+
+        TextFontSize = Math.Clamp(value, 1, 200);
+    }
+
+    private void UpdateTextContent(string? value)
+    {
+        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text))
+        {
+            return;
+        }
+
+        TextContent = value ?? string.Empty;
     }
 
     private static Color ApplyOpacity(Color color, int opacityPercentage)
@@ -624,6 +780,32 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             // Execute the operation
             operation.Redo();
         }
+    }
+
+    public void OnTextPlaced(Vector2 position)
+    {
+        if (!IsInTextMode || !_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text) || string.IsNullOrWhiteSpace(TextContent))
+        {
+            return;
+        }
+
+        var textDrawable = new TextDrawable(
+            position,
+            TextContent,
+            TextFontColor,
+            TextFontFamily,
+            TextFontSize);
+
+        var operation = new AddShapeOperation(
+            _drawables,
+            textDrawable,
+            () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
+
+        _operationsUndoStack.Push(operation);
+        _operationsRedoStack.Clear();
+        UpdateUndoRedoStackProperties();
+
+        operation.Redo();
     }
 
     public void OnShapeDeleted(int shapeIndex)

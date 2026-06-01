@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.TextToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=local:TextToolbar}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ColorTypeConverter x:Key="ColorTypeConverter" />
+        <Style x:Key="ColorPaletteFlyoutPresenterStyle" TargetType="FlyoutPresenter">
+            <Setter Property="Background" Value="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBox
+                x:Name="TextContentBox"
+                x:Uid="TextToolbar_ContentBox"
+                Width="220"
+                MinHeight="34"
+                MaxLength="500"
+                PlaceholderText="Text"
+                Text="{x:Bind TextContent, Mode=OneWay}"
+                TextChanged="TextContentBox_TextChanged" />
+
+            <Button
+                x:Name="FontColorButton"
+                x:Uid="TextToolbar_FontColorButton"
+                MinWidth="68"
+                MinHeight="34"
+                Padding="8,4"
+                Background="Transparent"
+                BorderBrush="Transparent">
+                <Grid VerticalAlignment="Center" ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Width="24"
+                        Height="24"
+                        VerticalAlignment="Center"
+                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="4">
+                        <Rectangle RadiusX="3" RadiusY="3">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="{x:Bind TextFontColor, Mode=OneWay, Converter={StaticResource ColorTypeConverter}}" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                    </Border>
+                    <TextBlock
+                        x:Uid="TextToolbar_FontColorButtonLabel"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Text="Color" />
+                    <FontIcon
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Glyph="&#xE70D;" />
+                </Grid>
+                <Button.Flyout>
+                    <Flyout FlyoutPresenterStyle="{StaticResource ColorPaletteFlyoutPresenterStyle}">
+                        <local:ColorPalettePicker
+                            ColorOptions="{x:Bind TextFontColorOptions, Mode=OneWay}"
+                            IsThicknessVisible="False"
+                            MaximumRowsOrColumns="4"
+                            OpacityPercentage="{x:Bind TextFontColorOpacity, Mode=OneWay}"
+                            OpacityPercentageChanged="FontColorPalette_OpacityPercentageChanged"
+                            SelectedColor="{x:Bind TextFontColor, Mode=OneWay}"
+                            SelectedColorChanged="FontColorPalette_SelectedColorChanged" />
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+
+            <TextBox
+                x:Name="FontFamilyBox"
+                x:Uid="TextToolbar_FontFamilyBox"
+                Width="140"
+                MinHeight="34"
+                PlaceholderText="Font"
+                Text="{x:Bind TextFontFamily, Mode=OneWay}"
+                TextChanged="FontFamilyBox_TextChanged" />
+
+            <NumberBox
+                x:Name="FontSizeNumberBox"
+                x:Uid="TextToolbar_FontSizeNumberBox"
+                Width="96"
+                MinHeight="34"
+                LargeChange="4"
+                Maximum="200"
+                Minimum="1"
+                SmallChange="1"
+                SpinButtonPlacementMode="Inline"
+                Value="{x:Bind TextFontSize, Mode=OneWay}"
+                ValueChanged="FontSizeNumberBox_ValueChanged" />
+        </StackPanel>
+    </Grid>
+</local:UserControlBase>

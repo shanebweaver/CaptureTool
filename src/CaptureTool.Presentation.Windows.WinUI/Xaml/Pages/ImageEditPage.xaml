@@ -58,6 +58,16 @@
                     <FontIcon Glyph="&#xE91B;" />
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
+            <AppBarToggleButton
+                x:Uid="ImageEdit_TextButton"
+                Command="{x:Bind ViewModel.ToggleTextModeCommand}"
+                IsChecked="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsTextFeatureEnabled, Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE8D2;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
             <AppBarButton
                 x:Uid="ImageEdit_RotateButton"
                 Command="{x:Bind ViewModel.RotateCommand}"
@@ -175,6 +185,25 @@
                     StrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
                     StrokeWidthChanged="ShapeToolbar_StrokeWidthChanged" />
             </Grid>
+
+            <!--  Text options  -->
+            <Grid
+                Margin="0,0,0,6"
+                HorizontalAlignment="Center"
+                Visibility="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}">
+                <controls:TextToolbar
+                    TextContent="{x:Bind ViewModel.TextContent, Mode=OneWay}"
+                    TextContentChanged="TextToolbar_TextContentChanged"
+                    TextFontColor="{x:Bind ViewModel.TextFontColor, Mode=OneWay}"
+                    TextFontColorChanged="TextToolbar_FontColorChanged"
+                    TextFontColorOpacity="{x:Bind ViewModel.TextFontColorOpacity, Mode=OneWay}"
+                    TextFontColorOpacityChanged="TextToolbar_FontColorOpacityChanged"
+                    TextFontColorOptions="{x:Bind ViewModel.TextFontColorOptions, Mode=OneWay}"
+                    TextFontFamily="{x:Bind ViewModel.TextFontFamily, Mode=OneWay}"
+                    TextFontFamilyChanged="TextToolbar_FontFamilyChanged"
+                    TextFontSize="{x:Bind ViewModel.TextFontSize, Mode=OneWay}"
+                    TextFontSizeChanged="TextToolbar_FontSizeChanged" />
+            </Grid>
         </Grid>
 
         <!--  Canvas  -->
@@ -194,6 +223,7 @@
                 IsAutoZoomLocked="{x:Bind ViewModel.IsAutoZoomLocked, Mode=OneWay}"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 IsShapesModeEnabled="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
+                IsTextModeEnabled="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}"
                 SelectedShapeType="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay}"
                 ShapeDeleted="ImageCanvas_ShapeDeleted"
@@ -201,7 +231,8 @@
                 ShapeFillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
                 ShapeModified="ImageCanvas_ShapeModified"
                 ShapeStrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
-                ShapeStrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}" />
+                ShapeStrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
+                TextPlaced="ImageCanvas_TextPlaced" />
         </Grid>
 
         <ProgressRing

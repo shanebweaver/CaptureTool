@@ -65,7 +65,7 @@ public sealed class ImageEditPageViewModelTests
         var storeService = Fixture.Freeze<Mock<IStoreService>>();
         var chromaService = Fixture.Freeze<Mock<IChromaKeyService>>();
 
-        chromaFeature.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_ImageEdit_ChromaKey))
+        chromaFeature.Setup(f => f.IsEnabled(AppFeatures.Feature_ImageEdit_ChromaKey))
                      .Returns(false);
 
         storeService.Setup(s => s.IsAddonPurchasedAsync(It.IsAny<string>()))
@@ -325,5 +325,110 @@ public sealed class ImageEditPageViewModelTests
 
         // Assert
         vm.Drawables.Count.Should().Be(1, "Drawable should not be removed with invalid index");
+    }
+
+    [TestMethod]
+    public void OnTextPlaced_ShouldIgnore_WhenTextModeIsOff()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(AppFeatures.Feature_ImageEdit_Text)).Returns(true);
+
+        var vm = Create();
+        vm.UpdateTextContentCommand.Execute("Hello");
+        int initialCount = vm.Drawables.Count;
+
+        // Act
+        vm.OnTextPlaced(new System.Numerics.Vector2(50, 50));
+
+        // Assert
+        vm.Drawables.Count.Should().Be(initialCount, "text placement requires text mode");
+    }
+
+    [TestMethod]
+    public void OnTextPlaced_ShouldIgnore_WhenFeatureIsDisabled()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(AppFeatures.Feature_ImageEdit_Text)).Returns(false);
+
+        var vm = Create();
+        int initialCount = vm.Drawables.Count;
+
+        // Act
+        vm.OnTextPlaced(new System.Numerics.Vector2(50, 50));
+
+        // Assert
+        vm.Drawables.Count.Should().Be(initialCount, "the text feature flag gates placement");
+    }
+
+    [TestMethod]
+    public void OnTextPlaced_ShouldIgnore_WhenTextContentIsEmpty()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(AppFeatures.Feature_ImageEdit_Text)).Returns(true);
+
+        var vm = Create();
+        vm.ToggleTextModeCommand.Execute(null);
+        int initialCount = vm.Drawables.Count;
+
+        // Act
+        vm.OnTextPlaced(new System.Numerics.Vector2(50, 50));
+
+        // Assert
+        vm.Drawables.Count.Should().Be(initialCount, "blank text is not useful to render");
+    }
+
+    [TestMethod]
+    public void OnTextPlaced_ShouldAddTextDrawable_AndPushUndo()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(AppFeatures.Feature_ImageEdit_Text)).Returns(true);
+
+        var vm = Create();
+        vm.ToggleTextModeCommand.Execute(null);
+        vm.UpdateTextContentCommand.Execute("Hello World");
+        vm.UpdateTextFontColorCommand.Execute(Color.Blue);
+        vm.UpdateTextFontFamilyCommand.Execute("Arial");
+        vm.UpdateTextFontSizeCommand.Execute(32);
+        int initialCount = vm.Drawables.Count;
+
+        // Act
+        vm.OnTextPlaced(new System.Numerics.Vector2(100f, 200f));
+
+        // Assert
+        vm.Drawables.Count.Should().Be(initialCount + 1, "placing text should add a drawable");
+        vm.Drawables.Last().Should().BeOfType<TextDrawable>();
+
+        var textDrawable = (TextDrawable)vm.Drawables.Last();
+        textDrawable.Text.Should().Be("Hello World");
+        textDrawable.Offset.Should().Be(new System.Numerics.Vector2(100f, 200f));
+        textDrawable.Color.Should().Be(Color.Blue);
+        textDrawable.FontFamily.Should().Be("Arial");
+        textDrawable.FontSize.Should().Be(32);
+        vm.HasUndoStack.Should().BeTrue("text placement participates in undo");
+        vm.HasRedoStack.Should().BeFalse("new operations clear redo");
+    }
+
+    [TestMethod]
+    public void ToggleTextMode_ShouldDisableOtherModes()
+    {
+        // Arrange
+        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
+        featureManager.Setup(f => f.IsEnabled(AppFeatures.Feature_ImageEdit_Text)).Returns(true);
+
+        var vm = Create();
+        vm.ToggleCropModeCommand.Execute(null);
+        vm.ToggleShapesModeCommand.Execute(null);
+
+        // Act
+        vm.ToggleTextModeCommand.Execute(null);
+
+        // Assert
+        vm.IsInTextMode.Should().BeTrue();
+        vm.IsInCropMode.Should().BeFalse();
+        vm.IsInShapesMode.Should().BeFalse();
     }
 }

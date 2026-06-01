@@ -778,4 +778,37 @@ SOFTWARE.
     <comment />
     <comment>The tooltip for the fill color picker button in the shape toolbar.</comment>
   </data>
+  <data name="ImageEdit_TextButton.Label" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
+    <value>T</value>
+  </data>
+  <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Add text</value>
+  </data>
+  <data name="TextToolbar_ContentBox.PlaceholderText" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="TextToolbar_FontColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose text color and opacity</value>
+  </data>
+  <data name="TextToolbar_FontColorButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Text color</value>
+  </data>
+  <data name="TextToolbar_FontColorButtonLabel.Text" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="TextToolbar_FontFamilyBox.PlaceholderText" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="TextToolbar_FontFamilyBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Font family</value>
+  </data>
+  <data name="TextToolbar_FontSizeNumberBox.Header" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="TextToolbar_FontSizeNumberBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Font size</value>
+  </data>
 </root>
