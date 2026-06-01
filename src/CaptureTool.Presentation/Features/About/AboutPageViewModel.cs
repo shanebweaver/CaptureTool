@@ -10,7 +10,7 @@ namespace CaptureTool.Presentation.Features.About;
 public sealed partial class AboutPageViewModel : ViewModelBase
 {
     public AboutPageViewModel(
-        IUseCase<LeaveAboutPageRequest, LeaveAboutPageResponse> goBackCommand,
+        LeaveAboutPageUseCase goBackCommand,
         ILocalizationService localizationService)
     {
         _localizationService = localizationService;

@@ -16,8 +16,8 @@ namespace CaptureTool.Application.Features.Activation;
 
 public sealed class CaptureToolActivationHandler : IActivationHandler
 {
-    private readonly IUseCase<OpenSelectionOverlayRequest, OpenSelectionOverlayResponse> _openSelectionOverlay;
-    private readonly IUseCase<ShowHomePageRequest, ShowHomePageResponse> _showHomePage;
+    private readonly OpenSelectionOverlayUseCase _openSelectionOverlay;
+    private readonly ShowHomePageUseCase _showHomePage;
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
     private readonly ILogService _logService;
@@ -31,8 +31,8 @@ public sealed class CaptureToolActivationHandler : IActivationHandler
     private bool _isInitialized;
 
     public CaptureToolActivationHandler(
-        IUseCase<OpenSelectionOverlayRequest, OpenSelectionOverlayResponse> openSelectionOverlay,
-        IUseCase<ShowHomePageRequest, ShowHomePageResponse> showHomePage,
+        OpenSelectionOverlayUseCase openSelectionOverlay,
+        ShowHomePageUseCase showHomePage,
         ICancellationService cancellationService,
         ISettingsService settingsService,
         ILogService logService,

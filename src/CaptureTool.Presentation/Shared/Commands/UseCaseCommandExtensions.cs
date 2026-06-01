@@ -12,7 +12,11 @@ internal static class UseCaseCommandExtensions
         ArgumentNullException.ThrowIfNull(useCase);
         ArgumentNullException.ThrowIfNull(requestFactory);
 
-        return new AsyncRelayCommand(cancellationToken => useCase.ExecuteAsync(requestFactory(), cancellationToken));
+        return useCase is IConditional<TRequest> conditional
+            ? new AsyncRelayCommand(
+                cancelableExecute: cancellationToken => useCase.ExecuteAsync(requestFactory(), cancellationToken),
+                canExecute: () => conditional.CanExecute(requestFactory()))
+            : new AsyncRelayCommand(cancellationToken => useCase.ExecuteAsync(requestFactory(), cancellationToken));
     }
 
     public static IRelayCommand ToRelayCommand<TRequest, TResponse>(
@@ -55,7 +59,11 @@ internal static class UseCaseCommandExtensions
         ArgumentNullException.ThrowIfNull(useCase);
         ArgumentNullException.ThrowIfNull(requestFactory);
 
-        return new AsyncRelayCommand(cancellationToken => useCase.ExecuteAsync(requestFactory(), cancellationToken));
+        return useCase is IConditional<TRequest> conditional
+            ? new AsyncRelayCommand(
+                cancelableExecute: cancellationToken => useCase.ExecuteAsync(requestFactory(), cancellationToken),
+                canExecute: () => conditional.CanExecute(requestFactory()))
+            : new AsyncRelayCommand(cancellationToken => useCase.ExecuteAsync(requestFactory(), cancellationToken));
     }
 
     public static IAsyncRelayCommand ToAsyncRelayCommand<TRequest, TResponse>(

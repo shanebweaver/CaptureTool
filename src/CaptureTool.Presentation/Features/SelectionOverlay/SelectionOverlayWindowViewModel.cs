@@ -17,9 +17,9 @@ namespace CaptureTool.Presentation.Features.SelectionOverlay;
 
 public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>
 {
-    private readonly IUseCase<OpenCaptureOverlayRequest, OpenCaptureOverlayResponse> _openVideoCaptureOverlayCommand;
-    private readonly IUseCase<OpenImageEditPageRequest, OpenImageEditPageResponse> _openImageEditCommand;
-    private readonly IUseCase<ShowMainWindowRequest, ShowMainWindowResponse> _showMainWindowCommand;
+    private readonly OpenCaptureOverlayUseCase _openVideoCaptureOverlayCommand;
+    private readonly OpenImageEditPageUseCase _openImageEditCommand;
+    private readonly ShowMainWindowUseCase _showMainWindowCommand;
     private readonly ITelemetryService _telemetryService;
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IImageCaptureHandler _imageCaptureHandler;
@@ -142,9 +142,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     }
 
     public SelectionOverlayWindowViewModel(
-        IUseCase<OpenImageEditPageRequest, OpenImageEditPageResponse> openImageEditPageCommand,
-        IUseCase<OpenCaptureOverlayRequest, OpenCaptureOverlayResponse> openVideoCaptureOverlayCommand,
-        IUseCase<ShowMainWindowRequest, ShowMainWindowResponse> showMainWindowCommand,
+        OpenImageEditPageUseCase openImageEditPageCommand,
+        OpenCaptureOverlayUseCase openVideoCaptureOverlayCommand,
+        ShowMainWindowUseCase showMainWindowCommand,
         ITelemetryService telemetryService,
         IThemeService themeService,
         IShutdownHandler shutdownHandler,

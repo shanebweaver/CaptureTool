@@ -77,13 +77,13 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         (TrimStartSeconds > TrimComparisonToleranceSeconds ||
             TrimEndSeconds < VideoDurationSeconds - TrimComparisonToleranceSeconds);
 
-    private readonly IUseCase<SaveVideoFileRequest, SaveVideoFileResponse> _saveAction;
-    private readonly IUseCase<CopyVideoFileRequest, CopyVideoFileResponse> _copyAction;
+    private readonly SaveVideoFileUseCase _saveAction;
+    private readonly CopyVideoFileUseCase _copyAction;
     private readonly ITelemetryService _telemetryService;
 
     public VideoEditPageViewModel(
-        IUseCase<SaveVideoFileRequest, SaveVideoFileResponse> saveAction,
-        IUseCase<CopyVideoFileRequest, CopyVideoFileResponse> copyAction,
+        SaveVideoFileUseCase saveAction,
+        CopyVideoFileUseCase copyAction,
         ITelemetryService telemetryService)
     {
         _saveAction = saveAction;
