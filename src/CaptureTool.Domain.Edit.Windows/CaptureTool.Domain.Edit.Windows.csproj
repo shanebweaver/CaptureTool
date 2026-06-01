@@ -19,4 +19,12 @@
     <ProjectReference Include="..\CaptureTool.Domain.Edit.Abstractions\CaptureTool.Domain.Edit.Abstractions.csproj" />
   </ItemGroup>
 
+  <!-- Chroma key shader source is kept for maintenance; the compiled bytecode is embedded at runtime. -->
+  <ItemGroup>
+    <EmbeddedResource
+      Include="ChromaKey\ChromaKeyShader.bin"
+      LogicalName="CaptureTool.Domain.Edit.Windows.ChromaKey.ChromaKeyShader.bin" />
+    <None Include="ChromaKey\ChromaKeyShader.hlsl" />
+  </ItemGroup>
+
 </Project>

@@ -359,7 +359,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             if (_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_ChromaKey))
             {
-                bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
+                bool isChromaKeyAddOnOwned = true; //await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
                 IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
                 if (isChromaKeyAddOnOwned)
                 {

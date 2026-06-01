@@ -179,7 +179,6 @@ public static partial class Win2DImageCanvasRenderer
 
     private static void DrawImage(ImageDrawable drawable, CanvasDrawingSession drawingSession)
     {
-        ChromaKeyProcessor processor = new();
         ICanvasImage? preparedImage = drawable.GetPreparedImage();
         if (preparedImage != null)
         {
@@ -191,10 +190,10 @@ public static partial class Win2DImageCanvasRenderer
                     imageChromaKeyEffect.Color.G,
                     imageChromaKeyEffect.Color.B);
                 var tolerance = imageChromaKeyEffect.Tolerance;
-                var desaturation = imageChromaKeyEffect.Desaturation;
+                var softness = imageChromaKeyEffect.Desaturation;
 
                 drawingSession.Clear(Colors.White);
-                processor.DrawChromaKeyMaskedImage(drawingSession, preparedImage, drawable.Offset, keyColor, tolerance, desaturation);
+                drawable.GetChromaKeyProcessor().DrawChromaKeyMaskedImage(drawingSession, preparedImage, drawable.Offset, keyColor, tolerance, softness);
             }
             else
             {

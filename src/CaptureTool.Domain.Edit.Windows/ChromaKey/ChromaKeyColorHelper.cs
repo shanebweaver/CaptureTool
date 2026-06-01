@@ -5,15 +5,26 @@ namespace CaptureTool.Domain.Edit.Windows.ChromaKey;
 
 public static partial class ChromaKeyColorHelper
 {
+    private const int MaxSampledPixels = 1_000_000;
+
     public static async Task<Color[]> GetTopColorsAsync(string fileName, uint count = 3, byte quantizeStep = 8)
     {
         var device = CanvasDevice.GetSharedDevice();
         using var bitmap = await CanvasBitmap.LoadAsync(device, fileName);
 
         var pixelBytes = bitmap.GetPixelBytes();
-        var colorCounts = new Dictionary<Color, int>();
+        int pixelCount = pixelBytes.Length / 4;
+        int pixelStep = Math.Max(1, pixelCount / MaxSampledPixels);
 
-        for (int i = 0; i < pixelBytes.Length; i += 4)
+        return await Task.Run(() => GetTopColors(pixelBytes, pixelStep, count, quantizeStep));
+    }
+
+    private static Color[] GetTopColors(byte[] pixelBytes, int pixelStep, uint count, byte quantizeStep)
+    {
+        var colorCounts = new Dictionary<Color, int>();
+        int byteStep = pixelStep * 4;
+
+        for (int i = 0; i < pixelBytes.Length; i += byteStep)
         {
             byte b = pixelBytes[i + 0];
             byte g = pixelBytes[i + 1];
@@ -24,9 +35,9 @@ public static partial class ChromaKeyColorHelper
                 continue;
 
             // Quantize RGB to reduce variations
-            r = (byte)(Math.Round(r / (double)quantizeStep) * quantizeStep);
-            g = (byte)(Math.Round(g / (double)quantizeStep) * quantizeStep);
-            b = (byte)(Math.Round(b / (double)quantizeStep) * quantizeStep);
+            r = Quantize(r, quantizeStep);
+            g = Quantize(g, quantizeStep);
+            b = Quantize(b, quantizeStep);
 
             var color = Color.FromArgb(255, r, g, b);
 
@@ -40,5 +51,16 @@ public static partial class ChromaKeyColorHelper
             .OrderByDescending(kv => kv.Value)
             .Take((int)count)
             .Select(kv => kv.Key)];
+    }
+
+    private static byte Quantize(byte value, byte quantizeStep)
+    {
+        if (quantizeStep == 0)
+        {
+            return value;
+        }
+
+        double quantized = Math.Round(value / (double)quantizeStep) * quantizeStep;
+        return (byte)Math.Clamp(quantized, byte.MinValue, byte.MaxValue);
     }
 }
