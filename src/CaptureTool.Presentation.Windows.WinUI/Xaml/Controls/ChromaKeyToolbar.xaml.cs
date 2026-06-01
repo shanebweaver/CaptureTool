@@ -1,6 +1,8 @@
 using CaptureTool.Domain.Edit.Abstractions.ChromaKey;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System.Collections.Specialized;
+using System.Collections.ObjectModel;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
@@ -10,33 +12,32 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
         nameof(ColorOptions),
         typeof(IEnumerable<ChromaKeyColorOption>),
         typeof(ChromaKeyToolbar),
-        new PropertyMetadata(DependencyProperty.UnsetValue));
+        new PropertyMetadata(null, OnColorOptionsChanged));
 
     public static readonly DependencyProperty SelectedColorOptionIndexProperty = DependencyProperty.Register(
         nameof(SelectedColorOptionIndex),
         typeof(int),
         typeof(ChromaKeyToolbar),
-        new PropertyMetadata(DependencyProperty.UnsetValue));
+        new PropertyMetadata(-1));
 
     public static readonly DependencyProperty ToleranceProperty = DependencyProperty.Register(
         nameof(Tolerance),
         typeof(int),
         typeof(ChromaKeyToolbar),
-        new PropertyMetadata(DependencyProperty.UnsetValue));
+        new PropertyMetadata(30));
 
     public static readonly DependencyProperty DesaturationProperty = DependencyProperty.Register(
         nameof(Desaturation),
         typeof(int),
         typeof(ChromaKeyToolbar),
-        new PropertyMetadata(DependencyProperty.UnsetValue));
+        new PropertyMetadata(0));
 
-    public IEnumerable<ChromaKeyColorOption> ColorOptions
+    public IEnumerable<ChromaKeyColorOption>? ColorOptions
     {
-        get => Get<IEnumerable<ChromaKeyColorOption>>(ColorOptionsProperty);
+        get => GetValue(ColorOptionsProperty) as IEnumerable<ChromaKeyColorOption>;
         set
         {
             Set(ColorOptionsProperty, value);
-            UpdateSliderEnablement();
         }
     }
 
@@ -58,6 +59,8 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
         set => Set(DesaturationProperty, value);
     }
 
+    private readonly ObservableCollection<ChromaKeyColorOption> _bindableColorOptions = [];
+    private INotifyCollectionChanged? _colorOptionsCollection;
     private bool _areEffectOptionsEnabled;
     public bool AreEffectOptionsEnabled
     {
@@ -75,16 +78,60 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
     public ChromaKeyToolbar()
     {
         InitializeComponent();
+        KeyColorComboBox.ItemsSource = _bindableColorOptions;
+    }
+
+    private static void OnColorOptionsChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
+    {
+        if (dependencyObject is ChromaKeyToolbar toolbar)
+        {
+            toolbar.UpdateColorOptions(args.NewValue as IEnumerable<ChromaKeyColorOption>);
+        }
+    }
+
+    private void UpdateColorOptions(IEnumerable<ChromaKeyColorOption>? colorOptions)
+    {
+        if (_colorOptionsCollection != null)
+        {
+            _colorOptionsCollection.CollectionChanged -= ColorOptions_CollectionChanged;
+            _colorOptionsCollection = null;
+        }
+
+        if (colorOptions is INotifyCollectionChanged collectionChanged)
+        {
+            _colorOptionsCollection = collectionChanged;
+            _colorOptionsCollection.CollectionChanged += ColorOptions_CollectionChanged;
+        }
+
+        RefreshBindableColorOptions(colorOptions);
+    }
+
+    private void ColorOptions_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        RefreshBindableColorOptions(ColorOptions);
+    }
+
+    private void RefreshBindableColorOptions(IEnumerable<ChromaKeyColorOption>? colorOptions)
+    {
+        _bindableColorOptions.Clear();
+
+        if (colorOptions != null)
+        {
+            foreach (ChromaKeyColorOption colorOption in colorOptions)
+            {
+                _bindableColorOptions.Add(colorOption);
+            }
+        }
+
+        UpdateSliderEnablement();
     }
 
     private void UpdateSliderEnablement()
     {
         AreEffectOptionsEnabled =
-            ColorOptions != null &&
-            ColorOptions.Any() &&
-            ColorOptions.Count() > SelectedColorOptionIndex &&
+            _bindableColorOptions.Count > SelectedColorOptionIndex &&
             SelectedColorOptionIndex >= 0 &&
-            !ColorOptions.ElementAt(SelectedColorOptionIndex).IsEmpty;
+            !_bindableColorOptions[SelectedColorOptionIndex].IsEmpty;
     }
 
     private void UpdateSelectedColorOptionIndex(int value)

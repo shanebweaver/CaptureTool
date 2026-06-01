@@ -77,11 +77,11 @@
             <AppBarElementContainer VerticalContentAlignment="Stretch" IsTabStop="False">
                 <Grid Margin="4,0">
                     <ComboBox
+                        x:Name="KeyColorComboBox"
                         x:Uid="ChromaKeyToolbar_KeyColor"
                         MinWidth="156"
                         MinHeight="66"
                         ItemTemplateSelector="{StaticResource ChromaKeyColorOptionTemplateSelector}"
-                        ItemsSource="{x:Bind ColorOptions, Mode=OneWay}"
                         SelectedIndex="{x:Bind SelectedColorOptionIndex, Mode=OneWay}"
                         SelectionChanged="KeyColorComboBox_SelectionChanged" />
                 </Grid>
