@@ -231,6 +231,9 @@
   <data name="ImageEdit_CropButton.Label" xml:space="preserve">
     <value>裁剪</value>
   </data>
+  <data name="ImageEdit_ShapesButton.Label" xml:space="preserve">
+    <value>形状</value>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>打印</value>
   </data>
@@ -242,6 +245,9 @@
   </data>
   <data name="ImageEdit_CropButton.AccessKey" xml:space="preserve">
     <value>I</value>
+  </data>
+  <data name="ImageEdit_ShapesButton.AccessKey" xml:space="preserve">
+    <value>H</value>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -367,6 +373,9 @@
   </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>裁剪图像</value>
+  </data>
+  <data name="ImageEdit_ShapesButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>绘制形状</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>旋转图像</value>

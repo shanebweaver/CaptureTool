@@ -231,6 +231,9 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="ImageEdit_CropButton.Label" xml:space="preserve">
     <value>Zuschneiden</value>
   </data>
+  <data name="ImageEdit_ShapesButton.Label" xml:space="preserve">
+    <value>Formen</value>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Drucken</value>
   </data>
@@ -242,6 +245,9 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   </data>
   <data name="ImageEdit_CropButton.AccessKey" xml:space="preserve">
     <value>I</value>
+  </data>
+  <data name="ImageEdit_ShapesButton.AccessKey" xml:space="preserve">
+    <value>H</value>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -367,6 +373,9 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Bild zuschneiden</value>
+  </data>
+  <data name="ImageEdit_ShapesButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Formen zeichnen</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Bild drehen</value>

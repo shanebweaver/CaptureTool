@@ -53,8 +53,7 @@
                 x:Uid="ImageEdit_ShapesButton"
                 Command="{x:Bind ViewModel.ToggleShapesModeCommand}"
                 IsChecked="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
-                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
-                Visibility="{x:Bind ViewModel.IsShapesFeatureEnabled, Mode=OneWay}">
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="&#xE91B;" />
                 </AppBarToggleButton.Icon>
