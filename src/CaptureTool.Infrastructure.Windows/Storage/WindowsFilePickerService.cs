@@ -61,6 +61,17 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
                 filePicker.FileTypeFilter.Add(".mov");
                 break;
 
+            case FilePickerType.ImageOrVideo:
+                filePicker.FileTypeFilter.Add(".png");
+                filePicker.FileTypeFilter.Add(".jpg");
+                filePicker.FileTypeFilter.Add(".jpeg");
+                filePicker.FileTypeFilter.Add(".bmp");
+                filePicker.FileTypeFilter.Add(".mp4");
+                filePicker.FileTypeFilter.Add(".avi");
+                filePicker.FileTypeFilter.Add(".mov");
+                filePicker.FileTypeFilter.Add(".wmv");
+                break;
+
             default:
                 throw new InvalidOperationException("Unexpected file type value.");
         }
@@ -114,6 +125,9 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
 #pragma warning restore IDE0028 // Simplify collection initialization
                 }
                 break;
+
+            case FilePickerType.ImageOrVideo:
+                throw new InvalidOperationException("Image/video picker type is only supported for opening files.");
 
             default:
                 throw new InvalidOperationException("Unexpected file type value.");
