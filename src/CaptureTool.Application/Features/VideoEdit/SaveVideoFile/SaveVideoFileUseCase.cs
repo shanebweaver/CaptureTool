@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture.Abstractions.Metadata;
 using CaptureTool.FeatureManagement;
+using CaptureTool.Infrastructure.Abstractions.Media;
 using CaptureTool.Infrastructure.Abstractions.Settings;
 using CaptureTool.Infrastructure.Abstractions.Storage;
 using CaptureTool.Infrastructure.Abstractions.Windowing;
@@ -14,17 +15,20 @@ public sealed class SaveVideoFileUseCase : IUseCase<SaveVideoFileRequest, SaveVi
     private readonly IWindowHandleProvider _windowingService;
     private readonly ISettingsService _settingsService;
     private readonly IFeatureManager _featureManager;
+    private readonly IVideoFileTrimmer _videoFileTrimmer;
 
     public SaveVideoFileUseCase(
         IFilePickerService filePickerService,
         IWindowHandleProvider windowingService,
         ISettingsService settingsService,
-        IFeatureManager featureManager)
+        IFeatureManager featureManager,
+        IVideoFileTrimmer videoFileTrimmer)
     {
         _filePickerService = filePickerService;
         _windowingService = windowingService;
         _settingsService = settingsService;
         _featureManager = featureManager;
+        _videoFileTrimmer = videoFileTrimmer;
     }
 
     public bool CanExecute(SaveVideoFileRequest request)
@@ -45,7 +49,19 @@ public sealed class SaveVideoFileUseCase : IUseCase<SaveVideoFileRequest, SaveVi
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        File.Copy(request.VideoPath, file.FilePath, true);
+        if (TryGetTrim(request, out TimeSpan trimStart, out TimeSpan trimEnd))
+        {
+            await _videoFileTrimmer.TrimAsync(
+                request.VideoPath,
+                file.FilePath,
+                trimStart,
+                trimEnd,
+                cancellationToken);
+        }
+        else
+        {
+            File.Copy(request.VideoPath, file.FilePath, true);
+        }
 
         string metadataFilePath = Path.ChangeExtension(request.VideoPath, MetadataFile.FileExtension);
         if (File.Exists(metadataFilePath) &&
@@ -56,5 +72,14 @@ public sealed class SaveVideoFileUseCase : IUseCase<SaveVideoFileRequest, SaveVi
             File.Copy(metadataFilePath, newMetadataFilePath, true);
         }
         return new SaveVideoFileResponse();
+    }
+
+    private static bool TryGetTrim(SaveVideoFileRequest request, out TimeSpan trimStart, out TimeSpan trimEnd)
+    {
+        trimStart = request.TrimStart.GetValueOrDefault();
+        trimEnd = request.TrimEnd.GetValueOrDefault();
+        return request.TrimStart.HasValue &&
+            request.TrimEnd.HasValue &&
+            trimEnd > trimStart;
     }
 }
