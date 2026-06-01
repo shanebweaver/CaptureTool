@@ -20,6 +20,7 @@
   <ItemGroup>
     <PackageReference Include="AutoFixture.AutoMoq" />
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.CodeCoverage" />
     <PackageReference Include="Moq" />
     <PackageReference Update="MSTest.Analyzers">
       <PrivateAssets>all</PrivateAssets>
