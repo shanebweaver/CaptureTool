@@ -17,9 +17,9 @@ namespace CaptureTool.Presentation.Features.SelectionOverlay;
 
 public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>
 {
-    private readonly IUseCase<OpenCaptureOverlayRequest, OpenCaptureOverlayResponse> _openVideoCaptureOverlayCommand;
-    private readonly IUseCase<OpenImageEditPageRequest, OpenImageEditPageResponse> _openImageEditCommand;
-    private readonly IUseCase<ShowMainWindowRequest, ShowMainWindowResponse> _showMainWindowCommand;
+    private readonly OpenCaptureOverlayUseCase _openVideoCaptureOverlayCommand;
+    private readonly OpenImageEditPageUseCase _openImageEditCommand;
+    private readonly ShowMainWindowUseCase _showMainWindowCommand;
     private readonly ITelemetryService _telemetryService;
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IImageCaptureHandler _imageCaptureHandler;
@@ -36,8 +36,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         CaptureType.FullScreen,
     ];
 
-    public IRelayCommand RequestCaptureCommand { get; }
-    public IRelayCommand CloseOverlayCommand { get; }
+    public IAsyncRelayCommand RequestCaptureCommand { get; }
+    public IAsyncRelayCommand CloseOverlayCommand { get; }
     public IRelayCommand<(int Index, SelectionUpdateSource Source)> UpdateSelectedCaptureModeCommand { get; }
     public IRelayCommand<(int Index, SelectionUpdateSource Source)> UpdateSelectedCaptureTypeCommand { get; }
     public IRelayCommand<Rectangle> UpdateCaptureAreaCommand { get; }
@@ -142,9 +142,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     }
 
     public SelectionOverlayWindowViewModel(
-        IUseCase<OpenImageEditPageRequest, OpenImageEditPageResponse> openImageEditPageCommand,
-        IUseCase<OpenCaptureOverlayRequest, OpenCaptureOverlayResponse> openVideoCaptureOverlayCommand,
-        IUseCase<ShowMainWindowRequest, ShowMainWindowResponse> showMainWindowCommand,
+        OpenImageEditPageUseCase openImageEditPageCommand,
+        OpenCaptureOverlayUseCase openVideoCaptureOverlayCommand,
+        ShowMainWindowUseCase showMainWindowCommand,
         ITelemetryService telemetryService,
         IThemeService themeService,
         IShutdownHandler shutdownHandler,
@@ -166,8 +166,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
 
-        RequestCaptureCommand = new RelayCommand(RequestCapture);
-        CloseOverlayCommand = new RelayCommand(CloseOverlay);
+        RequestCaptureCommand = new AsyncRelayCommand(RequestCaptureAsync);
+        CloseOverlayCommand = new AsyncRelayCommand(CloseOverlayAsync);
         UpdateSelectedCaptureModeCommand = new RelayCommand<(int Index, SelectionUpdateSource Source)>(UpdateSelectedCaptureMode);
         UpdateSelectedCaptureTypeCommand = new RelayCommand<(int Index, SelectionUpdateSource Source)>(UpdateSelectedCaptureType);
         UpdateCaptureAreaCommand = new RelayCommand<Rectangle>(UpdateCaptureArea);
@@ -199,14 +199,15 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         base.Load(options);
     }
 
-    private void CloseOverlay()
+    private async Task CloseOverlayAsync()
     {
         try
         {
-            _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest()).GetAwaiter().GetResult();
+            await _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest(), CancellationToken.None);
         }
-        catch
+        catch (Exception exception)
         {
+            _telemetryService.ActivityError(nameof(CloseOverlayAsync), exception);
             _shutdownHandler.Shutdown();
         }
     }
@@ -271,22 +272,33 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         CaptureTypeIndexChanged?.Invoke(this, (0, SelectionUpdateSource.Programmatic));
     }
 
-    private void RequestCapture()
+    private async Task RequestCaptureAsync()
     {
-        if (Monitor != null && CaptureArea != Rectangle.Empty)
+        try
         {
-            if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
+            if (Monitor != null && CaptureArea != Rectangle.Empty)
             {
-                NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-                ImageFile image = _imageCaptureHandler.PerformImageCapture(args);
-                _openImageEditCommand.ExecuteAsync(new OpenImageEditPageRequest(image)).GetAwaiter().GetResult();
+                if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
+                {
+                    NewCaptureArgs args = new(Monitor.Value, CaptureArea);
+                    ImageFile image = _imageCaptureHandler.PerformImageCapture(args);
+                    await _openImageEditCommand.ExecuteAsync(new OpenImageEditPageRequest(image), CancellationToken.None);
 
+                }
+                else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
+                {
+                    NewCaptureArgs args = new(Monitor.Value, CaptureArea);
+                    await _openVideoCaptureOverlayCommand.ExecuteAsync(new OpenCaptureOverlayRequest(args), CancellationToken.None);
+                }
             }
-            else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
-            {
-                NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-                _openVideoCaptureOverlayCommand.ExecuteAsync(new OpenCaptureOverlayRequest(args)).GetAwaiter().GetResult();
-            }
+        }
+        catch (OperationCanceledException exception)
+        {
+            _telemetryService.ActivityCanceled(nameof(RequestCaptureAsync), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(RequestCaptureAsync), exception);
         }
     }
 

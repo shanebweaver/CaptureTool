@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.Error.RestartApplication;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.ViewModels;
 using CaptureTool.Presentation.Shared.Commands;
 using CommunityToolkit.Mvvm.Input;
@@ -11,8 +12,9 @@ public sealed partial class ErrorPageViewModel : ViewModelBase
     public IRelayCommand RestartAppCommand { get; }
 
     public ErrorPageViewModel(
-        IUseCase<RestartApplicationRequest, RestartApplicationResponse> restartAppAction)
+        RestartApplicationUseCase restartAppAction,
+        ITelemetryService telemetryService)
     {
-        RestartAppCommand = restartAppAction.ToRelayCommand(() => new RestartApplicationRequest());
+        RestartAppCommand = restartAppAction.ToRelayCommand(() => new RestartApplicationRequest(), telemetryService);
     }
 }

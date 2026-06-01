@@ -1,9 +1,5 @@
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Settings;
-using CaptureTool.Domain.Capture.Abstractions.Metadata;
-using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Abstractions.Media;
-using CaptureTool.Infrastructure.Abstractions.Settings;
 using CaptureTool.Infrastructure.Abstractions.Storage;
 using CaptureTool.Infrastructure.Abstractions.Windowing;
 
@@ -13,21 +9,15 @@ public sealed class SaveVideoFileUseCase : IUseCase<SaveVideoFileRequest, SaveVi
 {
     private readonly IFilePickerService _filePickerService;
     private readonly IWindowHandleProvider _windowingService;
-    private readonly ISettingsService _settingsService;
-    private readonly IFeatureManager _featureManager;
     private readonly IVideoFileTrimmer _videoFileTrimmer;
 
     public SaveVideoFileUseCase(
         IFilePickerService filePickerService,
         IWindowHandleProvider windowingService,
-        ISettingsService settingsService,
-        IFeatureManager featureManager,
         IVideoFileTrimmer videoFileTrimmer)
     {
         _filePickerService = filePickerService;
         _windowingService = windowingService;
-        _settingsService = settingsService;
-        _featureManager = featureManager;
         _videoFileTrimmer = videoFileTrimmer;
     }
 
@@ -63,14 +53,6 @@ public sealed class SaveVideoFileUseCase : IUseCase<SaveVideoFileRequest, SaveVi
             File.Copy(request.VideoPath, file.FilePath, true);
         }
 
-        string metadataFilePath = Path.ChangeExtension(request.VideoPath, MetadataFile.FileExtension);
-        if (File.Exists(metadataFilePath) &&
-            _featureManager.IsEnabled(AppFeatures.Feature_VideoCapture_MetadataCollection) &&
-            _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_MetadataAutoSave))
-        {
-            string newMetadataFilePath = Path.ChangeExtension(file.FilePath, MetadataFile.FileExtension);
-            File.Copy(metadataFilePath, newMetadataFilePath, true);
-        }
         return new SaveVideoFileResponse();
     }
 

@@ -10,15 +10,15 @@ namespace CaptureTool.Application.Features.RecentCaptures.OpenRecentCapture;
 public sealed class OpenRecentCaptureUseCase : IUseCase<OpenRecentCaptureRequest, OpenRecentCaptureResponse>, IConditional<OpenRecentCaptureRequest>
 {
     private readonly IFileTypeDetector _fileTypeDetector;
-    private readonly IUseCase<OpenAudioEditPageRequest, OpenAudioEditPageResponse> _goToAudioEdit;
-    private readonly IUseCase<OpenImageEditPageRequest, OpenImageEditPageResponse> _goToImageEdit;
-    private readonly IUseCase<OpenVideoEditPageRequest, OpenVideoEditPageResponse> _goToVideoEdit;
+    private readonly OpenAudioEditPageUseCase _goToAudioEdit;
+    private readonly OpenImageEditPageUseCase _goToImageEdit;
+    private readonly OpenVideoEditPageUseCase _goToVideoEdit;
 
     public OpenRecentCaptureUseCase(
         IFileTypeDetector fileTypeDetector,
-        IUseCase<OpenAudioEditPageRequest, OpenAudioEditPageResponse> goToAudioEdit,
-        IUseCase<OpenImageEditPageRequest, OpenImageEditPageResponse> goToImageEdit,
-        IUseCase<OpenVideoEditPageRequest, OpenVideoEditPageResponse> goToVideoEdit)
+        OpenAudioEditPageUseCase goToAudioEdit,
+        OpenImageEditPageUseCase goToImageEdit,
+        OpenVideoEditPageUseCase goToVideoEdit)
     {
         _fileTypeDetector = fileTypeDetector;
         _goToAudioEdit = goToAudioEdit;

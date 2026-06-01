@@ -23,7 +23,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly INavigationService _navigationService;
-    private readonly IUseCase<ShowMainWindowRequest, ShowMainWindowResponse> _showMainWindowCommand;
+    private readonly ShowMainWindowUseCase _showMainWindowCommand;
 
     private readonly SemaphoreSlim _semaphoreNavigation = new(1, 1);
     private SelectionOverlayHost? _selectionOverlayHost;
@@ -36,7 +36,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
         IShutdownHandler shutdownHandler,
         IVideoCaptureHandler videoCaptureHandler,
         INavigationService navigationService,
-        IUseCase<ShowMainWindowRequest, ShowMainWindowResponse> showMainWindowCommand)
+        ShowMainWindowUseCase showMainWindowCommand)
     {
         _shutdownHandler = shutdownHandler;
         _videoCaptureHandler = videoCaptureHandler;
@@ -220,11 +220,11 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
         });
     }
 
-    private void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
+    private async void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
     {
         if (_navigationService.CanGoBack)
         {
-            _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest()).GetAwaiter().GetResult();
+            await _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest());
         }
         else
         {

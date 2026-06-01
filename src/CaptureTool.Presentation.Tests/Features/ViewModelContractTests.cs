@@ -1,10 +1,12 @@
-using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.About.LeaveAboutPage;
 using CaptureTool.Application.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
+using CaptureTool.Application.Features.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.FeatureManagement;
 using CaptureTool.Infrastructure.Abstractions.Localization;
+using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Presentation.Features.About;
 using CaptureTool.Presentation.Features.Home;
 using Moq;
@@ -17,12 +19,12 @@ public sealed class ViewModelContractTests
     [TestMethod]
     public void AboutPageViewModel_ShouldRaiseDialogRequest_WithLocalizedContent()
     {
-        var goBack = Mock.Of<IUseCase<LeaveAboutPageRequest, LeaveAboutPageResponse>>();
+        var goBack = new LeaveAboutPageUseCase(Mock.Of<INavigationService>());
         var localization = new Mock<ILocalizationService>();
         localization.Setup(service => service.GetString("About_ThirdParty_DialogTitle")).Returns("Third-party");
         localization.Setup(service => service.GetString("About_ThirdParty_DialogContent")).Returns("Notices");
 
-        var viewModel = new AboutPageViewModel(goBack, localization.Object);
+        var viewModel = new AboutPageViewModel(goBack, localization.Object, Mock.Of<ITelemetryService>());
 
         (string title, string content)? dialog = null;
         viewModel.ShowDialogRequested += (_, args) => dialog = args;
@@ -37,24 +39,22 @@ public sealed class ViewModelContractTests
     [TestMethod]
     public async Task HomePageViewModel_NewImageCaptureCommand_ShouldExecuteSelectionOverlayUseCase()
     {
-        var openSelectionOverlay = new Mock<IUseCase<OpenSelectionOverlayRequest, OpenSelectionOverlayResponse>>();
-        openSelectionOverlay
-            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenSelectionOverlayRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new OpenSelectionOverlayResponse());
-
-        var openAudioCapturePage = Mock.Of<IUseCase<OpenAudioCapturePageRequest, OpenAudioCapturePageResponse>>();
+        var navigation = new Mock<INavigationService>();
+        var openSelectionOverlay = new OpenSelectionOverlayUseCase(navigation.Object);
+        var openAudioCapturePage = new OpenAudioCapturePageUseCase(Mock.Of<INavigationService>());
         var featureManager = new Mock<IFeatureManager>();
 
-        var viewModel = new HomePageViewModel(openSelectionOverlay.Object, openAudioCapturePage, featureManager.Object);
+        var viewModel = new HomePageViewModel(openSelectionOverlay, openAudioCapturePage, featureManager.Object, Mock.Of<ITelemetryService>());
 
         viewModel.NewImageCaptureCommand.Execute(null);
 
         await Task.Yield();
 
-        openSelectionOverlay.Verify(
-            useCase => useCase.ExecuteAsync(
-                It.Is<OpenSelectionOverlayRequest>(request => request.CaptureOptions.CaptureMode == CaptureMode.Image),
-                It.IsAny<CancellationToken>()),
+        navigation.Verify(
+            service => service.Navigate(
+                NavigationRoute.SelectionOverlay,
+                It.Is<CaptureOptions>(options => options.CaptureMode == CaptureMode.Image),
+                false),
             Times.Once);
     }
 }

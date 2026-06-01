@@ -1,8 +1,13 @@
-using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.FeatureManagement;
+using CaptureTool.Infrastructure.Abstractions.Clipboard;
+using CaptureTool.Infrastructure.Abstractions.Media;
+using CaptureTool.Infrastructure.Abstractions.Settings;
+using CaptureTool.Infrastructure.Abstractions.Storage;
 using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Infrastructure.Abstractions.Windowing;
 using CaptureTool.Presentation.Features.VideoEdit;
 using Moq;
 
@@ -63,8 +68,8 @@ public class VideoEditPageViewModelTrimTests
     [TestMethod]
     public async Task SaveCommand_ShouldIncludeTrimRange_WhenVideoIsTrimmed()
     {
-        var saveAction = new Mock<IUseCase<SaveVideoFileRequest, SaveVideoFileResponse>>();
-        var viewModel = CreateViewModel(saveAction: saveAction);
+        var trimmer = new Mock<IVideoFileTrimmer>();
+        var viewModel = CreateViewModel(saveAction: CreateSaveUseCase(trimmer));
         viewModel.Load(new VideoFile("test.mp4"));
         viewModel.SetVideoDuration(TimeSpan.FromSeconds(10));
         viewModel.UpdateTrimStart(2);
@@ -72,12 +77,12 @@ public class VideoEditPageViewModelTrimTests
 
         await viewModel.SaveCommand.ExecuteAsync(null);
 
-        saveAction.Verify(
-            action => action.ExecuteAsync(
-                It.Is<SaveVideoFileRequest>(request =>
-                    request.VideoPath == "test.mp4" &&
-                    request.TrimStart == TimeSpan.FromSeconds(2) &&
-                    request.TrimEnd == TimeSpan.FromSeconds(7)),
+        trimmer.Verify(
+            service => service.TrimAsync(
+                "test.mp4",
+                It.IsAny<string>(),
+                TimeSpan.FromSeconds(2),
+                TimeSpan.FromSeconds(7),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -85,8 +90,8 @@ public class VideoEditPageViewModelTrimTests
     [TestMethod]
     public async Task CopyCommand_ShouldIncludeTrimRange_WhenVideoIsTrimmed()
     {
-        var copyAction = new Mock<IUseCase<CopyVideoFileRequest, CopyVideoFileResponse>>();
-        var viewModel = CreateViewModel(copyAction: copyAction);
+        var trimmer = new Mock<IVideoFileTrimmer>();
+        var viewModel = CreateViewModel(copyAction: CreateCopyUseCase(trimmer));
         viewModel.Load(new VideoFile("test.mp4"));
         viewModel.SetVideoDuration(TimeSpan.FromSeconds(10));
         viewModel.UpdateTrimStart(1);
@@ -94,12 +99,12 @@ public class VideoEditPageViewModelTrimTests
 
         await viewModel.CopyCommand.ExecuteAsync(null);
 
-        copyAction.Verify(
-            action => action.ExecuteAsync(
-                It.Is<CopyVideoFileRequest>(request =>
-                    request.VideoPath == "test.mp4" &&
-                    request.TrimStart == TimeSpan.FromSeconds(1) &&
-                    request.TrimEnd == TimeSpan.FromSeconds(6)),
+        trimmer.Verify(
+            service => service.TrimAsync(
+                "test.mp4",
+                It.IsAny<string>(),
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(6),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -107,9 +112,13 @@ public class VideoEditPageViewModelTrimTests
     [TestMethod]
     public async Task SaveCommand_ShouldNotIncludeTrimRange_WhenTrimRestoredToFullDuration()
     {
-        var saveAction = new Mock<IUseCase<SaveVideoFileRequest, SaveVideoFileResponse>>();
-        var viewModel = CreateViewModel(saveAction: saveAction);
-        viewModel.Load(new VideoFile("test.mp4"));
+        var sourcePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mp4");
+        var destinationPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mp4");
+        await File.WriteAllTextAsync(sourcePath, "video");
+
+        var trimmer = new Mock<IVideoFileTrimmer>();
+        var viewModel = CreateViewModel(saveAction: CreateSaveUseCase(trimmer, destinationPath));
+        viewModel.Load(new VideoFile(sourcePath));
         viewModel.SetVideoDuration(TimeSpan.FromSeconds(10));
         viewModel.UpdateTrimStart(2);
         viewModel.UpdateTrimEnd(7);
@@ -118,23 +127,54 @@ public class VideoEditPageViewModelTrimTests
 
         await viewModel.SaveCommand.ExecuteAsync(null);
 
-        saveAction.Verify(
-            action => action.ExecuteAsync(
-                It.Is<SaveVideoFileRequest>(request =>
-                    request.VideoPath == "test.mp4" &&
-                    request.TrimStart == null &&
-                    request.TrimEnd == null),
+        trimmer.Verify(
+            service => service.TrimAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<TimeSpan>(),
                 It.IsAny<CancellationToken>()),
-            Times.Once);
+            Times.Never);
+
+        File.Delete(sourcePath);
+        File.Delete(destinationPath);
     }
 
     private static VideoEditPageViewModel CreateViewModel(
-        Mock<IUseCase<SaveVideoFileRequest, SaveVideoFileResponse>>? saveAction = null,
-        Mock<IUseCase<CopyVideoFileRequest, CopyVideoFileResponse>>? copyAction = null)
+        SaveVideoFileUseCase? saveAction = null,
+        CopyVideoFileUseCase? copyAction = null)
     {
         return new(
-            (saveAction ?? new Mock<IUseCase<SaveVideoFileRequest, SaveVideoFileResponse>>()).Object,
-            (copyAction ?? new Mock<IUseCase<CopyVideoFileRequest, CopyVideoFileResponse>>()).Object,
+            saveAction ?? CreateSaveUseCase(),
+            copyAction ?? CreateCopyUseCase(),
             Mock.Of<ITelemetryService>());
+    }
+
+    private static SaveVideoFileUseCase CreateSaveUseCase(
+        Mock<IVideoFileTrimmer>? trimmer = null,
+        string? destinationPath = null)
+    {
+        destinationPath ??= Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mp4");
+        var filePicker = new Mock<IFilePickerService>();
+        filePicker
+            .Setup(service => service.PickSaveFileAsync(It.IsAny<nint>(), FilePickerType.Video, UserFolder.Videos))
+            .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == destinationPath));
+
+        return new SaveVideoFileUseCase(
+            filePicker.Object,
+            Mock.Of<IWindowHandleProvider>(),
+            (trimmer ?? new Mock<IVideoFileTrimmer>()).Object);
+    }
+
+    private static CopyVideoFileUseCase CreateCopyUseCase(Mock<IVideoFileTrimmer>? trimmer = null)
+    {
+        var storage = new Mock<IStorageService>();
+        storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
+        storage.Setup(service => service.GetTemporaryFileName()).Returns($"{Guid.NewGuid()}.tmp");
+
+        return new CopyVideoFileUseCase(
+            Mock.Of<IClipboardService>(),
+            storage.Object,
+            (trimmer ?? new Mock<IVideoFileTrimmer>()).Object);
     }
 }

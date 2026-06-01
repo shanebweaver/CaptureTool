@@ -25,13 +25,13 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<IAudi
         private set => Set(ref field, value);
     }
 
-    private readonly IUseCase<SaveAudioFileRequest, SaveAudioFileResponse> _saveAction;
-    private readonly IUseCase<CopyAudioFileRequest, CopyAudioFileResponse> _copyAction;
+    private readonly SaveAudioFileUseCase _saveAction;
+    private readonly CopyAudioFileUseCase _copyAction;
     private readonly ITelemetryService _telemetryService;
 
     public AudioEditPageViewModel(
-        IUseCase<SaveAudioFileRequest, SaveAudioFileResponse> saveAction,
-        IUseCase<CopyAudioFileRequest, CopyAudioFileResponse> copyAction,
+        SaveAudioFileUseCase saveAction,
+        CopyAudioFileUseCase copyAction,
         ITelemetryService telemetryService)
     {
         _saveAction = saveAction;
@@ -57,21 +57,43 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<IAudi
 
     private async Task SaveAsync()
     {
-        if (string.IsNullOrEmpty(AudioPath))
+        try
         {
-            throw new InvalidOperationException("Cannot save audio without a valid filepath.");
-        }
+            if (string.IsNullOrEmpty(AudioPath))
+            {
+                throw new InvalidOperationException("Cannot save audio without a valid filepath.");
+            }
 
-        await _saveAction.ExecuteAsync(new SaveAudioFileRequest(AudioPath), CancellationToken.None);
+            await _saveAction.ExecuteAsync(new SaveAudioFileRequest(AudioPath), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            _telemetryService.ActivityCanceled(nameof(SaveAsync), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(SaveAsync), exception);
+        }
     }
 
     private async Task CopyAsync()
     {
-        if (string.IsNullOrEmpty(AudioPath))
+        try
         {
-            throw new InvalidOperationException("Cannot copy audio to clipboard without a valid filepath.");
-        }
+            if (string.IsNullOrEmpty(AudioPath))
+            {
+                throw new InvalidOperationException("Cannot copy audio to clipboard without a valid filepath.");
+            }
 
-        await _copyAction.ExecuteAsync(new CopyAudioFileRequest(AudioPath), CancellationToken.None);
+            await _copyAction.ExecuteAsync(new CopyAudioFileRequest(AudioPath), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            _telemetryService.ActivityCanceled(nameof(CopyAsync), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(CopyAsync), exception);
+        }
     }
 }
