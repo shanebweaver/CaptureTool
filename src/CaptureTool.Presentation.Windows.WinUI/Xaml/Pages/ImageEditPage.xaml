@@ -192,8 +192,6 @@
                 HorizontalAlignment="Center"
                 Visibility="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}">
                 <controls:TextToolbar
-                    TextContent="{x:Bind ViewModel.TextContent, Mode=OneWay}"
-                    TextContentChanged="TextToolbar_TextContentChanged"
                     TextFontColor="{x:Bind ViewModel.TextFontColor, Mode=OneWay}"
                     TextFontColorChanged="TextToolbar_FontColorChanged"
                     TextFontColorOpacity="{x:Bind ViewModel.TextFontColorOpacity, Mode=OneWay}"
@@ -232,7 +230,10 @@
                 ShapeModified="ImageCanvas_ShapeModified"
                 ShapeStrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
                 ShapeStrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
-                TextPlaced="ImageCanvas_TextPlaced" />
+                TextCommitted="ImageCanvas_TextCommitted"
+                TextFontColor="{x:Bind ViewModel.TextFontColor, Mode=OneWay}"
+                TextFontFamily="{x:Bind ViewModel.TextFontFamily, Mode=OneWay}"
+                TextFontSize="{x:Bind ViewModel.TextFontSize, Mode=OneWay}" />
         </Grid>
 
         <ProgressRing

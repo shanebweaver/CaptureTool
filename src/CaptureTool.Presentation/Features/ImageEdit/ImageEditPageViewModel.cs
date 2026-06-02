@@ -89,7 +89,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IRelayCommand<int> UpdateTextFontColorOpacityCommand { get; }
     public IRelayCommand<string?> UpdateTextFontFamilyCommand { get; }
     public IRelayCommand<int> UpdateTextFontSizeCommand { get; }
-    public IRelayCommand<string?> UpdateTextContentCommand { get; }
     public IRelayCommand<int> UpdateZoomPercentageCommand { get; }
     public IRelayCommand<bool> UpdateAutoZoomLockCommand { get; }
     public IRelayCommand ZoomAndCenterCommand { get; }
@@ -201,12 +200,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     }
 
     public int ShapeFillOpacity
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public string TextContent
     {
         get;
         private set => Set(ref field, value);
@@ -354,7 +347,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ShapeStrokeWidth = 3;
         ShapeStrokeOpacity = 100;
         ShapeFillOpacity = 100;
-        TextContent = string.Empty;
         TextFontColor = ShapesColorPalette[1];
         TextFontColorOpacity = 100;
         TextFontFamily = TextDrawable.DefaultFontFamily;
@@ -393,7 +385,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateTextFontColorOpacityCommand = new RelayCommand<int>(UpdateTextFontColorOpacity, _ => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text));
         UpdateTextFontFamilyCommand = new RelayCommand<string?>(UpdateTextFontFamily, _ => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text));
         UpdateTextFontSizeCommand = new RelayCommand<int>(UpdateTextFontSize, _ => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text));
-        UpdateTextContentCommand = new RelayCommand<string?>(UpdateTextContent, _ => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text));
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
@@ -665,16 +656,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextFontSize = Math.Clamp(value, 1, 200);
     }
 
-    private void UpdateTextContent(string? value)
-    {
-        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text))
-        {
-            return;
-        }
-
-        TextContent = value ?? string.Empty;
-    }
-
     private static Color ApplyOpacity(Color color, int opacityPercentage)
     {
         if (color.Equals(Color.Transparent))
@@ -782,16 +763,22 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
-    public void OnTextPlaced(Vector2 position)
+    public void OnTextCommitted(string text, RectangleF bounds)
     {
-        if (!IsInTextMode || !_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text) || string.IsNullOrWhiteSpace(TextContent))
+        if (!IsInTextMode || !_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text) || string.IsNullOrWhiteSpace(text))
         {
             return;
         }
 
+        var position = new Vector2(bounds.X, bounds.Y);
+        var size = bounds.Width > 0 && bounds.Height > 0
+            ? new Size((int)Math.Ceiling(bounds.Width), (int)Math.Ceiling(bounds.Height))
+            : Size.Empty;
+
         var textDrawable = new TextDrawable(
             position,
-            TextContent,
+            size,
+            text,
             TextFontColor,
             TextFontFamily,
             TextFontSize);
@@ -810,7 +797,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnShapeDeleted(int shapeIndex)
     {
-        if (!IsInShapesMode)
+        if (!IsInShapesMode && !IsInTextMode)
         {
             return;
         }
@@ -837,7 +824,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnShapeModified(int shapeIndex, ModifyShapeOperation.ShapeState oldState, ModifyShapeOperation.ShapeState newState)
     {
-        if (!IsInShapesMode)
+        if (!IsInShapesMode && !IsInTextMode)
         {
             return;
         }

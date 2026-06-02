@@ -4,6 +4,7 @@ using CaptureTool.Domain.Edit.Abstractions.Operations;
 using CaptureTool.Domain.Edit.Windows;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -73,7 +74,15 @@ public sealed partial class ImageCanvas : UserControlBase
         nameof(IsTextModeEnabled),
         typeof(bool),
         typeof(ImageCanvas),
-        new PropertyMetadata(false));
+        new PropertyMetadata(false, OnIsTextModeEnabledPropertyChanged));
+
+    private static void OnIsTextModeEnabledPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control && e.NewValue is bool isEnabled && !isEnabled)
+        {
+            control.CommitActiveTextEditor();
+        }
+    }
 
     public static readonly DependencyProperty CropRectProperty = DependencyProperty.Register(
        nameof(CropRect),
@@ -138,6 +147,35 @@ public sealed partial class ImageCanvas : UserControlBase
         if (d is ImageCanvas control && control._selectedShape != null && e.NewValue is int width)
         {
             control.UpdateSelectedShapeStrokeWidth(width);
+        }
+    }
+
+    public static readonly DependencyProperty TextFontColorProperty = DependencyProperty.Register(
+       nameof(TextFontColor),
+       typeof(Color),
+       typeof(ImageCanvas),
+       new PropertyMetadata(Color.Black, OnTextStyleChanged));
+
+    public static readonly DependencyProperty TextFontFamilyProperty = DependencyProperty.Register(
+       nameof(TextFontFamily),
+       typeof(string),
+       typeof(ImageCanvas),
+       new PropertyMetadata(TextDrawable.DefaultFontFamily, OnTextStyleChanged));
+
+    public static readonly DependencyProperty TextFontSizeProperty = DependencyProperty.Register(
+       nameof(TextFontSize),
+       typeof(int),
+       typeof(ImageCanvas),
+       new PropertyMetadata((int)TextDrawable.DefaultFontSize, OnTextStyleChanged));
+
+    private static void OnTextStyleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control)
+        {
+            control._activeTextColor = control.TextFontColor;
+            control._activeTextFontFamily = control.TextFontFamily;
+            control._activeTextFontSize = control.TextFontSize;
+            control.ApplyActiveTextEditorStyle();
         }
     }
 
@@ -257,10 +295,28 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(ShapeStrokeWidthProperty, value);
     }
 
+    public Color TextFontColor
+    {
+        get => Get<Color>(TextFontColorProperty);
+        set => Set(TextFontColorProperty, value);
+    }
+
+    public string TextFontFamily
+    {
+        get => Get<string>(TextFontFamilyProperty) ?? TextDrawable.DefaultFontFamily;
+        set => Set(TextFontFamilyProperty, value);
+    }
+
+    public int TextFontSize
+    {
+        get => Get<int>(TextFontSizeProperty);
+        set => Set(TextFontSizeProperty, value);
+    }
+
     public event EventHandler<Rectangle>? InteractionComplete;
     public event EventHandler<Rectangle>? CropRectChanged;
     public event EventHandler<(System.Numerics.Vector2 Start, System.Numerics.Vector2 End)>? ShapeDrawn;
-    public event EventHandler<System.Numerics.Vector2>? TextPlaced;
+    public event EventHandler<(string Text, RectangleF Bounds)>? TextCommitted;
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
     public event EventHandler<int>? ShapeDeleted;
     public event EventHandler<(int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState)>? ShapeModified;
@@ -284,6 +340,15 @@ public sealed partial class ImageCanvas : UserControlBase
     // Track if we're in a potential selection scenario
     private IDrawable? _shapeUnderPointer;
     private Point? _pointerPressPosition;
+    private Point? _textStartPoint;
+    private TextBox? _activeTextEditor;
+    private TextDrawable? _activeTextDrawable;
+    private int _activeTextDrawableIndex = -1;
+    private ModifyShapeOperation.ShapeState? _activeTextOldState;
+    private Color _activeTextColor;
+    private string _activeTextFontFamily = TextDrawable.DefaultFontFamily;
+    private float _activeTextFontSize = TextDrawable.DefaultFontSize;
+    private bool _isCommittingTextEditor;
 
     // Cached preview elements for performance
     private Microsoft.UI.Xaml.Shapes.Rectangle? _previewRectangle;
@@ -584,7 +649,11 @@ public sealed partial class ImageCanvas : UserControlBase
             // Filter out the selected shape ONLY when it's being actively manipulated
             // This prevents double rendering during drag operations
             var drawablesToRender = Drawables;
-            if (IsShapeSelected())
+            if (_activeTextDrawable != null)
+            {
+                drawablesToRender = Drawables.Where(d => !ReferenceEquals(d, _activeTextDrawable));
+            }
+            else if (IsShapeSelected() && _selectedShape is not TextDrawable)
             {
                 drawablesToRender = Drawables.Where((d, i) => i != _selectedShapeIndex);
             }
@@ -734,6 +803,16 @@ public sealed partial class ImageCanvas : UserControlBase
             var point = e.GetCurrentPoint(RenderCanvas);
             if (point.Properties.IsLeftButtonPressed)
             {
+                CommitActiveTextEditor();
+
+                if (FindTextAtPoint(point.Position) is { } textDrawable)
+                {
+                    ShowTextEditor(textDrawable);
+                    e.Handled = true;
+                    return;
+                }
+
+                DeselectShape();
                 _pointerPressPosition = point.Position;
                 _isPointerDown = true;
                 RootContainer.CapturePointer(e.Pointer);
@@ -813,6 +892,18 @@ public sealed partial class ImageCanvas : UserControlBase
             }
             else if (IsTextModeEnabled && _pointerPressPosition.HasValue)
             {
+                var currentPoint = e.GetCurrentPoint(RenderCanvas).Position;
+                const double dragThreshold = 3.0;
+                double distance = Math.Sqrt(
+                    Math.Pow(currentPoint.X - _pointerPressPosition.Value.X, 2) +
+                    Math.Pow(currentPoint.Y - _pointerPressPosition.Value.Y, 2));
+
+                if (distance > dragThreshold)
+                {
+                    _textStartPoint ??= _pointerPressPosition.Value;
+                    UpdateTextEditorPreview(_textStartPoint.Value, currentPoint);
+                }
+
                 e.Handled = true;
                 return;
             }
@@ -881,11 +972,18 @@ public sealed partial class ImageCanvas : UserControlBase
                 Math.Pow(releasePoint.X - _pointerPressPosition.Value.X, 2) +
                 Math.Pow(releasePoint.Y - _pointerPressPosition.Value.Y, 2));
 
-            if (distance <= clickThreshold)
+            if (distance > clickThreshold && _textStartPoint.HasValue)
             {
-                TextPlaced?.Invoke(this, DisplayPointToCanvasPoint(releasePoint));
+                RectangleF editorBounds = CreateDisplayBounds(_textStartPoint.Value, releasePoint);
+                ClearPreviewShape();
+                ShowTextEditor(editorBounds, string.Empty, TextFontColor, TextFontFamily, TextFontSize);
+            }
+            else
+            {
+                ClearPreviewShape();
             }
 
+            _textStartPoint = null;
             _pointerPressPosition = null;
             e.Handled = true;
         }
@@ -894,12 +992,212 @@ public sealed partial class ImageCanvas : UserControlBase
         RootContainer.ReleasePointerCaptures();
     }
 
+    private static RectangleF CreateDisplayBounds(Point startPoint, Point endPoint)
+    {
+        float x = (float)Math.Min(startPoint.X, endPoint.X);
+        float y = (float)Math.Min(startPoint.Y, endPoint.Y);
+        float width = Math.Max(24f, (float)Math.Abs(endPoint.X - startPoint.X));
+        float height = Math.Max(24f, (float)Math.Abs(endPoint.Y - startPoint.Y));
+        return new RectangleF(x, y, width, height);
+    }
+
+    private void UpdateTextEditorPreview(Point startPoint, Point endPoint)
+    {
+        RectangleF bounds = CreateDisplayBounds(startPoint, endPoint);
+
+        EnsureRectanglePreview();
+        if (_previewRectangle == null)
+        {
+            return;
+        }
+
+        Canvas.SetLeft(_previewRectangle, bounds.X);
+        Canvas.SetTop(_previewRectangle, bounds.Y);
+        _previewRectangle.Width = bounds.Width;
+        _previewRectangle.Height = bounds.Height;
+        _previewRectangle.Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(global::Windows.UI.Color.FromArgb(255, 0, 120, 212));
+        _previewRectangle.StrokeDashArray = new Microsoft.UI.Xaml.Media.DoubleCollection { 4, 4 };
+        _previewRectangle.StrokeThickness = 1;
+        _previewRectangle.Fill = new Microsoft.UI.Xaml.Media.SolidColorBrush(global::Windows.UI.Color.FromArgb(24, 0, 120, 212));
+        _previewRectangle.Visibility = Visibility.Visible;
+
+        if (_previewRectangleFill != null)
+        {
+            _previewRectangleFill.Visibility = Visibility.Collapsed;
+        }
+        if (_previewEllipse != null)
+        {
+            _previewEllipse.Visibility = Visibility.Collapsed;
+        }
+        if (_previewEllipseFill != null)
+        {
+            _previewEllipseFill.Visibility = Visibility.Collapsed;
+        }
+        if (_previewLine != null)
+        {
+            _previewLine.Visibility = Visibility.Collapsed;
+        }
+        if (_previewArrowHead != null)
+        {
+            _previewArrowHead.Visibility = Visibility.Collapsed;
+        }
+
+        PreviewShapeCanvas.Visibility = Visibility.Visible;
+    }
+
+    private void ShowTextEditor(TextDrawable textDrawable)
+    {
+        var drawableList = Drawables?.ToList();
+        int drawableIndex = drawableList?.IndexOf(textDrawable) ?? -1;
+        if (drawableIndex < 0)
+        {
+            return;
+        }
+
+        _selectedShape = textDrawable;
+        _selectedShapeIndex = drawableIndex;
+        _activeTextDrawable = textDrawable;
+        _activeTextDrawableIndex = drawableIndex;
+        _activeTextOldState = new ModifyShapeOperation.ShapeState(textDrawable);
+
+        ShowTextEditor(
+            CanvasBoundsToDisplayBounds(GetTextBounds(textDrawable)),
+            textDrawable.Text,
+            textDrawable.Color,
+            textDrawable.FontFamily,
+            textDrawable.FontSize);
+
+        RenderCanvas.Invalidate();
+    }
+
+    private void ShowTextEditor(RectangleF displayBounds, string text, Color color, string fontFamily, float fontSize)
+    {
+        CommitActiveTextEditor();
+
+        _activeTextEditor = new TextBox
+        {
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap,
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(4),
+            Width = displayBounds.Width,
+            Height = displayBounds.Height,
+            MinWidth = 24,
+            MinHeight = 24,
+            Text = text,
+        };
+
+        _activeTextColor = color;
+        _activeTextFontFamily = string.IsNullOrWhiteSpace(fontFamily) ? TextDrawable.DefaultFontFamily : fontFamily;
+        _activeTextFontSize = fontSize > 0 ? fontSize : TextDrawable.DefaultFontSize;
+        _activeTextEditor.LostFocus += ActiveTextEditor_LostFocus;
+        ApplyActiveTextEditorStyle();
+
+        Canvas.SetLeft(_activeTextEditor, displayBounds.X);
+        Canvas.SetTop(_activeTextEditor, displayBounds.Y);
+        TextEditorCanvas.Children.Add(_activeTextEditor);
+        _activeTextEditor.Focus(FocusState.Programmatic);
+    }
+
+    private void ActiveTextEditor_LostFocus(object sender, RoutedEventArgs e)
+    {
+        CommitActiveTextEditor();
+    }
+
+    private void CommitActiveTextEditor()
+    {
+        if (_activeTextEditor == null || _isCommittingTextEditor)
+        {
+            return;
+        }
+
+        _isCommittingTextEditor = true;
+        try
+        {
+            TextBox textEditor = _activeTextEditor;
+            _activeTextEditor = null;
+            textEditor.LostFocus -= ActiveTextEditor_LostFocus;
+
+            double left = Canvas.GetLeft(textEditor);
+            double top = Canvas.GetTop(textEditor);
+            double width = textEditor.ActualWidth > 0 ? textEditor.ActualWidth : textEditor.Width;
+            double height = textEditor.ActualHeight > 0 ? textEditor.ActualHeight : textEditor.Height;
+            var displayBounds = new RectangleF(
+                (float)left,
+                (float)top,
+                (float)width,
+                (float)height);
+
+            TextEditorCanvas.Children.Remove(textEditor);
+
+            RectangleF canvasBounds = DisplayBoundsToCanvasBounds(displayBounds);
+            if (_activeTextDrawable != null)
+            {
+                if (string.IsNullOrWhiteSpace(textEditor.Text))
+                {
+                    ShapeDeleted?.Invoke(this, _activeTextDrawableIndex);
+                }
+                else
+                {
+                    _activeTextDrawable.Offset = new Vector2(canvasBounds.X, canvasBounds.Y);
+                    _activeTextDrawable.Size = new Size((int)Math.Ceiling(canvasBounds.Width), (int)Math.Ceiling(canvasBounds.Height));
+                    _activeTextDrawable.Text = textEditor.Text;
+                    _activeTextDrawable.Color = _activeTextColor;
+                    _activeTextDrawable.FontFamily = _activeTextFontFamily;
+                    _activeTextDrawable.FontSize = _activeTextFontSize;
+
+                    var newState = new ModifyShapeOperation.ShapeState(_activeTextDrawable);
+                    if (_activeTextOldState.HasValue && !StatesAreEqual(_activeTextOldState.Value, newState))
+                    {
+                        ShapeModified?.Invoke(this, (_activeTextDrawableIndex, _activeTextOldState.Value, newState));
+                    }
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(textEditor.Text))
+            {
+                TextCommitted?.Invoke(this, (textEditor.Text, canvasBounds));
+            }
+
+            _activeTextDrawable = null;
+            _activeTextDrawableIndex = -1;
+            _activeTextOldState = null;
+            _selectedShape = null;
+            _selectedShapeIndex = -1;
+            ShapeResizeOverlay.Visibility = Visibility.Collapsed;
+            RenderCanvas.Invalidate();
+        }
+        finally
+        {
+            _isCommittingTextEditor = false;
+        }
+    }
+
+    private void ApplyActiveTextEditorStyle()
+    {
+        if (_activeTextEditor == null)
+        {
+            return;
+        }
+
+        var textColor = global::Windows.UI.Color.FromArgb(_activeTextColor.A, _activeTextColor.R, _activeTextColor.G, _activeTextColor.B);
+        _activeTextEditor.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(textColor);
+        var transparentBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(global::Windows.UI.Color.FromArgb(0, 0, 0, 0));
+        _activeTextEditor.Background = transparentBrush;
+        _activeTextEditor.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(textColor);
+        _activeTextEditor.FontFamily = new Microsoft.UI.Xaml.Media.FontFamily(_activeTextFontFamily);
+        _activeTextEditor.FontSize = Math.Max(1, _activeTextFontSize);
+        _activeTextEditor.Resources["TextControlBackground"] = transparentBrush;
+        _activeTextEditor.Resources["TextControlBackgroundPointerOver"] = transparentBrush;
+        _activeTextEditor.Resources["TextControlBackgroundFocused"] = transparentBrush;
+    }
+
     private void RootContainer_PointerCanceled(object sender, PointerRoutedEventArgs e)
     {
         _isPointerDown = false;
         _shapeStartPoint = null;
         _shapeUnderPointer = null;
         _pointerPressPosition = null;
+        _textStartPoint = null;
         RootContainer.ReleasePointerCaptures();
     }
 
@@ -909,6 +1207,7 @@ public sealed partial class ImageCanvas : UserControlBase
         _shapeStartPoint = null;
         _shapeUnderPointer = null;
         _pointerPressPosition = null;
+        _textStartPoint = null;
     }
     #endregion
 
@@ -1278,7 +1577,10 @@ public sealed partial class ImageCanvas : UserControlBase
                state1.EndPoint == state2.EndPoint &&
                state1.StrokeColor == state2.StrokeColor &&
                state1.FillColor == state2.FillColor &&
-               state1.StrokeWidth == state2.StrokeWidth;
+               state1.StrokeWidth == state2.StrokeWidth &&
+               state1.Text == state2.Text &&
+               state1.FontFamily == state2.FontFamily &&
+               Math.Abs(state1.FontSize - state2.FontSize) < 0.01f;
     }
 
     private void DeselectShape()
@@ -1307,6 +1609,26 @@ public sealed partial class ImageCanvas : UserControlBase
             if (IsPointInShape(clickPoint, drawable))
             {
                 return drawable;
+            }
+        }
+
+        return null;
+    }
+
+    private TextDrawable? FindTextAtPoint(Point clickPoint)
+    {
+        if (Drawables == null)
+        {
+            return null;
+        }
+
+        var drawableList = Drawables.ToList();
+        for (int i = drawableList.Count - 1; i >= 0; i--)
+        {
+            if (drawableList[i] is TextDrawable textDrawable &&
+                CanvasBoundsToDisplayBounds(GetTextBounds(textDrawable)).Contains((float)clickPoint.X, (float)clickPoint.Y))
+            {
+                return textDrawable;
             }
         }
 
@@ -1497,9 +1819,25 @@ public sealed partial class ImageCanvas : UserControlBase
                     return new RectangleF(minX, minY, maxX - minX, maxY - minY);
                 }
 
+            case TextDrawable text:
+                return GetTextBounds(text);
+
             default:
                 return RectangleF.Empty;
         }
+    }
+
+    private static RectangleF GetTextBounds(TextDrawable text)
+    {
+        if (text.Size.Width > 0 && text.Size.Height > 0)
+        {
+            return new RectangleF(text.Offset.X, text.Offset.Y, text.Size.Width, text.Size.Height);
+        }
+
+        float fontSize = text.FontSize > 0 ? text.FontSize : TextDrawable.DefaultFontSize;
+        float width = Math.Max(24f, text.Text.Length * fontSize * 0.6f);
+        float height = Math.Max(24f, fontSize * 1.5f);
+        return new RectangleF(text.Offset.X, text.Offset.Y, width, height);
     }
 
     private void ShowResizeHandles(IDrawable drawable)
@@ -1883,6 +2221,11 @@ public sealed partial class ImageCanvas : UserControlBase
                     }
                 }
                 break;
+
+            case TextDrawable text:
+                text.Offset = new Vector2(canvasBounds.X, canvasBounds.Y);
+                text.Size = new Size((int)Math.Ceiling(canvasBounds.Width), (int)Math.Ceiling(canvasBounds.Height));
+                break;
         }
     }
 
@@ -1908,6 +2251,9 @@ public sealed partial class ImageCanvas : UserControlBase
                     break;
                 case ArrowDrawable arrow:
                     arrow.StrokeColor = color;
+                    break;
+                case TextDrawable text:
+                    text.Color = color;
                     break;
             }
         });

@@ -80,9 +80,21 @@ public static partial class Win2DImageCanvasRenderer
         {
             FontFamily = string.IsNullOrWhiteSpace(drawable.FontFamily) ? TextDrawable.DefaultFontFamily : drawable.FontFamily,
             FontSize = drawable.FontSize > 0 ? drawable.FontSize : TextDrawable.DefaultFontSize,
+            WordWrapping = CanvasWordWrapping.Wrap,
         };
 
-        drawingSession.DrawText(drawable.Text, textPosition, color, textFormat);
+        if (drawable.Size.Width > 0 && drawable.Size.Height > 0)
+        {
+            drawingSession.DrawText(
+                drawable.Text,
+                new Rect(textPosition.X, textPosition.Y, drawable.Size.Width, drawable.Size.Height),
+                color,
+                textFormat);
+        }
+        else
+        {
+            drawingSession.DrawText(drawable.Text, textPosition, color, textFormat);
+        }
     }
 
     private static void DrawRectangle(RectangleDrawable drawable, CanvasDrawingSession drawingSession)

@@ -9,6 +9,7 @@ public sealed partial class TextDrawable : IDrawable
     public const float DefaultFontSize = 24f;
 
     public Vector2 Offset { get; set; }
+    public Size Size { get; set; }
     public string Text { get; set; }
     public Color Color { get; set; }
     public string FontFamily { get; set; }
@@ -25,8 +26,14 @@ public sealed partial class TextDrawable : IDrawable
     }
 
     public TextDrawable(Vector2 position, string text, Color color, string fontFamily, float fontSize)
+        : this(position, Size.Empty, text, color, fontFamily, fontSize)
+    {
+    }
+
+    public TextDrawable(Vector2 position, Size size, string text, Color color, string fontFamily, float fontSize)
     {
         Offset = position;
+        Size = size;
         Text = text;
         Color = color;
         FontFamily = string.IsNullOrWhiteSpace(fontFamily) ? DefaultFontFamily : fontFamily;

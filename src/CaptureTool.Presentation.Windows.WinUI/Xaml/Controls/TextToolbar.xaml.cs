@@ -6,12 +6,6 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
 public sealed partial class TextToolbar : UserControlBase
 {
-    public static readonly DependencyProperty TextContentProperty = DependencyProperty.Register(
-        nameof(TextContent),
-        typeof(string),
-        typeof(TextToolbar),
-        new PropertyMetadata(string.Empty));
-
     public static readonly DependencyProperty TextFontColorProperty = DependencyProperty.Register(
         nameof(TextFontColor),
         typeof(Color),
@@ -41,12 +35,6 @@ public sealed partial class TextToolbar : UserControlBase
         typeof(int),
         typeof(TextToolbar),
         new PropertyMetadata(24));
-
-    public string TextContent
-    {
-        get => Get<string>(TextContentProperty) ?? string.Empty;
-        set => Set(TextContentProperty, value);
-    }
 
     public Color TextFontColor
     {
@@ -78,7 +66,6 @@ public sealed partial class TextToolbar : UserControlBase
         set => Set(TextFontSizeProperty, value);
     }
 
-    public event EventHandler<string>? TextContentChanged;
     public event EventHandler<Color>? TextFontColorChanged;
     public event EventHandler<int>? TextFontColorOpacityChanged;
     public event EventHandler<string>? TextFontFamilyChanged;
@@ -87,17 +74,6 @@ public sealed partial class TextToolbar : UserControlBase
     public TextToolbar()
     {
         InitializeComponent();
-    }
-
-    private void UpdateTextContent(string value)
-    {
-        if (TextContent.Equals(value, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        TextContent = value;
-        TextContentChanged?.Invoke(this, value);
     }
 
     private void UpdateTextFontColor(Color value)
@@ -142,14 +118,6 @@ public sealed partial class TextToolbar : UserControlBase
 
         TextFontSize = value;
         TextFontSizeChanged?.Invoke(this, value);
-    }
-
-    private void TextContentBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (sender is TextBox textBox)
-        {
-            UpdateTextContent(textBox.Text);
-        }
     }
 
     private void FontColorPalette_SelectedColorChanged(object? sender, Color color)

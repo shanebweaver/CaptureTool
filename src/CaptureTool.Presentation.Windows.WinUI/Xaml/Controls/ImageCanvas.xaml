@@ -67,6 +67,12 @@
                     IsHitTestVisible="False"
                     Visibility="Collapsed" />
 
+                <!--  Active text editor overlay  -->
+                <Canvas
+                    x:Name="TextEditorCanvas"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch" />
+
                 <!--  Line/Arrow Endpoint Handles  -->
                 <Canvas x:Name="LineEndpointHandlesCanvas" Visibility="Collapsed">
                     <!--  Dashed selection line visual  -->

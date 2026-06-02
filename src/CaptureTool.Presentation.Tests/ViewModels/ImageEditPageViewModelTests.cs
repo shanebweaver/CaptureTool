@@ -328,25 +328,24 @@ public sealed class ImageEditPageViewModelTests
     }
 
     [TestMethod]
-    public void OnTextPlaced_ShouldIgnore_WhenTextModeIsOff()
+    public void OnTextCommitted_ShouldIgnore_WhenTextModeIsOff()
     {
         // Arrange
         var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
         featureManager.Setup(f => f.IsEnabled(AppFeatures.Feature_ImageEdit_Text)).Returns(true);
 
         var vm = Create();
-        vm.UpdateTextContentCommand.Execute("Hello");
         int initialCount = vm.Drawables.Count;
 
         // Act
-        vm.OnTextPlaced(new System.Numerics.Vector2(50, 50));
+        vm.OnTextCommitted("Hello", new RectangleF(50, 50, 120, 40));
 
         // Assert
         vm.Drawables.Count.Should().Be(initialCount, "text placement requires text mode");
     }
 
     [TestMethod]
-    public void OnTextPlaced_ShouldIgnore_WhenFeatureIsDisabled()
+    public void OnTextCommitted_ShouldIgnore_WhenFeatureIsDisabled()
     {
         // Arrange
         var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
@@ -356,14 +355,14 @@ public sealed class ImageEditPageViewModelTests
         int initialCount = vm.Drawables.Count;
 
         // Act
-        vm.OnTextPlaced(new System.Numerics.Vector2(50, 50));
+        vm.OnTextCommitted("Hello", new RectangleF(50, 50, 120, 40));
 
         // Assert
         vm.Drawables.Count.Should().Be(initialCount, "the text feature flag gates placement");
     }
 
     [TestMethod]
-    public void OnTextPlaced_ShouldIgnore_WhenTextContentIsEmpty()
+    public void OnTextCommitted_ShouldIgnore_WhenTextContentIsEmpty()
     {
         // Arrange
         var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
@@ -374,14 +373,14 @@ public sealed class ImageEditPageViewModelTests
         int initialCount = vm.Drawables.Count;
 
         // Act
-        vm.OnTextPlaced(new System.Numerics.Vector2(50, 50));
+        vm.OnTextCommitted("   ", new RectangleF(50, 50, 120, 40));
 
         // Assert
         vm.Drawables.Count.Should().Be(initialCount, "blank text is not useful to render");
     }
 
     [TestMethod]
-    public void OnTextPlaced_ShouldAddTextDrawable_AndPushUndo()
+    public void OnTextCommitted_ShouldAddTextDrawable_AndPushUndo()
     {
         // Arrange
         var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
@@ -389,14 +388,13 @@ public sealed class ImageEditPageViewModelTests
 
         var vm = Create();
         vm.ToggleTextModeCommand.Execute(null);
-        vm.UpdateTextContentCommand.Execute("Hello World");
         vm.UpdateTextFontColorCommand.Execute(Color.Blue);
         vm.UpdateTextFontFamilyCommand.Execute("Arial");
         vm.UpdateTextFontSizeCommand.Execute(32);
         int initialCount = vm.Drawables.Count;
 
         // Act
-        vm.OnTextPlaced(new System.Numerics.Vector2(100f, 200f));
+        vm.OnTextCommitted("Hello World", new RectangleF(100f, 200f, 240f, 80f));
 
         // Assert
         vm.Drawables.Count.Should().Be(initialCount + 1, "placing text should add a drawable");
@@ -405,6 +403,7 @@ public sealed class ImageEditPageViewModelTests
         var textDrawable = (TextDrawable)vm.Drawables.Last();
         textDrawable.Text.Should().Be("Hello World");
         textDrawable.Offset.Should().Be(new System.Numerics.Vector2(100f, 200f));
+        textDrawable.Size.Should().Be(new Size(240, 80));
         textDrawable.Color.Should().Be(Color.Blue);
         textDrawable.FontFamily.Should().Be("Arial");
         textDrawable.FontSize.Should().Be(32);

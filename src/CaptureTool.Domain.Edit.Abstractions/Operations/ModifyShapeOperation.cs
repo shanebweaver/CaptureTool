@@ -62,6 +62,15 @@ public sealed partial class ModifyShapeOperation : CanvasOperation
                 arrow.StrokeColor = state.StrokeColor;
                 arrow.StrokeWidth = state.StrokeWidth;
                 break;
+
+            case TextDrawable text:
+                text.Offset = state.Offset;
+                text.Size = state.Size;
+                text.Color = state.StrokeColor;
+                text.Text = state.Text;
+                text.FontFamily = state.FontFamily;
+                text.FontSize = state.FontSize;
+                break;
         }
     }
 }

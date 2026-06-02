@@ -1004,10 +1004,6 @@ SOFTWARE.
     <value>Add text</value>
     <comment>The tooltip for the text button on the image edit page.</comment>
   </data>
-  <data name="TextToolbar_ContentBox.PlaceholderText" xml:space="preserve">
-    <value>Text</value>
-    <comment>The placeholder text for the text content box.</comment>
-  </data>
   <data name="TextToolbar_FontColorButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Choose text color and opacity</value>
     <comment>The tooltip for the font color picker button in the text toolbar.</comment>

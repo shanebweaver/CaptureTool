@@ -19,16 +19,6 @@
 
     <Grid>
         <StackPanel Orientation="Horizontal" Spacing="4">
-            <TextBox
-                x:Name="TextContentBox"
-                x:Uid="TextToolbar_ContentBox"
-                Width="220"
-                MinHeight="34"
-                MaxLength="500"
-                PlaceholderText="Text"
-                Text="{x:Bind TextContent, Mode=OneWay}"
-                TextChanged="TextContentBox_TextChanged" />
-
             <Button
                 x:Name="FontColorButton"
                 x:Uid="TextToolbar_FontColorButton"
