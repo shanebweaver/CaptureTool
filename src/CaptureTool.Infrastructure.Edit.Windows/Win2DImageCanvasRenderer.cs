@@ -1,5 +1,5 @@
-using CaptureTool.Domain.Edit.Abstractions;
-using CaptureTool.Domain.Edit.Abstractions.Drawable;
+using CaptureTool.Domain.Edit;
+using CaptureTool.Domain.Edit.Drawable;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.UI;

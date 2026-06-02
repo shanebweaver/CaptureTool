@@ -1,8 +1,8 @@
 using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Domain.Capture.Abstractions.Files;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 

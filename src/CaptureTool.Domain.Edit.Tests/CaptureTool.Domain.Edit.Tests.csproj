@@ -1,0 +1,23 @@
+﻿<Project Sdk="MSTest.Sdk/4.0.2">
+
+  <!-- Project properties -->
+  <PropertyGroup>
+    <UseVSTest>true</UseVSTest>
+  </PropertyGroup>
+
+  <!-- Package references -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeCoverage" />
+    <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Update="MSTest.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" />
+  </ItemGroup>
+
+</Project>

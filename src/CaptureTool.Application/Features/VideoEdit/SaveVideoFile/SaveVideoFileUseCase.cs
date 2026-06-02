@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Windowing;
-using CaptureTool.Domain.Capture.Abstractions.Files;
+using CaptureTool.Domain.Capture.Files;
 
 namespace CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
 

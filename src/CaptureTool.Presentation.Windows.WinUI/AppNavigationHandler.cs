@@ -4,7 +4,7 @@ using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Windowing;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 
 namespace CaptureTool.Presentation.Windows.WinUI;

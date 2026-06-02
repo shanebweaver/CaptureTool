@@ -24,7 +24,6 @@
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domain.Capture.Abstractions/CaptureTool.Domain.Capture.Abstractions.csproj" />
   <Project Path="src/CaptureTool.Infrastructure.Capture.Tests.Windows/CaptureTool.Infrastructure.Capture.Tests.Windows.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
@@ -33,11 +32,9 @@
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Domain.Edit.Abstractions/CaptureTool.Domain.Edit.Abstractions.csproj" />
-  <Project Path="src/CaptureTool.Domain.Edit.Tests.Windows/CaptureTool.Domain.Edit.Tests.Windows.csproj">
-    <Platform Solution="*|ARM64" Project="ARM64" />
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
+  <Project Path="src/CaptureTool.Domain.Capture/CaptureTool.Domain.Capture.csproj" />
+  <Project Path="src/CaptureTool.Domain.Edit/CaptureTool.Domain.Edit.csproj" />
+  <Project Path="src/CaptureTool.Domain.Edit.Tests/CaptureTool.Domain.Edit.Tests.csproj" />
   <Project Path="src/CaptureTool.FeatureManagement.Generators/CaptureTool.FeatureManagement.Generators.csproj" />
   <Project Path="src/CaptureTool.FeatureManagement/CaptureTool.FeatureManagement.csproj" />
   <Project Path="src/CaptureTool.Infrastructure.Windows/CaptureTool.Infrastructure.Windows.csproj">

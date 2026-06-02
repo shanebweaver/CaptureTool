@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GoBackFromCaptureOverlay;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.GoBackFromCaptureOverlay;
 

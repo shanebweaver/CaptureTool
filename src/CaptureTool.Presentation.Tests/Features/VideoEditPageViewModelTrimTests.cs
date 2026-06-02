@@ -3,8 +3,8 @@ using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Domain.Capture.Abstractions.Files;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Presentation.Features.VideoEdit;
 using Moq;
 

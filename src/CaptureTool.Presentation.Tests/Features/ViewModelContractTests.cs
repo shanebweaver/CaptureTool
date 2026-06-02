@@ -4,7 +4,7 @@ using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCaptur
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Features.About;
 using CaptureTool.Presentation.Features.Home;
 using Moq;

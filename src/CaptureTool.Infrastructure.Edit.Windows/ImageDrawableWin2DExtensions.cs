@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Edit.Abstractions.Drawable;
+using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Infrastructure.Edit.Windows.ChromaKey;
 using Microsoft.Graphics.Canvas;
 using System.Runtime.CompilerServices;

@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Themes;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.Features.About;
 using CaptureTool.Presentation.Features.AudioCapture;

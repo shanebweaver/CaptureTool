@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Features;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;

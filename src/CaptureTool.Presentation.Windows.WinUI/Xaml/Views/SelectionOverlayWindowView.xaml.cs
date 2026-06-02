@@ -1,5 +1,5 @@
 using CaptureTool.Application.Abstractions.Themes;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Features.SelectionOverlay;
 using CaptureTool.Presentation.Loading;
 using Microsoft.UI.Input;

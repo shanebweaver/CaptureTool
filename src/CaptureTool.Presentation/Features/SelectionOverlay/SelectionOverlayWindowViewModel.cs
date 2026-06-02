@@ -5,7 +5,7 @@ using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;

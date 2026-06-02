@@ -5,7 +5,7 @@ using CaptureTool.Application.Abstractions.Features.AudioCapture.StartAudioCaptu
 using CaptureTool.Application.Abstractions.Features.AudioCapture.StopAudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.ToggleLocalAudioCapture;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;

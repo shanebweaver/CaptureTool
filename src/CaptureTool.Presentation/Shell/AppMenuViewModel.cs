@@ -9,8 +9,8 @@ using CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCap
 using CaptureTool.Application.Abstractions.Features.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Domain.Capture.Abstractions.Files;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.Features.RecentCaptures;
 using CaptureTool.Presentation.Shared.Commands;

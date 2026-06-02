@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Capture.Abstractions.Files;
+using CaptureTool.Domain.Capture.Files;
 using System.Drawing;
 
 namespace CaptureTool.Application.Abstractions.Storage;

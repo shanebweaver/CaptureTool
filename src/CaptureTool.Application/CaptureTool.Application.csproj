@@ -3,8 +3,8 @@
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture.Abstractions\CaptureTool.Domain.Capture.Abstractions.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Edit.Abstractions\CaptureTool.Domain.Edit.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture\CaptureTool.Domain.Capture.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" />
   </ItemGroup>
 
   <!-- Package references -->

@@ -1,5 +1,5 @@
 using CaptureTool.Application.Abstractions.Features.Navigation;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Infrastructure.Capture.Windows;
 using CaptureTool.Presentation.Features.SelectionOverlay;
 using CaptureTool.Presentation.Windows.WinUI.Utils;

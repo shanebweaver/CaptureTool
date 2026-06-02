@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Infrastructure.Capture.Windows.DependencyInjection;

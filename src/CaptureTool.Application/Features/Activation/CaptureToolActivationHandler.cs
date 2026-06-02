@@ -7,7 +7,7 @@ using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 using System.Collections.Specialized;
 using System.Web;
 
