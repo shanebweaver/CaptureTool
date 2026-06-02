@@ -5,8 +5,7 @@ Set-Location $repoRoot
 
 $testProjects = @(
     'src\CaptureTool.Application.Tests\CaptureTool.Application.Tests.csproj',
-    'src\CaptureTool.Domain.Capture.Tests.Windows\CaptureTool.Domain.Capture.Tests.Windows.csproj',
-    'src\CaptureTool.Domain.Edit.Tests.Windows\CaptureTool.Domain.Edit.Tests.Windows.csproj',
+    'src\CaptureTool.Domain.Edit.Tests\CaptureTool.Domain.Edit.Tests.csproj',
     'src\CaptureTool.Infrastructure.Tests\CaptureTool.Infrastructure.Tests.csproj',
     'src\CaptureTool.Presentation.Tests\CaptureTool.Presentation.Tests.csproj'
 )
