@@ -1,13 +1,12 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Store.GetChromaKeyAddOn;
-using CaptureTool.Application.Features.Store.LeaveStorePage;
-using CaptureTool.Application.Features.Store.PurchaseChromaKeyAddOn;
-using CaptureTool.Infrastructure.Abstractions.Cancellation;
-using CaptureTool.Infrastructure.Abstractions.Localization;
-using CaptureTool.Infrastructure.Abstractions.Store;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Features.Store.GetChromaKeyAddOn;
+using CaptureTool.Application.Abstractions.Features.Store.LeaveStorePage;
+using CaptureTool.Application.Abstractions.Features.Store.PurchaseChromaKeyAddOn;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Presentation.Shared.Commands;
+using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.Store;
@@ -15,9 +14,9 @@ namespace CaptureTool.Presentation.Features.Store;
 public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
 {
     public StorePageViewModel(
-        LeaveStorePageUseCase leaveStorePageCommand,
-        PurchaseChromaKeyAddOnUseCase purchaseChromaKeyAddOnCommand,
-        GetChromaKeyAddOnUseCase getChromaKeyAddOnQuery,
+        ILeaveStorePageUseCase leaveStorePageCommand,
+        IPurchaseChromaKeyAddOnUseCase purchaseChromaKeyAddOnCommand,
+        IGetChromaKeyAddOnUseCase getChromaKeyAddOnQuery,
         ILocalizationService localizationService,
         ICancellationService cancellationService,
         ITelemetryService telemetryService)
@@ -34,7 +33,7 @@ public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
 
     private readonly ILocalizationService _localizationService;
     private readonly ICancellationService _cancellationService;
-    private readonly GetChromaKeyAddOnUseCase _getChromaKeyAddOnQuery;
+    private readonly IGetChromaKeyAddOnUseCase _getChromaKeyAddOnQuery;
     private readonly ITelemetryService _telemetryService;
 
     public IAsyncRelayCommand PurchaseChromaKeyAddOnCommand { get; }

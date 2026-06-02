@@ -1,6 +1,6 @@
-using CaptureTool.Infrastructure.Abstractions.Cancellation;
-using CaptureTool.Infrastructure.Abstractions.Logging;
-using CaptureTool.Infrastructure.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Shutdown;
 using Microsoft.Windows.AppLifecycle;
 
 namespace CaptureTool.Infrastructure.Windows.Shutdown;

@@ -1,10 +1,12 @@
-using CaptureTool.Infrastructure.Abstractions.Cancellation;
-using CaptureTool.Infrastructure.Abstractions.Globalization;
-using CaptureTool.Infrastructure.Abstractions.Logging;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Settings;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Features;
+using CaptureTool.Application.Abstractions.Globalization;
+using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Infrastructure.Cancellation;
+using CaptureTool.Infrastructure.Features;
 using CaptureTool.Infrastructure.Globalization;
 using CaptureTool.Infrastructure.Logging;
 using CaptureTool.Infrastructure.Navigation;
@@ -19,6 +21,7 @@ public static class GenericServicesServiceCollectionExtensions
     public static IServiceCollection AddGenericServices(this IServiceCollection services)
     {
         services.AddSingleton<ICancellationService, CancellationService>();
+        services.AddSingleton<IFeatureAvailabilityService, FeatureAvailabilityService>();
         services.AddSingleton<IGlobalizationService, GlobalizationService>();
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<ISettingsService, LocalSettingsService>();

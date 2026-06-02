@@ -1,8 +1,8 @@
 using CaptureTool.Domain.Edit.Abstractions.ChromaKey;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System.Collections.Specialized;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 

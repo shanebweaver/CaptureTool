@@ -1,12 +1,12 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GoBackFromCaptureOverlay;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.GoBackFromCaptureOverlay;
 
-public sealed class GoBackFromCaptureOverlayUseCase : IUseCase<GoBackFromCaptureOverlayRequest, GoBackFromCaptureOverlayResponse>, IConditional<GoBackFromCaptureOverlayRequest>
+public sealed class GoBackFromCaptureOverlayUseCase : IGoBackFromCaptureOverlayUseCase
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly INavigationService _navigationService;

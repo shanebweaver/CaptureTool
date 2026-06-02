@@ -1,5 +1,5 @@
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Presentation.ViewModels;
 using System.ComponentModel;
 using System.Drawing;
 

@@ -1,8 +1,8 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using CaptureTool.Application.Abstractions.Features;
 using CaptureTool.Application.Abstractions.Home;
-using CaptureTool.FeatureManagement;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Presentation.ViewModels;
 using Moq;
 
@@ -24,7 +24,7 @@ public sealed class HomePageViewModelTests
         Fixture.Freeze<Mock<IHomeNewImageCaptureUseCase>>();
         Fixture.Freeze<Mock<IHomeNewVideoCaptureUseCase>>();
         Fixture.Freeze<Mock<IHomeNewAudioCaptureUseCase>>();
-        Fixture.Freeze<Mock<IFeatureManager>>();
+        Fixture.Freeze<Mock<IFeatureAvailabilityService>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
 
@@ -63,8 +63,8 @@ public sealed class HomePageViewModelTests
     public void NewAudioCaptureCommand_ShouldInvokeAction_AndTrackTelemetry_WhenEnabled()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
-        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_AudioCapture)).Returns(true);
+        var featureAvailability = Fixture.Freeze<Mock<IFeatureAvailabilityService>>();
+        featureAvailability.Setup(f => f.IsAudioCaptureEnabled).Returns(true);
 
         var newAudioCaptureAction = Fixture.Freeze<Mock<IHomeNewAudioCaptureUseCase>>();
         newAudioCaptureAction.Setup(a => a.CanExecute()).Returns(true);
@@ -80,12 +80,12 @@ public sealed class HomePageViewModelTests
     [TestMethod]
     public void IsAudioCaptureEnabled_ShouldReflectFeatureFlag()
     {
-        var featureManager = Fixture.Freeze<Mock<IFeatureManager>>();
-        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_AudioCapture)).Returns(false);
+        var featureAvailability = Fixture.Freeze<Mock<IFeatureAvailabilityService>>();
+        featureAvailability.Setup(f => f.IsAudioCaptureEnabled).Returns(false);
         var vm = Create();
         Assert.IsFalse(vm.IsAudioCaptureEnabled);
 
-        featureManager.Setup(f => f.IsEnabled(CaptureToolFeatures.Feature_AudioCapture)).Returns(true);
+        featureAvailability.Setup(f => f.IsAudioCaptureEnabled).Returns(true);
         vm = Create();
         Assert.IsTrue(vm.IsAudioCaptureEnabled);
     }

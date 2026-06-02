@@ -1,9 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Features.Store;
+using CaptureTool.Application.Abstractions.Features.Store.GetChromaKeyAddOn;
+using CaptureTool.Application.Abstractions.Store;
 
 namespace CaptureTool.Application.Features.Store.GetChromaKeyAddOn;
 
-public sealed class GetChromaKeyAddOnUseCase : IUseCase<GetChromaKeyAddOnRequest, GetChromaKeyAddOnResponse>, IConditional<GetChromaKeyAddOnRequest>
+public sealed class GetChromaKeyAddOnUseCase : IGetChromaKeyAddOnUseCase
 {
     private readonly IStoreService _storeService;
 

@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Audio;
+using CaptureTool.Application.Abstractions.Audio;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections;

@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Globalization;
+using CaptureTool.Application.Abstractions.Globalization;
 using System.Globalization;
 
 namespace CaptureTool.Infrastructure.Globalization;

@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Cancellation;
 
 namespace CaptureTool.Infrastructure.Cancellation;
 

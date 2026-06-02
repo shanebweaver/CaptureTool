@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Domain.Capture.Abstractions.Files;
 using System.Drawing;
 
 namespace CaptureTool.Domain.Edit.Abstractions.ChromaKey;

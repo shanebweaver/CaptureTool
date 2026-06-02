@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Presentation.ViewModels;
 
 namespace CaptureTool.Presentation.Shell;
 

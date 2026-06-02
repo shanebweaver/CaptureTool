@@ -1,4 +1,5 @@
-using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Domain.Capture.Abstractions.Files;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Windows.Storage;

@@ -1,9 +1,9 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.MuteAudioCapture;
 
 namespace CaptureTool.Application.Features.AudioCapture.MuteAudioCapture;
 
-public sealed class MuteAudioCaptureUseCase : IUseCase<MuteAudioCaptureRequest, MuteAudioCaptureResponse>
+public sealed class MuteAudioCaptureUseCase : IMuteAudioCaptureUseCase
 {
     private readonly IAudioCaptureHandler _audioCaptureHandler;
 

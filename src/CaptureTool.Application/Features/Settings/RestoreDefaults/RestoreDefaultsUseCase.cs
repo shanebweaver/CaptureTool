@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Localization;
-using CaptureTool.Infrastructure.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings.RestoreDefaults;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Settings;
 
 namespace CaptureTool.Application.Features.Settings.RestoreDefaults;
 
-public sealed class RestoreDefaultsUseCase : IUseCase<RestoreDefaultsRequest, RestoreDefaultsResponse>, IConditional<RestoreDefaultsRequest>
+public sealed class RestoreDefaultsUseCase : IRestoreDefaultsUseCase
 {
     private readonly ISettingsService _settingsService;
     private readonly ILocalizationService _localizationService;

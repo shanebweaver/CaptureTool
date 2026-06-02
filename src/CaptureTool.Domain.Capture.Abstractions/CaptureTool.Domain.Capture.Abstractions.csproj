@@ -5,9 +5,4 @@
     <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
 
-  <!-- Project references -->
-  <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Abstractions\CaptureTool.Infrastructure.Abstractions.csproj" />
-  </ItemGroup>
-
 </Project>

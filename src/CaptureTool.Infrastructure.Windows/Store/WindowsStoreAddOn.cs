@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Store;
 
 namespace CaptureTool.Infrastructure.Windows.Store;
 

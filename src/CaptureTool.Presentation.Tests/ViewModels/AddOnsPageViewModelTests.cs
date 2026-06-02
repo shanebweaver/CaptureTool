@@ -2,11 +2,11 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Presentation.ViewModels;
 using CaptureTool.Application.Abstractions.UseCases.AddOns;
-using CaptureTool.Infrastructure.Abstractions.Cancellation;
-using CaptureTool.Infrastructure.Abstractions.Localization;
-using CaptureTool.Infrastructure.Abstractions.Store;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
+using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Windowing;
 using Moq;
 
 namespace CaptureTool.Application.Tests.ViewModels;

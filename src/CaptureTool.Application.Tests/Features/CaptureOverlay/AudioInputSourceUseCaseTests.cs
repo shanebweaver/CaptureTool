@@ -1,6 +1,8 @@
+using CaptureTool.Application.Abstractions.Audio;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GetAudioInputSources;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.SelectAudioInputSource;
 using CaptureTool.Application.Features.CaptureOverlay.GetAudioInputSources;
 using CaptureTool.Application.Features.CaptureOverlay.SelectAudioInputSource;
-using CaptureTool.Infrastructure.Abstractions.Audio;
 using FluentAssertions;
 using Moq;
 

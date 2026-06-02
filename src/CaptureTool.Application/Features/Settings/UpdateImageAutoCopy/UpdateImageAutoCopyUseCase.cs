@@ -1,9 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateImageAutoCopy;
+using CaptureTool.Application.Abstractions.Settings;
 
 namespace CaptureTool.Application.Features.Settings.UpdateImageAutoCopy;
 
-public sealed class UpdateImageAutoCopyUseCase : IUseCase<UpdateImageAutoCopyRequest, UpdateImageAutoCopyResponse>, IConditional<UpdateImageAutoCopyRequest>
+public sealed class UpdateImageAutoCopyUseCase : IUpdateImageAutoCopyUseCase
 {
     private readonly ISettingsService _settingsService;
 

@@ -1,7 +1,7 @@
 using CaptureTool.Domain.Edit.Abstractions;
 using CaptureTool.Domain.Edit.Abstractions.Drawable;
 using CaptureTool.Domain.Edit.Abstractions.Operations;
-using CaptureTool.Domain.Edit.Windows;
+using CaptureTool.Infrastructure.Edit.Windows;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;

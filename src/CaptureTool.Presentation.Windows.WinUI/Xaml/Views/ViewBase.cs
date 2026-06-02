@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Abstractions.Loading;
-using CaptureTool.Infrastructure.Abstractions.ViewModels;
+using CaptureTool.Presentation.Loading;
+using CaptureTool.Presentation.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 

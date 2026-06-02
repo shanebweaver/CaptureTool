@@ -1,9 +1,9 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Themes;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppTheme;
+using CaptureTool.Application.Abstractions.Themes;
 
 namespace CaptureTool.Application.Features.Settings.UpdateAppTheme;
 
-public sealed class UpdateAppThemeUseCase : IUseCase<UpdateAppThemeRequest, UpdateAppThemeResponse>, IConditional<UpdateAppThemeRequest>
+public sealed class UpdateAppThemeUseCase : IUpdateAppThemeUseCase
 {
     private static readonly AppTheme[] SupportedThemes = [AppTheme.Light, AppTheme.Dark, AppTheme.SystemDefault];
     private readonly IThemeService _themes;

@@ -1,11 +1,12 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Settings;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
+using CaptureTool.Application.Abstractions.Features.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings.ChangeVideosFolder;
+using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Windowing;
 
 namespace CaptureTool.Application.Features.Settings.ChangeVideosFolder;
 
-public sealed class ChangeVideosFolderUseCase : IUseCase<ChangeVideosFolderRequest, ChangeVideosFolderResponse>, IConditional<ChangeVideosFolderRequest>
+public sealed class ChangeVideosFolderUseCase : IChangeVideosFolderUseCase
 {
     private readonly IWindowHandleProvider _windowing;
     private readonly IFilePickerService _picker;

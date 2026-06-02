@@ -1,10 +1,11 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Localization;
-using CaptureTool.Infrastructure.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppLanguage;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Settings;
 
 namespace CaptureTool.Application.Features.Settings.UpdateAppLanguage;
 
-public sealed class UpdateAppLanguageUseCase : IUseCase<UpdateAppLanguageRequest, UpdateAppLanguageResponse>, IConditional<UpdateAppLanguageRequest>
+public sealed class UpdateAppLanguageUseCase : IUpdateAppLanguageUseCase
 {
     private readonly ILocalizationService _localization;
     private readonly ISettingsService _settings;

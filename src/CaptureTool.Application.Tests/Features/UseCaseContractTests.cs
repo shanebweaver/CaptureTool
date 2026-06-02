@@ -1,8 +1,10 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.MuteAudioCapture;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppTheme;
+using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.AudioCapture.MuteAudioCapture;
 using CaptureTool.Application.Features.Settings.UpdateAppTheme;
-using CaptureTool.Infrastructure.Abstractions.Themes;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;

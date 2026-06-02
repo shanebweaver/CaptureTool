@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Abstractions.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Themes;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Presentation.Shell;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;

@@ -1,14 +1,15 @@
+using CaptureTool.Application.Abstractions.Features.AppMenu.OpenFile;
+using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Files;
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
+using CaptureTool.Domain.Capture.Abstractions.Files;
 
 namespace CaptureTool.Application.Features.AppMenu.OpenFile;
 
-public sealed class OpenFileUseCase : IUseCase<OpenFileRequest, OpenFileResponse>
+public sealed class OpenFileUseCase : IOpenFileUseCase
 {
     private readonly IFileTypeDetector _fileTypeDetector;
     private readonly IFilePickerService _filePickerService;

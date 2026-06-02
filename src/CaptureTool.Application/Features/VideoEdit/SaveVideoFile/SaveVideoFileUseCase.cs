@@ -1,11 +1,12 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Media;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
+using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
+using CaptureTool.Application.Abstractions.Media;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Windowing;
+using CaptureTool.Domain.Capture.Abstractions.Files;
 
 namespace CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
 
-public sealed class SaveVideoFileUseCase : IUseCase<SaveVideoFileRequest, SaveVideoFileResponse>, IConditional<SaveVideoFileRequest>
+public sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
 {
     private readonly IFilePickerService _filePickerService;
     private readonly IWindowHandleProvider _windowingService;

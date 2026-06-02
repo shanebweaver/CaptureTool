@@ -1,11 +1,12 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Settings;
-using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Features.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings.OpenScreenshotsFolder;
+using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Storage;
 using System.Diagnostics;
 
 namespace CaptureTool.Application.Features.Settings.OpenScreenshotsFolder;
 
-public sealed class OpenScreenshotsFolderUseCase : IUseCase<OpenScreenshotsFolderRequest, OpenScreenshotsFolderResponse>, IConditional<OpenScreenshotsFolderRequest>
+public sealed class OpenScreenshotsFolderUseCase : IOpenScreenshotsFolderUseCase
 {
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;

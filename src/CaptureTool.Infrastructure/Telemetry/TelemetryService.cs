@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Abstractions.Logging;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Telemetry;
 using System.Runtime.CompilerServices;
 using System.Text;
 

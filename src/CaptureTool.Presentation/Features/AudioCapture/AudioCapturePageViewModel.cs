@@ -1,14 +1,13 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.AudioCapture.MuteAudioCapture;
-using CaptureTool.Application.Features.AudioCapture.PauseAudioCapture;
-using CaptureTool.Application.Features.AudioCapture.StartAudioCapture;
-using CaptureTool.Application.Features.AudioCapture.StopAudioCapture;
-using CaptureTool.Application.Features.AudioCapture.ToggleLocalAudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.MuteAudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.PauseAudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.StartAudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.StopAudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.ToggleLocalAudioCapture;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.ViewModels;
 using CaptureTool.Presentation.Shared.Commands;
+using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.AudioCapture;
@@ -55,11 +54,11 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
 
     public AudioCapturePageViewModel(
         IAudioCaptureHandler audioCaptureHandler,
-        StartAudioCaptureUseCase startAction,
-        StopAudioCaptureUseCase stopAction,
-        PauseAudioCaptureUseCase pauseAction,
-        MuteAudioCaptureUseCase muteAction,
-        ToggleLocalAudioCaptureUseCase toggleDesktopAudioAction,
+        IStartAudioCaptureUseCase startAction,
+        IStopAudioCaptureUseCase stopAction,
+        IPauseAudioCaptureUseCase pauseAction,
+        IMuteAudioCaptureUseCase muteAction,
+        IToggleLocalAudioCaptureUseCase toggleDesktopAudioAction,
         ITelemetryService telemetryService)
     {
         _audioCaptureHandler = audioCaptureHandler;

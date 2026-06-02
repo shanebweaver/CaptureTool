@@ -1,10 +1,11 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Store;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
+using CaptureTool.Application.Abstractions.Features.Store;
+using CaptureTool.Application.Abstractions.Features.Store.PurchaseChromaKeyAddOn;
+using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Windowing;
 
 namespace CaptureTool.Application.Features.Store.PurchaseChromaKeyAddOn;
 
-public sealed class PurchaseChromaKeyAddOnUseCase : IUseCase<PurchaseChromaKeyAddOnRequest, PurchaseChromaKeyAddOnResponse>, IConditional<PurchaseChromaKeyAddOnRequest>
+public sealed class PurchaseChromaKeyAddOnUseCase : IPurchaseChromaKeyAddOnUseCase
 {
     private readonly IStoreService _storeService;
     private readonly IWindowHandleProvider _windowingService;

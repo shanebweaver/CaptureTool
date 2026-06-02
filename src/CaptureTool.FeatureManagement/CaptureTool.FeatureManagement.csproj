@@ -12,7 +12,6 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Abstractions\CaptureTool.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement.Generators\CaptureTool.FeatureManagement.Generators.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />

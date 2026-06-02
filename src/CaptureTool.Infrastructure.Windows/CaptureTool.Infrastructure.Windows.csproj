@@ -17,7 +17,7 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Abstractions\CaptureTool.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

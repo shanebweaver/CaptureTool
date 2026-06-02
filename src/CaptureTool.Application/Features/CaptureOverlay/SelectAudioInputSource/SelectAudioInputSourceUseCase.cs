@@ -1,9 +1,9 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Audio;
+using CaptureTool.Application.Abstractions.Audio;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.SelectAudioInputSource;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.SelectAudioInputSource;
 
-public sealed class SelectAudioInputSourceUseCase : IUseCase<SelectAudioInputSourceRequest, SelectAudioInputSourceResponse>
+public sealed class SelectAudioInputSourceUseCase : ISelectAudioInputSourceUseCase
 {
     private readonly IAudioInputDetectionService _audioInputDetectionService;
 

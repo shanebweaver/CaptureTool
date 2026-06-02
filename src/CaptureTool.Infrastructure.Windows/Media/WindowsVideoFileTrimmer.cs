@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Media;
+using CaptureTool.Application.Abstractions.Media;
 using System.Runtime.InteropServices;
 using Windows.Media.Editing;
 using Windows.Media.Transcoding;

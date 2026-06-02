@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Logging;
-using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Features.Settings.ClearTempFiles;
+using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Storage;
 
 namespace CaptureTool.Application.Features.Settings.ClearTempFiles;
 
-public sealed class ClearTempFilesUseCase : IUseCase<ClearTempFilesRequest, ClearTempFilesResponse>, IConditional<ClearTempFilesRequest>
+public sealed class ClearTempFilesUseCase : IClearTempFilesUseCase
 {
     private readonly ILogService _logService;
     private readonly IStorageService _storageService;

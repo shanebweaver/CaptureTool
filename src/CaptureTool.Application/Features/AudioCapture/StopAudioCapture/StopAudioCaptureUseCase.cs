@@ -1,9 +1,9 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.StopAudioCapture;
 
 namespace CaptureTool.Application.Features.AudioCapture.StopAudioCapture;
 
-public sealed class StopAudioCaptureUseCase : IUseCase<StopAudioCaptureRequest, StopAudioCaptureResponse>
+public sealed class StopAudioCaptureUseCase : IStopAudioCaptureUseCase
 {
     private readonly IAudioCaptureHandler _audioCaptureHandler;
 

@@ -1,9 +1,9 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.ToggleVideoCaptureDesktopAudio;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.ToggleVideoCaptureDesktopAudio;
 
-public sealed class ToggleVideoCaptureDesktopAudioUseCase : IUseCase<ToggleVideoCaptureDesktopAudioRequest, ToggleVideoCaptureDesktopAudioResponse>
+public sealed class ToggleVideoCaptureDesktopAudioUseCase : IToggleVideoCaptureDesktopAudioUseCase
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
 

@@ -1,11 +1,12 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Settings;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
+using CaptureTool.Application.Abstractions.Features.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings.ChangeScreenshotsFolder;
+using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Windowing;
 
 namespace CaptureTool.Application.Features.Settings.ChangeScreenshotsFolder;
 
-public sealed class ChangeScreenshotsFolderUseCase : IUseCase<ChangeScreenshotsFolderRequest, ChangeScreenshotsFolderResponse>, IConditional<ChangeScreenshotsFolderRequest>
+public sealed class ChangeScreenshotsFolderUseCase : IChangeScreenshotsFolderUseCase
 {
     private readonly IWindowHandleProvider _windowing;
     private readonly IFilePickerService _picker;

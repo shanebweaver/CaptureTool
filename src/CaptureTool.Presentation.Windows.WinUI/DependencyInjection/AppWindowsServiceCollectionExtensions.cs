@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Abstractions.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Windowing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Presentation.Windows.WinUI.DependencyInjection;

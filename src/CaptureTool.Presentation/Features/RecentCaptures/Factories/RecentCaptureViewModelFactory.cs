@@ -1,5 +1,5 @@
 using CaptureTool.Application.Abstractions.Files;
-using CaptureTool.Infrastructure.Abstractions.Factories;
+using CaptureTool.Presentation.Factories;
 
 namespace CaptureTool.Presentation.Features.RecentCaptures.Factories;
 

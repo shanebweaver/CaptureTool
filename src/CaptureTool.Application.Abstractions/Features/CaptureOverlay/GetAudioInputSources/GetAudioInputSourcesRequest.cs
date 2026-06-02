@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Abstractions.Features.CaptureOverlay.GetAudioInputSources;
+
+public sealed record GetAudioInputSourcesRequest;

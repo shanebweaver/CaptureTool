@@ -1,9 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateVideoCaptureDefaultLocalAudio;
+using CaptureTool.Application.Abstractions.Settings;
 
 namespace CaptureTool.Application.Features.Settings.UpdateVideoCaptureDefaultLocalAudio;
 
-public sealed class UpdateVideoCaptureDefaultLocalAudioUseCase : IUseCase<UpdateVideoCaptureDefaultLocalAudioRequest, UpdateVideoCaptureDefaultLocalAudioResponse>, IConditional<UpdateVideoCaptureDefaultLocalAudioRequest>
+public sealed class UpdateVideoCaptureDefaultLocalAudioUseCase : IUpdateVideoCaptureDefaultLocalAudioUseCase
 {
     private readonly ISettingsService _settingsService;
 

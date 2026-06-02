@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.Store.OpenStorePage;
 
-public sealed class OpenStorePageUseCase : IUseCase<OpenStorePageRequest, OpenStorePageResponse>
+public sealed class OpenStorePageUseCase : IOpenStorePageUseCase
 {
     private readonly INavigationService _navigationService;
 

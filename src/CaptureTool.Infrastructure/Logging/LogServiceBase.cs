@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Logging;
 using System.Text;
 
 namespace CaptureTool.Infrastructure.Logging;

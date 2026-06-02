@@ -1,18 +1,18 @@
-using CaptureTool.Application.Features.Store;
+using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Features;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Share;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture.Abstractions.Files;
 using CaptureTool.Domain.Edit.Abstractions;
 using CaptureTool.Domain.Edit.Abstractions.ChromaKey;
 using CaptureTool.Domain.Edit.Abstractions.Drawable;
 using CaptureTool.Domain.Edit.Abstractions.Operations;
-using CaptureTool.FeatureManagement;
-using CaptureTool.Infrastructure.Abstractions.Cancellation;
-using CaptureTool.Infrastructure.Abstractions.Localization;
-using CaptureTool.Infrastructure.Abstractions.Share;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Store;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Drawing;
@@ -49,7 +49,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageCanvasExporter _imageCanvasExporter;
     private readonly IChromaKeyService _chromaKeyService;
     private readonly IFilePickerService _filePickerService;
-    private readonly IFeatureManager _featureManager;
+    private readonly IFeatureAvailabilityService _featureAvailability;
     private readonly IShareService _shareService;
     private readonly ITelemetryService _telemetryService;
 
@@ -270,7 +270,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageCanvasExporter imageCanvasExporter,
         IFilePickerService filePickerService,
         IChromaKeyService chromaKeyService,
-        IFeatureManager featureManager,
+        IFeatureAvailabilityService featureAvailability,
         IShareService shareService)
     {
         _localizationService = localizationService;
@@ -280,7 +280,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _imageCanvasPrinter = imageCanvasPrinter;
         _chromaKeyService = chromaKeyService;
         _filePickerService = filePickerService;
-        _featureManager = featureManager;
+        _featureAvailability = featureAvailability;
         _shareService = shareService;
         _imageCanvasExporter = imageCanvasExporter;
         _telemetryService = telemetryService;
@@ -319,7 +319,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         FlipVerticalCommand = new RelayCommand(() => Flip(FlipDirection.Vertical));
         PrintCommand = new AsyncRelayCommand(PrintAsync);
         ShareCommand = new AsyncRelayCommand(ShareAsync);
-        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, (c) => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_ChromaKey));
+        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, (c) => _featureAvailability.IsImageEditChromaKeyEnabled);
         UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
         UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
         UpdateShowChromaKeyOptionsCommand = new RelayCommand<bool>(UpdateShowChromaKeyOptions);
@@ -353,7 +353,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             _imageDrawable = new(topLeft, imageFile, ImageSize);
             _drawables.Add(_imageDrawable);
 
-            if (_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_ChromaKey))
+            if (_featureAvailability.IsImageEditChromaKeyEnabled)
             {
                 bool isChromaKeyAddOnOwned = true; //await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
                 IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
@@ -723,7 +723,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateChromaKeyColor(Color color)
     {
-        if (!_featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_ChromaKey))
+        if (!_featureAvailability.IsImageEditChromaKeyEnabled)
         {
             return;
         }

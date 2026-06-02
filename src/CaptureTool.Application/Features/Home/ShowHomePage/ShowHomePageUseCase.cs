@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.Home.ShowHomePage;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.Home.ShowHomePage;
 
-public sealed class ShowHomePageUseCase : IUseCase<ShowHomePageRequest, ShowHomePageResponse>
+public sealed class ShowHomePageUseCase : IShowHomePageUseCase
 {
     private readonly INavigationService _navigationService;
 

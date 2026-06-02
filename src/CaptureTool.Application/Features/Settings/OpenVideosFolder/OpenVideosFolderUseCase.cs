@@ -1,11 +1,12 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Settings;
-using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Features.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings.OpenVideosFolder;
+using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Storage;
 using System.Diagnostics;
 
 namespace CaptureTool.Application.Features.Settings.OpenVideosFolder;
 
-public sealed class OpenVideosFolderUseCase : IUseCase<OpenVideosFolderRequest, OpenVideosFolderResponse>, IConditional<OpenVideosFolderRequest>
+public sealed class OpenVideosFolderUseCase : IOpenVideosFolderUseCase
 {
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;

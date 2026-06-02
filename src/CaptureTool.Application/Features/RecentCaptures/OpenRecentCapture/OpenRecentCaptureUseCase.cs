@@ -1,24 +1,24 @@
+using CaptureTool.Application.Abstractions.Features.AudioEdit.OpenAudioEditPage;
+using CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
+using CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Files;
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.AudioEdit.OpenAudioEditPage;
-using CaptureTool.Application.Features.ImageEdit.OpenImageEditPage;
-using CaptureTool.Application.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Domain.Capture.Abstractions;
 
 namespace CaptureTool.Application.Features.RecentCaptures.OpenRecentCapture;
 
-public sealed class OpenRecentCaptureUseCase : IUseCase<OpenRecentCaptureRequest, OpenRecentCaptureResponse>, IConditional<OpenRecentCaptureRequest>
+public sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
 {
     private readonly IFileTypeDetector _fileTypeDetector;
-    private readonly OpenAudioEditPageUseCase _goToAudioEdit;
-    private readonly OpenImageEditPageUseCase _goToImageEdit;
-    private readonly OpenVideoEditPageUseCase _goToVideoEdit;
+    private readonly IOpenAudioEditPageUseCase _goToAudioEdit;
+    private readonly IOpenImageEditPageUseCase _goToImageEdit;
+    private readonly IOpenVideoEditPageUseCase _goToVideoEdit;
 
     public OpenRecentCaptureUseCase(
         IFileTypeDetector fileTypeDetector,
-        OpenAudioEditPageUseCase goToAudioEdit,
-        OpenImageEditPageUseCase goToImageEdit,
-        OpenVideoEditPageUseCase goToVideoEdit)
+        IOpenAudioEditPageUseCase goToAudioEdit,
+        IOpenImageEditPageUseCase goToImageEdit,
+        IOpenVideoEditPageUseCase goToVideoEdit)
     {
         _fileTypeDetector = fileTypeDetector;
         _goToAudioEdit = goToAudioEdit;

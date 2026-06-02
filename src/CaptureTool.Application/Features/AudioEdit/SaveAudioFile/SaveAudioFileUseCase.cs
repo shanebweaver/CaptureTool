@@ -1,10 +1,11 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
+using CaptureTool.Application.Abstractions.Features.AudioEdit.SaveAudioFile;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Windowing;
+using CaptureTool.Domain.Capture.Abstractions.Files;
 
 namespace CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
 
-public sealed class SaveAudioFileUseCase : IUseCase<SaveAudioFileRequest, SaveAudioFileResponse>, IConditional<SaveAudioFileRequest>
+public sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
 {
     private readonly IFilePickerService _filePickerService;
     private readonly IWindowHandleProvider _windowingService;

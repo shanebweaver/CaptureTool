@@ -1,9 +1,9 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.Features.Settings.RestartSettingsApplication;
+using CaptureTool.Application.Abstractions.Shutdown;
 
 namespace CaptureTool.Application.Features.Settings.RestartSettingsApplication;
 
-public sealed class RestartSettingsApplicationUseCase : IUseCase<RestartSettingsApplicationRequest, RestartSettingsApplicationResponse>, IConditional<RestartSettingsApplicationRequest>
+public sealed class RestartSettingsApplicationUseCase : IRestartSettingsApplicationUseCase
 {
     private readonly IShutdownHandler _shutdownHandler;
 

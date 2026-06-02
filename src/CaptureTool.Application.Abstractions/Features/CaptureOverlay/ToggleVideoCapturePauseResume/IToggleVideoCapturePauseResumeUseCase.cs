@@ -1,0 +1,7 @@
+using CaptureTool.Application.Abstractions.UseCases;
+
+namespace CaptureTool.Application.Abstractions.Features.CaptureOverlay.ToggleVideoCapturePauseResume;
+
+public interface IToggleVideoCapturePauseResumeUseCase : IUseCase<ToggleVideoCapturePauseResumeRequest, ToggleVideoCapturePauseResumeResponse>, IConditional<ToggleVideoCapturePauseResumeRequest>
+{
+}

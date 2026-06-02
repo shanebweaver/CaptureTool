@@ -1,9 +1,9 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Features.Diagnostics.GetCurrentLogs;
+using CaptureTool.Application.Abstractions.Logging;
 
 namespace CaptureTool.Application.Features.Diagnostics.GetCurrentLogs;
 
-public sealed class GetCurrentLogsUseCase : IUseCase<GetCurrentLogsRequest, GetCurrentLogsResponse>
+public sealed class GetCurrentLogsUseCase : IGetCurrentLogsUseCase
 {
     private readonly ILogService _logService;
 

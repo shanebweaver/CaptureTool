@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Features.Settings.OpenTempFolder;
+using CaptureTool.Application.Abstractions.Storage;
 using System.Diagnostics;
 
 namespace CaptureTool.Application.Features.Settings.OpenTempFolder;
 
-public sealed class OpenTempFolderUseCase : IUseCase<OpenTempFolderRequest, OpenTempFolderResponse>, IConditional<OpenTempFolderRequest>
+public sealed class OpenTempFolderUseCase : IOpenTempFolderUseCase
 {
     private readonly IStorageService _storageService;
 

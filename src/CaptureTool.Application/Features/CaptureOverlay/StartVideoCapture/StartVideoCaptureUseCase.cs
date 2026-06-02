@@ -1,11 +1,11 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StartVideoCapture;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.StartVideoCapture;
 
-public sealed class StartVideoCaptureUseCase : IUseCase<StartVideoCaptureRequest, StartVideoCaptureResponse>, IConditional<StartVideoCaptureRequest>
+public sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
 {
     private readonly INavigationService _navigationService;
     private readonly IVideoCaptureHandler _videoCaptureHandler;

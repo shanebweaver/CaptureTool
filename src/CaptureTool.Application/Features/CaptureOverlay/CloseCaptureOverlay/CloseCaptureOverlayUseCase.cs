@@ -1,20 +1,20 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Application.Features.Windowing.ShowMainWindow;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.CloseCaptureOverlay;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.CloseCaptureOverlay;
 
-public sealed class CloseCaptureOverlayUseCase : IUseCase<CloseCaptureOverlayRequest, CloseCaptureOverlayResponse>, IConditional<CloseCaptureOverlayRequest>
+public sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
 {
     private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly ShowMainWindowUseCase _showMainWindow;
+    private readonly IShowMainWindowUseCase _showMainWindow;
     private readonly INavigationService _navigationService;
 
     public CloseCaptureOverlayUseCase(
         IVideoCaptureHandler videoCaptureHandler,
-        ShowMainWindowUseCase showMainWindow,
+        IShowMainWindowUseCase showMainWindow,
         INavigationService navigationService)
     {
         _videoCaptureHandler = videoCaptureHandler;

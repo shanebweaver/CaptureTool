@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Localization;
 
 namespace CaptureTool.Infrastructure.Windows.Localization;
 

@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Localization;
 using System.Diagnostics;
 using System.Globalization;
 using Windows.ApplicationModel.Resources;

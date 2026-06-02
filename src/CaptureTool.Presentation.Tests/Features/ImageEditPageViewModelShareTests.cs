@@ -1,15 +1,15 @@
+using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Features;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Share;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.Capture.Abstractions;
 using CaptureTool.Domain.Edit.Abstractions;
 using CaptureTool.Domain.Edit.Abstractions.ChromaKey;
 using CaptureTool.Domain.Edit.Abstractions.Drawable;
-using CaptureTool.FeatureManagement;
-using CaptureTool.Infrastructure.Abstractions.Cancellation;
-using CaptureTool.Infrastructure.Abstractions.Localization;
-using CaptureTool.Infrastructure.Abstractions.Share;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Store;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
 using CaptureTool.Presentation.Features.ImageEdit;
 using Moq;
 using System.Drawing;
@@ -32,7 +32,7 @@ public sealed class ImageEditPageViewModelShareTests
         var exporter = new Mock<IImageCanvasExporter>();
         var filePicker = new Mock<IFilePickerService>();
         var chromaKeyService = Mock.Of<IChromaKeyService>();
-        var featureManager = new Mock<IFeatureManager>();
+        var featureAvailability = new Mock<IFeatureAvailabilityService>();
         var shareService = new Mock<IShareService>();
 
         const nint hwnd = 123;
@@ -50,8 +50,8 @@ public sealed class ImageEditPageViewModelShareTests
             .Setup(service => service.GetLinkedCancellationTokenSource(It.IsAny<CancellationToken>()))
             .Returns(linkedCts);
 
-        featureManager
-            .Setup(manager => manager.IsEnabled(AppFeatures.Feature_ImageEdit_ChromaKey))
+        featureAvailability
+            .Setup(service => service.IsImageEditChromaKeyEnabled)
             .Returns(false);
 
         filePicker
@@ -78,7 +78,7 @@ public sealed class ImageEditPageViewModelShareTests
             exporter.Object,
             filePicker.Object,
             chromaKeyService,
-            featureManager.Object,
+            featureAvailability.Object,
             shareService.Object);
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);

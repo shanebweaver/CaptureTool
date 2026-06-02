@@ -1,10 +1,12 @@
+using CaptureTool.Application.Abstractions.Features.AppMenu.OpenFile;
+using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Files;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Application.Features.AppMenu.OpenFile;
-using CaptureTool.Application.Features.Navigation;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
+using CaptureTool.Domain.Capture.Abstractions.Files;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;

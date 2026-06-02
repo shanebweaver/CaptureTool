@@ -1,28 +1,27 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Settings;
-using CaptureTool.Application.Features.Settings.ChangeScreenshotsFolder;
-using CaptureTool.Application.Features.Settings.ChangeVideosFolder;
-using CaptureTool.Application.Features.Settings.ClearTempFiles;
-using CaptureTool.Application.Features.Settings.LeaveSettingsPage;
-using CaptureTool.Application.Features.Settings.OpenScreenshotsFolder;
-using CaptureTool.Application.Features.Settings.OpenTempFolder;
-using CaptureTool.Application.Features.Settings.OpenVideosFolder;
-using CaptureTool.Application.Features.Settings.RestartSettingsApplication;
-using CaptureTool.Application.Features.Settings.RestoreDefaults;
-using CaptureTool.Application.Features.Settings.UpdateAppLanguage;
-using CaptureTool.Application.Features.Settings.UpdateAppTheme;
-using CaptureTool.Application.Features.Settings.UpdateImageAutoCopy;
-using CaptureTool.Application.Features.Settings.UpdateImageAutoSave;
-using CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoCopy;
-using CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoSave;
-using CaptureTool.Application.Features.Settings.UpdateVideoCaptureDefaultLocalAudio;
-using CaptureTool.Infrastructure.Abstractions.Factories;
-using CaptureTool.Infrastructure.Abstractions.Localization;
-using CaptureTool.Infrastructure.Abstractions.Settings;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.Abstractions.Themes;
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Application.Abstractions.Features.Settings;
+using CaptureTool.Application.Abstractions.Features.Settings.ChangeScreenshotsFolder;
+using CaptureTool.Application.Abstractions.Features.Settings.ChangeVideosFolder;
+using CaptureTool.Application.Abstractions.Features.Settings.ClearTempFiles;
+using CaptureTool.Application.Abstractions.Features.Settings.LeaveSettingsPage;
+using CaptureTool.Application.Abstractions.Features.Settings.OpenScreenshotsFolder;
+using CaptureTool.Application.Abstractions.Features.Settings.OpenTempFolder;
+using CaptureTool.Application.Abstractions.Features.Settings.OpenVideosFolder;
+using CaptureTool.Application.Abstractions.Features.Settings.RestartSettingsApplication;
+using CaptureTool.Application.Abstractions.Features.Settings.RestoreDefaults;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppLanguage;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppTheme;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateImageAutoCopy;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateImageAutoSave;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateVideoCaptureAutoCopy;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateVideoCaptureAutoSave;
+using CaptureTool.Application.Abstractions.Features.Settings.UpdateVideoCaptureDefaultLocalAudio;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Presentation.Factories;
+using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 
@@ -30,22 +29,22 @@ namespace CaptureTool.Presentation.Features.Settings;
 
 public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 {
-    private readonly LeaveSettingsPageUseCase _goBackAction;
-    private readonly RestartSettingsApplicationUseCase _restartAppAction;
-    private readonly UpdateImageAutoCopyUseCase _updateImageAutoCopyAction;
-    private readonly UpdateImageAutoSaveUseCase _updateImageAutoSaveAction;
-    private readonly UpdateVideoCaptureAutoCopyUseCase _updateVideoCaptureAutoCopyAction;
-    private readonly UpdateVideoCaptureAutoSaveUseCase _updateVideoCaptureAutoSaveAction;
-    private readonly UpdateVideoCaptureDefaultLocalAudioUseCase _updateVideoCaptureDefaultLocalAudioAction;
-    private readonly UpdateAppLanguageUseCase _updateAppLanguageAction;
-    private readonly UpdateAppThemeUseCase _updateAppThemeAction;
-    private readonly ChangeScreenshotsFolderUseCase _changeScreenshotsFolderAction;
-    private readonly OpenScreenshotsFolderUseCase _openScreenshotsFolderAction;
-    private readonly ChangeVideosFolderUseCase _changeVideosFolderAction;
-    private readonly OpenVideosFolderUseCase _openVideosFolderAction;
-    private readonly OpenTempFolderUseCase _openTempFolderAction;
-    private readonly ClearTempFilesUseCase _clearTempFilesAction;
-    private readonly RestoreDefaultsUseCase _restoreDefaultsAction;
+    private readonly ILeaveSettingsPageUseCase _goBackAction;
+    private readonly IRestartSettingsApplicationUseCase _restartAppAction;
+    private readonly IUpdateImageAutoCopyUseCase _updateImageAutoCopyAction;
+    private readonly IUpdateImageAutoSaveUseCase _updateImageAutoSaveAction;
+    private readonly IUpdateVideoCaptureAutoCopyUseCase _updateVideoCaptureAutoCopyAction;
+    private readonly IUpdateVideoCaptureAutoSaveUseCase _updateVideoCaptureAutoSaveAction;
+    private readonly IUpdateVideoCaptureDefaultLocalAudioUseCase _updateVideoCaptureDefaultLocalAudioAction;
+    private readonly IUpdateAppLanguageUseCase _updateAppLanguageAction;
+    private readonly IUpdateAppThemeUseCase _updateAppThemeAction;
+    private readonly IChangeScreenshotsFolderUseCase _changeScreenshotsFolderAction;
+    private readonly IOpenScreenshotsFolderUseCase _openScreenshotsFolderAction;
+    private readonly IChangeVideosFolderUseCase _changeVideosFolderAction;
+    private readonly IOpenVideosFolderUseCase _openVideosFolderAction;
+    private readonly IOpenTempFolderUseCase _openTempFolderAction;
+    private readonly IClearTempFilesUseCase _clearTempFilesAction;
+    private readonly IRestoreDefaultsUseCase _restoreDefaultsAction;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
@@ -175,22 +174,22 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     }
 
     public SettingsPageViewModel(
-        LeaveSettingsPageUseCase goBackAction,
-        RestartSettingsApplicationUseCase restartAppAction,
-        UpdateImageAutoCopyUseCase updateImageAutoCopyAction,
-        UpdateImageAutoSaveUseCase updateImageAutoSaveAction,
-        UpdateVideoCaptureAutoCopyUseCase updateVideoCaptureAutoCopyAction,
-        UpdateVideoCaptureAutoSaveUseCase updateVideoCaptureAutoSaveAction,
-        UpdateVideoCaptureDefaultLocalAudioUseCase updateVideoCaptureDefaultLocalAudioAction,
-        UpdateAppLanguageUseCase updateAppLanguageAction,
-        UpdateAppThemeUseCase updateAppThemeAction,
-        ChangeScreenshotsFolderUseCase changeScreenshotsFolderAction,
-        OpenScreenshotsFolderUseCase openScreenshotsFolderAction,
-        ChangeVideosFolderUseCase changeVideosFolderAction,
-        OpenVideosFolderUseCase openVideosFolderAction,
-        OpenTempFolderUseCase openTempFolderAction,
-        ClearTempFilesUseCase clearTempFilesAction,
-        RestoreDefaultsUseCase restoreDefaultsAction,
+        ILeaveSettingsPageUseCase goBackAction,
+        IRestartSettingsApplicationUseCase restartAppAction,
+        IUpdateImageAutoCopyUseCase updateImageAutoCopyAction,
+        IUpdateImageAutoSaveUseCase updateImageAutoSaveAction,
+        IUpdateVideoCaptureAutoCopyUseCase updateVideoCaptureAutoCopyAction,
+        IUpdateVideoCaptureAutoSaveUseCase updateVideoCaptureAutoSaveAction,
+        IUpdateVideoCaptureDefaultLocalAudioUseCase updateVideoCaptureDefaultLocalAudioAction,
+        IUpdateAppLanguageUseCase updateAppLanguageAction,
+        IUpdateAppThemeUseCase updateAppThemeAction,
+        IChangeScreenshotsFolderUseCase changeScreenshotsFolderAction,
+        IOpenScreenshotsFolderUseCase openScreenshotsFolderAction,
+        IChangeVideosFolderUseCase changeVideosFolderAction,
+        IOpenVideosFolderUseCase openVideosFolderAction,
+        IOpenTempFolderUseCase openTempFolderAction,
+        IClearTempFilesUseCase clearTempFilesAction,
+        IRestoreDefaultsUseCase restoreDefaultsAction,
         ILocalizationService localizationService,
         IThemeService themeService,
         ISettingsService settingsService,

@@ -1,3 +1,0 @@
-namespace CaptureTool.Application.Features.Settings.RestartSettingsApplication;
-
-public sealed record RestartSettingsApplicationResponse;

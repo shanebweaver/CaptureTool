@@ -1,9 +1,9 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
+using CaptureTool.Application.Abstractions.Shutdown;
 
 namespace CaptureTool.Application.Features.AppMenu.ExitApplication;
 
-public sealed class ExitApplicationUseCase : IUseCase<ExitApplicationRequest, ExitApplicationResponse>, IConditional<ExitApplicationRequest>
+public sealed class ExitApplicationUseCase : IExitApplicationUseCase
 {
     private readonly IShutdownHandler _shutdownHandler;
 

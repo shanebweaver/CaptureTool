@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Features.Settings.OpenSettingsPage;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.Settings.OpenSettingsPage;
 
-public sealed class OpenSettingsPageUseCase : IUseCase<OpenSettingsPageRequest, OpenSettingsPageResponse>, IConditional<OpenSettingsPageRequest>
+public sealed class OpenSettingsPageUseCase : IOpenSettingsPageUseCase
 {
     private readonly INavigationService _navigationService;
 

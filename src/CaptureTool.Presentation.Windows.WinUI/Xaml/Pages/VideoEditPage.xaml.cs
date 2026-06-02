@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Abstractions.Media;
-using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Media;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Presentation.Features.VideoEdit;
 using Microsoft.UI.Xaml;
 using System.ComponentModel;

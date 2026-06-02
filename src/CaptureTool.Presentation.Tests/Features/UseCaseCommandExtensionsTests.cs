@@ -1,5 +1,5 @@
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
 using CaptureTool.Presentation.Shared.Commands;
 using Moq;
 

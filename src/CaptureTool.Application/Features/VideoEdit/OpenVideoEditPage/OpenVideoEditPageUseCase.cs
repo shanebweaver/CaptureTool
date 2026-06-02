@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.VideoEdit.OpenVideoEditPage;
 
-public sealed class OpenVideoEditPageUseCase : IUseCase<OpenVideoEditPageRequest, OpenVideoEditPageResponse>
+public sealed class OpenVideoEditPageUseCase : IOpenVideoEditPageUseCase
 {
     private readonly INavigationService _navigationService;
 

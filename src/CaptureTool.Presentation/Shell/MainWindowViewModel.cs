@@ -1,6 +1,6 @@
-using CaptureTool.Infrastructure.Abstractions.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Themes;
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Presentation.ViewModels;
 
 namespace CaptureTool.Presentation.Shell;
 

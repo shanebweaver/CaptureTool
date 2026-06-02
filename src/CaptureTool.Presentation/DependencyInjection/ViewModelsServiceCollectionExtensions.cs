@@ -1,7 +1,7 @@
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Abstractions.Factories;
-using CaptureTool.Infrastructure.Abstractions.Localization;
-using CaptureTool.Infrastructure.Abstractions.Themes;
+using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.Features.About;
 using CaptureTool.Presentation.Features.AudioCapture;
 using CaptureTool.Presentation.Features.AudioEdit;
@@ -18,7 +18,6 @@ using CaptureTool.Presentation.Features.Settings.Factories;
 using CaptureTool.Presentation.Features.Store;
 using CaptureTool.Presentation.Features.VideoEdit;
 using CaptureTool.Presentation.Shell;
-
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Presentation.DependencyInjection;
