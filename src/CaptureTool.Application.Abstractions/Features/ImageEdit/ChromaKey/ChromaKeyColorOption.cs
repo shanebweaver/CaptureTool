@@ -1,6 +1,6 @@
-﻿using System.Drawing;
+using System.Drawing;
 
-namespace CaptureTool.Domain.Edit.ChromaKey;
+namespace CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 
 public sealed partial class ChromaKeyColorOption
 {

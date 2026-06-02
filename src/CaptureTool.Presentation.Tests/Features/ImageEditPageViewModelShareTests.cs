@@ -1,6 +1,8 @@
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Features;
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
+using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
@@ -8,7 +10,6 @@ using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Edit;
-using CaptureTool.Domain.Edit.ChromaKey;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Presentation.Features.ImageEdit;
 using Moq;

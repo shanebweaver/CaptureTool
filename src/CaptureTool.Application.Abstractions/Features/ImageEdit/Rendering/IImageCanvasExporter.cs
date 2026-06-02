@@ -1,6 +1,6 @@
-﻿using CaptureTool.Domain.Edit.Drawable;
+using CaptureTool.Domain.Edit.Drawable;
 
-namespace CaptureTool.Domain.Edit;
+namespace CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 
 public interface IImageCanvasExporter
 {

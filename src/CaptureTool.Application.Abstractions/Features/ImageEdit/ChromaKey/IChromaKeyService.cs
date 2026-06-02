@@ -1,7 +1,7 @@
 using CaptureTool.Domain.Capture.Files;
 using System.Drawing;
 
-namespace CaptureTool.Domain.Edit.ChromaKey;
+namespace CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 
 public partial interface IChromaKeyService
 {

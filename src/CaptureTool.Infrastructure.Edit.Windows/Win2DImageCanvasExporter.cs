@@ -1,5 +1,5 @@
 using CaptureTool.Application.Abstractions.Clipboard;
-using CaptureTool.Domain.Edit;
+using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Domain.Edit.Drawable;
 using Microsoft.Graphics.Canvas;
 using Windows.Storage;

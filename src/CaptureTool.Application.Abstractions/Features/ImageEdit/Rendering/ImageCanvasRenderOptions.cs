@@ -1,6 +1,7 @@
-﻿using System.Drawing;
+using CaptureTool.Domain.Edit;
+using System.Drawing;
 
-namespace CaptureTool.Domain.Edit;
+namespace CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 
 public sealed partial class ImageCanvasRenderOptions
 {
