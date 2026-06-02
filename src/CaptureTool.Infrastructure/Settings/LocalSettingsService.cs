@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
-using CaptureTool.Application.Abstractions.Settings.Definitions;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Features.Settings.Definitions;
 using CaptureTool.Domain.Capture.Files;
 
 namespace CaptureTool.Infrastructure.Settings;
@@ -43,7 +43,7 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
             return
                 settingDefinition.Key != null &&
                 _settings.TryGetValue(settingDefinition.Key, out SettingDefinition? storedSetting) &&
-                storedSetting is SettingDefinition<T> tSetting
+                storedSetting is ISettingDefinitionWithValue<T> tSetting
                     ? tSetting.Value
                     : settingDefinition.Value;
         }
@@ -205,7 +205,7 @@ public partial class LocalSettingsService : ISettingsService, IDisposable
             if (settingDefinition.Key != null)
             {
                 if (_settings.TryGetValue(settingDefinition.Key, out SettingDefinition? existingSetting) &&
-                    existingSetting is SettingDefinition<T> existingSettingT &&
+                    existingSetting is ISettingDefinitionWithValue<T> existingSettingT &&
                     EqualityComparer<T>.Default.Equals(existingSettingT.Value, settingDefinition.Value))
                 {
                     // Values are the same.

@@ -34,7 +34,7 @@ public static partial class Win2DImageCanvasRenderer
         using var rotateEffect = new Transform2DEffect
         {
             Source = renderTarget,
-            TransformMatrix = ImageOrientationHelper.CalculateRenderTransform(options.CanvasSize, options.Orientation, scale)
+            TransformMatrix = ImageRenderTransformHelper.CalculateRenderTransform(options.CanvasSize, options.Orientation, scale)
         };
 
         // Crop

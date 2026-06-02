@@ -809,8 +809,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         try
         {
             ImageOrientation oldOrientation = Orientation;
-            ImageOrientation newOrientation = ImageOrientationHelper.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
-            Rectangle newCropRect = ImageOrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
+            ImageOrientation newOrientation = ImageOrientationGeometry.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
+            Rectangle newCropRect = ImageOrientationGeometry.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
 
             CropRect = newCropRect;
             Orientation = newOrientation;
@@ -832,9 +832,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         try
         {
             ImageOrientation oldOrientation = Orientation;
-            ImageOrientation newOrientation = ImageOrientationHelper.GetFlippedOrientation(Orientation, flipDirection);
-            Size imageSize = ImageOrientationHelper.GetOrientedImageSize(ImageSize, Orientation);
-            Rectangle newCropRect = ImageOrientationHelper.GetFlippedCropRect(CropRect, imageSize, flipDirection);
+            ImageOrientation newOrientation = ImageOrientationGeometry.GetFlippedOrientation(Orientation, flipDirection);
+            Size imageSize = ImageOrientationGeometry.GetOrientedImageSize(ImageSize, Orientation);
+            Rectangle newCropRect = ImageOrientationGeometry.GetFlippedCropRect(CropRect, imageSize, flipDirection);
 
             CropRect = newCropRect;
             Orientation = newOrientation;
@@ -912,7 +912,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void UpdateOrientation(ImageOrientation newOrientation)
     {
         ImageOrientation oldOrientation = Orientation;
-        Rectangle newCropRect = ImageOrientationHelper.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
+        Rectangle newCropRect = ImageOrientationGeometry.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
         CropRect = newCropRect;
         Orientation = newOrientation;
         MirroredDisplayName = GetMirroredDisplayName(newOrientation);

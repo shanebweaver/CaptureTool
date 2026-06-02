@@ -5,5 +5,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.Application\CaptureTool.Application.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" />
   </ItemGroup>
 </Project>

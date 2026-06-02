@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Features.Diagnostics.UpdateLoggingState;
-using CaptureTool.Application.Abstractions.Features.Settings;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Features.Settings;
 
 namespace CaptureTool.Application.Features.Diagnostics.UpdateLoggingState;
 

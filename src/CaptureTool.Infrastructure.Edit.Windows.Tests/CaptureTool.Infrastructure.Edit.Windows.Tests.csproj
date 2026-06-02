@@ -10,8 +10,7 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Capture.Windows\CaptureTool.Infrastructure.Capture.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture\CaptureTool.Domain.Capture.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Edit.Windows\CaptureTool.Infrastructure.Edit.Windows.csproj" />
   </ItemGroup>
 
   <!-- Package references -->

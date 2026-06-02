@@ -598,7 +598,7 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         var cropRect = GetRenderCropRect();
         var orientedPoint = new Vector2((float)(point.X + cropRect.X), (float)(point.Y + cropRect.Y));
-        Matrix3x2 transform = ImageOrientationHelper.CalculateRenderTransform(CanvasSize, Orientation);
+        Matrix3x2 transform = ImageRenderTransformHelper.CalculateRenderTransform(CanvasSize, Orientation);
 
         return Matrix3x2.Invert(transform, out Matrix3x2 inverseTransform)
             ? Vector2.Transform(orientedPoint, inverseTransform)
@@ -608,7 +608,7 @@ public sealed partial class ImageCanvas : UserControlBase
     private Point CanvasPointToDisplayPoint(Vector2 point)
     {
         var cropRect = GetRenderCropRect();
-        Matrix3x2 transform = ImageOrientationHelper.CalculateRenderTransform(CanvasSize, Orientation);
+        Matrix3x2 transform = ImageRenderTransformHelper.CalculateRenderTransform(CanvasSize, Orientation);
         Vector2 orientedPoint = Vector2.Transform(point, transform);
 
         return new Point(orientedPoint.X - cropRect.X, orientedPoint.Y - cropRect.Y);
