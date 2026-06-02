@@ -23,7 +23,7 @@ using Microsoft.UI.Dispatching;
 
 namespace CaptureTool.Infrastructure.Windows.DependencyInjection;
 
-public static class WindowsServicesServiceCollectionExtensions
+public static class WindowsInfrastructureServiceCollectionExtensions
 {
     public static IServiceCollection AddWindowsServices(this IServiceCollection services, DispatcherQueue dispatcherQueue)
     {

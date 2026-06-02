@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Presentation.Windows.WinUI.DependencyInjection;
 
-public static class AppWindowsServiceCollectionExtensions
+public static class WindowsPresentationServiceCollectionExtensions
 {
     public static IServiceCollection AddAppWindowsServices(this IServiceCollection services)
     {

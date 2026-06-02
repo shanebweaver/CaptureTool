@@ -1,5 +1,4 @@
-﻿using CaptureTool.Domain.Edit;
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace CaptureTool.Domain.Edit.Tests;
 

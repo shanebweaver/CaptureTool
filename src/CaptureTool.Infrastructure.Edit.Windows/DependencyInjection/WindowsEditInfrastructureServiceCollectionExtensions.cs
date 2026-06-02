@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Infrastructure.Edit.Windows.DependencyInjection;
 
-public static class EditDomainsWindowsServiceCollectionExtensions
+public static class WindowsEditInfrastructureServiceCollectionExtensions
 {
     public static IServiceCollection AddWindowsEditDomains(this IServiceCollection services)
     {

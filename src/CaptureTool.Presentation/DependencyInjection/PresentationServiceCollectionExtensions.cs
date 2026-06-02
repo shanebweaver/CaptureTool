@@ -22,7 +22,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Presentation.DependencyInjection;
 
-public static class ViewModelsServiceCollectionExtensions
+public static class PresentationServiceCollectionExtensions
 {
     public static IServiceCollection AddViewModels(this IServiceCollection services)
     {

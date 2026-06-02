@@ -16,7 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Infrastructure.DependencyInjection;
 
-public static class GenericServicesServiceCollectionExtensions
+public static class InfrastructureServiceCollectionExtensions
 {
     public static IServiceCollection AddGenericServices(this IServiceCollection services)
     {

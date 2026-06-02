@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Infrastructure.Capture.Windows.DependencyInjection;
 
-public static class CaptureDomainsWindowsServiceCollectionExtensions
+public static class WindowsCaptureInfrastructureServiceCollectionExtensions
 {
     public static IServiceCollection AddWindowsCaptureDomains(this IServiceCollection services)
     {
