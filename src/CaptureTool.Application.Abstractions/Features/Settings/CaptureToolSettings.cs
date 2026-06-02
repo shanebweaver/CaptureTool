@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Settings.Definitions;
 
 namespace CaptureTool.Application.Abstractions.Features.Settings;
 
