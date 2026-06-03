@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Themes;
+using CaptureTool.Application.Abstractions.Themes;
 using Microsoft.Windows.Storage;
 using System.Diagnostics;
 

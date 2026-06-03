@@ -1,11 +1,11 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StopVideoCapture;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.StopVideoCapture;
 
-public sealed class StopVideoCaptureUseCase : IUseCase<StopVideoCaptureRequest, StopVideoCaptureResponse>, IConditional<StopVideoCaptureRequest>
+public sealed class StopVideoCaptureUseCase : IStopVideoCaptureUseCase
 {
     private readonly INavigationService _navigationService;
     private readonly IVideoCaptureHandler _videoCaptureHandler;

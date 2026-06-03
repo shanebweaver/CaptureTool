@@ -2,7 +2,7 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Presentation.ViewModels;
 using CaptureTool.Application.Abstractions.UseCases.Settings;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Telemetry;
 using Moq;
 
 namespace CaptureTool.Application.Tests.ViewModels;

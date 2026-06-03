@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.Windowing.ShowMainWindow;
 
-public sealed class ShowMainWindowUseCase : IUseCase<ShowMainWindowRequest, ShowMainWindowResponse>, IConditional<ShowMainWindowRequest>
+public sealed class ShowMainWindowUseCase : IShowMainWindowUseCase
 {
     private readonly INavigationService _navigationService;
 

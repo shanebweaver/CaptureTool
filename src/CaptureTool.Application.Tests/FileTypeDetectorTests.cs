@@ -1,5 +1,5 @@
 using CaptureTool.Application.Features.RecentCaptures;
-using CaptureTool.Domain.Capture.Abstractions;
+using CaptureTool.Domain.Capture;
 using FluentAssertions;
 
 namespace CaptureTool.Application.Tests;

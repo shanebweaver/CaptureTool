@@ -1,13 +1,10 @@
-using CaptureTool.Application.Features.VideoEdit.CopyVideoFile;
-using CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.FeatureManagement;
-using CaptureTool.Infrastructure.Abstractions.Clipboard;
-using CaptureTool.Infrastructure.Abstractions.Media;
-using CaptureTool.Infrastructure.Abstractions.Settings;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
+using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
+using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
+using CaptureTool.Application.Abstractions.Media;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Presentation.Features.VideoEdit;
 using Moq;
 
@@ -141,8 +138,8 @@ public class VideoEditPageViewModelTrimTests
     }
 
     private static VideoEditPageViewModel CreateViewModel(
-        SaveVideoFileUseCase? saveAction = null,
-        CopyVideoFileUseCase? copyAction = null)
+        ISaveVideoFileUseCase? saveAction = null,
+        ICopyVideoFileUseCase? copyAction = null)
     {
         return new(
             saveAction ?? CreateSaveUseCase(),
@@ -150,7 +147,7 @@ public class VideoEditPageViewModelTrimTests
             Mock.Of<ITelemetryService>());
     }
 
-    private static SaveVideoFileUseCase CreateSaveUseCase(
+    private static ISaveVideoFileUseCase CreateSaveUseCase(
         Mock<IVideoFileTrimmer>? trimmer = null,
         string? destinationPath = null)
     {
@@ -160,21 +157,42 @@ public class VideoEditPageViewModelTrimTests
             .Setup(service => service.PickSaveFileAsync(It.IsAny<nint>(), FilePickerType.Video, UserFolder.Videos))
             .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == destinationPath));
 
-        return new SaveVideoFileUseCase(
-            filePicker.Object,
-            Mock.Of<IWindowHandleProvider>(),
-            (trimmer ?? new Mock<IVideoFileTrimmer>()).Object);
+        var videoTrimmer = trimmer ?? new Mock<IVideoFileTrimmer>();
+        var useCase = new Mock<ISaveVideoFileUseCase>();
+        useCase
+            .Setup(service => service.ExecuteAsync(It.IsAny<SaveVideoFileRequest>(), It.IsAny<CancellationToken>()))
+            .Returns<SaveVideoFileRequest, CancellationToken>(async (request, cancellationToken) =>
+            {
+                if (request.TrimStart.HasValue && request.TrimEnd.HasValue)
+                {
+                    await videoTrimmer.Object.TrimAsync(request.VideoPath, destinationPath, request.TrimStart.Value, request.TrimEnd.Value, cancellationToken);
+                }
+                return new SaveVideoFileResponse();
+            });
+
+        return useCase.Object;
     }
 
-    private static CopyVideoFileUseCase CreateCopyUseCase(Mock<IVideoFileTrimmer>? trimmer = null)
+    private static ICopyVideoFileUseCase CreateCopyUseCase(Mock<IVideoFileTrimmer>? trimmer = null)
     {
         var storage = new Mock<IStorageService>();
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
         storage.Setup(service => service.GetTemporaryFileName()).Returns($"{Guid.NewGuid()}.tmp");
 
-        return new CopyVideoFileUseCase(
-            Mock.Of<IClipboardService>(),
-            storage.Object,
-            (trimmer ?? new Mock<IVideoFileTrimmer>()).Object);
+        var videoTrimmer = trimmer ?? new Mock<IVideoFileTrimmer>();
+        var useCase = new Mock<ICopyVideoFileUseCase>();
+        useCase
+            .Setup(service => service.ExecuteAsync(It.IsAny<CopyVideoFileRequest>(), It.IsAny<CancellationToken>()))
+            .Returns<CopyVideoFileRequest, CancellationToken>(async (request, cancellationToken) =>
+            {
+                if (request.TrimStart.HasValue && request.TrimEnd.HasValue)
+                {
+                    string destinationPath = Path.Combine(storage.Object.GetApplicationTemporaryFolderPath(), storage.Object.GetTemporaryFileName());
+                    await videoTrimmer.Object.TrimAsync(request.VideoPath, destinationPath, request.TrimStart.Value, request.TrimEnd.Value, cancellationToken);
+                }
+                return new CopyVideoFileResponse();
+            });
+
+        return useCase.Object;
     }
 }

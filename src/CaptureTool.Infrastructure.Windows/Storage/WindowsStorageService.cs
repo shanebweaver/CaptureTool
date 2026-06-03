@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Storage;
 using Microsoft.Windows.Storage;
 
 namespace CaptureTool.Infrastructure.Windows.Storage;

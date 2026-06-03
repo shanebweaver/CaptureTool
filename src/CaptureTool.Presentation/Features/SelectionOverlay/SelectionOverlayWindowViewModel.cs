@@ -1,14 +1,13 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.CaptureOverlay.OpenCaptureOverlay;
-using CaptureTool.Application.Features.ImageEdit.OpenImageEditPage;
-using CaptureTool.Application.Features.Windowing.ShowMainWindow;
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Abstractions.Factories;
-using CaptureTool.Infrastructure.Abstractions.Shutdown;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.Abstractions.Themes;
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenCaptureOverlay;
+using CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
+using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
+using CaptureTool.Application.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Presentation.Factories;
+using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Drawing;
@@ -17,9 +16,9 @@ namespace CaptureTool.Presentation.Features.SelectionOverlay;
 
 public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelBase<SelectionOverlayWindowOptions>
 {
-    private readonly OpenCaptureOverlayUseCase _openVideoCaptureOverlayCommand;
-    private readonly OpenImageEditPageUseCase _openImageEditCommand;
-    private readonly ShowMainWindowUseCase _showMainWindowCommand;
+    private readonly IOpenCaptureOverlayUseCase _openVideoCaptureOverlayCommand;
+    private readonly IOpenImageEditPageUseCase _openImageEditCommand;
+    private readonly IShowMainWindowUseCase _showMainWindowCommand;
     private readonly ITelemetryService _telemetryService;
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IImageCaptureHandler _imageCaptureHandler;
@@ -142,9 +141,9 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     }
 
     public SelectionOverlayWindowViewModel(
-        OpenImageEditPageUseCase openImageEditPageCommand,
-        OpenCaptureOverlayUseCase openVideoCaptureOverlayCommand,
-        ShowMainWindowUseCase showMainWindowCommand,
+        IOpenImageEditPageUseCase openImageEditPageCommand,
+        IOpenCaptureOverlayUseCase openVideoCaptureOverlayCommand,
+        IShowMainWindowUseCase showMainWindowCommand,
         ITelemetryService telemetryService,
         IThemeService themeService,
         IShutdownHandler shutdownHandler,

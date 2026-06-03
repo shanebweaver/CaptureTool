@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Abstractions.Settings;
-using CaptureTool.Infrastructure.Settings;
+using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Features.Settings.Definitions;
 
 namespace CaptureTool.Application.Features.Settings;
 

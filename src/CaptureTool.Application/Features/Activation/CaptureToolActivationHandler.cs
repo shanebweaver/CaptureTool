@@ -1,14 +1,13 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
-using CaptureTool.Application.Features.Home.ShowHomePage;
+using CaptureTool.Application.Abstractions.Activation;
+using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.Features.Home.ShowHomePage;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Features.Settings;
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Abstractions.Activation;
-using CaptureTool.Infrastructure.Abstractions.Cancellation;
-using CaptureTool.Infrastructure.Abstractions.Localization;
-using CaptureTool.Infrastructure.Abstractions.Logging;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Settings;
+using CaptureTool.Domain.Capture;
 using System.Collections.Specialized;
 using System.Web;
 
@@ -16,8 +15,8 @@ namespace CaptureTool.Application.Features.Activation;
 
 public sealed class CaptureToolActivationHandler : IActivationHandler
 {
-    private readonly OpenSelectionOverlayUseCase _openSelectionOverlay;
-    private readonly ShowHomePageUseCase _showHomePage;
+    private readonly IOpenSelectionOverlayUseCase _openSelectionOverlay;
+    private readonly IShowHomePageUseCase _showHomePage;
     private readonly ICancellationService _cancellationService;
     private readonly ISettingsService _settingsService;
     private readonly ILogService _logService;
@@ -31,8 +30,8 @@ public sealed class CaptureToolActivationHandler : IActivationHandler
     private bool _isInitialized;
 
     public CaptureToolActivationHandler(
-        OpenSelectionOverlayUseCase openSelectionOverlay,
-        ShowHomePageUseCase showHomePage,
+        IOpenSelectionOverlayUseCase openSelectionOverlay,
+        IShowHomePageUseCase showHomePage,
         ICancellationService cancellationService,
         ISettingsService settingsService,
         ILogService logService,
@@ -142,9 +141,9 @@ public sealed class CaptureToolActivationHandler : IActivationHandler
         }
     }
 
-    private Task OpenSelectionOverlayAsync(CaptureOptions captureOptions)
+    private async Task OpenSelectionOverlayAsync(CaptureOptions captureOptions)
     {
-        return _openSelectionOverlay.ExecuteAsync(new OpenSelectionOverlayRequest(captureOptions));
+        await _openSelectionOverlay.ExecuteAsync(new OpenSelectionOverlayRequest(captureOptions));
     }
 
     private async Task InitializeSettingsServiceAsync(CancellationToken cancellationToken)

@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
+using CaptureTool.Application.Abstractions.TaskEnvironment;
 using Microsoft.UI.Dispatching;
 
 namespace CaptureTool.Infrastructure.Windows.TaskEnvironment;

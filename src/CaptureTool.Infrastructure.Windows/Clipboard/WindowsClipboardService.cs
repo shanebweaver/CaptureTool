@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Clipboard;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics.Imaging;
 using Windows.Storage;

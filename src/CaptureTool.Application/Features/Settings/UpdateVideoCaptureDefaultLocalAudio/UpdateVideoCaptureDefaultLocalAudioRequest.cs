@@ -1,3 +1,0 @@
-namespace CaptureTool.Application.Features.Settings.UpdateVideoCaptureDefaultLocalAudio;
-
-public sealed record UpdateVideoCaptureDefaultLocalAudioRequest(bool IsEnabled);

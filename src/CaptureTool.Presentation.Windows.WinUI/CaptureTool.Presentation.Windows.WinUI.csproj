@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Project properties -->
   <PropertyGroup>
@@ -41,14 +41,13 @@
     <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
     <ProjectReference Include="..\CaptureTool.Application\CaptureTool.Application.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Edit.Windows\CaptureTool.Domain.Edit.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Edit.Abstractions\CaptureTool.Domain.Edit.Abstractions.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture.Windows\CaptureTool.Domain.Capture.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture.Abstractions\CaptureTool.Domain.Capture.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Edit.Windows\CaptureTool.Infrastructure.Edit.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Capture.Windows\CaptureTool.Infrastructure.Capture.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture\CaptureTool.Domain.Capture.csproj" />
     <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Windows\CaptureTool.Infrastructure.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure\CaptureTool.Infrastructure.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Abstractions\CaptureTool.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\CaptureTool.Presentation\CaptureTool.Presentation.csproj" />
   </ItemGroup>
 

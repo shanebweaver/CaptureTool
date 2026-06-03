@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.AudioCapture.OpenAudioCapturePage;
 
-public sealed class OpenAudioCapturePageUseCase : IUseCase<OpenAudioCapturePageRequest, OpenAudioCapturePageResponse>
+public sealed class OpenAudioCapturePageUseCase : IOpenAudioCapturePageUseCase
 {
     private readonly INavigationService _navigationService;
 

@@ -1,3 +1,0 @@
-namespace CaptureTool.Application.Features.CaptureOverlay.ToggleVideoCapturePauseResume;
-
-public sealed record ToggleVideoCapturePauseResumeResponse;

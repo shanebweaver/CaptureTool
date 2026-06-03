@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Share;
+using CaptureTool.Application.Abstractions.Share;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace CaptureTool.Infrastructure.Windows.Share;

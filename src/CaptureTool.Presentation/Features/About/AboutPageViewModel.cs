@@ -1,9 +1,8 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.About.LeaveAboutPage;
-using CaptureTool.Infrastructure.Abstractions.Localization;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Application.Abstractions.Features.About.LeaveAboutPage;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Presentation.Shared.Commands;
+using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.About;
@@ -11,7 +10,7 @@ namespace CaptureTool.Presentation.Features.About;
 public sealed partial class AboutPageViewModel : ViewModelBase
 {
     public AboutPageViewModel(
-        LeaveAboutPageUseCase goBackCommand,
+        ILeaveAboutPageUseCase goBackCommand,
         ILocalizationService localizationService,
         ITelemetryService telemetryService)
     {

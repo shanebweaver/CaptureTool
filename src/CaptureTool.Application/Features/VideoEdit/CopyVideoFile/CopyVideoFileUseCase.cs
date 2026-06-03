@@ -1,11 +1,11 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Clipboard;
-using CaptureTool.Infrastructure.Abstractions.Media;
-using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
+using CaptureTool.Application.Abstractions.Media;
+using CaptureTool.Application.Abstractions.Storage;
 
 namespace CaptureTool.Application.Features.VideoEdit.CopyVideoFile;
 
-public sealed class CopyVideoFileUseCase : IUseCase<CopyVideoFileRequest, CopyVideoFileResponse>, IConditional<CopyVideoFileRequest>
+public sealed class CopyVideoFileUseCase : ICopyVideoFileUseCase
 {
     private readonly IClipboardService _clipboardService;
     private readonly IStorageService _storageService;

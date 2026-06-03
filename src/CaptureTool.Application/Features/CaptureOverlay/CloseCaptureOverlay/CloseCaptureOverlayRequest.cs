@@ -1,3 +1,0 @@
-namespace CaptureTool.Application.Features.CaptureOverlay.CloseCaptureOverlay;
-
-public sealed record CloseCaptureOverlayRequest;

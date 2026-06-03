@@ -1,6 +1,6 @@
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Abstractions.Factories;
-using CaptureTool.Infrastructure.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Presentation.Factories;
 
 namespace CaptureTool.Presentation.Features.SelectionOverlay.Factories;
 

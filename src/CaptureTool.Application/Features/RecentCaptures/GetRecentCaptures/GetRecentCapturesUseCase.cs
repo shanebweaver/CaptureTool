@@ -1,10 +1,11 @@
+using CaptureTool.Application.Abstractions.Features.RecentCaptures;
+using CaptureTool.Application.Abstractions.Features.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Abstractions.Files;
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Storage;
 
 namespace CaptureTool.Application.Features.RecentCaptures.GetRecentCaptures;
 
-public sealed class GetRecentCapturesUseCase : IUseCase<GetRecentCapturesRequest, GetRecentCapturesResponse>, IConditional<GetRecentCapturesRequest>
+public sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
 {
     private readonly IStorageService _storageService;
     private readonly IFileTypeDetector _fileTypeDetector;

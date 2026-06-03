@@ -1,9 +1,9 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.ToggleLocalAudioCapture;
 
 namespace CaptureTool.Application.Features.AudioCapture.ToggleLocalAudioCapture;
 
-public sealed class ToggleLocalAudioCaptureUseCase : IUseCase<ToggleLocalAudioCaptureRequest, ToggleLocalAudioCaptureResponse>
+public sealed class ToggleLocalAudioCaptureUseCase : IToggleLocalAudioCaptureUseCase
 {
     private readonly IAudioCaptureHandler _audioCaptureHandler;
 

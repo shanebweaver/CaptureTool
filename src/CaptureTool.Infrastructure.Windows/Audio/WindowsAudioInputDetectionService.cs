@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Abstractions.Audio;
+using CaptureTool.Application.Abstractions.Audio;
 using Windows.Devices.Enumeration;
 using Windows.Media.Devices;
 

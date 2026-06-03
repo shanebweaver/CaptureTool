@@ -1,10 +1,9 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.VideoEdit.CopyVideoFile;
-using CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
+using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.VideoEdit;
@@ -77,13 +76,13 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         (TrimStartSeconds > TrimComparisonToleranceSeconds ||
             TrimEndSeconds < VideoDurationSeconds - TrimComparisonToleranceSeconds);
 
-    private readonly SaveVideoFileUseCase _saveAction;
-    private readonly CopyVideoFileUseCase _copyAction;
+    private readonly ISaveVideoFileUseCase _saveAction;
+    private readonly ICopyVideoFileUseCase _copyAction;
     private readonly ITelemetryService _telemetryService;
 
     public VideoEditPageViewModel(
-        SaveVideoFileUseCase saveAction,
-        CopyVideoFileUseCase copyAction,
+        ISaveVideoFileUseCase saveAction,
+        ICopyVideoFileUseCase copyAction,
         ITelemetryService telemetryService)
     {
         _saveAction = saveAction;

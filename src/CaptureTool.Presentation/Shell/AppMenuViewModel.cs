@@ -1,20 +1,20 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Features.About.OpenAboutPage;
-using CaptureTool.Application.Features.AppMenu.ExitApplication;
-using CaptureTool.Application.Features.AppMenu.OpenFile;
-using CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
-using CaptureTool.Application.Features.RecentCaptures.GetRecentCaptures;
-using CaptureTool.Application.Features.RecentCaptures.OpenRecentCapture;
-using CaptureTool.Application.Features.Settings.OpenSettingsPage;
-using CaptureTool.Application.Features.Store.OpenStorePage;
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.FeatureManagement;
-using CaptureTool.Infrastructure.Abstractions.Factories;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Application.Abstractions.Features;
+using CaptureTool.Application.Abstractions.Features.About.OpenAboutPage;
+using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
+using CaptureTool.Application.Abstractions.Features.AppMenu.OpenFile;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.Features.RecentCaptures.GetRecentCaptures;
+using CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Features.Settings.OpenSettingsPage;
+using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.Features.RecentCaptures;
 using CaptureTool.Presentation.Shared.Commands;
+using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 
@@ -24,8 +24,8 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 {
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly OpenRecentCaptureUseCase _openRecentCaptureCommand;
-    private readonly GetRecentCapturesUseCase _getRecentCapturesQuery;
+    private readonly IOpenRecentCaptureUseCase _openRecentCaptureCommand;
+    private readonly IGetRecentCapturesUseCase _getRecentCapturesQuery;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
     private readonly ITelemetryService _telemetryService;
 
@@ -56,15 +56,15 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     }
 
     public AppMenuViewModel(
-        OpenSelectionOverlayUseCase openSelectionOverlayCommand,
-        OpenSettingsPageUseCase openSettingsPageCommand,
-        OpenAboutPageUseCase openAboutPageCommand,
-        OpenStorePageUseCase openStorePageCommand,
-        OpenFileUseCase openFileCommand,
-        ExitApplicationUseCase exitApplicationCommand,
-        OpenRecentCaptureUseCase openRecentCaptureCommand,
-        GetRecentCapturesUseCase getRecentCapturesQuery,
-        IFeatureManager featureManager,
+        IOpenSelectionOverlayUseCase openSelectionOverlayCommand,
+        IOpenSettingsPageUseCase openSettingsPageCommand,
+        IOpenAboutPageUseCase openAboutPageCommand,
+        IOpenStorePageUseCase openStorePageCommand,
+        IOpenFileUseCase openFileCommand,
+        IExitApplicationUseCase exitApplicationCommand,
+        IOpenRecentCaptureUseCase openRecentCaptureCommand,
+        IGetRecentCapturesUseCase getRecentCapturesQuery,
+        IFeatureAvailabilityService featureAvailability,
         IImageCaptureHandler imageCaptureHandler,
         IVideoCaptureHandler videoCaptureHandler,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory,
@@ -87,7 +87,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         RefreshRecentCapturesCommand = new AsyncRelayCommand(RefreshRecentCapturesAsync);
         OpenRecentCaptureCommand = new AsyncRelayCommand<RecentCaptureViewModel>(OpenRecentCaptureAsync);
 
-        ShowAddOnsOption = featureManager.IsEnabled(AppFeatures.Feature_AddOns_Store);
+        ShowAddOnsOption = featureAvailability.IsAddOnsStoreEnabled;
         RecentCaptures = [];
     }
 

@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.ImageEdit.OpenImageEditPage;
 
-public sealed class OpenImageEditPageUseCase : IUseCase<OpenImageEditPageRequest, OpenImageEditPageResponse>, IConditional<OpenImageEditPageRequest>
+public sealed class OpenImageEditPageUseCase : IOpenImageEditPageUseCase
 {
     private readonly INavigationService _navigationService;
 

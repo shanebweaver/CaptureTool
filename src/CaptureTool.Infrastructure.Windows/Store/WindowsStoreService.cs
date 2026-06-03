@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Abstractions.Store;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Telemetry;
 using Windows.Services.Store;
 
 namespace CaptureTool.Infrastructure.Windows.Store;

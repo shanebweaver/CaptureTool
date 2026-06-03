@@ -1,5 +1,5 @@
-using CaptureTool.Infrastructure.Abstractions.Factories;
-using CaptureTool.Infrastructure.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Presentation.Factories;
 
 namespace CaptureTool.Presentation.Features.Settings.Factories;
 

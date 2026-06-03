@@ -1,9 +1,9 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Features.Diagnostics.ClearLogs;
+using CaptureTool.Application.Abstractions.Logging;
 
 namespace CaptureTool.Application.Features.Diagnostics.ClearLogs;
 
-public sealed class ClearLogsUseCase : IUseCase<ClearLogsRequest, ClearLogsResponse>
+public sealed class ClearLogsUseCase : IClearLogsUseCase
 {
     private readonly ILogService _logService;
 

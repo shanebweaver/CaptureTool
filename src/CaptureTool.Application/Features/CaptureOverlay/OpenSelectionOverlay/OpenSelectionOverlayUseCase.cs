@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
 
-public sealed class OpenSelectionOverlayUseCase : IUseCase<OpenSelectionOverlayRequest, OpenSelectionOverlayResponse>
+public sealed class OpenSelectionOverlayUseCase : IOpenSelectionOverlayUseCase
 {
     private readonly INavigationService _navigationService;
 

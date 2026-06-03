@@ -1,21 +1,20 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Diagnostics.ClearLogs;
-using CaptureTool.Application.Features.Diagnostics.GetCurrentLogs;
-using CaptureTool.Application.Features.Diagnostics.GetIsLoggingEnabled;
-using CaptureTool.Application.Features.Diagnostics.UpdateLoggingState;
-using CaptureTool.Infrastructure.Abstractions.Logging;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Application.Abstractions.Features.Diagnostics.ClearLogs;
+using CaptureTool.Application.Abstractions.Features.Diagnostics.GetCurrentLogs;
+using CaptureTool.Application.Abstractions.Features.Diagnostics.GetIsLoggingEnabled;
+using CaptureTool.Application.Abstractions.Features.Diagnostics.UpdateLoggingState;
+using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.Diagnostics;
 
 public sealed partial class DiagnosticsViewModel : ViewModelBase
 {
-    private readonly ClearLogsUseCase _clearLogsCommand;
-    private readonly UpdateLoggingStateUseCase _updateLoggingStateCommand;
-    private readonly GetIsLoggingEnabledUseCase _getIsLoggingEnabledQuery;
-    private readonly GetCurrentLogsUseCase _getCurrentLogsQuery;
+    private readonly IClearLogsUseCase _clearLogsCommand;
+    private readonly IUpdateLoggingStateUseCase _updateLoggingStateCommand;
+    private readonly IGetIsLoggingEnabledUseCase _getIsLoggingEnabledQuery;
+    private readonly IGetCurrentLogsUseCase _getCurrentLogsQuery;
     private readonly ILogService _logService;
     private readonly ITelemetryService _telemetryService;
 
@@ -35,10 +34,10 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     }
 
     public DiagnosticsViewModel(
-        ClearLogsUseCase clearLogsCommand,
-        UpdateLoggingStateUseCase updateLoggingEnablementCommand,
-        GetIsLoggingEnabledUseCase getIsLoggingEnabledQuery,
-        GetCurrentLogsUseCase getCurrentLogsQuery,
+        IClearLogsUseCase clearLogsCommand,
+        IUpdateLoggingStateUseCase updateLoggingEnablementCommand,
+        IGetIsLoggingEnabledUseCase getIsLoggingEnabledQuery,
+        IGetCurrentLogsUseCase getCurrentLogsQuery,
         ILogService logService,
         ITelemetryService telemetryService)
     {

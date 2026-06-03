@@ -1,9 +1,9 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Features.AudioEdit.CopyAudioFile;
 
 namespace CaptureTool.Application.Features.AudioEdit.CopyAudioFile;
 
-public sealed class CopyAudioFileUseCase : IUseCase<CopyAudioFileRequest, CopyAudioFileResponse>, IConditional<CopyAudioFileRequest>
+public sealed class CopyAudioFileUseCase : ICopyAudioFileUseCase
 {
     private readonly IClipboardService _clipboardService;
 

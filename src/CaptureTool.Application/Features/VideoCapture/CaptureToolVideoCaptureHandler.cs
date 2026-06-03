@@ -1,11 +1,12 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.TaskEnvironment;
+using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Features.Settings;
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Abstractions.Clipboard;
-using CaptureTool.Infrastructure.Abstractions.Settings;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.TaskEnvironment;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.Capture.Files;
 namespace CaptureTool.Application.Features.VideoCapture;
 
 public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler

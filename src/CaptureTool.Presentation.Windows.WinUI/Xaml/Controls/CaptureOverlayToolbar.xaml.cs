@@ -1,5 +1,5 @@
+using CaptureTool.Application.Abstractions.Audio;
 using Microsoft.UI.Xaml;
-using CaptureTool.Infrastructure.Abstractions.Audio;
 using System.Collections;
 using System.Windows.Input;
 

@@ -1,9 +1,8 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.AudioEdit.CopyAudioFile;
-using CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
-using CaptureTool.Infrastructure.Abstractions.Storage;
-using CaptureTool.Infrastructure.Abstractions.Telemetry;
-using CaptureTool.Infrastructure.ViewModels;
+using CaptureTool.Application.Abstractions.Features.AudioEdit.CopyAudioFile;
+using CaptureTool.Application.Abstractions.Features.AudioEdit.SaveAudioFile;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.AudioEdit;
@@ -25,13 +24,13 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<IAudi
         private set => Set(ref field, value);
     }
 
-    private readonly SaveAudioFileUseCase _saveAction;
-    private readonly CopyAudioFileUseCase _copyAction;
+    private readonly ISaveAudioFileUseCase _saveAction;
+    private readonly ICopyAudioFileUseCase _copyAction;
     private readonly ITelemetryService _telemetryService;
 
     public AudioEditPageViewModel(
-        SaveAudioFileUseCase saveAction,
-        CopyAudioFileUseCase copyAction,
+        ISaveAudioFileUseCase saveAction,
+        ICopyAudioFileUseCase copyAction,
         ITelemetryService telemetryService)
     {
         _saveAction = saveAction;

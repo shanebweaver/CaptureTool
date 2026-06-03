@@ -1,11 +1,10 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Application.Features.Windowing.ShowMainWindow;
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Shutdown;
-using CaptureTool.Infrastructure.Abstractions.Windowing;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.Windowing;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 
 namespace CaptureTool.Presentation.Windows.WinUI;
@@ -23,7 +22,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly INavigationService _navigationService;
-    private readonly ShowMainWindowUseCase _showMainWindowCommand;
+    private readonly IShowMainWindowUseCase _showMainWindowCommand;
 
     private readonly SemaphoreSlim _semaphoreNavigation = new(1, 1);
     private SelectionOverlayHost? _selectionOverlayHost;
@@ -36,7 +35,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
         IShutdownHandler shutdownHandler,
         IVideoCaptureHandler videoCaptureHandler,
         INavigationService navigationService,
-        ShowMainWindowUseCase showMainWindowCommand)
+        IShowMainWindowUseCase showMainWindowCommand)
     {
         _shutdownHandler = shutdownHandler;
         _videoCaptureHandler = videoCaptureHandler;

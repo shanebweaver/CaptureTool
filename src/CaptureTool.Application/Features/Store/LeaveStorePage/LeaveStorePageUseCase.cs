@@ -1,10 +1,10 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.Navigation;
-using CaptureTool.Infrastructure.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Features.Store.LeaveStorePage;
+using CaptureTool.Application.Abstractions.Navigation;
 
 namespace CaptureTool.Application.Features.Store.LeaveStorePage;
 
-public sealed class LeaveStorePageUseCase : IUseCase<LeaveStorePageRequest, LeaveStorePageResponse>
+public sealed class LeaveStorePageUseCase : ILeaveStorePageUseCase
 {
     private readonly INavigationService _navigationService;
 

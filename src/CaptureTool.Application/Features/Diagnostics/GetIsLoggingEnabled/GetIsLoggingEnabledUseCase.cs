@@ -1,9 +1,9 @@
-using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Infrastructure.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Features.Diagnostics.GetIsLoggingEnabled;
+using CaptureTool.Application.Abstractions.Logging;
 
 namespace CaptureTool.Application.Features.Diagnostics.GetIsLoggingEnabled;
 
-public sealed class GetIsLoggingEnabledUseCase : IUseCase<GetIsLoggingEnabledRequest, GetIsLoggingEnabledResponse>
+public sealed class GetIsLoggingEnabledUseCase : IGetIsLoggingEnabledUseCase
 {
     private readonly ILogService _logService;
 
