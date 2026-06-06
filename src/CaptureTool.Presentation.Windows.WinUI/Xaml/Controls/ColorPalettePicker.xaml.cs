@@ -41,6 +41,12 @@ public sealed partial class ColorPalettePicker : UserControlBase
         typeof(ColorPalettePicker),
         new PropertyMetadata(false));
 
+    public static readonly DependencyProperty IsOpacityVisibleProperty = DependencyProperty.Register(
+        nameof(IsOpacityVisible),
+        typeof(bool),
+        typeof(ColorPalettePicker),
+        new PropertyMetadata(true));
+
     public static readonly DependencyProperty ThicknessProperty = DependencyProperty.Register(
         nameof(Thickness),
         typeof(int),
@@ -84,6 +90,12 @@ public sealed partial class ColorPalettePicker : UserControlBase
     {
         get => Get<bool>(IsThicknessVisibleProperty);
         set => Set(IsThicknessVisibleProperty, value);
+    }
+
+    public bool IsOpacityVisible
+    {
+        get => Get<bool>(IsOpacityVisibleProperty);
+        set => Set(IsOpacityVisibleProperty, value);
     }
 
     public int Thickness

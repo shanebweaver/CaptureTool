@@ -36,6 +36,12 @@ public class ChromaKeyProcessor
         float tolerance,
         float softness = 0)
     {
+        if (tolerance == 0 && softness == 0)
+        {
+            ds.DrawImage(sourceImage, offset);
+            return;
+        }
+
         if (TryDrawGpuChromaKey(ds, sourceImage, offset, keyColor, tolerance, softness))
         {
             return;
