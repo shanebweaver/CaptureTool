@@ -67,6 +67,7 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
         return false;
     }
 
+    m_threadResult.store(S_OK, std::memory_order_release);
     m_isRunning = true;
     m_captureThread = std::thread(&AudioCaptureHandler::CaptureThreadProc, this);
 
@@ -76,19 +77,20 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
 
 HRESULT AudioCaptureHandler::Stop()
 {
-    if (m_isRunning)
+    m_isRunning = false;
+
+    if (m_captureThread.joinable())
     {
-        m_isRunning = false;
-        
-        if (m_captureThread.joinable())
-        {
-            m_captureThread.join();
-        }
-        
-        return m_device.Stop();
+        m_captureThread.join();
     }
 
-    return S_OK;
+    HRESULT deviceResult = m_device.Stop();
+    if (FAILED(deviceResult))
+    {
+        return deviceResult;
+    }
+
+    return m_threadResult.load(std::memory_order_acquire);
 }
 
 // ============================================================================
@@ -130,7 +132,9 @@ BYTE* AudioCaptureHandler::GetSilentBuffer(UINT32 requiredSize)
 
 void AudioCaptureHandler::CaptureThreadProc()
 {
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+    try
+    {
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
     
     // Validate that we have the required components before starting
     if (!m_clockWriter || m_sampleRate == 0)
@@ -147,8 +151,8 @@ void AudioCaptureHandler::CaptureThreadProc()
     QueryPerformanceFrequency(&qpcFreq);
     QueryPerformanceCounter(&lastAdvanceQpc);
     
-    while (m_isRunning)
-    {
+        while (m_isRunning)
+        {
         BYTE* pData = nullptr;
         UINT32 numFramesAvailable = 0;
         DWORD flags = 0;
@@ -287,5 +291,11 @@ void AudioCaptureHandler::CaptureThreadProc()
             // Sleep briefly to avoid busy-waiting
             Sleep(1); // Shorter sleep to check more frequently
         }
+        }
+    }
+    catch (...)
+    {
+        m_threadResult.store(E_FAIL, std::memory_order_release);
+        m_isRunning.store(false, std::memory_order_release);
     }
 }

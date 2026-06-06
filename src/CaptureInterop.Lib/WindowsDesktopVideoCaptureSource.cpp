@@ -168,6 +168,7 @@ HRESULT WindowsDesktopVideoCaptureSource::Stop()
     if (m_frameHandler)
     {
         m_frameHandler->Stop();
+        retainFirstError(m_frameHandler->GetProcessingResult());
         m_frameHandler.reset(); // Explicit reset for clarity, calls Release() automatically
     }
 

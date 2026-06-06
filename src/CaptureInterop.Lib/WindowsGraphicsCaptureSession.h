@@ -86,6 +86,8 @@ private:
     bool InitializeSinkWriter(HRESULT* outHr);
     bool StartAudioCapture(HRESULT* outHr);
     void SetupCallbacks();
+    void RecordFailure(HRESULT hr, CaptureOperationStage stage) noexcept;
+    CaptureOperationResult GetRecordedFailure() const noexcept;
 
     // Configuration and dependencies
     CaptureSessionConfig m_config;
@@ -97,6 +99,10 @@ private:
     // State management
     CaptureSessionStateMachine m_stateMachine;
     std::atomic<bool> m_isShuttingDown{false}; // For thread coordination during shutdown
+    std::atomic<bool> m_hasFailure{false};
+    CaptureOperationResult m_firstFailure;
+    mutable std::mutex m_failureMutex;
+    mutable std::mutex m_sinkMutex;
     
     // Callbacks - using registry for safer lifetime management
     CaptureInterop::CallbackRegistry<VideoFrameData> m_videoCallbackRegistry;

@@ -7,6 +7,7 @@
 #include "IMP4SinkWriter.h"
 #include "IMediaClock.h"
 
+#include <array>
 #include <stdexcept>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -76,6 +77,28 @@ namespace CaptureInteropTests
         bool IsRunning() const override { return m_running; }
         void SetClockWriter(IMediaClockWriter* writer) override { m_writer = writer; }
 
+        void EmitSample()
+        {
+            if (!m_callback)
+            {
+                return;
+            }
+
+            std::array<uint8_t, 4> data{};
+            WAVEFORMATEX format{};
+            format.nChannels = 2;
+            format.nSamplesPerSec = 48'000;
+            format.wBitsPerSample = 16;
+            format.nBlockAlign = 4;
+
+            AudioSampleReadyEventArgs args{
+                std::span<const uint8_t>(data),
+                100,
+                &format
+            };
+            m_callback(args);
+        }
+
         int stopCount = 0;
 
     private:
@@ -123,6 +146,14 @@ namespace CaptureInteropTests
         }
         bool IsRunning() const override { return m_running; }
 
+        void EmitFrame()
+        {
+            if (m_callback)
+            {
+                m_callback(VideoFrameReadyEventArgs{nullptr, 100});
+            }
+        }
+
         int stopCount = 0;
 
     private:
@@ -134,9 +165,15 @@ namespace CaptureInteropTests
     class StopTestSinkWriter final : public IMP4SinkWriter
     {
     public:
-        explicit StopTestSinkWriter(HRESULT finalizeResult = S_OK, bool throwOnFinalize = false)
+        explicit StopTestSinkWriter(
+            HRESULT finalizeResult = S_OK,
+            bool throwOnFinalize = false,
+            HRESULT videoWriteResult = S_OK,
+            HRESULT audioWriteResult = S_OK)
             : m_finalizeResult(finalizeResult)
             , m_throwOnFinalize(throwOnFinalize)
+            , m_videoWriteResult(videoWriteResult)
+            , m_audioWriteResult(audioWriteResult)
         {
         }
 
@@ -152,8 +189,17 @@ namespace CaptureInteropTests
             return true;
         }
 
-        long WriteFrame(ID3D11Texture2D*, int64_t) override { return S_OK; }
-        long WriteAudioSample(std::span<const uint8_t>, int64_t) override { return S_OK; }
+        long WriteFrame(ID3D11Texture2D*, int64_t) override
+        {
+            ++videoWriteCount;
+            return m_videoWriteResult;
+        }
+
+        long WriteAudioSample(std::span<const uint8_t>, int64_t) override
+        {
+            ++audioWriteCount;
+            return m_audioWriteResult;
+        }
 
         HRESULT Finalize() override
         {
@@ -166,10 +212,14 @@ namespace CaptureInteropTests
         }
 
         int finalizeCount = 0;
+        int videoWriteCount = 0;
+        int audioWriteCount = 0;
 
     private:
         HRESULT m_finalizeResult;
         bool m_throwOnFinalize;
+        HRESULT m_videoWriteResult;
+        HRESULT m_audioWriteResult;
     };
 
     TEST_CLASS(CaptureSessionStopTests)
@@ -255,6 +305,77 @@ namespace CaptureInteropTests
             Assert::AreEqual(static_cast<long>(E_FAIL), static_cast<long>(result.hr));
             Assert::AreEqual(
                 static_cast<int>(CaptureOperationStage::SinkFinalize),
+                static_cast<int>(result.stage));
+        }
+
+        TEST_METHOD(Pause_DropsAudioAndVideoUntilResume)
+        {
+            auto audio = std::make_unique<StopTestAudioSource>();
+            auto video = std::make_unique<StopTestVideoSource>();
+            auto sink = std::make_unique<StopTestSinkWriter>();
+            StopTestAudioSource* audioPtr = audio.get();
+            StopTestVideoSource* videoPtr = video.get();
+            StopTestSinkWriter* sinkPtr = sink.get();
+            auto session = CreateActiveSession(std::move(audio), std::move(video), std::move(sink));
+
+            audioPtr->EmitSample();
+            videoPtr->EmitFrame();
+            Assert::AreEqual(1, sinkPtr->audioWriteCount);
+            Assert::AreEqual(1, sinkPtr->videoWriteCount);
+
+            session->Pause();
+            audioPtr->EmitSample();
+            videoPtr->EmitFrame();
+            Assert::AreEqual(1, sinkPtr->audioWriteCount);
+            Assert::AreEqual(1, sinkPtr->videoWriteCount);
+
+            session->Resume();
+            audioPtr->EmitSample();
+            videoPtr->EmitFrame();
+            Assert::AreEqual(2, sinkPtr->audioWriteCount);
+            Assert::AreEqual(2, sinkPtr->videoWriteCount);
+        }
+
+        TEST_METHOD(Stop_WhenVideoWriteFailed_ReturnsRecordedFailure)
+        {
+            auto audio = std::make_unique<StopTestAudioSource>();
+            auto video = std::make_unique<StopTestVideoSource>();
+            auto sink = std::make_unique<StopTestSinkWriter>(
+                S_OK,
+                false,
+                DXGI_ERROR_DEVICE_REMOVED);
+            StopTestVideoSource* videoPtr = video.get();
+            auto session = CreateActiveSession(std::move(audio), std::move(video), std::move(sink));
+
+            videoPtr->EmitFrame();
+            CaptureOperationResult result = session->Stop();
+
+            Assert::AreEqual(
+                static_cast<long>(DXGI_ERROR_DEVICE_REMOVED),
+                static_cast<long>(result.hr));
+            Assert::AreEqual(
+                static_cast<int>(CaptureOperationStage::VideoFrameWrite),
+                static_cast<int>(result.stage));
+        }
+
+        TEST_METHOD(Stop_WhenAudioWriteFailed_ReturnsRecordedFailure)
+        {
+            auto audio = std::make_unique<StopTestAudioSource>();
+            auto video = std::make_unique<StopTestVideoSource>();
+            auto sink = std::make_unique<StopTestSinkWriter>(
+                S_OK,
+                false,
+                S_OK,
+                E_ACCESSDENIED);
+            StopTestAudioSource* audioPtr = audio.get();
+            auto session = CreateActiveSession(std::move(audio), std::move(video), std::move(sink));
+
+            audioPtr->EmitSample();
+            CaptureOperationResult result = session->Stop();
+
+            Assert::AreEqual(static_cast<long>(E_ACCESSDENIED), static_cast<long>(result.hr));
+            Assert::AreEqual(
+                static_cast<int>(CaptureOperationStage::AudioSampleWrite),
                 static_cast<int>(result.stage));
         }
     };

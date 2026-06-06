@@ -103,7 +103,10 @@ ULONG STDMETHODCALLTYPE FrameArrivedHandler::Release()
     return ref;
 }
 
-HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePool* sender, IInspectable* /*args*/) noexcept
+HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(
+    IDirect3D11CaptureFramePool* sender,
+    IInspectable* /*args*/) noexcept
+try
 {
     if (!m_callback)
     {
@@ -170,49 +173,55 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
 
     return S_OK;
 }
+catch (...)
+{
+    m_processingResult.store(E_FAIL, std::memory_order_release);
+    return E_FAIL;
+}
 
 void FrameArrivedHandler::ProcessingThreadProc()
 {
-    int processedCount = 0;
-    
-    while (m_running)
+    try
     {
-        QueuedFrame frame;
-        
+        while (m_running)
         {
-            std::unique_lock<std::mutex> lock(m_queueMutex);
-            m_queueCV.wait(lock, [this] { return !m_frameQueue.empty() || !m_running; });
-            
-            if (!m_running && m_frameQueue.empty())
+            QueuedFrame frame;
+
             {
-                break;
+                std::unique_lock<std::mutex> lock(m_queueMutex);
+                m_queueCV.wait(lock, [this] { return !m_frameQueue.empty() || !m_running; });
+
+                if (!m_running && m_frameQueue.empty())
+                {
+                    break;
+                }
+
+                if (!m_frameQueue.empty())
+                {
+                    frame = std::move(m_frameQueue.front());
+                    m_frameQueue.pop();
+                }
+                else
+                {
+                    continue;
+                }
             }
-            
-            if (!m_frameQueue.empty())
+
+            if (frame.texture && m_callback && m_running)
             {
-                frame = std::move(m_frameQueue.front());
-                m_frameQueue.pop();
+                VideoFrameReadyEventArgs args;
+                args.pTexture = frame.texture.get();
+                args.timestamp = frame.relativeTimestamp;
+
+                m_callback(args);
             }
-            else
-            {
-                continue;
-            }
-        }
-        
-        // Check if callback is still valid and we're still running before invoking
-        if (frame.texture && m_callback && m_running)
-        {
-            VideoFrameReadyEventArgs args;
-            args.pTexture = frame.texture.get();
-            args.timestamp = frame.relativeTimestamp;
-            
-            m_callback(args);
-            processedCount++;
         }
     }
-    
-    // Don't drain remaining frames after stopping to prevent callbacks after shutdown
-    // Frames in the queue will be automatically cleaned up when the queue is destroyed
+    catch (...)
+    {
+        m_processingResult.store(E_FAIL, std::memory_order_release);
+        m_running.store(false, std::memory_order_release);
+    }
 }
 
 EventRegistrationToken RegisterFrameArrivedHandler(

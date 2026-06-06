@@ -6,5 +6,7 @@ public enum ScreenRecordingStage
     VideoSourceStop = 1,
     AudioSourceStop = 2,
     SinkFinalize = 3,
-    NativeException = 4
+    NativeException = 4,
+    VideoFrameWrite = 5,
+    AudioSampleWrite = 6
 }

@@ -138,6 +138,7 @@ private:
     
     std::thread m_captureThread;
     std::atomic<bool> m_isRunning{false};
+    std::atomic<HRESULT> m_threadResult{S_OK};
     std::atomic<bool> m_isEnabled{true};        // Controls whether audio is written to output
     std::atomic<bool> m_wasDisabled{false};     // Tracks if audio was previously disabled for resync
     std::atomic<int> m_samplesToSkip{0};        // Number of samples to skip after re-enabling

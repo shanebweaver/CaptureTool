@@ -130,41 +130,58 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
     // Setup audio callback - writes to sink and forwards to registered callbacks
     m_audioCaptureSource->SetAudioSampleReadyCallback(
         [this](const AudioSampleReadyEventArgs& args) {
-            // Abort if shutting down
-            if (m_isShuttingDown.load(std::memory_order_acquire))
+            try
             {
-                return;
-            }
+                if (m_isShuttingDown.load(std::memory_order_acquire) ||
+                    m_stateMachine.GetState() != CaptureSessionState::Active ||
+                    m_hasFailure.load(std::memory_order_acquire))
+                {
+                    return;
+                }
 
-            // Validate audio format before processing
-            if (args.pFormat && (args.pFormat->nBlockAlign == 0 || args.pFormat->nSamplesPerSec == 0))
-            {
-                // Invalid audio format - skip this sample
-                return;
-            }
+                if (!args.pFormat ||
+                    args.pFormat->nBlockAlign == 0 ||
+                    args.pFormat->nSamplesPerSec == 0)
+                {
+                    RecordFailure(E_INVALIDARG, CaptureOperationStage::AudioSampleWrite);
+                    return;
+                }
 
-            // Write to sink writer
-            HRESULT hr = m_sinkWriter->WriteAudioSample(args.data, args.timestamp);
-                
-            // Disable audio on write failure
-            if (FAILED(hr))
-            {
-                m_audioCaptureSource->SetEnabled(false);
-            }
+                {
+                    std::lock_guard<std::mutex> sinkLock(m_sinkMutex);
+                    if (m_isShuttingDown.load(std::memory_order_acquire) ||
+                        m_stateMachine.GetState() != CaptureSessionState::Active ||
+                        m_hasFailure.load(std::memory_order_acquire))
+                    {
+                        return;
+                    }
 
-            // Forward to registered callbacks if any exist
-            if (args.pFormat && m_audioCallbackRegistry.HasCallbacks())
+                    HRESULT hr = m_sinkWriter->WriteAudioSample(args.data, args.timestamp);
+                    if (FAILED(hr))
+                    {
+                        RecordFailure(hr, CaptureOperationStage::AudioSampleWrite);
+                        m_audioCaptureSource->SetEnabled(false);
+                        return;
+                    }
+                }
+
+                if (m_stateMachine.GetState() == CaptureSessionState::Active &&
+                    m_audioCallbackRegistry.HasCallbacks())
+                {
+                    AudioSampleData sampleData{};
+                    sampleData.pData = args.data.data();
+                    sampleData.numFrames = static_cast<UINT32>(args.data.size()) / args.pFormat->nBlockAlign;
+                    sampleData.timestamp = args.timestamp;
+                    sampleData.sampleRate = args.pFormat->nSamplesPerSec;
+                    sampleData.channels = args.pFormat->nChannels;
+                    sampleData.bitsPerSample = args.pFormat->wBitsPerSample;
+
+                    m_audioCallbackRegistry.Invoke(sampleData);
+                }
+            }
+            catch (...)
             {
-                AudioSampleData sampleData{};
-                sampleData.pData = args.data.data();
-                sampleData.numFrames = static_cast<UINT32>(args.data.size()) / args.pFormat->nBlockAlign;
-                sampleData.timestamp = args.timestamp;
-                sampleData.sampleRate = args.pFormat->nSamplesPerSec;
-                sampleData.channels = args.pFormat->nChannels;
-                sampleData.bitsPerSample = args.pFormat->wBitsPerSample;
-                
-                // Invoke all registered callbacks through registry
-                m_audioCallbackRegistry.Invoke(sampleData);
+                RecordFailure(E_FAIL, CaptureOperationStage::NativeException);
             }
         }
     );
@@ -172,29 +189,83 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
     // Setup video callback - writes to sink and forwards to registered callbacks
     m_videoCaptureSource->SetVideoFrameReadyCallback(
         [this](const VideoFrameReadyEventArgs& args) {
-            // Abort if shutting down
-            if (m_isShuttingDown.load(std::memory_order_acquire))
+            try
             {
-                return;
+                if (m_isShuttingDown.load(std::memory_order_acquire) ||
+                    m_stateMachine.GetState() != CaptureSessionState::Active ||
+                    m_hasFailure.load(std::memory_order_acquire))
+                {
+                    return;
+                }
+
+                {
+                    std::lock_guard<std::mutex> sinkLock(m_sinkMutex);
+                    if (m_isShuttingDown.load(std::memory_order_acquire) ||
+                        m_stateMachine.GetState() != CaptureSessionState::Active ||
+                        m_hasFailure.load(std::memory_order_acquire))
+                    {
+                        return;
+                    }
+
+                    HRESULT hr = m_sinkWriter->WriteFrame(args.pTexture, args.timestamp);
+                    if (FAILED(hr))
+                    {
+                        RecordFailure(hr, CaptureOperationStage::VideoFrameWrite);
+                        return;
+                    }
+                }
+
+                if (m_stateMachine.GetState() == CaptureSessionState::Active &&
+                    m_videoCallbackRegistry.HasCallbacks())
+                {
+                    VideoFrameData frameData{};
+                    frameData.pTexture = args.pTexture;
+                    frameData.timestamp = args.timestamp;
+                    frameData.width = m_videoCaptureSource->GetWidth();
+                    frameData.height = m_videoCaptureSource->GetHeight();
+
+                    m_videoCallbackRegistry.Invoke(frameData);
+                }
             }
-
-            // Write to sink writer
-            HRESULT hr = m_sinkWriter->WriteFrame(args.pTexture, args.timestamp);
-
-            // Forward to registered callbacks if any exist
-            if (m_videoCallbackRegistry.HasCallbacks())
+            catch (...)
             {
-                VideoFrameData frameData{};
-                frameData.pTexture = args.pTexture;
-                frameData.timestamp = args.timestamp;
-                frameData.width = m_videoCaptureSource->GetWidth();
-                frameData.height = m_videoCaptureSource->GetHeight();
-                
-                // Invoke all registered callbacks through registry
-                m_videoCallbackRegistry.Invoke(frameData);
+                RecordFailure(E_FAIL, CaptureOperationStage::NativeException);
             }
         }
     );
+}
+
+void WindowsGraphicsCaptureSession::RecordFailure(
+    HRESULT hr,
+    CaptureOperationStage stage) noexcept
+{
+    if (SUCCEEDED(hr))
+    {
+        return;
+    }
+
+    if (m_hasFailure.load(std::memory_order_acquire))
+    {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(m_failureMutex);
+    if (!m_hasFailure.load(std::memory_order_relaxed))
+    {
+        m_firstFailure = CaptureOperationResult::Failure(hr, stage);
+        m_hasFailure.store(true, std::memory_order_release);
+    }
+}
+
+CaptureOperationResult WindowsGraphicsCaptureSession::GetRecordedFailure() const noexcept
+{
+    if (!m_hasFailure.load(std::memory_order_acquire))
+    {
+        return CaptureOperationResult::Success();
+    }
+
+    std::lock_guard<std::mutex> lock(m_failureMutex);
+    return m_firstFailure;
 }
 
 bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
@@ -316,7 +387,7 @@ CaptureOperationResult WindowsGraphicsCaptureSession::Stop() noexcept
         return CaptureOperationResult::Success();
     }
 
-    CaptureOperationResult result = CaptureOperationResult::Success();
+    CaptureOperationResult result = GetRecordedFailure();
     auto retainFirstError = [&result](HRESULT hr, CaptureOperationStage stage)
     {
         if (FAILED(hr) && result.IsSuccess())
@@ -384,6 +455,7 @@ CaptureOperationResult WindowsGraphicsCaptureSession::Stop() noexcept
     {
         if (m_sinkWriter)
         {
+            std::lock_guard<std::mutex> sinkLock(m_sinkMutex);
             retainFirstError(m_sinkWriter->Finalize(), CaptureOperationStage::SinkFinalize);
         }
     }
@@ -409,6 +481,12 @@ void WindowsGraphicsCaptureSession::Pause()
     // Can only pause from Active state
     if (m_stateMachine.GetState() == CaptureSessionState::Active && m_mediaClock)
     {
+        std::lock_guard<std::mutex> sinkLock(m_sinkMutex);
+        if (m_stateMachine.GetState() != CaptureSessionState::Active)
+        {
+            return;
+        }
+
         m_mediaClock->Pause();
         m_stateMachine.TryTransitionTo(CaptureSessionState::Paused);
     }
@@ -419,6 +497,12 @@ void WindowsGraphicsCaptureSession::Resume()
     // Can only resume from Paused state
     if (m_stateMachine.GetState() == CaptureSessionState::Paused && m_mediaClock)
     {
+        std::lock_guard<std::mutex> sinkLock(m_sinkMutex);
+        if (m_stateMachine.GetState() != CaptureSessionState::Paused)
+        {
+            return;
+        }
+
         m_mediaClock->Resume();
         m_stateMachine.TryTransitionTo(CaptureSessionState::Active);
     }
