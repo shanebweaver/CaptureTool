@@ -136,6 +136,7 @@
     <ClInclude Include="StreamConfigurationBuilderFactory.h" />
     <ClInclude Include="TextureProcessor.h" />
     <ClInclude Include="TextureProcessorFactory.h" />
+    <ClInclude Include="V2\Core\MediaPrimitives.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSource.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSourceFactory.h" />
     <ClInclude Include="WindowsLocalAudioCaptureSource.h" />
