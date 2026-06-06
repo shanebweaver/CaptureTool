@@ -53,8 +53,9 @@ public:
 
     /// <summary>
     /// Stop capturing video from the capture source.
+    /// Returns the first teardown failure, or S_OK.
     /// </summary>
-    virtual void Stop() = 0;
+    virtual HRESULT Stop() = 0;
 
     /// <summary>
     /// Get the width of the video frames.
@@ -67,6 +68,11 @@ public:
     /// </summary>
     /// <returns>Frame height in pixels, or 0 if not initialized.</returns>
     virtual UINT32 GetHeight() const = 0;
+
+    /// <summary>
+    /// Get the D3D11 device used by this capture source.
+    /// </summary>
+    virtual ID3D11Device* GetDevice() const = 0;
 
     /// <summary>
     /// Set the callback to be invoked when a video frame is ready.

@@ -39,7 +39,7 @@ public:
     // IAudioCaptureSource implementation
     bool Initialize(HRESULT* outHr = nullptr) override;
     bool Start(HRESULT* outHr = nullptr) override;
-    void Stop() override;
+    HRESULT Stop() override;
     WAVEFORMATEX* GetFormat() const override;
     void SetAudioSampleReadyCallback(AudioSampleReadyCallback callback) override;
     void SetEnabled(bool enabled) override;

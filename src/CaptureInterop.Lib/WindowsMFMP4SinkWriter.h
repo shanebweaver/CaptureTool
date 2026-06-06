@@ -74,7 +74,7 @@ public:
     bool InitializeAudioStream(WAVEFORMATEX* audioFormat, long* outHr = nullptr) override;
     long WriteFrame(ID3D11Texture2D* texture, int64_t relativeTicks) override;
     long WriteAudioSample(std::span<const uint8_t> data, int64_t timestamp) override;
-    void Finalize() override;
+    HRESULT Finalize() override;
 
     // Finalization error tracking
     long GetLastFinalizationError() const { return m_lastFinalizationError; }

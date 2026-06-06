@@ -5,7 +5,6 @@
 #include "IMediaClock.h"
 #include "CaptureSessionConfig.h"
 #include "IMP4SinkWriter.h"
-#include "WindowsDesktopVideoCaptureSource.h"
 #include "CallbackTypes.h"
 #include "ICaptureSession.h"
 
@@ -14,15 +13,6 @@
 #include <d3d11.h>
 #include <Windows.h>
 #include <cassert>
-
-namespace {
-    /// <summary>
-    /// Time to wait for encoder to drain its queue before finalizing.
-    /// Allows the encoder to process remaining queued frames.
-    /// 200ms is sufficient for approximately 6 frames at 30fps.
-    /// </summary>
-    constexpr DWORD ENCODER_DRAIN_TIMEOUT_MS = 200;
-}
 
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     const CaptureSessionConfig& config,
@@ -45,7 +35,7 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
 
 WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
 {
-    Stop();
+    (void)Stop();
     // Principle #5 (RAII Everything): Destructor ensures all resources are cleaned up
     // automatically via the following chain:
     //
@@ -243,7 +233,7 @@ bool WindowsGraphicsCaptureSession::Start(HRESULT* outHr)
     {
         if (m_audioCaptureSource && m_audioCaptureSource->IsRunning())
         {
-            m_audioCaptureSource->Stop();
+            (void)m_audioCaptureSource->Stop();
         }
         [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
         assert(transitioned && "Transition to Failed should always succeed from Initialized state");
@@ -270,7 +260,7 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
     // Get video properties
     UINT32 width = m_videoCaptureSource->GetWidth();
     UINT32 height = m_videoCaptureSource->GetHeight();
-    ID3D11Device* device = static_cast<WindowsDesktopVideoCaptureSource*>(m_videoCaptureSource.get())->GetDevice();
+    ID3D11Device* device = m_videoCaptureSource->GetDevice();
     
     // Initialize video stream
     if (!m_sinkWriter->Initialize(m_config.outputPath.c_str(), device, width, height, &hr))
@@ -318,26 +308,49 @@ bool WindowsGraphicsCaptureSession::StartAudioCapture(HRESULT* outHr)
     return true;
 }
 
-void WindowsGraphicsCaptureSession::Stop()
+CaptureOperationResult WindowsGraphicsCaptureSession::Stop() noexcept
 {
     // Check if session is active (Active or Paused state)
     if (!m_stateMachine.IsActive())
     {
-        return;
+        return CaptureOperationResult::Success();
     }
+
+    CaptureOperationResult result = CaptureOperationResult::Success();
+    auto retainFirstError = [&result](HRESULT hr, CaptureOperationStage stage)
+    {
+        if (FAILED(hr) && result.IsSuccess())
+        {
+            result = CaptureOperationResult::Failure(hr, stage);
+        }
+    };
 
     // Shutdown sequence: set flag, stop sources, clear callbacks, finalize
     m_isShuttingDown.store(true, std::memory_order_release);
 
     // Stop sources
-    if (m_videoCaptureSource)
+    try
     {
-        m_videoCaptureSource->Stop();
+        if (m_videoCaptureSource)
+        {
+            retainFirstError(m_videoCaptureSource->Stop(), CaptureOperationStage::VideoSourceStop);
+        }
+    }
+    catch (...)
+    {
+        retainFirstError(E_FAIL, CaptureOperationStage::VideoSourceStop);
     }
 
-    if (m_audioCaptureSource)
+    try
     {
-        m_audioCaptureSource->Stop();
+        if (m_audioCaptureSource)
+        {
+            retainFirstError(m_audioCaptureSource->Stop(), CaptureOperationStage::AudioSourceStop);
+        }
+    }
+    catch (...)
+    {
+        retainFirstError(E_FAIL, CaptureOperationStage::AudioSourceStop);
     }
 
     if (m_mediaClock)
@@ -346,25 +359,38 @@ void WindowsGraphicsCaptureSession::Stop()
     }
 
     // Clear callbacks from sources to stop invocations
-    if (m_audioCaptureSource)
+    try
     {
-        m_audioCaptureSource->SetAudioSampleReadyCallback(nullptr);
+        if (m_audioCaptureSource)
+        {
+            m_audioCaptureSource->SetAudioSampleReadyCallback(nullptr);
+        }
+
+        if (m_videoCaptureSource)
+        {
+            m_videoCaptureSource->SetVideoFrameReadyCallback(nullptr);
+        }
+
+        m_videoCallbackRegistry.Clear();
+        m_audioCallbackRegistry.Clear();
     }
-    
-    if (m_videoCaptureSource)
+    catch (...)
     {
-        m_videoCaptureSource->SetVideoFrameReadyCallback(nullptr);
+        retainFirstError(E_FAIL, CaptureOperationStage::NativeException);
     }
-    
-    // Clear all registered callbacks through registry
-    // Note: The m_isShuttingDown flag ensures no callbacks are invoked after Stop() is called.
-    // Sources are stopped first, then callbacks are cleared, ensuring synchronization.
-    m_videoCallbackRegistry.Clear();
-    m_audioCallbackRegistry.Clear();
 
     // Finalize sink writer
-    Sleep(ENCODER_DRAIN_TIMEOUT_MS);
-    m_sinkWriter->Finalize();
+    try
+    {
+        if (m_sinkWriter)
+        {
+            retainFirstError(m_sinkWriter->Finalize(), CaptureOperationStage::SinkFinalize);
+        }
+    }
+    catch (...)
+    {
+        retainFirstError(E_FAIL, CaptureOperationStage::SinkFinalize);
+    }
 
     // Reset clock
     if (m_mediaClock)
@@ -375,6 +401,7 @@ void WindowsGraphicsCaptureSession::Stop()
     // Transition to Stopped state
     m_stateMachine.TryTransitionTo(CaptureSessionState::Stopped);
     m_isShuttingDown.store(false, std::memory_order_release);
+    return result;
 }
 
 void WindowsGraphicsCaptureSession::Pause()

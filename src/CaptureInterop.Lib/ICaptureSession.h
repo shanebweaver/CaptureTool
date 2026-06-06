@@ -1,4 +1,5 @@
 #pragma once
+#include "CaptureOperationResult.h"
 #include <Windows.h>
 
 // Forward declarations for callback types
@@ -28,8 +29,9 @@ public:
     /// <summary>
     /// Stop the capture session and finalize the output file.
     /// Ensures all resources are properly released and file is written.
+    /// Returns the first failure and the teardown stage where it occurred.
     /// </summary>
-    virtual void Stop() = 0;
+    virtual CaptureOperationResult Stop() noexcept = 0;
 
     /// <summary>
     /// Pause the capture session without stopping.

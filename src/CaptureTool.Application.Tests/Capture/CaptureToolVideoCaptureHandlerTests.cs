@@ -17,6 +17,9 @@ public class CaptureToolVideoCaptureHandlerTests
     public void Init()
     {
         Fixture = new Fixture().Customize(new AutoMoqCustomization { ConfigureMembers = true });
+        Fixture.Freeze<Mock<IScreenRecorder>>()
+            .Setup(x => x.StartRecording(It.IsAny<nint>(), It.IsAny<string>(), It.IsAny<bool>()))
+            .Returns(true);
     }
 
     [TestMethod]
@@ -186,5 +189,60 @@ public class CaptureToolVideoCaptureHandlerTests
         // Assert
         handler.IsFinalizing.Should().BeFalse();
         handler.IsRecording.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void StartVideoCapture_WhenNativeStartFails_ShouldReturnToIdle()
+    {
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        screenRecorder
+            .Setup(x => x.StartRecording(It.IsAny<nint>(), It.IsAny<string>(), It.IsAny<bool>()))
+            .Returns(false);
+        var storageService = Fixture.Freeze<Mock<IStorageService>>();
+        storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+        var args = CreateCaptureArgs();
+
+        Action action = () => handler.StartVideoCapture(args);
+
+        action.Should().Throw<InvalidOperationException>();
+        handler.IsRecording.Should().BeFalse();
+        handler.IsFinalizing.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task StopVideoCapture_WhenNativeFinalizeFails_ShouldFaultPendingVideo()
+    {
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        screenRecorder
+            .Setup(x => x.StopRecording())
+            .Returns(new ScreenRecordingResult(
+                unchecked((int)0x80004005),
+                ScreenRecordingStage.SinkFinalize));
+        var storageService = Fixture.Freeze<Mock<IStorageService>>();
+        storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+        handler.StartVideoCapture(CreateCaptureArgs());
+
+        PendingVideoFile pendingVideo = handler.StopVideoCapture();
+
+        ScreenRecordingException exception = await Assert.ThrowsExactlyAsync<ScreenRecordingException>(
+            pendingVideo.WhenReadyAsync);
+        await handler.WaitForFinalizationAsync();
+        exception.Result.Stage.Should().Be(ScreenRecordingStage.SinkFinalize);
+        handler.IsRecording.Should().BeFalse();
+    }
+
+    private static NewCaptureArgs CreateCaptureArgs()
+    {
+        return new NewCaptureArgs(
+            new MonitorCaptureResult(
+                IntPtr.Zero,
+                [],
+                96,
+                new System.Drawing.Rectangle(0, 0, 1920, 1080),
+                new System.Drawing.Rectangle(0, 0, 1920, 1080),
+                true),
+            new System.Drawing.Rectangle(0, 0, 1920, 1080));
     }
 }

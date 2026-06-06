@@ -17,6 +17,7 @@ public interface IVideoCaptureHandler
     void PrepareForVideoCapture();
     void StartVideoCapture(NewCaptureArgs args);
     PendingVideoFile StopVideoCapture();
+    Task WaitForFinalizationAsync();
     void CancelVideoCapture();
     void SetIsDesktopAudioEnabled(bool value);
     void ToggleDesktopAudioCapture(bool enabled);

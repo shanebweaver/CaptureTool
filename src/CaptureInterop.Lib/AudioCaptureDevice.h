@@ -51,7 +51,7 @@ public:
     /// <summary>
     /// Stop audio capture. Safe to call multiple times.
     /// </summary>
-    void Stop();
+    HRESULT Stop();
     
     /// <summary>
     /// Get the audio format (sample rate, channels, bit depth) of the capture device.

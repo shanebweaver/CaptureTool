@@ -34,17 +34,27 @@ ScreenRecorderImpl::ScreenRecorderImpl()
 
 ScreenRecorderImpl::~ScreenRecorderImpl()
 {
-    StopRecording();
+    (void)StopRecording();
     // Principle #5 (RAII Everything): Destructor ensures cleanup even if caller forgets
 }
 
 bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     // Stop any existing session
-    StopRecording();
+    CaptureOperationResult stopResult = StopRecordingLocked();
+    if (!stopResult.IsSuccess())
+    {
+        return false;
+    }
 
     // Create a new capture session using the factory with the config
     m_captureSession = m_factory->CreateSession(config);
+    if (!m_captureSession)
+    {
+        return false;
+    }
 
     // Apply stored callbacks to the new session
     if (m_videoFrameCallback)
@@ -76,10 +86,9 @@ bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* output
 
 void ScreenRecorderImpl::PauseRecording()
 {
-    // Principle #3: Use HasActiveSession() for explicit null checking
-    // Note: Direct access to m_captureSession after check is safe because this class
-    // is documented to require single-threaded access (see class documentation).
-    if (HasActiveSession() && m_captureSession->IsActive())
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    if (m_captureSession && m_captureSession->IsActive())
     {
         m_captureSession->Pause();
     }
@@ -87,28 +96,32 @@ void ScreenRecorderImpl::PauseRecording()
 
 void ScreenRecorderImpl::ResumeRecording()
 {
-    // Principle #3: Use HasActiveSession() for explicit null checking
-    if (HasActiveSession() && m_captureSession->IsActive())
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    if (m_captureSession && m_captureSession->IsActive())
     {
         m_captureSession->Resume();
     }
 }
 
-void ScreenRecorderImpl::StopRecording()
+CaptureOperationResult ScreenRecorderImpl::StopRecording() noexcept
 {
-    // Principle #3: Use HasActiveSession() for explicit null checking
-    if (HasActiveSession())
+    try
     {
-        m_captureSession->Stop();
-        m_captureSession.reset();
-        // Principle #5 (RAII): Session cleanup happens automatically via unique_ptr
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return StopRecordingLocked();
+    }
+    catch (...)
+    {
+        return CaptureOperationResult::Failure(E_FAIL, CaptureOperationStage::NativeException);
     }
 }
 
 void ScreenRecorderImpl::ToggleAudioCapture(bool enabled)
 {
-    // Principle #3: Use HasActiveSession() for explicit null checking
-    if (HasActiveSession() && m_captureSession->IsActive())
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    if (m_captureSession && m_captureSession->IsActive())
     {
         m_captureSession->ToggleAudioCapture(enabled);
     }
@@ -116,11 +129,13 @@ void ScreenRecorderImpl::ToggleAudioCapture(bool enabled)
 
 void ScreenRecorderImpl::SetVideoFrameCallback(VideoFrameCallback callback)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     // Store callback so it persists across session recreation
     m_videoFrameCallback = callback;
     
     // Also apply to current session if one exists
-    if (HasActiveSession())
+    if (m_captureSession)
     {
         m_captureSession->SetVideoFrameCallback(callback);
     }
@@ -128,12 +143,32 @@ void ScreenRecorderImpl::SetVideoFrameCallback(VideoFrameCallback callback)
 
 void ScreenRecorderImpl::SetAudioSampleCallback(AudioSampleCallback callback)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     // Store callback so it persists across session recreation
     m_audioSampleCallback = callback;
     
     // Also apply to current session if one exists
-    if (HasActiveSession())
+    if (m_captureSession)
     {
         m_captureSession->SetAudioSampleCallback(callback);
     }
+}
+
+bool ScreenRecorderImpl::HasActiveSession() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_captureSession != nullptr;
+}
+
+CaptureOperationResult ScreenRecorderImpl::StopRecordingLocked() noexcept
+{
+    if (!m_captureSession)
+    {
+        return CaptureOperationResult::Success();
+    }
+
+    CaptureOperationResult result = m_captureSession->Stop();
+    m_captureSession.reset();
+    return result;
 }

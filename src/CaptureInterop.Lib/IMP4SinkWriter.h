@@ -58,6 +58,7 @@ public:
     /// <summary>
     /// Finalize and close the MP4 file.
     /// Must be called when recording is complete to properly close the file.
+    /// Returns the Media Foundation finalization HRESULT.
     /// </summary>
-    virtual void Finalize() = 0;
+    virtual HRESULT Finalize() = 0;
 };

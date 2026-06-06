@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Shutdown;
 using Microsoft.Windows.AppLifecycle;
@@ -9,15 +10,18 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
 {
     private readonly ICancellationService _cancellationService;
     private readonly ILogService _logService;
+    private readonly IVideoCaptureHandler _videoCaptureHandler;
 
     public bool IsShuttingDown { get; private set; }
 
     public WindowsShutdownHandler(
         ILogService logService,
-        ICancellationService cancellationService)
+        ICancellationService cancellationService,
+        IVideoCaptureHandler videoCaptureHandler)
     {
         _logService = logService;
         _cancellationService = cancellationService;
+        _videoCaptureHandler = videoCaptureHandler;
     }
 
     public bool TryRestart()
@@ -73,5 +77,14 @@ public sealed partial class WindowsShutdownHandler : IShutdownHandler
     {
         IsShuttingDown = true;
         _cancellationService.CancelAll();
+
+        if (_videoCaptureHandler.IsFinalizing)
+        {
+            _videoCaptureHandler.WaitForFinalizationAsync().GetAwaiter().GetResult();
+        }
+        else
+        {
+            _videoCaptureHandler.CancelVideoCapture();
+        }
     }
 }

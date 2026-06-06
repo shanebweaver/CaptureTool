@@ -52,7 +52,7 @@ public:
     // IVideoCaptureSource implementation
     bool Initialize(HRESULT* outHr = nullptr) override;
     bool Start(HRESULT* outHr = nullptr) override;
-    void Stop() override;
+    HRESULT Stop() override;
     UINT32 GetWidth() const override { return m_width; }
     UINT32 GetHeight() const override { return m_height; }
     void SetVideoFrameReadyCallback(VideoFrameReadyCallback callback) override { m_callback = callback; }
@@ -62,7 +62,7 @@ public:
     /// Get the D3D11 device used for video capture.
     /// Available after successful initialization.
     /// </summary>
-    ID3D11Device* GetDevice() const { return m_device.get(); }
+    ID3D11Device* GetDevice() const override { return m_device.get(); }
 
 private:
     // Configuration

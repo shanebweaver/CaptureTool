@@ -60,7 +60,7 @@ public:
 
     // ICaptureSession implementation
     bool Start(HRESULT* outHr = nullptr) override;
-    void Stop() override;
+    CaptureOperationResult Stop() noexcept override;
     void Pause() override;
     void Resume() override;
     void ToggleAudioCapture(bool enabled) override;

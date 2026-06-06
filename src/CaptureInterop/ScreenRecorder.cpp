@@ -2,43 +2,108 @@
 #include "ScreenRecorderImpl.h"
 #include <Windows.h>
 
-static ScreenRecorderImpl g_recorder;
+namespace
+{
+    ScreenRecorderImpl& GetRecorder()
+    {
+        static ScreenRecorderImpl recorder;
+        return recorder;
+    }
+}
 
 // Exported API
 extern "C"
 {
-    __declspec(dllexport) bool TryStartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio)
+    __declspec(dllexport) bool TryStartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio) noexcept
     {
-        return g_recorder.StartRecording(hMonitor, outputPath, captureAudio);
+        try
+        {
+            return GetRecorder().StartRecording(hMonitor, outputPath, captureAudio);
+        }
+        catch (...)
+        {
+            return false;
+        }
     }
 
-    __declspec(dllexport) void TryPauseRecording()
+    __declspec(dllexport) void TryPauseRecording() noexcept
     {
-        g_recorder.PauseRecording();
+        try
+        {
+            GetRecorder().PauseRecording();
+        }
+        catch (...)
+        {
+        }
     }
 
-    __declspec(dllexport) void TryResumeRecording()
+    __declspec(dllexport) void TryResumeRecording() noexcept
     {
-        g_recorder.ResumeRecording();
+        try
+        {
+            GetRecorder().ResumeRecording();
+        }
+        catch (...)
+        {
+        }
     }
 
-    __declspec(dllexport) void TryStopRecording()
+    __declspec(dllexport) HRESULT TryStopRecording(CaptureOperationStage* outStage) noexcept
     {
-        g_recorder.StopRecording();
+        if (outStage)
+        {
+            *outStage = CaptureOperationStage::None;
+        }
+
+        try
+        {
+            CaptureOperationResult result = GetRecorder().StopRecording();
+            if (outStage)
+            {
+                *outStage = result.stage;
+            }
+            return result.hr;
+        }
+        catch (...)
+        {
+            if (outStage)
+            {
+                *outStage = CaptureOperationStage::NativeException;
+            }
+            return E_FAIL;
+        }
     }
 
-    __declspec(dllexport) void TryToggleAudioCapture(bool enabled)
+    __declspec(dllexport) void TryToggleAudioCapture(bool enabled) noexcept
     {
-        g_recorder.ToggleAudioCapture(enabled);
+        try
+        {
+            GetRecorder().ToggleAudioCapture(enabled);
+        }
+        catch (...)
+        {
+        }
     }
 
-    __declspec(dllexport) void SetVideoFrameCallback(VideoFrameCallback callback)
+    __declspec(dllexport) void SetVideoFrameCallback(VideoFrameCallback callback) noexcept
     {
-        g_recorder.SetVideoFrameCallback(callback);
+        try
+        {
+            GetRecorder().SetVideoFrameCallback(callback);
+        }
+        catch (...)
+        {
+        }
     }
 
-    __declspec(dllexport) void SetAudioSampleCallback(AudioSampleCallback callback)
+    __declspec(dllexport) void SetAudioSampleCallback(AudioSampleCallback callback) noexcept
     {
-        g_recorder.SetAudioSampleCallback(callback);
+        try
+        {
+            GetRecorder().SetAudioSampleCallback(callback);
+        }
+        catch (...)
+        {
+        }
     }
 }

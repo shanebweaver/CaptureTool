@@ -19,7 +19,7 @@ WindowsDesktopVideoCaptureSource::WindowsDesktopVideoCaptureSource(const Capture
 
 WindowsDesktopVideoCaptureSource::~WindowsDesktopVideoCaptureSource()
 {
-    Stop();
+    (void)Stop();
     // Principle #5 (RAII Everything): Destructor ensures cleanup via following chain:
     // 1. Stop() unregisters event handler, stops frame processing, releases resources
     // 2. wil::com_ptr members automatically Release() COM objects:
@@ -144,17 +144,21 @@ bool WindowsDesktopVideoCaptureSource::Start(HRESULT* outHr)
     return true;
 }
 
-void WindowsDesktopVideoCaptureSource::Stop()
+HRESULT WindowsDesktopVideoCaptureSource::Stop()
 {
-    if (!m_isRunning)
+    HRESULT firstError = S_OK;
+    auto retainFirstError = [&firstError](HRESULT hr)
     {
-        return;
-    }
+        if (FAILED(hr) && SUCCEEDED(firstError))
+        {
+            firstError = hr;
+        }
+    };
 
     // Remove the event registration
-    if (m_framePool)
+    if (m_framePool && m_frameArrivedEventToken.value != 0)
     {
-        m_framePool->remove_FrameArrived(m_frameArrivedEventToken);
+        retainFirstError(m_framePool->remove_FrameArrived(m_frameArrivedEventToken));
     }
 
     m_frameArrivedEventToken.value = 0;
@@ -183,16 +187,23 @@ void WindowsDesktopVideoCaptureSource::Stop()
         wil::com_ptr<ABI::Windows::Foundation::IClosable> closable;
         if (SUCCEEDED(m_captureSession->QueryInterface(IID_PPV_ARGS(closable.put()))))
         {
-            (void)closable->Close(); // Best-effort: ignore HRESULT if close fails
+            retainFirstError(closable->Close());
         }
         m_captureSession.reset();
     }
 
-    // Release frame pool
+    // Close and release the frame pool explicitly. Like the capture session,
+    // the frame pool is IClosable and can hold capture resources until Close.
     if (m_framePool)
     {
+        wil::com_ptr<ABI::Windows::Foundation::IClosable> closable;
+        if (SUCCEEDED(m_framePool->QueryInterface(IID_PPV_ARGS(closable.put()))))
+        {
+            retainFirstError(closable->Close());
+        }
         m_framePool.reset();
     }
 
     m_isRunning = false;
+    return firstError;
 }

@@ -9,7 +9,7 @@ AudioCaptureDevice::AudioCaptureDevice() = default;
 
 AudioCaptureDevice::~AudioCaptureDevice()
 {
-    Stop();
+    (void)Stop();
     // Principle #5 (RAII Everything): All COM objects automatically released via wil::com_ptr
     // - m_captureClient, m_audioClient, m_device, m_deviceEnumerator: wil::com_ptr handles Release()
     // - m_waveFormat: wil::unique_cotaskmem_ptr calls CoTaskMemFree()
@@ -135,13 +135,16 @@ bool AudioCaptureDevice::Start(HRESULT* outHr)
     return true;
 }
 
-void AudioCaptureDevice::Stop()
+HRESULT AudioCaptureDevice::Stop()
 {
     if (m_audioClient && m_isCapturing)
     {
-        m_audioClient->Stop();
+        HRESULT hr = m_audioClient->Stop();
         m_isCapturing = false;
+        return hr;
     }
+
+    return S_OK;
 }
 
 // ============================================================================

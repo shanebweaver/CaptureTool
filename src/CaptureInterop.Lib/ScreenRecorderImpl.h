@@ -2,15 +2,16 @@
 #include "pch.h"
 #include "ICaptureSession.h"
 #include "ICaptureSessionFactory.h"
+#include "CaptureOperationResult.h"
 #include "CaptureSessionConfig.h"
+#include <mutex>
 
 /// <summary>
 /// Implementation class for screen recording functionality.
 /// Manages the capture session lifecycle and callbacks to managed layer.
 /// 
-/// Threading model: This class is NOT thread-safe. All public methods must be called
-/// from the same thread (typically the UI thread). The session is only modified through
-/// public methods and is never accessed concurrently.
+/// Threading model: Public operations are serialized by an internal mutex. Capture
+/// callbacks run on source-owned threads and do not acquire the recorder mutex.
 /// 
 /// Implements Rust Principles:
 /// - Principle #3 (No Nullable Pointers): Uses std::unique_ptr for session ownership.
@@ -74,7 +75,7 @@ public:
     /// <summary>
     /// Stop the current recording and finalize the output file.
     /// </summary>
-    void StopRecording();
+    CaptureOperationResult StopRecording() noexcept;
 
     /// <summary>
     /// Toggle audio capture on/off during recording.
@@ -102,11 +103,14 @@ public:
     /// Implements Principle #3: Make nullable states explicit.
     /// </summary>
     /// <returns>True if a session exists, false otherwise.</returns>
-    bool HasActiveSession() const { return m_captureSession != nullptr; }
+    bool HasActiveSession() const;
 
 private:
+    CaptureOperationResult StopRecordingLocked() noexcept;
+
     std::unique_ptr<ICaptureSession> m_captureSession;
     std::unique_ptr<ICaptureSessionFactory> m_factory;
+    mutable std::mutex m_mutex;
     
     // Store callbacks so they persist across session recreation
     VideoFrameCallback m_videoFrameCallback = nullptr;

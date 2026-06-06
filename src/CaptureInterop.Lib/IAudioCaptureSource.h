@@ -57,8 +57,9 @@ public:
 
     /// <summary>
     /// Stop capturing audio from the input source.
+    /// Returns the first teardown failure, or S_OK.
     /// </summary>
-    virtual void Stop() = 0;
+    virtual HRESULT Stop() = 0;
 
     /// <summary>
     /// Get the audio format of the input source.

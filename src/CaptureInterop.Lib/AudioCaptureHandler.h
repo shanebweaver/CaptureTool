@@ -74,7 +74,7 @@ public:
     /// Stop the audio capture thread and wait for it to complete.
     /// Safe to call multiple times.
     /// </summary>
-    void Stop();
+    HRESULT Stop();
     
     /// <summary>
     /// Get the audio format of the capture device.

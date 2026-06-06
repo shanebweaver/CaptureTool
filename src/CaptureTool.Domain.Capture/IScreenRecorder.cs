@@ -5,7 +5,7 @@ namespace CaptureTool.Domain.Capture;
 public partial interface IScreenRecorder
 {
     bool StartRecording(nint hMonitor, string outputPath, bool captureAudio = false);
-    void StopRecording();
+    ScreenRecordingResult StopRecording();
     void PauseRecording();
     void ResumeRecording();
     void ToggleAudioCapture(bool enabled);

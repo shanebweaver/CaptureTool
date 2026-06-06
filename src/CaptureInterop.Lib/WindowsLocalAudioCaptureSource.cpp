@@ -10,7 +10,7 @@ WindowsLocalAudioCaptureSource::WindowsLocalAudioCaptureSource(IMediaClockReader
 
 WindowsLocalAudioCaptureSource::~WindowsLocalAudioCaptureSource()
 {
-    Stop();
+    (void)Stop();
     // Principle #5 (RAII Everything): Stop() releases audio resources, then m_handler
     // is automatically cleaned up via std::unique_ptr destructor
 }
@@ -26,9 +26,9 @@ bool WindowsLocalAudioCaptureSource::Start(HRESULT* outHr)
     return m_handler->Start(outHr);
 }
 
-void WindowsLocalAudioCaptureSource::Stop()
+HRESULT WindowsLocalAudioCaptureSource::Stop()
 {
-    m_handler->Stop();
+    return m_handler->Stop();
 }
 
 WAVEFORMATEX* WindowsLocalAudioCaptureSource::GetFormat() const

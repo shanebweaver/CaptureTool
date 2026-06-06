@@ -6,7 +6,11 @@ public partial class WindowsScreenRecorder : IScreenRecorder
 {
     public bool StartRecording(IntPtr hMonitor, string outputPath, bool captureAudio = false)
         => CaptureInterop.TryStartRecording(hMonitor, outputPath, captureAudio);
-    public void StopRecording() => CaptureInterop.TryStopRecording();
+    public ScreenRecordingResult StopRecording()
+    {
+        int hresult = CaptureInterop.TryStopRecording(out ScreenRecordingStage stage);
+        return new ScreenRecordingResult(hresult, stage);
+    }
 
     public void PauseRecording() => CaptureInterop.TryPauseRecording();
     public void ResumeRecording() => CaptureInterop.TryResumeRecording();

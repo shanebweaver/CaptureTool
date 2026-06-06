@@ -21,7 +21,7 @@ AudioCaptureHandler::AudioCaptureHandler(IMediaClockReader* clockReader)
 
 AudioCaptureHandler::~AudioCaptureHandler()
 {
-    Stop();
+    (void)Stop();
     // Principle #5 (RAII Everything): Destructor ensures cleanup via following chain:
     // 1. Stop() joins capture thread and releases audio device
     // 2. m_device destructor releases WASAPI COM objects via wil::com_ptr
@@ -74,7 +74,7 @@ bool AudioCaptureHandler::Start(HRESULT* outHr)
     return true;
 }
 
-void AudioCaptureHandler::Stop()
+HRESULT AudioCaptureHandler::Stop()
 {
     if (m_isRunning)
     {
@@ -85,8 +85,10 @@ void AudioCaptureHandler::Stop()
             m_captureThread.join();
         }
         
-        m_device.Stop();
+        return m_device.Stop();
     }
+
+    return S_OK;
 }
 
 // ============================================================================

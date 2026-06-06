@@ -26,6 +26,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private readonly ITelemetryService _telemetryService;
 
     private string? _tempVideoPath;
+    private Task _finalizationTask = Task.CompletedTask;
 
     private CaptureState _captureState = CaptureState.Idle;
 
@@ -73,7 +74,12 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             GetNewCaptureFileName()
         );
 
-        _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled);
+        if (!_screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled))
+        {
+            _tempVideoPath = null;
+            UpdateCaptureState(CaptureState.Idle);
+            throw new InvalidOperationException("The native screen recorder failed to start.");
+        }
     }
 
     public PendingVideoFile StopVideoCapture()
@@ -88,17 +94,23 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         var pendingVideo = new PendingVideoFile(_tempVideoPath);
 
         // Finalize video on a background thread to avoid blocking the UI
-        Task.Run(() => FinalizeVideo(pendingVideo));
+        _finalizationTask = Task.Run(() => FinalizeVideo(pendingVideo));
 
         NewVideoCaptured?.Invoke(this, pendingVideo);
         return pendingVideo;
     }
 
+    public Task WaitForFinalizationAsync() => _finalizationTask;
+
     private void FinalizeVideo(PendingVideoFile pendingVideo)
     {
         try
         {
-            _screenRecorder.StopRecording();
+            ScreenRecordingResult result = _screenRecorder.StopRecording();
+            if (!result.Succeeded)
+            {
+                throw new ScreenRecordingException(result);
+            }
 
             pendingVideo.Complete();
 
@@ -108,7 +120,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         catch (Exception ex)
         {
             pendingVideo.Fail(ex);
-            throw;
+            _telemetryService.ActivityError("FinalizeVideo", ex);
         }
         finally
         {
@@ -130,7 +142,11 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
             _screenRecorder.SetAudioSampleCallback(null);
             _screenRecorder.SetVideoFrameCallback(null);
-            _screenRecorder.StopRecording();
+            ScreenRecordingResult result = _screenRecorder.StopRecording();
+            if (!result.Succeeded)
+            {
+                throw new ScreenRecordingException(result);
+            }
         }
         finally
         {

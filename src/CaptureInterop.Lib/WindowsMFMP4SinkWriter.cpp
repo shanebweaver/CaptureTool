@@ -71,7 +71,7 @@ WindowsMFMP4SinkWriter::WindowsMFMP4SinkWriter(
 
 WindowsMFMP4SinkWriter::~WindowsMFMP4SinkWriter()
 {
-    Finalize();
+    (void)Finalize();
 }
 
 bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, uint32_t width, uint32_t height, long* outHr)
@@ -268,38 +268,16 @@ long WindowsMFMP4SinkWriter::WriteAudioSample(std::span<const uint8_t> data, int
     return m_sinkWriter->WriteSample(m_audioStreamIndex, sampleResult.Value().get());
 }
 
-void WindowsMFMP4SinkWriter::Finalize()
+HRESULT WindowsMFMP4SinkWriter::Finalize()
 {
     m_lastFinalizationError = S_OK;
     
     if (m_sinkWriter)
     {
-        HRESULT hr = S_OK;
-        
-        if (m_hasBegunWriting)
-        {
-            // Flush encoder by sending stream ticks
-            hr = m_sinkWriter->SendStreamTick(m_videoStreamIndex, m_prevVideoTimestamp);
-            if (FAILED(hr))
-            {
-                m_lastFinalizationError = hr;
-            }
-            
-            if (m_hasAudioStream)
-            {
-                hr = m_sinkWriter->SendStreamTick(m_audioStreamIndex, m_prevVideoTimestamp);
-                if (FAILED(hr) && SUCCEEDED(m_lastFinalizationError))
-                {
-                    m_lastFinalizationError = hr;
-                }
-            }
-        }
-        
-        hr = m_sinkWriter->Finalize();
-        if (FAILED(hr) && SUCCEEDED(m_lastFinalizationError))
-        {
-            m_lastFinalizationError = hr;
-        }
+        // Finalize is the Media Foundation operation that drains encoders and
+        // writes the container metadata. SendStreamTick indicates a media gap;
+        // it is not a flush operation and can introduce invalid end timestamps.
+        m_lastFinalizationError = m_sinkWriter->Finalize();
         
         m_sinkWriter.reset();
     }
@@ -308,4 +286,5 @@ void WindowsMFMP4SinkWriter::Finalize()
     m_textureProcessor.reset();
     
     // MediaFoundationLifecycleManager handles MFShutdown in its destructor
+    return m_lastFinalizationError;
 }
