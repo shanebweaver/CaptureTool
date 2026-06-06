@@ -126,6 +126,7 @@
     <ClInclude Include="MediaFoundationLifecycleManagerFactory.h" />
     <ClInclude Include="MediaTimeConstants.h" />
     <ClInclude Include="V2\Core\OutputProfileResolver.h" />
+    <ClInclude Include="V2\Core\PipelineInterfaces.h" />
     <ClInclude Include="V2\Core\PipelineStateMachine.h" />
     <ClInclude Include="Result.h" />
     <ClInclude Include="SampleBuilder.h" />
@@ -141,6 +142,7 @@
     <ClInclude Include="V2\Core\CapturePipelineConfig.h" />
     <ClInclude Include="V2\Core\CapturePipelineConfigValidator.h" />
     <ClInclude Include="V2\Core\MediaPrimitives.h" />
+    <ClInclude Include="V2\Core\MediaSamples.h" />
     <ClInclude Include="V2\Core\MediaTypes.h" />
     <ClInclude Include="V2\Core\ResultTypes.h" />
     <ClInclude Include="V2\Core\RecordingClock.h" />

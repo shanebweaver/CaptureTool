@@ -66,6 +66,9 @@
     <ClCompile Include="V2CoreOutputProfileResolverTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="V2CorePipelineInterfacesTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="V2CorePipelineStateMachineTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

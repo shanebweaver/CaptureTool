@@ -243,6 +243,9 @@
     <ClInclude Include="V2\Core\MediaPrimitives.h">
       <Filter>Header Files\V2\Core</Filter>
     </ClInclude>
+    <ClInclude Include="V2\Core\MediaSamples.h">
+      <Filter>Header Files\V2\Core</Filter>
+    </ClInclude>
     <ClInclude Include="V2\Core\MediaTypes.h">
       <Filter>Header Files\V2\Core</Filter>
     </ClInclude>
@@ -256,6 +259,9 @@
       <Filter>Header Files\V2\Core</Filter>
     </ClInclude>
     <ClInclude Include="V2\Core\PipelineStateMachine.h">
+      <Filter>Header Files\V2\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="V2\Core\PipelineInterfaces.h">
       <Filter>Header Files\V2\Core</Filter>
     </ClInclude>
   </ItemGroup>
