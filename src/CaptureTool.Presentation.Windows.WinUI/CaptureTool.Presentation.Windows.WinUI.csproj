@@ -55,6 +55,12 @@
   <ItemGroup>
     <Content Include="Fonts\FluentSystemIcons-Regular.ttf" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Remove="D:\Git\CaptureTool\bin\Debug\x64\CaptureInterop.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="D:\Git\CaptureTool\bin\Debug\x64\CaptureInterop.dll" />
+  </ItemGroup>
 
   <!-- Native DLL references for MSIX packaging -->
   <ItemGroup>

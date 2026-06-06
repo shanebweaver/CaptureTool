@@ -1,13 +1,18 @@
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Drawing;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
 public sealed partial class ChromaKeyToolbar : UserControlBase
 {
+    private const int MinimumEffectPercentage = 0;
+    private const int MaximumEffectPercentage = 100;
+
     public static readonly DependencyProperty ColorOptionsProperty = DependencyProperty.Register(
         nameof(ColorOptions),
         typeof(IEnumerable<ChromaKeyColorOption>),
@@ -18,7 +23,7 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
         nameof(SelectedColorOptionIndex),
         typeof(int),
         typeof(ChromaKeyToolbar),
-        new PropertyMetadata(-1));
+        new PropertyMetadata(-1, OnSelectedColorOptionIndexChanged));
 
     public static readonly DependencyProperty ToleranceProperty = DependencyProperty.Register(
         nameof(Tolerance),
@@ -50,18 +55,40 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
     public int Tolerance
     {
         get => Get<int>(ToleranceProperty);
-        set => Set(ToleranceProperty, value);
+        set => Set(ToleranceProperty, Math.Clamp(value, MinimumEffectPercentage, MaximumEffectPercentage));
     }
 
     public int Desaturation
     {
         get => Get<int>(DesaturationProperty);
-        set => Set(DesaturationProperty, value);
+        set => Set(DesaturationProperty, Math.Clamp(value, MinimumEffectPercentage, MaximumEffectPercentage));
     }
 
     private readonly ObservableCollection<ChromaKeyColorOption> _bindableColorOptions = [];
     private INotifyCollectionChanged? _colorOptionsCollection;
+    private IReadOnlyList<Color> _paletteColorOptions = [];
+    private Color _selectedColor = Color.Empty;
+    private bool _hasColorOptions;
     private bool _areEffectOptionsEnabled;
+
+    public IReadOnlyList<Color> PaletteColorOptions
+    {
+        get => _paletteColorOptions;
+        private set => Set(ref _paletteColorOptions, value);
+    }
+
+    public Color SelectedColor
+    {
+        get => _selectedColor;
+        private set => Set(ref _selectedColor, value);
+    }
+
+    public bool HasColorOptions
+    {
+        get => _hasColorOptions;
+        private set => Set(ref _hasColorOptions, value);
+    }
+
     public bool AreEffectOptionsEnabled
     {
         get => _areEffectOptionsEnabled;
@@ -72,13 +99,9 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
     public event EventHandler<int>? ToleranceChanged;
     public event EventHandler<int>? DesaturationChanged;
 
-    public int[] ToleranceOptions = [.. Enumerable.Range(1, 99)];
-    public int[] DesaturationOptions = [.. Enumerable.Range(1, 99)];
-
     public ChromaKeyToolbar()
     {
         InitializeComponent();
-        KeyColorComboBox.ItemsSource = _bindableColorOptions;
     }
 
     private static void OnColorOptionsChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
@@ -86,6 +109,15 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
         if (dependencyObject is ChromaKeyToolbar toolbar)
         {
             toolbar.UpdateColorOptions(args.NewValue as IEnumerable<ChromaKeyColorOption>);
+        }
+    }
+
+    private static void OnSelectedColorOptionIndexChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
+    {
+        if (dependencyObject is ChromaKeyToolbar toolbar)
+        {
+            toolbar.UpdateSelectedColor();
+            toolbar.UpdateSliderEnablement();
         }
     }
 
@@ -123,7 +155,18 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
             }
         }
 
+        PaletteColorOptions = [.. _bindableColorOptions.Select(option => option.Color)];
+        HasColorOptions = _bindableColorOptions.Count > 0;
+        UpdateSelectedColor();
         UpdateSliderEnablement();
+    }
+
+    private void UpdateSelectedColor()
+    {
+        SelectedColor =
+            _bindableColorOptions.Count > SelectedColorOptionIndex && SelectedColorOptionIndex >= 0
+                ? _bindableColorOptions[SelectedColorOptionIndex].Color
+                : Color.Empty;
     }
 
     private void UpdateSliderEnablement()
@@ -143,11 +186,13 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
 
         SelectedColorOptionIndex = value;
         SelectedColorOptionIndexChanged?.Invoke(this, value);
+        UpdateSelectedColor();
         UpdateSliderEnablement();
     }
 
     private void UpdateTolerance(int value)
     {
+        value = Math.Clamp(value, MinimumEffectPercentage, MaximumEffectPercentage);
         if (Tolerance == value)
         {
             return;
@@ -159,6 +204,7 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
 
     private void UpdateDesaturation(int value)
     {
+        value = Math.Clamp(value, MinimumEffectPercentage, MaximumEffectPercentage);
         if (Desaturation == value)
         {
             return;
@@ -168,27 +214,64 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
         DesaturationChanged?.Invoke(this, value);
     }
 
-    private void KeyColorComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void KeyColorPalette_SelectedColorChanged(object? sender, Color color)
     {
-        if (sender is ComboBox comboBox)
+        int colorOptionIndex = FindColorOptionIndex(color);
+        UpdateSelectedColorOptionIndex(colorOptionIndex);
+    }
+
+    private int FindColorOptionIndex(Color color)
+    {
+        for (int i = 0; i < _bindableColorOptions.Count; i++)
         {
-            UpdateSelectedColorOptionIndex(comboBox.SelectedIndex);
+            if (_bindableColorOptions[i].Color.Equals(color))
+            {
+                return i;
+            }
         }
+
+        return -1;
+    }
+
+    private void ToleranceSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs args)
+    {
+        UpdateTolerance((int)Math.Round(args.NewValue));
+    }
+
+    private void DesaturationSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs args)
+    {
+        UpdateDesaturation((int)Math.Round(args.NewValue));
     }
 
     private void ToleranceNumberBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
     {
-        if (sender is NumberBox numberBox)
+        if (double.IsNaN(args.NewValue))
         {
-            UpdateTolerance((int)numberBox.Value);
+            sender.Value = Tolerance;
+            return;
         }
+
+        int value = (int)Math.Round(Math.Clamp(
+            args.NewValue,
+            MinimumEffectPercentage,
+            MaximumEffectPercentage));
+        sender.Value = value;
+        UpdateTolerance(value);
     }
 
     private void DesaturationNumberBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
     {
-        if (sender is NumberBox numberBox)
+        if (double.IsNaN(args.NewValue))
         {
-            UpdateDesaturation((int)numberBox.Value);
+            sender.Value = Desaturation;
+            return;
         }
+
+        int value = (int)Math.Round(Math.Clamp(
+            args.NewValue,
+            MinimumEffectPercentage,
+            MaximumEffectPercentage));
+        sender.Value = value;
+        UpdateDesaturation(value);
     }
 }

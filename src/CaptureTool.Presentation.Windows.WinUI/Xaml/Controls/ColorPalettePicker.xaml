@@ -117,7 +117,10 @@
                     Text="{x:Bind FormatThickness(Thickness), Mode=OneWay}" />
             </Grid>
 
-            <Grid Width="58" VerticalAlignment="Top">
+            <Grid
+                Width="58"
+                VerticalAlignment="Top"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsOpacityVisible), Mode=OneWay}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
