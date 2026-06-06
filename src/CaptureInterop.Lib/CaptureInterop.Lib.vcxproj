@@ -126,6 +126,7 @@
     <ClInclude Include="MediaFoundationLifecycleManagerFactory.h" />
     <ClInclude Include="MediaTimeConstants.h" />
     <ClInclude Include="V2\Core\OutputProfileResolver.h" />
+    <ClInclude Include="V2\Core\PipelineStateMachine.h" />
     <ClInclude Include="Result.h" />
     <ClInclude Include="SampleBuilder.h" />
     <ClInclude Include="SampleBuilderFactory.h" />

@@ -114,6 +114,7 @@
     <ClCompile Include="V2CoreCapturePipelineConfigValidatorTests.cpp" />
     <ClCompile Include="V2CoreMediaTypesTests.cpp" />
     <ClCompile Include="V2CoreOutputProfileResolverTests.cpp" />
+    <ClCompile Include="V2CorePipelineStateMachineTests.cpp" />
     <ClCompile Include="V2CorePrimitiveValueObjectsTests.cpp" />
     <ClCompile Include="V2CoreRecordingClockTests.cpp" />
     <ClCompile Include="V2CoreResultDiagnosticsTests.cpp" />
