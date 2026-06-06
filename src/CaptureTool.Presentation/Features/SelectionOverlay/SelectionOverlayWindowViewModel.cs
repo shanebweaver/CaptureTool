@@ -32,6 +32,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     ];
 
     private static readonly CaptureType[] _videoCaptureTypes = [
+        CaptureType.Rectangle,
         CaptureType.FullScreen,
     ];
 

@@ -54,7 +54,13 @@ class FrameArrivedHandler final
     : public ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>
 {
 public:
-    explicit FrameArrivedHandler(VideoFrameReadyCallback callback, IMediaClockReader* clockReader) noexcept;
+    explicit FrameArrivedHandler(
+        VideoFrameReadyCallback callback,
+        IMediaClockReader* clockReader,
+        UINT32 cropLeft,
+        UINT32 cropTop,
+        UINT32 cropWidth,
+        UINT32 cropHeight) noexcept;
     ~FrameArrivedHandler();
 
     // IUnknown
@@ -77,10 +83,18 @@ public:
 
 private:
     void ProcessingThreadProc();
+    HRESULT CreateCroppedTexture(
+        ID3D11Texture2D* source,
+        wil::com_ptr<ID3D11Texture2D>& croppedTexture);
 
     volatile long m_ref;
     VideoFrameReadyCallback m_callback;
     IMediaClockReader* m_clockReader;
+    UINT32 m_cropLeft;
+    UINT32 m_cropTop;
+    UINT32 m_cropWidth;
+    UINT32 m_cropHeight;
+    wil::com_ptr<ID3D11Texture2D> m_croppedTexture;
     
     // Background processing
     std::queue<QueuedFrame> m_frameQueue;
@@ -95,4 +109,13 @@ private:
 };
 
 // Helper to register the frame-arrived event.
-EventRegistrationToken RegisterFrameArrivedHandler(wil::com_ptr<IDirect3D11CaptureFramePool> framePool, VideoFrameReadyCallback callback, IMediaClockReader* clockReader, FrameArrivedHandler** outHandler = nullptr, HRESULT* outHr = nullptr);
+EventRegistrationToken RegisterFrameArrivedHandler(
+    wil::com_ptr<IDirect3D11CaptureFramePool> framePool,
+    VideoFrameReadyCallback callback,
+    IMediaClockReader* clockReader,
+    UINT32 cropLeft,
+    UINT32 cropTop,
+    UINT32 cropWidth,
+    UINT32 cropHeight,
+    FrameArrivedHandler** outHandler = nullptr,
+    HRESULT* outHr = nullptr);

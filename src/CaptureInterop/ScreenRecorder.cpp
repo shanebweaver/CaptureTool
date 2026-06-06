@@ -26,6 +26,46 @@ extern "C"
         }
     }
 
+    __declspec(dllexport) int32_t TryStartRecordingRegion(
+        HMONITOR hMonitor,
+        const wchar_t* outputPath,
+        int32_t captureX,
+        int32_t captureY,
+        int32_t captureWidth,
+        int32_t captureHeight,
+        int32_t captureAudio) noexcept
+    {
+        try
+        {
+            if (captureX < 0 ||
+                captureY < 0 ||
+                captureWidth <= 0 ||
+                captureHeight <= 0 ||
+                captureX > INT32_MAX - captureWidth ||
+                captureY > INT32_MAX - captureHeight)
+            {
+                return 0;
+            }
+
+            RECT captureArea
+            {
+                captureX,
+                captureY,
+                captureX + captureWidth,
+                captureY + captureHeight
+            };
+            return GetRecorder().StartRecording(
+                hMonitor,
+                outputPath,
+                captureAudio != 0,
+                captureArea) ? 1 : 0;
+        }
+        catch (...)
+        {
+            return 0;
+        }
+    }
+
     __declspec(dllexport) void TryPauseRecording() noexcept
     {
         try

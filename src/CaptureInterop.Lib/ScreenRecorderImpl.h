@@ -61,6 +61,11 @@ public:
     /// <param name="captureAudio">Whether to capture system audio.</param>
     /// <returns>True if recording started successfully, false otherwise.</returns>
     bool StartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio);
+    bool StartRecording(
+        HMONITOR hMonitor,
+        const wchar_t* outputPath,
+        bool captureAudio,
+        RECT captureArea);
 
     /// <summary>
     /// Pause the current recording.

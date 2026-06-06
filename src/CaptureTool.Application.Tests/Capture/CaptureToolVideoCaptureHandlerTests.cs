@@ -18,7 +18,11 @@ public class CaptureToolVideoCaptureHandlerTests
     {
         Fixture = new Fixture().Customize(new AutoMoqCustomization { ConfigureMembers = true });
         Fixture.Freeze<Mock<IScreenRecorder>>()
-            .Setup(x => x.StartRecording(It.IsAny<nint>(), It.IsAny<string>(), It.IsAny<bool>()))
+            .Setup(x => x.StartRecording(
+                It.IsAny<nint>(),
+                It.IsAny<System.Drawing.Rectangle>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>()))
             .Returns(true);
     }
 
@@ -196,7 +200,11 @@ public class CaptureToolVideoCaptureHandlerTests
     {
         var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
         screenRecorder
-            .Setup(x => x.StartRecording(It.IsAny<nint>(), It.IsAny<string>(), It.IsAny<bool>()))
+            .Setup(x => x.StartRecording(
+                It.IsAny<nint>(),
+                It.IsAny<System.Drawing.Rectangle>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>()))
             .Returns(false);
         var storageService = Fixture.Freeze<Mock<IStorageService>>();
         storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
@@ -208,6 +216,32 @@ public class CaptureToolVideoCaptureHandlerTests
         action.Should().Throw<InvalidOperationException>();
         handler.IsRecording.Should().BeFalse();
         handler.IsFinalizing.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void StartVideoCapture_UsesPhysicalPixelCaptureArea()
+    {
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        var storageService = Fixture.Freeze<Mock<IStorageService>>();
+        storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+        var args = new NewCaptureArgs(
+            new MonitorCaptureResult(
+                new nint(42),
+                [],
+                144,
+                new System.Drawing.Rectangle(100, 200, 1920, 1080),
+                new System.Drawing.Rectangle(100, 200, 1920, 1040),
+                true),
+            new System.Drawing.Rectangle(10, 20, 300, 200));
+
+        handler.StartVideoCapture(args);
+
+        screenRecorder.Verify(x => x.StartRecording(
+            new nint(42),
+            new System.Drawing.Rectangle(15, 30, 450, 300),
+            It.IsAny<string>(),
+            It.IsAny<bool>()), Times.Once);
     }
 
     [TestMethod]

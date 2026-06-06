@@ -4,8 +4,19 @@ namespace CaptureTool.Infrastructure.Capture.Windows;
 
 public partial class WindowsScreenRecorder : IScreenRecorder
 {
-    public bool StartRecording(IntPtr hMonitor, string outputPath, bool captureAudio = false)
-        => CaptureInterop.TryStartRecording(hMonitor, outputPath, captureAudio);
+    public bool StartRecording(
+        IntPtr hMonitor,
+        System.Drawing.Rectangle captureArea,
+        string outputPath,
+        bool captureAudio = false)
+        => CaptureInterop.TryStartRecordingRegion(
+            hMonitor,
+            outputPath,
+            captureArea.X,
+            captureArea.Y,
+            captureArea.Width,
+            captureArea.Height,
+            captureAudio ? 1 : 0) != 0;
     public ScreenRecordingResult StopRecording()
     {
         int hresult = CaptureInterop.TryStopRecording(out ScreenRecordingStage stage);

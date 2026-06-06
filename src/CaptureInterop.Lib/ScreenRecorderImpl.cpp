@@ -79,8 +79,23 @@ bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
 
 bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool audioEnabled)
 {
-    // Create config and delegate to config-based method
-    CaptureSessionConfig config(hMonitor, outputPath, audioEnabled);
+    return StartRecording(hMonitor, outputPath, audioEnabled, {});
+}
+
+bool ScreenRecorderImpl::StartRecording(
+    HMONITOR hMonitor,
+    const wchar_t* outputPath,
+    bool audioEnabled,
+    RECT captureArea)
+{
+    CaptureSessionConfig config(
+        hMonitor,
+        outputPath,
+        audioEnabled,
+        30,
+        5'000'000,
+        128'000,
+        captureArea);
     return StartRecording(config);
 }
 

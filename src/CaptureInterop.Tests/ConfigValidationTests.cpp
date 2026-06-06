@@ -377,5 +377,42 @@ namespace CaptureInteropTests
             Assert::IsTrue(result.isValid, L"Configuration with edge case valid values should be valid");
             Assert::AreEqual(size_t(0), result.errors.size(), L"Should have no errors");
         }
+
+        TEST_METHOD(Validate_ValidCaptureArea_ReturnsOk)
+        {
+            HMONITOR hMonitor = reinterpret_cast<HMONITOR>(0x12345678);
+            RECT captureArea{100, 50, 900, 650};
+            CaptureSessionConfig config(
+                hMonitor,
+                L"C:\\test\\output.mp4",
+                false,
+                30,
+                5'000'000,
+                128'000,
+                captureArea);
+
+            ConfigValidationResult result = config.Validate();
+
+            Assert::IsTrue(result.isValid, L"Valid capture area should be accepted");
+            Assert::IsTrue(config.HasCaptureArea(), L"Capture area should be enabled");
+        }
+
+        TEST_METHOD(Validate_InvalidCaptureArea_ReturnsError)
+        {
+            HMONITOR hMonitor = reinterpret_cast<HMONITOR>(0x12345678);
+            RECT captureArea{100, 50, 100, 650};
+            CaptureSessionConfig config(
+                hMonitor,
+                L"C:\\test\\output.mp4",
+                false,
+                30,
+                5'000'000,
+                128'000,
+                captureArea);
+
+            ConfigValidationResult result = config.Validate();
+
+            Assert::IsFalse(result.isValid, L"Zero-width capture area should be rejected");
+        }
     };
 }

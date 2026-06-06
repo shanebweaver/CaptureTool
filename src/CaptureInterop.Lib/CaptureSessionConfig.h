@@ -82,6 +82,12 @@ struct CaptureSessionConfig
     bool audioEnabled;
 
     /// <summary>
+    /// Region to capture in monitor-relative physical pixels.
+    /// An empty rectangle captures the entire monitor.
+    /// </summary>
+    RECT captureArea;
+
+    /// <summary>
     /// Target video frame rate (FPS). Default is 30.
     /// </summary>
     uint32_t frameRate;
@@ -105,10 +111,12 @@ struct CaptureSessionConfig
         bool audio = false,
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
-        uint32_t audBitrate = 128'000)
+        uint32_t audBitrate = 128'000,
+        RECT area = {})
         : hMonitor(monitor)
         , outputPath(path ? path : L"")
         , audioEnabled(audio)
+        , captureArea(area)
         , frameRate(fps)
         , videoBitrate(vidBitrate)
         , audioBitrate(audBitrate)
@@ -124,10 +132,12 @@ struct CaptureSessionConfig
         bool audio = false,
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
-        uint32_t audBitrate = 128'000)
+        uint32_t audBitrate = 128'000,
+        RECT area = {})
         : hMonitor(monitor)
         , outputPath(std::move(path))
         , audioEnabled(audio)
+        , captureArea(area)
         , frameRate(fps)
         , videoBitrate(vidBitrate)
         , audioBitrate(audBitrate)
@@ -141,6 +151,7 @@ struct CaptureSessionConfig
         : hMonitor(nullptr)
         , outputPath(L"")
         , audioEnabled(false)
+        , captureArea{}
         , frameRate(30)
         , videoBitrate(5'000'000)
         , audioBitrate(128'000)
@@ -223,8 +234,28 @@ struct CaptureSessionConfig
                               std::to_string(audioBitrate) + ")");
             }
         }
+
+        bool hasAnyCaptureAreaValue =
+            captureArea.left != 0 ||
+            captureArea.top != 0 ||
+            captureArea.right != 0 ||
+            captureArea.bottom != 0;
+        if (hasAnyCaptureAreaValue &&
+            (captureArea.left < 0 ||
+             captureArea.top < 0 ||
+             captureArea.right <= captureArea.left ||
+             captureArea.bottom <= captureArea.top))
+        {
+            result.AddError("captureArea must be empty or have non-negative coordinates and positive dimensions");
+        }
         
         return result;
+    }
+
+    bool HasCaptureArea() const
+    {
+        return captureArea.right > captureArea.left &&
+               captureArea.bottom > captureArea.top;
     }
 
 private:

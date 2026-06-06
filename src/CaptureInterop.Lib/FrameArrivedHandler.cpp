@@ -9,9 +9,19 @@ using namespace ABI::Windows::Graphics::DirectX::Direct3D11;
 using namespace ABI::Windows::Graphics;
 using namespace ABI::Windows::Graphics::Capture;
 
-FrameArrivedHandler::FrameArrivedHandler(VideoFrameReadyCallback callback, IMediaClockReader* clockReader) noexcept
+FrameArrivedHandler::FrameArrivedHandler(
+    VideoFrameReadyCallback callback,
+    IMediaClockReader* clockReader,
+    UINT32 cropLeft,
+    UINT32 cropTop,
+    UINT32 cropWidth,
+    UINT32 cropHeight) noexcept
     : m_callback(std::move(callback)),
     m_clockReader(clockReader),
+    m_cropLeft(cropLeft),
+    m_cropTop(cropTop),
+    m_cropWidth(cropWidth),
+    m_cropHeight(cropHeight),
     m_ref(1),
     m_running(true),
     m_stopped(false),
@@ -209,8 +219,17 @@ void FrameArrivedHandler::ProcessingThreadProc()
 
             if (frame.texture && m_callback && m_running)
             {
+                wil::com_ptr<ID3D11Texture2D> croppedTexture;
+                HRESULT cropResult = CreateCroppedTexture(frame.texture.get(), croppedTexture);
+                if (FAILED(cropResult))
+                {
+                    m_processingResult.store(cropResult, std::memory_order_release);
+                    m_running.store(false, std::memory_order_release);
+                    break;
+                }
+
                 VideoFrameReadyEventArgs args;
-                args.pTexture = frame.texture.get();
+                args.pTexture = croppedTexture ? croppedTexture.get() : frame.texture.get();
                 args.timestamp = frame.relativeTimestamp;
 
                 m_callback(args);
@@ -224,15 +243,108 @@ void FrameArrivedHandler::ProcessingThreadProc()
     }
 }
 
+HRESULT FrameArrivedHandler::CreateCroppedTexture(
+    ID3D11Texture2D* source,
+    wil::com_ptr<ID3D11Texture2D>& croppedTexture)
+{
+    if (!source)
+    {
+        return E_INVALIDARG;
+    }
+
+    D3D11_TEXTURE2D_DESC sourceDesc{};
+    source->GetDesc(&sourceDesc);
+
+    if (m_cropLeft == 0 &&
+        m_cropTop == 0 &&
+        m_cropWidth == sourceDesc.Width &&
+        m_cropHeight == sourceDesc.Height)
+    {
+        return S_OK;
+    }
+
+    if (m_cropWidth == 0 ||
+        m_cropHeight == 0 ||
+        m_cropWidth > sourceDesc.Width ||
+        m_cropHeight > sourceDesc.Height ||
+        m_cropLeft > sourceDesc.Width - m_cropWidth ||
+        m_cropTop > sourceDesc.Height - m_cropHeight)
+    {
+        return E_INVALIDARG;
+    }
+
+    wil::com_ptr<ID3D11Device> device;
+    source->GetDevice(device.put());
+    if (!device)
+    {
+        return E_FAIL;
+    }
+
+    if (!m_croppedTexture)
+    {
+        D3D11_TEXTURE2D_DESC croppedDesc = sourceDesc;
+        croppedDesc.Width = m_cropWidth;
+        croppedDesc.Height = m_cropHeight;
+
+        HRESULT hr = device->CreateTexture2D(
+            &croppedDesc,
+            nullptr,
+            m_croppedTexture.put());
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+    }
+
+    wil::com_ptr<ID3D11DeviceContext> context;
+    device->GetImmediateContext(context.put());
+    if (!context)
+    {
+        return E_FAIL;
+    }
+
+    D3D11_BOX sourceBox
+    {
+        m_cropLeft,
+        m_cropTop,
+        0,
+        m_cropLeft + m_cropWidth,
+        m_cropTop + m_cropHeight,
+        1
+    };
+    context->CopySubresourceRegion(
+        m_croppedTexture.get(),
+        0,
+        0,
+        0,
+        0,
+        source,
+        0,
+        &sourceBox);
+
+    croppedTexture = m_croppedTexture;
+    return S_OK;
+}
+
 EventRegistrationToken RegisterFrameArrivedHandler(
     wil::com_ptr<IDirect3D11CaptureFramePool> framePool,
     VideoFrameReadyCallback callback,
     IMediaClockReader* clockReader,
+    UINT32 cropLeft,
+    UINT32 cropTop,
+    UINT32 cropWidth,
+    UINT32 cropHeight,
     FrameArrivedHandler** outHandler,
     HRESULT* outHr)
 {
     EventRegistrationToken token{};
-    auto handler = new FrameArrivedHandler(callback, clockReader);
+    auto handler = new FrameArrivedHandler(
+        callback,
+        clockReader,
+        cropLeft,
+        cropTop,
+        cropWidth,
+        cropHeight);
     
     // Start the processing thread after object is fully constructed
     handler->StartProcessing();

@@ -3,6 +3,8 @@
 #include "FrameArrivedHandler.h"
 #include "WindowsGraphicsCaptureHelpers.h"
 
+#include <algorithm>
+
 using namespace WindowsGraphicsCaptureHelpers;
 
 WindowsDesktopVideoCaptureSource::WindowsDesktopVideoCaptureSource(const CaptureSessionConfig& config, IMediaClockReader* clockReader)
@@ -11,6 +13,8 @@ WindowsDesktopVideoCaptureSource::WindowsDesktopVideoCaptureSource(const Capture
     , m_clockReader(clockReader)
     , m_width(0)
     , m_height(0)
+    , m_cropLeft(0)
+    , m_cropTop(0)
     , m_isRunning(false)
 {
     m_frameArrivedEventToken.value = 0;
@@ -91,8 +95,43 @@ bool WindowsDesktopVideoCaptureSource::Initialize(HRESULT* outHr)
         return false;
     }
 
-    m_width = size.Width;
-    m_height = size.Height;
+    if (size.Width <= 0 || size.Height <= 0)
+    {
+        if (outHr) *outHr = E_INVALIDARG;
+        return false;
+    }
+
+    UINT32 sourceWidth = static_cast<UINT32>(size.Width);
+    UINT32 sourceHeight = static_cast<UINT32>(size.Height);
+    m_cropLeft = 0;
+    m_cropTop = 0;
+    m_width = sourceWidth;
+    m_height = sourceHeight;
+
+    if (m_config.HasCaptureArea())
+    {
+        LONG left = std::clamp<LONG>(m_config.captureArea.left, 0, size.Width);
+        LONG top = std::clamp<LONG>(m_config.captureArea.top, 0, size.Height);
+        LONG right = std::clamp<LONG>(m_config.captureArea.right, left, size.Width);
+        LONG bottom = std::clamp<LONG>(m_config.captureArea.bottom, top, size.Height);
+
+        UINT32 width = static_cast<UINT32>(right - left);
+        UINT32 height = static_cast<UINT32>(bottom - top);
+
+        // The Media Foundation H.264 encoder requires even frame dimensions.
+        width &= ~1u;
+        height &= ~1u;
+        if (width < 2 || height < 2)
+        {
+            if (outHr) *outHr = E_INVALIDARG;
+            return false;
+        }
+
+        m_cropLeft = static_cast<UINT32>(left);
+        m_cropTop = static_cast<UINT32>(top);
+        m_width = width;
+        m_height = height;
+    }
 
     if (outHr) *outHr = S_OK;
     return true;
@@ -117,7 +156,16 @@ bool WindowsDesktopVideoCaptureSource::Start(HRESULT* outHr)
     // Register frame arrived handler with callback and clock reader for timestamps
     // Principle #3 (No Nullable Pointers): Use wil::com_ptr to manage handler lifetime
     FrameArrivedHandler* rawHandler = nullptr;
-    m_frameArrivedEventToken = RegisterFrameArrivedHandler(m_framePool, m_callback, m_clockReader, &rawHandler, &hr);
+    m_frameArrivedEventToken = RegisterFrameArrivedHandler(
+        m_framePool,
+        m_callback,
+        m_clockReader,
+        m_cropLeft,
+        m_cropTop,
+        m_width,
+        m_height,
+        &rawHandler,
+        &hr);
     if (FAILED(hr))
     {
         if (outHr) *outHr = hr;

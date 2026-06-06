@@ -74,7 +74,11 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             GetNewCaptureFileName()
         );
 
-        if (!_screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled))
+        if (!_screenRecorder.StartRecording(
+            args.Monitor.HMonitor,
+            args.GetPhysicalCaptureArea(),
+            _tempVideoPath,
+            IsDesktopAudioEnabled))
         {
             _tempVideoPath = null;
             UpdateCaptureState(CaptureState.Idle);

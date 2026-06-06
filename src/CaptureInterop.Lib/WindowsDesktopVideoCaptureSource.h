@@ -87,6 +87,8 @@ private:
     // Video dimensions
     UINT32 m_width;
     UINT32 m_height;
+    UINT32 m_cropLeft;
+    UINT32 m_cropTop;
     
     // State
     bool m_isRunning;

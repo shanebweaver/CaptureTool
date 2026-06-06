@@ -4,7 +4,11 @@ namespace CaptureTool.Domain.Capture;
 
 public partial interface IScreenRecorder
 {
-    bool StartRecording(nint hMonitor, string outputPath, bool captureAudio = false);
+    bool StartRecording(
+        nint hMonitor,
+        System.Drawing.Rectangle captureArea,
+        string outputPath,
+        bool captureAudio = false);
     ScreenRecordingResult StopRecording();
     void PauseRecording();
     void ResumeRecording();
