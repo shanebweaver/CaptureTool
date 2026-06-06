@@ -89,7 +89,7 @@ jobs:
 
     - name: Upload coverage to Codecov
       if: matrix.platform == 'x64'
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         files: coverage.cobertura.xml
         token: ${{ secrets.CODECOV_TOKEN }}
