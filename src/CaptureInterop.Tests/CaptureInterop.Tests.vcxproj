@@ -111,6 +111,7 @@
     <ClCompile Include="ShutdownRaceConditionTests.cpp" />
     <ClCompile Include="VideoCaptureSourceStopTests.cpp" />
     <ClCompile Include="V2CorePrimitiveValueObjectsTests.cpp" />
+    <ClCompile Include="V2CoreResultDiagnosticsTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
