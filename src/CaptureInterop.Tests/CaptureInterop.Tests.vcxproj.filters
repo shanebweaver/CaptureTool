@@ -60,6 +60,9 @@
     <ClCompile Include="V2CoreCapturePipelineConfigValidatorTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="V2CoreFakeComponentsTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="V2CoreMediaTypesTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -81,6 +84,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="V2CoreTestComponents.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
