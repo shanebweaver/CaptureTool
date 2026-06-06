@@ -115,6 +115,7 @@
     <ClCompile Include="V2CoreMediaTypesTests.cpp" />
     <ClCompile Include="V2CoreOutputProfileResolverTests.cpp" />
     <ClCompile Include="V2CorePrimitiveValueObjectsTests.cpp" />
+    <ClCompile Include="V2CoreRecordingClockTests.cpp" />
     <ClCompile Include="V2CoreResultDiagnosticsTests.cpp" />
   </ItemGroup>
   <ItemGroup>

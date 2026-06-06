@@ -142,6 +142,7 @@
     <ClInclude Include="V2\Core\MediaPrimitives.h" />
     <ClInclude Include="V2\Core\MediaTypes.h" />
     <ClInclude Include="V2\Core\ResultTypes.h" />
+    <ClInclude Include="V2\Core\RecordingClock.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSource.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSourceFactory.h" />
     <ClInclude Include="WindowsLocalAudioCaptureSource.h" />
