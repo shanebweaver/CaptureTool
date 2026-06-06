@@ -54,6 +54,9 @@
     <ClCompile Include="V2CorePrimitiveValueObjectsTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="V2CoreMediaTypesTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="V2CoreResultDiagnosticsTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

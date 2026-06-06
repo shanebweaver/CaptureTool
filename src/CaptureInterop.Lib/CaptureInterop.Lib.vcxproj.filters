@@ -237,6 +237,9 @@
     <ClInclude Include="V2\Core\MediaPrimitives.h">
       <Filter>Header Files\V2\Core</Filter>
     </ClInclude>
+    <ClInclude Include="V2\Core\MediaTypes.h">
+      <Filter>Header Files\V2\Core</Filter>
+    </ClInclude>
     <ClInclude Include="V2\Core\ResultTypes.h">
       <Filter>Header Files\V2\Core</Filter>
     </ClInclude>

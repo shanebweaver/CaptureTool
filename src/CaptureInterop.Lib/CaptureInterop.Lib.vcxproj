@@ -137,6 +137,7 @@
     <ClInclude Include="TextureProcessor.h" />
     <ClInclude Include="TextureProcessorFactory.h" />
     <ClInclude Include="V2\Core\MediaPrimitives.h" />
+    <ClInclude Include="V2\Core\MediaTypes.h" />
     <ClInclude Include="V2\Core\ResultTypes.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSource.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSourceFactory.h" />
