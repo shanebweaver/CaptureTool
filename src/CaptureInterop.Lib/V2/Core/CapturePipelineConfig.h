@@ -104,7 +104,17 @@ namespace CaptureInterop::V2
             return std::get_if<DesktopSourceConfig>(&m_data);
         }
 
+        [[nodiscard]] DesktopSourceConfig* AsDesktop() noexcept
+        {
+            return std::get_if<DesktopSourceConfig>(&m_data);
+        }
+
         [[nodiscard]] const SystemAudioSourceConfig* AsSystemAudio() const noexcept
+        {
+            return std::get_if<SystemAudioSourceConfig>(&m_data);
+        }
+
+        [[nodiscard]] SystemAudioSourceConfig* AsSystemAudio() noexcept
         {
             return std::get_if<SystemAudioSourceConfig>(&m_data);
         }
@@ -157,9 +167,28 @@ namespace CaptureInterop::V2
             return nullptr;
         }
 
+        [[nodiscard]] SourceConfig* FindSource(SourceId id) noexcept
+        {
+            for (SourceConfig& source : sources)
+            {
+                if (source.Id() == id)
+                {
+                    return &source;
+                }
+            }
+
+            return nullptr;
+        }
+
         [[nodiscard]] const SystemAudioSourceConfig* FindSystemAudioSource(SourceId id) const noexcept
         {
             const SourceConfig* source = FindSource(id);
+            return source == nullptr ? nullptr : source->AsSystemAudio();
+        }
+
+        [[nodiscard]] SystemAudioSourceConfig* FindSystemAudioSource(SourceId id) noexcept
+        {
+            SourceConfig* source = FindSource(id);
             return source == nullptr ? nullptr : source->AsSystemAudio();
         }
 
