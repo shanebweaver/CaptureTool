@@ -96,6 +96,7 @@
     <ClInclude Include="ScreenshotExports.h" />
     <ClInclude Include="TextureConversionExports.h" />
     <ClInclude Include="V2\CaptureInteropV2Exports.h" />
+    <ClInclude Include="V2\CaptureInteropV2Validation.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />

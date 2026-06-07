@@ -27,6 +27,9 @@
     <ClInclude Include="V2\CaptureInteropV2Exports.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="V2\CaptureInteropV2Validation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
