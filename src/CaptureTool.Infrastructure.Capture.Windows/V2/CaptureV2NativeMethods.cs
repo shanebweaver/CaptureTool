@@ -17,6 +17,31 @@ internal static partial class CaptureV2NativeMethods
     internal static extern int CtCaptureV2_Pause(CaptureRecorderSafeHandle handle);
 
     [DllImport("CaptureInterop.dll", ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    internal static extern int CtCaptureV2_Start(
+        CaptureRecorderSafeHandle handle,
+        in CaptureV2NativeConfig config);
+
+    [DllImport("CaptureInterop.dll", ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    internal static extern int CtCaptureV2_Resume(CaptureRecorderSafeHandle handle);
+
+    [DllImport("CaptureInterop.dll", ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    internal static extern int CtCaptureV2_SetAudioMuted(
+        CaptureRecorderSafeHandle handle,
+        uint sourceId,
+        byte muted);
+
+    [DllImport("CaptureInterop.dll", ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    internal static extern int CtCaptureV2_SetAudioGain(
+        CaptureRecorderSafeHandle handle,
+        uint sourceId,
+        float gainDb);
+
+    [DllImport("CaptureInterop.dll", ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    internal static extern int CtCaptureV2_Stop(
+        CaptureRecorderSafeHandle handle,
+        out CaptureV2NativeStopResult result);
+
+    [DllImport("CaptureInterop.dll", ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     internal static extern int CtCaptureV2_GetLastError(
         CaptureRecorderSafeHandle handle,
         out CaptureV2NativeErrorInfo errorInfo,
