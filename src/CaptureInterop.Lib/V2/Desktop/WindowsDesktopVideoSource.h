@@ -57,8 +57,27 @@ namespace CaptureInterop::V2::Desktop
                         "Configured monitor target was not found");
                 }
 
+                OperationResult regionValidation = ValidateRegion(*monitor);
+                if (!regionValidation.IsSuccess())
+                {
+                    return regionValidation;
+                }
+
                 std::lock_guard lock(m_mutex);
+                VideoMediaType effectiveMediaType = m_provider->CurrentMediaType();
+                if (m_config.region.has_value())
+                {
+                    effectiveMediaType.width = m_config.region->width;
+                    effectiveMediaType.height = m_config.region->height;
+                }
+                else
+                {
+                    effectiveMediaType.width = monitor->bounds.width;
+                    effectiveMediaType.height = monitor->bounds.height;
+                }
+
                 m_resolvedMonitor = std::move(monitor);
+                m_effectiveMediaType = effectiveMediaType;
             }
 
             OperationResult startResult = m_provider->Start();
@@ -84,6 +103,12 @@ namespace CaptureInterop::V2::Desktop
         {
             std::lock_guard lock(m_mutex);
             return m_resolvedMonitor;
+        }
+
+        [[nodiscard]] VideoMediaType EffectiveMediaType() const
+        {
+            std::lock_guard lock(m_mutex);
+            return m_effectiveMediaType.has_value() ? *m_effectiveMediaType : m_provider->CurrentMediaType();
         }
 
         [[nodiscard]] OperationResult Stop() noexcept override
@@ -162,7 +187,7 @@ namespace CaptureInterop::V2::Desktop
                 frame.streamId,
                 frame.timestamp,
                 frame.duration,
-                frame.mediaType,
+                EffectiveMediaType(),
                 frame.placeholderPixels
             };
 
@@ -186,6 +211,55 @@ namespace CaptureInterop::V2::Desktop
                 m_handlers.end());
         }
 
+        OperationResult ValidateRegion(const DesktopMonitorInfo& monitor) const
+        {
+            if (!monitor.bounds.IsValid())
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::ValidationFailure,
+                    "WindowsDesktopVideoSource",
+                    "Start",
+                    "Resolved monitor bounds must have non-zero size");
+            }
+
+            if (!m_config.region.has_value())
+            {
+                return OperationResult::Success();
+            }
+
+            const CaptureRectangle& region = *m_config.region;
+            if (region.x < 0 || region.y < 0)
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::ValidationFailure,
+                    "WindowsDesktopVideoSource",
+                    "Start",
+                    "Desktop capture region cannot use negative physical-pixel coordinates");
+            }
+
+            if (!region.IsValid())
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::ValidationFailure,
+                    "WindowsDesktopVideoSource",
+                    "Start",
+                    "Desktop capture region must have non-zero physical-pixel dimensions");
+            }
+
+            const uint64_t regionRight = static_cast<uint64_t>(region.x) + region.width;
+            const uint64_t regionBottom = static_cast<uint64_t>(region.y) + region.height;
+            if (regionRight > monitor.bounds.width || regionBottom > monitor.bounds.height)
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::ValidationFailure,
+                    "WindowsDesktopVideoSource",
+                    "Start",
+                    "Desktop capture region must fit within resolved monitor bounds");
+            }
+
+            return OperationResult::Success();
+        }
+
         DesktopVideoSourceConfig m_config;
         std::shared_ptr<IDesktopCaptureProvider> m_provider;
         std::shared_ptr<IDesktopMonitorResolver> m_monitorResolver;
@@ -193,6 +267,7 @@ namespace CaptureInterop::V2::Desktop
         std::vector<HandlerEntry> m_handlers;
         CallbackRegistrationToken m_providerCallback;
         std::optional<DesktopMonitorInfo> m_resolvedMonitor;
+        std::optional<VideoMediaType> m_effectiveMediaType;
         uint64_t m_nextHandlerId{ 1 };
     };
 }
