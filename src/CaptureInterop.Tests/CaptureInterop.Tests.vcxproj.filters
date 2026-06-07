@@ -93,6 +93,9 @@
     <ClCompile Include="V2CoreSessionDiagnosticsTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="V2NativeAbiFoundationTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">

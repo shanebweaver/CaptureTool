@@ -64,7 +64,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(VCInstallDir)UnitTest\include;$(SolutionDir)src\CaptureInterop.Lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VCInstallDir)UnitTest\include;$(SolutionDir)src\CaptureInterop.Lib;$(SolutionDir)src\CaptureInterop;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UseFullPaths>true</UseFullPaths>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -111,6 +111,7 @@
     <ClCompile Include="ResultTests.cpp" />
     <ClCompile Include="ShutdownRaceConditionTests.cpp" />
     <ClCompile Include="VideoCaptureSourceStopTests.cpp" />
+    <ClCompile Include="V2NativeAbiFoundationTests.cpp" />
     <ClCompile Include="V2CoreAudioControlProcessorTests.cpp" />
     <ClCompile Include="V2CoreCapturePipelineConfigTests.cpp" />
     <ClCompile Include="V2CoreCapturePipelineConfigValidatorTests.cpp" />
@@ -131,6 +132,9 @@
     <ClInclude Include="V2CoreTestComponents.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj">
+      <Project>{e576bd23-e4b5-4a1e-a385-87cb932e6d32}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\CaptureInterop.Lib\CaptureInterop.Lib.vcxproj">
       <Project>{8B5E7A7C-3D1F-4E9A-9C2B-1F6D8E3A5B4C}</Project>
     </ProjectReference>
@@ -138,6 +142,9 @@
   <ItemGroup>
     <None Include="CaptureInterop.Tests.vcxproj.new" />
   </ItemGroup>
+  <Target Name="CopyCaptureInteropDllForNativeTests" AfterTargets="Build" Condition="Exists('$(SolutionDir)bin\$(Configuration)\$(Platform)\CaptureInterop.dll')">
+    <Copy SourceFiles="$(SolutionDir)bin\$(Configuration)\$(Platform)\CaptureInterop.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

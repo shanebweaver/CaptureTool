@@ -95,12 +95,14 @@
     <ClInclude Include="ScreenRecorder.h" />
     <ClInclude Include="ScreenshotExports.h" />
     <ClInclude Include="TextureConversionExports.h" />
+    <ClInclude Include="V2\CaptureInteropV2Exports.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="ScreenRecorder.cpp" />
     <ClCompile Include="ScreenshotExports.cpp" />
     <ClCompile Include="TextureConversionExports.cpp" />
+    <ClCompile Include="V2\CaptureInteropV2Exports.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CaptureInterop.Lib\CaptureInterop.Lib.vcxproj">
