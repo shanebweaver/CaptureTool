@@ -7,7 +7,10 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cmath>
+#include <cstring>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -19,6 +22,7 @@ namespace CaptureInterop::V2::Audio
     struct WasapiLoopbackAudioSourceDiagnostics
     {
         uint64_t droppedPausedFrames{ 0 };
+        uint64_t clippedSamples{ 0 };
     };
 
     class WasapiLoopbackAudioSource final : public IAudioCaptureSource
@@ -340,10 +344,12 @@ namespace CaptureInterop::V2::Audio
         {
             bool paused = false;
             bool muted = false;
+            float gainDb = AudioGainSettings::DefaultGainDb;
             {
                 std::lock_guard lock(m_mutex);
                 paused = m_paused;
                 muted = m_muted;
+                gainDb = m_gainDb;
                 if (paused)
                 {
                     m_diagnostics.droppedPausedFrames += sample.frameCount;
@@ -355,9 +361,22 @@ namespace CaptureInterop::V2::Audio
                 return;
             }
 
-            AudioSample outputSample = muted
-                ? AudioSilenceGenerator::CreateSilenceLike(sample)
-                : sample;
+            AudioSample outputSample = sample;
+            if (!muted)
+            {
+                const uint64_t clippedSamples = ApplyGain(outputSample, gainDb);
+                if (clippedSamples != 0)
+                {
+                    std::lock_guard lock(m_mutex);
+                    m_diagnostics.clippedSamples += clippedSamples;
+                }
+            }
+
+            if (muted)
+            {
+                outputSample = AudioSilenceGenerator::CreateSilenceLike(outputSample);
+            }
+
             std::vector<AudioSampleHandler> handlers;
             {
                 std::lock_guard lock(m_callbackState->mutex);
@@ -377,6 +396,117 @@ namespace CaptureInterop::V2::Audio
             {
                 handler(outputSample);
             }
+        }
+
+        [[nodiscard]] static uint64_t ApplyGain(AudioSample& sample, float gainDb)
+        {
+            if (gainDb == AudioGainSettings::DefaultGainDb || sample.pcmData.empty())
+            {
+                return 0;
+            }
+
+            const double scalar = std::pow(10.0, static_cast<double>(gainDb) / 20.0);
+            switch (sample.mediaType.sampleFormat)
+            {
+            case AudioSampleFormat::Pcm16:
+                return ApplyIntegerGain<int16_t>(sample.pcmData, scalar);
+            case AudioSampleFormat::Pcm24:
+                return ApplyPcm24Gain(sample.pcmData, scalar);
+            case AudioSampleFormat::Pcm32:
+                return ApplyIntegerGain<int32_t>(sample.pcmData, scalar);
+            case AudioSampleFormat::Float32:
+                return ApplyFloat32Gain(sample.pcmData, scalar);
+            default:
+                return 0;
+            }
+        }
+
+        template <typename TSample>
+        [[nodiscard]] static uint64_t ApplyIntegerGain(
+            std::vector<uint8_t>& data,
+            double scalar)
+        {
+            constexpr size_t SampleBytes = sizeof(TSample);
+            uint64_t clippedSamples = 0;
+            for (size_t offset = 0; offset + SampleBytes <= data.size(); offset += SampleBytes)
+            {
+                TSample value{};
+                std::memcpy(&value, data.data() + offset, SampleBytes);
+                const double scaled = static_cast<double>(value) * scalar;
+                const double clipped = std::clamp(
+                    scaled,
+                    static_cast<double>((std::numeric_limits<TSample>::min)()),
+                    static_cast<double>((std::numeric_limits<TSample>::max)()));
+                if (clipped != scaled)
+                {
+                    ++clippedSamples;
+                }
+
+                const auto output = static_cast<TSample>(std::llround(clipped));
+                std::memcpy(data.data() + offset, &output, SampleBytes);
+            }
+
+            return clippedSamples;
+        }
+
+        [[nodiscard]] static uint64_t ApplyPcm24Gain(
+            std::vector<uint8_t>& data,
+            double scalar)
+        {
+            constexpr int32_t MinimumPcm24 = -8'388'608;
+            constexpr int32_t MaximumPcm24 = 8'388'607;
+            uint64_t clippedSamples = 0;
+            for (size_t offset = 0; offset + 3 <= data.size(); offset += 3)
+            {
+                int32_t value =
+                    static_cast<int32_t>(data[offset])
+                    | (static_cast<int32_t>(data[offset + 1]) << 8)
+                    | (static_cast<int32_t>(data[offset + 2]) << 16);
+                if ((value & 0x00800000) != 0)
+                {
+                    value |= 0xFF000000;
+                }
+
+                const double scaled = static_cast<double>(value) * scalar;
+                const double clipped = std::clamp(
+                    scaled,
+                    static_cast<double>(MinimumPcm24),
+                    static_cast<double>(MaximumPcm24));
+                if (clipped != scaled)
+                {
+                    ++clippedSamples;
+                }
+
+                const int32_t output = static_cast<int32_t>(std::llround(clipped));
+                data[offset] = static_cast<uint8_t>(output & 0xFF);
+                data[offset + 1] = static_cast<uint8_t>((output >> 8) & 0xFF);
+                data[offset + 2] = static_cast<uint8_t>((output >> 16) & 0xFF);
+            }
+
+            return clippedSamples;
+        }
+
+        [[nodiscard]] static uint64_t ApplyFloat32Gain(
+            std::vector<uint8_t>& data,
+            double scalar)
+        {
+            uint64_t clippedSamples = 0;
+            for (size_t offset = 0; offset + sizeof(float) <= data.size(); offset += sizeof(float))
+            {
+                float value = 0.0f;
+                std::memcpy(&value, data.data() + offset, sizeof(float));
+                const double scaled = static_cast<double>(value) * scalar;
+                const double clipped = std::clamp(scaled, -1.0, 1.0);
+                if (clipped != scaled)
+                {
+                    ++clippedSamples;
+                }
+
+                const float output = static_cast<float>(clipped);
+                std::memcpy(data.data() + offset, &output, sizeof(float));
+            }
+
+            return clippedSamples;
         }
 
         static void Unregister(

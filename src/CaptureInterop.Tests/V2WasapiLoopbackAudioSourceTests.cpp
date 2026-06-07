@@ -8,6 +8,7 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <cstring>
 #include <functional>
 #include <mutex>
 #include <optional>
@@ -54,6 +55,18 @@ namespace
             StreamId::FromValue(44));
     }
 
+    WasapiLoopbackAudioSourceConfig CreateUnityGainConfig(
+        bool armed = true,
+        bool initiallyMuted = true)
+    {
+        SystemAudioSourceConfig source = CreateCoreConfig(armed, initiallyMuted);
+        source.controls.initialGain.gainDb = AudioGainSettings::DefaultGainDb;
+        return MapWasapiLoopbackAudioSourceConfig(
+            source,
+            CreateMediaType(),
+            StreamId::FromValue(44));
+    }
+
     AudioSample CreateSample(uint8_t firstByte = 7)
     {
         AudioSample sample;
@@ -66,6 +79,118 @@ namespace
         sample.pcmData = { firstByte, 0, 0, 0 };
         sample.sourceTiming.timestampSource = AudioTimestampSource::GeneratedContinuity;
         return sample;
+    }
+
+    AudioSample CreatePcm16Sample(std::initializer_list<int16_t> values)
+    {
+        AudioSample sample;
+        sample.sourceId = SourceId::FromValue(22);
+        sample.streamId = StreamId::FromValue(44);
+        sample.timestamp = MediaTime::FromTicks(123);
+        sample.mediaType = AudioMediaType{
+            48000,
+            1,
+            16,
+            2,
+            AudioSampleFormat::Pcm16
+        };
+        sample.frameCount = static_cast<uint32_t>(values.size());
+        sample.duration = MediaDuration::FromTicks(static_cast<int64_t>(values.size()) * 10'000'000 / 48000);
+        sample.pcmData.resize(values.size() * sizeof(int16_t));
+        size_t offset = 0;
+        for (const int16_t value : values)
+        {
+            std::memcpy(sample.pcmData.data() + offset, &value, sizeof(value));
+            offset += sizeof(value);
+        }
+
+        return sample;
+    }
+
+    AudioSample CreateFloat32Sample(std::initializer_list<float> values)
+    {
+        AudioSample sample;
+        sample.sourceId = SourceId::FromValue(22);
+        sample.streamId = StreamId::FromValue(44);
+        sample.timestamp = MediaTime::FromTicks(123);
+        sample.mediaType = AudioMediaType{
+            48000,
+            1,
+            32,
+            4,
+            AudioSampleFormat::Float32
+        };
+        sample.frameCount = static_cast<uint32_t>(values.size());
+        sample.duration = MediaDuration::FromTicks(static_cast<int64_t>(values.size()) * 10'000'000 / 48000);
+        sample.pcmData.resize(values.size() * sizeof(float));
+        size_t offset = 0;
+        for (const float value : values)
+        {
+            std::memcpy(sample.pcmData.data() + offset, &value, sizeof(value));
+            offset += sizeof(value);
+        }
+
+        return sample;
+    }
+
+    int16_t ReadPcm16Sample(const AudioSample& sample, size_t index = 0)
+    {
+        int16_t value = 0;
+        std::memcpy(&value, sample.pcmData.data() + index * sizeof(value), sizeof(value));
+        return value;
+    }
+
+    float ReadFloat32Sample(const AudioSample& sample, size_t index = 0)
+    {
+        float value = 0.0f;
+        std::memcpy(&value, sample.pcmData.data() + index * sizeof(value), sizeof(value));
+        return value;
+    }
+
+    bool WaitFor(
+        const std::function<bool()>& predicate,
+        std::chrono::milliseconds timeout);
+
+    struct CapturedAudioSampleResult
+    {
+        AudioSample sample;
+        WasapiLoopbackAudioSourceDiagnostics diagnostics;
+    };
+
+    CapturedAudioSampleResult CaptureSinglePacket(
+        AudioSample packet,
+        float gainDb,
+        bool initiallyMuted = false)
+    {
+        auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+        packetProvider->EnqueuePacket(std::move(packet));
+        WasapiLoopbackAudioSource source(CreateConfig(true, initiallyMuted), nullptr, packetProvider);
+        Assert::IsTrue(source.SetGainDb(SourceId::FromValue(22), gainDb).IsSuccess());
+
+        std::mutex mutex;
+        std::optional<AudioSample> receivedSample;
+        CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+            [&](const AudioSample& sample)
+            {
+                std::lock_guard lock(mutex);
+                receivedSample = sample;
+            });
+
+        Assert::IsTrue(source.Start().IsSuccess());
+        Assert::IsTrue(WaitFor(
+            [&]
+            {
+                std::lock_guard lock(mutex);
+                return receivedSample.has_value();
+            },
+            std::chrono::milliseconds(500)));
+        Assert::IsTrue(source.Stop().IsSuccess());
+
+        std::lock_guard lock(mutex);
+        return CapturedAudioSampleResult{
+            receivedSample.value(),
+            source.Diagnostics()
+        };
     }
 
     bool WaitFor(
@@ -220,7 +345,7 @@ namespace CaptureInteropTests
         {
             auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
             packetProvider->EnqueuePacket(CreateSample(42));
-            WasapiLoopbackAudioSource source(CreateConfig(true, false), nullptr, packetProvider);
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
 
             std::mutex mutex;
             std::condition_variable condition;
@@ -293,7 +418,7 @@ namespace CaptureInteropTests
         {
             auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
             packetProvider->EnqueuePacket(CreateSample(55));
-            WasapiLoopbackAudioSource source(CreateConfig(true, false), nullptr, packetProvider);
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
             std::mutex mutex;
             std::optional<AudioSample> receivedSample;
             CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
@@ -325,7 +450,7 @@ namespace CaptureInteropTests
         {
             auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
             packetProvider->EnqueuePacket(CreateSample(11));
-            WasapiLoopbackAudioSource source(CreateConfig(true, false), nullptr, packetProvider);
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
             std::mutex mutex;
             std::vector<AudioSample> receivedSamples;
             CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
@@ -367,7 +492,7 @@ namespace CaptureInteropTests
         TEST_METHOD(Pause_DropsIncomingSamplesAndCountsFrames)
         {
             auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
-            WasapiLoopbackAudioSource source(CreateConfig(true, false), nullptr, packetProvider);
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
             std::atomic_int callbackCount{ 0 };
             CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
                 [&](const AudioSample&)
@@ -387,7 +512,7 @@ namespace CaptureInteropTests
         TEST_METHOD(Resume_AllowsFutureSamplesAgain)
         {
             auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
-            WasapiLoopbackAudioSource source(CreateConfig(true, false), nullptr, packetProvider);
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
             std::mutex mutex;
             std::vector<AudioSample> receivedSamples;
             CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
@@ -691,6 +816,54 @@ namespace CaptureInteropTests
             Assert::AreEqual(
                 static_cast<uint32_t>(CoreResultCode::UnsupportedOperation),
                 static_cast<uint32_t>(result.code));
+        }
+
+        TEST_METHOD(UnityGain_LeavesPcm16SamplesUnchanged)
+        {
+            const CapturedAudioSampleResult result = CaptureSinglePacket(CreatePcm16Sample({ 1000 }), 0.0f);
+
+            Assert::AreEqual(1000, static_cast<int>(ReadPcm16Sample(result.sample)));
+            Assert::AreEqual(0ull, result.diagnostics.clippedSamples);
+        }
+
+        TEST_METHOD(NegativeGain_AttenuatesPcm16Samples)
+        {
+            const CapturedAudioSampleResult result = CaptureSinglePacket(CreatePcm16Sample({ 1000 }), -6.0f);
+
+            Assert::AreEqual(501, static_cast<int>(ReadPcm16Sample(result.sample)));
+            Assert::AreEqual(0ull, result.diagnostics.clippedSamples);
+        }
+
+        TEST_METHOD(PositiveGain_AmplifiesPcm16Samples)
+        {
+            const CapturedAudioSampleResult result = CaptureSinglePacket(CreatePcm16Sample({ 1000 }), 6.0f);
+
+            Assert::AreEqual(1995, static_cast<int>(ReadPcm16Sample(result.sample)));
+            Assert::AreEqual(0ull, result.diagnostics.clippedSamples);
+        }
+
+        TEST_METHOD(PositiveGain_ClipsAndIncrementsDiagnostics)
+        {
+            const CapturedAudioSampleResult result = CaptureSinglePacket(CreatePcm16Sample({ 30000 }), 12.0f);
+
+            Assert::AreEqual(32767, static_cast<int>(ReadPcm16Sample(result.sample)));
+            Assert::AreEqual(1ull, result.diagnostics.clippedSamples);
+        }
+
+        TEST_METHOD(Float32Gain_AmplifiesAndClipsDeterministically)
+        {
+            const CapturedAudioSampleResult result = CaptureSinglePacket(CreateFloat32Sample({ 0.75f }), 6.0f);
+
+            Assert::AreEqual(1.0f, ReadFloat32Sample(result.sample));
+            Assert::AreEqual(1ull, result.diagnostics.clippedSamples);
+        }
+
+        TEST_METHOD(MuteOverridesPositiveGain)
+        {
+            const CapturedAudioSampleResult result = CaptureSinglePacket(CreatePcm16Sample({ 30000 }), 12.0f, true);
+
+            Assert::AreEqual(0, static_cast<int>(ReadPcm16Sample(result.sample)));
+            Assert::AreEqual(0ull, result.diagnostics.clippedSamples);
         }
 
         TEST_METHOD(CallbackTokenCanOutliveSource)
