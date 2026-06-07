@@ -4,6 +4,9 @@ namespace CaptureTool.Infrastructure.Capture.Windows.V2;
 
 internal static partial class CaptureV2NativeMethods
 {
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    internal delegate void CaptureV2NativeEventCallback(nint eventData, nint userData);
+
     [DllImport("CaptureInterop.dll", ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     internal static extern int CtCaptureV2_GetApiVersion(out CaptureV2ApiVersion outVersion);
 
@@ -48,4 +51,18 @@ internal static partial class CaptureV2NativeMethods
         IntPtr messageBuffer,
         uint messageBufferLength,
         out uint requiredMessageLength);
+
+    [DllImport("CaptureInterop.dll", ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    internal static extern int CtCaptureV2_RegisterCallbacks(
+        CaptureRecorderSafeHandle handle,
+        in CaptureV2NativeCallbackConfig config,
+        out nint outRegistration);
+
+    [DllImport("CaptureInterop.dll", ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    internal static extern int CtCaptureV2_UnregisterCallbacks(nint registration);
+
+    [DllImport("CaptureInterop.dll", ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    internal static extern int CtCaptureV2_TestTriggerEvent(
+        CaptureRecorderSafeHandle handle,
+        in CaptureV2NativeEvent eventData);
 }

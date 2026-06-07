@@ -34,6 +34,14 @@ internal enum CaptureV2NativeHdrPolicy
     ForceSdr = 4,
 }
 
+internal enum CaptureV2NativeEventType
+{
+    Unknown = 0,
+    StateChanged = 1,
+    Error = 2,
+    Diagnostics = 3,
+}
+
 [StructLayout(LayoutKind.Sequential)]
 internal struct CaptureV2NativeRect
 {
@@ -156,4 +164,28 @@ internal struct CaptureV2NativeStopResult
     public ulong LateSamples;
     public ulong UnsupportedCommands;
     public ulong ValidationWarnings;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct CaptureV2NativeEvent
+{
+    public uint Size;
+    public uint Version;
+    public int EventType;
+    public int ResultCode;
+    public ulong Sequence;
+    public ulong Timestamp100ns;
+    public uint SourceId;
+    public uint Reserved;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct CaptureV2NativeCallbackConfig
+{
+    public uint Size;
+    public uint Version;
+    public nint EventCallback;
+    public nint UserData;
+    public ulong EventMask;
+    public ulong Reserved;
 }
