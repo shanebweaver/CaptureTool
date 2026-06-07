@@ -452,6 +452,62 @@ namespace CaptureInteropTests
             Assert::AreEqual(600u, croppedDesc.Height);
         }
 
+        TEST_METHOD(Diagnostics_IncludeProviderIdentitySourceStreamOutputAndRequestedRegion)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            std::shared_ptr<FakeDesktopMonitorResolver> resolver = CreateResolverWithConfiguredMonitor();
+            WindowsDesktopVideoSource source(
+                CreateConfigWithRegion(CaptureRectangle{ 100, 200, 800, 600 }),
+                provider,
+                resolver,
+                CreateDependency());
+
+            Assert::IsTrue(source.Start().IsSuccess());
+
+            const DesktopVideoSourceDiagnostics diagnostics = source.Diagnostics();
+            Assert::AreEqual("FakeDesktopCaptureProvider", diagnostics.providerName.c_str());
+            Assert::AreEqual(7u, diagnostics.sourceId.value);
+            Assert::AreEqual(9u, diagnostics.streamId.value);
+            Assert::AreEqual(800u, diagnostics.effectiveOutputDimensions.width);
+            Assert::AreEqual(600u, diagnostics.effectiveOutputDimensions.height);
+            Assert::IsTrue(diagnostics.requestedRegion.has_value());
+            Assert::AreEqual(100, diagnostics.requestedRegion->x);
+            Assert::AreEqual(200, diagnostics.requestedRegion->y);
+            Assert::AreEqual(800u, diagnostics.requestedRegion->width);
+            Assert::AreEqual(600u, diagnostics.requestedRegion->height);
+        }
+
+        TEST_METHOD(Diagnostics_CountDuplicateSkippedAndLateFrames)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
+            CallbackRegistrationToken token = source.RegisterFrameArrivedHandler(
+                [](const VideoSample&)
+                {
+                });
+
+            DesktopCaptureFrame first = CreateFrame(1);
+            first.timestamp = MediaTime::FromTicks(1000);
+            DesktopCaptureFrame duplicate = CreateFrame(1);
+            duplicate.timestamp = MediaTime::FromTicks(1010);
+            DesktopCaptureFrame skipped = CreateFrame(4);
+            skipped.timestamp = MediaTime::FromTicks(1020);
+            DesktopCaptureFrame late = CreateFrame(5);
+            late.timestamp = MediaTime::FromTicks(900);
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            Assert::IsTrue(provider->EmitFrame(first).IsSuccess());
+            Assert::IsTrue(provider->EmitFrame(duplicate).IsSuccess());
+            Assert::IsTrue(provider->EmitFrame(skipped).IsSuccess());
+            Assert::IsTrue(provider->EmitFrame(late).IsSuccess());
+
+            const DesktopVideoSourceDiagnostics diagnostics = source.Diagnostics();
+            Assert::AreEqual(4ull, diagnostics.framesReceived);
+            Assert::AreEqual(1ull, diagnostics.duplicateFrames);
+            Assert::AreEqual(2ull, diagnostics.skippedFrames);
+            Assert::AreEqual(1ull, diagnostics.lateFrames);
+        }
+
         TEST_METHOD(CallbackTokenDestroyed_PreventsForwardedSample)
         {
             std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();

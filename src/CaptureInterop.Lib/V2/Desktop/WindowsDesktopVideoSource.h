@@ -11,6 +11,20 @@
 
 namespace CaptureInterop::V2::Desktop
 {
+    struct DesktopVideoSourceDiagnostics
+    {
+        std::string providerName;
+        SourceId sourceId;
+        StreamId streamId;
+        VideoFrameDimensions effectiveOutputDimensions;
+        std::optional<CaptureRectangle> requestedRegion;
+        uint64_t framesReceived{ 0 };
+        uint64_t duplicateFrames{ 0 };
+        uint64_t lateFrames{ 0 };
+        uint64_t skippedFrames{ 0 };
+        uint64_t providerFailures{ 0 };
+    };
+
     class WindowsDesktopVideoSource final : public IVideoCaptureSource
     {
     public:
@@ -163,6 +177,29 @@ namespace CaptureInterop::V2::Desktop
             return m_effectiveMediaType.has_value() ? *m_effectiveMediaType : m_provider->CurrentMediaType();
         }
 
+        [[nodiscard]] DesktopVideoSourceDiagnostics Diagnostics() const
+        {
+            std::lock_guard lock(m_mutex);
+            DesktopVideoSourceDiagnostics diagnostics = m_diagnostics;
+            diagnostics.sourceId = m_config.sourceId;
+            diagnostics.streamId = m_config.streamId;
+            diagnostics.requestedRegion = m_config.region;
+
+            VideoMediaType mediaType = m_effectiveMediaType.has_value()
+                ? *m_effectiveMediaType
+                : (m_provider ? m_provider->CurrentMediaType() : VideoMediaType{});
+            diagnostics.effectiveOutputDimensions = VideoFrameDimensions::FromMediaType(mediaType);
+
+            if (m_provider)
+            {
+                const DesktopCaptureProviderDiagnostics providerDiagnostics = m_provider->Diagnostics();
+                diagnostics.providerName = providerDiagnostics.providerName;
+                diagnostics.providerFailures = providerDiagnostics.providerFailures;
+            }
+
+            return diagnostics;
+        }
+
         [[nodiscard]] OperationResult Stop() noexcept override
         {
             CallbackRegistrationToken providerCallback;
@@ -250,6 +287,8 @@ namespace CaptureInterop::V2::Desktop
                 {
                     handlers.push_back(entry.handler);
                 }
+
+                UpdateTimingDiagnostics(frame);
             }
 
             VideoSample sample{
@@ -268,6 +307,31 @@ namespace CaptureInterop::V2::Desktop
             {
                 handler(sample);
             }
+        }
+
+        void UpdateTimingDiagnostics(const DesktopCaptureFrame& frame)
+        {
+            ++m_diagnostics.framesReceived;
+
+            if (m_lastSequenceNumber.has_value())
+            {
+                if (frame.sequenceNumber == *m_lastSequenceNumber)
+                {
+                    ++m_diagnostics.duplicateFrames;
+                }
+                else if (frame.sequenceNumber > *m_lastSequenceNumber + 1)
+                {
+                    m_diagnostics.skippedFrames += frame.sequenceNumber - *m_lastSequenceNumber - 1;
+                }
+            }
+
+            if (m_lastTimestamp.has_value() && frame.timestamp.ticks100ns < m_lastTimestamp->ticks100ns)
+            {
+                ++m_diagnostics.lateFrames;
+            }
+
+            m_lastSequenceNumber = frame.sequenceNumber;
+            m_lastTimestamp = frame.timestamp;
         }
 
         void Unregister(uint64_t id)
@@ -413,6 +477,9 @@ namespace CaptureInterop::V2::Desktop
         CallbackRegistrationToken m_providerCallback;
         std::optional<DesktopMonitorInfo> m_resolvedMonitor;
         std::optional<VideoMediaType> m_effectiveMediaType;
+        DesktopVideoSourceDiagnostics m_diagnostics;
+        std::optional<uint64_t> m_lastSequenceNumber;
+        std::optional<MediaTime> m_lastTimestamp;
         uint64_t m_nextHandlerId{ 1 };
         bool m_started{ false };
     };
