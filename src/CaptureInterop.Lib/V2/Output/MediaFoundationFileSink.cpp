@@ -837,9 +837,11 @@ namespace CaptureInterop::V2::Output
                 "Media Foundation file sink can only be opened once");
         }
 
+        InitializeDiagnostics(plan);
         OperationResult validation = ValidateOpenPlan(plan);
         if (validation.IsFailure())
         {
+            RecordSetupFailure("ValidateOpenPlan", validation);
             m_state = MediaFoundationFileSinkState::Failed;
             return validation;
         }
@@ -848,25 +850,30 @@ namespace CaptureInterop::V2::Output
         {
             if (!m_runtime)
             {
-                m_state = MediaFoundationFileSinkState::Failed;
-                return Failure(
+                OperationResult result = Failure(
                     CoreResultCode::InvalidState,
                     "Open",
                     "Media Foundation runtime is not configured");
+                RecordSetupFailure("ValidateRuntime", result);
+                m_state = MediaFoundationFileSinkState::Failed;
+                return result;
             }
 
             if (!m_sinkWriterFactory)
             {
-                m_state = MediaFoundationFileSinkState::Failed;
-                return Failure(
+                OperationResult result = Failure(
                     CoreResultCode::InvalidState,
                     "Open",
                     "Media Foundation sink writer factory is not configured");
+                RecordSetupFailure("ValidateSinkWriterFactory", result);
+                m_state = MediaFoundationFileSinkState::Failed;
+                return result;
             }
 
             MediaFoundationRuntimeLeaseResult runtimeLeaseResult = m_runtime->Acquire();
             if (!runtimeLeaseResult.IsSuccess())
             {
+                RecordSetupFailure("AcquireRuntime", runtimeLeaseResult.result);
                 m_state = MediaFoundationFileSinkState::Failed;
                 return runtimeLeaseResult.result;
             }
@@ -877,12 +884,14 @@ namespace CaptureInterop::V2::Output
             {
                 runtimeLeaseResult.lease.Release();
                 m_state = MediaFoundationFileSinkState::Failed;
-                return writerResult.result.IsFailure()
+                OperationResult result = writerResult.result.IsFailure()
                     ? writerResult.result
                     : Failure(
                         CoreResultCode::InvalidState,
                         "CreateFileSinkWriter",
                         "Media Foundation sink writer factory did not create a writer");
+                RecordSetupFailure("CreateFileSinkWriter", result);
+                return result;
             }
 
             m_runtimeLease = std::move(runtimeLeaseResult.lease);
@@ -897,6 +906,7 @@ namespace CaptureInterop::V2::Output
             OperationResult configureResult = ConfigureMp4Streams(plan, mappings);
             if (configureResult.IsFailure())
             {
+                RecordSetupFailure("ConfigureMp4Streams", configureResult);
                 ReleaseWriterResources();
                 m_state = MediaFoundationFileSinkState::Failed;
                 return configureResult;
@@ -916,6 +926,10 @@ namespace CaptureInterop::V2::Output
 
         const bool hasConfiguredMp4Streams = plan.container == ContainerFormat::Mp4 && !mappings.empty();
         m_streamMappings = std::move(mappings);
+        for (const MediaFoundationSinkStreamMapping& mapping : m_streamMappings)
+        {
+            MarkAcceptedStream(mapping);
+        }
         m_state = hasConfiguredMp4Streams
             ? MediaFoundationFileSinkState::WritingReady
             : MediaFoundationFileSinkState::Opened;
@@ -995,6 +1009,10 @@ namespace CaptureInterop::V2::Output
             OperationResult validation = ValidateVideoSample(*mapping, video);
             if (validation.IsFailure())
             {
+                if (IsTimestampValidationFailure(validation))
+                {
+                    RecordTimestampValidationFailure(mapping->streamId);
+                }
                 RecordRejectedWrite();
                 return validation;
             }
@@ -1008,6 +1026,7 @@ namespace CaptureInterop::V2::Output
             }
 
             RecordWrittenTimestamp(video.streamId, video.timestamp);
+            RecordSampleWritten(video.streamId);
             return OperationResult::Success();
         }
 
@@ -1026,6 +1045,10 @@ namespace CaptureInterop::V2::Output
             OperationResult validation = ValidateAudioSample(*mapping, audio);
             if (validation.IsFailure())
             {
+                if (IsTimestampValidationFailure(validation))
+                {
+                    RecordTimestampValidationFailure(mapping->streamId);
+                }
                 RecordRejectedWrite();
                 return validation;
             }
@@ -1039,6 +1062,7 @@ namespace CaptureInterop::V2::Output
             }
 
             RecordWrittenTimestamp(audio.streamId, audio.timestamp);
+            RecordSampleWritten(audio.streamId);
             return OperationResult::Success();
         }
 
@@ -1112,6 +1136,14 @@ namespace CaptureInterop::V2::Output
     {
         std::lock_guard lock(m_mutex);
         return m_writeDiagnostics;
+    }
+
+    MediaFoundationFileSinkDiagnostics MediaFoundationFileSink::Diagnostics() const
+    {
+        std::lock_guard lock(m_mutex);
+        MediaFoundationFileSinkDiagnostics diagnostics = m_diagnostics;
+        diagnostics.writes = m_writeDiagnostics;
+        return diagnostics;
     }
 
     bool MediaFoundationFileSink::HasSinkWriter() const noexcept
@@ -1498,10 +1530,88 @@ namespace CaptureInterop::V2::Output
             result = m_sinkWriter->Finalize();
         }
 
+        RecordFinalizeResult(result);
         ReleaseWriterResources();
         m_finalizationResult = result;
         m_state = MediaFoundationFileSinkState::Finalized;
         return result;
+    }
+
+    void MediaFoundationFileSink::InitializeDiagnostics(const OutputPlan& plan)
+    {
+        m_diagnostics = MediaFoundationFileSinkDiagnostics{};
+        m_writeDiagnostics = MediaFoundationFileSinkWriteDiagnostics{};
+        m_activeWriteCount = 0;
+        m_diagnostics.outputPath = plan.outputPath;
+        m_diagnostics.selectedProfile = plan.container;
+        m_diagnostics.selectedProfileName = ContainerFormatName(plan.container);
+        m_diagnostics.setupStage = "Open";
+        m_diagnostics.streams.reserve(plan.streams.size());
+
+        for (const OutputStreamPlan& stream : plan.streams)
+        {
+            MediaFoundationFileSinkStreamDiagnostics streamDiagnostics;
+            streamDiagnostics.streamId = stream.streamId;
+            streamDiagnostics.kind = stream.kind;
+            streamDiagnostics.rejected = true;
+            if (stream.videoMediaType.has_value())
+            {
+                streamDiagnostics.configuredMediaTypeSummary =
+                    "video planned "
+                    + std::to_string(stream.videoMediaType->width)
+                    + "x"
+                    + std::to_string(stream.videoMediaType->height);
+            }
+            else if (stream.audio.has_value())
+            {
+                streamDiagnostics.configuredMediaTypeSummary =
+                    "audio planned "
+                    + std::to_string(stream.audio->sampleRate)
+                    + "Hz "
+                    + std::to_string(stream.audio->channels)
+                    + "ch";
+            }
+
+            m_diagnostics.streams.push_back(std::move(streamDiagnostics));
+        }
+    }
+
+    void MediaFoundationFileSink::MarkAcceptedStream(const MediaFoundationSinkStreamMapping& mapping)
+    {
+        MediaFoundationFileSinkStreamDiagnostics* diagnostics = FindStreamDiagnostics(mapping.streamId);
+        if (!diagnostics)
+        {
+            m_diagnostics.streams.push_back(MediaFoundationFileSinkStreamDiagnostics{
+                mapping.streamId,
+                mapping.kind
+            });
+            diagnostics = &m_diagnostics.streams.back();
+        }
+
+        diagnostics->kind = mapping.kind;
+        diagnostics->accepted = true;
+        diagnostics->rejected = false;
+        diagnostics->sinkStreamIndex = mapping.sinkStreamIndex;
+        diagnostics->configuredMediaTypeSummary = BuildStreamMediaTypeSummary(mapping);
+    }
+
+    void MediaFoundationFileSink::RecordSetupFailure(std::string stage, const OperationResult& result)
+    {
+        m_diagnostics.setupStage = std::move(stage);
+        if (result.diagnostic.has_value())
+        {
+            m_diagnostics.setupFailure = result.diagnostic;
+        }
+    }
+
+    void MediaFoundationFileSink::RecordFinalizeResult(const OperationResult& result)
+    {
+        m_diagnostics.finalized = true;
+        m_diagnostics.finalizeStage = "Finalize";
+        if (result.IsFailure() && result.diagnostic.has_value())
+        {
+            m_diagnostics.finalizeFailure = result.diagnostic;
+        }
     }
 
     void MediaFoundationFileSink::RecordRejectedWrite() noexcept
@@ -1532,6 +1642,92 @@ namespace CaptureInterop::V2::Output
         {
             ++m_writeDiagnostics.failedWrites;
         }
+    }
+
+    void MediaFoundationFileSink::RecordSampleWritten(StreamId streamId) noexcept
+    {
+        if (MediaFoundationFileSinkStreamDiagnostics* diagnostics = FindStreamDiagnostics(streamId))
+        {
+            ++diagnostics->samplesWritten;
+        }
+    }
+
+    void MediaFoundationFileSink::RecordTimestampValidationFailure(StreamId streamId) noexcept
+    {
+        ++m_diagnostics.timestampValidationFailures;
+        if (MediaFoundationFileSinkStreamDiagnostics* diagnostics = FindStreamDiagnostics(streamId))
+        {
+            ++diagnostics->timestampValidationFailures;
+        }
+    }
+
+    MediaFoundationFileSinkStreamDiagnostics* MediaFoundationFileSink::FindStreamDiagnostics(
+        StreamId streamId) noexcept
+    {
+        const auto found = std::find_if(
+            m_diagnostics.streams.begin(),
+            m_diagnostics.streams.end(),
+            [&](const MediaFoundationFileSinkStreamDiagnostics& candidate)
+            {
+                return candidate.streamId == streamId;
+            });
+
+        return found == m_diagnostics.streams.end() ? nullptr : &*found;
+    }
+
+    bool MediaFoundationFileSink::IsTimestampValidationFailure(const OperationResult& result) noexcept
+    {
+        return result.IsFailure()
+            && result.diagnostic.has_value()
+            && result.diagnostic->operation == "WriteSample"
+            && result.diagnostic->message.find("timestamp") != std::string::npos;
+    }
+
+    std::string MediaFoundationFileSink::ContainerFormatName(ContainerFormat container)
+    {
+        switch (container)
+        {
+        case ContainerFormat::Mp4:
+            return "mp4";
+        case ContainerFormat::Mp3:
+            return "mp3";
+        case ContainerFormat::Wav:
+            return "wav";
+        default:
+            return "unknown";
+        }
+    }
+
+    std::string MediaFoundationFileSink::BuildStreamMediaTypeSummary(
+        const MediaFoundationSinkStreamMapping& mapping)
+    {
+        if (mapping.videoMediaType.has_value())
+        {
+            const VideoMediaType& mediaType = mapping.videoMediaType.value();
+            return "video "
+                + std::to_string(mediaType.width)
+                + "x"
+                + std::to_string(mediaType.height)
+                + " @ "
+                + std::to_string(mediaType.frameRate.numerator)
+                + "/"
+                + std::to_string(mediaType.frameRate.denominator)
+                + " fps";
+        }
+
+        if (mapping.audioMediaType.has_value())
+        {
+            const AudioMediaType& mediaType = mapping.audioMediaType.value();
+            return "audio "
+                + std::to_string(mediaType.sampleRate)
+                + "Hz "
+                + std::to_string(mediaType.channels)
+                + "ch "
+                + std::to_string(mediaType.bitsPerSample)
+                + "bit";
+        }
+
+        return "unconfigured";
     }
 
     OperationResult MediaFoundationFileSink::Failure(

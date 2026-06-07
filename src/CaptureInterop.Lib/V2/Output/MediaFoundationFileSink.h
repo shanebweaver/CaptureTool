@@ -44,6 +44,33 @@ namespace CaptureInterop::V2::Output
         uint32_t writeDepthHighWaterMark{ 0 };
     };
 
+    struct MediaFoundationFileSinkStreamDiagnostics
+    {
+        StreamId streamId;
+        MediaKind kind{ MediaKind::Unknown };
+        bool accepted{ false };
+        bool rejected{ false };
+        uint32_t sinkStreamIndex{ 0 };
+        std::string configuredMediaTypeSummary;
+        uint64_t samplesWritten{ 0 };
+        uint64_t timestampValidationFailures{ 0 };
+    };
+
+    struct MediaFoundationFileSinkDiagnostics
+    {
+        std::wstring outputPath;
+        ContainerFormat selectedProfile{ ContainerFormat::Mp4 };
+        std::string selectedProfileName;
+        std::vector<MediaFoundationFileSinkStreamDiagnostics> streams;
+        MediaFoundationFileSinkWriteDiagnostics writes;
+        uint64_t timestampValidationFailures{ 0 };
+        std::string setupStage;
+        std::optional<CoreDiagnostic> setupFailure;
+        std::string finalizeStage;
+        std::optional<CoreDiagnostic> finalizeFailure;
+        bool finalized{ false };
+    };
+
     struct MediaFoundationH264VideoStreamConfig
     {
         StreamId streamId;
@@ -145,6 +172,7 @@ namespace CaptureInterop::V2::Output
         [[nodiscard]] std::vector<MediaFoundationSinkStreamMapping> StreamMappings() const;
         [[nodiscard]] std::optional<MediaFoundationSinkStreamMapping> FindStream(StreamId streamId) const;
         [[nodiscard]] MediaFoundationFileSinkWriteDiagnostics WriteDiagnostics() const noexcept;
+        [[nodiscard]] MediaFoundationFileSinkDiagnostics Diagnostics() const;
         [[nodiscard]] bool HasSinkWriter() const noexcept;
 
     private:
@@ -172,9 +200,21 @@ namespace CaptureInterop::V2::Output
             const MediaTime& timestamp) const noexcept;
         void RecordWrittenTimestamp(StreamId streamId, MediaTime timestamp) noexcept;
         [[nodiscard]] OperationResult FinalizeCore() noexcept;
+        void InitializeDiagnostics(const OutputPlan& plan);
+        void MarkAcceptedStream(const MediaFoundationSinkStreamMapping& mapping);
+        void RecordSetupFailure(std::string stage, const OperationResult& result);
+        void RecordFinalizeResult(const OperationResult& result);
         void RecordRejectedWrite() noexcept;
         void RecordAcceptedWriteStart() noexcept;
         void RecordAcceptedWriteCompletion(const OperationResult& result) noexcept;
+        void RecordSampleWritten(StreamId streamId) noexcept;
+        void RecordTimestampValidationFailure(StreamId streamId) noexcept;
+        [[nodiscard]] MediaFoundationFileSinkStreamDiagnostics* FindStreamDiagnostics(
+            StreamId streamId) noexcept;
+        [[nodiscard]] static bool IsTimestampValidationFailure(const OperationResult& result) noexcept;
+        [[nodiscard]] static std::string ContainerFormatName(ContainerFormat container);
+        [[nodiscard]] static std::string BuildStreamMediaTypeSummary(
+            const MediaFoundationSinkStreamMapping& mapping);
         [[nodiscard]] static OperationResult Failure(
             CoreResultCode code,
             const char* operation,
@@ -188,6 +228,7 @@ namespace CaptureInterop::V2::Output
         MediaFoundationFileSinkState m_state{ MediaFoundationFileSinkState::Created };
         std::vector<MediaFoundationSinkStreamMapping> m_streamMappings;
         std::vector<std::pair<StreamId, MediaTime>> m_lastWrittenTimestamps;
+        MediaFoundationFileSinkDiagnostics m_diagnostics;
         MediaFoundationFileSinkWriteDiagnostics m_writeDiagnostics;
         uint32_t m_activeWriteCount{ 0 };
         MediaFoundationRuntimeLease m_runtimeLease;

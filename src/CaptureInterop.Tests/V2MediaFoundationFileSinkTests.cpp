@@ -362,6 +362,21 @@ namespace
             frameCount
         };
     }
+
+    const MediaFoundationFileSinkStreamDiagnostics* FindDiagnosticsStream(
+        const MediaFoundationFileSinkDiagnostics& diagnostics,
+        StreamId streamId)
+    {
+        const auto found = std::find_if(
+            diagnostics.streams.begin(),
+            diagnostics.streams.end(),
+            [&](const MediaFoundationFileSinkStreamDiagnostics& stream)
+            {
+                return stream.streamId == streamId;
+            });
+
+        return found == diagnostics.streams.end() ? nullptr : &*found;
+    }
 }
 
 namespace CaptureInteropTests
@@ -441,6 +456,21 @@ namespace CaptureInteropTests
                 static_cast<int>(audioConfig->inputSampleFormat));
             Assert::AreEqual(32u, static_cast<uint32_t>(audioConfig->inputBitsPerSample));
             Assert::AreEqual(8u, static_cast<uint32_t>(audioConfig->inputBlockAlign));
+
+            const MediaFoundationFileSinkDiagnostics diagnostics = harness.sink.Diagnostics();
+            Assert::AreEqual(static_cast<size_t>(2), diagnostics.streams.size());
+            const MediaFoundationFileSinkStreamDiagnostics* videoDiagnostics =
+                FindDiagnosticsStream(diagnostics, StreamId::FromValue(7));
+            const MediaFoundationFileSinkStreamDiagnostics* audioDiagnostics =
+                FindDiagnosticsStream(diagnostics, StreamId::FromValue(8));
+            Assert::IsNotNull(videoDiagnostics);
+            Assert::IsNotNull(audioDiagnostics);
+            Assert::IsTrue(videoDiagnostics->accepted);
+            Assert::IsFalse(videoDiagnostics->rejected);
+            Assert::IsTrue(audioDiagnostics->accepted);
+            Assert::IsFalse(audioDiagnostics->rejected);
+            Assert::IsTrue(audioDiagnostics->configuredMediaTypeSummary.find("audio 48000Hz 2ch 32bit")
+                != std::string::npos);
         }
 
         TEST_METHOD(Open_Mp3PlanWithVideoStream_FailsDefensively)
@@ -598,6 +628,19 @@ namespace CaptureInteropTests
             Assert::AreEqual(42u, harness.sinkWriterFactory->session->lastWriteVideoStreamIndex);
             Assert::IsTrue(harness.sinkWriterFactory->session->lastVideoSample.has_value());
             Assert::AreEqual(100LL, harness.sinkWriterFactory->session->lastVideoSample->timestamp.ticks100ns);
+
+            const MediaFoundationFileSinkDiagnostics diagnostics = harness.sink.Diagnostics();
+            Assert::AreEqual(L"C:\\Temp\\capture.mp4", diagnostics.outputPath.c_str());
+            Assert::AreEqual("mp4", diagnostics.selectedProfileName.c_str());
+            Assert::AreEqual(1u, diagnostics.writes.writeDepthHighWaterMark);
+            const MediaFoundationFileSinkStreamDiagnostics* stream =
+                FindDiagnosticsStream(diagnostics, StreamId::FromValue(1));
+            Assert::IsNotNull(stream);
+            Assert::IsTrue(stream->accepted);
+            Assert::IsFalse(stream->rejected);
+            Assert::AreEqual(42u, stream->sinkStreamIndex);
+            Assert::AreEqual(1ull, stream->samplesWritten);
+            Assert::IsTrue(stream->configuredMediaTypeSummary.find("video 2x2") != std::string::npos);
         }
 
         TEST_METHOD(WriteSample_UnknownStream_ReturnsNotFound)
@@ -612,6 +655,7 @@ namespace CaptureInteropTests
             Assert::AreEqual(
                 static_cast<uint32_t>(CoreResultCode::NotFound),
                 static_cast<uint32_t>(result.code));
+            Assert::AreEqual(1ull, harness.sink.Diagnostics().writes.rejectedWrites);
         }
 
         TEST_METHOD(WriteSample_AudioSentToVideoStream_ReturnsValidationFailure)
@@ -828,6 +872,12 @@ namespace CaptureInteropTests
                 "Audio sample timestamp regressed for the negotiated stream",
                 result.diagnostic->message.c_str());
             Assert::AreEqual(1, harness.sinkWriterFactory->session->writeAudioCalls);
+            const MediaFoundationFileSinkDiagnostics diagnostics = harness.sink.Diagnostics();
+            Assert::AreEqual(1ull, diagnostics.timestampValidationFailures);
+            const MediaFoundationFileSinkStreamDiagnostics* stream =
+                FindDiagnosticsStream(diagnostics, StreamId::FromValue(2));
+            Assert::IsNotNull(stream);
+            Assert::AreEqual(1ull, stream->timestampValidationFailures);
         }
 
         TEST_METHOD(WriteSample_InvalidAudioBufferLength_ReturnsValidationFailure)
@@ -992,6 +1042,13 @@ namespace CaptureInteropTests
             Assert::AreEqual(
                 static_cast<int>(MediaFoundationFileSinkState::Finalized),
                 static_cast<int>(harness.sink.State()));
+            const MediaFoundationFileSinkDiagnostics diagnostics = harness.sink.Diagnostics();
+            Assert::IsTrue(diagnostics.finalized);
+            Assert::AreEqual("Finalize", diagnostics.finalizeStage.c_str());
+            Assert::IsTrue(diagnostics.finalizeFailure.has_value());
+            Assert::AreEqual("simulated finalize failure", diagnostics.finalizeFailure->message.c_str());
+            Assert::IsTrue(diagnostics.finalizeFailure->nativeStatus.has_value());
+            Assert::AreEqual(static_cast<int64_t>(E_FAIL), diagnostics.finalizeFailure->nativeStatus.value());
         }
 
         TEST_METHOD(Finalize_VideoPlusAudio_FinalizesAfterBeginWriting)
@@ -1079,6 +1136,12 @@ namespace CaptureInteropTests
             Assert::AreEqual(0u, harness.runtime->ActiveLeaseCount());
             Assert::AreEqual(1, harness.runtimeApi->shutdownCalls);
             Assert::IsFalse(harness.sink.HasSinkWriter());
+            const MediaFoundationFileSinkDiagnostics diagnostics = harness.sink.Diagnostics();
+            Assert::AreEqual("CreateFileSinkWriter", diagnostics.setupStage.c_str());
+            Assert::IsTrue(diagnostics.setupFailure.has_value());
+            Assert::AreEqual("simulated writer creation failure", diagnostics.setupFailure->message.c_str());
+            Assert::IsTrue(diagnostics.setupFailure->nativeStatus.has_value());
+            Assert::AreEqual(static_cast<int64_t>(E_FAIL), diagnostics.setupFailure->nativeStatus.value());
         }
 
         TEST_METHOD(Open_SinkWriterFactorySuccessWithoutWriter_FailsAndReleasesRuntimeLease)
