@@ -12,6 +12,7 @@
 #include <functional>
 #include <mutex>
 #include <optional>
+#include <thread>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace CaptureInterop::V2;
@@ -831,6 +832,176 @@ namespace CaptureInteropTests
 
             Assert::IsTrue(WaitFor([&] { return callbackCompleted.load(); }));
             Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
+        TEST_METHOD(ConcurrentMuteAndGainUpdatesWhilePacketsArriveAreSafe)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
+            std::atomic_int callbackCount{ 0 };
+            std::atomic_bool commandFailed{ false };
+            CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                [&](const AudioSample&)
+                {
+                    ++callbackCount;
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            std::thread producer(
+                [&]
+                {
+                    for (int index = 0; index < 200; ++index)
+                    {
+                        packetProvider->EnqueuePacket(CreateSample(static_cast<uint8_t>(index + 1)));
+                    }
+                });
+            std::thread controller(
+                [&]
+                {
+                    for (int index = 0; index < 200; ++index)
+                    {
+                        if (source.SetMuted(SourceId::FromValue(22), (index % 2) == 0).IsFailure())
+                        {
+                            commandFailed.store(true);
+                        }
+
+                        if (source.SetGainDb(
+                            SourceId::FromValue(22),
+                            (index % 2) == 0 ? -6.0f : 3.0f).IsFailure())
+                        {
+                            commandFailed.store(true);
+                        }
+                    }
+                });
+
+            producer.join();
+            controller.join();
+            Assert::IsFalse(commandFailed.load());
+            Assert::IsTrue(WaitFor([&] { return callbackCount.load() > 0; }));
+            Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
+        TEST_METHOD(StopDuringCallbackDrainsBeforeReturning)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            packetProvider->EnqueuePacket(CreateSample(5));
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
+            std::mutex mutex;
+            std::condition_variable condition;
+            bool callbackEntered = false;
+            bool allowCallbackExit = false;
+            std::atomic_bool callbackExited{ false };
+            std::atomic_bool stopReturned{ false };
+            std::atomic_bool stopSucceeded{ false };
+            CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                [&](const AudioSample&)
+                {
+                    std::unique_lock lock(mutex);
+                    callbackEntered = true;
+                    condition.notify_all();
+                    condition.wait(
+                        lock,
+                        [&]
+                        {
+                            return allowCallbackExit;
+                        });
+                    callbackExited.store(true);
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            {
+                std::unique_lock lock(mutex);
+                Assert::IsTrue(condition.wait_for(
+                    lock,
+                    std::chrono::milliseconds(500),
+                    [&]
+                    {
+                        return callbackEntered;
+                    }));
+            }
+
+            std::thread stopper(
+                [&]
+                {
+                    stopSucceeded.store(source.Stop().IsSuccess());
+                    stopReturned.store(true);
+                });
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            Assert::IsFalse(stopReturned.load());
+            {
+                std::lock_guard lock(mutex);
+                allowCallbackExit = true;
+            }
+            condition.notify_all();
+            stopper.join();
+
+            Assert::IsTrue(callbackExited.load());
+            Assert::IsTrue(stopSucceeded.load());
+            Assert::IsTrue(stopReturned.load());
+        }
+
+        TEST_METHOD(PauseResumeDuringFakePacketFlowIsSafe)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
+            std::atomic_bool pauseFailed{ false };
+            CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                [&](const AudioSample&)
+                {
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            std::thread producer(
+                [&]
+                {
+                    for (int index = 0; index < 200; ++index)
+                    {
+                        packetProvider->EnqueuePacket(CreateSample(static_cast<uint8_t>(index + 1)));
+                    }
+                });
+            std::thread pauser(
+                [&]
+                {
+                    for (int index = 0; index < 100; ++index)
+                    {
+                        if (source.SetPaused((index % 2) == 0).IsFailure())
+                        {
+                            pauseFailed.store(true);
+                        }
+                    }
+
+                    if (source.SetPaused(false).IsFailure())
+                    {
+                        pauseFailed.store(true);
+                    }
+                });
+
+            producer.join();
+            pauser.join();
+            Assert::IsFalse(pauseFailed.load());
+            Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
+        TEST_METHOD(RuntimeCommandRace_RepeatedSequencesDoNotDeadlock)
+        {
+            for (int iteration = 0; iteration < 25; ++iteration)
+            {
+                auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+                WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
+                CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                    [](const AudioSample&)
+                    {
+                    });
+
+                Assert::IsTrue(source.Start().IsSuccess());
+                packetProvider->EnqueuePacket(CreateSample(static_cast<uint8_t>(iteration + 1)));
+                Assert::IsTrue(source.SetPaused((iteration % 2) == 0).IsSuccess());
+                Assert::IsTrue(source.SetMuted(SourceId::FromValue(22), (iteration % 3) == 0).IsSuccess());
+                Assert::IsTrue(source.SetGainDb(SourceId::FromValue(22), -3.0f).IsSuccess());
+                Assert::IsTrue(source.SetPaused(false).IsSuccess());
+                Assert::IsTrue(source.Stop().IsSuccess());
+            }
         }
 
         TEST_METHOD(Start_UnarmedSource_ReturnsUnsupportedOperation)

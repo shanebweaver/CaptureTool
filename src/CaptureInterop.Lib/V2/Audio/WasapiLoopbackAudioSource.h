@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <cmath>
 #include <cstring>
 #include <functional>
@@ -36,8 +37,8 @@ namespace CaptureInterop::V2::Audio
               m_provider(std::move(provider)),
               m_packetProvider(std::move(packetProvider))
         {
-            m_muted = m_config.controls.initiallyMuted;
-            m_gainDb = m_config.controls.initialGain.gainDb;
+            m_muted.store(m_config.controls.initiallyMuted);
+            m_gainDb.store(m_config.controls.initialGain.gainDb);
         }
 
         ~WasapiLoopbackAudioSource() override
@@ -78,20 +79,17 @@ namespace CaptureInterop::V2::Audio
 
         [[nodiscard]] bool IsMuted() const noexcept
         {
-            std::lock_guard lock(m_mutex);
-            return m_muted;
+            return m_muted.load();
         }
 
         [[nodiscard]] float GainDb() const noexcept
         {
-            std::lock_guard lock(m_mutex);
-            return m_gainDb;
+            return m_gainDb.load();
         }
 
         [[nodiscard]] bool IsPaused() const noexcept
         {
-            std::lock_guard lock(m_mutex);
-            return m_paused;
+            return m_paused.load();
         }
 
         [[nodiscard]] WasapiLoopbackAudioSourceDiagnostics Diagnostics() const noexcept
@@ -102,6 +100,7 @@ namespace CaptureInterop::V2::Audio
 
         [[nodiscard]] OperationResult Start() noexcept override
         {
+            std::lock_guard lifecycleLock(m_lifecycleMutex);
             if (!m_config.armed)
             {
                 return OperationResult::Failure(
@@ -164,6 +163,7 @@ namespace CaptureInterop::V2::Audio
 
         [[nodiscard]] OperationResult Stop() noexcept override
         {
+            std::lock_guard lifecycleLock(m_lifecycleMutex);
             DisableCallbacks();
             m_stopRequested.store(true);
 
@@ -180,6 +180,8 @@ namespace CaptureInterop::V2::Audio
             {
                 m_worker.join();
             }
+
+            WaitForCallbackDrain();
 
             if (packetProvider && shouldStopProvider)
             {
@@ -209,8 +211,7 @@ namespace CaptureInterop::V2::Audio
                     "System audio source is not armed");
             }
 
-            std::lock_guard lock(m_mutex);
-            m_muted = muted;
+            m_muted.store(muted);
             return OperationResult::Success();
         }
 
@@ -245,15 +246,13 @@ namespace CaptureInterop::V2::Audio
                     "Audio gain is outside the supported range");
             }
 
-            std::lock_guard lock(m_mutex);
-            m_gainDb = gainDb;
+            m_gainDb.store(gainDb);
             return OperationResult::Success();
         }
 
         [[nodiscard]] OperationResult SetPaused(bool paused) noexcept
         {
-            std::lock_guard lock(m_mutex);
-            m_paused = paused;
+            m_paused.store(paused);
             return OperationResult::Success();
         }
 
@@ -308,8 +307,10 @@ namespace CaptureInterop::V2::Audio
         struct CallbackState
         {
             std::mutex mutex;
+            std::condition_variable idleCondition;
             std::vector<HandlerEntry> handlers;
             uint64_t nextHandlerId{ 1 };
+            size_t activeDispatches{ 0 };
             bool acceptingCallbacks{ false };
         };
 
@@ -323,6 +324,17 @@ namespace CaptureInterop::V2::Audio
         {
             std::lock_guard lock(m_callbackState->mutex);
             m_callbackState->acceptingCallbacks = false;
+        }
+
+        void WaitForCallbackDrain()
+        {
+            std::unique_lock lock(m_callbackState->mutex);
+            m_callbackState->idleCondition.wait(
+                lock,
+                [&]
+                {
+                    return m_callbackState->activeDispatches == 0;
+                });
         }
 
         void CaptureLoop()
@@ -342,22 +354,13 @@ namespace CaptureInterop::V2::Audio
 
         void PublishSample(const AudioSample& sample)
         {
-            bool paused = false;
-            bool muted = false;
-            float gainDb = AudioGainSettings::DefaultGainDb;
-            {
-                std::lock_guard lock(m_mutex);
-                paused = m_paused;
-                muted = m_muted;
-                gainDb = m_gainDb;
-                if (paused)
-                {
-                    m_diagnostics.droppedPausedFrames += sample.frameCount;
-                }
-            }
-
+            const bool paused = m_paused.load();
+            const bool muted = m_muted.load();
+            const float gainDb = m_gainDb.load();
             if (paused)
             {
+                std::lock_guard lock(m_mutex);
+                m_diagnostics.droppedPausedFrames += sample.frameCount;
                 return;
             }
 
@@ -390,11 +393,32 @@ namespace CaptureInterop::V2::Audio
                 {
                     handlers.push_back(entry.handler);
                 }
+                ++m_callbackState->activeDispatches;
             }
 
-            for (const AudioSampleHandler& handler : handlers)
+            try
             {
-                handler(outputSample);
+                for (const AudioSampleHandler& handler : handlers)
+                {
+                    handler(outputSample);
+                }
+            }
+            catch (...)
+            {
+                FinishCallbackDispatch();
+                throw;
+            }
+
+            FinishCallbackDispatch();
+        }
+
+        void FinishCallbackDispatch()
+        {
+            std::lock_guard lock(m_callbackState->mutex);
+            --m_callbackState->activeDispatches;
+            if (m_callbackState->activeDispatches == 0)
+            {
+                m_callbackState->idleCondition.notify_all();
             }
         }
 
@@ -534,13 +558,18 @@ namespace CaptureInterop::V2::Audio
         WasapiLoopbackAudioSourceConfig m_config;
         std::shared_ptr<IWasapiLoopbackAudioProvider> m_provider;
         std::shared_ptr<IWasapiLoopbackPacketProvider> m_packetProvider;
+        // Lifecycle transitions are serialized by m_lifecycleMutex. Runtime command
+        // state is atomic so the capture thread can snapshot pause/mute/gain without
+        // taking the diagnostics/lifecycle lock. Callback publication copies handlers
+        // and tracks active dispatches before invoking observers without internal locks.
+        mutable std::mutex m_lifecycleMutex;
         mutable std::mutex m_mutex;
         std::shared_ptr<CallbackState> m_callbackState{ std::make_shared<CallbackState>() };
         std::thread m_worker;
         std::atomic_bool m_stopRequested{ false };
-        float m_gainDb{ AudioGainSettings::DefaultGainDb };
-        bool m_muted{ false };
-        bool m_paused{ false };
+        std::atomic<float> m_gainDb{ AudioGainSettings::DefaultGainDb };
+        std::atomic_bool m_muted{ false };
+        std::atomic_bool m_paused{ false };
         bool m_started{ false };
         WasapiLoopbackAudioSourceDiagnostics m_diagnostics;
     };
