@@ -1595,6 +1595,11 @@ namespace CaptureInterop::V2::Output
 
         RecordFinalizeResult(result);
         ReleaseWriterResources();
+        if (result.IsFailure())
+        {
+            DeleteFailedFinalizeOutput();
+        }
+
         m_finalizationResult = result;
         m_state = MediaFoundationFileSinkState::Finalized;
         return result;
@@ -1675,6 +1680,24 @@ namespace CaptureInterop::V2::Output
         {
             m_diagnostics.finalizeFailure = result.diagnostic;
         }
+    }
+
+    void MediaFoundationFileSink::DeleteFailedFinalizeOutput() noexcept
+    {
+        if (m_diagnostics.outputPath.empty())
+        {
+            return;
+        }
+
+        m_diagnostics.failedFinalizeOutputDeleteAttempted = true;
+        if (DeleteFileW(m_diagnostics.outputPath.c_str()) != FALSE)
+        {
+            m_diagnostics.failedFinalizeOutputDeleted = true;
+            return;
+        }
+
+        m_diagnostics.failedFinalizeOutputDeleted =
+            GetFileAttributesW(m_diagnostics.outputPath.c_str()) == INVALID_FILE_ATTRIBUTES;
     }
 
     void MediaFoundationFileSink::RecordRejectedWrite() noexcept

@@ -70,6 +70,8 @@ namespace CaptureInterop::V2::Output
         std::string finalizeStage;
         std::optional<CoreDiagnostic> finalizeFailure;
         bool finalized{ false };
+        bool failedFinalizeOutputDeleteAttempted{ false };
+        bool failedFinalizeOutputDeleted{ false };
     };
 
     struct MediaFoundationH264VideoStreamConfig
@@ -216,6 +218,7 @@ namespace CaptureInterop::V2::Output
         void MarkAcceptedStream(const MediaFoundationSinkStreamMapping& mapping);
         void RecordSetupFailure(std::string stage, const OperationResult& result);
         void RecordFinalizeResult(const OperationResult& result);
+        void DeleteFailedFinalizeOutput() noexcept;
         void RecordRejectedWrite() noexcept;
         void RecordAcceptedWriteStart() noexcept;
         void RecordAcceptedWriteCompletion(const OperationResult& result) noexcept;

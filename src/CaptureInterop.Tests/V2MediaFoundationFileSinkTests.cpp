@@ -3,6 +3,7 @@
 #include "V2/Output/MediaFoundationFileSink.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <condition_variable>
 #include <initializer_list>
@@ -380,6 +381,25 @@ namespace
 
         return found == diagnostics.streams.end() ? nullptr : &*found;
     }
+
+    std::wstring CreateTemporaryOutputFile()
+    {
+        std::array<wchar_t, MAX_PATH> tempDirectory{};
+        const DWORD directoryLength = GetTempPathW(
+            static_cast<DWORD>(tempDirectory.size()),
+            tempDirectory.data());
+        Assert::IsTrue(directoryLength > 0 && directoryLength < tempDirectory.size());
+
+        std::array<wchar_t, MAX_PATH> tempFile{};
+        const UINT result = GetTempFileNameW(
+            tempDirectory.data(),
+            L"ctv",
+            0,
+            tempFile.data());
+        Assert::AreNotEqual(0u, result);
+
+        return tempFile.data();
+    }
 }
 
 namespace CaptureInteropTests
@@ -508,6 +528,33 @@ namespace CaptureInteropTests
             Assert::IsFalse(audioDiagnostics->rejected);
             Assert::IsTrue(audioDiagnostics->configuredMediaTypeSummary.find("audio 48000Hz 2ch 32bit")
                 != std::string::npos);
+        }
+
+        TEST_METHOD(Open_Mp4AudioOnlyPlan_MapsOnlyAudioStream)
+        {
+            SinkHarness harness;
+            const OutputPlan plan = CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateAudioStream(8) });
+
+            const OperationResult result = harness.sink.Open(plan);
+
+            Assert::IsTrue(result.IsSuccess());
+            const std::vector<MediaFoundationSinkStreamMapping> mappings = harness.sink.StreamMappings();
+            Assert::AreEqual(static_cast<size_t>(1), mappings.size());
+            Assert::AreEqual(8u, mappings[0].streamId.value);
+            Assert::AreEqual(77u, mappings[0].sinkStreamIndex);
+            Assert::AreEqual(static_cast<int>(MediaKind::Audio), static_cast<int>(mappings[0].kind));
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->configureVideoCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->configureAudioCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->beginWritingCalls);
+            Assert::IsTrue(harness.sink.HasSinkWriter());
+
+            const auto& audioConfig = harness.sinkWriterFactory->session->lastAudioConfig;
+            Assert::IsTrue(audioConfig.has_value());
+            Assert::AreEqual(8u, audioConfig->streamId.value);
+            Assert::AreEqual(48000u, audioConfig->sampleRate);
+            Assert::AreEqual(2u, static_cast<uint32_t>(audioConfig->channels));
         }
 
         TEST_METHOD(Open_Mp3PlanWithVideoStream_FailsDefensively)
@@ -846,6 +893,24 @@ namespace CaptureInteropTests
             Assert::AreEqual(1000LL, harness.sinkWriterFactory->session->lastAudioSample->timestamp.ticks100ns);
         }
 
+        TEST_METHOD(WriteSample_Mp4AudioOnly_WritesAndFinalizes)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateAudioStream(2) })).IsSuccess());
+
+            AudioSample sample = CreateAudioSample(StreamId::FromValue(2));
+            sample.timestamp = MediaTime::FromTicks(1000);
+
+            Assert::IsTrue(harness.sink.WriteSample(MediaSample{ sample }).IsSuccess());
+            Assert::IsTrue(harness.sink.Finalize().IsSuccess());
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->writeVideoCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->writeAudioCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->finalizeCalls);
+            Assert::AreEqual(1ull, harness.sink.Diagnostics().streams[0].samplesWritten);
+        }
+
         TEST_METHOD(WriteSample_SilentAudioSample_WritesSuccessfully)
         {
             SinkHarness harness;
@@ -1163,7 +1228,10 @@ namespace CaptureInteropTests
                 "Finalize",
                 "simulated finalize failure",
                 E_FAIL);
-            Assert::IsTrue(harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() })).IsSuccess());
+            OutputPlan plan = CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() });
+            plan.outputPath = CreateTemporaryOutputFile();
+            Assert::IsTrue(GetFileAttributesW(plan.outputPath.c_str()) != INVALID_FILE_ATTRIBUTES);
+            Assert::IsTrue(harness.sink.Open(plan).IsSuccess());
 
             const OperationResult first = harness.sink.Finalize();
             const OperationResult second = harness.sink.Finalize();
@@ -1185,6 +1253,9 @@ namespace CaptureInteropTests
             Assert::AreEqual("simulated finalize failure", diagnostics.finalizeFailure->message.c_str());
             Assert::IsTrue(diagnostics.finalizeFailure->nativeStatus.has_value());
             Assert::AreEqual(static_cast<int64_t>(E_FAIL), diagnostics.finalizeFailure->nativeStatus.value());
+            Assert::IsTrue(diagnostics.failedFinalizeOutputDeleteAttempted);
+            Assert::IsTrue(diagnostics.failedFinalizeOutputDeleted);
+            Assert::IsTrue(GetFileAttributesW(plan.outputPath.c_str()) == INVALID_FILE_ATTRIBUTES);
         }
 
         TEST_METHOD(Finalize_VideoPlusAudio_FinalizesAfterBeginWriting)
