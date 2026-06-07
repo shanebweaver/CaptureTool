@@ -170,6 +170,7 @@
     <ClInclude Include="V2\Core\MediaTypes.h" />
     <ClInclude Include="V2\Core\ResultTypes.h" />
     <ClInclude Include="V2\Core\RecordingClock.h" />
+    <ClInclude Include="V2\Output\MediaFoundationFileSink.h" />
     <ClInclude Include="V2\Output\MediaFoundationRuntime.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSource.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSourceFactory.h" />
@@ -207,6 +208,7 @@
     <ClCompile Include="V2\Audio\WindowsWasapiAudioClientFactory.cpp" />
     <ClCompile Include="V2\Audio\WindowsWasapiLoopbackPacketProvider.cpp" />
     <ClCompile Include="V2\Desktop\WindowsGraphicsCaptureProvider.cpp" />
+    <ClCompile Include="V2\Output\MediaFoundationFileSink.cpp" />
     <ClCompile Include="V2\Output\MediaFoundationRuntime.cpp" />
     <ClCompile Include="WindowsDesktopVideoCaptureSource.cpp" />
     <ClCompile Include="WindowsDesktopVideoCaptureSourceFactory.cpp" />

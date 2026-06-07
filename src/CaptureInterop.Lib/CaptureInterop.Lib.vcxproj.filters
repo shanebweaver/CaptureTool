@@ -342,6 +342,9 @@
     <ClInclude Include="V2\Core\PipelineInterfaces.h">
       <Filter>Header Files\V2\Core</Filter>
     </ClInclude>
+    <ClInclude Include="V2\Output\MediaFoundationFileSink.h">
+      <Filter>Header Files\V2\Output</Filter>
+    </ClInclude>
     <ClInclude Include="V2\Output\MediaFoundationRuntime.h">
       <Filter>Header Files\V2\Output</Filter>
     </ClInclude>
@@ -427,6 +430,9 @@
     </ClCompile>
     <ClCompile Include="V2\Desktop\WindowsGraphicsCaptureProvider.cpp">
       <Filter>Source Files\VideoCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="V2\Output\MediaFoundationFileSink.cpp">
+      <Filter>Source Files\V2\Output</Filter>
     </ClCompile>
     <ClCompile Include="V2\Output\MediaFoundationRuntime.cpp">
       <Filter>Source Files\V2\Output</Filter>

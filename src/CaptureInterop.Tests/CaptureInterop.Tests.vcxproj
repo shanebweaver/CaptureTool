@@ -131,6 +131,7 @@
     <ClCompile Include="V2CoreCapturePipelineSessionRoutingTests.cpp" />
     <ClCompile Include="V2CoreFakeComponentsTests.cpp" />
     <ClCompile Include="V2CoreMediaTypesTests.cpp" />
+    <ClCompile Include="V2MediaFoundationFileSinkTests.cpp" />
     <ClCompile Include="V2MediaFoundationSinkCapabilitiesTests.cpp" />
     <ClCompile Include="V2MediaFoundationRuntimeTests.cpp" />
     <ClCompile Include="V2CoreOutputProfileResolverTests.cpp" />
