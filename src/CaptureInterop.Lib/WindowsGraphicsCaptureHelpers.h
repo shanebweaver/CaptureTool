@@ -220,13 +220,27 @@ namespace WindowsGraphicsCaptureHelpers
         }
 
         wil::com_ptr<IDirect3D11CaptureFramePool> framePool;
+        wil::com_ptr<IDirect3D11CaptureFramePoolStatics2> freeThreadedFactory;
+        hr = factory->QueryInterface(IID_PPV_ARGS(freeThreadedFactory.put()));
+        if (SUCCEEDED(hr) && freeThreadedFactory)
+        {
+            hr = freeThreadedFactory->CreateFreeThreaded(
+                direct3DDevice.get(),
+                DirectXPixelFormat_B8G8R8A8UIntNormalized,
+                6, // number of buffers - increased from 2 to prevent stalls when WriteSample blocks
+                size,
+                framePool.put());
+        }
+        else
+        {
+            hr = factory->Create(
+                direct3DDevice.get(),
+                DirectXPixelFormat_B8G8R8A8UIntNormalized,
+                6, // number of buffers - increased from 2 to prevent stalls when WriteSample blocks
+                size,
+                framePool.put());
+        }
 
-        hr = factory->Create(
-            direct3DDevice.get(),
-            DirectXPixelFormat_B8G8R8A8UIntNormalized,
-            6, // number of buffers - increased from 2 to prevent stalls when WriteSample blocks
-            size,
-            framePool.put());
         if (FAILED(hr))
         {
             if (outHr) *outHr = hr;

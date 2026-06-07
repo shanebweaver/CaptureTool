@@ -33,6 +33,7 @@
     <VcpkgTriplet Condition="'$(Platform)'=='ARM64'">arm64-windows</VcpkgTriplet>
     <VcpkgRoot>$(SolutionDir)\vcpkg</VcpkgRoot>
     <VcpkgInstalledDir>$(SolutionDir)\vcpkg_installed</VcpkgInstalledDir>
+    <VcpkgXUseBuiltInApplocalDeps>true</VcpkgXUseBuiltInApplocalDeps>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
@@ -94,12 +95,15 @@
     <ClInclude Include="ScreenRecorder.h" />
     <ClInclude Include="ScreenshotExports.h" />
     <ClInclude Include="TextureConversionExports.h" />
+    <ClInclude Include="V2\CaptureInteropV2Exports.h" />
+    <ClInclude Include="V2\CaptureInteropV2Validation.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="ScreenRecorder.cpp" />
     <ClCompile Include="ScreenshotExports.cpp" />
     <ClCompile Include="TextureConversionExports.cpp" />
+    <ClCompile Include="V2\CaptureInteropV2Exports.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CaptureInterop.Lib\CaptureInterop.Lib.vcxproj">
