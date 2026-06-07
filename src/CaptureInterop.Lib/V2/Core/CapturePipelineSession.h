@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AudioControlProcessors.h"
 #include "OutputProfileResolver.h"
 #include "PipelineInterfaces.h"
 #include "PipelineStateMachine.h"
@@ -173,6 +174,65 @@ namespace CaptureInterop::V2
             return m_stateMachine.Resume();
         }
 
+        [[nodiscard]] OperationResult SetAudioMuted(SourceId sourceId, bool muted)
+        {
+            if (!m_stateMachine.CanApply(PipelineOperation::SetAudioMuted))
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::InvalidState,
+                    "CapturePipelineSession",
+                    "SetAudioMuted",
+                    "Session cannot update audio mute from the current state");
+            }
+
+            IAudioMuteProcessor* processor = FindAudioMuteProcessor(sourceId);
+            if (processor == nullptr)
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::NotFound,
+                    "CapturePipelineSession",
+                    "SetAudioMuted",
+                    "No armed audio mute processor was found for the source");
+            }
+
+            return processor->SetMuted(muted);
+        }
+
+        [[nodiscard]] OperationResult SetAudioGain(SourceId sourceId, float gainDb)
+        {
+            if (!m_stateMachine.CanApply(PipelineOperation::SetAudioGain))
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::InvalidState,
+                    "CapturePipelineSession",
+                    "SetAudioGain",
+                    "Session cannot update audio gain from the current state");
+            }
+
+            AudioGainSettings requestedGain;
+            requestedGain.gainDb = gainDb;
+            if (!requestedGain.IsInSupportedRange())
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::RangeError,
+                    "CapturePipelineSession",
+                    "SetAudioGain",
+                    "Audio gain is outside the supported range");
+            }
+
+            IAudioGainProcessor* processor = FindAudioGainProcessor(sourceId);
+            if (processor == nullptr)
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::NotFound,
+                    "CapturePipelineSession",
+                    "SetAudioGain",
+                    "No armed audio gain processor was found for the source");
+            }
+
+            return processor->SetGainDb(gainDb);
+        }
+
         [[nodiscard]] CapturePipelineStopResult Stop()
         {
             if (m_stateMachine.IsTerminal())
@@ -309,6 +369,34 @@ namespace CaptureInterop::V2
                 if (processor != nullptr && processor->Kind() == kind)
                 {
                     return processor.get();
+                }
+            }
+
+            return nullptr;
+        }
+
+        IAudioMuteProcessor* FindAudioMuteProcessor(SourceId sourceId) noexcept
+        {
+            for (const std::unique_ptr<IMediaProcessor>& processor : m_processors)
+            {
+                auto* muteProcessor = dynamic_cast<IAudioMuteProcessor*>(processor.get());
+                if (muteProcessor != nullptr && muteProcessor->ControlledSource() == sourceId)
+                {
+                    return muteProcessor;
+                }
+            }
+
+            return nullptr;
+        }
+
+        IAudioGainProcessor* FindAudioGainProcessor(SourceId sourceId) noexcept
+        {
+            for (const std::unique_ptr<IMediaProcessor>& processor : m_processors)
+            {
+                auto* gainProcessor = dynamic_cast<IAudioGainProcessor*>(processor.get());
+                if (gainProcessor != nullptr && gainProcessor->ControlledSource() == sourceId)
+                {
+                    return gainProcessor;
                 }
             }
 

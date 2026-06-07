@@ -110,6 +110,7 @@
     <ClCompile Include="ResultTests.cpp" />
     <ClCompile Include="ShutdownRaceConditionTests.cpp" />
     <ClCompile Include="VideoCaptureSourceStopTests.cpp" />
+    <ClCompile Include="V2CoreAudioControlProcessorTests.cpp" />
     <ClCompile Include="V2CoreCapturePipelineConfigTests.cpp" />
     <ClCompile Include="V2CoreCapturePipelineConfigValidatorTests.cpp" />
     <ClCompile Include="V2CoreCapturePipelineSessionTests.cpp" />
