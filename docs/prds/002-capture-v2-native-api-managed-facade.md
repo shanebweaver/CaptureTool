@@ -1008,6 +1008,12 @@ Suggested tests:
 - Feature flag off path uses current recorder.
 - Feature flag on path can be wired to a test/dummy V2 recorder.
 
+Implementation note:
+
+- `AddWindowsCaptureDomains` keeps `WindowsScreenRecorder` as the default `IScreenRecorder`.
+- Workflow PRDs can opt into V2 by configuring `WindowsCaptureInfrastructureOptions.UseCaptureV2ScreenRecorder` after a feature flag is evaluated by the app layer.
+- The first workflow integration should replace the placeholder monitor geometry in `CaptureV2ScreenRecorderAdapter` with source metadata from the desktop-source PRD before enabling production capture.
+
 ## Open Questions
 
 - Should `CtCaptureV2_GetLastError` support handle-null thread-local create errors, or should create failures be fully represented by result code alone?
