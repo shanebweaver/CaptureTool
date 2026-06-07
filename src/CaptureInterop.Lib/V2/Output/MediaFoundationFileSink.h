@@ -54,6 +54,7 @@ namespace CaptureInterop::V2::Output
         std::string configuredMediaTypeSummary;
         uint64_t samplesWritten{ 0 };
         uint64_t timestampValidationFailures{ 0 };
+        uint64_t textureSamplesConverted{ 0 };
     };
 
     struct MediaFoundationFileSinkDiagnostics
@@ -223,6 +224,7 @@ namespace CaptureInterop::V2::Output
         void RecordAcceptedWriteStart() noexcept;
         void RecordAcceptedWriteCompletion(const OperationResult& result) noexcept;
         void RecordSampleWritten(StreamId streamId) noexcept;
+        void RecordTextureSampleConverted(StreamId streamId) noexcept;
         void RecordTimestampValidationFailure(StreamId streamId) noexcept;
         [[nodiscard]] MediaFoundationFileSinkStreamDiagnostics* FindStreamDiagnostics(
             StreamId streamId) noexcept;

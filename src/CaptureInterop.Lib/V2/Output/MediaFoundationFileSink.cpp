@@ -227,7 +227,20 @@ namespace CaptureInterop::V2::Output
                         "Media Foundation sink writer is not available");
                 }
 
-                if (sample.pixelData.empty())
+                std::vector<uint8_t> convertedPixelData;
+                const std::vector<uint8_t>* pixelData = &sample.pixelData;
+                if (pixelData->empty() && sample.HasTexture())
+                {
+                    OperationResult convertResult = CopyTextureToPixelData(sample, convertedPixelData);
+                    if (convertResult.IsFailure())
+                    {
+                        return convertResult;
+                    }
+
+                    pixelData = &convertedPixelData;
+                }
+
+                if (pixelData->empty())
                 {
                     return OperationResult::Failure(
                         CoreResultCode::ValidationFailure,
@@ -238,7 +251,7 @@ namespace CaptureInterop::V2::Output
 
                 wil::com_ptr<IMFMediaBuffer> buffer;
                 HRESULT hr = MFCreateMemoryBuffer(
-                    static_cast<DWORD>(sample.pixelData.size()),
+                    static_cast<DWORD>(pixelData->size()),
                     buffer.put());
                 if (FAILED(hr))
                 {
@@ -254,7 +267,7 @@ namespace CaptureInterop::V2::Output
                     return NativeFailure("LockVideoSampleBuffer", "Failed to lock Media Foundation video sample buffer", hr);
                 }
 
-                if (maxLength < sample.pixelData.size())
+                if (maxLength < pixelData->size())
                 {
                     buffer->Unlock();
                     return OperationResult::Failure(
@@ -264,14 +277,14 @@ namespace CaptureInterop::V2::Output
                         "Media Foundation video sample buffer is smaller than the source sample");
                 }
 
-                std::memcpy(destination, sample.pixelData.data(), sample.pixelData.size());
+                std::memcpy(destination, pixelData->data(), pixelData->size());
                 hr = buffer->Unlock();
                 if (FAILED(hr))
                 {
                     return NativeFailure("UnlockVideoSampleBuffer", "Failed to unlock Media Foundation video sample buffer", hr);
                 }
 
-                hr = buffer->SetCurrentLength(static_cast<DWORD>(sample.pixelData.size()));
+                hr = buffer->SetCurrentLength(static_cast<DWORD>(pixelData->size()));
                 if (FAILED(hr))
                 {
                     return NativeFailure("SetVideoSampleBufferLength", "Failed to set Media Foundation video sample buffer length", hr);
@@ -753,6 +766,115 @@ namespace CaptureInterop::V2::Output
                 return created;
             }
 
+            [[nodiscard]] static OperationResult CopyTextureToPixelData(
+                const VideoSample& sample,
+                std::vector<uint8_t>& pixelData) noexcept
+            {
+                ID3D11Texture2D* texture = sample.texture ? sample.texture->Texture() : nullptr;
+                if (!texture)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::InvalidState,
+                        "MediaFoundationFileSink",
+                        "CopyTextureToPixelData",
+                        "Video sample texture reference is not available");
+                }
+
+                D3D11_TEXTURE2D_DESC desc{};
+                texture->GetDesc(&desc);
+                const VideoFrameDimensions dimensions = sample.Dimensions();
+                if (desc.Width != dimensions.width || desc.Height != dimensions.height)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::ValidationFailure,
+                        "MediaFoundationFileSink",
+                        "CopyTextureToPixelData",
+                        "Video sample texture dimensions do not match the negotiated media type");
+                }
+
+                if (desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM && desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM_SRGB)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::UnsupportedOperation,
+                        "MediaFoundationFileSink",
+                        "CopyTextureToPixelData",
+                        "Video sample texture format is not supported by the current H.264 input path");
+                }
+
+                if (desc.SampleDesc.Count != 1)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::UnsupportedOperation,
+                        "MediaFoundationFileSink",
+                        "CopyTextureToPixelData",
+                        "Multisampled video textures are not supported by the current H.264 input path");
+                }
+
+                wil::com_ptr<ID3D11Device> device;
+                texture->GetDevice(device.put());
+                if (!device)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::InvalidState,
+                        "MediaFoundationFileSink",
+                        "CopyTextureToPixelData",
+                        "Video sample texture did not provide a D3D11 device");
+                }
+
+                wil::com_ptr<ID3D11DeviceContext> context;
+                device->GetImmediateContext(context.put());
+                if (!context)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::InvalidState,
+                        "MediaFoundationFileSink",
+                        "CopyTextureToPixelData",
+                        "D3D11 immediate context is not available for texture conversion");
+                }
+
+                D3D11_TEXTURE2D_DESC stagingDesc = desc;
+                stagingDesc.BindFlags = 0;
+                stagingDesc.MiscFlags = 0;
+                stagingDesc.Usage = D3D11_USAGE_STAGING;
+                stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+                wil::com_ptr<ID3D11Texture2D> stagingTexture;
+                HRESULT hr = device->CreateTexture2D(&stagingDesc, nullptr, stagingTexture.put());
+                if (FAILED(hr) || !stagingTexture)
+                {
+                    return NativeFailure(
+                        "CreateVideoStagingTexture",
+                        "Failed to create D3D11 staging texture for video sample conversion",
+                        hr);
+                }
+
+                context->CopyResource(stagingTexture.get(), texture);
+
+                D3D11_MAPPED_SUBRESOURCE mapped{};
+                hr = context->Map(stagingTexture.get(), 0, D3D11_MAP_READ, 0, &mapped);
+                if (FAILED(hr))
+                {
+                    return NativeFailure(
+                        "MapVideoStagingTexture",
+                        "Failed to map D3D11 staging texture for video sample conversion",
+                        hr);
+                }
+
+                const size_t rowBytes = static_cast<size_t>(dimensions.width) * 4;
+                pixelData.resize(rowBytes * dimensions.height);
+                const auto* sourceBytes = static_cast<const uint8_t*>(mapped.pData);
+                for (uint32_t row = 0; row < dimensions.height; ++row)
+                {
+                    std::memcpy(
+                        pixelData.data() + (static_cast<size_t>(row) * rowBytes),
+                        sourceBytes + (static_cast<size_t>(row) * mapped.RowPitch),
+                        rowBytes);
+                }
+
+                context->Unmap(stagingTexture.get(), 0);
+                return OperationResult::Success();
+            }
+
             wil::com_ptr<IMFSinkWriter> m_sinkWriter;
         };
     }
@@ -1046,6 +1168,10 @@ namespace CaptureInterop::V2::Output
             }
 
             RecordWrittenTimestamp(video.streamId, video.timestamp);
+            if (video.pixelData.empty() && video.HasTexture())
+            {
+                RecordTextureSampleConverted(video.streamId);
+            }
             RecordSampleWritten(video.streamId);
             return OperationResult::Success();
         }
@@ -1478,7 +1604,17 @@ namespace CaptureInterop::V2::Output
         {
             const uint64_t expectedBytes =
                 static_cast<uint64_t>(sample.mediaType.width) * sample.mediaType.height * 4;
-            if (sample.pixelData.size() != expectedBytes)
+            if (sample.pixelData.empty())
+            {
+                if (!sample.HasTexture())
+                {
+                    return Failure(
+                        CoreResultCode::ValidationFailure,
+                        "WriteSample",
+                        "Video sample contains neither CPU pixel data nor a D3D texture");
+                }
+            }
+            else if (sample.pixelData.size() != expectedBytes)
             {
                 return Failure(
                     CoreResultCode::ValidationFailure,
@@ -1735,6 +1871,14 @@ namespace CaptureInterop::V2::Output
         if (MediaFoundationFileSinkStreamDiagnostics* diagnostics = FindStreamDiagnostics(streamId))
         {
             ++diagnostics->samplesWritten;
+        }
+    }
+
+    void MediaFoundationFileSink::RecordTextureSampleConverted(StreamId streamId) noexcept
+    {
+        if (MediaFoundationFileSinkStreamDiagnostics* diagnostics = FindStreamDiagnostics(streamId))
+        {
+            ++diagnostics->textureSamplesConverted;
         }
     }
 

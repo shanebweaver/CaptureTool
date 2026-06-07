@@ -400,6 +400,71 @@ namespace
 
         return tempFile.data();
     }
+
+    wil::com_ptr<ID3D11Device> CreateTestD3DDevice()
+    {
+        wil::com_ptr<ID3D11Device> device;
+        D3D_FEATURE_LEVEL featureLevel{};
+        HRESULT hr = D3D11CreateDevice(
+            nullptr,
+            D3D_DRIVER_TYPE_HARDWARE,
+            nullptr,
+            D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+            nullptr,
+            0,
+            D3D11_SDK_VERSION,
+            device.put(),
+            &featureLevel,
+            nullptr);
+        if (FAILED(hr))
+        {
+            hr = D3D11CreateDevice(
+                nullptr,
+                D3D_DRIVER_TYPE_WARP,
+                nullptr,
+                D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+                nullptr,
+                0,
+                D3D11_SDK_VERSION,
+                device.put(),
+                &featureLevel,
+                nullptr);
+        }
+
+        Assert::IsTrue(SUCCEEDED(hr));
+        return device;
+    }
+
+    wil::com_ptr<ID3D11Texture2D> CreateBgraTexture(
+        ID3D11Device* device,
+        uint32_t width,
+        uint32_t height)
+    {
+        std::vector<uint8_t> pixels(static_cast<size_t>(width) * height * 4);
+        for (size_t index = 0; index < pixels.size(); ++index)
+        {
+            pixels[index] = static_cast<uint8_t>((index % 251) + 1);
+        }
+
+        D3D11_TEXTURE2D_DESC desc{};
+        desc.Width = width;
+        desc.Height = height;
+        desc.MipLevels = 1;
+        desc.ArraySize = 1;
+        desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+        desc.SampleDesc.Count = 1;
+        desc.Usage = D3D11_USAGE_DEFAULT;
+        desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+        D3D11_SUBRESOURCE_DATA initialData{};
+        initialData.pSysMem = pixels.data();
+        initialData.SysMemPitch = width * 4;
+
+        wil::com_ptr<ID3D11Texture2D> texture;
+        const HRESULT hr = device->CreateTexture2D(&desc, &initialData, texture.put());
+        Assert::IsTrue(SUCCEEDED(hr));
+        return texture;
+    }
 }
 
 namespace CaptureInteropTests
@@ -960,6 +1025,62 @@ namespace CaptureInteropTests
             Assert::IsTrue(sink.WriteSample(MediaSample{ videoSample }).IsSuccess());
             Assert::IsTrue(sink.WriteSample(MediaSample{ audioSample }).IsSuccess());
             Assert::IsTrue(sink.Finalize().IsSuccess());
+
+            WIN32_FILE_ATTRIBUTE_DATA attributes = {};
+            Assert::IsTrue(GetFileAttributesExW(
+                outputPath.c_str(),
+                GetFileExInfoStandard,
+                &attributes));
+            const uint64_t fileSize =
+                (static_cast<uint64_t>(attributes.nFileSizeHigh) << 32) | attributes.nFileSizeLow;
+            Assert::IsTrue(fileSize > 0);
+
+            DeleteFileW(outputPath.c_str());
+        }
+
+        TEST_METHOD(WriteSample_TextureBackedVideoMp4_ConvertsAndFinalizes)
+        {
+            constexpr uint32_t width = 320;
+            constexpr uint32_t height = 180;
+            wil::com_ptr<ID3D11Device> device = CreateTestD3DDevice();
+            wil::com_ptr<ID3D11Texture2D> texture = CreateBgraTexture(device.get(), width, height);
+
+            const std::wstring tempPath = CreateTemporaryOutputFile();
+            DeleteFileW(tempPath.c_str());
+            const std::wstring outputPath = tempPath + L".mp4";
+            DeleteFileW(outputPath.c_str());
+
+            OutputStreamPlan videoStream = CreateVideoStream(1);
+            videoStream.videoMediaType = CreatePlannedVideoMediaType(width, height);
+            OutputPlan plan = CreatePlan(ContainerFormat::Mp4, { videoStream });
+            plan.outputPath = outputPath;
+
+            MediaFoundationFileSink sink;
+            const OperationResult openResult = sink.Open(plan);
+            if (openResult.IsFailure() && openResult.diagnostic.has_value())
+            {
+                Logger::WriteMessage(openResult.diagnostic->message.c_str());
+            }
+            Assert::IsTrue(openResult.IsSuccess());
+
+            VideoSample sample = CreateVideoSample(StreamId::FromValue(1), width, height);
+            sample.pixelData.clear();
+            sample.texture = std::make_shared<D3D11VideoTextureReference>(std::move(texture));
+
+            const OperationResult writeResult = sink.WriteSample(MediaSample{ sample });
+            if (writeResult.IsFailure() && writeResult.diagnostic.has_value())
+            {
+                Logger::WriteMessage(writeResult.diagnostic->message.c_str());
+            }
+            Assert::IsTrue(writeResult.IsSuccess());
+            Assert::IsTrue(sink.Finalize().IsSuccess());
+
+            const MediaFoundationFileSinkDiagnostics diagnostics = sink.Diagnostics();
+            const MediaFoundationFileSinkStreamDiagnostics* streamDiagnostics =
+                FindDiagnosticsStream(diagnostics, StreamId::FromValue(1));
+            Assert::IsNotNull(streamDiagnostics);
+            Assert::AreEqual(1ull, streamDiagnostics->samplesWritten);
+            Assert::AreEqual(1ull, streamDiagnostics->textureSamplesConverted);
 
             WIN32_FILE_ATTRIBUTE_DATA attributes = {};
             Assert::IsTrue(GetFileAttributesExW(
