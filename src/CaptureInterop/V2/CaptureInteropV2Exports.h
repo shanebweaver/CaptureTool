@@ -39,8 +39,16 @@ struct CtCaptureV2_ApiVersion
     uint32_t reserved;
 };
 
+typedef struct CtCaptureV2_Recorder_t* CtCaptureV2_RecorderHandle;
+
 extern "C"
 {
     CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_GetApiVersion(
         CtCaptureV2_ApiVersion* outVersion) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_CreateRecorder(
+        CtCaptureV2_RecorderHandle* outHandle) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_DestroyRecorder(
+        CtCaptureV2_RecorderHandle handle) noexcept;
 }

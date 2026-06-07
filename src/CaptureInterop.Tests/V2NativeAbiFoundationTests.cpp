@@ -59,5 +59,56 @@ namespace CaptureInteropTests
             Assert::AreEqual(static_cast<size_t>(0), offsetof(CtCaptureV2_ApiVersion, size));
             Assert::AreEqual(sizeof(uint32_t), offsetof(CtCaptureV2_ApiVersion, version));
         }
+
+        TEST_METHOD(CreateRecorder_ReturnsLiveOpaqueHandle)
+        {
+            CtCaptureV2_RecorderHandle recorder = nullptr;
+
+            const int32_t createResult = CtCaptureV2_CreateRecorder(&recorder);
+            const int32_t destroyResult = CtCaptureV2_DestroyRecorder(recorder);
+
+            Assert::AreEqual(static_cast<int32_t>(CtCaptureV2_ResultCode_Success), createResult);
+            Assert::IsTrue(recorder != nullptr);
+            Assert::AreEqual(static_cast<int32_t>(CtCaptureV2_ResultCode_Success), destroyResult);
+        }
+
+        TEST_METHOD(CreateRecorder_NullOutput_ReturnsInvalidArgument)
+        {
+            const int32_t result = CtCaptureV2_CreateRecorder(nullptr);
+
+            Assert::AreEqual(static_cast<int32_t>(CtCaptureV2_ResultCode_InvalidArgument), result);
+        }
+
+        TEST_METHOD(DestroyRecorder_NullHandle_ReturnsSuccess)
+        {
+            const int32_t result = CtCaptureV2_DestroyRecorder(nullptr);
+
+            Assert::AreEqual(static_cast<int32_t>(CtCaptureV2_ResultCode_Success), result);
+        }
+
+        TEST_METHOD(DestroyRecorder_ObviousInvalidHandle_ReturnsInvalidHandle)
+        {
+            auto invalidHandle = reinterpret_cast<CtCaptureV2_RecorderHandle>(static_cast<uintptr_t>(1));
+
+            const int32_t result = CtCaptureV2_DestroyRecorder(invalidHandle);
+
+            Assert::AreEqual(static_cast<int32_t>(CtCaptureV2_ResultCode_InvalidHandle), result);
+        }
+
+        TEST_METHOD(DestroyRecorder_SameHandleTwice_ReturnsInvalidHandleOnSecondDestroy)
+        {
+            CtCaptureV2_RecorderHandle recorder = nullptr;
+
+            Assert::AreEqual(
+                static_cast<int32_t>(CtCaptureV2_ResultCode_Success),
+                CtCaptureV2_CreateRecorder(&recorder));
+            Assert::AreEqual(
+                static_cast<int32_t>(CtCaptureV2_ResultCode_Success),
+                CtCaptureV2_DestroyRecorder(recorder));
+
+            const int32_t secondDestroyResult = CtCaptureV2_DestroyRecorder(recorder);
+
+            Assert::AreEqual(static_cast<int32_t>(CtCaptureV2_ResultCode_InvalidHandle), secondDestroyResult);
+        }
     };
 }
