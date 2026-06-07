@@ -34,6 +34,7 @@ namespace CaptureInterop::V2
         std::string monitorDeviceName;
         uintptr_t monitorHandle{ 0 };
         std::optional<CaptureRectangle> captureArea;
+        CursorCapturePolicy cursorPolicy{ CursorCapturePolicy::Included };
         Rational frameRate;
 
         [[nodiscard]] bool HasCaptureArea() const noexcept

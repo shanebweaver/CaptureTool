@@ -18,6 +18,7 @@ namespace CaptureInterop::V2::Desktop
         StreamId streamId;
         VideoFrameDimensions effectiveOutputDimensions;
         std::optional<CaptureRectangle> requestedRegion;
+        CursorCapturePolicy cursorPolicy{ CursorCapturePolicy::Included };
         uint64_t framesReceived{ 0 };
         uint64_t duplicateFrames{ 0 };
         uint64_t lateFrames{ 0 };
@@ -184,6 +185,7 @@ namespace CaptureInterop::V2::Desktop
             diagnostics.sourceId = m_config.sourceId;
             diagnostics.streamId = m_config.streamId;
             diagnostics.requestedRegion = m_config.region;
+            diagnostics.cursorPolicy = m_config.cursorPolicy;
 
             VideoMediaType mediaType = m_effectiveMediaType.has_value()
                 ? *m_effectiveMediaType

@@ -22,6 +22,7 @@ namespace CaptureInterop::V2::Desktop
         uint64_t activationAttempts{ 0 };
         uint64_t activationFailures{ 0 };
         bool resourcesActive{ false };
+        CursorCapturePolicy cursorPolicy{ CursorCapturePolicy::Included };
         std::optional<int64_t> lastNativeStatus;
         std::string lastFailureOperation;
         std::string lastFailureMessage;

@@ -14,13 +14,16 @@ using namespace CaptureInterop::V2::Desktop;
 
 namespace
 {
-    DesktopVideoSourceConfig CreateConfig(uintptr_t monitorHandle = 0)
+    DesktopVideoSourceConfig CreateConfig(
+        uintptr_t monitorHandle = 0,
+        CursorCapturePolicy cursorPolicy = CursorCapturePolicy::Included)
     {
         DesktopSourceConfig source;
         source.id = SourceId::FromValue(11);
         source.videoStreamId = StreamId::FromValue(12);
         source.name = "WGC test monitor";
         source.monitorHandle = monitorHandle;
+        source.cursorPolicy = cursorPolicy;
         source.frameRate = Rational::From(60, 1);
         return MapDesktopVideoSourceConfig(source);
     }
@@ -99,6 +102,17 @@ namespace CaptureInteropTests
 
             Assert::IsTrue(result.IsSuccess());
             Assert::IsTrue(provider.DeviceDependency() == dependency);
+        }
+
+        TEST_METHOD(Diagnostics_ReportConfiguredCursorPolicy)
+        {
+            WindowsGraphicsCaptureProvider provider(CreateConfig(0, CursorCapturePolicy::Excluded));
+
+            const DesktopCaptureProviderDiagnostics diagnostics = provider.Diagnostics();
+
+            Assert::AreEqual(
+                static_cast<int>(CursorCapturePolicy::Excluded),
+                static_cast<int>(diagnostics.cursorPolicy));
         }
 
         TEST_METHOD(Start_WithoutDeviceDependency_ReturnsStructuredFailure)

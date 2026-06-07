@@ -81,6 +81,12 @@ namespace CaptureInterop::V2
         ForceSdr
     };
 
+    enum class CursorCapturePolicy
+    {
+        Included = 0,
+        Excluded
+    };
+
     struct VideoMediaType
     {
         uint32_t width{ 0 };

@@ -70,6 +70,18 @@ namespace
         return MapDesktopVideoSourceConfig(source);
     }
 
+    DesktopVideoSourceConfig CreateConfigWithCursorPolicy(CursorCapturePolicy cursorPolicy)
+    {
+        DesktopSourceConfig source;
+        source.id = SourceId::FromValue(7);
+        source.videoStreamId = StreamId::FromValue(9);
+        source.name = "Test monitor";
+        source.displayId = "DISPLAY7";
+        source.frameRate = Rational::From(60, 1);
+        source.cursorPolicy = cursorPolicy;
+        return MapDesktopVideoSourceConfig(source);
+    }
+
     std::shared_ptr<FakeDesktopCaptureProvider> CreateProvider()
     {
         DesktopVideoSourceConfig config = CreateConfig();
@@ -475,6 +487,34 @@ namespace CaptureInteropTests
             Assert::AreEqual(200, diagnostics.requestedRegion->y);
             Assert::AreEqual(800u, diagnostics.requestedRegion->width);
             Assert::AreEqual(600u, diagnostics.requestedRegion->height);
+        }
+
+        TEST_METHOD(Diagnostics_ReportCursorPolicyWithoutChangingMediaTypeOrTiming)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            WindowsDesktopVideoSource source(
+                CreateConfigWithCursorPolicy(CursorCapturePolicy::Excluded),
+                provider,
+                nullptr,
+                CreateDependency());
+            VideoSample receivedSample;
+            CallbackRegistrationToken token = source.RegisterFrameArrivedHandler(
+                [&receivedSample](const VideoSample& sample)
+                {
+                    receivedSample = sample;
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            Assert::IsTrue(provider->EmitFrame(CreateFrame(33)).IsSuccess());
+
+            const DesktopVideoSourceDiagnostics diagnostics = source.Diagnostics();
+            Assert::AreEqual(
+                static_cast<int>(CursorCapturePolicy::Excluded),
+                static_cast<int>(diagnostics.cursorPolicy));
+            Assert::AreEqual(1280u, receivedSample.mediaType.width);
+            Assert::AreEqual(720u, receivedSample.mediaType.height);
+            Assert::AreEqual(33ull, receivedSample.sequenceNumber);
+            Assert::AreEqual(456ll, receivedSample.timestamp.ticks100ns);
         }
 
         TEST_METHOD(Diagnostics_CountDuplicateSkippedAndLateFrames)

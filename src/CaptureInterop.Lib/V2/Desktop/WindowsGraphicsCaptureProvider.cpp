@@ -145,6 +145,7 @@ namespace CaptureInterop::V2::Desktop
               mediaType(CreateDefaultMediaType(config))
         {
             diagnostics.providerName = "WindowsGraphicsCaptureProvider";
+            diagnostics.cursorPolicy = config.cursorPolicy;
         }
 
         OperationResult Activate()
@@ -255,6 +256,22 @@ namespace CaptureInterop::V2::Desktop
                     hr);
                 RecordFailure(result);
                 return result;
+            }
+
+            wil::com_ptr<IGraphicsCaptureSession2> captureSession2;
+            if (SUCCEEDED(nextCaptureSession->QueryInterface(IID_PPV_ARGS(captureSession2.put()))))
+            {
+                hr = captureSession2->put_IsCursorCaptureEnabled(
+                    config.cursorPolicy == CursorCapturePolicy::Included);
+                if (FAILED(hr))
+                {
+                    OperationResult result = NativeFailure(
+                        "SetCursorCapturePolicy",
+                        "Failed to apply Windows Graphics Capture cursor policy",
+                        hr);
+                    RecordFailure(result);
+                    return result;
+                }
             }
 
             wil::com_ptr<WgcFrameArrivedHandler> nextFrameArrivedHandler;

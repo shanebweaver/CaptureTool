@@ -70,6 +70,18 @@ namespace CaptureInteropTests
             Assert::AreEqual(config.id.value, mapped.streamId.value);
         }
 
+        TEST_METHOD(MapDesktopVideoSourceConfig_PreservesCursorCapturePolicy)
+        {
+            DesktopSourceConfig config = CreateDesktopConfig();
+            config.cursorPolicy = CursorCapturePolicy::Excluded;
+
+            const DesktopVideoSourceConfig mapped = MapDesktopVideoSourceConfig(config);
+
+            Assert::AreEqual(
+                static_cast<int>(CursorCapturePolicy::Excluded),
+                static_cast<int>(mapped.cursorPolicy));
+        }
+
         TEST_METHOD(SourceDescriptor_UsesDesktopKindAndHumanReadableName)
         {
             const DesktopVideoSourceConfig mapped = MapDesktopVideoSourceConfig(CreateDesktopConfig());

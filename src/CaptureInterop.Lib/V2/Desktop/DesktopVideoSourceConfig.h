@@ -30,6 +30,7 @@ namespace CaptureInterop::V2::Desktop
         std::string streamName;
         DesktopMonitorTarget monitor;
         std::optional<CaptureRectangle> region;
+        CursorCapturePolicy cursorPolicy{ CursorCapturePolicy::Included };
         Rational requestedFrameRate;
 
         [[nodiscard]] bool CapturesRegion() const noexcept
@@ -90,6 +91,7 @@ namespace CaptureInterop::V2::Desktop
             std::move(config.monitorDeviceName)
         };
         mapped.region = std::move(config.captureArea);
+        mapped.cursorPolicy = config.cursorPolicy;
         mapped.requestedFrameRate = config.frameRate;
         return mapped;
     }
