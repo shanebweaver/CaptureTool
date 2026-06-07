@@ -1,6 +1,6 @@
 namespace CaptureTool.Infrastructure.Capture.Windows.V2;
 
-internal enum CaptureV2ResultCode
+public enum CaptureV2ResultCode
 {
     Success = 0,
     InvalidArgument = 1,
