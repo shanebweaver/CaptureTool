@@ -21,6 +21,15 @@ namespace CaptureInterop::V2
         bool alreadyStopped{ false };
     };
 
+    struct PipelineCounters
+    {
+        uint64_t droppedVideoFrames{ 0 };
+        uint64_t audioDiscontinuities{ 0 };
+        uint64_t lateSamples{ 0 };
+        uint64_t unsupportedCommands{ 0 };
+        uint64_t validationWarnings{ 0 };
+    };
+
     class CapturePipelineSession
     {
     public:
@@ -48,18 +57,29 @@ namespace CaptureInterop::V2
             return m_teardownStages;
         }
 
+        [[nodiscard]] const PipelineCounters& Counters() const noexcept
+        {
+            return m_counters;
+        }
+
+        [[nodiscard]] const std::vector<CoreDiagnostic>& Diagnostics() const noexcept
+        {
+            return m_diagnostics;
+        }
+
         [[nodiscard]] OperationResult Start()
         {
             if (!m_stateMachine.CanApply(PipelineOperation::Start))
             {
-                return OperationResult::Failure(
+                return RecordCommandFailure(OperationResult::Failure(
                     CoreResultCode::InvalidState,
                     "CapturePipelineSession",
                     "Start",
-                    "Session cannot be started from the current state");
+                    "Session cannot be started from the current state"));
             }
 
             const OutputProfileResolutionResult resolution = m_outputProfileResolver.Resolve(m_config);
+            RecordValidationDiagnostics(resolution.diagnostics);
             if (!resolution.IsSuccess())
             {
                 (void)m_stateMachine.Fail();
@@ -74,11 +94,11 @@ namespace CaptureInterop::V2
             if (m_clock == nullptr || m_sink == nullptr)
             {
                 (void)m_stateMachine.Fail();
-                return OperationResult::Failure(
+                return RecordDiagnostic(OperationResult::Failure(
                     CoreResultCode::ValidationFailure,
                     "CapturePipelineSession",
                     "Start",
-                    "Session graph factory returned a missing required component");
+                    "Session graph factory returned a missing required component"));
             }
 
             if (OperationResult openResult = m_sink->Open(*m_outputPlan); openResult.IsFailure())
@@ -122,25 +142,25 @@ namespace CaptureInterop::V2
         {
             if (!m_stateMachine.CanApply(PipelineOperation::Pause))
             {
-                return OperationResult::Failure(
+                return RecordCommandFailure(OperationResult::Failure(
                     CoreResultCode::InvalidState,
                     "CapturePipelineSession",
                     "Pause",
-                    "Session cannot be paused from the current state");
+                    "Session cannot be paused from the current state"));
             }
 
             if (m_clock == nullptr)
             {
-                return OperationResult::Failure(
+                return RecordCommandFailure(OperationResult::Failure(
                     CoreResultCode::InvalidState,
                     "CapturePipelineSession",
                     "Pause",
-                    "Session clock is not available");
+                    "Session clock is not available"));
             }
 
             if (OperationResult clockResult = m_clock->Pause(); clockResult.IsFailure())
             {
-                return clockResult;
+                return RecordCommandFailure(std::move(clockResult));
             }
 
             return m_stateMachine.Pause();
@@ -150,25 +170,25 @@ namespace CaptureInterop::V2
         {
             if (!m_stateMachine.CanApply(PipelineOperation::Resume))
             {
-                return OperationResult::Failure(
+                return RecordCommandFailure(OperationResult::Failure(
                     CoreResultCode::InvalidState,
                     "CapturePipelineSession",
                     "Resume",
-                    "Session cannot be resumed from the current state");
+                    "Session cannot be resumed from the current state"));
             }
 
             if (m_clock == nullptr)
             {
-                return OperationResult::Failure(
+                return RecordCommandFailure(OperationResult::Failure(
                     CoreResultCode::InvalidState,
                     "CapturePipelineSession",
                     "Resume",
-                    "Session clock is not available");
+                    "Session clock is not available"));
             }
 
             if (OperationResult clockResult = m_clock->Resume(); clockResult.IsFailure())
             {
-                return clockResult;
+                return RecordCommandFailure(std::move(clockResult));
             }
 
             return m_stateMachine.Resume();
@@ -178,59 +198,61 @@ namespace CaptureInterop::V2
         {
             if (!m_stateMachine.CanApply(PipelineOperation::SetAudioMuted))
             {
-                return OperationResult::Failure(
+                return RecordCommandFailure(OperationResult::Failure(
                     CoreResultCode::InvalidState,
                     "CapturePipelineSession",
                     "SetAudioMuted",
-                    "Session cannot update audio mute from the current state");
+                    "Session cannot update audio mute from the current state"));
             }
 
             IAudioMuteProcessor* processor = FindAudioMuteProcessor(sourceId);
             if (processor == nullptr)
             {
-                return OperationResult::Failure(
+                return RecordCommandFailure(OperationResult::Failure(
                     CoreResultCode::NotFound,
                     "CapturePipelineSession",
                     "SetAudioMuted",
-                    "No armed audio mute processor was found for the source");
+                    "No armed audio mute processor was found for the source"));
             }
 
-            return processor->SetMuted(muted);
+            OperationResult result = processor->SetMuted(muted);
+            return result.IsFailure() ? RecordCommandFailure(std::move(result)) : result;
         }
 
         [[nodiscard]] OperationResult SetAudioGain(SourceId sourceId, float gainDb)
         {
             if (!m_stateMachine.CanApply(PipelineOperation::SetAudioGain))
             {
-                return OperationResult::Failure(
+                return RecordCommandFailure(OperationResult::Failure(
                     CoreResultCode::InvalidState,
                     "CapturePipelineSession",
                     "SetAudioGain",
-                    "Session cannot update audio gain from the current state");
+                    "Session cannot update audio gain from the current state"));
             }
 
             AudioGainSettings requestedGain;
             requestedGain.gainDb = gainDb;
             if (!requestedGain.IsInSupportedRange())
             {
-                return OperationResult::Failure(
+                return RecordCommandFailure(OperationResult::Failure(
                     CoreResultCode::RangeError,
                     "CapturePipelineSession",
                     "SetAudioGain",
-                    "Audio gain is outside the supported range");
+                    "Audio gain is outside the supported range"));
             }
 
             IAudioGainProcessor* processor = FindAudioGainProcessor(sourceId);
             if (processor == nullptr)
             {
-                return OperationResult::Failure(
+                return RecordCommandFailure(OperationResult::Failure(
                     CoreResultCode::NotFound,
                     "CapturePipelineSession",
                     "SetAudioGain",
-                    "No armed audio gain processor was found for the source");
+                    "No armed audio gain processor was found for the source"));
             }
 
-            return processor->SetGainDb(gainDb);
+            OperationResult result = processor->SetGainDb(gainDb);
+            return result.IsFailure() ? RecordCommandFailure(std::move(result)) : result;
         }
 
         [[nodiscard]] CapturePipelineStopResult Stop()
@@ -247,12 +269,14 @@ namespace CaptureInterop::V2
 
             if (!m_stateMachine.CanApply(PipelineOperation::Stop))
             {
+                OperationResult failure = RecordCommandFailure(OperationResult::Failure(
+                    CoreResultCode::InvalidState,
+                    "CapturePipelineSession",
+                    "Stop",
+                    "Session cannot be stopped from the current state"));
+
                 return CapturePipelineStopResult{
-                    OperationResult::Failure(
-                        CoreResultCode::InvalidState,
-                        "CapturePipelineSession",
-                        "Stop",
-                        "Session cannot be stopped from the current state"),
+                    failure,
                     m_stateMachine.State(),
                     TeardownStage::None,
                     false
@@ -262,6 +286,7 @@ namespace CaptureInterop::V2
             const TeardownOutcome outcome = TeardownGraph();
             if (outcome.result.IsFailure())
             {
+                (void)RecordDiagnostic(outcome.result);
                 (void)m_stateMachine.Fail();
             }
             else
@@ -288,7 +313,30 @@ namespace CaptureInterop::V2
         {
             TeardownGraph();
             (void)m_stateMachine.Fail();
-            return failure;
+            return RecordDiagnostic(std::move(failure));
+        }
+
+        void RecordValidationDiagnostics(const ValidationResult& validationResult)
+        {
+            m_counters.validationWarnings += validationResult.warnings.size();
+            m_diagnostics.insert(m_diagnostics.end(), validationResult.warnings.begin(), validationResult.warnings.end());
+            m_diagnostics.insert(m_diagnostics.end(), validationResult.errors.begin(), validationResult.errors.end());
+        }
+
+        OperationResult RecordDiagnostic(OperationResult result)
+        {
+            if (result.IsFailure() && result.diagnostic.has_value())
+            {
+                m_diagnostics.push_back(*result.diagnostic);
+            }
+
+            return result;
+        }
+
+        OperationResult RecordCommandFailure(OperationResult result)
+        {
+            m_counters.unsupportedCommands++;
+            return RecordDiagnostic(std::move(result));
         }
 
         void RegisterGraphCallbacks()
@@ -331,6 +379,11 @@ namespace CaptureInterop::V2
         {
             if (m_stateMachine.State() != PipelineState::Recording || m_clock == nullptr)
             {
+                if (m_stateMachine.State() == PipelineState::Paused && sample.Kind() == MediaKind::Video)
+                {
+                    m_counters.droppedVideoFrames++;
+                }
+
                 return;
             }
 
@@ -340,6 +393,7 @@ namespace CaptureInterop::V2
             {
                 if (OperationResult result = processor->Process(sample); result.IsFailure())
                 {
+                    (void)RecordDiagnostic(result);
                     (void)m_stateMachine.Fail();
                 }
 
@@ -358,6 +412,7 @@ namespace CaptureInterop::V2
 
             if (OperationResult result = m_sink->WriteSample(sample); result.IsFailure())
             {
+                (void)RecordDiagnostic(result);
                 (void)m_stateMachine.Fail();
             }
         }
@@ -488,5 +543,7 @@ namespace CaptureInterop::V2
         std::unique_ptr<IRecordingClock> m_clock;
         std::vector<CallbackRegistrationToken> m_callbackTokens;
         std::vector<TeardownStage> m_teardownStages;
+        PipelineCounters m_counters;
+        std::vector<CoreDiagnostic> m_diagnostics;
     };
 }

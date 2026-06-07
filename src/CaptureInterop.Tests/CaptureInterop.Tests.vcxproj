@@ -123,6 +123,7 @@
     <ClCompile Include="V2CorePrimitiveValueObjectsTests.cpp" />
     <ClCompile Include="V2CoreRecordingClockTests.cpp" />
     <ClCompile Include="V2CoreResultDiagnosticsTests.cpp" />
+    <ClCompile Include="V2CoreSessionDiagnosticsTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
