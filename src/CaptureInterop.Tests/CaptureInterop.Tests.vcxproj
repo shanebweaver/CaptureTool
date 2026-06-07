@@ -112,6 +112,7 @@
     <ClCompile Include="VideoCaptureSourceStopTests.cpp" />
     <ClCompile Include="V2CoreCapturePipelineConfigTests.cpp" />
     <ClCompile Include="V2CoreCapturePipelineConfigValidatorTests.cpp" />
+    <ClCompile Include="V2CoreCapturePipelineSessionTests.cpp" />
     <ClCompile Include="V2CoreFakeComponentsTests.cpp" />
     <ClCompile Include="V2CoreMediaTypesTests.cpp" />
     <ClCompile Include="V2CoreOutputProfileResolverTests.cpp" />

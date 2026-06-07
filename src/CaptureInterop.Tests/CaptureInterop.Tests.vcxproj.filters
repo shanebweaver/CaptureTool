@@ -60,6 +60,9 @@
     <ClCompile Include="V2CoreCapturePipelineConfigValidatorTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="V2CoreCapturePipelineSessionTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="V2CoreFakeComponentsTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -141,6 +141,7 @@
     <ClInclude Include="TextureProcessorFactory.h" />
     <ClInclude Include="V2\Core\CapturePipelineConfig.h" />
     <ClInclude Include="V2\Core\CapturePipelineConfigValidator.h" />
+    <ClInclude Include="V2\Core\CapturePipelineSession.h" />
     <ClInclude Include="V2\Core\MediaPrimitives.h" />
     <ClInclude Include="V2\Core\MediaSamples.h" />
     <ClInclude Include="V2\Core\MediaTypes.h" />
