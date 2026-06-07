@@ -14,6 +14,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -22,8 +23,29 @@ namespace CaptureInterop::V2::Audio
 {
     struct WasapiLoopbackAudioSourceDiagnostics
     {
+        SourceId sourceId;
+        StreamId streamId;
         uint64_t droppedPausedFrames{ 0 };
         uint64_t clippedSamples{ 0 };
+        uint64_t packetsRead{ 0 };
+        uint64_t framesRead{ 0 };
+        uint64_t silentPackets{ 0 };
+        uint64_t synthesizedSilencePackets{ 0 };
+        uint64_t synthesizedSilenceFrames{ 0 };
+        uint64_t discontinuities{ 0 };
+        uint64_t packetGaps{ 0 };
+        uint64_t providerFailures{ 0 };
+        int64_t bufferDuration100ns{ 0 };
+        bool eventDrivenCapture{ false };
+        bool pollingFallbackUsed{ false };
+        AudioTimestampSource lastTimestampSource{ AudioTimestampSource::Unknown };
+        AudioMediaType mediaType;
+        std::wstring endpointId;
+        std::wstring endpointName;
+        std::string lastFailureComponent;
+        std::string lastFailureOperation;
+        std::optional<int64_t> lastNativeStatus;
+        std::string lastFailureMessage;
     };
 
     class WasapiLoopbackAudioSource final : public IAudioCaptureSource
@@ -94,8 +116,39 @@ namespace CaptureInterop::V2::Audio
 
         [[nodiscard]] WasapiLoopbackAudioSourceDiagnostics Diagnostics() const noexcept
         {
-            std::lock_guard lock(m_mutex);
-            return m_diagnostics;
+            WasapiLoopbackAudioSourceDiagnostics diagnostics;
+            {
+                std::lock_guard lock(m_mutex);
+                diagnostics = m_diagnostics;
+            }
+
+            diagnostics.sourceId = m_config.sourceId;
+            diagnostics.streamId = m_config.audioStreamId;
+            diagnostics.mediaType = m_config.mediaType;
+            if (m_packetProvider)
+            {
+                const WasapiLoopbackPacketProviderDiagnostics providerDiagnostics =
+                    m_packetProvider->Diagnostics();
+                diagnostics.packetsRead = providerDiagnostics.packetsRead;
+                diagnostics.framesRead = providerDiagnostics.framesRead;
+                diagnostics.silentPackets = providerDiagnostics.silentPackets;
+                diagnostics.synthesizedSilencePackets = providerDiagnostics.synthesizedSilencePackets;
+                diagnostics.synthesizedSilenceFrames = providerDiagnostics.synthesizedSilenceFrames;
+                diagnostics.discontinuities = providerDiagnostics.discontinuities;
+                diagnostics.packetGaps = providerDiagnostics.packetGaps;
+                diagnostics.providerFailures += providerDiagnostics.providerFailures;
+                diagnostics.bufferDuration100ns = providerDiagnostics.bufferDuration100ns;
+                diagnostics.eventDrivenCapture = providerDiagnostics.eventDrivenCapture;
+                diagnostics.pollingFallbackUsed = providerDiagnostics.pollingFallbackUsed;
+                diagnostics.lastTimestampSource = providerDiagnostics.lastTimestampSource;
+                diagnostics.mediaType = providerDiagnostics.mediaType.IsValid()
+                    ? providerDiagnostics.mediaType
+                    : diagnostics.mediaType;
+                diagnostics.endpointId = providerDiagnostics.endpointId;
+                diagnostics.endpointName = providerDiagnostics.endpointName;
+            }
+
+            return diagnostics;
         }
 
         [[nodiscard]] OperationResult Start() noexcept override
@@ -135,6 +188,7 @@ namespace CaptureInterop::V2::Audio
                         std::lock_guard lock(m_mutex);
                         m_started = false;
                     }
+                    RecordProviderFailure(initializeResult);
                     DisableCallbacks();
                     return initializeResult;
                 }
@@ -146,6 +200,7 @@ namespace CaptureInterop::V2::Audio
                         std::lock_guard lock(m_mutex);
                         m_started = false;
                     }
+                    RecordProviderFailure(startResult);
                     DisableCallbacks();
                     [[maybe_unused]] OperationResult stopResult = m_packetProvider->Stop();
                     return startResult;
@@ -335,6 +390,18 @@ namespace CaptureInterop::V2::Audio
                 {
                     return m_callbackState->activeDispatches == 0;
                 });
+        }
+
+        void RecordProviderFailure(const OperationResult& result)
+        {
+            std::lock_guard lock(m_mutex);
+            if (result.diagnostic.has_value())
+            {
+                m_diagnostics.lastFailureComponent = result.diagnostic->component;
+                m_diagnostics.lastFailureOperation = result.diagnostic->operation;
+                m_diagnostics.lastNativeStatus = result.diagnostic->nativeStatus;
+                m_diagnostics.lastFailureMessage = result.diagnostic->message;
+            }
         }
 
         void CaptureLoop()

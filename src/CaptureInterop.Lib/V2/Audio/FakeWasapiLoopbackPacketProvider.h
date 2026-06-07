@@ -64,8 +64,11 @@ namespace CaptureInterop::V2::Audio
             const WasapiLoopbackAudioSourceConfig& config) override
         {
             ++m_initializeCount;
+            m_config = config;
+            m_diagnostics.mediaType = config.mediaType;
             if (m_failInitialize)
             {
+                ++m_diagnostics.providerFailures;
                 return OperationResult::Failure(
                     CoreResultCode::NativeFailure,
                     "FakeWasapiLoopbackPacketProvider",
@@ -73,7 +76,6 @@ namespace CaptureInterop::V2::Audio
                     "Simulated packet provider initialization failure");
             }
 
-            m_config = config;
             return OperationResult::Success();
         }
 

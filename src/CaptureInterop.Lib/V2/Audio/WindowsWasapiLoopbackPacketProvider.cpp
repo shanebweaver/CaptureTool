@@ -47,6 +47,7 @@ namespace CaptureInterop::V2::Audio
         }
 
         m_config = config;
+        m_diagnostics.mediaType = config.mediaType;
         OperationResult eventDrivenResult = ActivateAndInitialize(true);
         if (eventDrivenResult.IsSuccess())
         {
@@ -59,6 +60,7 @@ namespace CaptureInterop::V2::Audio
         OperationResult pollingResult = ActivateAndInitialize(false);
         if (pollingResult.IsFailure())
         {
+            ++m_diagnostics.providerFailures;
             ReleaseResourcesNoLock();
             return pollingResult;
         }
@@ -84,6 +86,7 @@ namespace CaptureInterop::V2::Audio
         HRESULT hr = m_endpoint->AudioClient()->Start();
         if (FAILED(hr))
         {
+            ++m_diagnostics.providerFailures;
             return NativeFailure(
                 "Start",
                 "WASAPI loopback audio client could not be started",
@@ -120,6 +123,7 @@ namespace CaptureInterop::V2::Audio
         HRESULT hr = m_captureClient->GetNextPacketSize(&packetFrames);
         if (FAILED(hr))
         {
+            ++m_diagnostics.providerFailures;
             return std::nullopt;
         }
 
@@ -129,6 +133,10 @@ namespace CaptureInterop::V2::Audio
             hr = m_captureClient->GetNextPacketSize(&packetFrames);
             if (FAILED(hr) || packetFrames == 0)
             {
+                if (FAILED(hr))
+                {
+                    ++m_diagnostics.providerFailures;
+                }
                 return std::nullopt;
             }
         }
@@ -151,6 +159,7 @@ namespace CaptureInterop::V2::Audio
             &qpcPosition);
         if (FAILED(hr))
         {
+            ++m_diagnostics.providerFailures;
             return std::nullopt;
         }
 
@@ -206,6 +215,7 @@ namespace CaptureInterop::V2::Audio
 
         m_endpoint = std::move(endpointResult.endpoint);
         m_config.mediaType = m_endpoint->Info().mixFormat;
+        m_diagnostics.mediaType = m_config.mediaType;
         m_diagnostics.endpointId = m_endpoint->Info().endpointId;
         m_diagnostics.endpointName = m_endpoint->Info().friendlyName;
 
@@ -230,6 +240,7 @@ namespace CaptureInterop::V2::Audio
         }
 
         DWORD streamFlags = AUDCLNT_STREAMFLAGS_LOOPBACK;
+        m_diagnostics.bufferDuration100ns = DefaultBufferDuration100Ns;
         if (useEvent)
         {
             m_captureEvent.reset(CreateEventW(nullptr, FALSE, FALSE, nullptr));

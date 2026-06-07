@@ -16,9 +16,13 @@ namespace CaptureInterop::V2::Audio
         uint64_t synthesizedSilencePackets{ 0 };
         uint64_t synthesizedSilenceFrames{ 0 };
         uint64_t discontinuities{ 0 };
+        uint64_t packetGaps{ 0 };
+        uint64_t providerFailures{ 0 };
+        int64_t bufferDuration100ns{ 0 };
         bool eventDrivenCapture{ false };
         bool pollingFallbackUsed{ false };
         AudioTimestampSource lastTimestampSource{ AudioTimestampSource::Unknown };
+        AudioMediaType mediaType;
         std::wstring endpointId;
         std::wstring endpointName;
         std::vector<std::string> releaseEvents;

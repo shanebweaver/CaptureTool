@@ -12,6 +12,8 @@
 #include <functional>
 #include <mutex>
 #include <optional>
+#include <sstream>
+#include <string>
 #include <thread>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -220,6 +222,68 @@ namespace
             value,
             ARRAYSIZE(value));
         return length > 0 && value[0] == L'1';
+    }
+
+    const wchar_t* AudioSampleFormatName(AudioSampleFormat format) noexcept
+    {
+        switch (format)
+        {
+        case AudioSampleFormat::Pcm16:
+            return L"Pcm16";
+        case AudioSampleFormat::Pcm24:
+            return L"Pcm24";
+        case AudioSampleFormat::Pcm32:
+            return L"Pcm32";
+        case AudioSampleFormat::Float32:
+            return L"Float32";
+        default:
+            return L"Unknown";
+        }
+    }
+
+    const wchar_t* AudioTimestampSourceName(AudioTimestampSource source) noexcept
+    {
+        switch (source)
+        {
+        case AudioTimestampSource::WasapiPacketPosition:
+            return L"WasapiPacketPosition";
+        case AudioTimestampSource::WasapiQpcPosition:
+            return L"WasapiQpcPosition";
+        case AudioTimestampSource::GeneratedContinuity:
+            return L"GeneratedContinuity";
+        case AudioTimestampSource::ArrivalTime:
+            return L"ArrivalTime";
+        default:
+            return L"Unknown";
+        }
+    }
+
+    std::wstring FormatAudioDiagnosticsLine(
+        const wchar_t* label,
+        const WasapiLoopbackAudioSourceDiagnostics& diagnostics)
+    {
+        std::wstringstream stream;
+        stream
+            << L"[V2 WASAPI Probe] " << label
+            << L" source=" << diagnostics.sourceId.value
+            << L" stream=" << diagnostics.streamId.value
+            << L" endpoint=\"" << diagnostics.endpointName << L"\""
+            << L" format=" << diagnostics.mediaType.sampleRate << L"Hz/"
+            << diagnostics.mediaType.channels << L"ch/"
+            << diagnostics.mediaType.bitsPerSample << L"bit/"
+            << AudioSampleFormatName(diagnostics.mediaType.sampleFormat)
+            << L" buffer100ns=" << diagnostics.bufferDuration100ns
+            << L" packets=" << diagnostics.packetsRead
+            << L" frames=" << diagnostics.framesRead
+            << L" silent=" << diagnostics.silentPackets
+            << L" synthesized=" << diagnostics.synthesizedSilencePackets
+            << L" pausedDrops=" << diagnostics.droppedPausedFrames
+            << L" discontinuities=" << diagnostics.discontinuities
+            << L" clipping=" << diagnostics.clippedSamples
+            << L" timestamp=" << AudioTimestampSourceName(diagnostics.lastTimestampSource)
+            << L" eventDriven=" << (diagnostics.eventDrivenCapture ? L"true" : L"false")
+            << L" pollingFallback=" << (diagnostics.pollingFallbackUsed ? L"true" : L"false");
+        return stream.str();
     }
 }
 
@@ -770,6 +834,61 @@ namespace CaptureInteropTests
             Assert::IsTrue(source.Stop().IsSuccess());
         }
 
+        TEST_METHOD(Diagnostics_IncludeProviderCountersWithoutCallbacks)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            packetProvider->EnqueuePacket(CreateSample(1), true);
+            packetProvider->EnqueuePacket(CreateSample(2), false, true);
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            packetProvider->EnqueueSynthesizedSilence(16);
+
+            Assert::IsTrue(WaitFor(
+                [&]
+                {
+                    return source.Diagnostics().packetsRead == 3;
+                }));
+            Assert::IsTrue(source.Stop().IsSuccess());
+
+            const WasapiLoopbackAudioSourceDiagnostics diagnostics = source.Diagnostics();
+            Assert::AreEqual(22u, diagnostics.sourceId.value);
+            Assert::AreEqual(44u, diagnostics.streamId.value);
+            Assert::AreEqual(3ull, diagnostics.packetsRead);
+            Assert::AreEqual(18ull, diagnostics.framesRead);
+            Assert::AreEqual(1ull, diagnostics.silentPackets);
+            Assert::AreEqual(1ull, diagnostics.synthesizedSilencePackets);
+            Assert::AreEqual(16ull, diagnostics.synthesizedSilenceFrames);
+            Assert::AreEqual(1ull, diagnostics.discontinuities);
+            Assert::AreEqual(48000u, diagnostics.mediaType.sampleRate);
+        }
+
+        TEST_METHOD(Diagnostics_IncludeClippingCounterAfterStop)
+        {
+            const CapturedAudioSampleResult result = CaptureSinglePacket(CreatePcm16Sample({ 30000 }), 12.0f);
+
+            Assert::AreEqual(1ull, result.diagnostics.clippedSamples);
+            Assert::AreEqual(1ull, result.diagnostics.packetsRead);
+            Assert::AreEqual(1ull, result.diagnostics.framesRead);
+        }
+
+        TEST_METHOD(Diagnostics_RecordProviderInitializationFailureDetails)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            packetProvider->SimulateInitializeFailure();
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
+
+            const OperationResult result = source.Start();
+
+            Assert::IsTrue(result.IsFailure());
+            const WasapiLoopbackAudioSourceDiagnostics diagnostics = source.Diagnostics();
+            Assert::AreEqual(1ull, diagnostics.providerFailures);
+            Assert::AreEqual("FakeWasapiLoopbackPacketProvider", diagnostics.lastFailureComponent.c_str());
+            Assert::AreEqual("Initialize", diagnostics.lastFailureOperation.c_str());
+            Assert::AreEqual(22u, diagnostics.sourceId.value);
+            Assert::AreEqual(44u, diagnostics.streamId.value);
+        }
+
         TEST_METHOD(PacketProvider_StopRecordsReleaseOrder)
         {
             auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
@@ -1153,7 +1272,13 @@ namespace CaptureInteropTests
             }
 
             auto packetProvider = std::make_shared<WindowsWasapiLoopbackPacketProvider>();
-            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
+            std::atomic_int callbackCount{ 0 };
+            CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                [&](const AudioSample&)
+                {
+                    ++callbackCount;
+                });
 
             const OperationResult startResult = source.Start();
             if (startResult.IsFailure())
@@ -1163,11 +1288,24 @@ namespace CaptureInteropTests
             }
 
             Sleep(50);
+            Assert::IsTrue(source.SetMuted(SourceId::FromValue(22), true).IsSuccess());
+            Assert::IsTrue(source.SetGainDb(SourceId::FromValue(22), -6.0f).IsSuccess());
+            Assert::IsTrue(source.SetPaused(true).IsSuccess());
+            Sleep(10);
+            Assert::IsTrue(source.SetPaused(false).IsSuccess());
+            Assert::IsTrue(source.SetMuted(SourceId::FromValue(22), false).IsSuccess());
+            Sleep(50);
             Assert::IsTrue(source.Stop().IsSuccess());
 
-            const WasapiLoopbackPacketProviderDiagnostics diagnostics = packetProvider->Diagnostics();
+            const WasapiLoopbackAudioSourceDiagnostics diagnostics = source.Diagnostics();
             Logger::WriteMessage(diagnostics.endpointId.c_str());
-            Logger::WriteMessage(diagnostics.endpointName.c_str());
+            Logger::WriteMessage(FormatAudioDiagnosticsLine(L"default-render", diagnostics).c_str());
+            std::wstringstream callbackLine;
+            callbackLine
+                << L"[V2 WASAPI Probe] callbacks=" << callbackCount.load()
+                << L" packetCadenceApproxFramesPerPacket="
+                << (diagnostics.packetsRead == 0 ? 0 : diagnostics.framesRead / diagnostics.packetsRead);
+            Logger::WriteMessage(callbackLine.str().c_str());
             Assert::IsFalse(source.IsStarted());
         }
     };
