@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "CppUnitTest.h"
+#include "V2/Desktop/DesktopMonitorResolver.h"
 #include "V2/Desktop/FakeDesktopCaptureProvider.h"
 #include "V2/Desktop/WindowsDesktopVideoSource.h"
 
@@ -40,6 +41,18 @@ namespace
             config.SourceDescriptor(),
             BuildDesktopVideoStreams(config),
             CreateMediaType());
+    }
+
+    std::shared_ptr<FakeDesktopMonitorResolver> CreateResolverWithConfiguredMonitor()
+    {
+        auto resolver = std::make_shared<FakeDesktopMonitorResolver>();
+        DesktopVideoSourceConfig config = CreateConfig();
+        resolver->AddMonitor(DesktopMonitorInfo{
+            config.monitor,
+            DesktopMonitorBounds{ 0, 0, 2560, 1440 },
+            "Primary display"
+        });
+        return resolver;
     }
 
     DesktopCaptureFrame CreateFrame(uint64_t sequence = 1)
@@ -149,6 +162,39 @@ namespace CaptureInteropTests
 
             Assert::IsFalse(provider->EmitFrame(CreateFrame()).IsSuccess());
             Assert::AreEqual(0u, invocationCount);
+        }
+
+        TEST_METHOD(Start_WithMonitorResolver_StoresResolvedPhysicalBounds)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            std::shared_ptr<FakeDesktopMonitorResolver> resolver = CreateResolverWithConfiguredMonitor();
+            WindowsDesktopVideoSource source(CreateConfig(), provider, resolver);
+
+            const OperationResult result = source.Start();
+            const std::optional<DesktopMonitorInfo> monitor = source.ResolvedMonitor();
+
+            Assert::IsTrue(result.IsSuccess());
+            Assert::IsTrue(monitor.has_value());
+            Assert::AreEqual(0, monitor->bounds.x);
+            Assert::AreEqual(0, monitor->bounds.y);
+            Assert::AreEqual(2560u, monitor->bounds.width);
+            Assert::AreEqual(1440u, monitor->bounds.height);
+            Assert::AreEqual("Primary display", monitor->displayName.c_str());
+        }
+
+        TEST_METHOD(Start_WithMissingMonitor_ReturnsNotFoundBeforeProviderStart)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            auto resolver = std::make_shared<FakeDesktopMonitorResolver>();
+            WindowsDesktopVideoSource source(CreateConfig(), provider, resolver);
+
+            const OperationResult result = source.Start();
+
+            Assert::IsFalse(result.IsSuccess());
+            Assert::AreEqual(static_cast<int>(CoreResultCode::NotFound), static_cast<int>(result.code));
+            Assert::AreEqual("WindowsDesktopVideoSource", result.diagnostic->component.c_str());
+            Assert::AreEqual("Start", result.diagnostic->operation.c_str());
+            Assert::IsFalse(provider->EmitFrame(CreateFrame()).IsSuccess());
         }
     };
 }

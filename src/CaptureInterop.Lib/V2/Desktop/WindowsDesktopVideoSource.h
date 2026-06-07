@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DesktopMonitorResolver.h"
 #include "DesktopVideoSourceConfig.h"
 #include "IDesktopCaptureProvider.h"
 
@@ -15,9 +16,11 @@ namespace CaptureInterop::V2::Desktop
     public:
         WindowsDesktopVideoSource(
             DesktopVideoSourceConfig config,
-            std::shared_ptr<IDesktopCaptureProvider> provider)
+            std::shared_ptr<IDesktopCaptureProvider> provider,
+            std::shared_ptr<IDesktopMonitorResolver> monitorResolver = nullptr)
             : m_config(std::move(config)),
-              m_provider(std::move(provider))
+              m_provider(std::move(provider)),
+              m_monitorResolver(std::move(monitorResolver))
         {
         }
 
@@ -42,6 +45,22 @@ namespace CaptureInterop::V2::Desktop
                     "Desktop capture provider is required");
             }
 
+            if (m_monitorResolver)
+            {
+                std::optional<DesktopMonitorInfo> monitor = m_monitorResolver->Resolve(m_config.monitor);
+                if (!monitor.has_value())
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::NotFound,
+                        "WindowsDesktopVideoSource",
+                        "Start",
+                        "Configured monitor target was not found");
+                }
+
+                std::lock_guard lock(m_mutex);
+                m_resolvedMonitor = std::move(monitor);
+            }
+
             OperationResult startResult = m_provider->Start();
             if (!startResult.IsSuccess())
             {
@@ -59,6 +78,12 @@ namespace CaptureInterop::V2::Desktop
             }
 
             return OperationResult::Success();
+        }
+
+        [[nodiscard]] std::optional<DesktopMonitorInfo> ResolvedMonitor() const
+        {
+            std::lock_guard lock(m_mutex);
+            return m_resolvedMonitor;
         }
 
         [[nodiscard]] OperationResult Stop() noexcept override
@@ -163,9 +188,11 @@ namespace CaptureInterop::V2::Desktop
 
         DesktopVideoSourceConfig m_config;
         std::shared_ptr<IDesktopCaptureProvider> m_provider;
+        std::shared_ptr<IDesktopMonitorResolver> m_monitorResolver;
         mutable std::mutex m_mutex;
         std::vector<HandlerEntry> m_handlers;
         CallbackRegistrationToken m_providerCallback;
+        std::optional<DesktopMonitorInfo> m_resolvedMonitor;
         uint64_t m_nextHandlerId{ 1 };
     };
 }
