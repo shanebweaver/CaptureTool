@@ -29,6 +29,8 @@ namespace CaptureInterop::V2::Desktop
         MediaDuration duration;
         uint64_t sequenceNumber{ 0 };
         std::vector<uint8_t> placeholderPixels;
+        VideoFrameDimensions frameDimensions;
+        std::shared_ptr<IVideoTextureReference> texture;
     };
 
     using DesktopCaptureFrameHandler = std::function<void(const DesktopCaptureFrame&)>;

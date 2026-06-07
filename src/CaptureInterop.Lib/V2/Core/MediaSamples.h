@@ -3,9 +3,13 @@
 #include "MediaTypes.h"
 
 #include <cstdint>
+#include <d3d11.h>
+#include <memory>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
+#include <wil/com.h>
 
 namespace CaptureInterop::V2
 {
@@ -26,8 +30,50 @@ namespace CaptureInterop::V2
         std::string name;
     };
 
-    // CPU sample buffers are owned by the sample object. Callback receivers that need
-    // to retain data beyond the callback must copy the sample or move it through a queue.
+    struct VideoFrameDimensions
+    {
+        uint32_t width{ 0 };
+        uint32_t height{ 0 };
+
+        [[nodiscard]] bool IsValid() const noexcept
+        {
+            return width > 0 && height > 0;
+        }
+
+        [[nodiscard]] static VideoFrameDimensions FromMediaType(const VideoMediaType& mediaType) noexcept
+        {
+            return VideoFrameDimensions{ mediaType.width, mediaType.height };
+        }
+    };
+
+    class IVideoTextureReference
+    {
+    public:
+        virtual ~IVideoTextureReference() = default;
+
+        [[nodiscard]] virtual ID3D11Texture2D* Texture() const noexcept = 0;
+    };
+
+    class D3D11VideoTextureReference final : public IVideoTextureReference
+    {
+    public:
+        explicit D3D11VideoTextureReference(wil::com_ptr<ID3D11Texture2D> texture)
+            : m_texture(std::move(texture))
+        {
+        }
+
+        [[nodiscard]] ID3D11Texture2D* Texture() const noexcept override
+        {
+            return m_texture.get();
+        }
+
+    private:
+        wil::com_ptr<ID3D11Texture2D> m_texture;
+    };
+
+    // CPU buffers and optional D3D texture references are owned by the sample object.
+    // Callback receivers that need to retain data beyond the callback must copy the
+    // sample or move it through a queue.
     struct VideoSample
     {
         SourceId sourceId;
@@ -36,6 +82,19 @@ namespace CaptureInterop::V2
         MediaDuration duration;
         VideoMediaType mediaType;
         std::vector<uint8_t> pixelData;
+        uint64_t sequenceNumber{ 0 };
+        VideoFrameDimensions frameDimensions;
+        std::shared_ptr<IVideoTextureReference> texture;
+
+        [[nodiscard]] bool HasTexture() const noexcept
+        {
+            return texture != nullptr;
+        }
+
+        [[nodiscard]] VideoFrameDimensions Dimensions() const noexcept
+        {
+            return frameDimensions.IsValid() ? frameDimensions : VideoFrameDimensions::FromMediaType(mediaType);
+        }
     };
 
     // Audio sample buffers are owned by the sample object. Source implementations must

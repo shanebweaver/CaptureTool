@@ -224,7 +224,10 @@ namespace CaptureInterop::V2::Desktop
                 frame.timestamp,
                 frame.duration,
                 EffectiveMediaType(),
-                frame.placeholderPixels
+                frame.placeholderPixels,
+                frame.sequenceNumber,
+                ResolveFrameDimensions(frame),
+                frame.texture
             };
 
             for (const VideoSampleHandler& handler : handlers)
@@ -245,6 +248,17 @@ namespace CaptureInterop::V2::Desktop
                         return entry.id == id;
                     }),
                 m_handlers.end());
+        }
+
+        VideoFrameDimensions ResolveFrameDimensions(const DesktopCaptureFrame& frame) const
+        {
+            if (frame.frameDimensions.IsValid())
+            {
+                return frame.frameDimensions;
+            }
+
+            const VideoMediaType mediaType = EffectiveMediaType();
+            return VideoFrameDimensions::FromMediaType(mediaType);
         }
 
         OperationResult ValidateRegion(const DesktopMonitorInfo& monitor) const

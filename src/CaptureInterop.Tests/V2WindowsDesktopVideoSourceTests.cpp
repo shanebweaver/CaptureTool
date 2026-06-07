@@ -11,6 +11,28 @@ using namespace CaptureInterop::V2::Desktop;
 
 namespace
 {
+    class FakeVideoTextureReference final : public IVideoTextureReference
+    {
+    public:
+        explicit FakeVideoTextureReference(std::shared_ptr<std::vector<std::string>> lifecycleEvents)
+            : m_lifecycleEvents(std::move(lifecycleEvents))
+        {
+        }
+
+        ~FakeVideoTextureReference() override
+        {
+            m_lifecycleEvents->push_back("texture-destroyed");
+        }
+
+        [[nodiscard]] ID3D11Texture2D* Texture() const noexcept override
+        {
+            return nullptr;
+        }
+
+    private:
+        std::shared_ptr<std::vector<std::string>> m_lifecycleEvents;
+    };
+
     VideoMediaType CreateMediaType()
     {
         return VideoMediaType{
@@ -195,9 +217,46 @@ namespace CaptureInteropTests
             Assert::AreEqual(7u, receivedSample.sourceId.value);
             Assert::AreEqual(9u, receivedSample.streamId.value);
             Assert::AreEqual(456ll, receivedSample.timestamp.ticks100ns);
+            Assert::AreEqual(42ull, receivedSample.sequenceNumber);
             Assert::AreEqual(1280u, receivedSample.mediaType.width);
+            Assert::AreEqual(1280u, receivedSample.Dimensions().width);
+            Assert::AreEqual(720u, receivedSample.Dimensions().height);
             Assert::AreEqual(static_cast<size_t>(4), receivedSample.pixelData.size());
             Assert::AreEqual(static_cast<uint8_t>(9), receivedSample.pixelData[0]);
+        }
+
+        TEST_METHOD(FakeProviderTextureFrame_SampleOwnsTextureReferenceBeyondCallback)
+        {
+            auto lifecycleEvents = std::make_shared<std::vector<std::string>>();
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
+            std::optional<VideoSample> retainedSample;
+            CallbackRegistrationToken token = source.RegisterFrameArrivedHandler(
+                [&retainedSample](const VideoSample& sample)
+                {
+                    retainedSample = sample;
+                });
+
+            {
+                DesktopCaptureFrame frame = CreateFrame(77);
+                frame.frameDimensions = VideoFrameDimensions{ 640, 480 };
+                frame.texture = std::make_shared<FakeVideoTextureReference>(lifecycleEvents);
+
+                Assert::IsTrue(source.Start().IsSuccess());
+                Assert::IsTrue(provider->EmitFrame(frame).IsSuccess());
+            }
+
+            Assert::IsTrue(retainedSample.has_value());
+            Assert::IsTrue(retainedSample->HasTexture());
+            Assert::AreEqual(77ull, retainedSample->sequenceNumber);
+            Assert::AreEqual(640u, retainedSample->Dimensions().width);
+            Assert::AreEqual(480u, retainedSample->Dimensions().height);
+            Assert::AreEqual(static_cast<size_t>(0), lifecycleEvents->size());
+
+            retainedSample.reset();
+
+            Assert::AreEqual(static_cast<size_t>(1), lifecycleEvents->size());
+            Assert::AreEqual("texture-destroyed", lifecycleEvents->at(0).c_str());
         }
 
         TEST_METHOD(CallbackTokenDestroyed_PreventsForwardedSample)

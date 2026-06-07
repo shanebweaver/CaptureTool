@@ -159,7 +159,9 @@ namespace
             MediaTime::FromTicks(100),
             MediaDuration::FromMilliseconds(16),
             mediaType,
-            std::vector<uint8_t>{ 1, 2, 3, 4 }
+            std::vector<uint8_t>{ 1, 2, 3, 4 },
+            12,
+            VideoFrameDimensions{ 2, 2 }
         };
     }
 
@@ -197,6 +199,11 @@ namespace CaptureInteropTests
             Assert::AreEqual(1u, sample.Stream().value);
             Assert::AreEqual(100LL, sample.Timestamp().ticks100ns);
             Assert::AreEqual(MediaDuration::FromMilliseconds(16).ticks100ns, sample.Duration().ticks100ns);
+            const VideoSample& video = std::get<VideoSample>(sample.data);
+            Assert::AreEqual(12ull, video.sequenceNumber);
+            Assert::AreEqual(2u, video.Dimensions().width);
+            Assert::AreEqual(2u, video.Dimensions().height);
+            Assert::IsFalse(video.HasTexture());
         }
 
         TEST_METHOD(MediaSample_Audio_ExposesCommonFields)
