@@ -95,6 +95,7 @@
     <ClInclude Include="AudioCaptureHandler.h" />
     <ClInclude Include="V2\Audio\FakeWasapiLoopbackAudioProvider.h" />
     <ClInclude Include="V2\Audio\IWasapiLoopbackAudioProvider.h" />
+    <ClInclude Include="V2\Audio\WasapiAudioClientFactory.h" />
     <ClInclude Include="V2\Audio\WasapiAudioFormatMapper.h" />
     <ClInclude Include="V2\Audio\WasapiLoopbackAudioSource.h" />
     <ClInclude Include="V2\Audio\WasapiLoopbackAudioSourceConfig.h" />
@@ -197,6 +198,7 @@
     <ClCompile Include="StreamConfigurationBuilderFactory.cpp" />
     <ClCompile Include="TextureProcessor.cpp" />
     <ClCompile Include="TextureProcessorFactory.cpp" />
+    <ClCompile Include="V2\Audio\WindowsWasapiAudioClientFactory.cpp" />
     <ClCompile Include="V2\Desktop\WindowsGraphicsCaptureProvider.cpp" />
     <ClCompile Include="WindowsDesktopVideoCaptureSource.cpp" />
     <ClCompile Include="WindowsDesktopVideoCaptureSourceFactory.cpp" />
