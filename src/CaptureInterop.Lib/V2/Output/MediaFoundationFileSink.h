@@ -68,6 +68,7 @@ namespace CaptureInterop::V2::Output
             uint32_t sinkStreamIndex,
             const VideoSample& sample) noexcept = 0;
         [[nodiscard]] virtual OperationResult BeginWriting() noexcept = 0;
+        [[nodiscard]] virtual OperationResult Finalize() noexcept = 0;
     };
 
     struct MediaFoundationSinkWriterCreationResult
@@ -136,6 +137,7 @@ namespace CaptureInterop::V2::Output
             const MediaFoundationSinkStreamMapping& mapping,
             const MediaTime& timestamp) const noexcept;
         void RecordWrittenTimestamp(StreamId streamId, MediaTime timestamp) noexcept;
+        [[nodiscard]] OperationResult FinalizeCore() noexcept;
         [[nodiscard]] static OperationResult Failure(
             CoreResultCode code,
             const char* operation,
@@ -152,5 +154,7 @@ namespace CaptureInterop::V2::Output
         MediaFoundationRuntimeLease m_runtimeLease;
         std::shared_ptr<IMediaFoundationSinkWriterSession> m_sinkWriter;
         bool m_sinkWriterCreated{ false };
+        bool m_hasBegunWriting{ false };
+        std::optional<OperationResult> m_finalizationResult;
     };
 }

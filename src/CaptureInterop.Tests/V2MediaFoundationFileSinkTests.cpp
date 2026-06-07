@@ -87,9 +87,16 @@ namespace
             return beginWritingResult;
         }
 
+        [[nodiscard]] OperationResult Finalize() noexcept override
+        {
+            ++finalizeCalls;
+            return finalizeResult;
+        }
+
         int configureVideoCalls{ 0 };
         int beginWritingCalls{ 0 };
         int writeVideoCalls{ 0 };
+        int finalizeCalls{ 0 };
         uint32_t nextVideoStreamIndex{ 42 };
         uint32_t lastWriteVideoStreamIndex{ 0 };
         std::optional<MediaFoundationH264VideoStreamConfig> lastVideoConfig;
@@ -97,6 +104,7 @@ namespace
         OperationResult configureVideoResult{ OperationResult::Success() };
         OperationResult beginWritingResult{ OperationResult::Success() };
         OperationResult writeVideoResult{ OperationResult::Success() };
+        OperationResult finalizeResult{ OperationResult::Success() };
     };
 
     class FakeSinkWriterFactory final : public IMediaFoundationSinkWriterFactory
@@ -583,7 +591,70 @@ namespace CaptureInteropTests
             Assert::IsFalse(harness.sink.HasSinkWriter());
             Assert::AreEqual(0u, harness.runtime->ActiveLeaseCount());
             Assert::AreEqual(1, harness.runtimeApi->shutdownCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->finalizeCalls);
             Assert::IsTrue(harness.sink.Finalize().IsSuccess());
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->finalizeCalls);
+        }
+
+        TEST_METHOD(Finalize_FailureIsStableAndReleasesResources)
+        {
+            SinkHarness harness;
+            harness.sinkWriterFactory->session->finalizeResult = OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "MediaFoundationFileSink",
+                "Finalize",
+                "simulated finalize failure",
+                E_FAIL);
+            Assert::IsTrue(harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() })).IsSuccess());
+
+            const OperationResult first = harness.sink.Finalize();
+            const OperationResult second = harness.sink.Finalize();
+
+            Assert::IsTrue(first.IsFailure());
+            Assert::IsTrue(second.IsFailure());
+            Assert::AreEqual("simulated finalize failure", second.diagnostic->message.c_str());
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->finalizeCalls);
+            Assert::AreEqual(0u, harness.runtime->ActiveLeaseCount());
+            Assert::AreEqual(1, harness.runtimeApi->shutdownCalls);
+            Assert::IsFalse(harness.sink.HasSinkWriter());
+            Assert::AreEqual(
+                static_cast<int>(MediaFoundationFileSinkState::Finalized),
+                static_cast<int>(harness.sink.State()));
+        }
+
+        TEST_METHOD(Finalize_BeforeBeginWriting_ReleasesResourcesWithoutWriterFinalize)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1), CreateAudioStream(2) })).IsSuccess());
+
+            const OperationResult result = harness.sink.Finalize();
+
+            Assert::IsTrue(result.IsSuccess());
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->finalizeCalls);
+            Assert::AreEqual(0u, harness.runtime->ActiveLeaseCount());
+            Assert::AreEqual(1, harness.runtimeApi->shutdownCalls);
+        }
+
+        TEST_METHOD(Destructor_FinalizesUnfinalizedWritingSink)
+        {
+            auto runtimeApi = std::make_shared<FakeMediaFoundationRuntimeApi>();
+            auto runtime = std::make_shared<MediaFoundationRuntime>(runtimeApi);
+            auto sinkWriterFactory = std::make_shared<FakeSinkWriterFactory>();
+
+            {
+                MediaFoundationFileSink sink(
+                    MediaFoundationSinkProfileValidator{},
+                    runtime,
+                    sinkWriterFactory);
+                Assert::IsTrue(sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() })).IsSuccess());
+                Assert::AreEqual(1u, runtime->ActiveLeaseCount());
+            }
+
+            Assert::AreEqual(1, sinkWriterFactory->session->finalizeCalls);
+            Assert::AreEqual(0u, runtime->ActiveLeaseCount());
+            Assert::AreEqual(1, runtimeApi->shutdownCalls);
         }
 
         TEST_METHOD(Open_EmptyOutputPath_FailsBeforeRuntimeLease)

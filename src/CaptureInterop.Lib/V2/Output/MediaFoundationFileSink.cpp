@@ -258,6 +258,20 @@ namespace CaptureInterop::V2::Output
                     : NativeFailure("BeginWriting", "Failed to begin Media Foundation sink writing", hr);
             }
 
+            [[nodiscard]] OperationResult Finalize() noexcept override
+            {
+                if (!m_sinkWriter)
+                {
+                    return OperationResult::Success();
+                }
+
+                const HRESULT hr = m_sinkWriter->Finalize();
+                m_sinkWriter.reset();
+                return SUCCEEDED(hr)
+                    ? OperationResult::Success()
+                    : NativeFailure("Finalize", "Failed to finalize Media Foundation sink writer", hr);
+            }
+
         private:
             struct MediaTypeCreationResult
             {
@@ -492,6 +506,13 @@ namespace CaptureInterop::V2::Output
     MediaFoundationFileSink::~MediaFoundationFileSink()
     {
         std::lock_guard lock(m_mutex);
+        if (m_state == MediaFoundationFileSinkState::Opened
+            || m_state == MediaFoundationFileSinkState::WritingReady)
+        {
+            (void)FinalizeCore();
+            return;
+        }
+
         ReleaseWriterResources();
     }
 
@@ -681,7 +702,7 @@ namespace CaptureInterop::V2::Output
         std::lock_guard lock(m_mutex);
         if (m_state == MediaFoundationFileSinkState::Finalized)
         {
-            return OperationResult::Success();
+            return m_finalizationResult.value_or(OperationResult::Success());
         }
 
         if (m_state == MediaFoundationFileSinkState::Created)
@@ -700,10 +721,7 @@ namespace CaptureInterop::V2::Output
                 "Media Foundation file sink cannot finalize after failure");
         }
 
-        m_state = MediaFoundationFileSinkState::Finalizing;
-        ReleaseWriterResources();
-        m_state = MediaFoundationFileSinkState::Finalized;
-        return OperationResult::Success();
+        return FinalizeCore();
     }
 
     MediaFoundationFileSinkState MediaFoundationFileSink::State() const noexcept
@@ -903,6 +921,8 @@ namespace CaptureInterop::V2::Output
             {
                 return beginResult;
             }
+
+            m_hasBegunWriting = true;
         }
 
         return OperationResult::Success();
@@ -1004,6 +1024,22 @@ namespace CaptureInterop::V2::Output
         m_lastVideoTimestamps.emplace_back(streamId, timestamp);
     }
 
+    OperationResult MediaFoundationFileSink::FinalizeCore() noexcept
+    {
+        m_state = MediaFoundationFileSinkState::Finalizing;
+
+        OperationResult result = OperationResult::Success();
+        if (m_sinkWriter && m_hasBegunWriting)
+        {
+            result = m_sinkWriter->Finalize();
+        }
+
+        ReleaseWriterResources();
+        m_finalizationResult = result;
+        m_state = MediaFoundationFileSinkState::Finalized;
+        return result;
+    }
+
     OperationResult MediaFoundationFileSink::Failure(
         CoreResultCode code,
         const char* operation,
@@ -1016,6 +1052,7 @@ namespace CaptureInterop::V2::Output
     {
         m_sinkWriter.reset();
         m_sinkWriterCreated = false;
+        m_hasBegunWriting = false;
         m_lastVideoTimestamps.clear();
         m_runtimeLease.Release();
     }
