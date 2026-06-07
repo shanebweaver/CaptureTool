@@ -15,6 +15,7 @@ namespace CaptureInterop::V2::Audio
         const uint8_t* data{ nullptr };
         uint32_t frameCount{ 0 };
         bool silent{ false };
+        AudioSourceTimingMetadata sourceTiming;
     };
 
     [[nodiscard]] inline MediaDuration AudioDurationForFrames(
@@ -41,6 +42,7 @@ namespace CaptureInterop::V2::Audio
         sample.duration = AudioDurationForFrames(packet.frameCount, packet.mediaType);
         sample.frameCount = packet.frameCount;
         sample.mediaType = packet.mediaType;
+        sample.sourceTiming = packet.sourceTiming;
 
         const size_t byteCount =
             static_cast<size_t>(packet.frameCount) * packet.mediaType.blockAlign;

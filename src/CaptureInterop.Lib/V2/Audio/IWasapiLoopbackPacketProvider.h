@@ -16,6 +16,7 @@ namespace CaptureInterop::V2::Audio
         uint64_t discontinuities{ 0 };
         bool eventDrivenCapture{ false };
         bool pollingFallbackUsed{ false };
+        AudioTimestampSource lastTimestampSource{ AudioTimestampSource::Unknown };
         std::wstring endpointId;
         std::wstring endpointName;
         std::vector<std::string> releaseEvents;

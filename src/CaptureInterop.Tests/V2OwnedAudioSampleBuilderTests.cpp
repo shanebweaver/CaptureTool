@@ -28,7 +28,13 @@ namespace
             CreateMediaType(),
             data,
             frameCount,
-            false
+            false,
+            AudioSourceTimingMetadata{
+                AudioTimestampSource::WasapiPacketPosition,
+                777,
+                888,
+                false
+            }
         };
     }
 }
@@ -100,6 +106,39 @@ namespace CaptureInteropTests
             Assert::AreEqual(0u, sample.frameCount);
             Assert::IsTrue(sample.duration.IsZero());
             Assert::IsTrue(sample.pcmData.empty());
+        }
+
+        TEST_METHOD(WasapiPacketPositionTimestamp_MapsToSourceTimingMetadata)
+        {
+            uint8_t borrowedPacket[] = { 1, 2, 3, 4 };
+
+            const AudioSample sample = BuildOwnedAudioSampleFromWasapiPacket(CreatePacketView(borrowedPacket, 1));
+
+            Assert::AreEqual(
+                static_cast<int>(AudioTimestampSource::WasapiPacketPosition),
+                static_cast<int>(sample.sourceTiming.timestampSource));
+            Assert::AreEqual(777ull, sample.sourceTiming.packetPosition);
+            Assert::AreEqual(888ull, sample.sourceTiming.qpcPosition);
+            Assert::IsFalse(sample.sourceTiming.discontinuity);
+        }
+
+        TEST_METHOD(QpcTimestampAndDiscontinuity_AreCopiedToSourceTimingMetadata)
+        {
+            uint8_t borrowedPacket[] = { 1, 2, 3, 4 };
+            WasapiAudioPacketView packet = CreatePacketView(borrowedPacket, 1);
+            packet.sourceTiming.timestampSource = AudioTimestampSource::WasapiQpcPosition;
+            packet.sourceTiming.packetPosition = 0;
+            packet.sourceTiming.qpcPosition = 999;
+            packet.sourceTiming.discontinuity = true;
+
+            const AudioSample sample = BuildOwnedAudioSampleFromWasapiPacket(packet);
+
+            Assert::AreEqual(
+                static_cast<int>(AudioTimestampSource::WasapiQpcPosition),
+                static_cast<int>(sample.sourceTiming.timestampSource));
+            Assert::AreEqual(0ull, sample.sourceTiming.packetPosition);
+            Assert::AreEqual(999ull, sample.sourceTiming.qpcPosition);
+            Assert::IsTrue(sample.sourceTiming.discontinuity);
         }
     };
 }

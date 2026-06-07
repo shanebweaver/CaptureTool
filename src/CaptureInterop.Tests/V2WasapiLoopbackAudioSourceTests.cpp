@@ -60,6 +60,7 @@ namespace
         sample.frameCount = 1;
         sample.mediaType = CreateMediaType();
         sample.pcmData = { firstByte, 0, 0, 0 };
+        sample.sourceTiming.timestampSource = AudioTimestampSource::GeneratedContinuity;
         return sample;
     }
 
@@ -290,6 +291,25 @@ namespace CaptureInteropTests
             Assert::IsTrue(source.Start().IsSuccess());
 
             Assert::IsTrue(WaitFor([&] { return packetProvider->Diagnostics().discontinuities == 1; }));
+            Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
+        TEST_METHOD(PacketProvider_TracksLastTimestampSource)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            AudioSample sample = CreateSample();
+            sample.sourceTiming.timestampSource = AudioTimestampSource::WasapiQpcPosition;
+            packetProvider->EnqueuePacket(sample);
+            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+
+            Assert::IsTrue(source.Start().IsSuccess());
+
+            Assert::IsTrue(WaitFor(
+                [&]
+                {
+                    return packetProvider->Diagnostics().lastTimestampSource ==
+                        AudioTimestampSource::WasapiQpcPosition;
+                }));
             Assert::IsTrue(source.Stop().IsSuccess());
         }
 

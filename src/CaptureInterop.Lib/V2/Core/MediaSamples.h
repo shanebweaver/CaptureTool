@@ -15,6 +15,23 @@ namespace CaptureInterop::V2
 {
     using MediaType = std::variant<VideoMediaType, AudioMediaType>;
 
+    enum class AudioTimestampSource
+    {
+        Unknown = 0,
+        WasapiPacketPosition,
+        WasapiQpcPosition,
+        GeneratedContinuity,
+        ArrivalTime
+    };
+
+    struct AudioSourceTimingMetadata
+    {
+        AudioTimestampSource timestampSource{ AudioTimestampSource::Unknown };
+        uint64_t packetPosition{ 0 };
+        uint64_t qpcPosition{ 0 };
+        bool discontinuity{ false };
+    };
+
     struct SourceDescriptor
     {
         SourceId id;
@@ -108,6 +125,7 @@ namespace CaptureInterop::V2
         AudioMediaType mediaType;
         std::vector<uint8_t> pcmData;
         uint32_t frameCount{ 0 };
+        AudioSourceTimingMetadata sourceTiming;
     };
 
     using MediaSampleData = std::variant<VideoSample, AudioSample>;

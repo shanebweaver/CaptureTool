@@ -97,6 +97,7 @@ namespace CaptureInterop::V2::Audio
             {
                 ++m_diagnostics.discontinuities;
             }
+            m_diagnostics.lastTimestampSource = packet.sample.sourceTiming.timestampSource;
 
             return packet.sample;
         }

@@ -162,7 +162,13 @@ namespace CaptureInterop::V2::Audio
             m_config.mediaType,
             data,
             framesAvailable,
-            silentPacket
+            silentPacket,
+            AudioSourceTimingMetadata{
+                AudioTimestampSource::WasapiPacketPosition,
+                devicePosition,
+                qpcPosition,
+                (flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY) != 0
+            }
         });
 
         if (silentPacket)
@@ -177,6 +183,7 @@ namespace CaptureInterop::V2::Audio
 
         ++m_diagnostics.packetsRead;
         m_diagnostics.framesRead += framesAvailable;
+        m_diagnostics.lastTimestampSource = sample.sourceTiming.timestampSource;
 
         [[maybe_unused]] HRESULT releaseHr = m_captureClient->ReleaseBuffer(framesAvailable);
         return sample;
