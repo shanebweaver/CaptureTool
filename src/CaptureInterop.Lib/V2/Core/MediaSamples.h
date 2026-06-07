@@ -30,6 +30,8 @@ namespace CaptureInterop::V2
         uint64_t packetPosition{ 0 };
         uint64_t qpcPosition{ 0 };
         bool discontinuity{ false };
+        bool silent{ false };
+        bool synthesizedSilence{ false };
     };
 
     struct SourceDescriptor

@@ -645,6 +645,99 @@ namespace CaptureInteropTests
             Assert::IsTrue(source.Stop().IsSuccess());
         }
 
+        TEST_METHOD(PacketProvider_SilentPacketPublishesOwnedZeroedSampleAndMetadata)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            packetProvider->EnqueuePacket(CreateSample(99), true);
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
+            std::mutex mutex;
+            std::optional<AudioSample> receivedSample;
+            CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                [&](const AudioSample& sample)
+                {
+                    std::lock_guard lock(mutex);
+                    receivedSample = sample;
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            Assert::IsTrue(WaitFor(
+                [&]
+                {
+                    std::lock_guard lock(mutex);
+                    return receivedSample.has_value();
+                }));
+            Assert::IsTrue(source.Stop().IsSuccess());
+
+            std::lock_guard lock(mutex);
+            Assert::IsTrue(receivedSample->sourceTiming.silent);
+            Assert::IsFalse(receivedSample->sourceTiming.synthesizedSilence);
+            Assert::AreEqual(1u, receivedSample->frameCount);
+            Assert::AreEqual(208ll, receivedSample->duration.ticks100ns);
+            for (const uint8_t value : receivedSample->pcmData)
+            {
+                Assert::AreEqual(0u, static_cast<uint32_t>(value));
+            }
+        }
+
+        TEST_METHOD(PacketProvider_SynthesizedSilenceIsBoundedMarkedAndCounted)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
+            std::mutex mutex;
+            std::optional<AudioSample> receivedSample;
+            CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                [&](const AudioSample& sample)
+                {
+                    std::lock_guard lock(mutex);
+                    receivedSample = sample;
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            packetProvider->EnqueueSynthesizedSilence(96'000, MediaTime::FromTicks(123));
+
+            Assert::IsTrue(WaitFor(
+                [&]
+                {
+                    std::lock_guard lock(mutex);
+                    return receivedSample.has_value();
+                }));
+            Assert::IsTrue(source.Stop().IsSuccess());
+
+            const WasapiLoopbackPacketProviderDiagnostics diagnostics = packetProvider->Diagnostics();
+            Assert::AreEqual(1ull, diagnostics.synthesizedSilencePackets);
+            Assert::AreEqual(48'000ull, diagnostics.synthesizedSilenceFrames);
+            std::lock_guard lock(mutex);
+            Assert::IsTrue(receivedSample->sourceTiming.silent);
+            Assert::IsTrue(receivedSample->sourceTiming.synthesizedSilence);
+            Assert::AreEqual(48'000u, receivedSample->frameCount);
+            Assert::AreEqual(10'000'000ll, receivedSample->duration.ticks100ns);
+        }
+
+        TEST_METHOD(PausedSource_DropsSynthesizedSilenceWithoutPublishing)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            WasapiLoopbackAudioSource source(CreateUnityGainConfig(true, false), nullptr, packetProvider);
+            std::atomic_int callbackCount{ 0 };
+            CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                [&](const AudioSample&)
+                {
+                    ++callbackCount;
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            Assert::IsTrue(source.SetPaused(true).IsSuccess());
+            packetProvider->EnqueueSynthesizedSilence(32);
+
+            Assert::IsTrue(WaitFor(
+                [&]
+                {
+                    return packetProvider->Diagnostics().synthesizedSilenceFrames == 32;
+                }));
+            Assert::IsTrue(WaitFor([&] { return source.Diagnostics().droppedPausedFrames == 32; }));
+            Assert::AreEqual(0, callbackCount.load());
+            Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
         TEST_METHOD(PacketProvider_DiscontinuityIncrementsDiagnostics)
         {
             auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();

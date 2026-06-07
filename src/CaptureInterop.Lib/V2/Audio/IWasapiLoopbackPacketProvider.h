@@ -13,6 +13,8 @@ namespace CaptureInterop::V2::Audio
         uint64_t packetsRead{ 0 };
         uint64_t framesRead{ 0 };
         uint64_t silentPackets{ 0 };
+        uint64_t synthesizedSilencePackets{ 0 };
+        uint64_t synthesizedSilenceFrames{ 0 };
         uint64_t discontinuities{ 0 };
         bool eventDrivenCapture{ false };
         bool pollingFallbackUsed{ false };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IWasapiLoopbackPacketProvider.h"
+#include "OwnedAudioSampleBuilder.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -45,8 +46,22 @@ namespace CaptureInterop::V2::Audio
             m_packets.push(Packet{ std::move(sample), silent, discontinuity });
         }
 
+        void EnqueueSynthesizedSilence(
+            uint32_t requestedFrameCount,
+            MediaTime timestamp = MediaTime{})
+        {
+            std::lock_guard lock(m_mutex);
+            AudioSample sample = BuildBoundedSynthesizedSilentAudioSample(
+                m_config.sourceId,
+                m_config.audioStreamId,
+                timestamp,
+                m_config.mediaType,
+                requestedFrameCount);
+            m_packets.push(Packet{ std::move(sample), false, false });
+        }
+
         [[nodiscard]] OperationResult Initialize(
-            const WasapiLoopbackAudioSourceConfig&) override
+            const WasapiLoopbackAudioSourceConfig& config) override
         {
             ++m_initializeCount;
             if (m_failInitialize)
@@ -58,6 +73,7 @@ namespace CaptureInterop::V2::Audio
                     "Simulated packet provider initialization failure");
             }
 
+            m_config = config;
             return OperationResult::Success();
         }
 
@@ -87,16 +103,29 @@ namespace CaptureInterop::V2::Audio
 
             Packet packet = std::move(m_packets.front());
             m_packets.pop();
-            ++m_diagnostics.packetsRead;
-            m_diagnostics.framesRead += packet.sample.frameCount;
             if (packet.silent)
             {
+                packet.sample = BuildOwnedSilentAudioSample(
+                    packet.sample.sourceId,
+                    packet.sample.streamId,
+                    packet.sample.timestamp,
+                    packet.sample.mediaType,
+                    packet.sample.frameCount,
+                    packet.sample.sourceTiming);
                 ++m_diagnostics.silentPackets;
             }
             if (packet.discontinuity)
             {
                 ++m_diagnostics.discontinuities;
             }
+            if (packet.sample.sourceTiming.synthesizedSilence)
+            {
+                ++m_diagnostics.synthesizedSilencePackets;
+                m_diagnostics.synthesizedSilenceFrames += packet.sample.frameCount;
+            }
+
+            ++m_diagnostics.packetsRead;
+            m_diagnostics.framesRead += packet.sample.frameCount;
             m_diagnostics.lastTimestampSource = packet.sample.sourceTiming.timestampSource;
 
             return packet.sample;
@@ -118,6 +147,7 @@ namespace CaptureInterop::V2::Audio
 
         mutable std::mutex m_mutex;
         std::queue<Packet> m_packets;
+        WasapiLoopbackAudioSourceConfig m_config;
         WasapiLoopbackPacketProviderDiagnostics m_diagnostics;
         int m_initializeCount{ 0 };
         int m_startCount{ 0 };

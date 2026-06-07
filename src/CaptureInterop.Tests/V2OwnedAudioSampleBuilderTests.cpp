@@ -2,6 +2,8 @@
 #include "CppUnitTest.h"
 #include "V2/Audio/OwnedAudioSampleBuilder.h"
 
+#include <cstring>
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace CaptureInterop::V2;
 using namespace CaptureInterop::V2::Audio;
@@ -16,6 +18,17 @@ namespace
             16,
             4,
             AudioSampleFormat::Pcm16
+        };
+    }
+
+    AudioMediaType CreateFloatMediaType()
+    {
+        return AudioMediaType{
+            48000,
+            1,
+            32,
+            4,
+            AudioSampleFormat::Float32
         };
     }
 
@@ -70,6 +83,56 @@ namespace CaptureInteropTests
             {
                 Assert::AreEqual(0u, static_cast<uint32_t>(value));
             }
+            Assert::IsTrue(sample.sourceTiming.silent);
+            Assert::IsFalse(sample.sourceTiming.synthesizedSilence);
+        }
+
+        TEST_METHOD(SilentPacket_Float32SamplesAreZero)
+        {
+            float borrowedPacket[] = { 0.5f };
+            WasapiAudioPacketView packet = CreatePacketView(
+                reinterpret_cast<const uint8_t*>(borrowedPacket),
+                1);
+            packet.mediaType = CreateFloatMediaType();
+            packet.silent = true;
+
+            const AudioSample sample = BuildOwnedAudioSampleFromWasapiPacket(packet);
+
+            float observed = 1.0f;
+            std::memcpy(&observed, sample.pcmData.data(), sizeof(observed));
+            Assert::AreEqual(0.0f, observed);
+        }
+
+        TEST_METHOD(SilentSamples_DoNotReuseMutableRetainedBuffers)
+        {
+            uint8_t borrowedPacket[] = { 1, 2, 3, 4 };
+            WasapiAudioPacketView packet = CreatePacketView(borrowedPacket, 1);
+            packet.silent = true;
+
+            AudioSample first = BuildOwnedAudioSampleFromWasapiPacket(packet);
+            AudioSample second = BuildOwnedAudioSampleFromWasapiPacket(packet);
+            first.pcmData[0] = 99;
+
+            Assert::AreEqual(99u, static_cast<uint32_t>(first.pcmData[0]));
+            Assert::AreEqual(0u, static_cast<uint32_t>(second.pcmData[0]));
+        }
+
+        TEST_METHOD(SynthesizedSilence_IsBoundedAndMarked)
+        {
+            const AudioSample sample = BuildBoundedSynthesizedSilentAudioSample(
+                SourceId::FromValue(22),
+                StreamId::FromValue(44),
+                MediaTime::FromTicks(123),
+                CreateMediaType(),
+                96000);
+
+            Assert::AreEqual(48000u, sample.frameCount);
+            Assert::AreEqual(10'000'000ll, sample.duration.ticks100ns);
+            Assert::IsTrue(sample.sourceTiming.silent);
+            Assert::IsTrue(sample.sourceTiming.synthesizedSilence);
+            Assert::AreEqual(
+                static_cast<int>(AudioTimestampSource::GeneratedContinuity),
+                static_cast<int>(sample.sourceTiming.timestampSource));
         }
 
         TEST_METHOD(FrameCountAndDuration_ArePreserved)
