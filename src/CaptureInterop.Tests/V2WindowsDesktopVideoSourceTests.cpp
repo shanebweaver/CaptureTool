@@ -557,6 +557,69 @@ namespace CaptureInteropTests
             Assert::AreEqual(1ull, diagnostics.lateFrames);
         }
 
+        TEST_METHOD(ProviderFailure_TransitionsSourceToTerminalFailedState)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
+            uint32_t invocationCount = 0;
+            CallbackRegistrationToken token = source.RegisterFrameArrivedHandler(
+                [&invocationCount](const VideoSample&)
+                {
+                    ++invocationCount;
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            Assert::IsTrue(provider->EmitFrame(CreateFrame(1)).IsSuccess());
+
+            OperationResult failure = OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "FakeDesktopCaptureProvider",
+                "MonitorLost",
+                "Configured monitor disappeared",
+                -7);
+            Assert::IsTrue(provider->FailActiveCapture(failure).IsSuccess());
+
+            const DesktopVideoSourceDiagnostics diagnostics = source.Diagnostics();
+            Assert::AreEqual(1u, invocationCount);
+            Assert::IsTrue(diagnostics.terminalFailure);
+            Assert::IsTrue(diagnostics.terminalDiagnostic.has_value());
+            Assert::AreEqual(7u, diagnostics.sourceId.value);
+            Assert::AreEqual(9u, diagnostics.streamId.value);
+            Assert::AreEqual("FakeDesktopCaptureProvider", diagnostics.providerName.c_str());
+            Assert::AreEqual("FakeDesktopCaptureProvider", diagnostics.terminalDiagnostic->component.c_str());
+            Assert::AreEqual("MonitorLost", diagnostics.terminalDiagnostic->operation.c_str());
+            Assert::AreEqual("Configured monitor disappeared", diagnostics.terminalDiagnostic->message.c_str());
+            Assert::AreEqual(1ull, diagnostics.providerFailures);
+        }
+
+        TEST_METHOD(ProviderFailure_DropsLaterFramesAndBlocksRestart)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
+            uint32_t invocationCount = 0;
+            CallbackRegistrationToken token = source.RegisterFrameArrivedHandler(
+                [&invocationCount](const VideoSample&)
+                {
+                    ++invocationCount;
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            Assert::IsTrue(provider->FailActiveCapture(OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "FakeDesktopCaptureProvider",
+                "FrameArrived",
+                "Provider frame callback failed")).IsSuccess());
+
+            Assert::IsFalse(provider->EmitFrame(CreateFrame(2)).IsSuccess());
+            const OperationResult restartResult = source.Start();
+
+            Assert::AreEqual(0u, invocationCount);
+            Assert::IsFalse(restartResult.IsSuccess());
+            Assert::AreEqual(static_cast<int>(CoreResultCode::InvalidState), static_cast<int>(restartResult.code));
+            Assert::AreEqual("Start", restartResult.diagnostic->operation.c_str());
+            Assert::IsTrue(source.Diagnostics().terminalFailure);
+        }
+
         TEST_METHOD(CallbackTokenDestroyed_PreventsForwardedSample)
         {
             std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();

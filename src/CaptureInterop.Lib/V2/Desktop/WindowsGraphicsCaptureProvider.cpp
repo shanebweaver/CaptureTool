@@ -140,6 +140,12 @@ namespace CaptureInterop::V2::Desktop
             DesktopCaptureFrameHandler handler;
         };
 
+        struct FailureHandlerEntry
+        {
+            uint64_t id{ 0 };
+            DesktopCaptureProviderFailureHandler handler;
+        };
+
         explicit Impl(DesktopVideoSourceConfig providerConfig)
             : config(std::move(providerConfig)),
               mediaType(CreateDefaultMediaType(config))
@@ -457,13 +463,32 @@ namespace CaptureInterop::V2::Desktop
         void RecordFrameFailure(
             std::string operation,
             HRESULT hr,
-            std::string message) noexcept
+            std::string message)
         {
-            std::lock_guard lock(mutex);
-            ++diagnostics.providerFailures;
-            diagnostics.lastNativeStatus = static_cast<int64_t>(hr);
-            diagnostics.lastFailureOperation = std::move(operation);
-            diagnostics.lastFailureMessage = std::move(message);
+            OperationResult failure = NativeFailure(operation, message, hr);
+            std::vector<DesktopCaptureProviderFailureHandler> handlersToInvoke;
+            {
+                std::lock_guard lock(mutex);
+                ++diagnostics.providerFailures;
+                diagnostics.resourcesActive = false;
+                diagnostics.lastNativeStatus = static_cast<int64_t>(hr);
+                diagnostics.lastFailureOperation = std::move(operation);
+                diagnostics.lastFailureMessage = std::move(message);
+                if (started)
+                {
+                    started = false;
+                    handlersToInvoke.reserve(failureHandlers.size());
+                    for (const FailureHandlerEntry& entry : failureHandlers)
+                    {
+                        handlersToInvoke.push_back(entry.handler);
+                    }
+                }
+            }
+
+            for (const DesktopCaptureProviderFailureHandler& handler : handlersToInvoke)
+            {
+                handler(failure);
+            }
         }
 
         void Unregister(uint64_t id)
@@ -480,6 +505,20 @@ namespace CaptureInterop::V2::Desktop
                 handlers.end());
         }
 
+        void UnregisterFailureHandler(uint64_t id)
+        {
+            std::lock_guard lock(mutex);
+            failureHandlers.erase(
+                std::remove_if(
+                    failureHandlers.begin(),
+                    failureHandlers.end(),
+                    [id](const FailureHandlerEntry& entry)
+                    {
+                        return entry.id == id;
+                    }),
+                failureHandlers.end());
+        }
+
         DesktopVideoSourceConfig config;
         SourceDescriptor source;
         std::vector<StreamDescriptor> streams;
@@ -493,7 +532,9 @@ namespace CaptureInterop::V2::Desktop
         wil::com_ptr<WgcFrameArrivedHandler> frameArrivedHandler;
         EventRegistrationToken frameArrivedToken{};
         std::vector<HandlerEntry> handlers;
+        std::vector<FailureHandlerEntry> failureHandlers;
         uint64_t nextHandlerId{ 1 };
+        uint64_t nextFailureHandlerId{ 1 };
         uint64_t nextSequenceNumber{ 1 };
         bool started{ false };
         bool frameArrivedRegistered{ false };
@@ -620,6 +661,28 @@ namespace CaptureInterop::V2::Desktop
             [impl = m_impl.get(), id]
             {
                 impl->Unregister(id);
+            });
+    }
+
+    CallbackRegistrationToken WindowsGraphicsCaptureProvider::RegisterProviderFailedHandler(
+        DesktopCaptureProviderFailureHandler handler)
+    {
+        if (!handler)
+        {
+            return nullptr;
+        }
+
+        uint64_t id = 0;
+        {
+            std::lock_guard lock(m_impl->mutex);
+            id = m_impl->nextFailureHandlerId++;
+            m_impl->failureHandlers.push_back(Impl::FailureHandlerEntry{ id, std::move(handler) });
+        }
+
+        return std::make_unique<CallbackToken>(
+            [impl = m_impl.get(), id]
+            {
+                impl->UnregisterFailureHandler(id);
             });
     }
 }

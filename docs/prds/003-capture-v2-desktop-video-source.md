@@ -692,6 +692,10 @@ Out of scope for this PR:
 - Hot-switching to a new monitor.
 - UI recovery prompts.
 
+Implementation note:
+
+- The first implementation treats monitor disappearance as a terminal provider failure. The desktop source records provider/source/stream identity in diagnostics, stops forwarding frames, and does not silently switch to a different monitor.
+
 ### PR 003-P: Local Probe and Integration Harness
 
 Scope:

@@ -44,6 +44,7 @@ namespace CaptureInterop::V2::Desktop
     };
 
     using DesktopCaptureFrameHandler = std::function<void(const DesktopCaptureFrame&)>;
+    using DesktopCaptureProviderFailureHandler = std::function<void(const OperationResult&)>;
 
     class IDesktopCaptureProvider
     {
@@ -72,5 +73,7 @@ namespace CaptureInterop::V2::Desktop
         // register or unregister without re-entering provider-state locks.
         [[nodiscard]] virtual CallbackRegistrationToken RegisterFrameArrivedHandler(
             DesktopCaptureFrameHandler handler) = 0;
+        [[nodiscard]] virtual CallbackRegistrationToken RegisterProviderFailedHandler(
+            DesktopCaptureProviderFailureHandler handler) = 0;
     };
 }

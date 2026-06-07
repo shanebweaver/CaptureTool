@@ -265,5 +265,36 @@ namespace CaptureInteropTests
             Assert::IsTrue(diagnostics.color.wideColorInputDetected);
             Assert::IsTrue(diagnostics.color.hdrToneMappingPending);
         }
+
+        TEST_METHOD(FakeProvider_FailActiveCapture_NotifiesFailureHandlerAndDiagnostics)
+        {
+            FakeDesktopCaptureProvider provider = CreateProvider();
+            OperationResult receivedFailure;
+            CallbackRegistrationToken token = provider.RegisterProviderFailedHandler(
+                [&receivedFailure](const OperationResult& failure)
+                {
+                    receivedFailure = failure;
+                });
+
+            Assert::IsTrue(provider.ConfigureDeviceDependency(CreateDependency()).IsSuccess());
+            Assert::IsTrue(provider.Start().IsSuccess());
+
+            OperationResult failure = OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "FakeDesktopCaptureProvider",
+                "MonitorLost",
+                "Configured monitor disappeared",
+                -7);
+            Assert::IsTrue(provider.FailActiveCapture(failure).IsSuccess());
+
+            const DesktopCaptureProviderDiagnostics diagnostics = provider.Diagnostics();
+            Assert::AreEqual(static_cast<int>(CoreResultCode::NativeFailure), static_cast<int>(receivedFailure.code));
+            Assert::AreEqual(1ull, diagnostics.providerFailures);
+            Assert::AreEqual("MonitorLost", diagnostics.lastFailureOperation.c_str());
+            Assert::AreEqual("Configured monitor disappeared", diagnostics.lastFailureMessage.c_str());
+            Assert::AreEqual(static_cast<int64_t>(-7), *diagnostics.lastNativeStatus);
+            Assert::IsFalse(diagnostics.resourcesActive);
+            Assert::IsFalse(provider.EmitFrame(CreateFrame(99)).IsSuccess());
+        }
     };
 }

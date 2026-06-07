@@ -25,6 +25,8 @@ namespace CaptureInterop::V2::Desktop
         uint64_t lateFrames{ 0 };
         uint64_t skippedFrames{ 0 };
         uint64_t providerFailures{ 0 };
+        bool terminalFailure{ false };
+        std::optional<CoreDiagnostic> terminalDiagnostic;
     };
 
     class WindowsDesktopVideoSource final : public IVideoCaptureSource
@@ -77,6 +79,15 @@ namespace CaptureInterop::V2::Desktop
                         "WindowsDesktopVideoSource",
                         "Start",
                         "Desktop video source is already started");
+                }
+
+                if (m_terminalFailure)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::InvalidState,
+                        "WindowsDesktopVideoSource",
+                        "Start",
+                        "Desktop video source is in a terminal failed state");
                 }
             }
 
@@ -146,18 +157,30 @@ namespace CaptureInterop::V2::Desktop
                             ForwardFrame(frame);
                         });
                 }
+
+                if (!m_providerFailureCallback)
+                {
+                    m_providerFailureCallback = m_provider->RegisterProviderFailedHandler(
+                        [this](const OperationResult& failure)
+                        {
+                            HandleProviderFailure(failure);
+                        });
+                }
             }
 
             OperationResult startResult = m_provider->Start();
             if (!startResult.IsSuccess())
             {
                 CallbackRegistrationToken providerCallback;
+                CallbackRegistrationToken providerFailureCallback;
                 {
                     std::lock_guard lock(m_mutex);
                     providerCallback = std::move(m_providerCallback);
+                    providerFailureCallback = std::move(m_providerFailureCallback);
                 }
 
                 providerCallback.reset();
+                providerFailureCallback.reset();
                 m_provider->ReleaseDeviceResources();
                 return startResult;
             }
@@ -187,6 +210,7 @@ namespace CaptureInterop::V2::Desktop
             diagnostics.streamId = m_config.streamId;
             diagnostics.requestedRegion = m_config.region;
             diagnostics.cursorPolicy = m_config.cursorPolicy;
+            diagnostics.terminalFailure = m_terminalFailure;
 
             VideoMediaType mediaType = m_effectiveMediaType.has_value()
                 ? *m_effectiveMediaType
@@ -214,18 +238,21 @@ namespace CaptureInterop::V2::Desktop
         [[nodiscard]] OperationResult Stop() noexcept override
         {
             CallbackRegistrationToken providerCallback;
+            CallbackRegistrationToken providerFailureCallback;
             {
                 std::lock_guard lock(m_mutex);
-                if (!m_started && !m_providerCallback)
+                if (!m_started && !m_providerCallback && !m_providerFailureCallback)
                 {
                     return OperationResult::Success();
                 }
 
                 m_started = false;
                 providerCallback = std::move(m_providerCallback);
+                providerFailureCallback = std::move(m_providerFailureCallback);
             }
 
             providerCallback.reset();
+            providerFailureCallback.reset();
             if (!m_provider)
             {
                 return OperationResult::Success();
@@ -343,6 +370,37 @@ namespace CaptureInterop::V2::Desktop
 
             m_lastSequenceNumber = frame.sequenceNumber;
             m_lastTimestamp = frame.timestamp;
+        }
+
+        void HandleProviderFailure(const OperationResult& failure)
+        {
+            {
+                std::lock_guard lock(m_mutex);
+                if (m_terminalFailure)
+                {
+                    return;
+                }
+
+                m_started = false;
+                m_terminalFailure = true;
+                if (failure.diagnostic.has_value())
+                {
+                    m_diagnostics.terminalDiagnostic = failure.diagnostic;
+                }
+                else
+                {
+                    m_diagnostics.terminalDiagnostic = CoreDiagnostic::Error(
+                        CoreResultCode::NativeFailure,
+                        "WindowsDesktopVideoSource",
+                        "ProviderFailure",
+                        "Desktop capture provider failed without structured diagnostics");
+                }
+            }
+
+            if (m_provider)
+            {
+                m_provider->ReleaseDeviceResources();
+            }
         }
 
         void Unregister(uint64_t id)
@@ -486,6 +544,7 @@ namespace CaptureInterop::V2::Desktop
         mutable std::mutex m_mutex;
         std::vector<HandlerEntry> m_handlers;
         CallbackRegistrationToken m_providerCallback;
+        CallbackRegistrationToken m_providerFailureCallback;
         std::optional<DesktopMonitorInfo> m_resolvedMonitor;
         std::optional<VideoMediaType> m_effectiveMediaType;
         DesktopVideoSourceDiagnostics m_diagnostics;
@@ -493,5 +552,6 @@ namespace CaptureInterop::V2::Desktop
         std::optional<MediaTime> m_lastTimestamp;
         uint64_t m_nextHandlerId{ 1 };
         bool m_started{ false };
+        bool m_terminalFailure{ false };
     };
 }

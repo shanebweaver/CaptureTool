@@ -35,6 +35,8 @@ namespace CaptureInterop::V2::Desktop
 
         [[nodiscard]] CallbackRegistrationToken RegisterFrameArrivedHandler(
             DesktopCaptureFrameHandler handler) override;
+        [[nodiscard]] CallbackRegistrationToken RegisterProviderFailedHandler(
+            DesktopCaptureProviderFailureHandler handler) override;
     private:
         std::unique_ptr<Impl> m_impl;
     };

@@ -123,6 +123,7 @@ namespace CaptureInterop::V2::Desktop
             }
 
             m_started = true;
+            m_diagnostics.resourcesActive = true;
             return OperationResult::Success();
         }
 
@@ -130,6 +131,7 @@ namespace CaptureInterop::V2::Desktop
         {
             std::lock_guard lock(m_mutex);
             m_started = false;
+            m_diagnostics.resourcesActive = false;
             if (m_stopFailure.has_value())
             {
                 return *m_stopFailure;
@@ -167,8 +169,60 @@ namespace CaptureInterop::V2::Desktop
             return std::make_unique<CallbackToken>(
                 [this, id]
                 {
-                    Unregister(id);
+                    UnregisterFrameHandler(id);
                 });
+        }
+
+        [[nodiscard]] CallbackRegistrationToken RegisterProviderFailedHandler(
+            DesktopCaptureProviderFailureHandler handler) override
+        {
+            if (!handler)
+            {
+                return nullptr;
+            }
+
+            const uint64_t id = m_nextFailureHandlerId++;
+            {
+                std::lock_guard lock(m_mutex);
+                m_failureHandlers.push_back(FailureHandlerEntry{ id, std::move(handler) });
+            }
+
+            return std::make_unique<CallbackToken>(
+                [this, id]
+                {
+                    UnregisterFailureHandler(id);
+                });
+        }
+
+        [[nodiscard]] OperationResult FailActiveCapture(OperationResult failure)
+        {
+            std::vector<DesktopCaptureProviderFailureHandler> handlers;
+            {
+                std::lock_guard lock(m_mutex);
+                if (!m_started)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::InvalidState,
+                        ProviderName(),
+                        "FailActiveCapture",
+                        "Provider must be started before failing active capture");
+                }
+
+                m_started = false;
+                RecordFailureLocked(failure);
+                handlers.reserve(m_failureHandlers.size());
+                for (const FailureHandlerEntry& entry : m_failureHandlers)
+                {
+                    handlers.push_back(entry.handler);
+                }
+            }
+
+            for (const DesktopCaptureProviderFailureHandler& handler : handlers)
+            {
+                handler(failure);
+            }
+
+            return OperationResult::Success();
         }
 
         [[nodiscard]] OperationResult EmitFrame(DesktopCaptureFrame frame)
@@ -228,7 +282,13 @@ namespace CaptureInterop::V2::Desktop
             DesktopCaptureFrameHandler handler;
         };
 
-        void Unregister(uint64_t id)
+        struct FailureHandlerEntry
+        {
+            uint64_t id{ 0 };
+            DesktopCaptureProviderFailureHandler handler;
+        };
+
+        void UnregisterFrameHandler(uint64_t id)
         {
             std::lock_guard lock(m_mutex);
             m_handlers.erase(
@@ -242,17 +302,45 @@ namespace CaptureInterop::V2::Desktop
                 m_handlers.end());
         }
 
+        void UnregisterFailureHandler(uint64_t id)
+        {
+            std::lock_guard lock(m_mutex);
+            m_failureHandlers.erase(
+                std::remove_if(
+                    m_failureHandlers.begin(),
+                    m_failureHandlers.end(),
+                    [id](const FailureHandlerEntry& entry)
+                    {
+                        return entry.id == id;
+                    }),
+                m_failureHandlers.end());
+        }
+
+        void RecordFailureLocked(const OperationResult& failure)
+        {
+            ++m_diagnostics.providerFailures;
+            m_diagnostics.resourcesActive = false;
+            if (failure.diagnostic.has_value())
+            {
+                m_diagnostics.lastNativeStatus = failure.diagnostic->nativeStatus;
+                m_diagnostics.lastFailureOperation = failure.diagnostic->operation;
+                m_diagnostics.lastFailureMessage = failure.diagnostic->message;
+            }
+        }
+
         SourceDescriptor m_source;
         std::vector<StreamDescriptor> m_streams;
         VideoMediaType m_mediaType;
         mutable std::mutex m_mutex;
         std::vector<HandlerEntry> m_handlers;
+        std::vector<FailureHandlerEntry> m_failureHandlers;
         DesktopCaptureProviderDiagnostics m_diagnostics;
         std::shared_ptr<IDesktopD3DDeviceDependency> m_deviceDependency;
         std::shared_ptr<std::vector<std::string>> m_lifecycleEvents;
         std::optional<OperationResult> m_startFailure;
         std::optional<OperationResult> m_stopFailure;
         uint64_t m_nextHandlerId{ 1 };
+        uint64_t m_nextFailureHandlerId{ 1 };
         bool m_started{ false };
     };
 }
