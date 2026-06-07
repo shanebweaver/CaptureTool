@@ -75,6 +75,12 @@
     <ClInclude Include="V2\Desktop\DesktopVideoSourceConfig.h">
       <Filter>Header Files\V2\Desktop</Filter>
     </ClInclude>
+    <ClInclude Include="V2\Desktop\FakeDesktopCaptureProvider.h">
+      <Filter>Header Files\V2\Desktop</Filter>
+    </ClInclude>
+    <ClInclude Include="V2\Desktop\IDesktopCaptureProvider.h">
+      <Filter>Header Files\V2\Desktop</Filter>
+    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
