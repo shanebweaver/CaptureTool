@@ -2,6 +2,7 @@
 #include "CaptureInteropV2Exports.h"
 #include "CaptureInteropV2Validation.h"
 
+#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -52,7 +53,21 @@ namespace
         std::string operation;
         std::u16string message;
     };
+
+    struct CopiedCallback
+    {
+        CtCaptureV2_EventCallback callback{ nullptr };
+        void* userData{ nullptr };
+    };
 }
+
+struct CtCaptureV2_CallbackRegistration_t
+{
+    CtCaptureV2_RecorderHandle recorder{ nullptr };
+    CtCaptureV2_EventCallback callback{ nullptr };
+    void* userData{ nullptr };
+    uint64_t eventMask{ 0 };
+};
 
 struct CtCaptureV2_Recorder_t
 {
@@ -60,6 +75,7 @@ struct CtCaptureV2_Recorder_t
     std::optional<CopiedRecorderConfig> activeConfig;
     std::vector<CopiedAudioGainConfig> runtimeGains;
     std::vector<uint32_t> mutedAudioSources;
+    std::vector<CtCaptureV2_CallbackRegistrationHandle> callbackRegistrations;
     LastErrorState lastError;
 };
 
@@ -72,6 +88,7 @@ namespace
 
     std::mutex RecorderRegistryMutex;
     std::unordered_set<CtCaptureV2_RecorderHandle> RecorderRegistry;
+    std::unordered_set<CtCaptureV2_CallbackRegistrationHandle> CallbackRegistrationRegistry;
     constexpr const char* RecorderComponent = "CaptureInteropV2Recorder";
 
     CtCaptureV2_Recorder_t* FindRecorder(CtCaptureV2_RecorderHandle handle) noexcept
@@ -83,6 +100,55 @@ namespace
 
         std::lock_guard lock(RecorderRegistryMutex);
         return RecorderRegistry.find(handle) == RecorderRegistry.end() ? nullptr : handle;
+    }
+
+    bool IsEventTypeEnabled(uint64_t eventMask, int32_t eventType) noexcept
+    {
+        if (eventType <= CtCaptureV2_EventType_Unknown || eventType >= 64)
+        {
+            return false;
+        }
+
+        return (eventMask & (1ULL << eventType)) != 0;
+    }
+
+    void RemoveRegistrationFromRecorder(
+        CtCaptureV2_Recorder_t& recorder,
+        CtCaptureV2_CallbackRegistrationHandle registration)
+    {
+        recorder.callbackRegistrations.erase(
+            std::remove(
+                recorder.callbackRegistrations.begin(),
+                recorder.callbackRegistrations.end(),
+                registration),
+            recorder.callbackRegistrations.end());
+    }
+
+    void DeleteRegistrations(std::vector<CtCaptureV2_CallbackRegistrationHandle>& registrations) noexcept
+    {
+        for (CtCaptureV2_CallbackRegistrationHandle registration : registrations)
+        {
+            delete registration;
+        }
+
+        registrations.clear();
+    }
+
+    void UnregisterAllCallbacksLocked(
+        CtCaptureV2_Recorder_t& recorder,
+        std::vector<CtCaptureV2_CallbackRegistrationHandle>& registrationsToDelete)
+    {
+        registrationsToDelete.insert(
+            registrationsToDelete.end(),
+            recorder.callbackRegistrations.begin(),
+            recorder.callbackRegistrations.end());
+
+        for (CtCaptureV2_CallbackRegistrationHandle registration : recorder.callbackRegistrations)
+        {
+            CallbackRegistrationRegistry.erase(registration);
+        }
+
+        recorder.callbackRegistrations.clear();
     }
 
     std::u16string CopyNullTerminatedString(const char16_t* value)
@@ -307,6 +373,8 @@ extern "C"
 
         try
         {
+            std::vector<CtCaptureV2_CallbackRegistrationHandle> registrationsToDelete;
+
             {
                 std::lock_guard lock(RecorderRegistryMutex);
                 const auto found = RecorderRegistry.find(handle);
@@ -316,8 +384,10 @@ extern "C"
                 }
 
                 RecorderRegistry.erase(found);
+                UnregisterAllCallbacksLocked(*handle, registrationsToDelete);
             }
 
+            DeleteRegistrations(registrationsToDelete);
             delete handle;
             return CtCaptureV2_ResultCode_Success;
         }
@@ -561,22 +631,37 @@ extern "C"
                 return CtCaptureV2_ResultCode_InvalidHandle;
             }
 
+            std::vector<CtCaptureV2_CallbackRegistrationHandle> registrationsToDelete;
+
             if (recorder->state == RecorderState::Idle)
             {
+                {
+                    std::lock_guard lock(RecorderRegistryMutex);
+                    UnregisterAllCallbacksLocked(*recorder, registrationsToDelete);
+                }
+
                 *result = MakeStopResult(CtCaptureV2_ResultCode_AlreadyStopped, RecorderState::Idle);
-                return RecordFailure(
+                const int32_t failure = RecordFailure(
                     *recorder,
                     CtCaptureV2_ResultCode_AlreadyStopped,
                     "Stop",
                     u"Recorder is already stopped.");
+                DeleteRegistrations(registrationsToDelete);
+                return failure;
             }
 
             recorder->state = RecorderState::Idle;
             recorder->activeConfig.reset();
             recorder->runtimeGains.clear();
             recorder->mutedAudioSources.clear();
+            {
+                std::lock_guard lock(RecorderRegistryMutex);
+                UnregisterAllCallbacksLocked(*recorder, registrationsToDelete);
+            }
+
             *result = MakeStopResult(CtCaptureV2_ResultCode_Success, RecorderState::Idle);
             ClearLastError(*recorder);
+            DeleteRegistrations(registrationsToDelete);
             return CtCaptureV2_ResultCode_Success;
         }
         catch (...)
@@ -636,6 +721,169 @@ extern "C"
         catch (...)
         {
             return CtCaptureV2_ResultCode_NativeFailure;
+        }
+    }
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_RegisterCallbacks(
+        CtCaptureV2_RecorderHandle handle,
+        const CtCaptureV2_CallbackConfig* config,
+        CtCaptureV2_CallbackRegistrationHandle* outRegistration) noexcept
+    {
+        if (outRegistration == nullptr)
+        {
+            return CtCaptureV2_ResultCode_InvalidArgument;
+        }
+
+        *outRegistration = nullptr;
+
+        try
+        {
+            if (config == nullptr || config->callback == nullptr)
+            {
+                return CtCaptureV2_ResultCode_InvalidArgument;
+            }
+
+            if (config->size != sizeof(CtCaptureV2_CallbackConfig))
+            {
+                return CtCaptureV2_ResultCode_InvalidArgument;
+            }
+
+            if (config->version != CtCaptureV2_DtoVersion)
+            {
+                return CtCaptureV2_ResultCode_UnsupportedVersion;
+            }
+
+            auto registration = std::make_unique<CtCaptureV2_CallbackRegistration_t>();
+            registration->recorder = handle;
+            registration->callback = config->callback;
+            registration->userData = config->userData;
+            registration->eventMask = config->eventMask;
+
+            CtCaptureV2_RecorderHandle recorder = nullptr;
+            {
+                std::lock_guard lock(RecorderRegistryMutex);
+                const auto recorderFound = RecorderRegistry.find(handle);
+                if (recorderFound == RecorderRegistry.end())
+                {
+                    return CtCaptureV2_ResultCode_InvalidHandle;
+                }
+
+                CtCaptureV2_CallbackRegistrationHandle registrationHandle = registration.get();
+                CallbackRegistrationRegistry.insert(registrationHandle);
+                try
+                {
+                    (*recorderFound)->callbackRegistrations.push_back(registrationHandle);
+                }
+                catch (...)
+                {
+                    CallbackRegistrationRegistry.erase(registrationHandle);
+                    throw;
+                }
+
+                *outRegistration = registration.release();
+                recorder = *recorderFound;
+            }
+
+            ClearLastError(*recorder);
+            return CtCaptureV2_ResultCode_Success;
+        }
+        catch (...)
+        {
+            return CtCaptureV2_ResultCode_CallbackRegistrationFailed;
+        }
+    }
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_UnregisterCallbacks(
+        CtCaptureV2_CallbackRegistrationHandle registration) noexcept
+    {
+        if (registration == nullptr)
+        {
+            return CtCaptureV2_ResultCode_Success;
+        }
+
+        try
+        {
+            {
+                std::lock_guard lock(RecorderRegistryMutex);
+                const auto registrationFound = CallbackRegistrationRegistry.find(registration);
+                if (registrationFound == CallbackRegistrationRegistry.end())
+                {
+                    return CtCaptureV2_ResultCode_InvalidHandle;
+                }
+
+                const auto recorderFound = RecorderRegistry.find(registration->recorder);
+                if (recorderFound != RecorderRegistry.end())
+                {
+                    RemoveRegistrationFromRecorder(**recorderFound, registration);
+                }
+
+                CallbackRegistrationRegistry.erase(registrationFound);
+            }
+
+            delete registration;
+            return CtCaptureV2_ResultCode_Success;
+        }
+        catch (...)
+        {
+            return CtCaptureV2_ResultCode_NativeFailure;
+        }
+    }
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_TestTriggerEvent(
+        CtCaptureV2_RecorderHandle handle,
+        const CtCaptureV2_Event* eventData) noexcept
+    {
+        try
+        {
+            if (eventData == nullptr)
+            {
+                return CtCaptureV2_ResultCode_InvalidArgument;
+            }
+
+            if (eventData->size != sizeof(CtCaptureV2_Event))
+            {
+                return CtCaptureV2_ResultCode_InvalidArgument;
+            }
+
+            if (eventData->version != CtCaptureV2_DtoVersion)
+            {
+                return CtCaptureV2_ResultCode_UnsupportedVersion;
+            }
+
+            std::vector<CopiedCallback> callbacks;
+            {
+                std::lock_guard lock(RecorderRegistryMutex);
+                const auto recorderFound = RecorderRegistry.find(handle);
+                if (recorderFound == RecorderRegistry.end())
+                {
+                    return CtCaptureV2_ResultCode_InvalidHandle;
+                }
+
+                const CtCaptureV2_Recorder_t& recorder = **recorderFound;
+                callbacks.reserve(recorder.callbackRegistrations.size());
+                for (CtCaptureV2_CallbackRegistrationHandle registration : recorder.callbackRegistrations)
+                {
+                    if (CallbackRegistrationRegistry.find(registration) != CallbackRegistrationRegistry.end()
+                        && IsEventTypeEnabled(registration->eventMask, eventData->eventType))
+                    {
+                        callbacks.push_back(CopiedCallback{
+                            registration->callback,
+                            registration->userData
+                        });
+                    }
+                }
+            }
+
+            for (const CopiedCallback& callback : callbacks)
+            {
+                callback.callback(eventData, callback.userData);
+            }
+
+            return CtCaptureV2_ResultCode_Success;
+        }
+        catch (...)
+        {
+            return CtCaptureV2_ResultCode_CallbackInvocationFailed;
         }
     }
 }

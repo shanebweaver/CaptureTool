@@ -52,6 +52,14 @@ namespace CaptureInteropTests
             Assert::AreEqual(14, static_cast<int>(CtCaptureV2_ResultCode_CallbackInvocationFailed));
         }
 
+        TEST_METHOD(EventType_ValuesAreStable)
+        {
+            Assert::AreEqual(0, static_cast<int>(CtCaptureV2_EventType_Unknown));
+            Assert::AreEqual(1, static_cast<int>(CtCaptureV2_EventType_StateChanged));
+            Assert::AreEqual(2, static_cast<int>(CtCaptureV2_EventType_Error));
+            Assert::AreEqual(3, static_cast<int>(CtCaptureV2_EventType_Diagnostics));
+        }
+
         TEST_METHOD(ApiVersionDto_IsSizePrefixedAndPlainData)
         {
             Assert::IsTrue(std::is_standard_layout_v<CtCaptureV2_ApiVersion>);

@@ -112,6 +112,7 @@
     <ClCompile Include="ShutdownRaceConditionTests.cpp" />
     <ClCompile Include="VideoCaptureSourceStopTests.cpp" />
     <ClCompile Include="V2NativeAbiFoundationTests.cpp" />
+    <ClCompile Include="V2NativeCallbackRegistrationTests.cpp" />
     <ClCompile Include="V2NativeDtoValidationTests.cpp" />
     <ClCompile Include="V2NativeErrorReportingTests.cpp" />
     <ClCompile Include="V2NativeLifecycleCommandTests.cpp" />

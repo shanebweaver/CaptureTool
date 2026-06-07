@@ -41,6 +41,7 @@ struct CtCaptureV2_ApiVersion
 };
 
 typedef struct CtCaptureV2_Recorder_t* CtCaptureV2_RecorderHandle;
+typedef struct CtCaptureV2_CallbackRegistration_t* CtCaptureV2_CallbackRegistrationHandle;
 
 enum CtCaptureV2_SourceKind : int32_t
 {
@@ -202,6 +203,40 @@ struct CtCaptureV2_ErrorInfo
     const char* operation;
 };
 
+enum CtCaptureV2_EventType : int32_t
+{
+    CtCaptureV2_EventType_Unknown = 0,
+    CtCaptureV2_EventType_StateChanged = 1,
+    CtCaptureV2_EventType_Error = 2,
+    CtCaptureV2_EventType_Diagnostics = 3
+};
+
+struct CtCaptureV2_Event
+{
+    uint32_t size;
+    uint32_t version;
+    int32_t eventType;
+    int32_t resultCode;
+    uint64_t sequence;
+    uint64_t timestamp100ns;
+    uint32_t sourceId;
+    uint32_t reserved;
+};
+
+typedef void(CTCAPTUREV2_CALL* CtCaptureV2_EventCallback)(
+    const CtCaptureV2_Event* eventData,
+    void* userData) noexcept;
+
+struct CtCaptureV2_CallbackConfig
+{
+    uint32_t size;
+    uint32_t version;
+    CtCaptureV2_EventCallback callback;
+    void* userData;
+    uint64_t eventMask;
+    uint64_t reserved;
+};
+
 inline constexpr uint32_t CtCaptureV2_DtoVersion = 1;
 
 inline void CtCaptureV2_InitSourceConfig(CtCaptureV2_SourceConfig* value) noexcept
@@ -310,6 +345,27 @@ inline void CtCaptureV2_InitErrorInfo(CtCaptureV2_ErrorInfo* value) noexcept
     }
 }
 
+inline void CtCaptureV2_InitEvent(CtCaptureV2_Event* value) noexcept
+{
+    if (value != nullptr)
+    {
+        *value = {};
+        value->size = sizeof(CtCaptureV2_Event);
+        value->version = CtCaptureV2_DtoVersion;
+    }
+}
+
+inline void CtCaptureV2_InitCallbackConfig(CtCaptureV2_CallbackConfig* value) noexcept
+{
+    if (value != nullptr)
+    {
+        *value = {};
+        value->size = sizeof(CtCaptureV2_CallbackConfig);
+        value->version = CtCaptureV2_DtoVersion;
+        value->eventMask = UINT64_MAX;
+    }
+}
+
 extern "C"
 {
     CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_GetApiVersion(
@@ -351,4 +407,16 @@ extern "C"
         char16_t* messageBuffer,
         uint32_t messageBufferLength,
         uint32_t* requiredMessageLength) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_RegisterCallbacks(
+        CtCaptureV2_RecorderHandle handle,
+        const CtCaptureV2_CallbackConfig* config,
+        CtCaptureV2_CallbackRegistrationHandle* outRegistration) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_UnregisterCallbacks(
+        CtCaptureV2_CallbackRegistrationHandle registration) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_TestTriggerEvent(
+        CtCaptureV2_RecorderHandle handle,
+        const CtCaptureV2_Event* eventData) noexcept;
 }

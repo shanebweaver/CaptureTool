@@ -69,6 +69,10 @@ namespace CaptureInteropTests
             Assert::AreEqual(sizeof(uint32_t), offsetof(CtCaptureV2_OutputConfig, version));
             Assert::AreEqual(static_cast<size_t>(0), offsetof(CtCaptureV2_StopResult, size));
             Assert::AreEqual(sizeof(uint32_t), offsetof(CtCaptureV2_StopResult, version));
+            Assert::AreEqual(static_cast<size_t>(0), offsetof(CtCaptureV2_Event, size));
+            Assert::AreEqual(sizeof(uint32_t), offsetof(CtCaptureV2_Event, version));
+            Assert::AreEqual(static_cast<size_t>(0), offsetof(CtCaptureV2_CallbackConfig, size));
+            Assert::AreEqual(sizeof(uint32_t), offsetof(CtCaptureV2_CallbackConfig, version));
         }
 
         TEST_METHOD(Dtos_ArePlainAbiData)
@@ -77,6 +81,10 @@ namespace CaptureInteropTests
             Assert::IsTrue(std::is_trivially_copyable_v<CtCaptureV2_Config>);
             Assert::IsTrue(std::is_standard_layout_v<CtCaptureV2_StopResult>);
             Assert::IsTrue(std::is_trivially_copyable_v<CtCaptureV2_StopResult>);
+            Assert::IsTrue(std::is_standard_layout_v<CtCaptureV2_Event>);
+            Assert::IsTrue(std::is_trivially_copyable_v<CtCaptureV2_Event>);
+            Assert::IsTrue(std::is_standard_layout_v<CtCaptureV2_CallbackConfig>);
+            Assert::IsTrue(std::is_trivially_copyable_v<CtCaptureV2_CallbackConfig>);
             Assert::AreEqual(sizeof(uint8_t), sizeof(((CtCaptureV2_SourceConfig*)nullptr)->enabled));
             Assert::AreEqual(sizeof(uint8_t), sizeof(((CtCaptureV2_ControlConfig*)nullptr)->startMuted));
         }
@@ -85,15 +93,23 @@ namespace CaptureInteropTests
         {
             CtCaptureV2_Config config{};
             CtCaptureV2_StopResult stopResult{};
+            CtCaptureV2_Event eventData{};
+            CtCaptureV2_CallbackConfig callbackConfig{};
 
             CtCaptureV2_InitConfig(&config);
             CtCaptureV2_InitStopResult(&stopResult);
+            CtCaptureV2_InitEvent(&eventData);
+            CtCaptureV2_InitCallbackConfig(&callbackConfig);
 
             Assert::AreEqual(static_cast<uint32_t>(sizeof(CtCaptureV2_Config)), config.size);
             Assert::AreEqual(CtCaptureV2_DtoVersion, config.version);
             Assert::AreEqual(static_cast<uint32_t>(sizeof(CtCaptureV2_OutputConfig)), config.output.size);
             Assert::AreEqual(static_cast<uint32_t>(sizeof(CtCaptureV2_StopResult)), stopResult.size);
             Assert::AreEqual(CtCaptureV2_DtoVersion, stopResult.version);
+            Assert::AreEqual(static_cast<uint32_t>(sizeof(CtCaptureV2_Event)), eventData.size);
+            Assert::AreEqual(CtCaptureV2_DtoVersion, eventData.version);
+            Assert::AreEqual(static_cast<uint32_t>(sizeof(CtCaptureV2_CallbackConfig)), callbackConfig.size);
+            Assert::AreEqual(CtCaptureV2_DtoVersion, callbackConfig.version);
         }
 
         TEST_METHOD(ValidateConfig_ValidDesktopMp4Config_Succeeds)
