@@ -81,6 +81,9 @@
     <ClCompile Include="V2MediaFoundationSinkCapabilitiesTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="V2MediaFoundationRuntimeTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="V2CorePipelineInterfacesTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
