@@ -2,14 +2,88 @@
 #include "V2/Output/MediaFoundationFileSink.h"
 
 #include <algorithm>
+#include <mfapi.h>
+#include <mfreadwrite.h>
 #include <utility>
 
 namespace CaptureInterop::V2::Output
 {
-    MediaFoundationFileSink::MediaFoundationFileSink(
-        MediaFoundationSinkProfileValidator profileValidator)
-        : m_profileValidator(std::move(profileValidator))
+    namespace
     {
+        [[nodiscard]] OperationResult NativeFailure(
+            const char* operation,
+            const char* message,
+            HRESULT hr)
+        {
+            return OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "MediaFoundationFileSink",
+                operation,
+                message,
+                hr);
+        }
+    }
+
+    MediaFoundationSinkWriterCreationResult WindowsMediaFoundationSinkWriterFactory::CreateFileSinkWriter(
+        const std::wstring& outputPath) noexcept
+    {
+        wil::com_ptr<IMFAttributes> attributes;
+        HRESULT hr = MFCreateAttributes(attributes.put(), 1);
+        if (FAILED(hr))
+        {
+            return MediaFoundationSinkWriterCreationResult{
+                NativeFailure("CreateSinkWriterAttributes", "Failed to create Media Foundation sink writer attributes", hr),
+                {},
+                false,
+                false
+            };
+        }
+
+        hr = attributes->SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, TRUE);
+        if (FAILED(hr))
+        {
+            return MediaFoundationSinkWriterCreationResult{
+                NativeFailure("ConfigureSinkWriterAttributes", "Failed to configure Media Foundation sink writer attributes", hr),
+                {},
+                false,
+                false
+            };
+        }
+
+        wil::com_ptr<IMFSinkWriter> sinkWriter;
+        hr = MFCreateSinkWriterFromURL(outputPath.c_str(), nullptr, attributes.get(), sinkWriter.put());
+        if (FAILED(hr))
+        {
+            return MediaFoundationSinkWriterCreationResult{
+                NativeFailure("CreateFileSinkWriter", "Failed to create Media Foundation file sink writer", hr),
+                {},
+                true,
+                false
+            };
+        }
+
+        return MediaFoundationSinkWriterCreationResult{
+            OperationResult::Success(),
+            std::move(sinkWriter),
+            true,
+            true
+        };
+    }
+
+    MediaFoundationFileSink::MediaFoundationFileSink(
+        MediaFoundationSinkProfileValidator profileValidator,
+        std::shared_ptr<MediaFoundationRuntime> runtime,
+        std::shared_ptr<IMediaFoundationSinkWriterFactory> sinkWriterFactory)
+        : m_profileValidator(std::move(profileValidator)),
+          m_runtime(std::move(runtime)),
+          m_sinkWriterFactory(std::move(sinkWriterFactory))
+    {
+    }
+
+    MediaFoundationFileSink::~MediaFoundationFileSink()
+    {
+        std::lock_guard lock(m_mutex);
+        ReleaseWriterResources();
     }
 
     OperationResult MediaFoundationFileSink::Open(const OutputPlan& plan) noexcept
@@ -28,6 +102,52 @@ namespace CaptureInterop::V2::Output
         {
             m_state = MediaFoundationFileSinkState::Failed;
             return validation;
+        }
+
+        if (plan.container == ContainerFormat::Mp4)
+        {
+            if (!m_runtime)
+            {
+                m_state = MediaFoundationFileSinkState::Failed;
+                return Failure(
+                    CoreResultCode::InvalidState,
+                    "Open",
+                    "Media Foundation runtime is not configured");
+            }
+
+            if (!m_sinkWriterFactory)
+            {
+                m_state = MediaFoundationFileSinkState::Failed;
+                return Failure(
+                    CoreResultCode::InvalidState,
+                    "Open",
+                    "Media Foundation sink writer factory is not configured");
+            }
+
+            MediaFoundationRuntimeLeaseResult runtimeLeaseResult = m_runtime->Acquire();
+            if (!runtimeLeaseResult.IsSuccess())
+            {
+                m_state = MediaFoundationFileSinkState::Failed;
+                return runtimeLeaseResult.result;
+            }
+
+            MediaFoundationSinkWriterCreationResult writerResult =
+                m_sinkWriterFactory->CreateFileSinkWriter(plan.outputPath);
+            if (!writerResult.IsSuccess())
+            {
+                runtimeLeaseResult.lease.Release();
+                m_state = MediaFoundationFileSinkState::Failed;
+                return writerResult.result.IsFailure()
+                    ? writerResult.result
+                    : Failure(
+                        CoreResultCode::InvalidState,
+                        "CreateFileSinkWriter",
+                        "Media Foundation sink writer factory did not create a writer");
+            }
+
+            m_runtimeLease = std::move(runtimeLeaseResult.lease);
+            m_sinkWriter = std::move(writerResult.sinkWriter);
+            m_sinkWriterCreated = writerResult.writerCreated;
         }
 
         std::vector<MediaFoundationSinkStreamMapping> mappings;
@@ -122,6 +242,7 @@ namespace CaptureInterop::V2::Output
         }
 
         m_state = MediaFoundationFileSinkState::Finalizing;
+        ReleaseWriterResources();
         m_state = MediaFoundationFileSinkState::Finalized;
         return OperationResult::Success();
     }
@@ -158,8 +279,22 @@ namespace CaptureInterop::V2::Output
         return *mapping;
     }
 
+    bool MediaFoundationFileSink::HasSinkWriter() const noexcept
+    {
+        std::lock_guard lock(m_mutex);
+        return m_sinkWriterCreated;
+    }
+
     OperationResult MediaFoundationFileSink::ValidateOpenPlan(const OutputPlan& plan) const
     {
+        if (plan.outputPath.empty())
+        {
+            return Failure(
+                CoreResultCode::ValidationFailure,
+                "Open",
+                "Output path is required");
+        }
+
         const MediaFoundationProfileValidationResult profileResult = m_profileValidator.Validate(plan);
         if (!profileResult.IsSuccess())
         {
@@ -252,5 +387,12 @@ namespace CaptureInterop::V2::Output
         const char* message) noexcept
     {
         return OperationResult::Failure(code, Component, operation, message);
+    }
+
+    void MediaFoundationFileSink::ReleaseWriterResources() noexcept
+    {
+        m_sinkWriter.reset();
+        m_sinkWriterCreated = false;
+        m_runtimeLease.Release();
     }
 }
