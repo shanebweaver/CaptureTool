@@ -154,13 +154,13 @@ public sealed class CaptureRecorder : IAsyncDisposable
                 }
 
                 int result = CaptureV2NativeMethods.CtCaptureV2_Stop(_handle, out CaptureV2NativeStopResult stopResult);
+                _state = CaptureRecorderState.Idle;
                 if (result != (int)CaptureV2ResultCode.Success
                     && result != (int)CaptureV2ResultCode.AlreadyStopped)
                 {
                     CaptureV2ResultTranslator.ThrowIfFailed(_handle, result);
                 }
 
-                _state = CaptureRecorderState.Idle;
                 return CaptureStopResult.FromNative(stopResult);
             },
             cancellationToken).ConfigureAwait(false);

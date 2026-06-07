@@ -66,6 +66,7 @@ namespace CaptureInterop::V2::Output
         MediaFoundationFileSinkWriteDiagnostics writes;
         std::vector<std::string> encoderSettingDiagnostics;
         uint64_t timestampValidationFailures{ 0 };
+        std::optional<CoreDiagnostic> lastWriteFailure;
         std::string setupStage;
         std::optional<CoreDiagnostic> setupFailure;
         std::string finalizeStage;
@@ -221,6 +222,7 @@ namespace CaptureInterop::V2::Output
         void RecordFinalizeResult(const OperationResult& result);
         void DeleteFailedFinalizeOutput() noexcept;
         void RecordRejectedWrite() noexcept;
+        OperationResult RejectWrite(OperationResult result) noexcept;
         void RecordAcceptedWriteStart() noexcept;
         void RecordAcceptedWriteCompletion(const OperationResult& result) noexcept;
         void RecordSampleWritten(StreamId streamId) noexcept;

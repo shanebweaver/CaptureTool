@@ -1072,42 +1072,38 @@ namespace CaptureInterop::V2::Output
         std::lock_guard lock(m_mutex);
         if (m_state == MediaFoundationFileSinkState::Created)
         {
-            RecordRejectedWrite();
-            return Failure(
+            return RejectWrite(Failure(
                 CoreResultCode::InvalidState,
                 "WriteSample",
-                "Media Foundation file sink is not open");
+                "Media Foundation file sink is not open"));
         }
 
         if (m_diagnostics.selectedProfile == ContainerFormat::Mp3)
         {
-            RecordRejectedWrite();
-            return Failure(
+            return RejectWrite(Failure(
                 CoreResultCode::UnsupportedOperation,
                 "WriteSample",
                 sample.Kind() == MediaKind::Video
                     ? "MP3 output does not accept video samples"
-                    : "Media Foundation MP3 sample writing is not implemented in this PRD slice");
+                    : "Media Foundation MP3 sample writing is not implemented in this PRD slice"));
         }
 
         if (m_state == MediaFoundationFileSinkState::Opened)
         {
-            RecordRejectedWrite();
-            return Failure(
+            return RejectWrite(Failure(
                 CoreResultCode::InvalidState,
                 "WriteSample",
-                "Media Foundation file sink is not ready for sample writing");
+                "Media Foundation file sink is not ready for sample writing"));
         }
 
         if (m_state == MediaFoundationFileSinkState::Finalizing
             || m_state == MediaFoundationFileSinkState::Finalized
             || m_state == MediaFoundationFileSinkState::Failed)
         {
-            RecordRejectedWrite();
-            return Failure(
+            return RejectWrite(Failure(
                 CoreResultCode::InvalidState,
                 "WriteSample",
-                "Media Foundation file sink is not accepting samples");
+                "Media Foundation file sink is not accepting samples"));
         }
 
         const auto mapping = std::find_if(
@@ -1120,31 +1116,28 @@ namespace CaptureInterop::V2::Output
 
         if (mapping == m_streamMappings.end())
         {
-            RecordRejectedWrite();
-            return Failure(
+            return RejectWrite(Failure(
                 CoreResultCode::NotFound,
                 "WriteSample",
-                "Sample stream is not mapped by the Media Foundation file sink");
+                "Sample stream is not mapped by the Media Foundation file sink"));
         }
 
         if (mapping->kind != sample.Kind())
         {
-            RecordRejectedWrite();
-            return Failure(
+            return RejectWrite(Failure(
                 CoreResultCode::ValidationFailure,
                 "WriteSample",
-                "Sample media kind does not match the negotiated output stream");
+                "Sample media kind does not match the negotiated output stream"));
         }
 
         if (sample.Kind() == MediaKind::Video)
         {
             if (!m_sinkWriter)
             {
-                RecordRejectedWrite();
-                return Failure(
+                return RejectWrite(Failure(
                     CoreResultCode::InvalidState,
                     "WriteSample",
-                    "Media Foundation sink writer is not available");
+                    "Media Foundation sink writer is not available"));
             }
 
             const VideoSample& video = std::get<VideoSample>(sample.data);
@@ -1155,8 +1148,7 @@ namespace CaptureInterop::V2::Output
                 {
                     RecordTimestampValidationFailure(mapping->streamId);
                 }
-                RecordRejectedWrite();
-                return validation;
+                return RejectWrite(std::move(validation));
             }
 
             RecordAcceptedWriteStart();
@@ -1180,11 +1172,10 @@ namespace CaptureInterop::V2::Output
         {
             if (!m_sinkWriter)
             {
-                RecordRejectedWrite();
-                return Failure(
+                return RejectWrite(Failure(
                     CoreResultCode::InvalidState,
                     "WriteSample",
-                    "Media Foundation sink writer is not available");
+                    "Media Foundation sink writer is not available"));
             }
 
             const AudioSample& audio = std::get<AudioSample>(sample.data);
@@ -1195,8 +1186,7 @@ namespace CaptureInterop::V2::Output
                 {
                     RecordTimestampValidationFailure(mapping->streamId);
                 }
-                RecordRejectedWrite();
-                return validation;
+                return RejectWrite(std::move(validation));
             }
 
             RecordAcceptedWriteStart();
@@ -1212,11 +1202,10 @@ namespace CaptureInterop::V2::Output
             return OperationResult::Success();
         }
 
-        RecordRejectedWrite();
-        return Failure(
+        return RejectWrite(Failure(
             CoreResultCode::UnsupportedOperation,
             "WriteSample",
-            "Media sample kind is not supported by the Media Foundation file sink");
+            "Media sample kind is not supported by the Media Foundation file sink"));
     }
 
     OperationResult MediaFoundationFileSink::Finalize() noexcept
@@ -1727,6 +1716,37 @@ namespace CaptureInterop::V2::Output
         if (m_sinkWriter && m_hasBegunWriting)
         {
             result = m_sinkWriter->Finalize();
+            if (result.IsFailure() && result.diagnostic.has_value())
+            {
+                std::string message =
+                    result.diagnostic->message
+                    + " Writes accepted="
+                    + std::to_string(m_writeDiagnostics.acceptedWrites)
+                    + ", completed="
+                    + std::to_string(m_writeDiagnostics.completedWrites)
+                    + ", failed="
+                    + std::to_string(m_writeDiagnostics.failedWrites)
+                    + ", rejected="
+                    + std::to_string(m_writeDiagnostics.rejectedWrites)
+                    + ".";
+                if (m_diagnostics.lastWriteFailure.has_value())
+                {
+                    message += " Last write failure: "
+                        + m_diagnostics.lastWriteFailure->component
+                        + "::"
+                        + m_diagnostics.lastWriteFailure->operation
+                        + " - "
+                        + m_diagnostics.lastWriteFailure->message
+                        + ".";
+                }
+
+                result = OperationResult::Failure(
+                    result.code,
+                    Component,
+                    result.diagnostic->operation,
+                    std::move(message),
+                    result.diagnostic->nativeStatus);
+            }
         }
 
         RecordFinalizeResult(result);
@@ -1839,6 +1859,17 @@ namespace CaptureInterop::V2::Output
     void MediaFoundationFileSink::RecordRejectedWrite() noexcept
     {
         ++m_writeDiagnostics.rejectedWrites;
+    }
+
+    OperationResult MediaFoundationFileSink::RejectWrite(OperationResult result) noexcept
+    {
+        RecordRejectedWrite();
+        if (result.diagnostic.has_value())
+        {
+            m_diagnostics.lastWriteFailure = result.diagnostic;
+        }
+
+        return result;
     }
 
     void MediaFoundationFileSink::RecordAcceptedWriteStart() noexcept

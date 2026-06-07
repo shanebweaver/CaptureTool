@@ -117,7 +117,7 @@ public sealed class CaptureV2ScreenRecorderAdapter : IScreenRecorder, IDisposabl
             {
                 SourceId = new CaptureSourceId(DesktopSourceId),
                 MonitorHandle = hMonitor,
-                CaptureArea = new Rectangle(0, 0, 1, 1),
+                CaptureArea = Rectangle.Empty,
             },
         ];
 

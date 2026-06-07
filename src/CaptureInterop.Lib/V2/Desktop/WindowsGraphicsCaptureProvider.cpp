@@ -22,7 +22,8 @@ namespace CaptureInterop::V2::Desktop
     namespace
     {
         class WgcFrameArrivedHandler final
-            : public ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>
+            : public ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>,
+              public IAgileObject
         {
         public:
             explicit WgcFrameArrivedHandler(WindowsGraphicsCaptureProvider::Impl* owner) noexcept
@@ -42,6 +43,13 @@ namespace CaptureInterop::V2::Desktop
                     riid == __uuidof(ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>))
                 {
                     *ppvObject = static_cast<ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>*>(this);
+                    AddRef();
+                    return S_OK;
+                }
+
+                if (riid == __uuidof(IAgileObject))
+                {
+                    *ppvObject = static_cast<IAgileObject*>(this);
                     AddRef();
                     return S_OK;
                 }

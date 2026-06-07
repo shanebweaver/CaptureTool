@@ -9,7 +9,7 @@ public class CaptureNativeException : Exception
         string operation,
         int stage,
         string message)
-        : base(message)
+        : base(FormatMessage(message, component, operation, nativeStatus, stage))
     {
         ResultCode = resultCode;
         NativeStatus = nativeStatus;
@@ -27,6 +27,20 @@ public class CaptureNativeException : Exception
     public string Operation { get; }
 
     public int Stage { get; }
+
+    private static string FormatMessage(
+        string message,
+        string component,
+        string operation,
+        int nativeStatus,
+        int stage)
+    {
+        string nativeStatusText = nativeStatus == 0
+            ? "0"
+            : $"0x{nativeStatus:X8}";
+
+        return $"{message} Component={component}; Operation={operation}; NativeStatus={nativeStatusText}; Stage={stage}.";
+    }
 }
 
 public sealed class CaptureValidationException : CaptureNativeException

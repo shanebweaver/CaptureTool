@@ -42,6 +42,19 @@ namespace
         desktop->captureArea = CaptureRectangle{ 10, 20, 1280, 720 };
         return config;
     }
+
+    CapturePipelineConfig CreateMp4ResolvedFullMonitorVideoConfig()
+    {
+        CapturePipelineConfig config = CreateMp4VideoConfig();
+        DesktopSourceConfig* desktop = config.sources[0].AsDesktop();
+        VideoMediaType mediaType;
+        mediaType.width = 2560;
+        mediaType.height = 1440;
+        mediaType.frameRate = Rational::From(60, 1);
+        mediaType.pixelFormat = VideoPixelFormat::Bgra8;
+        desktop->resolvedVideoMediaType = mediaType;
+        return config;
+    }
 }
 
 namespace CaptureInteropTests
@@ -79,6 +92,25 @@ namespace CaptureInteropTests
             Assert::IsTrue(stream.videoMediaType.has_value());
             Assert::AreEqual(1280u, stream.videoMediaType->width);
             Assert::AreEqual(720u, stream.videoMediaType->height);
+            Assert::AreEqual(60u, stream.videoMediaType->frameRate.numerator);
+            Assert::AreEqual(1u, stream.videoMediaType->frameRate.denominator);
+            Assert::AreEqual(
+                static_cast<int>(VideoPixelFormat::Bgra8),
+                static_cast<int>(stream.videoMediaType->pixelFormat));
+        }
+
+        TEST_METHOD(Resolve_Mp4FullMonitorVideo_PlansResolvedVideoMediaType)
+        {
+            const CapturePipelineConfig config = CreateMp4ResolvedFullMonitorVideoConfig();
+            OutputProfileResolver resolver;
+
+            const OutputProfileResolutionResult result = resolver.Resolve(config);
+
+            Assert::IsTrue(result.IsSuccess());
+            const OutputStreamPlan& stream = result.plan->streams[0];
+            Assert::IsTrue(stream.videoMediaType.has_value());
+            Assert::AreEqual(2560u, stream.videoMediaType->width);
+            Assert::AreEqual(1440u, stream.videoMediaType->height);
             Assert::AreEqual(60u, stream.videoMediaType->frameRate.numerator);
             Assert::AreEqual(1u, stream.videoMediaType->frameRate.denominator);
             Assert::AreEqual(

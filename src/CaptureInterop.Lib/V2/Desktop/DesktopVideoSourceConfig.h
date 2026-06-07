@@ -30,6 +30,7 @@ namespace CaptureInterop::V2::Desktop
         std::string streamName;
         DesktopMonitorTarget monitor;
         std::optional<CaptureRectangle> region;
+        std::optional<VideoMediaType> resolvedMediaType;
         CursorCapturePolicy cursorPolicy{ CursorCapturePolicy::Included };
         Rational requestedFrameRate;
 
@@ -91,6 +92,7 @@ namespace CaptureInterop::V2::Desktop
             std::move(config.monitorDeviceName)
         };
         mapped.region = std::move(config.captureArea);
+        mapped.resolvedMediaType = std::move(config.resolvedVideoMediaType);
         mapped.cursorPolicy = config.cursorPolicy;
         mapped.requestedFrameRate = config.frameRate;
         return mapped;

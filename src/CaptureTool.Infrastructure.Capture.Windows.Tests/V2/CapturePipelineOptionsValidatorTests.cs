@@ -36,7 +36,7 @@ public sealed class CapturePipelineOptionsValidatorTests
     }
 
     [TestMethod]
-    public void Validate_InvalidDesktopCaptureRectangle_ThrowsArgumentException()
+    public void Validate_FullMonitorDesktopCaptureRectangle_Passes()
     {
         CapturePipelineOptions options = CreateValidOptions() with
         {
@@ -48,8 +48,24 @@ public sealed class CapturePipelineOptionsValidatorTests
 
         Action act = () => CapturePipelineOptionsValidator.Validate(options);
 
+        act.Should().NotThrow();
+    }
+
+    [TestMethod]
+    public void Validate_InvalidDesktopCaptureRectangle_ThrowsArgumentException()
+    {
+        CapturePipelineOptions options = CreateValidOptions() with
+        {
+            Sources =
+            [
+                CreateDesktopSource(1) with { CaptureArea = new Rectangle(0, 0, 0, 1080) },
+            ],
+        };
+
+        Action act = () => CapturePipelineOptionsValidator.Validate(options);
+
         act.Should().Throw<ArgumentException>()
-            .WithMessage("*positive width and height*");
+            .WithMessage("*full-monitor capture or have positive width and height*");
     }
 
     [TestMethod]

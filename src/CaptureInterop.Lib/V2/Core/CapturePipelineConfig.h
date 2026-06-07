@@ -34,6 +34,7 @@ namespace CaptureInterop::V2
         std::string monitorDeviceName;
         uintptr_t monitorHandle{ 0 };
         std::optional<CaptureRectangle> captureArea;
+        std::optional<VideoMediaType> resolvedVideoMediaType;
         CursorCapturePolicy cursorPolicy{ CursorCapturePolicy::Included };
         Rational frameRate;
 

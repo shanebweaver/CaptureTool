@@ -3,6 +3,7 @@
 #include "V2/Core/CapturePipelineSession.h"
 #include "V2CoreTestComponents.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -86,6 +87,22 @@ namespace
             processors.push_back(std::make_unique<PassThroughProcessor>(MediaKind::Audio));
             return processors;
         }
+    };
+
+    class FailingVideoProcessorFactory final : public IMediaProcessorFactory
+    {
+    public:
+        std::vector<std::unique_ptr<IMediaProcessor>> CreateProcessors(const OutputPlan&) override
+        {
+            auto processor = std::make_unique<PassThroughProcessor>(MediaKind::Video);
+            videoProcessor = processor.get();
+
+            std::vector<std::unique_ptr<IMediaProcessor>> processors;
+            processors.push_back(std::move(processor));
+            return processors;
+        }
+
+        PassThroughProcessor* videoProcessor{ nullptr };
     };
 
     class AudioTagProcessor final : public IMediaProcessor
@@ -250,6 +267,74 @@ namespace CaptureInteropTests
             Assert::AreEqual(MediaDuration::FromSeconds(3).ticks100ns, sinkFactory.nullSink->ReceivedSamples()[1].Timestamp().ticks100ns);
         }
 
+        TEST_METHOD(Session_PausePropagatesToAudioSourceAndDropsPausedAudio)
+        {
+            ManualTimeProvider timeProvider;
+            RoutingSourceFactory sourceFactory;
+            RoutingProcessorFactory processorFactory;
+            RoutingSinkFactory sinkFactory;
+            CapturePipelineSession session = CreateSession(timeProvider, sourceFactory, processorFactory, sinkFactory);
+
+            Assert::IsTrue(session.Start().IsSuccess());
+            Assert::IsFalse(sourceFactory.audioSource->Paused());
+
+            timeProvider.Advance(MediaDuration::FromSeconds(1));
+            Assert::IsTrue(sourceFactory.audioSource->Emit(SampleBuilder::Audio()).IsSuccess());
+
+            Assert::IsTrue(session.Pause().IsSuccess());
+            Assert::IsTrue(sourceFactory.audioSource->Paused());
+            timeProvider.Advance(MediaDuration::FromSeconds(5));
+            Assert::IsTrue(sourceFactory.audioSource->Emit(SampleBuilder::Audio()).IsSuccess());
+
+            Assert::AreEqual(static_cast<size_t>(1), sinkFactory.nullSink->ReceivedSamples().size());
+            Assert::AreEqual(static_cast<int>(MediaKind::Audio), static_cast<int>(sinkFactory.nullSink->ReceivedSamples()[0].Kind()));
+            Assert::AreEqual(MediaDuration::FromSeconds(1).ticks100ns, sinkFactory.nullSink->ReceivedSamples()[0].Timestamp().ticks100ns);
+        }
+
+        TEST_METHOD(Session_ResumeReenablesAudioSourceAndRoutesFutureAudio)
+        {
+            ManualTimeProvider timeProvider;
+            RoutingSourceFactory sourceFactory;
+            RoutingProcessorFactory processorFactory;
+            RoutingSinkFactory sinkFactory;
+            CapturePipelineSession session = CreateSession(timeProvider, sourceFactory, processorFactory, sinkFactory);
+
+            Assert::IsTrue(session.Start().IsSuccess());
+            Assert::IsTrue(session.Pause().IsSuccess());
+            Assert::IsTrue(sourceFactory.audioSource->Paused());
+            timeProvider.Advance(MediaDuration::FromSeconds(5));
+            Assert::IsTrue(sourceFactory.audioSource->Emit(SampleBuilder::Audio()).IsSuccess());
+
+            Assert::IsTrue(session.Resume().IsSuccess());
+            Assert::IsFalse(sourceFactory.audioSource->Paused());
+            timeProvider.Advance(MediaDuration::FromSeconds(2));
+            Assert::IsTrue(sourceFactory.audioSource->Emit(SampleBuilder::Audio()).IsSuccess());
+
+            Assert::AreEqual(static_cast<size_t>(1), sinkFactory.nullSink->ReceivedSamples().size());
+            Assert::AreEqual(static_cast<int>(MediaKind::Audio), static_cast<int>(sinkFactory.nullSink->ReceivedSamples()[0].Kind()));
+            Assert::AreEqual(MediaDuration::FromSeconds(2).ticks100ns, sinkFactory.nullSink->ReceivedSamples()[0].Timestamp().ticks100ns);
+        }
+
+        TEST_METHOD(Session_PausedSilentAudioSampleIsNotWrittenToSink)
+        {
+            ManualTimeProvider timeProvider;
+            RoutingSourceFactory sourceFactory;
+            RoutingProcessorFactory processorFactory;
+            RoutingSinkFactory sinkFactory;
+            CapturePipelineSession session = CreateSession(timeProvider, sourceFactory, processorFactory, sinkFactory);
+
+            Assert::IsTrue(session.Start().IsSuccess());
+            Assert::IsTrue(session.Pause().IsSuccess());
+
+            AudioSample silence = SampleBuilder::Audio();
+            std::fill(silence.pcmData.begin(), silence.pcmData.end(), uint8_t{ 0 });
+            silence.sourceTiming.silent = true;
+            silence.sourceTiming.synthesizedSilence = true;
+            Assert::IsTrue(sourceFactory.audioSource->Emit(silence).IsSuccess());
+
+            Assert::AreEqual(static_cast<size_t>(0), sinkFactory.nullSink->ReceivedSamples().size());
+        }
+
         TEST_METHOD(Session_PauseResumeInvalidTransitions_ReturnInvalidState)
         {
             ManualTimeProvider timeProvider;
@@ -267,6 +352,62 @@ namespace CaptureInteropTests
             const OperationResult resumeBeforePause = session.Resume();
             Assert::IsTrue(resumeBeforePause.IsFailure());
             Assert::AreEqual("Resume", resumeBeforePause.diagnostic->operation.c_str());
+        }
+
+        TEST_METHOD(Session_StopAfterSinkWriteFailure_TearsDownLiveGraph)
+        {
+            ManualTimeProvider timeProvider;
+            RoutingSourceFactory sourceFactory;
+            RoutingProcessorFactory processorFactory;
+            RoutingSinkFactory sinkFactory;
+            CapturePipelineSession session = CreateSession(timeProvider, sourceFactory, processorFactory, sinkFactory);
+
+            Assert::IsTrue(session.Start().IsSuccess());
+            sinkFactory.nullSink->SetWriteResult(OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "NullOutputSink",
+                "WriteSample",
+                "Injected write failure"));
+
+            Assert::IsTrue(sourceFactory.videoSource->Emit(SampleBuilder::Video()).IsSuccess());
+            Assert::AreEqual(static_cast<int>(PipelineState::Failed), static_cast<int>(session.State()));
+
+            const CapturePipelineStopResult stopResult = session.Stop();
+
+            Assert::IsTrue(stopResult.result.IsSuccess());
+            Assert::IsFalse(stopResult.alreadyStopped);
+            Assert::AreEqual(static_cast<int>(PipelineState::Failed), static_cast<int>(stopResult.finalState));
+            Assert::AreEqual(static_cast<size_t>(9), session.TeardownStages().size());
+            Assert::AreEqual(static_cast<int>(TeardownStage::StopSources), static_cast<int>(session.TeardownStages()[1]));
+            Assert::AreEqual(static_cast<int>(TeardownStage::FinalizeSink), static_cast<int>(session.TeardownStages()[4]));
+        }
+
+        TEST_METHOD(Session_StopAfterProcessorFailure_TearsDownLiveGraph)
+        {
+            ManualTimeProvider timeProvider;
+            RoutingSourceFactory sourceFactory;
+            FailingVideoProcessorFactory processorFactory;
+            RoutingSinkFactory sinkFactory;
+            CapturePipelineSession session = CreateSession(timeProvider, sourceFactory, processorFactory, sinkFactory);
+
+            Assert::IsTrue(session.Start().IsSuccess());
+            processorFactory.videoProcessor->SetProcessResult(OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "PassThroughProcessor",
+                "Process",
+                "Injected process failure"));
+
+            Assert::IsTrue(sourceFactory.videoSource->Emit(SampleBuilder::Video()).IsSuccess());
+            Assert::AreEqual(static_cast<int>(PipelineState::Failed), static_cast<int>(session.State()));
+
+            const CapturePipelineStopResult stopResult = session.Stop();
+
+            Assert::IsTrue(stopResult.result.IsSuccess());
+            Assert::IsFalse(stopResult.alreadyStopped);
+            Assert::AreEqual(static_cast<int>(PipelineState::Failed), static_cast<int>(stopResult.finalState));
+            Assert::AreEqual(static_cast<size_t>(9), session.TeardownStages().size());
+            Assert::AreEqual(static_cast<int>(TeardownStage::StopSources), static_cast<int>(session.TeardownStages()[1]));
+            Assert::AreEqual(static_cast<int>(TeardownStage::FinalizeSink), static_cast<int>(session.TeardownStages()[4]));
         }
     };
 }

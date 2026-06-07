@@ -12,6 +12,7 @@ namespace
 
         RecorderFixture()
         {
+            SetEnvironmentVariableW(L"CAPTURETOOL_V2_FAKE_NATIVE_SESSION", L"1");
             Assert::AreEqual(
                 static_cast<int32_t>(CtCaptureV2_ResultCode_Success),
                 CtCaptureV2_CreateRecorder(&handle));
@@ -20,6 +21,7 @@ namespace
         ~RecorderFixture()
         {
             (void)CtCaptureV2_DestroyRecorder(handle);
+            SetEnvironmentVariableW(L"CAPTURETOOL_V2_FAKE_NATIVE_SESSION", nullptr);
         }
     };
 

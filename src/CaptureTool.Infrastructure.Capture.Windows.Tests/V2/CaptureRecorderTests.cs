@@ -8,8 +8,15 @@ using System.Threading;
 namespace CaptureTool.Infrastructure.Capture.Windows.Tests.V2;
 
 [TestClass]
+[DoNotParallelize]
 public sealed class CaptureRecorderTests
 {
+    [TestInitialize]
+    public void TestInitialize()
+    {
+        Environment.SetEnvironmentVariable("CAPTURETOOL_V2_FAKE_NATIVE_SESSION", "1");
+    }
+
     [TestMethod]
     public async Task StartPauseResumeStopAsync_WithValidOptions_Succeeds()
     {

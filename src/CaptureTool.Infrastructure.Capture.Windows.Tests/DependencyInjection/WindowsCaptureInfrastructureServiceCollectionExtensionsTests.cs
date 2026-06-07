@@ -17,19 +17,19 @@ public sealed class WindowsCaptureInfrastructureServiceCollectionExtensionsTests
         services.AddWindowsCaptureDomains();
 
         services.ShouldContainSingleton<IScreenCapture, WindowsScreenCapture>();
-        services.ShouldContainSingleton<IScreenRecorder, WindowsScreenRecorder>();
+        services.ShouldContainSingleton<IScreenRecorder, CaptureV2ScreenRecorderAdapter>();
         services.ShouldContainSingleton<IAudioRecorder, WindowsAudioRecorder>();
     }
 
     [TestMethod]
-    public void AddWindowsCaptureDomains_DefaultOptions_ResolvesExistingRecorder()
+    public void AddWindowsCaptureDomains_DefaultOptions_ResolvesV2Recorder()
     {
         var services = new ServiceCollection();
         services.AddWindowsCaptureDomains();
 
         using ServiceProvider provider = services.BuildServiceProvider();
 
-        provider.GetRequiredService<IScreenRecorder>().Should().BeOfType<WindowsScreenRecorder>();
+        provider.GetRequiredService<IScreenRecorder>().Should().BeOfType<CaptureV2ScreenRecorderAdapter>();
     }
 
     [TestMethod]
@@ -42,7 +42,7 @@ public sealed class WindowsCaptureInfrastructureServiceCollectionExtensionsTests
     }
 
     [TestMethod]
-    public void AddWindowsCaptureDomains_V2OptionOn_UsesAdapterWithoutReplacingDefaultPath()
+    public void AddWindowsCaptureDomains_V2OptionOn_UsesAdapter()
     {
         var services = new ServiceCollection();
         services.AddWindowsCaptureDomains(options => options.UseCaptureV2ScreenRecorder = true);

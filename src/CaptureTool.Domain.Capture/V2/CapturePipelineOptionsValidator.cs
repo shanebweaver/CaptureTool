@@ -114,14 +114,16 @@ public static class CapturePipelineOptionsValidator
 
     private static void ValidateDesktopSource(DesktopCaptureSourceOptions desktop)
     {
-        if (desktop.Enabled && IsInvalidRectangle(desktop.CaptureArea))
+        if (desktop.Enabled && !IsValidCaptureArea(desktop.CaptureArea))
         {
-            throw new ArgumentException("Desktop capture area must have positive width and height.", nameof(desktop));
+            throw new ArgumentException(
+                "Desktop capture area must be empty for full-monitor capture or have positive width and height.",
+                nameof(desktop));
         }
     }
 
-    private static bool IsInvalidRectangle(Rectangle rectangle)
-        => rectangle.Width <= 0 || rectangle.Height <= 0;
+    private static bool IsValidCaptureArea(Rectangle rectangle)
+        => rectangle == Rectangle.Empty || (rectangle.Width > 0 && rectangle.Height > 0);
 
     private static void ValidateControls(CaptureControlOptions controls)
     {

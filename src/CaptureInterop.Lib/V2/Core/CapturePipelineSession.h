@@ -91,11 +91,11 @@ namespace CaptureInterop::V2
             m_sources = m_sourceFactory.CreateSources(m_config);
             m_processors = m_processorFactory.CreateProcessors(*m_outputPlan);
             m_sink = m_sinkFactory.CreateSink(*m_outputPlan);
+            m_graphTornDown = false;
 
             if (m_clock == nullptr || m_sink == nullptr)
             {
-                (void)m_stateMachine.Fail();
-                return RecordDiagnostic(OperationResult::Failure(
+                return FailStartAndTeardown(OperationResult::Failure(
                     CoreResultCode::ValidationFailure,
                     "CapturePipelineSession",
                     "Start",
@@ -164,6 +164,11 @@ namespace CaptureInterop::V2
                 return RecordCommandFailure(std::move(clockResult));
             }
 
+            if (OperationResult sourcePauseResult = SetSourcePauseState(true); sourcePauseResult.IsFailure())
+            {
+                return RecordCommandFailure(std::move(sourcePauseResult));
+            }
+
             return m_stateMachine.Pause();
         }
 
@@ -190,6 +195,11 @@ namespace CaptureInterop::V2
             if (OperationResult clockResult = m_clock->Resume(); clockResult.IsFailure())
             {
                 return RecordCommandFailure(std::move(clockResult));
+            }
+
+            if (OperationResult sourceResumeResult = SetSourcePauseState(false); sourceResumeResult.IsFailure())
+            {
+                return RecordCommandFailure(std::move(sourceResumeResult));
             }
 
             return m_stateMachine.Resume();
@@ -260,6 +270,22 @@ namespace CaptureInterop::V2
         {
             if (m_stateMachine.IsTerminal())
             {
+                if (!m_graphTornDown)
+                {
+                    const TeardownOutcome outcome = TeardownGraph();
+                    if (outcome.result.IsFailure())
+                    {
+                        (void)RecordDiagnostic(outcome.result);
+                    }
+
+                    return CapturePipelineStopResult{
+                        outcome.result,
+                        m_stateMachine.State(),
+                        outcome.failureStage,
+                        false
+                    };
+                }
+
                 return CapturePipelineStopResult{
                     OperationResult::Success(),
                     m_stateMachine.State(),
@@ -454,6 +480,15 @@ namespace CaptureInterop::V2
                 }
             }
 
+            for (const std::unique_ptr<IMediaSource>& source : m_sources)
+            {
+                auto* muteProcessor = dynamic_cast<IAudioMuteProcessor*>(source.get());
+                if (muteProcessor != nullptr && muteProcessor->ControlledSource() == sourceId)
+                {
+                    return muteProcessor;
+                }
+            }
+
             return nullptr;
         }
 
@@ -468,7 +503,35 @@ namespace CaptureInterop::V2
                 }
             }
 
+            for (const std::unique_ptr<IMediaSource>& source : m_sources)
+            {
+                auto* gainProcessor = dynamic_cast<IAudioGainProcessor*>(source.get());
+                if (gainProcessor != nullptr && gainProcessor->ControlledSource() == sourceId)
+                {
+                    return gainProcessor;
+                }
+            }
+
             return nullptr;
+        }
+
+        OperationResult SetSourcePauseState(bool paused) noexcept
+        {
+            for (const std::unique_ptr<IMediaSource>& source : m_sources)
+            {
+                auto* pauseControl = dynamic_cast<ISourcePauseControl*>(source.get());
+                if (pauseControl == nullptr)
+                {
+                    continue;
+                }
+
+                if (OperationResult result = pauseControl->SetPaused(paused); result.IsFailure())
+                {
+                    return result;
+                }
+            }
+
+            return OperationResult::Success();
         }
 
         static MediaSample WithTimestamp(MediaSample sample, MediaTime timestamp)
@@ -523,6 +586,7 @@ namespace CaptureInterop::V2
             RecordStage(TeardownStage::ReleaseInfrastructure);
             m_clock.reset();
 
+            m_graphTornDown = true;
             return outcome;
         }
 
@@ -558,6 +622,7 @@ namespace CaptureInterop::V2
         std::vector<TeardownStage> m_teardownStages;
         PipelineCounters m_counters;
         std::vector<CoreDiagnostic> m_diagnostics;
+        bool m_graphTornDown{ true };
 
         static constexpr size_t InvalidProcessorIndex = static_cast<size_t>(-1);
     };

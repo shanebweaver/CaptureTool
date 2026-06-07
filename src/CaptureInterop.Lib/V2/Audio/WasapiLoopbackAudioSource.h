@@ -48,7 +48,11 @@ namespace CaptureInterop::V2::Audio
         std::string lastFailureMessage;
     };
 
-    class WasapiLoopbackAudioSource final : public IAudioCaptureSource
+    class WasapiLoopbackAudioSource final :
+        public IAudioCaptureSource,
+        public IAudioMuteProcessor,
+        public IAudioGainProcessor,
+        public ISourcePauseControl
     {
     public:
         WasapiLoopbackAudioSource(
@@ -112,6 +116,11 @@ namespace CaptureInterop::V2::Audio
         [[nodiscard]] bool IsPaused() const noexcept
         {
             return m_paused.load();
+        }
+
+        [[nodiscard]] SourceId ControlledSource() const noexcept override
+        {
+            return m_config.sourceId;
         }
 
         [[nodiscard]] WasapiLoopbackAudioSourceDiagnostics Diagnostics() const noexcept
@@ -270,6 +279,11 @@ namespace CaptureInterop::V2::Audio
             return OperationResult::Success();
         }
 
+        [[nodiscard]] OperationResult SetMuted(bool muted) noexcept override
+        {
+            return SetMuted(m_config.sourceId, muted);
+        }
+
         [[nodiscard]] OperationResult SetGainDb(SourceId sourceId, float gainDb) noexcept
         {
             if (sourceId != m_config.sourceId)
@@ -305,7 +319,12 @@ namespace CaptureInterop::V2::Audio
             return OperationResult::Success();
         }
 
-        [[nodiscard]] OperationResult SetPaused(bool paused) noexcept
+        [[nodiscard]] OperationResult SetGainDb(float gainDb) noexcept override
+        {
+            return SetGainDb(m_config.sourceId, gainDb);
+        }
+
+        [[nodiscard]] OperationResult SetPaused(bool paused) noexcept override
         {
             m_paused.store(paused);
             return OperationResult::Success();

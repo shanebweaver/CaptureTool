@@ -140,6 +140,11 @@ namespace CaptureInterop::V2::Desktop
                 m_resolvedMonitor = std::move(monitor);
                 m_effectiveMediaType = effectiveMediaType;
             }
+            else if (m_config.resolvedMediaType.has_value())
+            {
+                std::lock_guard lock(m_mutex);
+                m_effectiveMediaType = *m_config.resolvedMediaType;
+            }
 
             OperationResult configureResult = m_provider->ConfigureDeviceDependency(m_d3dDeviceDependency);
             if (!configureResult.IsSuccess())
@@ -166,6 +171,8 @@ namespace CaptureInterop::V2::Desktop
                             HandleProviderFailure(failure);
                         });
                 }
+
+                m_started = true;
             }
 
             OperationResult startResult = m_provider->Start();
@@ -175,6 +182,7 @@ namespace CaptureInterop::V2::Desktop
                 CallbackRegistrationToken providerFailureCallback;
                 {
                     std::lock_guard lock(m_mutex);
+                    m_started = false;
                     providerCallback = std::move(m_providerCallback);
                     providerFailureCallback = std::move(m_providerFailureCallback);
                 }
@@ -185,8 +193,6 @@ namespace CaptureInterop::V2::Desktop
                 return startResult;
             }
 
-            std::lock_guard lock(m_mutex);
-            m_started = true;
             return OperationResult::Success();
         }
 

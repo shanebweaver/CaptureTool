@@ -266,6 +266,19 @@ namespace
         MediaFoundationFileSink sink;
     };
 
+    struct MediaFileInspection
+    {
+        bool hasVideo{ false };
+        bool hasAudio{ false };
+        GUID videoSubtype{ GUID_NULL };
+        GUID audioSubtype{ GUID_NULL };
+        uint32_t videoSampleCount{ 0 };
+        uint32_t audioSampleCount{ 0 };
+        int64_t presentationDurationTicks{ 0 };
+        int64_t videoDurationTicks{ 0 };
+        int64_t audioDurationTicks{ 0 };
+    };
+
     OutputStreamPlan CreateVideoStream(
         uint32_t streamId = 1,
         VideoCodec codec = VideoCodec::H264,
@@ -399,6 +412,118 @@ namespace
         Assert::AreNotEqual(0u, result);
 
         return tempFile.data();
+    }
+
+    void AccumulateSamples(
+        IMFSourceReader* reader,
+        DWORD streamIndex,
+        uint32_t& sampleCount,
+        int64_t& durationTicks)
+    {
+        Assert::IsNotNull(reader);
+
+        while (true)
+        {
+            DWORD actualStreamIndex = 0;
+            DWORD flags = 0;
+            LONGLONG sampleTime = 0;
+            wil::com_ptr<IMFSample> sample;
+            const HRESULT hr = reader->ReadSample(
+                streamIndex,
+                0,
+                &actualStreamIndex,
+                &flags,
+                &sampleTime,
+                sample.put());
+            Assert::IsTrue(SUCCEEDED(hr));
+
+            if ((flags & MF_SOURCE_READERF_ENDOFSTREAM) != 0)
+            {
+                break;
+            }
+
+            if (sample)
+            {
+                const uint32_t previousSampleCount = sampleCount;
+                ++sampleCount;
+
+                LONGLONG sampleDuration = 0;
+                if (SUCCEEDED(sample->GetSampleDuration(&sampleDuration)))
+                {
+                    durationTicks += sampleDuration;
+                }
+
+                if (previousSampleCount > 0 && durationTicks == 0)
+                {
+                    durationTicks = sampleTime;
+                }
+            }
+        }
+    }
+
+    MediaFileInspection InspectMediaFile(const std::wstring& outputPath)
+    {
+        Assert::IsTrue(SUCCEEDED(MFStartup(MF_VERSION)));
+
+        MediaFileInspection inspection;
+        wil::com_ptr<IMFSourceReader> reader;
+        HRESULT hr = MFCreateSourceReaderFromURL(outputPath.c_str(), nullptr, reader.put());
+        Assert::IsTrue(SUCCEEDED(hr));
+
+        PROPVARIANT presentationDuration;
+        PropVariantInit(&presentationDuration);
+        hr = reader->GetPresentationAttribute(
+            MF_SOURCE_READER_MEDIASOURCE,
+            MF_PD_DURATION,
+            &presentationDuration);
+        if (SUCCEEDED(hr) && presentationDuration.vt == VT_UI8)
+        {
+            inspection.presentationDurationTicks = static_cast<int64_t>(presentationDuration.uhVal.QuadPart);
+        }
+        PropVariantClear(&presentationDuration);
+
+        wil::com_ptr<IMFMediaType> videoType;
+        hr = reader->GetNativeMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, videoType.put());
+        if (SUCCEEDED(hr))
+        {
+            inspection.hasVideo = true;
+            (void)videoType->GetGUID(MF_MT_SUBTYPE, &inspection.videoSubtype);
+        }
+
+        wil::com_ptr<IMFMediaType> audioType;
+        hr = reader->GetNativeMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0, audioType.put());
+        if (SUCCEEDED(hr))
+        {
+            inspection.hasAudio = true;
+            (void)audioType->GetGUID(MF_MT_SUBTYPE, &inspection.audioSubtype);
+        }
+
+        if (inspection.hasVideo)
+        {
+            Assert::IsTrue(SUCCEEDED(reader->SetStreamSelection(MF_SOURCE_READER_FIRST_VIDEO_STREAM, TRUE)));
+            AccumulateSamples(
+                reader.get(),
+                MF_SOURCE_READER_FIRST_VIDEO_STREAM,
+                inspection.videoSampleCount,
+                inspection.videoDurationTicks);
+        }
+
+        if (inspection.hasAudio)
+        {
+            wil::com_ptr<IMFSourceReader> audioReader;
+            hr = MFCreateSourceReaderFromURL(outputPath.c_str(), nullptr, audioReader.put());
+            Assert::IsTrue(SUCCEEDED(hr));
+            Assert::IsTrue(SUCCEEDED(audioReader->SetStreamSelection(MF_SOURCE_READER_FIRST_AUDIO_STREAM, TRUE)));
+            AccumulateSamples(
+                audioReader.get(),
+                MF_SOURCE_READER_FIRST_AUDIO_STREAM,
+                inspection.audioSampleCount,
+                inspection.audioDurationTicks);
+        }
+
+        reader.reset();
+        MFShutdown();
+        return inspection;
     }
 
     wil::com_ptr<ID3D11Device> CreateTestD3DDevice()
@@ -996,10 +1121,9 @@ namespace CaptureInteropTests
 
         TEST_METHOD(WriteSample_SyntheticVideoPlusAudioMp4_WritesAndFinalizes)
         {
-            wchar_t tempDirectory[MAX_PATH] = {};
-            Assert::IsTrue(GetTempPathW(MAX_PATH, tempDirectory) > 0);
-
-            const std::wstring outputPath = std::wstring(tempDirectory) + L"capturetool-v2-pr005-09.mp4";
+            const std::wstring tempPath = CreateTemporaryOutputFile();
+            DeleteFileW(tempPath.c_str());
+            const std::wstring outputPath = tempPath + L".mp4";
             DeleteFileW(outputPath.c_str());
 
             OutputStreamPlan videoStream = CreateVideoStream(1);
@@ -1017,13 +1141,19 @@ namespace CaptureInteropTests
             }
             Assert::IsTrue(openResult.IsSuccess());
 
-            VideoSample videoSample = CreateVideoSample(StreamId::FromValue(1), 320, 180);
-            AudioSample audioSample = CreateAudioSample(StreamId::FromValue(2), 480);
-            audioSample.sourceTiming.silent = true;
-            std::fill(audioSample.pcmData.begin(), audioSample.pcmData.end(), 0);
+            for (int i = 0; i < 3; ++i)
+            {
+                VideoSample videoSample = CreateVideoSample(StreamId::FromValue(1), 320, 180);
+                videoSample.timestamp = MediaTime::FromTicks(MediaDuration::FromMilliseconds(16).ticks100ns * i);
+                Assert::IsTrue(sink.WriteSample(MediaSample{ videoSample }).IsSuccess());
 
-            Assert::IsTrue(sink.WriteSample(MediaSample{ videoSample }).IsSuccess());
-            Assert::IsTrue(sink.WriteSample(MediaSample{ audioSample }).IsSuccess());
+                AudioSample audioSample = CreateAudioSample(StreamId::FromValue(2), 480);
+                audioSample.timestamp = MediaTime::FromTicks(MediaDuration::FromMilliseconds(10).ticks100ns * i);
+                audioSample.sourceTiming.silent = true;
+                std::fill(audioSample.pcmData.begin(), audioSample.pcmData.end(), 0);
+                Assert::IsTrue(sink.WriteSample(MediaSample{ audioSample }).IsSuccess());
+            }
+
             Assert::IsTrue(sink.Finalize().IsSuccess());
 
             WIN32_FILE_ATTRIBUTE_DATA attributes = {};
@@ -1034,6 +1164,16 @@ namespace CaptureInteropTests
             const uint64_t fileSize =
                 (static_cast<uint64_t>(attributes.nFileSizeHigh) << 32) | attributes.nFileSizeLow;
             Assert::IsTrue(fileSize > 0);
+
+            const MediaFileInspection inspection = InspectMediaFile(outputPath);
+            Assert::IsTrue(inspection.hasVideo);
+            Assert::IsTrue(inspection.hasAudio);
+            Assert::IsTrue(IsEqualGUID(MFVideoFormat_H264, inspection.videoSubtype));
+            Assert::IsTrue(IsEqualGUID(MFAudioFormat_AAC, inspection.audioSubtype));
+            Assert::IsTrue(inspection.videoSampleCount >= 3);
+            Assert::IsTrue(inspection.audioSampleCount > 0);
+            Assert::IsTrue(inspection.presentationDurationTicks > 0);
+            Assert::IsTrue(inspection.videoDurationTicks > 0);
 
             DeleteFileW(outputPath.c_str());
         }
@@ -1359,7 +1499,8 @@ namespace CaptureInteropTests
 
             Assert::IsTrue(first.IsFailure());
             Assert::IsTrue(second.IsFailure());
-            Assert::AreEqual("simulated finalize failure", second.diagnostic->message.c_str());
+            Assert::IsTrue(second.diagnostic->message.find("simulated finalize failure") != std::string::npos);
+            Assert::IsTrue(second.diagnostic->message.find("Writes accepted=0") != std::string::npos);
             Assert::AreEqual(1, harness.sinkWriterFactory->session->finalizeCalls);
             Assert::AreEqual(0u, harness.runtime->ActiveLeaseCount());
             Assert::AreEqual(1, harness.runtimeApi->shutdownCalls);
@@ -1371,7 +1512,8 @@ namespace CaptureInteropTests
             Assert::IsTrue(diagnostics.finalized);
             Assert::AreEqual("Finalize", diagnostics.finalizeStage.c_str());
             Assert::IsTrue(diagnostics.finalizeFailure.has_value());
-            Assert::AreEqual("simulated finalize failure", diagnostics.finalizeFailure->message.c_str());
+            Assert::IsTrue(diagnostics.finalizeFailure->message.find("simulated finalize failure") != std::string::npos);
+            Assert::IsTrue(diagnostics.finalizeFailure->message.find("Writes accepted=0") != std::string::npos);
             Assert::IsTrue(diagnostics.finalizeFailure->nativeStatus.has_value());
             Assert::AreEqual(static_cast<int64_t>(E_FAIL), diagnostics.finalizeFailure->nativeStatus.value());
             Assert::IsTrue(diagnostics.failedFinalizeOutputDeleteAttempted);

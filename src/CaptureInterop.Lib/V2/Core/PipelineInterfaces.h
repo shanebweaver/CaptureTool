@@ -50,6 +50,14 @@ namespace CaptureInterop::V2
         [[nodiscard]] virtual CallbackRegistrationToken RegisterSampleArrivedHandler(AudioSampleHandler handler) = 0;
     };
 
+    class ISourcePauseControl
+    {
+    public:
+        virtual ~ISourcePauseControl() = default;
+
+        [[nodiscard]] virtual OperationResult SetPaused(bool paused) noexcept = 0;
+    };
+
     class IMediaProcessor
     {
     public:

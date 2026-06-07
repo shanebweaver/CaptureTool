@@ -266,16 +266,32 @@ namespace CaptureInterop::V2
             const DesktopSourceConfig& desktop,
             const VideoEncodingSettings& video) noexcept
         {
-            if (!desktop.captureArea.has_value())
+            if (desktop.captureArea.has_value())
+            {
+                VideoMediaType mediaType;
+                mediaType.width = desktop.captureArea->width;
+                mediaType.height = desktop.captureArea->height;
+                mediaType.frameRate = video.frameRate.IsValid() ? video.frameRate : desktop.frameRate;
+                mediaType.pixelFormat = VideoPixelFormat::Bgra8;
+                return mediaType.IsValid() ? std::optional<VideoMediaType>{ mediaType } : std::nullopt;
+            }
+
+            if (!desktop.resolvedVideoMediaType.has_value())
             {
                 return std::nullopt;
             }
 
-            VideoMediaType mediaType;
-            mediaType.width = desktop.captureArea->width;
-            mediaType.height = desktop.captureArea->height;
-            mediaType.frameRate = video.frameRate.IsValid() ? video.frameRate : desktop.frameRate;
-            mediaType.pixelFormat = VideoPixelFormat::Bgra8;
+            VideoMediaType mediaType = *desktop.resolvedVideoMediaType;
+            if (!mediaType.frameRate.IsValid())
+            {
+                mediaType.frameRate = video.frameRate.IsValid() ? video.frameRate : desktop.frameRate;
+            }
+
+            if (mediaType.pixelFormat == VideoPixelFormat::Unknown)
+            {
+                mediaType.pixelFormat = VideoPixelFormat::Bgra8;
+            }
+
             return mediaType.IsValid() ? std::optional<VideoMediaType>{ mediaType } : std::nullopt;
         }
 

@@ -166,7 +166,7 @@ namespace CaptureInterop::V2::Testing
         bool m_stopped{ false };
     };
 
-    class FakeAudioSource final : public IAudioCaptureSource
+    class FakeAudioSource final : public IAudioCaptureSource, public ISourcePauseControl
     {
     public:
         SourceDescriptor Describe() const override
@@ -188,6 +188,12 @@ namespace CaptureInterop::V2::Testing
         OperationResult Stop() noexcept override
         {
             m_stopped = true;
+            return OperationResult::Success();
+        }
+
+        OperationResult SetPaused(bool paused) noexcept override
+        {
+            m_paused = paused;
             return OperationResult::Success();
         }
 
@@ -217,6 +223,7 @@ namespace CaptureInterop::V2::Testing
 
         [[nodiscard]] bool Started() const noexcept { return m_started; }
         [[nodiscard]] bool Stopped() const noexcept { return m_stopped; }
+        [[nodiscard]] bool Paused() const noexcept { return m_paused; }
 
     private:
         struct State
@@ -227,6 +234,7 @@ namespace CaptureInterop::V2::Testing
         std::shared_ptr<State> m_state = std::make_shared<State>();
         bool m_started{ false };
         bool m_stopped{ false };
+        bool m_paused{ false };
     };
 
     class PassThroughProcessor final : public IMediaProcessor
