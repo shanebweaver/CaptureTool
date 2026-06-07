@@ -118,6 +118,7 @@
     <ClCompile Include="V2NativeDtoValidationTests.cpp" />
     <ClCompile Include="V2NativeErrorReportingTests.cpp" />
     <ClCompile Include="V2NativeLifecycleCommandTests.cpp" />
+    <ClCompile Include="V2WindowsDesktopVideoSourceTests.cpp" />
     <ClCompile Include="V2CoreAudioControlProcessorTests.cpp" />
     <ClCompile Include="V2CoreCapturePipelineConfigTests.cpp" />
     <ClCompile Include="V2CoreCapturePipelineConfigValidatorTests.cpp" />

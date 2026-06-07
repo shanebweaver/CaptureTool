@@ -96,6 +96,7 @@
     <ClInclude Include="V2\Desktop\DesktopVideoSourceConfig.h" />
     <ClInclude Include="V2\Desktop\FakeDesktopCaptureProvider.h" />
     <ClInclude Include="V2\Desktop\IDesktopCaptureProvider.h" />
+    <ClInclude Include="V2\Desktop\WindowsDesktopVideoSource.h" />
     <ClInclude Include="CallbackHandle.h" />
     <ClInclude Include="CallbackRegistry.h" />
     <ClInclude Include="CallbackTypes.h" />
