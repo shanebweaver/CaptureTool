@@ -298,4 +298,28 @@ extern "C"
 
     CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_DestroyRecorder(
         CtCaptureV2_RecorderHandle handle) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_Start(
+        CtCaptureV2_RecorderHandle handle,
+        const CtCaptureV2_Config* config) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_Pause(
+        CtCaptureV2_RecorderHandle handle) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_Resume(
+        CtCaptureV2_RecorderHandle handle) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_SetAudioMuted(
+        CtCaptureV2_RecorderHandle handle,
+        uint32_t sourceId,
+        uint8_t muted) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_SetAudioGain(
+        CtCaptureV2_RecorderHandle handle,
+        uint32_t sourceId,
+        float gainDb) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_Stop(
+        CtCaptureV2_RecorderHandle handle,
+        CtCaptureV2_StopResult* result) noexcept;
 }
