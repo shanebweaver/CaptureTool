@@ -59,10 +59,33 @@ namespace CaptureInterop::V2
         AudioSourceControlConfig controls;
     };
 
+    struct MicrophoneSourceConfig
+    {
+        SourceId id;
+        StreamId audioStreamId;
+        std::string name;
+        std::string deviceId;
+        bool useDefaultDevice{ true };
+        bool armed{ false };
+        AudioSourceControlConfig controls;
+
+        // Future microphone hardware gain, endpoint mute, echo cancellation, and
+        // monitoring are intentionally separate from first-version recording gain.
+    };
+
+    struct AudioMixerInputContract
+    {
+        uint32_t normalizedSampleRate{ 48000 };
+        uint16_t normalizedChannels{ 2 };
+        AudioSampleFormat normalizedSampleFormat{ AudioSampleFormat::Float32 };
+        bool sourceSpecificControlsBeforeMix{ true };
+        bool firstImplementationWritesSingleAudioTrack{ true };
+    };
+
     class SourceConfig
     {
     public:
-        using Data = std::variant<DesktopSourceConfig, SystemAudioSourceConfig>;
+        using Data = std::variant<DesktopSourceConfig, SystemAudioSourceConfig, MicrophoneSourceConfig>;
 
         static SourceConfig Desktop(DesktopSourceConfig config)
         {
@@ -74,6 +97,11 @@ namespace CaptureInterop::V2
             return SourceConfig(std::move(config));
         }
 
+        static SourceConfig Microphone(MicrophoneSourceConfig config)
+        {
+            return SourceConfig(std::move(config));
+        }
+
         [[nodiscard]] SourceKind Kind() const noexcept
         {
             if (std::holds_alternative<DesktopSourceConfig>(m_data))
@@ -81,7 +109,12 @@ namespace CaptureInterop::V2
                 return SourceKind::Desktop;
             }
 
-            return SourceKind::SystemAudio;
+            if (std::holds_alternative<SystemAudioSourceConfig>(m_data))
+            {
+                return SourceKind::SystemAudio;
+            }
+
+            return SourceKind::Microphone;
         }
 
         [[nodiscard]] SourceId Id() const noexcept
@@ -91,7 +124,12 @@ namespace CaptureInterop::V2
                 return desktop->id;
             }
 
-            return AsSystemAudio()->id;
+            if (const auto* systemAudio = AsSystemAudio())
+            {
+                return systemAudio->id;
+            }
+
+            return AsMicrophone()->id;
         }
 
         [[nodiscard]] bool IsVideo() const noexcept
@@ -101,7 +139,8 @@ namespace CaptureInterop::V2
 
         [[nodiscard]] bool IsAudio() const noexcept
         {
-            return Kind() == SourceKind::SystemAudio;
+            const SourceKind kind = Kind();
+            return kind == SourceKind::SystemAudio || kind == SourceKind::Microphone;
         }
 
         [[nodiscard]] const DesktopSourceConfig* AsDesktop() const noexcept
@@ -124,6 +163,16 @@ namespace CaptureInterop::V2
             return std::get_if<SystemAudioSourceConfig>(&m_data);
         }
 
+        [[nodiscard]] const MicrophoneSourceConfig* AsMicrophone() const noexcept
+        {
+            return std::get_if<MicrophoneSourceConfig>(&m_data);
+        }
+
+        [[nodiscard]] MicrophoneSourceConfig* AsMicrophone() noexcept
+        {
+            return std::get_if<MicrophoneSourceConfig>(&m_data);
+        }
+
     private:
         explicit SourceConfig(DesktopSourceConfig config)
             : m_data(std::move(config))
@@ -131,6 +180,11 @@ namespace CaptureInterop::V2
         }
 
         explicit SourceConfig(SystemAudioSourceConfig config)
+            : m_data(std::move(config))
+        {
+        }
+
+        explicit SourceConfig(MicrophoneSourceConfig config)
             : m_data(std::move(config))
         {
         }
@@ -158,6 +212,7 @@ namespace CaptureInterop::V2
         RecordingControlSettings controls;
         ToneMappingSettings toneMapping;
         DiagnosticsSettings diagnostics;
+        AudioMixerInputContract audioMixer;
 
         [[nodiscard]] const SourceConfig* FindSource(SourceId id) const noexcept
         {

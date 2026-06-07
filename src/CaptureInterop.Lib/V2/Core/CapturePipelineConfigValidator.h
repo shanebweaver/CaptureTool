@@ -63,6 +63,10 @@ namespace CaptureInterop::V2
                 {
                     ValidateSystemAudioSource(*audio, result);
                 }
+                else if (const MicrophoneSourceConfig* microphone = source.AsMicrophone())
+                {
+                    ValidateMicrophoneSource(*microphone, result);
+                }
             }
         }
 
@@ -106,6 +110,15 @@ namespace CaptureInterop::V2
                     Operation,
                     "Audio gain is outside the supported range");
             }
+        }
+
+        static void ValidateMicrophoneSource(const MicrophoneSourceConfig&, ValidationResult& result)
+        {
+            result.AddError(
+                CoreResultCode::UnsupportedOperation,
+                Component,
+                Operation,
+                "Microphone capture is not implemented");
         }
 
         static void ValidateOutput(const OutputSettings& output, ValidationResult& result)

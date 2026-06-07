@@ -72,6 +72,30 @@ namespace CaptureInteropTests
             Assert::AreEqual(-6.0f, source.AsSystemAudio()->controls.initialGain.gainDb);
         }
 
+        TEST_METHOD(SourceConfig_Microphone_PreservesFutureShapeWithoutImplementation)
+        {
+            MicrophoneSourceConfig microphone;
+            microphone.id = SourceId::FromValue(3);
+            microphone.audioStreamId = StreamId::FromValue(30);
+            microphone.name = "Future microphone";
+            microphone.armed = true;
+            microphone.controls.initiallyMuted = false;
+            microphone.controls.initialGain.gainDb = 0.0f;
+
+            const SourceConfig source = SourceConfig::Microphone(microphone);
+
+            Assert::AreEqual(
+                static_cast<int>(SourceKind::Microphone),
+                static_cast<int>(source.Kind()));
+            Assert::IsFalse(source.IsVideo());
+            Assert::IsTrue(source.IsAudio());
+            Assert::AreEqual(3u, source.Id().value);
+            Assert::IsNull(source.AsDesktop());
+            Assert::IsNull(source.AsSystemAudio());
+            Assert::IsNotNull(source.AsMicrophone());
+            Assert::AreEqual(30u, source.AsMicrophone()->audioStreamId.value);
+        }
+
         TEST_METHOD(CapturePipelineConfig_Default_HasNoSourcesOrOutputStreams)
         {
             const CapturePipelineConfig config;
@@ -83,6 +107,13 @@ namespace CaptureInteropTests
             Assert::IsTrue(config.controls.runtimeAudioGainEnabled);
             Assert::IsTrue(config.diagnostics.collectCounters);
             Assert::IsFalse(config.diagnostics.verboseLogging);
+            Assert::AreEqual(48000u, config.audioMixer.normalizedSampleRate);
+            Assert::AreEqual(2u, static_cast<uint32_t>(config.audioMixer.normalizedChannels));
+            Assert::AreEqual(
+                static_cast<int>(AudioSampleFormat::Float32),
+                static_cast<int>(config.audioMixer.normalizedSampleFormat));
+            Assert::IsTrue(config.audioMixer.sourceSpecificControlsBeforeMix);
+            Assert::IsTrue(config.audioMixer.firstImplementationWritesSingleAudioTrack);
         }
 
         TEST_METHOD(CapturePipelineConfig_CanExpressVideoOnlyMp4)
@@ -183,6 +214,21 @@ namespace CaptureInteropTests
             Assert::IsTrue(unarmedButMuted.controls.initiallyMuted);
             Assert::IsTrue(armedAndMuted.armed);
             Assert::IsTrue(armedAndMuted.controls.initiallyMuted);
+        }
+
+        TEST_METHOD(CapturePipelineConfig_UiVolumeZeroDoesNotMeanUnarmed)
+        {
+            SystemAudioSourceConfig audio;
+            audio.id = SourceId::FromValue(2);
+            audio.armed = true;
+            audio.controls.initiallyMuted = true;
+            audio.controls.initialGain.gainDb = AudioGainSettings::MinimumGainDb;
+
+            const SourceConfig source = SourceConfig::SystemAudio(audio);
+
+            Assert::IsTrue(source.AsSystemAudio()->armed);
+            Assert::IsTrue(source.AsSystemAudio()->controls.initiallyMuted);
+            Assert::AreEqual(AudioGainSettings::MinimumGainDb, source.AsSystemAudio()->controls.initialGain.gainDb);
         }
 
         TEST_METHOD(CapturePipelineConfig_FindsAudioControlsBySourceId)

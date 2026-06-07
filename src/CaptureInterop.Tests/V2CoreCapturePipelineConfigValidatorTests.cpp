@@ -197,6 +197,27 @@ namespace CaptureInteropTests
             Assert::AreEqual("An unarmed audio source cannot be initially muted", result.errors[0].message.c_str());
         }
 
+        TEST_METHOD(Validate_MicrophoneSource_ReturnsUnsupportedOperation)
+        {
+            CapturePipelineConfig config = CreateValidVideoOnlyMp4Config();
+
+            MicrophoneSourceConfig microphone;
+            microphone.id = SourceId::FromValue(3);
+            microphone.audioStreamId = StreamId::FromValue(30);
+            microphone.armed = true;
+            config.sources.push_back(SourceConfig::Microphone(microphone));
+            config.output.audio = AudioEncodingSettings{ AudioCodec::Aac, 192000, 48000, 2 };
+
+            const CapturePipelineConfigValidator validator;
+            const ValidationResult result = validator.Validate(config);
+
+            Assert::IsFalse(result.IsValid());
+            Assert::AreEqual(
+                static_cast<uint32_t>(CoreResultCode::UnsupportedOperation),
+                static_cast<uint32_t>(result.errors[0].code));
+            Assert::AreEqual("Microphone capture is not implemented", result.errors[0].message.c_str());
+        }
+
         TEST_METHOD(Validate_InvalidDesktopFrameRate_Fails)
         {
             CapturePipelineConfig config = CreateValidVideoOnlyMp4Config();
