@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "CppUnitTest.h"
+#include "V2/Desktop/FakeDesktopD3DDeviceDependency.h"
 #include "V2/Desktop/FakeDesktopCaptureProvider.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -27,6 +28,11 @@ namespace
             SourceDescriptor{ SourceId::FromValue(1), SourceKind::Desktop, "Desktop" },
             { StreamDescriptor{ StreamId::FromValue(1), SourceId::FromValue(1), MediaKind::Video, "Desktop video" } },
             CreateMediaType());
+    }
+
+    std::shared_ptr<FakeDesktopD3DDeviceDependency> CreateDependency()
+    {
+        return std::make_shared<FakeDesktopD3DDeviceDependency>();
     }
 
     DesktopCaptureFrame CreateFrame(uint64_t sequence = 1)
@@ -76,10 +82,52 @@ namespace CaptureInteropTests
                     receivedSequence = frame.sequenceNumber;
                 });
 
+            Assert::IsTrue(provider.ConfigureDeviceDependency(CreateDependency()).IsSuccess());
             Assert::IsTrue(provider.Start().IsSuccess());
             Assert::IsTrue(provider.EmitFrame(CreateFrame(42)).IsSuccess());
 
             Assert::AreEqual(42ull, receivedSequence);
+        }
+
+        TEST_METHOD(FakeProvider_StartWithoutD3DDependency_ReturnsInvalidState)
+        {
+            FakeDesktopCaptureProvider provider = CreateProvider();
+
+            const OperationResult result = provider.Start();
+
+            Assert::IsFalse(result.IsSuccess());
+            Assert::AreEqual(static_cast<int>(CoreResultCode::InvalidState), static_cast<int>(result.code));
+            Assert::AreEqual("Start", result.diagnostic->operation.c_str());
+        }
+
+        TEST_METHOD(FakeProvider_ConfigureDeviceDependency_StoresGraphDependency)
+        {
+            FakeDesktopCaptureProvider provider = CreateProvider();
+            std::shared_ptr<FakeDesktopD3DDeviceDependency> dependency = CreateDependency();
+
+            const OperationResult result = provider.ConfigureDeviceDependency(dependency);
+
+            Assert::IsTrue(result.IsSuccess());
+            Assert::IsTrue(provider.DeviceDependency() == dependency);
+        }
+
+        TEST_METHOD(FakeProvider_ConfigureRemovedDevice_ReturnsStructuredFailure)
+        {
+            FakeDesktopCaptureProvider provider = CreateProvider();
+            std::shared_ptr<FakeDesktopD3DDeviceDependency> dependency = CreateDependency();
+            dependency->SetHealthFailure(OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "FakeDesktopD3DDeviceDependency",
+                "CheckDeviceHealth",
+                "D3D device was removed or reset",
+                static_cast<int64_t>(0x887A0005)));
+
+            const OperationResult result = provider.ConfigureDeviceDependency(dependency);
+
+            Assert::IsFalse(result.IsSuccess());
+            Assert::AreEqual(static_cast<int>(CoreResultCode::NativeFailure), static_cast<int>(result.code));
+            Assert::AreEqual("CheckDeviceHealth", result.diagnostic->operation.c_str());
+            Assert::AreEqual(static_cast<int64_t>(0x887A0005), *result.diagnostic->nativeStatus);
         }
 
         TEST_METHOD(FakeProvider_EmitBeforeStart_ReturnsInvalidState)
@@ -106,6 +154,7 @@ namespace CaptureInteropTests
                     });
             }
 
+            Assert::IsTrue(provider.ConfigureDeviceDependency(CreateDependency()).IsSuccess());
             Assert::IsTrue(provider.Start().IsSuccess());
             Assert::IsTrue(provider.EmitFrame(CreateFrame()).IsSuccess());
 
@@ -124,6 +173,7 @@ namespace CaptureInteropTests
                     token.reset();
                 });
 
+            Assert::IsTrue(provider.ConfigureDeviceDependency(CreateDependency()).IsSuccess());
             Assert::IsTrue(provider.Start().IsSuccess());
 
             Assert::IsTrue(provider.EmitFrame(CreateFrame()).IsSuccess());
@@ -140,6 +190,7 @@ namespace CaptureInteropTests
                 {
                 });
 
+            Assert::IsTrue(provider.ConfigureDeviceDependency(CreateDependency()).IsSuccess());
             Assert::IsTrue(provider.Start().IsSuccess());
             Assert::IsTrue(provider.EmitFrame(CreateFrame()).IsSuccess());
             Assert::IsTrue(provider.EmitFrame(CreateFrame(2)).IsSuccess());

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "V2/Desktop/DesktopMonitorResolver.h"
+#include "V2/Desktop/FakeDesktopD3DDeviceDependency.h"
 #include "V2/Desktop/FakeDesktopCaptureProvider.h"
 #include "V2/Desktop/WindowsDesktopVideoSource.h"
 
@@ -53,6 +54,11 @@ namespace
             config.SourceDescriptor(),
             BuildDesktopVideoStreams(config),
             CreateMediaType());
+    }
+
+    std::shared_ptr<FakeDesktopD3DDeviceDependency> CreateDependency()
+    {
+        return std::make_shared<FakeDesktopD3DDeviceDependency>();
     }
 
     std::shared_ptr<FakeDesktopMonitorResolver> CreateResolverWithConfiguredMonitor()
@@ -108,18 +114,74 @@ namespace CaptureInteropTests
         TEST_METHOD(Start_DelegatesToProvider)
         {
             std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
-            WindowsDesktopVideoSource source(CreateConfig(), provider);
+            std::shared_ptr<FakeDesktopD3DDeviceDependency> dependency = CreateDependency();
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, dependency);
 
             const OperationResult result = source.Start();
 
             Assert::IsTrue(result.IsSuccess());
+            Assert::IsTrue(provider->DeviceDependency() == dependency);
             Assert::IsTrue(provider->Diagnostics().framesProduced == 0);
+        }
+
+        TEST_METHOD(Start_WithoutD3DDependency_ReturnsInvalidState)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            WindowsDesktopVideoSource source(CreateConfig(), provider);
+
+            const OperationResult result = source.Start();
+
+            Assert::IsFalse(result.IsSuccess());
+            Assert::AreEqual(static_cast<int>(CoreResultCode::InvalidState), static_cast<int>(result.code));
+            Assert::AreEqual("WindowsDesktopVideoSource", result.diagnostic->component.c_str());
+            Assert::AreEqual("Start", result.diagnostic->operation.c_str());
+        }
+
+        TEST_METHOD(Start_WhenD3DDependencyReportsFailure_ReturnsStructuredFailureBeforeProviderStart)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            std::shared_ptr<FakeDesktopD3DDeviceDependency> dependency = CreateDependency();
+            dependency->SetHealthFailure(OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "FakeDesktopD3DDeviceDependency",
+                "CheckDeviceHealth",
+                "D3D device was removed or reset",
+                static_cast<int64_t>(0x887A0007)));
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, dependency);
+
+            const OperationResult result = source.Start();
+
+            Assert::IsFalse(result.IsSuccess());
+            Assert::AreEqual(static_cast<int>(CoreResultCode::NativeFailure), static_cast<int>(result.code));
+            Assert::AreEqual("CheckDeviceHealth", result.diagnostic->operation.c_str());
+            Assert::IsFalse(provider->EmitFrame(CreateFrame()).IsSuccess());
+        }
+
+        TEST_METHOD(Stop_ReleasesProviderDeviceResourcesBeforeGraphDependencyDestroyed)
+        {
+            auto lifecycleEvents = std::make_shared<std::vector<std::string>>();
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            provider->SetLifecycleEvents(lifecycleEvents);
+            std::shared_ptr<FakeDesktopD3DDeviceDependency> dependency =
+                std::make_shared<FakeDesktopD3DDeviceDependency>(lifecycleEvents);
+
+            {
+                WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, dependency);
+                Assert::IsTrue(source.Start().IsSuccess());
+                Assert::IsTrue(source.Stop().IsSuccess());
+            }
+
+            dependency.reset();
+
+            Assert::AreEqual(static_cast<size_t>(2), lifecycleEvents->size());
+            Assert::AreEqual("provider-device-resources-released", lifecycleEvents->at(0).c_str());
+            Assert::AreEqual("dependency-destroyed", lifecycleEvents->at(1).c_str());
         }
 
         TEST_METHOD(FakeProviderFrame_IsForwardedAsVideoSample)
         {
             std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
-            WindowsDesktopVideoSource source(CreateConfig(), provider);
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
             VideoSample receivedSample;
             CallbackRegistrationToken token = source.RegisterFrameArrivedHandler(
                 [&receivedSample](const VideoSample& sample)
@@ -141,7 +203,7 @@ namespace CaptureInteropTests
         TEST_METHOD(CallbackTokenDestroyed_PreventsForwardedSample)
         {
             std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
-            WindowsDesktopVideoSource source(CreateConfig(), provider);
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
             uint32_t invocationCount = 0;
 
             {
@@ -161,7 +223,7 @@ namespace CaptureInteropTests
         TEST_METHOD(Stop_DisconnectsProviderCallback)
         {
             std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
-            WindowsDesktopVideoSource source(CreateConfig(), provider);
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
             uint32_t invocationCount = 0;
             CallbackRegistrationToken token = source.RegisterFrameArrivedHandler(
                 [&invocationCount](const VideoSample&)
@@ -180,7 +242,7 @@ namespace CaptureInteropTests
         {
             std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
             std::shared_ptr<FakeDesktopMonitorResolver> resolver = CreateResolverWithConfiguredMonitor();
-            WindowsDesktopVideoSource source(CreateConfig(), provider, resolver);
+            WindowsDesktopVideoSource source(CreateConfig(), provider, resolver, CreateDependency());
 
             const OperationResult result = source.Start();
             const std::optional<DesktopMonitorInfo> monitor = source.ResolvedMonitor();
@@ -198,7 +260,7 @@ namespace CaptureInteropTests
         {
             std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
             std::shared_ptr<FakeDesktopMonitorResolver> resolver = CreateResolverWithConfiguredMonitor();
-            WindowsDesktopVideoSource source(CreateConfig(), provider, resolver);
+            WindowsDesktopVideoSource source(CreateConfig(), provider, resolver, CreateDependency());
 
             Assert::IsTrue(source.Start().IsSuccess());
 
@@ -216,7 +278,8 @@ namespace CaptureInteropTests
             WindowsDesktopVideoSource source(
                 CreateConfigWithRegion(CaptureRectangle{ 100, 200, 800, 600 }),
                 provider,
-                resolver);
+                resolver,
+                CreateDependency());
             CallbackRegistrationToken token = source.RegisterFrameArrivedHandler(
                 [&receivedSample](const VideoSample& sample)
                 {
@@ -240,7 +303,8 @@ namespace CaptureInteropTests
             WindowsDesktopVideoSource source(
                 CreateConfigWithRegion(CaptureRectangle{ -1, 0, 800, 600 }),
                 provider,
-                resolver);
+                resolver,
+                CreateDependency());
 
             const OperationResult result = source.Start();
 
@@ -256,7 +320,8 @@ namespace CaptureInteropTests
             WindowsDesktopVideoSource source(
                 CreateConfigWithRegion(CaptureRectangle{ 0, 0, 0, 600 }),
                 provider,
-                resolver);
+                resolver,
+                CreateDependency());
 
             const OperationResult result = source.Start();
 
@@ -271,7 +336,8 @@ namespace CaptureInteropTests
             WindowsDesktopVideoSource source(
                 CreateConfigWithRegion(CaptureRectangle{ 2000, 1000, 800, 600 }),
                 provider,
-                resolver);
+                resolver,
+                CreateDependency());
 
             const OperationResult result = source.Start();
 
@@ -283,7 +349,7 @@ namespace CaptureInteropTests
         {
             std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
             auto resolver = std::make_shared<FakeDesktopMonitorResolver>();
-            WindowsDesktopVideoSource source(CreateConfig(), provider, resolver);
+            WindowsDesktopVideoSource source(CreateConfig(), provider, resolver, CreateDependency());
 
             const OperationResult result = source.Start();
 

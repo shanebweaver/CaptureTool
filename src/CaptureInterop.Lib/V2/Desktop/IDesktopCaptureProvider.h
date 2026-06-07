@@ -1,11 +1,13 @@
 #pragma once
 
+#include "DesktopD3DDeviceDependency.h"
 #include "V2/Core/MediaSamples.h"
 #include "V2/Core/PipelineInterfaces.h"
 #include "V2/Core/ResultTypes.h"
 
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -41,7 +43,15 @@ namespace CaptureInterop::V2::Desktop
         [[nodiscard]] virtual std::vector<StreamDescriptor> DescribeStreams() const = 0;
         [[nodiscard]] virtual VideoMediaType CurrentMediaType() const = 0;
         [[nodiscard]] virtual DesktopCaptureProviderDiagnostics Diagnostics() const = 0;
+        [[nodiscard]] virtual std::shared_ptr<IDesktopD3DDeviceDependency> DeviceDependency() const = 0;
 
+        [[nodiscard]] virtual OperationResult ConfigureDeviceDependency(
+            std::shared_ptr<IDesktopD3DDeviceDependency> dependency) noexcept = 0;
+
+        // Called during source stop and failed-start cleanup before the graph-owned
+        // D3D dependency is released. Providers must drop API-specific capture
+        // objects and texture references here.
+        virtual void ReleaseDeviceResources() noexcept = 0;
         [[nodiscard]] virtual OperationResult Start() noexcept = 0;
         [[nodiscard]] virtual OperationResult Stop() noexcept = 0;
 

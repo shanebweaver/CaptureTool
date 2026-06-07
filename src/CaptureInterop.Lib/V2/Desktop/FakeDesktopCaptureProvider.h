@@ -48,6 +48,52 @@ namespace CaptureInterop::V2::Desktop
             return m_diagnostics;
         }
 
+        [[nodiscard]] std::shared_ptr<IDesktopD3DDeviceDependency> DeviceDependency() const override
+        {
+            std::lock_guard lock(m_mutex);
+            return m_deviceDependency;
+        }
+
+        [[nodiscard]] OperationResult ConfigureDeviceDependency(
+            std::shared_ptr<IDesktopD3DDeviceDependency> dependency) noexcept override
+        {
+            if (!dependency)
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::InvalidState,
+                    ProviderName(),
+                    "ConfigureDeviceDependency",
+                    "D3D device dependency is required");
+            }
+
+            OperationResult health = dependency->CheckDeviceHealth();
+            if (!health.IsSuccess())
+            {
+                return health;
+            }
+
+            std::lock_guard lock(m_mutex);
+            m_deviceDependency = std::move(dependency);
+            return OperationResult::Success();
+        }
+
+        void ReleaseDeviceResources() noexcept override
+        {
+            std::lock_guard lock(m_mutex);
+            if (m_deviceDependency && m_lifecycleEvents)
+            {
+                m_lifecycleEvents->push_back("provider-device-resources-released");
+            }
+
+            m_deviceDependency.reset();
+        }
+
+        void SetLifecycleEvents(std::shared_ptr<std::vector<std::string>> lifecycleEvents)
+        {
+            std::lock_guard lock(m_mutex);
+            m_lifecycleEvents = std::move(lifecycleEvents);
+        }
+
         [[nodiscard]] OperationResult Start() noexcept override
         {
             std::lock_guard lock(m_mutex);
@@ -58,6 +104,15 @@ namespace CaptureInterop::V2::Desktop
                     ProviderName(),
                     "Start",
                     "Provider is already started");
+            }
+
+            if (!m_deviceDependency)
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::InvalidState,
+                    ProviderName(),
+                    "Start",
+                    "D3D device dependency must be configured before provider start");
             }
 
             m_started = true;
@@ -169,6 +224,8 @@ namespace CaptureInterop::V2::Desktop
         mutable std::mutex m_mutex;
         std::vector<HandlerEntry> m_handlers;
         DesktopCaptureProviderDiagnostics m_diagnostics;
+        std::shared_ptr<IDesktopD3DDeviceDependency> m_deviceDependency;
+        std::shared_ptr<std::vector<std::string>> m_lifecycleEvents;
         uint64_t m_nextHandlerId{ 1 };
         bool m_started{ false };
     };

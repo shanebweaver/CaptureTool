@@ -93,8 +93,10 @@
     <ClInclude Include="AudioCaptureDevice.h" />
     <ClInclude Include="AudioCaptureHandler.h" />
     <ClInclude Include="V2\Core\AudioControlProcessors.h" />
+    <ClInclude Include="V2\Desktop\DesktopD3DDeviceDependency.h" />
     <ClInclude Include="V2\Desktop\DesktopMonitorResolver.h" />
     <ClInclude Include="V2\Desktop\DesktopVideoSourceConfig.h" />
+    <ClInclude Include="V2\Desktop\FakeDesktopD3DDeviceDependency.h" />
     <ClInclude Include="V2\Desktop\FakeDesktopCaptureProvider.h" />
     <ClInclude Include="V2\Desktop\IDesktopCaptureProvider.h" />
     <ClInclude Include="V2\Desktop\WindowsDesktopVideoSource.h" />

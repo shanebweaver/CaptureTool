@@ -17,11 +17,18 @@ namespace CaptureInterop::V2::Desktop
         WindowsDesktopVideoSource(
             DesktopVideoSourceConfig config,
             std::shared_ptr<IDesktopCaptureProvider> provider,
-            std::shared_ptr<IDesktopMonitorResolver> monitorResolver = nullptr)
+            std::shared_ptr<IDesktopMonitorResolver> monitorResolver = nullptr,
+            std::shared_ptr<IDesktopD3DDeviceDependency> d3dDeviceDependency = nullptr)
             : m_config(std::move(config)),
               m_provider(std::move(provider)),
-              m_monitorResolver(std::move(monitorResolver))
+              m_monitorResolver(std::move(monitorResolver)),
+              m_d3dDeviceDependency(std::move(d3dDeviceDependency))
         {
+        }
+
+        ~WindowsDesktopVideoSource() override
+        {
+            [[maybe_unused]] OperationResult stopResult = Stop();
         }
 
         [[nodiscard]] SourceDescriptor Describe() const override
@@ -43,6 +50,21 @@ namespace CaptureInterop::V2::Desktop
                     "WindowsDesktopVideoSource",
                     "Start",
                     "Desktop capture provider is required");
+            }
+
+            if (!m_d3dDeviceDependency)
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::InvalidState,
+                    "WindowsDesktopVideoSource",
+                    "Start",
+                    "D3D device dependency is required");
+            }
+
+            OperationResult deviceHealth = m_d3dDeviceDependency->CheckDeviceHealth();
+            if (!deviceHealth.IsSuccess())
+            {
+                return deviceHealth;
             }
 
             if (m_monitorResolver)
@@ -80,9 +102,16 @@ namespace CaptureInterop::V2::Desktop
                 m_effectiveMediaType = effectiveMediaType;
             }
 
+            OperationResult configureResult = m_provider->ConfigureDeviceDependency(m_d3dDeviceDependency);
+            if (!configureResult.IsSuccess())
+            {
+                return configureResult;
+            }
+
             OperationResult startResult = m_provider->Start();
             if (!startResult.IsSuccess())
             {
+                m_provider->ReleaseDeviceResources();
                 return startResult;
             }
 
@@ -120,7 +149,14 @@ namespace CaptureInterop::V2::Desktop
             }
 
             providerCallback.reset();
-            return m_provider ? m_provider->Stop() : OperationResult::Success();
+            if (!m_provider)
+            {
+                return OperationResult::Success();
+            }
+
+            OperationResult stopResult = m_provider->Stop();
+            m_provider->ReleaseDeviceResources();
+            return stopResult;
         }
 
         [[nodiscard]] CallbackRegistrationToken RegisterFrameArrivedHandler(VideoSampleHandler handler) override
@@ -263,6 +299,7 @@ namespace CaptureInterop::V2::Desktop
         DesktopVideoSourceConfig m_config;
         std::shared_ptr<IDesktopCaptureProvider> m_provider;
         std::shared_ptr<IDesktopMonitorResolver> m_monitorResolver;
+        std::shared_ptr<IDesktopD3DDeviceDependency> m_d3dDeviceDependency;
         mutable std::mutex m_mutex;
         std::vector<HandlerEntry> m_handlers;
         CallbackRegistrationToken m_providerCallback;
