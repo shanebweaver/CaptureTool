@@ -32,16 +32,49 @@ namespace CaptureInterop::V2::Output
         uint32_t sinkStreamIndex{ 0 };
     };
 
+    struct MediaFoundationH264VideoStreamConfig
+    {
+        StreamId streamId;
+        uint32_t width{ 0 };
+        uint32_t height{ 0 };
+        uint32_t bitrate{ 0 };
+        Rational frameRate;
+        uint32_t pixelAspectRatioNumerator{ 1 };
+        uint32_t pixelAspectRatioDenominator{ 1 };
+        VideoPixelFormat inputPixelFormat{ VideoPixelFormat::Bgra8 };
+    };
+
+    struct MediaFoundationStreamConfigurationResult
+    {
+        OperationResult result;
+        uint32_t sinkStreamIndex{ 0 };
+
+        [[nodiscard]] bool IsSuccess() const noexcept
+        {
+            return result.IsSuccess();
+        }
+    };
+
+    class IMediaFoundationSinkWriterSession
+    {
+    public:
+        virtual ~IMediaFoundationSinkWriterSession() = default;
+
+        [[nodiscard]] virtual MediaFoundationStreamConfigurationResult ConfigureH264VideoStream(
+            const MediaFoundationH264VideoStreamConfig& config) noexcept = 0;
+        [[nodiscard]] virtual OperationResult BeginWriting() noexcept = 0;
+    };
+
     struct MediaFoundationSinkWriterCreationResult
     {
         OperationResult result;
-        wil::com_ptr<IMFSinkWriter> sinkWriter;
+        std::shared_ptr<IMediaFoundationSinkWriterSession> sinkWriter;
         bool attributesConfigured{ false };
         bool writerCreated{ false };
 
         [[nodiscard]] bool IsSuccess() const noexcept
         {
-            return result.IsSuccess() && writerCreated;
+            return result.IsSuccess() && writerCreated && sinkWriter != nullptr;
         }
     };
 
@@ -86,6 +119,11 @@ namespace CaptureInterop::V2::Output
 
         [[nodiscard]] OperationResult ValidateOpenPlan(const OutputPlan& plan) const;
         [[nodiscard]] static OperationResult ValidateStreamShape(const OutputStreamPlan& stream);
+        [[nodiscard]] OperationResult ConfigureMp4Streams(
+            const OutputPlan& plan,
+            std::vector<MediaFoundationSinkStreamMapping>& mappings) noexcept;
+        [[nodiscard]] static MediaFoundationH264VideoStreamConfig BuildH264VideoStreamConfig(
+            const OutputStreamPlan& stream) noexcept;
         [[nodiscard]] static OperationResult Failure(
             CoreResultCode code,
             const char* operation,
@@ -99,7 +137,7 @@ namespace CaptureInterop::V2::Output
         MediaFoundationFileSinkState m_state{ MediaFoundationFileSinkState::Created };
         std::vector<MediaFoundationSinkStreamMapping> m_streamMappings;
         MediaFoundationRuntimeLease m_runtimeLease;
-        wil::com_ptr<IMFSinkWriter> m_sinkWriter;
+        std::shared_ptr<IMediaFoundationSinkWriterSession> m_sinkWriter;
         bool m_sinkWriterCreated{ false };
     };
 }

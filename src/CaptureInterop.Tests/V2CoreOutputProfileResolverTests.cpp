@@ -34,6 +34,14 @@ namespace
         config.output.video = VideoEncodingSettings{ VideoCodec::H264, 8'000'000, Rational::From(60, 1), 120, true };
         return config;
     }
+
+    CapturePipelineConfig CreateMp4RegionVideoConfig()
+    {
+        CapturePipelineConfig config = CreateMp4VideoConfig();
+        DesktopSourceConfig* desktop = config.sources[0].AsDesktop();
+        desktop->captureArea = CaptureRectangle{ 10, 20, 1280, 720 };
+        return config;
+    }
 }
 
 namespace CaptureInteropTests
@@ -57,6 +65,25 @@ namespace CaptureInteropTests
             Assert::AreEqual(1u, result.plan->streams[0].streamId.value);
             Assert::AreEqual(static_cast<int>(MediaKind::Video), static_cast<int>(result.plan->streams[0].kind));
             Assert::AreEqual(static_cast<int>(VideoCodec::H264), static_cast<int>(result.plan->streams[0].video->codec));
+        }
+
+        TEST_METHOD(Resolve_Mp4RegionVideo_PlansVideoMediaTypeWhenDimensionsAreKnown)
+        {
+            const CapturePipelineConfig config = CreateMp4RegionVideoConfig();
+            OutputProfileResolver resolver;
+
+            const OutputProfileResolutionResult result = resolver.Resolve(config);
+
+            Assert::IsTrue(result.IsSuccess());
+            const OutputStreamPlan& stream = result.plan->streams[0];
+            Assert::IsTrue(stream.videoMediaType.has_value());
+            Assert::AreEqual(1280u, stream.videoMediaType->width);
+            Assert::AreEqual(720u, stream.videoMediaType->height);
+            Assert::AreEqual(60u, stream.videoMediaType->frameRate.numerator);
+            Assert::AreEqual(1u, stream.videoMediaType->frameRate.denominator);
+            Assert::AreEqual(
+                static_cast<int>(VideoPixelFormat::Bgra8),
+                static_cast<int>(stream.videoMediaType->pixelFormat));
         }
 
         TEST_METHOD(Resolve_Mp4VideoAndAudio_PlansH264AndAacStreams)

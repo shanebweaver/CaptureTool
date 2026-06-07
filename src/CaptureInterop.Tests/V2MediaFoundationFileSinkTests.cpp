@@ -12,6 +12,20 @@ using namespace CaptureInterop::V2::Output;
 
 namespace
 {
+    VideoMediaType CreatePlannedVideoMediaType(
+        uint32_t width = 1920,
+        uint32_t height = 1080,
+        Rational frameRate = Rational::From(60, 1),
+        VideoPixelFormat pixelFormat = VideoPixelFormat::Bgra8)
+    {
+        VideoMediaType mediaType;
+        mediaType.width = width;
+        mediaType.height = height;
+        mediaType.frameRate = frameRate;
+        mediaType.pixelFormat = pixelFormat;
+        return mediaType;
+    }
+
     class FakeMediaFoundationRuntimeApi final : public IMediaFoundationRuntimeApi
     {
     public:
@@ -38,9 +52,47 @@ namespace
         long m_startupResult{ S_OK };
     };
 
+    class FakeSinkWriterSession final : public IMediaFoundationSinkWriterSession
+    {
+    public:
+        [[nodiscard]] MediaFoundationStreamConfigurationResult ConfigureH264VideoStream(
+            const MediaFoundationH264VideoStreamConfig& config) noexcept override
+        {
+            ++configureVideoCalls;
+            lastVideoConfig = config;
+            if (configureVideoResult.IsFailure())
+            {
+                return MediaFoundationStreamConfigurationResult{ configureVideoResult, 0 };
+            }
+
+            return MediaFoundationStreamConfigurationResult{
+                OperationResult::Success(),
+                nextVideoStreamIndex
+            };
+        }
+
+        [[nodiscard]] OperationResult BeginWriting() noexcept override
+        {
+            ++beginWritingCalls;
+            return beginWritingResult;
+        }
+
+        int configureVideoCalls{ 0 };
+        int beginWritingCalls{ 0 };
+        uint32_t nextVideoStreamIndex{ 42 };
+        std::optional<MediaFoundationH264VideoStreamConfig> lastVideoConfig;
+        OperationResult configureVideoResult{ OperationResult::Success() };
+        OperationResult beginWritingResult{ OperationResult::Success() };
+    };
+
     class FakeSinkWriterFactory final : public IMediaFoundationSinkWriterFactory
     {
     public:
+        FakeSinkWriterFactory()
+            : session(std::make_shared<FakeSinkWriterSession>())
+        {
+        }
+
         [[nodiscard]] MediaFoundationSinkWriterCreationResult CreateFileSinkWriter(
             const std::wstring& outputPath) noexcept override
         {
@@ -58,7 +110,7 @@ namespace
 
             return MediaFoundationSinkWriterCreationResult{
                 OperationResult::Success(),
-                {},
+                writerCreated ? session : nullptr,
                 attributesConfigured,
                 writerCreated
             };
@@ -69,6 +121,7 @@ namespace
         bool attributesConfigured{ true };
         bool writerCreated{ true };
         OperationResult nextResult{ OperationResult::Success() };
+        std::shared_ptr<FakeSinkWriterSession> session;
     };
 
     struct SinkHarness
@@ -98,7 +151,8 @@ namespace
             SourceId::FromValue(10),
             MediaKind::Video,
             VideoEncodingSettings{ codec, bitrate, frameRate, 120, true },
-            std::nullopt
+            std::nullopt,
+            CreatePlannedVideoMediaType(1920, 1080, frameRate)
         };
     }
 
@@ -114,7 +168,8 @@ namespace
             SourceId::FromValue(20),
             MediaKind::Audio,
             std::nullopt,
-            AudioEncodingSettings{ codec, bitrate, sampleRate, channels }
+            AudioEncodingSettings{ codec, bitrate, sampleRate, channels },
+            std::nullopt
         };
     }
 
@@ -183,16 +238,31 @@ namespace CaptureInteropTests
 
             Assert::IsTrue(result.IsSuccess());
             Assert::AreEqual(
-                static_cast<int>(MediaFoundationFileSinkState::Opened),
+                static_cast<int>(MediaFoundationFileSinkState::WritingReady),
                 static_cast<int>(harness.sink.State()));
             const std::vector<MediaFoundationSinkStreamMapping> mappings = harness.sink.StreamMappings();
             Assert::AreEqual(static_cast<size_t>(1), mappings.size());
             Assert::AreEqual(1u, mappings[0].streamId.value);
-            Assert::AreEqual(0u, mappings[0].sinkStreamIndex);
+            Assert::AreEqual(42u, mappings[0].sinkStreamIndex);
             Assert::AreEqual(static_cast<int>(MediaKind::Video), static_cast<int>(mappings[0].kind));
             Assert::IsTrue(harness.sink.HasSinkWriter());
             Assert::AreEqual(1, harness.runtimeApi->startupCalls);
             Assert::AreEqual(1, harness.sinkWriterFactory->createCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->configureVideoCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->beginWritingCalls);
+
+            const auto& videoConfig = harness.sinkWriterFactory->session->lastVideoConfig;
+            Assert::IsTrue(videoConfig.has_value());
+            Assert::AreEqual(1920u, videoConfig->width);
+            Assert::AreEqual(1080u, videoConfig->height);
+            Assert::AreEqual(8'000'000u, videoConfig->bitrate);
+            Assert::AreEqual(60u, videoConfig->frameRate.numerator);
+            Assert::AreEqual(1u, videoConfig->frameRate.denominator);
+            Assert::AreEqual(1u, videoConfig->pixelAspectRatioNumerator);
+            Assert::AreEqual(1u, videoConfig->pixelAspectRatioDenominator);
+            Assert::AreEqual(
+                static_cast<int>(VideoPixelFormat::Bgra8),
+                static_cast<int>(videoConfig->inputPixelFormat));
         }
 
         TEST_METHOD(Open_Mp4VideoPlusAudioPlan_MapsBothStreamsInOrder)
@@ -209,10 +279,15 @@ namespace CaptureInteropTests
             const auto audio = harness.sink.FindStream(StreamId::FromValue(8));
             Assert::IsTrue(video.has_value());
             Assert::IsTrue(audio.has_value());
-            Assert::AreEqual(0u, video->sinkStreamIndex);
+            Assert::AreEqual(42u, video->sinkStreamIndex);
             Assert::AreEqual(1u, audio->sinkStreamIndex);
             Assert::AreEqual(static_cast<int>(MediaKind::Video), static_cast<int>(video->kind));
             Assert::AreEqual(static_cast<int>(MediaKind::Audio), static_cast<int>(audio->kind));
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->configureVideoCalls);
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->beginWritingCalls);
+            Assert::AreEqual(
+                static_cast<int>(MediaFoundationFileSinkState::Opened),
+                static_cast<int>(harness.sink.State()));
         }
 
         TEST_METHOD(Open_Mp3PlanWithVideoStream_FailsDefensively)
@@ -263,6 +338,24 @@ namespace CaptureInteropTests
             Assert::AreEqual(
                 "Video output stream is missing required media fields",
                 result.diagnostic->message.c_str());
+        }
+
+        TEST_METHOD(Open_MissingVideoMediaTypeFields_FailsBeforeRuntimeLease)
+        {
+            OutputStreamPlan stream = CreateVideoStream();
+            stream.videoMediaType = CreatePlannedVideoMediaType(0, 1080);
+
+            SinkHarness harness;
+            const OutputPlan plan = CreatePlan(ContainerFormat::Mp4, { stream });
+
+            const OperationResult result = harness.sink.Open(plan);
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                "Video output stream is missing required media type fields",
+                result.diagnostic->message.c_str());
+            Assert::AreEqual(0, harness.runtimeApi->startupCalls);
+            Assert::AreEqual(0, harness.sinkWriterFactory->createCalls);
         }
 
         TEST_METHOD(Open_UnknownStreamKind_Fails)
@@ -430,6 +523,48 @@ namespace CaptureInteropTests
             Assert::AreEqual(1, harness.sinkWriterFactory->createCalls);
             Assert::AreEqual(0u, harness.runtime->ActiveLeaseCount());
             Assert::AreEqual(1, harness.runtimeApi->shutdownCalls);
+        }
+
+        TEST_METHOD(Open_VideoStreamConfigurationFailure_ReleasesRuntimeLease)
+        {
+            SinkHarness harness;
+            harness.sinkWriterFactory->session->configureVideoResult = OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "MediaFoundationFileSink",
+                "AddVideoStream",
+                "simulated video stream setup failure",
+                E_FAIL);
+
+            const OperationResult result =
+                harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() }));
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->configureVideoCalls);
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->beginWritingCalls);
+            Assert::AreEqual(0u, harness.runtime->ActiveLeaseCount());
+            Assert::AreEqual(1, harness.runtimeApi->shutdownCalls);
+            Assert::IsFalse(harness.sink.HasSinkWriter());
+        }
+
+        TEST_METHOD(Open_BeginWritingFailure_ReleasesRuntimeLease)
+        {
+            SinkHarness harness;
+            harness.sinkWriterFactory->session->beginWritingResult = OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "MediaFoundationFileSink",
+                "BeginWriting",
+                "simulated begin writing failure",
+                E_FAIL);
+
+            const OperationResult result =
+                harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() }));
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->configureVideoCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->beginWritingCalls);
+            Assert::AreEqual(0u, harness.runtime->ActiveLeaseCount());
+            Assert::AreEqual(1, harness.runtimeApi->shutdownCalls);
+            Assert::IsFalse(harness.sink.HasSinkWriter());
         }
     };
 }

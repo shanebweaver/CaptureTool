@@ -15,6 +15,7 @@ namespace CaptureInterop::V2
         MediaKind kind{ MediaKind::Unknown };
         std::optional<VideoEncodingSettings> video;
         std::optional<AudioEncodingSettings> audio;
+        std::optional<VideoMediaType> videoMediaType;
 
         [[nodiscard]] bool IsVideo() const noexcept
         {
@@ -150,7 +151,8 @@ namespace CaptureInterop::V2
                     desktop->id,
                     MediaKind::Video,
                     config.output.video,
-                    std::nullopt
+                    std::nullopt,
+                    BuildDesktopVideoMediaType(*desktop, *config.output.video)
                 });
             }
 
@@ -182,7 +184,8 @@ namespace CaptureInterop::V2
                     audio->id,
                     MediaKind::Audio,
                     std::nullopt,
-                    config.output.audio
+                    config.output.audio,
+                    std::nullopt
                 });
             }
 
@@ -241,7 +244,8 @@ namespace CaptureInterop::V2
                 audio->id,
                 MediaKind::Audio,
                 std::nullopt,
-                config.output.audio
+                config.output.audio,
+                std::nullopt
             });
 
             result.plan = std::move(plan);
@@ -256,6 +260,23 @@ namespace CaptureInterop::V2
                 Component,
                 Operation,
                 "WAV output planning is not part of the initial core profile resolver");
+        }
+
+        [[nodiscard]] static std::optional<VideoMediaType> BuildDesktopVideoMediaType(
+            const DesktopSourceConfig& desktop,
+            const VideoEncodingSettings& video) noexcept
+        {
+            if (!desktop.captureArea.has_value())
+            {
+                return std::nullopt;
+            }
+
+            VideoMediaType mediaType;
+            mediaType.width = desktop.captureArea->width;
+            mediaType.height = desktop.captureArea->height;
+            mediaType.frameRate = video.frameRate.IsValid() ? video.frameRate : desktop.frameRate;
+            mediaType.pixelFormat = VideoPixelFormat::Bgra8;
+            return mediaType.IsValid() ? std::optional<VideoMediaType>{ mediaType } : std::nullopt;
         }
 
         static const DesktopSourceConfig* FindFirstDesktopSource(const CapturePipelineConfig& config) noexcept
