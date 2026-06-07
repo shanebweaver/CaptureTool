@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "V2/Audio/WindowsWasapiLoopbackPacketProvider.h"
-
-#include <algorithm>
+#include "V2/Audio/OwnedAudioSampleBuilder.h"
 
 namespace CaptureInterop::V2::Audio
 {
@@ -20,20 +19,6 @@ namespace CaptureInterop::V2::Audio
                 operation,
                 message,
                 hr);
-        }
-
-        [[nodiscard]] MediaDuration DurationForFrames(
-            uint32_t frames,
-            const AudioMediaType& mediaType) noexcept
-        {
-            if (mediaType.sampleRate == 0)
-            {
-                return MediaDuration::Zero();
-            }
-
-            return MediaDuration::FromTicks(
-                static_cast<int64_t>(
-                    (static_cast<uint64_t>(frames) * MediaTicksPerSecond) / mediaType.sampleRate));
         }
     }
 
@@ -169,23 +154,20 @@ namespace CaptureInterop::V2::Audio
             return std::nullopt;
         }
 
-        AudioSample sample;
-        sample.sourceId = m_config.sourceId;
-        sample.streamId = m_config.audioStreamId;
-        sample.mediaType = m_config.mediaType;
-        sample.duration = DurationForFrames(framesAvailable, sample.mediaType);
+        const bool silentPacket = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0 || data == nullptr;
+        AudioSample sample = BuildOwnedAudioSampleFromWasapiPacket(WasapiAudioPacketView{
+            m_config.sourceId,
+            m_config.audioStreamId,
+            MediaTime{},
+            m_config.mediaType,
+            data,
+            framesAvailable,
+            silentPacket
+        });
 
-        const size_t byteCount =
-            static_cast<size_t>(framesAvailable) * sample.mediaType.blockAlign;
-        sample.pcmData.resize(byteCount);
-        if ((flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0 || data == nullptr)
+        if (silentPacket)
         {
-            std::fill(sample.pcmData.begin(), sample.pcmData.end(), uint8_t{ 0 });
             ++m_diagnostics.silentPackets;
-        }
-        else
-        {
-            std::copy(data, data + byteCount, sample.pcmData.begin());
         }
 
         if ((flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY) != 0)

@@ -57,6 +57,7 @@ namespace
         sample.streamId = StreamId::FromValue(44);
         sample.timestamp = MediaTime::FromTicks(123);
         sample.duration = MediaDuration::FromTicks(456);
+        sample.frameCount = 1;
         sample.mediaType = CreateMediaType();
         sample.pcmData = { firstByte, 0, 0, 0 };
         return sample;

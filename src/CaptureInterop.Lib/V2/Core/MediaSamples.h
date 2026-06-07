@@ -107,6 +107,7 @@ namespace CaptureInterop::V2
         MediaDuration duration;
         AudioMediaType mediaType;
         std::vector<uint8_t> pcmData;
+        uint32_t frameCount{ 0 };
     };
 
     using MediaSampleData = std::variant<VideoSample, AudioSample>;

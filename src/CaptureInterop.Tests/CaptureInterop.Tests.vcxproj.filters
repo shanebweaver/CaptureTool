@@ -114,6 +114,9 @@
     <ClCompile Include="V2NativeLifecycleCommandTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="V2OwnedAudioSampleBuilderTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="V2WasapiAudioClientFactoryTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

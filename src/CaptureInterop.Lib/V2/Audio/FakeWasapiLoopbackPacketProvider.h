@@ -88,9 +88,7 @@ namespace CaptureInterop::V2::Audio
             Packet packet = std::move(m_packets.front());
             m_packets.pop();
             ++m_diagnostics.packetsRead;
-            m_diagnostics.framesRead += packet.sample.mediaType.blockAlign == 0
-                ? 0
-                : packet.sample.pcmData.size() / packet.sample.mediaType.blockAlign;
+            m_diagnostics.framesRead += packet.sample.frameCount;
             if (packet.silent)
             {
                 ++m_diagnostics.silentPackets;
