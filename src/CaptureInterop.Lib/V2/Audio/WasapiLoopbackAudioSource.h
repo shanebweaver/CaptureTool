@@ -2,6 +2,7 @@
 
 #include "IWasapiLoopbackAudioProvider.h"
 #include "IWasapiLoopbackPacketProvider.h"
+#include "V2/Core/AudioControlProcessors.h"
 
 #include <algorithm>
 #include <atomic>
@@ -313,6 +314,10 @@ namespace CaptureInterop::V2::Audio
 
         void PublishSample(const AudioSample& sample)
         {
+            const bool muted = IsMuted();
+            AudioSample outputSample = muted
+                ? AudioSilenceGenerator::CreateSilenceLike(sample)
+                : sample;
             std::vector<AudioSampleHandler> handlers;
             {
                 std::lock_guard lock(m_callbackState->mutex);
@@ -330,7 +335,7 @@ namespace CaptureInterop::V2::Audio
 
             for (const AudioSampleHandler& handler : handlers)
             {
-                handler(sample);
+                handler(outputSample);
             }
         }
 
