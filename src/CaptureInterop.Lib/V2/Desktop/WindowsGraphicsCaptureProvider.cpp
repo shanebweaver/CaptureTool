@@ -3,7 +3,10 @@
 #include "WindowsGraphicsCaptureHelpers.h"
 
 #include <Windows.h>
+#include <algorithm>
+#include <functional>
 #include <mutex>
+#include <vector>
 #include <utility>
 
 using namespace ABI::Windows::Foundation;
@@ -14,8 +17,81 @@ using namespace WindowsGraphicsCaptureHelpers;
 
 namespace CaptureInterop::V2::Desktop
 {
+    struct WindowsGraphicsCaptureProvider::Impl;
+
     namespace
     {
+        class WgcFrameArrivedHandler final
+            : public ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>
+        {
+        public:
+            explicit WgcFrameArrivedHandler(WindowsGraphicsCaptureProvider::Impl* owner) noexcept
+                : m_owner(owner)
+            {
+            }
+
+            HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject) override
+            {
+                if (!ppvObject)
+                {
+                    return E_POINTER;
+                }
+
+                *ppvObject = nullptr;
+                if (riid == __uuidof(IUnknown) ||
+                    riid == __uuidof(ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>))
+                {
+                    *ppvObject = static_cast<ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>*>(this);
+                    AddRef();
+                    return S_OK;
+                }
+
+                return E_NOINTERFACE;
+            }
+
+            ULONG STDMETHODCALLTYPE AddRef() override
+            {
+                return InterlockedIncrement(&m_ref);
+            }
+
+            ULONG STDMETHODCALLTYPE Release() override
+            {
+                const ULONG ref = InterlockedDecrement(&m_ref);
+                if (ref == 0)
+                {
+                    delete this;
+                }
+
+                return ref;
+            }
+
+            HRESULT STDMETHODCALLTYPE Invoke(IDirect3D11CaptureFramePool* sender, IInspectable*) noexcept override;
+
+        private:
+            volatile long m_ref{ 1 };
+            WindowsGraphicsCaptureProvider::Impl* m_owner;
+        };
+
+        class CallbackToken final : public ICallbackRegistration
+        {
+        public:
+            explicit CallbackToken(std::function<void()> unregister)
+                : m_unregister(std::move(unregister))
+            {
+            }
+
+            ~CallbackToken() override
+            {
+                if (m_unregister)
+                {
+                    m_unregister();
+                }
+            }
+
+        private:
+            std::function<void()> m_unregister;
+        };
+
         VideoMediaType CreateDefaultMediaType(const DesktopVideoSourceConfig& config)
         {
             VideoMediaType mediaType;
@@ -58,6 +134,12 @@ namespace CaptureInterop::V2::Desktop
 
     struct WindowsGraphicsCaptureProvider::Impl
     {
+        struct HandlerEntry
+        {
+            uint64_t id{ 0 };
+            DesktopCaptureFrameHandler handler;
+        };
+
         explicit Impl(DesktopVideoSourceConfig providerConfig)
             : config(std::move(providerConfig)),
               mediaType(CreateDefaultMediaType(config))
@@ -175,6 +257,32 @@ namespace CaptureInterop::V2::Desktop
                 return result;
             }
 
+            wil::com_ptr<WgcFrameArrivedHandler> nextFrameArrivedHandler;
+            nextFrameArrivedHandler.attach(new WgcFrameArrivedHandler(this));
+            EventRegistrationToken nextFrameArrivedToken{};
+            hr = nextFramePool->add_FrameArrived(nextFrameArrivedHandler.get(), &nextFrameArrivedToken);
+            if (FAILED(hr))
+            {
+                OperationResult result = NativeFailure(
+                    "RegisterFrameArrived",
+                    "Failed to register Windows Graphics Capture frame callback",
+                    hr);
+                RecordFailure(result);
+                return result;
+            }
+
+            hr = nextCaptureSession->StartCapture();
+            if (FAILED(hr))
+            {
+                (void)nextFramePool->remove_FrameArrived(nextFrameArrivedToken);
+                OperationResult result = NativeFailure(
+                    "StartCapture",
+                    "Failed to start Windows Graphics Capture session",
+                    hr);
+                RecordFailure(result);
+                return result;
+            }
+
             SizeInt32 size{};
             hr = nextCaptureItem->get_Size(&size);
             if (FAILED(hr))
@@ -190,6 +298,9 @@ namespace CaptureInterop::V2::Desktop
             captureItem = std::move(nextCaptureItem);
             framePool = std::move(nextFramePool);
             captureSession = std::move(nextCaptureSession);
+            frameArrivedHandler = std::move(nextFrameArrivedHandler);
+            frameArrivedToken = nextFrameArrivedToken;
+            frameArrivedRegistered = true;
             mediaType.width = size.Width > 0 ? static_cast<uint32_t>(size.Width) : 0;
             mediaType.height = size.Height > 0 ? static_cast<uint32_t>(size.Height) : 0;
             diagnostics.resourcesActive = true;
@@ -202,6 +313,14 @@ namespace CaptureInterop::V2::Desktop
 
         void ReleaseResources() noexcept
         {
+            if (framePool && frameArrivedRegistered)
+            {
+                (void)framePool->remove_FrameArrived(frameArrivedToken);
+            }
+
+            frameArrivedRegistered = false;
+            frameArrivedToken = {};
+            frameArrivedHandler.reset();
             CloseCaptureSession(captureSession);
             framePool.reset();
             captureItem.reset();
@@ -223,6 +342,125 @@ namespace CaptureInterop::V2::Desktop
             }
         }
 
+        HRESULT OnFrameArrived(IDirect3D11CaptureFramePool* sender) noexcept
+        {
+            if (!sender)
+            {
+                RecordFrameFailure("FrameArrived", E_POINTER, "Frame-arrived callback did not provide a frame pool");
+                return E_POINTER;
+            }
+
+            wil::com_ptr<IDirect3D11CaptureFrame> frame;
+            HRESULT hr = sender->TryGetNextFrame(frame.put());
+            if (FAILED(hr) || !frame)
+            {
+                RecordFrameFailure("TryGetNextFrame", hr, "Failed to read next Windows Graphics Capture frame");
+                return hr;
+            }
+
+            wil::com_ptr<IDirect3DSurface> surface;
+            hr = frame->get_Surface(surface.put());
+            if (FAILED(hr) || !surface)
+            {
+                RecordFrameFailure("ReadFrameSurface", hr, "Failed to read Windows Graphics Capture frame surface");
+                return hr;
+            }
+
+            wil::com_ptr<Windows::Graphics::DirectX::Direct3D11::IDirect3DDxgiInterfaceAccess> access;
+            hr = surface->QueryInterface(IID_PPV_ARGS(access.put()));
+            if (FAILED(hr) || !access)
+            {
+                RecordFrameFailure("QueryDxgiInterfaceAccess", hr, "Failed to access DXGI texture from frame surface");
+                return hr;
+            }
+
+            wil::com_ptr<ID3D11Texture2D> texture;
+            hr = access->GetInterface(IID_PPV_ARGS(texture.put()));
+            if (FAILED(hr) || !texture)
+            {
+                RecordFrameFailure("ReadFrameTexture", hr, "Failed to read D3D11 texture from frame surface");
+                return hr;
+            }
+
+            SizeInt32 contentSize{};
+            hr = frame->get_ContentSize(&contentSize);
+            if (FAILED(hr))
+            {
+                RecordFrameFailure("ReadContentSize", hr, "Failed to read Windows Graphics Capture frame dimensions");
+                return hr;
+            }
+
+            TimeSpan systemRelativeTime{};
+            hr = frame->get_SystemRelativeTime(&systemRelativeTime);
+            if (FAILED(hr))
+            {
+                RecordFrameFailure("ReadSystemRelativeTime", hr, "Failed to read Windows Graphics Capture frame timestamp");
+                return hr;
+            }
+
+            std::vector<DesktopCaptureFrameHandler> handlersToInvoke;
+            DesktopCaptureFrame desktopFrame;
+            {
+                std::lock_guard lock(mutex);
+                if (!started)
+                {
+                    return S_OK;
+                }
+
+                ++diagnostics.framesProduced;
+                desktopFrame.sourceId = config.sourceId;
+                desktopFrame.streamId = config.streamId;
+                desktopFrame.mediaType = mediaType;
+                desktopFrame.timestamp = MediaTime::FromTicks(systemRelativeTime.Duration);
+                desktopFrame.duration = MediaDuration{};
+                desktopFrame.sequenceNumber = nextSequenceNumber++;
+                desktopFrame.frameDimensions = VideoFrameDimensions{
+                    contentSize.Width > 0 ? static_cast<uint32_t>(contentSize.Width) : mediaType.width,
+                    contentSize.Height > 0 ? static_cast<uint32_t>(contentSize.Height) : mediaType.height
+                };
+                desktopFrame.texture = std::make_shared<D3D11VideoTextureReference>(std::move(texture));
+
+                handlersToInvoke.reserve(handlers.size());
+                for (const HandlerEntry& entry : handlers)
+                {
+                    handlersToInvoke.push_back(entry.handler);
+                }
+            }
+
+            for (const DesktopCaptureFrameHandler& handler : handlersToInvoke)
+            {
+                handler(desktopFrame);
+            }
+
+            return S_OK;
+        }
+
+        void RecordFrameFailure(
+            std::string operation,
+            HRESULT hr,
+            std::string message) noexcept
+        {
+            std::lock_guard lock(mutex);
+            ++diagnostics.providerFailures;
+            diagnostics.lastNativeStatus = static_cast<int64_t>(hr);
+            diagnostics.lastFailureOperation = std::move(operation);
+            diagnostics.lastFailureMessage = std::move(message);
+        }
+
+        void Unregister(uint64_t id)
+        {
+            std::lock_guard lock(mutex);
+            handlers.erase(
+                std::remove_if(
+                    handlers.begin(),
+                    handlers.end(),
+                    [id](const HandlerEntry& entry)
+                    {
+                        return entry.id == id;
+                    }),
+                handlers.end());
+        }
+
         DesktopVideoSourceConfig config;
         SourceDescriptor source;
         std::vector<StreamDescriptor> streams;
@@ -233,8 +471,21 @@ namespace CaptureInterop::V2::Desktop
         wil::com_ptr<IGraphicsCaptureItem> captureItem;
         wil::com_ptr<IDirect3D11CaptureFramePool> framePool;
         wil::com_ptr<IGraphicsCaptureSession> captureSession;
+        wil::com_ptr<WgcFrameArrivedHandler> frameArrivedHandler;
+        EventRegistrationToken frameArrivedToken{};
+        std::vector<HandlerEntry> handlers;
+        uint64_t nextHandlerId{ 1 };
+        uint64_t nextSequenceNumber{ 1 };
         bool started{ false };
+        bool frameArrivedRegistered{ false };
     };
+
+    HRESULT STDMETHODCALLTYPE WgcFrameArrivedHandler::Invoke(
+        IDirect3D11CaptureFramePool* sender,
+        IInspectable*) noexcept
+    {
+        return m_owner ? m_owner->OnFrameArrived(sender) : E_POINTER;
+    }
 
     WindowsGraphicsCaptureProvider::WindowsGraphicsCaptureProvider(DesktopVideoSourceConfig config)
         : m_impl(std::make_unique<Impl>(std::move(config)))
@@ -332,8 +583,24 @@ namespace CaptureInterop::V2::Desktop
     }
 
     CallbackRegistrationToken WindowsGraphicsCaptureProvider::RegisterFrameArrivedHandler(
-        DesktopCaptureFrameHandler)
+        DesktopCaptureFrameHandler handler)
     {
-        return nullptr;
+        if (!handler)
+        {
+            return nullptr;
+        }
+
+        uint64_t id = 0;
+        {
+            std::lock_guard lock(m_impl->mutex);
+            id = m_impl->nextHandlerId++;
+            m_impl->handlers.push_back(Impl::HandlerEntry{ id, std::move(handler) });
+        }
+
+        return std::make_unique<CallbackToken>(
+            [impl = m_impl.get(), id]
+            {
+                impl->Unregister(id);
+            });
     }
 }

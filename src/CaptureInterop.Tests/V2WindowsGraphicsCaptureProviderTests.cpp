@@ -4,6 +4,10 @@
 #include "V2/Desktop/FakeDesktopD3DDeviceDependency.h"
 #include "V2/Desktop/WindowsGraphicsCaptureProvider.h"
 
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace CaptureInterop::V2;
 using namespace CaptureInterop::V2::Desktop;
@@ -145,6 +149,19 @@ namespace CaptureInteropTests
                 CreateConfig(reinterpret_cast<uintptr_t>(primaryMonitor)));
             Assert::IsTrue(provider.ConfigureDeviceDependency(CreateRealD3DDependency()).IsSuccess());
 
+            std::mutex frameMutex;
+            std::condition_variable frameAvailable;
+            uint64_t frameCount = 0;
+            DesktopCaptureFrame lastFrame;
+            CallbackRegistrationToken frameToken = provider.RegisterFrameArrivedHandler(
+                [&](const DesktopCaptureFrame& frame)
+                {
+                    std::lock_guard lock(frameMutex);
+                    ++frameCount;
+                    lastFrame = frame;
+                    frameAvailable.notify_one();
+                });
+
             const OperationResult startResult = provider.Start();
             const DesktopCaptureProviderDiagnostics startedDiagnostics = provider.Diagnostics();
 
@@ -172,6 +189,27 @@ namespace CaptureInteropTests
             Assert::AreEqual(0ull, startedDiagnostics.activationFailures);
             Assert::IsTrue(provider.CurrentMediaType().width > 0);
             Assert::IsTrue(provider.CurrentMediaType().height > 0);
+
+            {
+                std::unique_lock lock(frameMutex);
+                Assert::IsTrue(frameAvailable.wait_for(
+                    lock,
+                    std::chrono::seconds(3),
+                    [&frameCount]
+                    {
+                        return frameCount > 0;
+                    }));
+            }
+
+            const DesktopCaptureProviderDiagnostics frameDiagnostics = provider.Diagnostics();
+            Assert::IsTrue(frameDiagnostics.framesProduced >= 1);
+            Assert::AreEqual(11u, lastFrame.sourceId.value);
+            Assert::AreEqual(12u, lastFrame.streamId.value);
+            Assert::AreEqual(1ull, lastFrame.sequenceNumber);
+            Assert::IsTrue(lastFrame.timestamp.ticks100ns >= 0);
+            Assert::IsTrue(lastFrame.frameDimensions.width > 0);
+            Assert::IsTrue(lastFrame.frameDimensions.height > 0);
+            Assert::IsTrue(lastFrame.texture != nullptr);
 
             Assert::IsTrue(provider.Stop().IsSuccess());
             Assert::IsFalse(provider.Diagnostics().resourcesActive);

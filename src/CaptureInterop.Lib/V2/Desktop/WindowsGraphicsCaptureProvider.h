@@ -10,6 +10,8 @@ namespace CaptureInterop::V2::Desktop
     class WindowsGraphicsCaptureProvider final : public IDesktopCaptureProvider
     {
     public:
+        struct Impl;
+
         explicit WindowsGraphicsCaptureProvider(DesktopVideoSourceConfig config);
         ~WindowsGraphicsCaptureProvider() override;
 
@@ -33,10 +35,7 @@ namespace CaptureInterop::V2::Desktop
 
         [[nodiscard]] CallbackRegistrationToken RegisterFrameArrivedHandler(
             DesktopCaptureFrameHandler handler) override;
-
     private:
-        struct Impl;
-
         std::unique_ptr<Impl> m_impl;
     };
 }
