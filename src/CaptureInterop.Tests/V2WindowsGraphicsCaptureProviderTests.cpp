@@ -134,6 +134,34 @@ namespace CaptureInteropTests
             Assert::IsFalse(diagnostics.color.hdrToneMappingPending);
         }
 
+        TEST_METHOD(FrameCallbackTokenCanOutliveProvider)
+        {
+            CallbackRegistrationToken token;
+            {
+                WindowsGraphicsCaptureProvider provider(CreateConfig());
+                token = provider.RegisterFrameArrivedHandler(
+                    [](const DesktopCaptureFrame&)
+                    {
+                    });
+            }
+
+            token.reset();
+        }
+
+        TEST_METHOD(FailureCallbackTokenCanOutliveProvider)
+        {
+            CallbackRegistrationToken token;
+            {
+                WindowsGraphicsCaptureProvider provider(CreateConfig());
+                token = provider.RegisterProviderFailedHandler(
+                    [](const OperationResult&)
+                    {
+                    });
+            }
+
+            token.reset();
+        }
+
         TEST_METHOD(Start_WithoutDeviceDependency_ReturnsStructuredFailure)
         {
             WindowsGraphicsCaptureProvider provider(CreateConfig());

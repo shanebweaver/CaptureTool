@@ -813,6 +813,21 @@ namespace CaptureInteropTests
             Assert::AreEqual(0u, invocationCount);
         }
 
+        TEST_METHOD(CallbackTokenCanOutliveSource)
+        {
+            CallbackRegistrationToken token;
+            {
+                std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+                WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
+                token = source.RegisterFrameArrivedHandler(
+                    [](const VideoSample&)
+                    {
+                    });
+            }
+
+            token.reset();
+        }
+
         TEST_METHOD(Stop_DisconnectsProviderCallback)
         {
             std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();

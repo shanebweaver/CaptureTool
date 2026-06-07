@@ -170,6 +170,34 @@ namespace CaptureInteropTests
             Assert::AreEqual(0u, invocationCount);
         }
 
+        TEST_METHOD(FakeProvider_FrameCallbackTokenCanOutliveProvider)
+        {
+            CallbackRegistrationToken token;
+            {
+                FakeDesktopCaptureProvider provider = CreateProvider();
+                token = provider.RegisterFrameArrivedHandler(
+                    [](const DesktopCaptureFrame&)
+                    {
+                    });
+            }
+
+            token.reset();
+        }
+
+        TEST_METHOD(FakeProvider_FailureCallbackTokenCanOutliveProvider)
+        {
+            CallbackRegistrationToken token;
+            {
+                FakeDesktopCaptureProvider provider = CreateProvider();
+                token = provider.RegisterProviderFailedHandler(
+                    [](const OperationResult&)
+                    {
+                    });
+            }
+
+            token.reset();
+        }
+
         TEST_METHOD(FakeProvider_EmitCopiesHandlersBeforeInvoking)
         {
             FakeDesktopCaptureProvider provider = CreateProvider();

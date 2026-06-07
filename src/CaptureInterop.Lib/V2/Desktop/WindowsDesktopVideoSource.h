@@ -270,16 +270,17 @@ namespace CaptureInterop::V2::Desktop
                 return nullptr;
             }
 
-            const uint64_t id = m_nextHandlerId++;
+            uint64_t id = 0;
             {
-                std::lock_guard lock(m_mutex);
-                m_handlers.push_back(HandlerEntry{ id, std::move(handler) });
+                std::lock_guard lock(m_callbackState->mutex);
+                id = m_callbackState->nextHandlerId++;
+                m_callbackState->handlers.push_back(HandlerEntry{ id, std::move(handler) });
             }
 
             return std::make_unique<CallbackToken>(
-                [this, id]
+                [state = std::weak_ptr<CallbackState>(m_callbackState), id]
                 {
-                    Unregister(id);
+                    Unregister(state, id);
                 });
         }
 
@@ -310,6 +311,13 @@ namespace CaptureInterop::V2::Desktop
             VideoSampleHandler handler;
         };
 
+        struct CallbackState
+        {
+            std::mutex mutex;
+            std::vector<HandlerEntry> handlers;
+            uint64_t nextHandlerId{ 1 };
+        };
+
         void ForwardFrame(const DesktopCaptureFrame& frame)
         {
             std::vector<VideoSampleHandler> handlers;
@@ -320,13 +328,16 @@ namespace CaptureInterop::V2::Desktop
                     return;
                 }
 
-                handlers.reserve(m_handlers.size());
-                for (const HandlerEntry& entry : m_handlers)
+                UpdateTimingDiagnostics(frame);
+            }
+
+            {
+                std::lock_guard lock(m_callbackState->mutex);
+                handlers.reserve(m_callbackState->handlers.size());
+                for (const HandlerEntry& entry : m_callbackState->handlers)
                 {
                     handlers.push_back(entry.handler);
                 }
-
-                UpdateTimingDiagnostics(frame);
             }
 
             VideoSample sample{
@@ -403,18 +414,26 @@ namespace CaptureInterop::V2::Desktop
             }
         }
 
-        void Unregister(uint64_t id)
+        static void Unregister(
+            const std::weak_ptr<CallbackState>& weakState,
+            uint64_t id)
         {
-            std::lock_guard lock(m_mutex);
-            m_handlers.erase(
+            std::shared_ptr<CallbackState> state = weakState.lock();
+            if (!state)
+            {
+                return;
+            }
+
+            std::lock_guard lock(state->mutex);
+            state->handlers.erase(
                 std::remove_if(
-                    m_handlers.begin(),
-                    m_handlers.end(),
+                    state->handlers.begin(),
+                    state->handlers.end(),
                     [id](const HandlerEntry& entry)
                     {
                         return entry.id == id;
                     }),
-                m_handlers.end());
+                state->handlers.end());
         }
 
         VideoFrameDimensions ResolveFrameDimensions(const DesktopCaptureFrame& frame) const
@@ -542,7 +561,7 @@ namespace CaptureInterop::V2::Desktop
         std::shared_ptr<IDesktopMonitorResolver> m_monitorResolver;
         std::shared_ptr<IDesktopD3DDeviceDependency> m_d3dDeviceDependency;
         mutable std::mutex m_mutex;
-        std::vector<HandlerEntry> m_handlers;
+        std::shared_ptr<CallbackState> m_callbackState{ std::make_shared<CallbackState>() };
         CallbackRegistrationToken m_providerCallback;
         CallbackRegistrationToken m_providerFailureCallback;
         std::optional<DesktopMonitorInfo> m_resolvedMonitor;
@@ -550,7 +569,6 @@ namespace CaptureInterop::V2::Desktop
         DesktopVideoSourceDiagnostics m_diagnostics;
         std::optional<uint64_t> m_lastSequenceNumber;
         std::optional<MediaTime> m_lastTimestamp;
-        uint64_t m_nextHandlerId{ 1 };
         bool m_started{ false };
         bool m_terminalFailure{ false };
     };

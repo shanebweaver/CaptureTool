@@ -160,16 +160,17 @@ namespace CaptureInterop::V2::Desktop
                 return nullptr;
             }
 
-            const uint64_t id = m_nextHandlerId++;
+            uint64_t id = 0;
             {
-                std::lock_guard lock(m_mutex);
-                m_handlers.push_back(HandlerEntry{ id, std::move(handler) });
+                std::lock_guard lock(m_callbackState->mutex);
+                id = m_callbackState->nextFrameHandlerId++;
+                m_callbackState->frameHandlers.push_back(FrameHandlerEntry{ id, std::move(handler) });
             }
 
             return std::make_unique<CallbackToken>(
-                [this, id]
+                [state = std::weak_ptr<CallbackState>(m_callbackState), id]
                 {
-                    UnregisterFrameHandler(id);
+                    UnregisterFrameHandler(state, id);
                 });
         }
 
@@ -181,16 +182,17 @@ namespace CaptureInterop::V2::Desktop
                 return nullptr;
             }
 
-            const uint64_t id = m_nextFailureHandlerId++;
+            uint64_t id = 0;
             {
-                std::lock_guard lock(m_mutex);
-                m_failureHandlers.push_back(FailureHandlerEntry{ id, std::move(handler) });
+                std::lock_guard lock(m_callbackState->mutex);
+                id = m_callbackState->nextFailureHandlerId++;
+                m_callbackState->failureHandlers.push_back(FailureHandlerEntry{ id, std::move(handler) });
             }
 
             return std::make_unique<CallbackToken>(
-                [this, id]
+                [state = std::weak_ptr<CallbackState>(m_callbackState), id]
                 {
-                    UnregisterFailureHandler(id);
+                    UnregisterFailureHandler(state, id);
                 });
         }
 
@@ -210,8 +212,12 @@ namespace CaptureInterop::V2::Desktop
 
                 m_started = false;
                 RecordFailureLocked(failure);
-                handlers.reserve(m_failureHandlers.size());
-                for (const FailureHandlerEntry& entry : m_failureHandlers)
+            }
+
+            {
+                std::lock_guard lock(m_callbackState->mutex);
+                handlers.reserve(m_callbackState->failureHandlers.size());
+                for (const FailureHandlerEntry& entry : m_callbackState->failureHandlers)
                 {
                     handlers.push_back(entry.handler);
                 }
@@ -240,8 +246,12 @@ namespace CaptureInterop::V2::Desktop
                 }
 
                 ++m_diagnostics.framesProduced;
-                handlers.reserve(m_handlers.size());
-                for (const HandlerEntry& entry : m_handlers)
+            }
+
+            {
+                std::lock_guard lock(m_callbackState->mutex);
+                handlers.reserve(m_callbackState->frameHandlers.size());
+                for (const FrameHandlerEntry& entry : m_callbackState->frameHandlers)
                 {
                     handlers.push_back(entry.handler);
                 }
@@ -276,7 +286,7 @@ namespace CaptureInterop::V2::Desktop
             std::function<void()> m_unregister;
         };
 
-        struct HandlerEntry
+        struct FrameHandlerEntry
         {
             uint64_t id{ 0 };
             DesktopCaptureFrameHandler handler;
@@ -288,32 +298,57 @@ namespace CaptureInterop::V2::Desktop
             DesktopCaptureProviderFailureHandler handler;
         };
 
-        void UnregisterFrameHandler(uint64_t id)
+        struct CallbackState
         {
-            std::lock_guard lock(m_mutex);
-            m_handlers.erase(
+            std::mutex mutex;
+            std::vector<FrameHandlerEntry> frameHandlers;
+            std::vector<FailureHandlerEntry> failureHandlers;
+            uint64_t nextFrameHandlerId{ 1 };
+            uint64_t nextFailureHandlerId{ 1 };
+        };
+
+        static void UnregisterFrameHandler(
+            const std::weak_ptr<CallbackState>& weakState,
+            uint64_t id)
+        {
+            std::shared_ptr<CallbackState> state = weakState.lock();
+            if (!state)
+            {
+                return;
+            }
+
+            std::lock_guard lock(state->mutex);
+            state->frameHandlers.erase(
                 std::remove_if(
-                    m_handlers.begin(),
-                    m_handlers.end(),
-                    [id](const HandlerEntry& entry)
+                    state->frameHandlers.begin(),
+                    state->frameHandlers.end(),
+                    [id](const FrameHandlerEntry& entry)
                     {
                         return entry.id == id;
                     }),
-                m_handlers.end());
+                state->frameHandlers.end());
         }
 
-        void UnregisterFailureHandler(uint64_t id)
+        static void UnregisterFailureHandler(
+            const std::weak_ptr<CallbackState>& weakState,
+            uint64_t id)
         {
-            std::lock_guard lock(m_mutex);
-            m_failureHandlers.erase(
+            std::shared_ptr<CallbackState> state = weakState.lock();
+            if (!state)
+            {
+                return;
+            }
+
+            std::lock_guard lock(state->mutex);
+            state->failureHandlers.erase(
                 std::remove_if(
-                    m_failureHandlers.begin(),
-                    m_failureHandlers.end(),
+                    state->failureHandlers.begin(),
+                    state->failureHandlers.end(),
                     [id](const FailureHandlerEntry& entry)
                     {
                         return entry.id == id;
                     }),
-                m_failureHandlers.end());
+                state->failureHandlers.end());
         }
 
         void RecordFailureLocked(const OperationResult& failure)
@@ -332,15 +367,12 @@ namespace CaptureInterop::V2::Desktop
         std::vector<StreamDescriptor> m_streams;
         VideoMediaType m_mediaType;
         mutable std::mutex m_mutex;
-        std::vector<HandlerEntry> m_handlers;
-        std::vector<FailureHandlerEntry> m_failureHandlers;
+        std::shared_ptr<CallbackState> m_callbackState{ std::make_shared<CallbackState>() };
         DesktopCaptureProviderDiagnostics m_diagnostics;
         std::shared_ptr<IDesktopD3DDeviceDependency> m_deviceDependency;
         std::shared_ptr<std::vector<std::string>> m_lifecycleEvents;
         std::optional<OperationResult> m_startFailure;
         std::optional<OperationResult> m_stopFailure;
-        uint64_t m_nextHandlerId{ 1 };
-        uint64_t m_nextFailureHandlerId{ 1 };
         bool m_started{ false };
     };
 }
