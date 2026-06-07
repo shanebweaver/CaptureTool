@@ -96,6 +96,9 @@
     <ClCompile Include="V2NativeAbiFoundationTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="V2DesktopSourceConfigTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="V2NativeCallbackRegistrationTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -2,6 +2,7 @@
 
 #include "MediaTypes.h"
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <variant>
@@ -27,8 +28,11 @@ namespace CaptureInterop::V2
     struct DesktopSourceConfig
     {
         SourceId id;
+        StreamId videoStreamId;
         std::string name;
         std::string displayId;
+        std::string monitorDeviceName;
+        uintptr_t monitorHandle{ 0 };
         std::optional<CaptureRectangle> captureArea;
         Rational frameRate;
 

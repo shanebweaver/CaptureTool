@@ -61,6 +61,9 @@
     <Filter Include="Header Files\V2\Core">
       <UniqueIdentifier>{c09dcc5d-b658-497a-8f23-981a3fc1c605}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\V2\Desktop">
+      <UniqueIdentifier>{4d226d12-1971-47e9-8ff0-5d73d549ab13}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -68,6 +71,9 @@
     </ClInclude>
     <ClInclude Include="V2\Core\AudioControlProcessors.h">
       <Filter>Header Files\V2\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="V2\Desktop\DesktopVideoSourceConfig.h">
+      <Filter>Header Files\V2\Desktop</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
