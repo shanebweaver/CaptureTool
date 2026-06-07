@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -18,6 +19,12 @@ namespace CaptureInterop::V2::Desktop
         std::string providerName;
         uint64_t framesProduced{ 0 };
         uint64_t providerFailures{ 0 };
+        uint64_t activationAttempts{ 0 };
+        uint64_t activationFailures{ 0 };
+        bool resourcesActive{ false };
+        std::optional<int64_t> lastNativeStatus;
+        std::string lastFailureOperation;
+        std::string lastFailureMessage;
     };
 
     struct DesktopCaptureFrame

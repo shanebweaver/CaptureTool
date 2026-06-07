@@ -93,6 +93,9 @@
     <ClInclude Include="V2\Desktop\WindowsDesktopVideoSource.h">
       <Filter>Header Files\V2\Desktop</Filter>
     </ClInclude>
+    <ClInclude Include="V2\Desktop\WindowsGraphicsCaptureProvider.h">
+      <Filter>Header Files\V2\Desktop</Filter>
+    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -367,6 +370,9 @@
     </ClCompile>
     <ClCompile Include="TextureProcessorFactory.cpp">
       <Filter>Source Files\SinkWriter</Filter>
+    </ClCompile>
+    <ClCompile Include="V2\Desktop\WindowsGraphicsCaptureProvider.cpp">
+      <Filter>Source Files\VideoCapture</Filter>
     </ClCompile>
     <ClCompile Include="WindowsScreenshotCapture.cpp">
       <Filter>Source Files\Screenshot</Filter>
