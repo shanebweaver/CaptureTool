@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "CppUnitTest.h"
+#include "V2/Desktop/DesktopD3DDeviceDependency.h"
 #include "V2/Desktop/DesktopMonitorResolver.h"
 #include "V2/Desktop/FakeDesktopD3DDeviceDependency.h"
 #include "V2/Desktop/FakeDesktopCaptureProvider.h"
@@ -81,6 +82,67 @@ namespace
     std::shared_ptr<FakeDesktopD3DDeviceDependency> CreateDependency()
     {
         return std::make_shared<FakeDesktopD3DDeviceDependency>();
+    }
+
+    std::shared_ptr<DesktopD3DDeviceDependency> CreateRealD3DDependency()
+    {
+        D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
+        wil::com_ptr<ID3D11Device> device;
+        wil::com_ptr<ID3D11DeviceContext> context;
+
+        HRESULT hr = D3D11CreateDevice(
+            nullptr,
+            D3D_DRIVER_TYPE_HARDWARE,
+            nullptr,
+            D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+            featureLevels,
+            ARRAYSIZE(featureLevels),
+            D3D11_SDK_VERSION,
+            device.put(),
+            nullptr,
+            context.put());
+
+        if (FAILED(hr))
+        {
+            hr = D3D11CreateDevice(
+                nullptr,
+                D3D_DRIVER_TYPE_WARP,
+                nullptr,
+                D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+                featureLevels,
+                ARRAYSIZE(featureLevels),
+                D3D11_SDK_VERSION,
+                device.put(),
+                nullptr,
+                context.put());
+        }
+
+        Assert::IsTrue(SUCCEEDED(hr), L"Failed to create D3D11 device for crop test.");
+        return std::make_shared<DesktopD3DDeviceDependency>(
+            std::move(device),
+            std::move(context),
+            "DesktopSourceCropTestD3DDependency");
+    }
+
+    wil::com_ptr<ID3D11Texture2D> CreateTexture(
+        ID3D11Device* device,
+        uint32_t width,
+        uint32_t height)
+    {
+        D3D11_TEXTURE2D_DESC desc{};
+        desc.Width = width;
+        desc.Height = height;
+        desc.MipLevels = 1;
+        desc.ArraySize = 1;
+        desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+        desc.SampleDesc.Count = 1;
+        desc.Usage = D3D11_USAGE_DEFAULT;
+        desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+
+        wil::com_ptr<ID3D11Texture2D> texture;
+        const HRESULT hr = device->CreateTexture2D(&desc, nullptr, texture.put());
+        Assert::IsTrue(SUCCEEDED(hr), L"Failed to create D3D11 texture for crop test.");
+        return texture;
     }
 
     std::shared_ptr<FakeDesktopMonitorResolver> CreateResolverWithConfiguredMonitor()
@@ -344,6 +406,50 @@ namespace CaptureInteropTests
 
             Assert::AreEqual(static_cast<size_t>(1), lifecycleEvents->size());
             Assert::AreEqual("texture-destroyed", lifecycleEvents->at(0).c_str());
+        }
+
+        TEST_METHOD(TextureRegionFrame_IsCroppedToRegionSizedTextureAndPreservesMetadata)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            std::shared_ptr<FakeDesktopMonitorResolver> resolver = CreateResolverWithConfiguredMonitor();
+            std::shared_ptr<DesktopD3DDeviceDependency> dependency = CreateRealD3DDependency();
+            std::optional<VideoSample> receivedSample;
+            WindowsDesktopVideoSource source(
+                CreateConfigWithRegion(CaptureRectangle{ 100, 200, 800, 600 }),
+                provider,
+                resolver,
+                dependency);
+            CallbackRegistrationToken token = source.RegisterFrameArrivedHandler(
+                [&receivedSample](const VideoSample& sample)
+                {
+                    receivedSample = sample;
+                });
+
+            DesktopCaptureFrame frame = CreateFrame(123);
+            frame.texture = std::make_shared<D3D11VideoTextureReference>(
+                CreateTexture(dependency->Device(), 2560, 1440));
+            frame.frameDimensions = VideoFrameDimensions{ 2560, 1440 };
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            Assert::IsTrue(provider->EmitFrame(frame).IsSuccess());
+
+            Assert::IsTrue(receivedSample.has_value());
+            Assert::IsTrue(receivedSample->HasTexture());
+            Assert::AreEqual(7u, receivedSample->sourceId.value);
+            Assert::AreEqual(9u, receivedSample->streamId.value);
+            Assert::AreEqual(123ull, receivedSample->sequenceNumber);
+            Assert::AreEqual(456ll, receivedSample->timestamp.ticks100ns);
+            Assert::AreEqual(800u, receivedSample->mediaType.width);
+            Assert::AreEqual(600u, receivedSample->mediaType.height);
+            Assert::AreEqual(800u, receivedSample->frameDimensions.width);
+            Assert::AreEqual(600u, receivedSample->frameDimensions.height);
+
+            ID3D11Texture2D* croppedTexture = receivedSample->texture->Texture();
+            Assert::IsNotNull(croppedTexture);
+            D3D11_TEXTURE2D_DESC croppedDesc{};
+            croppedTexture->GetDesc(&croppedDesc);
+            Assert::AreEqual(800u, croppedDesc.Width);
+            Assert::AreEqual(600u, croppedDesc.Height);
         }
 
         TEST_METHOD(CallbackTokenDestroyed_PreventsForwardedSample)

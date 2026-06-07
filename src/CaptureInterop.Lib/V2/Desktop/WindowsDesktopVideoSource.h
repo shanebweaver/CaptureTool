@@ -261,7 +261,7 @@ namespace CaptureInterop::V2::Desktop
                 frame.placeholderPixels,
                 frame.sequenceNumber,
                 ResolveFrameDimensions(frame),
-                frame.texture
+                ResolveTextureReference(frame)
             };
 
             for (const VideoSampleHandler& handler : handlers)
@@ -286,6 +286,11 @@ namespace CaptureInterop::V2::Desktop
 
         VideoFrameDimensions ResolveFrameDimensions(const DesktopCaptureFrame& frame) const
         {
+            if (m_config.region.has_value())
+            {
+                return VideoFrameDimensions{ m_config.region->width, m_config.region->height };
+            }
+
             if (frame.frameDimensions.IsValid())
             {
                 return frame.frameDimensions;
@@ -293,6 +298,61 @@ namespace CaptureInterop::V2::Desktop
 
             const VideoMediaType mediaType = EffectiveMediaType();
             return VideoFrameDimensions::FromMediaType(mediaType);
+        }
+
+        std::shared_ptr<IVideoTextureReference> ResolveTextureReference(const DesktopCaptureFrame& frame) const
+        {
+            if (!frame.texture || !m_config.region.has_value())
+            {
+                return frame.texture;
+            }
+
+            if (!m_d3dDeviceDependency)
+            {
+                return nullptr;
+            }
+
+            ID3D11Device* device = m_d3dDeviceDependency->Device();
+            ID3D11DeviceContext* context = m_d3dDeviceDependency->ImmediateContext();
+            ID3D11Texture2D* sourceTexture = frame.texture->Texture();
+            if (!device || !context || !sourceTexture)
+            {
+                return nullptr;
+            }
+
+            const CaptureRectangle& region = *m_config.region;
+            D3D11_TEXTURE2D_DESC desc{};
+            sourceTexture->GetDesc(&desc);
+            desc.Width = region.width;
+            desc.Height = region.height;
+            desc.MiscFlags = 0;
+
+            wil::com_ptr<ID3D11Texture2D> croppedTexture;
+            const HRESULT createResult = device->CreateTexture2D(&desc, nullptr, croppedTexture.put());
+            if (FAILED(createResult) || !croppedTexture)
+            {
+                return nullptr;
+            }
+
+            const D3D11_BOX sourceBox{
+                static_cast<UINT>(region.x),
+                static_cast<UINT>(region.y),
+                0,
+                static_cast<UINT>(region.x + static_cast<int32_t>(region.width)),
+                static_cast<UINT>(region.y + static_cast<int32_t>(region.height)),
+                1
+            };
+            context->CopySubresourceRegion(
+                croppedTexture.get(),
+                0,
+                0,
+                0,
+                0,
+                sourceTexture,
+                0,
+                &sourceBox);
+
+            return std::make_shared<D3D11VideoTextureReference>(std::move(croppedTexture));
         }
 
         OperationResult ValidateRegion(const DesktopMonitorInfo& monitor) const
