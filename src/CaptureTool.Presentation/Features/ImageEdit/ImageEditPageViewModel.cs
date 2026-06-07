@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Features;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
+using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
@@ -356,7 +357,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             if (_featureAvailability.IsImageEditChromaKeyEnabled)
             {
-                bool isChromaKeyAddOnOwned = true; //await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
+                bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
                 IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
                 if (isChromaKeyAddOnOwned)
                 {
@@ -364,7 +365,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                     _chromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
 
                     // Add top detected colors
-                    var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 5, 4);
+                    var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 15, 16);
                     foreach (var topColor in topColors)
                     {
                         ChromaKeyColorOption colorOption = new(topColor);
