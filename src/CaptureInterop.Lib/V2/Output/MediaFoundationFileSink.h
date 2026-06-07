@@ -63,6 +63,7 @@ namespace CaptureInterop::V2::Output
         std::string selectedProfileName;
         std::vector<MediaFoundationFileSinkStreamDiagnostics> streams;
         MediaFoundationFileSinkWriteDiagnostics writes;
+        std::vector<std::string> encoderSettingDiagnostics;
         uint64_t timestampValidationFailures{ 0 };
         std::string setupStage;
         std::optional<CoreDiagnostic> setupFailure;
@@ -81,6 +82,8 @@ namespace CaptureInterop::V2::Output
         uint32_t pixelAspectRatioNumerator{ 1 };
         uint32_t pixelAspectRatioDenominator{ 1 };
         VideoPixelFormat inputPixelFormat{ VideoPixelFormat::Bgra8 };
+        uint32_t gopLength{ 0 };
+        bool hardwareAccelerationPreferred{ true };
     };
 
     struct MediaFoundationAacAudioStreamConfig
@@ -137,20 +140,27 @@ namespace CaptureInterop::V2::Output
         }
     };
 
+    struct MediaFoundationSinkWriterFactoryOptions
+    {
+        bool hardwareTransformsEnabled{ true };
+    };
+
     class IMediaFoundationSinkWriterFactory
     {
     public:
         virtual ~IMediaFoundationSinkWriterFactory() = default;
 
         [[nodiscard]] virtual MediaFoundationSinkWriterCreationResult CreateFileSinkWriter(
-            const std::wstring& outputPath) noexcept = 0;
+            const std::wstring& outputPath,
+            const MediaFoundationSinkWriterFactoryOptions& options) noexcept = 0;
     };
 
     class WindowsMediaFoundationSinkWriterFactory final : public IMediaFoundationSinkWriterFactory
     {
     public:
         [[nodiscard]] MediaFoundationSinkWriterCreationResult CreateFileSinkWriter(
-            const std::wstring& outputPath) noexcept override;
+            const std::wstring& outputPath,
+            const MediaFoundationSinkWriterFactoryOptions& options) noexcept override;
     };
 
     class MediaFoundationFileSink final : public IOutputSink
@@ -183,6 +193,8 @@ namespace CaptureInterop::V2::Output
         [[nodiscard]] OperationResult ConfigureMp4Streams(
             const OutputPlan& plan,
             std::vector<MediaFoundationSinkStreamMapping>& mappings) noexcept;
+        [[nodiscard]] static MediaFoundationSinkWriterFactoryOptions BuildSinkWriterOptions(
+            const OutputPlan& plan) noexcept;
         [[nodiscard]] static MediaFoundationH264VideoStreamConfig BuildH264VideoStreamConfig(
             const OutputStreamPlan& stream) noexcept;
         [[nodiscard]] static MediaFoundationAacAudioStreamConfig BuildAacAudioStreamConfig(

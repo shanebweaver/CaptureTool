@@ -216,10 +216,12 @@ namespace
         }
 
         [[nodiscard]] MediaFoundationSinkWriterCreationResult CreateFileSinkWriter(
-            const std::wstring& outputPath) noexcept override
+            const std::wstring& outputPath,
+            const MediaFoundationSinkWriterFactoryOptions& options) noexcept override
         {
             ++createCalls;
             lastOutputPath = outputPath;
+            lastOptions = options;
             if (nextResult.IsFailure())
             {
                 return MediaFoundationSinkWriterCreationResult{
@@ -240,6 +242,7 @@ namespace
 
         int createCalls{ 0 };
         std::wstring lastOutputPath;
+        MediaFoundationSinkWriterFactoryOptions lastOptions;
         bool attributesConfigured{ true };
         bool writerCreated{ true };
         OperationResult nextResult{ OperationResult::Success() };
@@ -418,6 +421,40 @@ namespace CaptureInteropTests
             Assert::AreEqual(
                 static_cast<int>(VideoPixelFormat::Bgra8),
                 static_cast<int>(videoConfig->inputPixelFormat));
+            Assert::AreEqual(120u, videoConfig->gopLength);
+            Assert::IsTrue(videoConfig->hardwareAccelerationPreferred);
+            Assert::IsTrue(harness.sinkWriterFactory->lastOptions.hardwareTransformsEnabled);
+
+            const MediaFoundationFileSinkDiagnostics diagnostics = harness.sink.Diagnostics();
+            Assert::IsTrue(std::find(
+                diagnostics.encoderSettingDiagnostics.begin(),
+                diagnostics.encoderSettingDiagnostics.end(),
+                "Hardware transform preference applied: enabled") != diagnostics.encoderSettingDiagnostics.end());
+            Assert::IsTrue(std::find(
+                diagnostics.encoderSettingDiagnostics.begin(),
+                diagnostics.encoderSettingDiagnostics.end(),
+                "GOP length 120 ignored: direct Media Foundation GOP mapping is deferred")
+                != diagnostics.encoderSettingDiagnostics.end());
+        }
+
+        TEST_METHOD(Open_Mp4VideoHardwarePreferenceDisabled_ConfiguresWriterAttributeAndDiagnostics)
+        {
+            SinkHarness harness;
+            OutputStreamPlan stream = CreateVideoStream();
+            stream.video->hardwareAccelerationPreferred = false;
+            const OutputPlan plan = CreatePlan(ContainerFormat::Mp4, { stream });
+
+            const OperationResult result = harness.sink.Open(plan);
+
+            Assert::IsTrue(result.IsSuccess());
+            Assert::IsFalse(harness.sinkWriterFactory->lastOptions.hardwareTransformsEnabled);
+            Assert::IsTrue(harness.sinkWriterFactory->session->lastVideoConfig.has_value());
+            Assert::IsFalse(harness.sinkWriterFactory->session->lastVideoConfig->hardwareAccelerationPreferred);
+            const MediaFoundationFileSinkDiagnostics diagnostics = harness.sink.Diagnostics();
+            Assert::IsTrue(std::find(
+                diagnostics.encoderSettingDiagnostics.begin(),
+                diagnostics.encoderSettingDiagnostics.end(),
+                "Hardware transform preference applied: disabled") != diagnostics.encoderSettingDiagnostics.end());
         }
 
         TEST_METHOD(Open_Mp4VideoPlusAudioPlan_MapsBothStreamsInOrder)
@@ -580,6 +617,46 @@ namespace CaptureInteropTests
             Assert::AreEqual(
                 "Video output stream is missing required media fields",
                 result.diagnostic->message.c_str());
+        }
+
+        TEST_METHOD(Open_UnsupportedVideoBitrate_FailsBeforeRuntimeLease)
+        {
+            SinkHarness harness;
+            const OutputPlan plan = CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1, VideoCodec::H264, Rational::From(60, 1), 50'000) });
+
+            const OperationResult result = harness.sink.Open(plan);
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                static_cast<uint32_t>(CoreResultCode::RangeError),
+                static_cast<uint32_t>(result.code));
+            Assert::AreEqual(
+                "Video output bitrate is outside the supported Media Foundation range",
+                result.diagnostic->message.c_str());
+            Assert::AreEqual(0, harness.runtimeApi->startupCalls);
+            Assert::AreEqual(0, harness.sinkWriterFactory->createCalls);
+        }
+
+        TEST_METHOD(Open_UnsupportedVideoFrameRate_FailsBeforeRuntimeLease)
+        {
+            SinkHarness harness;
+            const OutputPlan plan = CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1, VideoCodec::H264, Rational::From(241, 1)) });
+
+            const OperationResult result = harness.sink.Open(plan);
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                static_cast<uint32_t>(CoreResultCode::RangeError),
+                static_cast<uint32_t>(result.code));
+            Assert::AreEqual(
+                "Video output frame rate is outside the supported Media Foundation range",
+                result.diagnostic->message.c_str());
+            Assert::AreEqual(0, harness.runtimeApi->startupCalls);
+            Assert::AreEqual(0, harness.sinkWriterFactory->createCalls);
         }
 
         TEST_METHOD(Open_MissingVideoMediaTypeFields_FailsBeforeRuntimeLease)

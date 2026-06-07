@@ -758,7 +758,8 @@ namespace CaptureInterop::V2::Output
     }
 
     MediaFoundationSinkWriterCreationResult WindowsMediaFoundationSinkWriterFactory::CreateFileSinkWriter(
-        const std::wstring& outputPath) noexcept
+        const std::wstring& outputPath,
+        const MediaFoundationSinkWriterFactoryOptions& options) noexcept
     {
         wil::com_ptr<IMFAttributes> attributes;
         HRESULT hr = MFCreateAttributes(attributes.put(), 1);
@@ -772,7 +773,9 @@ namespace CaptureInterop::V2::Output
             };
         }
 
-        hr = attributes->SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, TRUE);
+        hr = attributes->SetUINT32(
+            MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS,
+            options.hardwareTransformsEnabled ? TRUE : FALSE);
         if (FAILED(hr))
         {
             return MediaFoundationSinkWriterCreationResult{
@@ -878,8 +881,14 @@ namespace CaptureInterop::V2::Output
                 return runtimeLeaseResult.result;
             }
 
+            MediaFoundationSinkWriterFactoryOptions writerOptions = BuildSinkWriterOptions(plan);
+            m_diagnostics.encoderSettingDiagnostics.push_back(
+                writerOptions.hardwareTransformsEnabled
+                    ? "Hardware transform preference applied: enabled"
+                    : "Hardware transform preference applied: disabled");
+
             MediaFoundationSinkWriterCreationResult writerResult =
-                m_sinkWriterFactory->CreateFileSinkWriter(plan.outputPath);
+                m_sinkWriterFactory->CreateFileSinkWriter(plan.outputPath, writerOptions);
             if (!writerResult.IsSuccess())
             {
                 runtimeLeaseResult.lease.Release();
@@ -1227,6 +1236,23 @@ namespace CaptureInterop::V2::Output
                     "Video output stream is missing required media fields");
             }
 
+            if (stream.video->bitrate < 100'000 || stream.video->bitrate > 100'000'000)
+            {
+                return Failure(
+                    CoreResultCode::RangeError,
+                    "Open",
+                    "Video output bitrate is outside the supported Media Foundation range");
+            }
+
+            if (stream.video->frameRate.numerator < stream.video->frameRate.denominator
+                || stream.video->frameRate.numerator > stream.video->frameRate.denominator * 240)
+            {
+                return Failure(
+                    CoreResultCode::RangeError,
+                    "Open",
+                    "Video output frame rate is outside the supported Media Foundation range");
+            }
+
             if (!stream.videoMediaType.has_value() || !stream.videoMediaType->IsValid())
             {
                 return Failure(
@@ -1291,6 +1317,14 @@ namespace CaptureInterop::V2::Output
         {
             if (stream.kind == MediaKind::Video)
             {
+                if (stream.video->gopLength != 0)
+                {
+                    m_diagnostics.encoderSettingDiagnostics.push_back(
+                        "GOP length "
+                        + std::to_string(stream.video->gopLength)
+                        + " ignored: direct Media Foundation GOP mapping is deferred");
+                }
+
                 MediaFoundationStreamConfigurationResult streamResult =
                     m_sinkWriter->ConfigureH264VideoStream(BuildH264VideoStreamConfig(stream));
                 if (streamResult.result.IsFailure())
@@ -1349,6 +1383,22 @@ namespace CaptureInterop::V2::Output
         return OperationResult::Success();
     }
 
+    MediaFoundationSinkWriterFactoryOptions MediaFoundationFileSink::BuildSinkWriterOptions(
+        const OutputPlan& plan) noexcept
+    {
+        for (const OutputStreamPlan& stream : plan.streams)
+        {
+            if (stream.IsVideo() && stream.video.has_value())
+            {
+                return MediaFoundationSinkWriterFactoryOptions{
+                    stream.video->hardwareAccelerationPreferred
+                };
+            }
+        }
+
+        return {};
+    }
+
     MediaFoundationH264VideoStreamConfig MediaFoundationFileSink::BuildH264VideoStreamConfig(
         const OutputStreamPlan& stream) noexcept
     {
@@ -1360,7 +1410,9 @@ namespace CaptureInterop::V2::Output
             stream.video->frameRate,
             1,
             1,
-            stream.videoMediaType->pixelFormat
+            stream.videoMediaType->pixelFormat,
+            stream.video->gopLength,
+            stream.video->hardwareAccelerationPreferred
         };
     }
 
