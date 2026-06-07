@@ -90,6 +90,13 @@ namespace CaptureInterop::V2
                 return FailStartAndTeardown(std::move(clockResult));
             }
 
+            RegisterGraphCallbacks();
+
+            if (OperationResult stateResult = m_stateMachine.Start(); stateResult.IsFailure())
+            {
+                return FailStartAndTeardown(std::move(stateResult));
+            }
+
             for (const std::unique_ptr<IMediaSource>& source : m_sources)
             {
                 if (source == nullptr)
@@ -107,7 +114,63 @@ namespace CaptureInterop::V2
                 }
             }
 
-            return m_stateMachine.Start();
+            return OperationResult::Success();
+        }
+
+        [[nodiscard]] OperationResult Pause()
+        {
+            if (!m_stateMachine.CanApply(PipelineOperation::Pause))
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::InvalidState,
+                    "CapturePipelineSession",
+                    "Pause",
+                    "Session cannot be paused from the current state");
+            }
+
+            if (m_clock == nullptr)
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::InvalidState,
+                    "CapturePipelineSession",
+                    "Pause",
+                    "Session clock is not available");
+            }
+
+            if (OperationResult clockResult = m_clock->Pause(); clockResult.IsFailure())
+            {
+                return clockResult;
+            }
+
+            return m_stateMachine.Pause();
+        }
+
+        [[nodiscard]] OperationResult Resume()
+        {
+            if (!m_stateMachine.CanApply(PipelineOperation::Resume))
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::InvalidState,
+                    "CapturePipelineSession",
+                    "Resume",
+                    "Session cannot be resumed from the current state");
+            }
+
+            if (m_clock == nullptr)
+            {
+                return OperationResult::Failure(
+                    CoreResultCode::InvalidState,
+                    "CapturePipelineSession",
+                    "Resume",
+                    "Session clock is not available");
+            }
+
+            if (OperationResult clockResult = m_clock->Resume(); clockResult.IsFailure())
+            {
+                return clockResult;
+            }
+
+            return m_stateMachine.Resume();
         }
 
         [[nodiscard]] CapturePipelineStopResult Stop()
@@ -166,6 +229,104 @@ namespace CaptureInterop::V2
             TeardownGraph();
             (void)m_stateMachine.Fail();
             return failure;
+        }
+
+        void RegisterGraphCallbacks()
+        {
+            for (const std::unique_ptr<IMediaProcessor>& processor : m_processors)
+            {
+                if (processor != nullptr)
+                {
+                    m_callbackTokens.push_back(processor->RegisterOutputHandler(
+                        [this](const MediaSample& sample)
+                        {
+                            WriteToSink(sample);
+                        }));
+                }
+            }
+
+            for (const std::unique_ptr<IMediaSource>& source : m_sources)
+            {
+                if (auto* videoSource = dynamic_cast<IVideoCaptureSource*>(source.get()))
+                {
+                    m_callbackTokens.push_back(videoSource->RegisterFrameArrivedHandler(
+                        [this](const VideoSample& sample)
+                        {
+                            RouteSample(MediaSample{ sample });
+                        }));
+                }
+
+                if (auto* audioSource = dynamic_cast<IAudioCaptureSource*>(source.get()))
+                {
+                    m_callbackTokens.push_back(audioSource->RegisterSampleArrivedHandler(
+                        [this](const AudioSample& sample)
+                        {
+                            RouteSample(MediaSample{ sample });
+                        }));
+                }
+            }
+        }
+
+        void RouteSample(MediaSample sample)
+        {
+            if (m_stateMachine.State() != PipelineState::Recording || m_clock == nullptr)
+            {
+                return;
+            }
+
+            sample = WithTimestamp(std::move(sample), m_clock->CurrentTime());
+
+            if (IMediaProcessor* processor = FindProcessor(sample.Kind()))
+            {
+                if (OperationResult result = processor->Process(sample); result.IsFailure())
+                {
+                    (void)m_stateMachine.Fail();
+                }
+
+                return;
+            }
+
+            WriteToSink(sample);
+        }
+
+        void WriteToSink(const MediaSample& sample)
+        {
+            if (m_stateMachine.State() != PipelineState::Recording || m_sink == nullptr)
+            {
+                return;
+            }
+
+            if (OperationResult result = m_sink->WriteSample(sample); result.IsFailure())
+            {
+                (void)m_stateMachine.Fail();
+            }
+        }
+
+        IMediaProcessor* FindProcessor(MediaKind kind) noexcept
+        {
+            for (const std::unique_ptr<IMediaProcessor>& processor : m_processors)
+            {
+                if (processor != nullptr && processor->Kind() == kind)
+                {
+                    return processor.get();
+                }
+            }
+
+            return nullptr;
+        }
+
+        static MediaSample WithTimestamp(MediaSample sample, MediaTime timestamp)
+        {
+            if (auto* video = std::get_if<VideoSample>(&sample.data))
+            {
+                video->timestamp = timestamp;
+            }
+            else
+            {
+                std::get<AudioSample>(sample.data).timestamp = timestamp;
+            }
+
+            return sample;
         }
 
         TeardownOutcome TeardownGraph()

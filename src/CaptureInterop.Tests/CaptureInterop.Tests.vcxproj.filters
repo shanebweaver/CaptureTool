@@ -63,6 +63,9 @@
     <ClCompile Include="V2CoreCapturePipelineSessionTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="V2CoreCapturePipelineSessionRoutingTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="V2CoreFakeComponentsTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
