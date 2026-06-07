@@ -94,7 +94,9 @@
     <ClInclude Include="AudioCaptureDevice.h" />
     <ClInclude Include="AudioCaptureHandler.h" />
     <ClInclude Include="V2\Audio\FakeWasapiLoopbackAudioProvider.h" />
+    <ClInclude Include="V2\Audio\FakeWasapiLoopbackPacketProvider.h" />
     <ClInclude Include="V2\Audio\IWasapiLoopbackAudioProvider.h" />
+    <ClInclude Include="V2\Audio\IWasapiLoopbackPacketProvider.h" />
     <ClInclude Include="V2\Audio\WasapiAudioClientFactory.h" />
     <ClInclude Include="V2\Audio\WasapiAudioFormatMapper.h" />
     <ClInclude Include="V2\Audio\WasapiLoopbackAudioSource.h" />

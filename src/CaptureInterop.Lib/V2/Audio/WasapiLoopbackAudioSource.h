@@ -1,11 +1,15 @@
 #pragma once
 
 #include "IWasapiLoopbackAudioProvider.h"
+#include "IWasapiLoopbackPacketProvider.h"
 
 #include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -16,9 +20,11 @@ namespace CaptureInterop::V2::Audio
     public:
         WasapiLoopbackAudioSource(
             WasapiLoopbackAudioSourceConfig config,
-            std::shared_ptr<IWasapiLoopbackAudioProvider> provider = nullptr)
+            std::shared_ptr<IWasapiLoopbackAudioProvider> provider = nullptr,
+            std::shared_ptr<IWasapiLoopbackPacketProvider> packetProvider = nullptr)
             : m_config(std::move(config)),
-              m_provider(std::move(provider))
+              m_provider(std::move(provider)),
+              m_packetProvider(std::move(packetProvider))
         {
             m_muted = m_config.controls.initiallyMuted;
             m_gainDb = m_config.controls.initialGain.gainDb;
@@ -83,24 +89,81 @@ namespace CaptureInterop::V2::Audio
                     "System audio source is not armed");
             }
 
-            std::lock_guard lock(m_mutex);
-            if (m_started)
             {
-                return OperationResult::Failure(
-                    CoreResultCode::InvalidState,
-                    "WasapiLoopbackAudioSource",
-                    "Start",
-                    "System audio source is already started");
+                std::lock_guard lock(m_mutex);
+                if (m_started)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::InvalidState,
+                        "WasapiLoopbackAudioSource",
+                        "Start",
+                        "System audio source is already started");
+                }
+
+                m_started = true;
             }
 
-            m_started = true;
+            m_stopRequested.store(false);
+            EnableCallbacks();
+            if (m_packetProvider)
+            {
+                OperationResult initializeResult = m_packetProvider->Initialize(m_config);
+                if (initializeResult.IsFailure())
+                {
+                    {
+                        std::lock_guard lock(m_mutex);
+                        m_started = false;
+                    }
+                    DisableCallbacks();
+                    return initializeResult;
+                }
+
+                OperationResult startResult = m_packetProvider->Start();
+                if (startResult.IsFailure())
+                {
+                    {
+                        std::lock_guard lock(m_mutex);
+                        m_started = false;
+                    }
+                    DisableCallbacks();
+                    [[maybe_unused]] OperationResult stopResult = m_packetProvider->Stop();
+                    return startResult;
+                }
+
+                m_worker = std::thread(
+                    [this]
+                    {
+                        CaptureLoop();
+                    });
+            }
+
             return OperationResult::Success();
         }
 
         [[nodiscard]] OperationResult Stop() noexcept override
         {
-            std::lock_guard lock(m_mutex);
-            m_started = false;
+            DisableCallbacks();
+            m_stopRequested.store(true);
+
+            std::shared_ptr<IWasapiLoopbackPacketProvider> packetProvider;
+            bool shouldStopProvider = false;
+            {
+                std::lock_guard lock(m_mutex);
+                shouldStopProvider = m_started || m_worker.joinable();
+                m_started = false;
+                packetProvider = m_packetProvider;
+            }
+
+            if (m_worker.joinable())
+            {
+                m_worker.join();
+            }
+
+            if (packetProvider && shouldStopProvider)
+            {
+                return packetProvider->Stop();
+            }
+
             return OperationResult::Success();
         }
 
@@ -218,7 +281,58 @@ namespace CaptureInterop::V2::Audio
             std::mutex mutex;
             std::vector<HandlerEntry> handlers;
             uint64_t nextHandlerId{ 1 };
+            bool acceptingCallbacks{ false };
         };
+
+        void EnableCallbacks()
+        {
+            std::lock_guard lock(m_callbackState->mutex);
+            m_callbackState->acceptingCallbacks = true;
+        }
+
+        void DisableCallbacks()
+        {
+            std::lock_guard lock(m_callbackState->mutex);
+            m_callbackState->acceptingCallbacks = false;
+        }
+
+        void CaptureLoop()
+        {
+            while (!m_stopRequested.load())
+            {
+                std::optional<AudioSample> packet = m_packetProvider->TryReadPacket();
+                if (packet.has_value())
+                {
+                    PublishSample(packet.value());
+                    continue;
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+        }
+
+        void PublishSample(const AudioSample& sample)
+        {
+            std::vector<AudioSampleHandler> handlers;
+            {
+                std::lock_guard lock(m_callbackState->mutex);
+                if (!m_callbackState->acceptingCallbacks)
+                {
+                    return;
+                }
+
+                handlers.reserve(m_callbackState->handlers.size());
+                for (const HandlerEntry& entry : m_callbackState->handlers)
+                {
+                    handlers.push_back(entry.handler);
+                }
+            }
+
+            for (const AudioSampleHandler& handler : handlers)
+            {
+                handler(sample);
+            }
+        }
 
         static void Unregister(
             const std::weak_ptr<CallbackState>& weakState,
@@ -244,8 +358,11 @@ namespace CaptureInterop::V2::Audio
 
         WasapiLoopbackAudioSourceConfig m_config;
         std::shared_ptr<IWasapiLoopbackAudioProvider> m_provider;
+        std::shared_ptr<IWasapiLoopbackPacketProvider> m_packetProvider;
         mutable std::mutex m_mutex;
         std::shared_ptr<CallbackState> m_callbackState{ std::make_shared<CallbackState>() };
+        std::thread m_worker;
+        std::atomic_bool m_stopRequested{ false };
         float m_gainDb{ AudioGainSettings::DefaultGainDb };
         bool m_muted{ false };
         bool m_started{ false };

@@ -1,7 +1,15 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "V2/Audio/FakeWasapiLoopbackAudioProvider.h"
+#include "V2/Audio/FakeWasapiLoopbackPacketProvider.h"
 #include "V2/Audio/WasapiLoopbackAudioSource.h"
+
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <functional>
+#include <mutex>
+#include <optional>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace CaptureInterop::V2;
@@ -39,6 +47,36 @@ namespace
             CreateCoreConfig(armed),
             CreateMediaType(),
             StreamId::FromValue(44));
+    }
+
+    AudioSample CreateSample(uint8_t firstByte = 7)
+    {
+        AudioSample sample;
+        sample.sourceId = SourceId::FromValue(22);
+        sample.streamId = StreamId::FromValue(44);
+        sample.timestamp = MediaTime::FromTicks(123);
+        sample.duration = MediaDuration::FromTicks(456);
+        sample.mediaType = CreateMediaType();
+        sample.pcmData = { firstByte, 0, 0, 0 };
+        return sample;
+    }
+
+    bool WaitFor(
+        const std::function<bool()>& predicate,
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(500))
+    {
+        const auto deadline = std::chrono::steady_clock::now() + timeout;
+        while (std::chrono::steady_clock::now() < deadline)
+        {
+            if (predicate())
+            {
+                return true;
+            }
+
+            Sleep(1);
+        }
+
+        return predicate();
     }
 }
 
@@ -129,6 +167,123 @@ namespace CaptureInteropTests
             Assert::IsTrue(source.IsStarted());
             Assert::IsTrue(source.Stop().IsSuccess());
             Assert::IsFalse(source.IsStarted());
+        }
+
+        TEST_METHOD(Start_WithPacketProvider_StartsWorkerLifecycle)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+
+            Assert::IsTrue(source.Start().IsSuccess());
+
+            Assert::IsTrue(source.IsStarted());
+            Assert::AreEqual(1, packetProvider->InitializeCount());
+            Assert::AreEqual(1, packetProvider->StartCount());
+            Assert::IsTrue(packetProvider->IsStarted());
+            Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
+        TEST_METHOD(Stop_WithPacketProvider_StopsAndJoinsWorker)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            {
+                WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+
+                Assert::IsTrue(source.Start().IsSuccess());
+                Assert::IsTrue(source.Stop().IsSuccess());
+
+                Assert::IsFalse(source.IsStarted());
+                Assert::IsFalse(packetProvider->IsStarted());
+            }
+
+            Assert::AreEqual(1, packetProvider->StopCount());
+        }
+
+        TEST_METHOD(PacketProvider_PublishesQueuedSamplesFromWorker)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            packetProvider->EnqueuePacket(CreateSample(42));
+            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+
+            std::mutex mutex;
+            std::condition_variable condition;
+            std::optional<AudioSample> receivedSample;
+            CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                [&](const AudioSample& sample)
+                {
+                    {
+                        std::lock_guard lock(mutex);
+                        receivedSample = sample;
+                    }
+                    condition.notify_one();
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            {
+                std::unique_lock lock(mutex);
+                condition.wait_for(
+                    lock,
+                    std::chrono::milliseconds(500),
+                    [&]
+                    {
+                        return receivedSample.has_value();
+                    });
+            }
+
+            Assert::IsTrue(receivedSample.has_value());
+            Assert::AreEqual(42u, static_cast<uint32_t>(receivedSample->pcmData[0]));
+            Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
+        TEST_METHOD(Stop_PreventsCallbacksAfterCompletion)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+            std::atomic_int callbackCount{ 0 };
+            CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                [&](const AudioSample&)
+                {
+                    ++callbackCount;
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            Assert::IsTrue(source.Stop().IsSuccess());
+            packetProvider->EnqueuePacket(CreateSample());
+
+            Sleep(25);
+            Assert::AreEqual(0, callbackCount.load());
+        }
+
+        TEST_METHOD(Stop_AfterPacketProviderInitializeFailure_IsSafe)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            packetProvider->SimulateInitializeFailure();
+            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+
+            const OperationResult startResult = source.Start();
+
+            Assert::IsTrue(startResult.IsFailure());
+            Assert::IsFalse(source.IsStarted());
+            Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
+        TEST_METHOD(PacketCallbacks_RunOutsideSourceStateLock)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            packetProvider->EnqueuePacket(CreateSample());
+            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+            std::atomic_bool callbackCompleted{ false };
+            CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                [&](const AudioSample&)
+                {
+                    Assert::IsTrue(source.SetMuted(SourceId::FromValue(22), false).IsSuccess());
+                    callbackCompleted.store(true);
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+
+            Assert::IsTrue(WaitFor([&] { return callbackCompleted.load(); }));
+            Assert::IsTrue(source.Stop().IsSuccess());
         }
 
         TEST_METHOD(Start_UnarmedSource_ReturnsUnsupportedOperation)
