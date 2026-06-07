@@ -36,10 +36,13 @@ namespace CaptureInterop::V2::Audio
             return m_started;
         }
 
-        void EnqueuePacket(AudioSample sample)
+        void EnqueuePacket(
+            AudioSample sample,
+            bool silent = false,
+            bool discontinuity = false)
         {
             std::lock_guard lock(m_mutex);
-            m_packets.push(std::move(sample));
+            m_packets.push(Packet{ std::move(sample), silent, discontinuity });
         }
 
         [[nodiscard]] OperationResult Initialize(
@@ -67,8 +70,10 @@ namespace CaptureInterop::V2::Audio
 
         [[nodiscard]] OperationResult Stop() noexcept override
         {
+            std::lock_guard lock(m_mutex);
             ++m_stopCount;
             m_started = false;
+            m_diagnostics.releaseEvents.push_back("fake-packet-provider-stopped");
             return OperationResult::Success();
         }
 
@@ -80,14 +85,41 @@ namespace CaptureInterop::V2::Audio
                 return std::nullopt;
             }
 
-            AudioSample sample = std::move(m_packets.front());
+            Packet packet = std::move(m_packets.front());
             m_packets.pop();
-            return sample;
+            ++m_diagnostics.packetsRead;
+            m_diagnostics.framesRead += packet.sample.mediaType.blockAlign == 0
+                ? 0
+                : packet.sample.pcmData.size() / packet.sample.mediaType.blockAlign;
+            if (packet.silent)
+            {
+                ++m_diagnostics.silentPackets;
+            }
+            if (packet.discontinuity)
+            {
+                ++m_diagnostics.discontinuities;
+            }
+
+            return packet.sample;
+        }
+
+        [[nodiscard]] WasapiLoopbackPacketProviderDiagnostics Diagnostics() const override
+        {
+            std::lock_guard lock(m_mutex);
+            return m_diagnostics;
         }
 
     private:
+        struct Packet
+        {
+            AudioSample sample;
+            bool silent{ false };
+            bool discontinuity{ false };
+        };
+
         mutable std::mutex m_mutex;
-        std::queue<AudioSample> m_packets;
+        std::queue<Packet> m_packets;
+        WasapiLoopbackPacketProviderDiagnostics m_diagnostics;
         int m_initializeCount{ 0 };
         int m_startCount{ 0 };
         int m_stopCount{ 0 };

@@ -101,6 +101,7 @@
     <ClInclude Include="V2\Audio\WasapiAudioFormatMapper.h" />
     <ClInclude Include="V2\Audio\WasapiLoopbackAudioSource.h" />
     <ClInclude Include="V2\Audio\WasapiLoopbackAudioSourceConfig.h" />
+    <ClInclude Include="V2\Audio\WindowsWasapiLoopbackPacketProvider.h" />
     <ClInclude Include="V2\Core\AudioControlProcessors.h" />
     <ClInclude Include="V2\Desktop\DesktopColorMetadata.h" />
     <ClInclude Include="V2\Desktop\DesktopD3DDeviceDependency.h" />
@@ -201,6 +202,7 @@
     <ClCompile Include="TextureProcessor.cpp" />
     <ClCompile Include="TextureProcessorFactory.cpp" />
     <ClCompile Include="V2\Audio\WindowsWasapiAudioClientFactory.cpp" />
+    <ClCompile Include="V2\Audio\WindowsWasapiLoopbackPacketProvider.cpp" />
     <ClCompile Include="V2\Desktop\WindowsGraphicsCaptureProvider.cpp" />
     <ClCompile Include="WindowsDesktopVideoCaptureSource.cpp" />
     <ClCompile Include="WindowsDesktopVideoCaptureSourceFactory.cpp" />

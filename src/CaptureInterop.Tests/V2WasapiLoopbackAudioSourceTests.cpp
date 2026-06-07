@@ -3,6 +3,7 @@
 #include "V2/Audio/FakeWasapiLoopbackAudioProvider.h"
 #include "V2/Audio/FakeWasapiLoopbackPacketProvider.h"
 #include "V2/Audio/WasapiLoopbackAudioSource.h"
+#include "V2/Audio/WindowsWasapiLoopbackPacketProvider.h"
 
 #include <atomic>
 #include <chrono>
@@ -77,6 +78,16 @@ namespace
         }
 
         return predicate();
+    }
+
+    bool IsWasapiLoopbackProbeEnabled()
+    {
+        wchar_t value[8]{};
+        const DWORD length = GetEnvironmentVariableW(
+            L"CAPTURETOOL_V2_WASAPI_LOOPBACK_PROBE",
+            value,
+            ARRAYSIZE(value));
+        return length > 0 && value[0] == L'1';
     }
 }
 
@@ -235,6 +246,65 @@ namespace CaptureInteropTests
             Assert::IsTrue(source.Stop().IsSuccess());
         }
 
+        TEST_METHOD(PacketProvider_DrainsMultipleQueuedPacketsBeforeWaiting)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            packetProvider->EnqueuePacket(CreateSample(1));
+            packetProvider->EnqueuePacket(CreateSample(2));
+            packetProvider->EnqueuePacket(CreateSample(3));
+            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+
+            std::atomic_int callbackCount{ 0 };
+            CallbackRegistrationToken token = source.RegisterSampleArrivedHandler(
+                [&](const AudioSample&)
+                {
+                    ++callbackCount;
+                });
+
+            Assert::IsTrue(source.Start().IsSuccess());
+
+            Assert::IsTrue(WaitFor([&] { return callbackCount.load() == 3; }));
+            Assert::IsTrue(source.Stop().IsSuccess());
+            Assert::AreEqual(3ull, packetProvider->Diagnostics().packetsRead);
+        }
+
+        TEST_METHOD(PacketProvider_SilentPacketIncrementsDiagnostics)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            packetProvider->EnqueuePacket(CreateSample(), true);
+            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+
+            Assert::IsTrue(source.Start().IsSuccess());
+
+            Assert::IsTrue(WaitFor([&] { return packetProvider->Diagnostics().silentPackets == 1; }));
+            Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
+        TEST_METHOD(PacketProvider_DiscontinuityIncrementsDiagnostics)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            packetProvider->EnqueuePacket(CreateSample(), false, true);
+            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+
+            Assert::IsTrue(source.Start().IsSuccess());
+
+            Assert::IsTrue(WaitFor([&] { return packetProvider->Diagnostics().discontinuities == 1; }));
+            Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
+        TEST_METHOD(PacketProvider_StopRecordsReleaseOrder)
+        {
+            auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
+            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            Assert::IsTrue(source.Stop().IsSuccess());
+
+            const WasapiLoopbackPacketProviderDiagnostics diagnostics = packetProvider->Diagnostics();
+            Assert::AreEqual(static_cast<size_t>(1), diagnostics.releaseEvents.size());
+            Assert::AreEqual("fake-packet-provider-stopped", diagnostics.releaseEvents[0].c_str());
+        }
+
         TEST_METHOD(Stop_PreventsCallbacksAfterCompletion)
         {
             auto packetProvider = std::make_shared<FakeWasapiLoopbackPacketProvider>();
@@ -376,6 +446,33 @@ namespace CaptureInteropTests
             }
 
             token.reset();
+        }
+
+        TEST_METHOD(LocalProbe_DefaultRenderLoopbackStartStop)
+        {
+            if (!IsWasapiLoopbackProbeEnabled())
+            {
+                Logger::WriteMessage("Skipping local WASAPI loopback probe. Set CAPTURETOOL_V2_WASAPI_LOOPBACK_PROBE=1 to enable.");
+                return;
+            }
+
+            auto packetProvider = std::make_shared<WindowsWasapiLoopbackPacketProvider>();
+            WasapiLoopbackAudioSource source(CreateConfig(), nullptr, packetProvider);
+
+            const OperationResult startResult = source.Start();
+            if (startResult.IsFailure())
+            {
+                Logger::WriteMessage("Local WASAPI loopback probe could not start default render endpoint loopback.");
+                return;
+            }
+
+            Sleep(50);
+            Assert::IsTrue(source.Stop().IsSuccess());
+
+            const WasapiLoopbackPacketProviderDiagnostics diagnostics = packetProvider->Diagnostics();
+            Logger::WriteMessage(diagnostics.endpointId.c_str());
+            Logger::WriteMessage(diagnostics.endpointName.c_str());
+            Assert::IsFalse(source.IsStarted());
         }
     };
 }
