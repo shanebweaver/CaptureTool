@@ -3,7 +3,9 @@
 #include "V2/Core/CapturePipelineSession.h"
 #include "V2CoreTestComponents.h"
 
+#include <cstdint>
 #include <memory>
+#include <utility>
 #include <vector>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -86,6 +88,64 @@ namespace
         }
     };
 
+    class AudioTagProcessor final : public IMediaProcessor
+    {
+    public:
+        explicit AudioTagProcessor(uint8_t tag) noexcept
+            : m_tag(tag)
+        {
+        }
+
+        MediaKind Kind() const noexcept override
+        {
+            return MediaKind::Audio;
+        }
+
+        OperationResult Configure(const MediaType&, const MediaType&) noexcept override
+        {
+            return OperationResult::Success();
+        }
+
+        OperationResult Process(const MediaSample& sample) noexcept override
+        {
+            MediaSample taggedSample = sample;
+            std::get<AudioSample>(taggedSample.data).pcmData.push_back(m_tag);
+
+            if (m_outputHandler)
+            {
+                m_outputHandler(taggedSample);
+            }
+
+            return OperationResult::Success();
+        }
+
+        CallbackRegistrationToken RegisterOutputHandler(MediaSampleHandler handler) override
+        {
+            m_outputHandler = std::move(handler);
+            return std::make_unique<CallbackRegistration>(
+                [this]()
+                {
+                    m_outputHandler = nullptr;
+                });
+        }
+
+    private:
+        uint8_t m_tag{ 0 };
+        MediaSampleHandler m_outputHandler;
+    };
+
+    class ChainedAudioProcessorFactory final : public IMediaProcessorFactory
+    {
+    public:
+        std::vector<std::unique_ptr<IMediaProcessor>> CreateProcessors(const OutputPlan&) override
+        {
+            std::vector<std::unique_ptr<IMediaProcessor>> processors;
+            processors.push_back(std::make_unique<AudioTagProcessor>(9));
+            processors.push_back(std::make_unique<AudioTagProcessor>(10));
+            return processors;
+        }
+    };
+
     class RoutingSinkFactory final : public IOutputSinkFactory
     {
     public:
@@ -102,7 +162,7 @@ namespace
     CapturePipelineSession CreateSession(
         ManualTimeProvider& timeProvider,
         RoutingSourceFactory& sourceFactory,
-        RoutingProcessorFactory& processorFactory,
+        IMediaProcessorFactory& processorFactory,
         RoutingSinkFactory& sinkFactory)
     {
         return CapturePipelineSession(
@@ -140,6 +200,28 @@ namespace CaptureInteropTests
             Assert::AreEqual(static_cast<int>(MediaKind::Audio), static_cast<int>(sinkFactory.nullSink->ReceivedSamples()[1].Kind()));
             Assert::AreEqual(MediaDuration::FromSeconds(1).ticks100ns, sinkFactory.nullSink->ReceivedSamples()[0].Timestamp().ticks100ns);
             Assert::AreEqual(MediaDuration::FromSeconds(2).ticks100ns, sinkFactory.nullSink->ReceivedSamples()[1].Timestamp().ticks100ns);
+        }
+
+        TEST_METHOD(Session_RoutesSamplesThroughAllMatchingProcessorsInOrder)
+        {
+            ManualTimeProvider timeProvider;
+            RoutingSourceFactory sourceFactory;
+            ChainedAudioProcessorFactory processorFactory;
+            RoutingSinkFactory sinkFactory;
+            CapturePipelineSession session = CreateSession(timeProvider, sourceFactory, processorFactory, sinkFactory);
+
+            Assert::IsTrue(session.Start().IsSuccess());
+            Assert::IsTrue(sourceFactory.audioSource->Emit(SampleBuilder::Audio()).IsSuccess());
+
+            Assert::AreEqual(static_cast<size_t>(1), sinkFactory.nullSink->ReceivedSamples().size());
+            const AudioSample& audio = std::get<AudioSample>(sinkFactory.nullSink->ReceivedSamples()[0].data);
+            Assert::AreEqual(static_cast<size_t>(6), audio.pcmData.size());
+            Assert::AreEqual(5, static_cast<int>(audio.pcmData[0]));
+            Assert::AreEqual(6, static_cast<int>(audio.pcmData[1]));
+            Assert::AreEqual(7, static_cast<int>(audio.pcmData[2]));
+            Assert::AreEqual(8, static_cast<int>(audio.pcmData[3]));
+            Assert::AreEqual(9, static_cast<int>(audio.pcmData[4]));
+            Assert::AreEqual(10, static_cast<int>(audio.pcmData[5]));
         }
 
         TEST_METHOD(Session_DropsSamplesWhilePausedAndResumesClockContinuity)

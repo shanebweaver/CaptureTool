@@ -6,6 +6,7 @@
 #include "PipelineStateMachine.h"
 #include "RecordingClock.h"
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -341,14 +342,15 @@ namespace CaptureInterop::V2
 
         void RegisterGraphCallbacks()
         {
-            for (const std::unique_ptr<IMediaProcessor>& processor : m_processors)
+            for (size_t index = 0; index < m_processors.size(); ++index)
             {
+                const std::unique_ptr<IMediaProcessor>& processor = m_processors[index];
                 if (processor != nullptr)
                 {
                     m_callbackTokens.push_back(processor->RegisterOutputHandler(
-                        [this](const MediaSample& sample)
+                        [this, index](const MediaSample& sample)
                         {
-                            WriteToSink(sample);
+                            ContinueProcessorChain(sample, index + 1);
                         }));
                 }
             }
@@ -388,10 +390,20 @@ namespace CaptureInterop::V2
             }
 
             sample = WithTimestamp(std::move(sample), m_clock->CurrentTime());
+            ContinueProcessorChain(sample, 0);
+        }
 
-            if (IMediaProcessor* processor = FindProcessor(sample.Kind()))
+        void ContinueProcessorChain(const MediaSample& sample, size_t startIndex)
+        {
+            if (m_stateMachine.State() != PipelineState::Recording || m_sink == nullptr)
             {
-                if (OperationResult result = processor->Process(sample); result.IsFailure())
+                return;
+            }
+
+            const size_t processorIndex = FindNextProcessorIndex(sample.Kind(), startIndex);
+            if (processorIndex != InvalidProcessorIndex)
+            {
+                if (OperationResult result = m_processors[processorIndex]->Process(sample); result.IsFailure())
                 {
                     (void)RecordDiagnostic(result);
                     (void)m_stateMachine.Fail();
@@ -417,17 +429,18 @@ namespace CaptureInterop::V2
             }
         }
 
-        IMediaProcessor* FindProcessor(MediaKind kind) noexcept
+        size_t FindNextProcessorIndex(MediaKind kind, size_t startIndex) const noexcept
         {
-            for (const std::unique_ptr<IMediaProcessor>& processor : m_processors)
+            for (size_t index = startIndex; index < m_processors.size(); ++index)
             {
+                const std::unique_ptr<IMediaProcessor>& processor = m_processors[index];
                 if (processor != nullptr && processor->Kind() == kind)
                 {
-                    return processor.get();
+                    return index;
                 }
             }
 
-            return nullptr;
+            return InvalidProcessorIndex;
         }
 
         IAudioMuteProcessor* FindAudioMuteProcessor(SourceId sourceId) noexcept
@@ -545,5 +558,7 @@ namespace CaptureInterop::V2
         std::vector<TeardownStage> m_teardownStages;
         PipelineCounters m_counters;
         std::vector<CoreDiagnostic> m_diagnostics;
+
+        static constexpr size_t InvalidProcessorIndex = static_cast<size_t>(-1);
     };
 }
