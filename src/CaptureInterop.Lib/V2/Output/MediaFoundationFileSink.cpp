@@ -948,6 +948,17 @@ namespace CaptureInterop::V2::Output
                 "Media Foundation file sink is not open");
         }
 
+        if (m_diagnostics.selectedProfile == ContainerFormat::Mp3)
+        {
+            RecordRejectedWrite();
+            return Failure(
+                CoreResultCode::UnsupportedOperation,
+                "WriteSample",
+                sample.Kind() == MediaKind::Video
+                    ? "MP3 output does not accept video samples"
+                    : "Media Foundation MP3 sample writing is not implemented in this PRD slice");
+        }
+
         if (m_state == MediaFoundationFileSinkState::Opened)
         {
             RecordRejectedWrite();

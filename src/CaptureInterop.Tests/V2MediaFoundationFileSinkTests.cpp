@@ -493,6 +493,65 @@ namespace CaptureInteropTests
             Assert::AreEqual(0, harness.sinkWriterFactory->createCalls);
         }
 
+        TEST_METHOD(Open_Mp3AudioOnlyPlan_ReachesExplicitShellWithoutMediaFoundationWriter)
+        {
+            SinkHarness harness;
+            const OutputPlan plan = CreatePlan(
+                ContainerFormat::Mp3,
+                { CreateAudioStream(2, AudioCodec::Mp3) });
+
+            const OperationResult result = harness.sink.Open(plan);
+
+            Assert::IsTrue(result.IsSuccess());
+            Assert::AreEqual(
+                static_cast<int>(MediaFoundationFileSinkState::Opened),
+                static_cast<int>(harness.sink.State()));
+            Assert::AreEqual(0, harness.runtimeApi->startupCalls);
+            Assert::AreEqual(0, harness.sinkWriterFactory->createCalls);
+            const MediaFoundationFileSinkDiagnostics diagnostics = harness.sink.Diagnostics();
+            Assert::AreEqual("mp3", diagnostics.selectedProfileName.c_str());
+            Assert::AreEqual(static_cast<size_t>(1), diagnostics.streams.size());
+            Assert::IsTrue(diagnostics.streams[0].accepted);
+        }
+
+        TEST_METHOD(WriteSample_Mp3AudioOnlyPlan_ReturnsExplicitNotImplemented)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(
+                ContainerFormat::Mp3,
+                { CreateAudioStream(2, AudioCodec::Mp3) })).IsSuccess());
+
+            const OperationResult result =
+                harness.sink.WriteSample(MediaSample{ CreateAudioSample(StreamId::FromValue(2)) });
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                static_cast<uint32_t>(CoreResultCode::UnsupportedOperation),
+                static_cast<uint32_t>(result.code));
+            Assert::AreEqual(
+                "Media Foundation MP3 sample writing is not implemented in this PRD slice",
+                result.diagnostic->message.c_str());
+            Assert::AreEqual(1ull, harness.sink.Diagnostics().writes.rejectedWrites);
+        }
+
+        TEST_METHOD(WriteSample_Mp3ProfileRejectsVideoSampleDefensively)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(
+                ContainerFormat::Mp3,
+                { CreateAudioStream(2, AudioCodec::Mp3) })).IsSuccess());
+
+            const OperationResult result =
+                harness.sink.WriteSample(MediaSample{ CreateVideoSample(StreamId::FromValue(2)) });
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                static_cast<uint32_t>(CoreResultCode::UnsupportedOperation),
+                static_cast<uint32_t>(result.code));
+            Assert::AreEqual("MP3 output does not accept video samples", result.diagnostic->message.c_str());
+            Assert::AreEqual(1ull, harness.sink.Diagnostics().writes.rejectedWrites);
+        }
+
         TEST_METHOD(Open_DuplicateStreamIds_Fails)
         {
             SinkHarness harness;
