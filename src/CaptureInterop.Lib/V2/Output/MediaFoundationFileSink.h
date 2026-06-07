@@ -35,6 +35,15 @@ namespace CaptureInterop::V2::Output
         std::optional<AudioMediaType> audioMediaType;
     };
 
+    struct MediaFoundationFileSinkWriteDiagnostics
+    {
+        uint64_t acceptedWrites{ 0 };
+        uint64_t completedWrites{ 0 };
+        uint64_t failedWrites{ 0 };
+        uint64_t rejectedWrites{ 0 };
+        uint32_t writeDepthHighWaterMark{ 0 };
+    };
+
     struct MediaFoundationH264VideoStreamConfig
     {
         StreamId streamId;
@@ -135,6 +144,7 @@ namespace CaptureInterop::V2::Output
         [[nodiscard]] MediaFoundationFileSinkState State() const noexcept;
         [[nodiscard]] std::vector<MediaFoundationSinkStreamMapping> StreamMappings() const;
         [[nodiscard]] std::optional<MediaFoundationSinkStreamMapping> FindStream(StreamId streamId) const;
+        [[nodiscard]] MediaFoundationFileSinkWriteDiagnostics WriteDiagnostics() const noexcept;
         [[nodiscard]] bool HasSinkWriter() const noexcept;
 
     private:
@@ -162,6 +172,9 @@ namespace CaptureInterop::V2::Output
             const MediaTime& timestamp) const noexcept;
         void RecordWrittenTimestamp(StreamId streamId, MediaTime timestamp) noexcept;
         [[nodiscard]] OperationResult FinalizeCore() noexcept;
+        void RecordRejectedWrite() noexcept;
+        void RecordAcceptedWriteStart() noexcept;
+        void RecordAcceptedWriteCompletion(const OperationResult& result) noexcept;
         [[nodiscard]] static OperationResult Failure(
             CoreResultCode code,
             const char* operation,
@@ -175,6 +188,8 @@ namespace CaptureInterop::V2::Output
         MediaFoundationFileSinkState m_state{ MediaFoundationFileSinkState::Created };
         std::vector<MediaFoundationSinkStreamMapping> m_streamMappings;
         std::vector<std::pair<StreamId, MediaTime>> m_lastWrittenTimestamps;
+        MediaFoundationFileSinkWriteDiagnostics m_writeDiagnostics;
+        uint32_t m_activeWriteCount{ 0 };
         MediaFoundationRuntimeLease m_runtimeLease;
         std::shared_ptr<IMediaFoundationSinkWriterSession> m_sinkWriter;
         bool m_sinkWriterCreated{ false };

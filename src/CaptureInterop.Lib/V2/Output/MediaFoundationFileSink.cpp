@@ -927,6 +927,7 @@ namespace CaptureInterop::V2::Output
         std::lock_guard lock(m_mutex);
         if (m_state == MediaFoundationFileSinkState::Created)
         {
+            RecordRejectedWrite();
             return Failure(
                 CoreResultCode::InvalidState,
                 "WriteSample",
@@ -935,6 +936,7 @@ namespace CaptureInterop::V2::Output
 
         if (m_state == MediaFoundationFileSinkState::Opened)
         {
+            RecordRejectedWrite();
             return Failure(
                 CoreResultCode::InvalidState,
                 "WriteSample",
@@ -945,6 +947,7 @@ namespace CaptureInterop::V2::Output
             || m_state == MediaFoundationFileSinkState::Finalized
             || m_state == MediaFoundationFileSinkState::Failed)
         {
+            RecordRejectedWrite();
             return Failure(
                 CoreResultCode::InvalidState,
                 "WriteSample",
@@ -961,6 +964,7 @@ namespace CaptureInterop::V2::Output
 
         if (mapping == m_streamMappings.end())
         {
+            RecordRejectedWrite();
             return Failure(
                 CoreResultCode::NotFound,
                 "WriteSample",
@@ -969,6 +973,7 @@ namespace CaptureInterop::V2::Output
 
         if (mapping->kind != sample.Kind())
         {
+            RecordRejectedWrite();
             return Failure(
                 CoreResultCode::ValidationFailure,
                 "WriteSample",
@@ -979,6 +984,7 @@ namespace CaptureInterop::V2::Output
         {
             if (!m_sinkWriter)
             {
+                RecordRejectedWrite();
                 return Failure(
                     CoreResultCode::InvalidState,
                     "WriteSample",
@@ -989,10 +995,13 @@ namespace CaptureInterop::V2::Output
             OperationResult validation = ValidateVideoSample(*mapping, video);
             if (validation.IsFailure())
             {
+                RecordRejectedWrite();
                 return validation;
             }
 
+            RecordAcceptedWriteStart();
             OperationResult writeResult = m_sinkWriter->WriteVideoSample(mapping->sinkStreamIndex, video);
+            RecordAcceptedWriteCompletion(writeResult);
             if (writeResult.IsFailure())
             {
                 return writeResult;
@@ -1006,6 +1015,7 @@ namespace CaptureInterop::V2::Output
         {
             if (!m_sinkWriter)
             {
+                RecordRejectedWrite();
                 return Failure(
                     CoreResultCode::InvalidState,
                     "WriteSample",
@@ -1016,10 +1026,13 @@ namespace CaptureInterop::V2::Output
             OperationResult validation = ValidateAudioSample(*mapping, audio);
             if (validation.IsFailure())
             {
+                RecordRejectedWrite();
                 return validation;
             }
 
+            RecordAcceptedWriteStart();
             OperationResult writeResult = m_sinkWriter->WriteAudioSample(mapping->sinkStreamIndex, audio);
+            RecordAcceptedWriteCompletion(writeResult);
             if (writeResult.IsFailure())
             {
                 return writeResult;
@@ -1029,6 +1042,7 @@ namespace CaptureInterop::V2::Output
             return OperationResult::Success();
         }
 
+        RecordRejectedWrite();
         return Failure(
             CoreResultCode::UnsupportedOperation,
             "WriteSample",
@@ -1092,6 +1106,12 @@ namespace CaptureInterop::V2::Output
         }
 
         return *mapping;
+    }
+
+    MediaFoundationFileSinkWriteDiagnostics MediaFoundationFileSink::WriteDiagnostics() const noexcept
+    {
+        std::lock_guard lock(m_mutex);
+        return m_writeDiagnostics;
     }
 
     bool MediaFoundationFileSink::HasSinkWriter() const noexcept
@@ -1482,6 +1502,36 @@ namespace CaptureInterop::V2::Output
         m_finalizationResult = result;
         m_state = MediaFoundationFileSinkState::Finalized;
         return result;
+    }
+
+    void MediaFoundationFileSink::RecordRejectedWrite() noexcept
+    {
+        ++m_writeDiagnostics.rejectedWrites;
+    }
+
+    void MediaFoundationFileSink::RecordAcceptedWriteStart() noexcept
+    {
+        ++m_writeDiagnostics.acceptedWrites;
+        ++m_activeWriteCount;
+        m_writeDiagnostics.writeDepthHighWaterMark =
+            std::max(m_writeDiagnostics.writeDepthHighWaterMark, m_activeWriteCount);
+    }
+
+    void MediaFoundationFileSink::RecordAcceptedWriteCompletion(const OperationResult& result) noexcept
+    {
+        if (m_activeWriteCount > 0)
+        {
+            --m_activeWriteCount;
+        }
+
+        if (result.IsSuccess())
+        {
+            ++m_writeDiagnostics.completedWrites;
+        }
+        else
+        {
+            ++m_writeDiagnostics.failedWrites;
+        }
     }
 
     OperationResult MediaFoundationFileSink::Failure(

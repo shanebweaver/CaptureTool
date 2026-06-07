@@ -3,10 +3,14 @@
 #include "V2/Output/MediaFoundationFileSink.h"
 
 #include <algorithm>
+#include <chrono>
+#include <condition_variable>
 #include <initializer_list>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
+#include <thread>
 #include <utility>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -94,20 +98,26 @@ namespace
             uint32_t sinkStreamIndex,
             const VideoSample& sample) noexcept override
         {
+            EnterWriterCall();
             ++writeVideoCalls;
             lastWriteVideoStreamIndex = sinkStreamIndex;
             lastVideoSample = sample;
-            return writeVideoResult;
+            const OperationResult result = writeVideoResult;
+            LeaveWriterCall();
+            return result;
         }
 
         [[nodiscard]] OperationResult WriteAudioSample(
             uint32_t sinkStreamIndex,
             const AudioSample& sample) noexcept override
         {
+            EnterWriterCall();
             ++writeAudioCalls;
             lastWriteAudioStreamIndex = sinkStreamIndex;
             lastAudioSample = sample;
-            return writeAudioResult;
+            const OperationResult result = writeAudioResult;
+            LeaveWriterCall();
+            return result;
         }
 
         [[nodiscard]] OperationResult BeginWriting() noexcept override
@@ -122,12 +132,40 @@ namespace
             return finalizeResult;
         }
 
+        void BlockWriterCalls()
+        {
+            std::lock_guard lock(writeBlockMutex);
+            blockWriterCalls = true;
+            writerCallEntered = false;
+        }
+
+        bool WaitForWriterCallEntered(std::chrono::milliseconds timeout)
+        {
+            std::unique_lock lock(writeBlockMutex);
+            return writeBlockCondition.wait_for(
+                lock,
+                timeout,
+                [&] { return writerCallEntered; });
+        }
+
+        void ReleaseWriterCalls()
+        {
+            {
+                std::lock_guard lock(writeBlockMutex);
+                blockWriterCalls = false;
+            }
+
+            writeBlockCondition.notify_all();
+        }
+
         int configureVideoCalls{ 0 };
         int configureAudioCalls{ 0 };
         int beginWritingCalls{ 0 };
         int writeVideoCalls{ 0 };
         int writeAudioCalls{ 0 };
         int finalizeCalls{ 0 };
+        int activeWriterCalls{ 0 };
+        int maxConcurrentWriterCalls{ 0 };
         uint32_t nextVideoStreamIndex{ 42 };
         uint32_t nextAudioStreamIndex{ 77 };
         uint32_t lastWriteVideoStreamIndex{ 0 };
@@ -142,6 +180,31 @@ namespace
         OperationResult writeVideoResult{ OperationResult::Success() };
         OperationResult writeAudioResult{ OperationResult::Success() };
         OperationResult finalizeResult{ OperationResult::Success() };
+
+    private:
+        void EnterWriterCall() noexcept
+        {
+            std::unique_lock lock(writeBlockMutex);
+            ++activeWriterCalls;
+            if (activeWriterCalls > maxConcurrentWriterCalls)
+            {
+                maxConcurrentWriterCalls = activeWriterCalls;
+            }
+            writerCallEntered = true;
+            writeBlockCondition.notify_all();
+            writeBlockCondition.wait(lock, [&] { return !blockWriterCalls; });
+        }
+
+        void LeaveWriterCall() noexcept
+        {
+            std::lock_guard lock(writeBlockMutex);
+            --activeWriterCalls;
+        }
+
+        std::mutex writeBlockMutex;
+        std::condition_variable writeBlockCondition;
+        bool blockWriterCalls{ false };
+        bool writerCallEntered{ false };
     };
 
     class FakeSinkWriterFactory final : public IMediaFoundationSinkWriterFactory
@@ -665,6 +728,86 @@ namespace CaptureInteropTests
             DeleteFileW(outputPath.c_str());
         }
 
+        TEST_METHOD(WriteSample_ConcurrentVideoAndAudioWrites_AreSerialized)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1), CreateAudioStream(2) })).IsSuccess());
+
+            harness.sinkWriterFactory->session->BlockWriterCalls();
+            OperationResult firstResult = OperationResult::Success();
+            OperationResult secondResult = OperationResult::Success();
+
+            std::thread firstWrite([&]
+            {
+                firstResult = harness.sink.WriteSample(MediaSample{ CreateVideoSample(StreamId::FromValue(1)) });
+            });
+            const bool firstEntered =
+                harness.sinkWriterFactory->session->WaitForWriterCallEntered(std::chrono::seconds(2));
+
+            std::thread secondWrite([&]
+            {
+                secondResult = harness.sink.WriteSample(MediaSample{ CreateAudioSample(StreamId::FromValue(2)) });
+            });
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            const int activeWriterCallsWhileBlocked =
+                harness.sinkWriterFactory->session->activeWriterCalls;
+
+            harness.sinkWriterFactory->session->ReleaseWriterCalls();
+            firstWrite.join();
+            secondWrite.join();
+
+            Assert::IsTrue(firstEntered);
+            Assert::AreEqual(1, activeWriterCallsWhileBlocked);
+            Assert::IsTrue(firstResult.IsSuccess());
+            Assert::IsTrue(secondResult.IsSuccess());
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->maxConcurrentWriterCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->writeVideoCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->writeAudioCalls);
+
+            const MediaFoundationFileSinkWriteDiagnostics diagnostics = harness.sink.WriteDiagnostics();
+            Assert::AreEqual(2ull, diagnostics.acceptedWrites);
+            Assert::AreEqual(2ull, diagnostics.completedWrites);
+            Assert::AreEqual(0ull, diagnostics.failedWrites);
+            Assert::AreEqual(1u, diagnostics.writeDepthHighWaterMark);
+        }
+
+        TEST_METHOD(Finalize_DuringAcceptedWrite_WaitsForWriteCompletion)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() })).IsSuccess());
+
+            harness.sinkWriterFactory->session->BlockWriterCalls();
+            OperationResult writeResult = OperationResult::Success();
+            OperationResult finalizeResult = OperationResult::Success();
+
+            std::thread writeThread([&]
+            {
+                writeResult = harness.sink.WriteSample(MediaSample{ CreateVideoSample() });
+            });
+            const bool writeEntered =
+                harness.sinkWriterFactory->session->WaitForWriterCallEntered(std::chrono::seconds(2));
+
+            std::thread finalizeThread([&]
+            {
+                finalizeResult = harness.sink.Finalize();
+            });
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            const int finalizeCallsWhileWriteBlocked = harness.sinkWriterFactory->session->finalizeCalls;
+
+            harness.sinkWriterFactory->session->ReleaseWriterCalls();
+            writeThread.join();
+            finalizeThread.join();
+
+            Assert::IsTrue(writeEntered);
+            Assert::AreEqual(0, finalizeCallsWhileWriteBlocked);
+            Assert::IsTrue(writeResult.IsSuccess());
+            Assert::IsTrue(finalizeResult.IsSuccess());
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->finalizeCalls);
+            Assert::AreEqual(1ull, harness.sink.WriteDiagnostics().completedWrites);
+        }
+
         TEST_METHOD(WriteSample_RegressingAudioTimestamp_ReturnsValidationFailure)
         {
             SinkHarness harness;
@@ -773,6 +916,7 @@ namespace CaptureInteropTests
                 static_cast<uint32_t>(CoreResultCode::InvalidState),
                 static_cast<uint32_t>(result.code));
             Assert::AreEqual(0, harness.sinkWriterFactory->session->writeVideoCalls);
+            Assert::AreEqual(1ull, harness.sink.WriteDiagnostics().rejectedWrites);
         }
 
         TEST_METHOD(WriteSample_SessionFailure_DoesNotAdvanceTimestamp)
@@ -798,6 +942,10 @@ namespace CaptureInteropTests
             Assert::IsTrue(firstResult.IsFailure());
             Assert::IsTrue(secondResult.IsSuccess());
             Assert::AreEqual(2, harness.sinkWriterFactory->session->writeVideoCalls);
+            const MediaFoundationFileSinkWriteDiagnostics diagnostics = harness.sink.WriteDiagnostics();
+            Assert::AreEqual(2ull, diagnostics.acceptedWrites);
+            Assert::AreEqual(1ull, diagnostics.failedWrites);
+            Assert::AreEqual(1ull, diagnostics.completedWrites);
         }
 
         TEST_METHOD(Finalize_AfterOpen_MovesToFinalized)
