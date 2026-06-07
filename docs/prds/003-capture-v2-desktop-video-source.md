@@ -719,6 +719,12 @@ Out of scope for this PR:
 - MP4 file output.
 - UI integration.
 
+Implementation note:
+
+- The local native probe is `PrimaryMonitorSourceProbe_WhenEnabled_CapturesFullMonitorAndRegion` in `V2WindowsDesktopVideoSourceTests`. It is disabled by default; run it with `CAPTURETOOL_V2_DESKTOP_SOURCE_PROBE=1` and `vstest.console.exe x64\Debug\CaptureInterop.Tests.dll /TestCaseFilter:FullyQualifiedName~PrimaryMonitorSourceProbe_WhenEnabled_CapturesFullMonitorAndRegion`.
+- The probe starts/stops the V2 desktop source twice, first for the primary monitor and then for a centered region. It logs provider name, output/sample dimensions, pixel format, cursor policy, color metadata, HDR/wide-color flags, timing counters, sequence, and timestamp through the MSTest logger.
+- Manual checks: confirm activation succeeds on the local Windows desktop, at least one frame is observed for both full-monitor and region capture, and probe dimensions match the selected monitor/region. Monitor-change behavior is still manual: disconnecting or changing displays during capture should surface as provider/source failure diagnostics rather than silently switching monitors.
+
 ### Recommended Sequence
 
 Implement these chunks in order:

@@ -5,6 +5,11 @@
 #include "V2/Desktop/FakeDesktopD3DDeviceDependency.h"
 #include "V2/Desktop/FakeDesktopCaptureProvider.h"
 #include "V2/Desktop/WindowsDesktopVideoSource.h"
+#include "V2/Desktop/WindowsGraphicsCaptureProvider.h"
+
+#include <chrono>
+#include <condition_variable>
+#include <sstream>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace CaptureInterop::V2;
@@ -143,6 +148,174 @@ namespace
             std::move(device),
             std::move(context),
             "DesktopSourceCropTestD3DDependency");
+    }
+
+    bool IsDesktopSourceProbeEnabled()
+    {
+        wchar_t value[8]{};
+        const DWORD length = GetEnvironmentVariableW(
+            L"CAPTURETOOL_V2_DESKTOP_SOURCE_PROBE",
+            value,
+            ARRAYSIZE(value));
+        return length > 0 && value[0] == L'1';
+    }
+
+    DesktopMonitorInfo CreatePrimaryMonitorInfo()
+    {
+        const HMONITOR primaryMonitor = MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY);
+        Assert::IsNotNull(primaryMonitor);
+
+        MONITORINFOEXW monitorInfo{};
+        monitorInfo.cbSize = sizeof(monitorInfo);
+        Assert::IsTrue(GetMonitorInfoW(primaryMonitor, &monitorInfo) != FALSE);
+
+        DesktopMonitorTarget target;
+        target.monitorHandle = reinterpret_cast<uintptr_t>(primaryMonitor);
+        target.displayId = "PRIMARY";
+
+        return DesktopMonitorInfo{
+            target,
+            DesktopMonitorBounds{
+                monitorInfo.rcMonitor.left,
+                monitorInfo.rcMonitor.top,
+                static_cast<uint32_t>(monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left),
+                static_cast<uint32_t>(monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top)
+            },
+            "Primary display"
+        };
+    }
+
+    CaptureRectangle CenteredProbeRegion(const DesktopMonitorInfo& monitor)
+    {
+        const uint32_t width = std::min<uint32_t>(monitor.bounds.width, 640);
+        const uint32_t height = std::min<uint32_t>(monitor.bounds.height, 360);
+        return CaptureRectangle{
+            static_cast<int32_t>((monitor.bounds.width - width) / 2),
+            static_cast<int32_t>((monitor.bounds.height - height) / 2),
+            width,
+            height
+        };
+    }
+
+    std::shared_ptr<FakeDesktopMonitorResolver> CreateResolver(DesktopMonitorInfo monitor)
+    {
+        auto resolver = std::make_shared<FakeDesktopMonitorResolver>();
+        resolver->AddMonitor(std::move(monitor));
+        return resolver;
+    }
+
+    DesktopVideoSourceConfig CreateProbeConfig(
+        const DesktopMonitorInfo& monitor,
+        std::optional<CaptureRectangle> region = std::nullopt)
+    {
+        DesktopSourceConfig source;
+        source.id = SourceId::FromValue(region.has_value() ? 31 : 30);
+        source.videoStreamId = StreamId::FromValue(region.has_value() ? 41 : 40);
+        source.name = region.has_value() ? "Primary monitor region probe" : "Primary monitor full probe";
+        source.displayId = monitor.target.displayId;
+        source.monitorHandle = monitor.target.monitorHandle;
+        source.frameRate = Rational::From(60, 1);
+        source.cursorPolicy = CursorCapturePolicy::Included;
+        source.captureArea = region;
+        return MapDesktopVideoSourceConfig(source);
+    }
+
+    std::wstring ToProbeLine(
+        const wchar_t* label,
+        const DesktopVideoSourceDiagnostics& diagnostics,
+        const VideoSample& sample)
+    {
+        std::wstringstream stream;
+        stream
+            << L"[V2 Desktop Probe] " << label
+            << L" provider=" << std::wstring(diagnostics.providerName.begin(), diagnostics.providerName.end())
+            << L" output=" << diagnostics.effectiveOutputDimensions.width << L"x"
+            << diagnostics.effectiveOutputDimensions.height
+            << L" sample=" << sample.frameDimensions.width << L"x" << sample.frameDimensions.height
+            << L" pixelFormat=" << static_cast<int>(sample.mediaType.pixelFormat)
+            << L" cursorPolicy=" << static_cast<int>(diagnostics.cursorPolicy)
+            << L" colorPrimaries=" << static_cast<int>(diagnostics.color.colorPrimaries)
+            << L" transferFunction=" << static_cast<int>(diagnostics.color.transferFunction)
+            << L" colorRange=" << static_cast<int>(diagnostics.color.colorRange)
+            << L" hdrDetected=" << diagnostics.color.hdrInputDetected
+            << L" wideColorDetected=" << diagnostics.color.wideColorInputDetected
+            << L" frames=" << diagnostics.framesReceived
+            << L" duplicate=" << diagnostics.duplicateFrames
+            << L" skipped=" << diagnostics.skippedFrames
+            << L" late=" << diagnostics.lateFrames
+            << L" sequence=" << sample.sequenceNumber
+            << L" timestamp=" << sample.timestamp.ticks100ns;
+        return stream.str();
+    }
+
+    VideoSample RunDesktopSourceProbe(
+        const wchar_t* label,
+        DesktopVideoSourceConfig config,
+        DesktopMonitorInfo monitor)
+    {
+        std::shared_ptr<DesktopD3DDeviceDependency> dependency = CreateRealD3DDependency();
+        auto provider = std::make_shared<WindowsGraphicsCaptureProvider>(config);
+        WindowsDesktopVideoSource source(
+            config,
+            provider,
+            CreateResolver(std::move(monitor)),
+            dependency);
+
+        std::mutex sampleMutex;
+        std::condition_variable sampleAvailable;
+        std::optional<VideoSample> receivedSample;
+        CallbackRegistrationToken token = source.RegisterFrameArrivedHandler(
+            [&](const VideoSample& sample)
+            {
+                std::lock_guard lock(sampleMutex);
+                receivedSample = sample;
+                sampleAvailable.notify_one();
+            });
+
+        const OperationResult startResult = source.Start();
+        if (!startResult.IsSuccess())
+        {
+            const DesktopVideoSourceDiagnostics diagnostics = source.Diagnostics();
+            std::wstring message = L"[V2 Desktop Probe] activation failed for ";
+            message.append(label);
+            message.append(L" provider=");
+            message.append(diagnostics.providerName.begin(), diagnostics.providerName.end());
+            if (startResult.diagnostic.has_value())
+            {
+                message.append(L" operation=");
+                message.append(startResult.diagnostic->operation.begin(), startResult.diagnostic->operation.end());
+                if (startResult.diagnostic->nativeStatus.has_value())
+                {
+                    message.append(L" nativeStatus=");
+                    message.append(std::to_wstring(*startResult.diagnostic->nativeStatus));
+                }
+                message.append(L" message=");
+                message.append(startResult.diagnostic->message.begin(), startResult.diagnostic->message.end());
+            }
+            Logger::WriteMessage(message.c_str());
+        }
+
+        Assert::IsTrue(startResult.IsSuccess());
+
+        {
+            std::unique_lock lock(sampleMutex);
+            Assert::IsTrue(sampleAvailable.wait_for(
+                lock,
+                std::chrono::seconds(3),
+                [&receivedSample]
+                {
+                    return receivedSample.has_value();
+                }));
+        }
+
+        const DesktopVideoSourceDiagnostics diagnostics = source.Diagnostics();
+        Assert::IsTrue(diagnostics.framesReceived >= 1);
+        Assert::IsTrue(receivedSample.has_value());
+        Assert::IsTrue(receivedSample->HasTexture());
+        Logger::WriteMessage(ToProbeLine(label, diagnostics, *receivedSample).c_str());
+
+        Assert::IsTrue(source.Stop().IsSuccess());
+        return *receivedSample;
     }
 
     wil::com_ptr<ID3D11Texture2D> CreateTexture(
@@ -806,6 +979,29 @@ namespace CaptureInteropTests
             Assert::AreEqual("WindowsDesktopVideoSource", result.diagnostic->component.c_str());
             Assert::AreEqual("Start", result.diagnostic->operation.c_str());
             Assert::IsFalse(provider->EmitFrame(CreateFrame()).IsSuccess());
+        }
+
+        TEST_METHOD(PrimaryMonitorSourceProbe_WhenEnabled_CapturesFullMonitorAndRegion)
+        {
+            if (!IsDesktopSourceProbeEnabled())
+            {
+                return;
+            }
+
+            const DesktopMonitorInfo monitor = CreatePrimaryMonitorInfo();
+            const DesktopVideoSourceConfig fullConfig = CreateProbeConfig(monitor);
+            const VideoSample fullSample = RunDesktopSourceProbe(L"full", fullConfig, monitor);
+
+            const CaptureRectangle region = CenteredProbeRegion(monitor);
+            const DesktopVideoSourceConfig regionConfig = CreateProbeConfig(monitor, region);
+            const VideoSample regionSample = RunDesktopSourceProbe(L"region", regionConfig, monitor);
+
+            Assert::AreEqual(monitor.bounds.width, fullSample.mediaType.width);
+            Assert::AreEqual(monitor.bounds.height, fullSample.mediaType.height);
+            Assert::AreEqual(region.width, regionSample.mediaType.width);
+            Assert::AreEqual(region.height, regionSample.mediaType.height);
+            Assert::IsTrue(fullSample.HasTexture());
+            Assert::IsTrue(regionSample.HasTexture());
         }
     };
 }
