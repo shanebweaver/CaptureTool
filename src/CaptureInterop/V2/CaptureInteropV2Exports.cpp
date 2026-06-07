@@ -41,6 +41,17 @@ namespace
         uint8_t startMuted{ 0 };
         std::vector<CopiedAudioGainConfig> audioGains;
     };
+
+    struct LastErrorState
+    {
+        int32_t resultCode{ CtCaptureV2_ResultCode_Success };
+        int32_t errorCode{ 0 };
+        int32_t nativeStatus{ 0 };
+        int32_t stage{ 0 };
+        std::string component;
+        std::string operation;
+        std::u16string message;
+    };
 }
 
 struct CtCaptureV2_Recorder_t
@@ -49,6 +60,7 @@ struct CtCaptureV2_Recorder_t
     std::optional<CopiedRecorderConfig> activeConfig;
     std::vector<CopiedAudioGainConfig> runtimeGains;
     std::vector<uint32_t> mutedAudioSources;
+    LastErrorState lastError;
 };
 
 namespace
@@ -60,6 +72,7 @@ namespace
 
     std::mutex RecorderRegistryMutex;
     std::unordered_set<CtCaptureV2_RecorderHandle> RecorderRegistry;
+    constexpr const char* RecorderComponent = "CaptureInteropV2Recorder";
 
     CtCaptureV2_Recorder_t* FindRecorder(CtCaptureV2_RecorderHandle handle) noexcept
     {
@@ -170,6 +183,66 @@ namespace
         result.finalState = static_cast<int32_t>(finalState);
         return result;
     }
+
+    void ClearLastError(CtCaptureV2_Recorder_t& recorder)
+    {
+        recorder.lastError = LastErrorState{};
+    }
+
+    int32_t RecordFailure(
+        CtCaptureV2_Recorder_t& recorder,
+        int32_t resultCode,
+        const char* operation,
+        const char16_t* message,
+        int32_t nativeStatus = 0,
+        int32_t stage = 0)
+    {
+        recorder.lastError.resultCode = resultCode;
+        recorder.lastError.errorCode = resultCode;
+        recorder.lastError.nativeStatus = nativeStatus;
+        recorder.lastError.stage = stage;
+        recorder.lastError.component = RecorderComponent;
+        recorder.lastError.operation = operation == nullptr ? "" : operation;
+        recorder.lastError.message = message == nullptr ? u"" : message;
+        return resultCode;
+    }
+
+    int32_t RecordNativeFailure(
+        CtCaptureV2_Recorder_t* recorder,
+        const char* operation) noexcept
+    {
+        if (recorder != nullptr)
+        {
+            return RecordFailure(
+                *recorder,
+                CtCaptureV2_ResultCode_NativeFailure,
+                operation,
+                u"An unexpected native failure occurred.");
+        }
+
+        return CtCaptureV2_ResultCode_NativeFailure;
+    }
+
+    uint32_t RequiredMessageLength(const std::u16string& message) noexcept
+    {
+        return static_cast<uint32_t>(message.size() + 1);
+    }
+
+    void CopyMessage(const std::u16string& message, char16_t* buffer, uint32_t bufferLength) noexcept
+    {
+        if (buffer == nullptr || bufferLength == 0)
+        {
+            return;
+        }
+
+        uint32_t index = 0;
+        for (; index < message.size() && index + 1 < bufferLength; ++index)
+        {
+            buffer[index] = message[index];
+        }
+
+        buffer[index] = u'\0';
+    }
 }
 
 extern "C"
@@ -215,6 +288,7 @@ extern "C"
             }
 
             *outHandle = recorder.release();
+            ClearLastError(**outHandle);
             return CtCaptureV2_ResultCode_Success;
         }
         catch (...)
@@ -267,13 +341,21 @@ extern "C"
 
             if (recorder->state != RecorderState::Idle)
             {
-                return CtCaptureV2_ResultCode_AlreadyStarted;
+                return RecordFailure(
+                    *recorder,
+                    CtCaptureV2_ResultCode_AlreadyStarted,
+                    "Start",
+                    u"Recorder is already started.");
             }
 
             const int32_t validationResult = CaptureInterop::V2::Api::ValidateConfig(config);
             if (validationResult != CtCaptureV2_ResultCode_Success)
             {
-                return validationResult;
+                return RecordFailure(
+                    *recorder,
+                    validationResult,
+                    "Start",
+                    u"Recorder configuration validation failed.");
             }
 
             recorder->activeConfig = CopyConfig(*config);
@@ -291,11 +373,12 @@ extern "C"
             }
 
             recorder->state = RecorderState::Recording;
+            ClearLastError(*recorder);
             return CtCaptureV2_ResultCode_Success;
         }
         catch (...)
         {
-            return CtCaptureV2_ResultCode_NativeFailure;
+            return RecordNativeFailure(FindRecorder(handle), "Start");
         }
     }
 
@@ -312,15 +395,20 @@ extern "C"
 
             if (recorder->state != RecorderState::Recording)
             {
-                return CtCaptureV2_ResultCode_InvalidState;
+                return RecordFailure(
+                    *recorder,
+                    CtCaptureV2_ResultCode_InvalidState,
+                    "Pause",
+                    u"Recorder cannot be paused from the current state.");
             }
 
             recorder->state = RecorderState::Paused;
+            ClearLastError(*recorder);
             return CtCaptureV2_ResultCode_Success;
         }
         catch (...)
         {
-            return CtCaptureV2_ResultCode_NativeFailure;
+            return RecordNativeFailure(FindRecorder(handle), "Pause");
         }
     }
 
@@ -337,15 +425,20 @@ extern "C"
 
             if (recorder->state != RecorderState::Paused)
             {
-                return CtCaptureV2_ResultCode_InvalidState;
+                return RecordFailure(
+                    *recorder,
+                    CtCaptureV2_ResultCode_InvalidState,
+                    "Resume",
+                    u"Recorder cannot be resumed from the current state.");
             }
 
             recorder->state = RecorderState::Recording;
+            ClearLastError(*recorder);
             return CtCaptureV2_ResultCode_Success;
         }
         catch (...)
         {
-            return CtCaptureV2_ResultCode_NativeFailure;
+            return RecordNativeFailure(FindRecorder(handle), "Resume");
         }
     }
 
@@ -364,25 +457,38 @@ extern "C"
 
             if (muted != 0 && muted != 1)
             {
-                return CtCaptureV2_ResultCode_InvalidArgument;
+                return RecordFailure(
+                    *recorder,
+                    CtCaptureV2_ResultCode_InvalidArgument,
+                    "SetAudioMuted",
+                    u"Muted must be 0 or 1.");
             }
 
             if (recorder->state != RecorderState::Recording && recorder->state != RecorderState::Paused)
             {
-                return CtCaptureV2_ResultCode_InvalidState;
+                return RecordFailure(
+                    *recorder,
+                    CtCaptureV2_ResultCode_InvalidState,
+                    "SetAudioMuted",
+                    u"Recorder cannot update audio mute from the current state.");
             }
 
             if (!HasArmedAudioSource(*recorder, sourceId))
             {
-                return CtCaptureV2_ResultCode_NotFound;
+                return RecordFailure(
+                    *recorder,
+                    CtCaptureV2_ResultCode_NotFound,
+                    "SetAudioMuted",
+                    u"No armed audio source was found for the requested source id.");
             }
 
             SetRuntimeMuted(*recorder, sourceId, muted != 0);
+            ClearLastError(*recorder);
             return CtCaptureV2_ResultCode_Success;
         }
         catch (...)
         {
-            return CtCaptureV2_ResultCode_NativeFailure;
+            return RecordNativeFailure(FindRecorder(handle), "SetAudioMuted");
         }
     }
 
@@ -401,26 +507,39 @@ extern "C"
 
             if (recorder->state != RecorderState::Recording && recorder->state != RecorderState::Paused)
             {
-                return CtCaptureV2_ResultCode_InvalidState;
+                return RecordFailure(
+                    *recorder,
+                    CtCaptureV2_ResultCode_InvalidState,
+                    "SetAudioGain",
+                    u"Recorder cannot update audio gain from the current state.");
             }
 
             if (gainDb < CaptureInterop::V2::Api::MinAudioGainDb
                 || gainDb > CaptureInterop::V2::Api::MaxAudioGainDb)
             {
-                return CtCaptureV2_ResultCode_ValidationFailed;
+                return RecordFailure(
+                    *recorder,
+                    CtCaptureV2_ResultCode_ValidationFailed,
+                    "SetAudioGain",
+                    u"Audio gain is outside the supported range.");
             }
 
             if (!HasArmedAudioSource(*recorder, sourceId))
             {
-                return CtCaptureV2_ResultCode_NotFound;
+                return RecordFailure(
+                    *recorder,
+                    CtCaptureV2_ResultCode_NotFound,
+                    "SetAudioGain",
+                    u"No armed audio source was found for the requested source id.");
             }
 
             SetRuntimeGain(*recorder, sourceId, gainDb);
+            ClearLastError(*recorder);
             return CtCaptureV2_ResultCode_Success;
         }
         catch (...)
         {
-            return CtCaptureV2_ResultCode_NativeFailure;
+            return RecordNativeFailure(FindRecorder(handle), "SetAudioGain");
         }
     }
 
@@ -445,7 +564,11 @@ extern "C"
             if (recorder->state == RecorderState::Idle)
             {
                 *result = MakeStopResult(CtCaptureV2_ResultCode_AlreadyStopped, RecorderState::Idle);
-                return CtCaptureV2_ResultCode_AlreadyStopped;
+                return RecordFailure(
+                    *recorder,
+                    CtCaptureV2_ResultCode_AlreadyStopped,
+                    "Stop",
+                    u"Recorder is already stopped.");
             }
 
             recorder->state = RecorderState::Idle;
@@ -453,6 +576,7 @@ extern "C"
             recorder->runtimeGains.clear();
             recorder->mutedAudioSources.clear();
             *result = MakeStopResult(CtCaptureV2_ResultCode_Success, RecorderState::Idle);
+            ClearLastError(*recorder);
             return CtCaptureV2_ResultCode_Success;
         }
         catch (...)
@@ -462,6 +586,55 @@ extern "C"
                 *result = MakeStopResult(CtCaptureV2_ResultCode_NativeFailure, RecorderState::Idle);
             }
 
+            return RecordNativeFailure(FindRecorder(handle), "Stop");
+        }
+    }
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_GetLastError(
+        CtCaptureV2_RecorderHandle handle,
+        CtCaptureV2_ErrorInfo* errorInfo,
+        char16_t* messageBuffer,
+        uint32_t messageBufferLength,
+        uint32_t* requiredMessageLength) noexcept
+    {
+        try
+        {
+            CtCaptureV2_Recorder_t* recorder = FindRecorder(handle);
+            if (recorder == nullptr)
+            {
+                return CtCaptureV2_ResultCode_InvalidHandle;
+            }
+
+            if (errorInfo == nullptr || requiredMessageLength == nullptr)
+            {
+                return RecordFailure(
+                    *recorder,
+                    CtCaptureV2_ResultCode_InvalidArgument,
+                    "GetLastError",
+                    u"Error info and required message length outputs are required.");
+            }
+
+            CtCaptureV2_InitErrorInfo(errorInfo);
+            errorInfo->resultCode = recorder->lastError.resultCode;
+            errorInfo->errorCode = recorder->lastError.errorCode;
+            errorInfo->nativeStatus = recorder->lastError.nativeStatus;
+            errorInfo->stage = recorder->lastError.stage;
+            errorInfo->component = recorder->lastError.component.c_str();
+            errorInfo->operation = recorder->lastError.operation.c_str();
+
+            const uint32_t requiredLength = RequiredMessageLength(recorder->lastError.message);
+            *requiredMessageLength = requiredLength;
+
+            if (messageBuffer == nullptr || messageBufferLength < requiredLength)
+            {
+                return CtCaptureV2_ResultCode_BufferTooSmall;
+            }
+
+            CopyMessage(recorder->lastError.message, messageBuffer, messageBufferLength);
+            return CtCaptureV2_ResultCode_Success;
+        }
+        catch (...)
+        {
             return CtCaptureV2_ResultCode_NativeFailure;
         }
     }

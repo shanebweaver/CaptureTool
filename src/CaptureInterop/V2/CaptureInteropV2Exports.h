@@ -190,6 +190,18 @@ struct CtCaptureV2_StopResult
     uint64_t validationWarnings;
 };
 
+struct CtCaptureV2_ErrorInfo
+{
+    uint32_t size;
+    uint32_t version;
+    int32_t resultCode;
+    int32_t errorCode;
+    int32_t nativeStatus;
+    int32_t stage;
+    const char* component;
+    const char* operation;
+};
+
 inline constexpr uint32_t CtCaptureV2_DtoVersion = 1;
 
 inline void CtCaptureV2_InitSourceConfig(CtCaptureV2_SourceConfig* value) noexcept
@@ -288,6 +300,16 @@ inline void CtCaptureV2_InitStopResult(CtCaptureV2_StopResult* value) noexcept
     }
 }
 
+inline void CtCaptureV2_InitErrorInfo(CtCaptureV2_ErrorInfo* value) noexcept
+{
+    if (value != nullptr)
+    {
+        *value = {};
+        value->size = sizeof(CtCaptureV2_ErrorInfo);
+        value->version = CtCaptureV2_DtoVersion;
+    }
+}
+
 extern "C"
 {
     CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_GetApiVersion(
@@ -322,4 +344,11 @@ extern "C"
     CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_Stop(
         CtCaptureV2_RecorderHandle handle,
         CtCaptureV2_StopResult* result) noexcept;
+
+    CTCAPTUREV2_API int32_t CTCAPTUREV2_CALL CtCaptureV2_GetLastError(
+        CtCaptureV2_RecorderHandle handle,
+        CtCaptureV2_ErrorInfo* errorInfo,
+        char16_t* messageBuffer,
+        uint32_t messageBufferLength,
+        uint32_t* requiredMessageLength) noexcept;
 }
