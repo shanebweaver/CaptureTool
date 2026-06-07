@@ -147,6 +147,7 @@
     <ClInclude Include="MediaFoundationLifecycleManager.h" />
     <ClInclude Include="MediaFoundationLifecycleManagerFactory.h" />
     <ClInclude Include="MediaTimeConstants.h" />
+    <ClInclude Include="V2\Core\MediaFoundationSinkCapabilities.h" />
     <ClInclude Include="V2\Core\OutputProfileResolver.h" />
     <ClInclude Include="V2\Core\PipelineInterfaces.h" />
     <ClInclude Include="V2\Core\PipelineStateMachine.h" />
