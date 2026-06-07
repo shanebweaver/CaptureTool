@@ -146,6 +146,39 @@ namespace CaptureInteropTests
             Assert::IsTrue(provider->Diagnostics().framesProduced == 0);
         }
 
+        TEST_METHOD(Start_WhileAlreadyStarted_ReturnsInvalidState)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            const OperationResult result = source.Start();
+
+            Assert::IsFalse(result.IsSuccess());
+            Assert::AreEqual(static_cast<int>(CoreResultCode::InvalidState), static_cast<int>(result.code));
+            Assert::AreEqual("WindowsDesktopVideoSource", result.diagnostic->component.c_str());
+            Assert::AreEqual("Start", result.diagnostic->operation.c_str());
+        }
+
+        TEST_METHOD(Stop_BeforeStart_IsIdempotentSuccess)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
+
+            Assert::IsTrue(source.Stop().IsSuccess());
+            Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
+        TEST_METHOD(Stop_AfterStop_IsIdempotentSuccess)
+        {
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            Assert::IsTrue(source.Stop().IsSuccess());
+            Assert::IsTrue(source.Stop().IsSuccess());
+        }
+
         TEST_METHOD(Start_WithoutD3DDependency_ReturnsInvalidState)
         {
             std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
@@ -177,6 +210,60 @@ namespace CaptureInteropTests
             Assert::AreEqual(static_cast<int>(CoreResultCode::NativeFailure), static_cast<int>(result.code));
             Assert::AreEqual("CheckDeviceHealth", result.diagnostic->operation.c_str());
             Assert::IsFalse(provider->EmitFrame(CreateFrame()).IsSuccess());
+        }
+
+        TEST_METHOD(Start_WhenProviderStartFails_ReleasesResourcesAndDrainsCallback)
+        {
+            auto lifecycleEvents = std::make_shared<std::vector<std::string>>();
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            provider->SetLifecycleEvents(lifecycleEvents);
+            provider->SetStartFailure(OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "FakeDesktopCaptureProvider",
+                "Start",
+                "Provider start failed",
+                -1));
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
+            uint32_t invocationCount = 0;
+            CallbackRegistrationToken token = source.RegisterFrameArrivedHandler(
+                [&invocationCount](const VideoSample&)
+                {
+                    ++invocationCount;
+                });
+
+            const OperationResult result = source.Start();
+
+            Assert::IsFalse(result.IsSuccess());
+            Assert::AreEqual(static_cast<int>(CoreResultCode::NativeFailure), static_cast<int>(result.code));
+            Assert::AreEqual("Start", result.diagnostic->operation.c_str());
+            Assert::IsNull(provider->DeviceDependency().get());
+            Assert::AreEqual(static_cast<size_t>(1), lifecycleEvents->size());
+            Assert::IsFalse(provider->EmitFrame(CreateFrame()).IsSuccess());
+            Assert::AreEqual(0u, invocationCount);
+        }
+
+        TEST_METHOD(Stop_WhenProviderStopFails_ReturnsFailureAndReleasesResources)
+        {
+            auto lifecycleEvents = std::make_shared<std::vector<std::string>>();
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider();
+            provider->SetLifecycleEvents(lifecycleEvents);
+            provider->SetStopFailure(OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "FakeDesktopCaptureProvider",
+                "Stop",
+                "Provider stop failed",
+                -2));
+            WindowsDesktopVideoSource source(CreateConfig(), provider, nullptr, CreateDependency());
+
+            Assert::IsTrue(source.Start().IsSuccess());
+            const OperationResult result = source.Stop();
+
+            Assert::IsFalse(result.IsSuccess());
+            Assert::AreEqual(static_cast<int>(CoreResultCode::NativeFailure), static_cast<int>(result.code));
+            Assert::AreEqual("FakeDesktopCaptureProvider", result.diagnostic->component.c_str());
+            Assert::AreEqual("Stop", result.diagnostic->operation.c_str());
+            Assert::IsNull(provider->DeviceDependency().get());
+            Assert::AreEqual(static_cast<size_t>(1), lifecycleEvents->size());
         }
 
         TEST_METHOD(Stop_ReleasesProviderDeviceResourcesBeforeGraphDependencyDestroyed)

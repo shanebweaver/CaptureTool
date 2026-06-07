@@ -52,6 +52,18 @@ namespace CaptureInterop::V2::Desktop
                     "Desktop capture provider is required");
             }
 
+            {
+                std::lock_guard lock(m_mutex);
+                if (m_started)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::InvalidState,
+                        "WindowsDesktopVideoSource",
+                        "Start",
+                        "Desktop video source is already started");
+                }
+            }
+
             if (!m_d3dDeviceDependency)
             {
                 return OperationResult::Failure(
@@ -108,23 +120,34 @@ namespace CaptureInterop::V2::Desktop
                 return configureResult;
             }
 
+            {
+                std::lock_guard lock(m_mutex);
+                if (!m_providerCallback)
+                {
+                    m_providerCallback = m_provider->RegisterFrameArrivedHandler(
+                        [this](const DesktopCaptureFrame& frame)
+                        {
+                            ForwardFrame(frame);
+                        });
+                }
+            }
+
             OperationResult startResult = m_provider->Start();
             if (!startResult.IsSuccess())
             {
+                CallbackRegistrationToken providerCallback;
+                {
+                    std::lock_guard lock(m_mutex);
+                    providerCallback = std::move(m_providerCallback);
+                }
+
+                providerCallback.reset();
                 m_provider->ReleaseDeviceResources();
                 return startResult;
             }
 
             std::lock_guard lock(m_mutex);
-            if (!m_providerCallback)
-            {
-                m_providerCallback = m_provider->RegisterFrameArrivedHandler(
-                    [this](const DesktopCaptureFrame& frame)
-                    {
-                        ForwardFrame(frame);
-                    });
-            }
-
+            m_started = true;
             return OperationResult::Success();
         }
 
@@ -145,6 +168,12 @@ namespace CaptureInterop::V2::Desktop
             CallbackRegistrationToken providerCallback;
             {
                 std::lock_guard lock(m_mutex);
+                if (!m_started && !m_providerCallback)
+                {
+                    return OperationResult::Success();
+                }
+
+                m_started = false;
                 providerCallback = std::move(m_providerCallback);
             }
 
@@ -211,6 +240,11 @@ namespace CaptureInterop::V2::Desktop
             std::vector<VideoSampleHandler> handlers;
             {
                 std::lock_guard lock(m_mutex);
+                if (!m_started)
+                {
+                    return;
+                }
+
                 handlers.reserve(m_handlers.size());
                 for (const HandlerEntry& entry : m_handlers)
                 {
@@ -320,5 +354,6 @@ namespace CaptureInterop::V2::Desktop
         std::optional<DesktopMonitorInfo> m_resolvedMonitor;
         std::optional<VideoMediaType> m_effectiveMediaType;
         uint64_t m_nextHandlerId{ 1 };
+        bool m_started{ false };
     };
 }

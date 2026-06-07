@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <mutex>
+#include <optional>
 #include <utility>
 
 namespace CaptureInterop::V2::Desktop
@@ -115,6 +116,11 @@ namespace CaptureInterop::V2::Desktop
                     "D3D device dependency must be configured before provider start");
             }
 
+            if (m_startFailure.has_value())
+            {
+                return *m_startFailure;
+            }
+
             m_started = true;
             return OperationResult::Success();
         }
@@ -123,7 +129,24 @@ namespace CaptureInterop::V2::Desktop
         {
             std::lock_guard lock(m_mutex);
             m_started = false;
+            if (m_stopFailure.has_value())
+            {
+                return *m_stopFailure;
+            }
+
             return OperationResult::Success();
+        }
+
+        void SetStartFailure(OperationResult failure)
+        {
+            std::lock_guard lock(m_mutex);
+            m_startFailure = std::move(failure);
+        }
+
+        void SetStopFailure(OperationResult failure)
+        {
+            std::lock_guard lock(m_mutex);
+            m_stopFailure = std::move(failure);
         }
 
         [[nodiscard]] CallbackRegistrationToken RegisterFrameArrivedHandler(
@@ -226,6 +249,8 @@ namespace CaptureInterop::V2::Desktop
         DesktopCaptureProviderDiagnostics m_diagnostics;
         std::shared_ptr<IDesktopD3DDeviceDependency> m_deviceDependency;
         std::shared_ptr<std::vector<std::string>> m_lifecycleEvents;
+        std::optional<OperationResult> m_startFailure;
+        std::optional<OperationResult> m_stopFailure;
         uint64_t m_nextHandlerId{ 1 };
         bool m_started{ false };
     };
