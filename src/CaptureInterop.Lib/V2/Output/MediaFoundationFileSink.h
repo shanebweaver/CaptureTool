@@ -46,6 +46,17 @@ namespace CaptureInterop::V2::Output
         VideoPixelFormat inputPixelFormat{ VideoPixelFormat::Bgra8 };
     };
 
+    struct MediaFoundationAacAudioStreamConfig
+    {
+        StreamId streamId;
+        uint32_t sampleRate{ 0 };
+        uint16_t channels{ 0 };
+        uint32_t bitrate{ 0 };
+        AudioSampleFormat inputSampleFormat{ AudioSampleFormat::Float32 };
+        uint16_t inputBitsPerSample{ 32 };
+        uint16_t inputBlockAlign{ 0 };
+    };
+
     struct MediaFoundationStreamConfigurationResult
     {
         OperationResult result;
@@ -64,6 +75,8 @@ namespace CaptureInterop::V2::Output
 
         [[nodiscard]] virtual MediaFoundationStreamConfigurationResult ConfigureH264VideoStream(
             const MediaFoundationH264VideoStreamConfig& config) noexcept = 0;
+        [[nodiscard]] virtual MediaFoundationStreamConfigurationResult ConfigureAacAudioStream(
+            const MediaFoundationAacAudioStreamConfig& config) noexcept = 0;
         [[nodiscard]] virtual OperationResult WriteVideoSample(
             uint32_t sinkStreamIndex,
             const VideoSample& sample) noexcept = 0;
@@ -129,6 +142,8 @@ namespace CaptureInterop::V2::Output
             const OutputPlan& plan,
             std::vector<MediaFoundationSinkStreamMapping>& mappings) noexcept;
         [[nodiscard]] static MediaFoundationH264VideoStreamConfig BuildH264VideoStreamConfig(
+            const OutputStreamPlan& stream) noexcept;
+        [[nodiscard]] static MediaFoundationAacAudioStreamConfig BuildAacAudioStreamConfig(
             const OutputStreamPlan& stream) noexcept;
         [[nodiscard]] OperationResult ValidateVideoSample(
             const MediaFoundationSinkStreamMapping& mapping,

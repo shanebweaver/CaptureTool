@@ -22,6 +22,21 @@ namespace CaptureInterop::V2::Output
             }
         }
 
+        [[nodiscard]] GUID AudioInputSubtype(AudioSampleFormat sampleFormat) noexcept
+        {
+            switch (sampleFormat)
+            {
+            case AudioSampleFormat::Float32:
+                return MFAudioFormat_Float;
+            case AudioSampleFormat::Pcm16:
+            case AudioSampleFormat::Pcm24:
+            case AudioSampleFormat::Pcm32:
+                return MFAudioFormat_PCM;
+            default:
+                return GUID_NULL;
+            }
+        }
+
         [[nodiscard]] OperationResult NativeFailure(
             const char* operation,
             const char* message,
@@ -134,6 +149,61 @@ namespace CaptureInterop::V2::Output
                 {
                     return MediaFoundationStreamConfigurationResult{
                         NativeFailure("SetVideoInputMediaType", "Failed to set H.264 video input media type", hr),
+                        sinkStreamIndex
+                    };
+                }
+
+                return MediaFoundationStreamConfigurationResult{
+                    OperationResult::Success(),
+                    sinkStreamIndex
+                };
+            }
+
+            [[nodiscard]] MediaFoundationStreamConfigurationResult ConfigureAacAudioStream(
+                const MediaFoundationAacAudioStreamConfig& config) noexcept override
+            {
+                if (!m_sinkWriter)
+                {
+                    return MediaFoundationStreamConfigurationResult{
+                        OperationResult::Failure(
+                            CoreResultCode::InvalidState,
+                            "MediaFoundationFileSink",
+                            "ConfigureAacAudioStream",
+                            "Media Foundation sink writer is not available"),
+                        0
+                    };
+                }
+
+                auto outputTypeResult = CreateAacOutputType(config);
+                if (outputTypeResult.result.IsFailure())
+                {
+                    return MediaFoundationStreamConfigurationResult{ outputTypeResult.result, 0 };
+                }
+
+                DWORD sinkStreamIndex = 0;
+                HRESULT hr = m_sinkWriter->AddStream(outputTypeResult.mediaType.get(), &sinkStreamIndex);
+                if (FAILED(hr))
+                {
+                    return MediaFoundationStreamConfigurationResult{
+                        NativeFailure("AddAudioStream", "Failed to add AAC audio output stream", hr),
+                        0
+                    };
+                }
+
+                auto inputTypeResult = CreateAudioInputType(config);
+                if (inputTypeResult.result.IsFailure())
+                {
+                    return MediaFoundationStreamConfigurationResult{ inputTypeResult.result, sinkStreamIndex };
+                }
+
+                hr = m_sinkWriter->SetInputMediaType(
+                    sinkStreamIndex,
+                    inputTypeResult.mediaType.get(),
+                    nullptr);
+                if (FAILED(hr))
+                {
+                    return MediaFoundationStreamConfigurationResult{
+                        NativeFailure("SetAudioInputMediaType", "Failed to set AAC audio input media type", hr),
                         sinkStreamIndex
                     };
                 }
@@ -361,6 +431,149 @@ namespace CaptureInterop::V2::Output
                     config.pixelAspectRatioDenominator,
                     "CreateH264OutputType",
                     "Failed to set H.264 output pixel aspect ratio");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                return created;
+            }
+
+            [[nodiscard]] static MediaTypeCreationResult CreateAacOutputType(
+                const MediaFoundationAacAudioStreamConfig& config) noexcept
+            {
+                MediaTypeCreationResult created = CreateMediaType("CreateAacOutputType");
+                if (created.result.IsFailure())
+                {
+                    return created;
+                }
+
+                IMFMediaType& mediaType = *created.mediaType;
+                OperationResult result = SetGuidAttribute(
+                    mediaType,
+                    MF_MT_MAJOR_TYPE,
+                    MFMediaType_Audio,
+                    "CreateAacOutputType",
+                    "Failed to set AAC output major type");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                result = SetGuidAttribute(
+                    mediaType,
+                    MF_MT_SUBTYPE,
+                    MFAudioFormat_AAC,
+                    "CreateAacOutputType",
+                    "Failed to set AAC output subtype");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                result = SetUint32Attribute(
+                    mediaType,
+                    MF_MT_AUDIO_SAMPLES_PER_SECOND,
+                    config.sampleRate,
+                    "CreateAacOutputType",
+                    "Failed to set AAC output sample rate");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                result = SetUint32Attribute(
+                    mediaType,
+                    MF_MT_AUDIO_NUM_CHANNELS,
+                    config.channels,
+                    "CreateAacOutputType",
+                    "Failed to set AAC output channel count");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                result = SetUint32Attribute(
+                    mediaType,
+                    MF_MT_AUDIO_AVG_BYTES_PER_SECOND,
+                    config.bitrate / 8,
+                    "CreateAacOutputType",
+                    "Failed to set AAC output bitrate");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                result = SetUint32Attribute(
+                    mediaType,
+                    MF_MT_AUDIO_BITS_PER_SAMPLE,
+                    16,
+                    "CreateAacOutputType",
+                    "Failed to set AAC output bits per sample");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                return created;
+            }
+
+            [[nodiscard]] static MediaTypeCreationResult CreateAudioInputType(
+                const MediaFoundationAacAudioStreamConfig& config) noexcept
+            {
+                const GUID inputSubtype = AudioInputSubtype(config.inputSampleFormat);
+                if (IsEqualGUID(inputSubtype, GUID_NULL))
+                {
+                    return MediaTypeCreationResult{
+                        OperationResult::Failure(
+                            CoreResultCode::UnsupportedOperation,
+                            "MediaFoundationFileSink",
+                            "CreateAudioInputType",
+                            "Audio input sample format is not supported by the AAC sink path"),
+                        {}
+                    };
+                }
+
+                MediaTypeCreationResult created = CreateMediaType("CreateAudioInputType");
+                if (created.result.IsFailure())
+                {
+                    return created;
+                }
+
+                IMFMediaType& mediaType = *created.mediaType;
+                OperationResult result = SetGuidAttribute(
+                    mediaType,
+                    MF_MT_MAJOR_TYPE,
+                    MFMediaType_Audio,
+                    "CreateAudioInputType",
+                    "Failed to set audio input major type");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                result = SetGuidAttribute(
+                    mediaType,
+                    MF_MT_SUBTYPE,
+                    inputSubtype,
+                    "CreateAudioInputType",
+                    "Failed to set audio input subtype");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                result = SetUint32Attribute(
+                    mediaType,
+                    MF_MT_AUDIO_SAMPLES_PER_SECOND,
+                    config.sampleRate,
+                    "CreateAudioInputType",
+                    "Failed to set audio input sample rate");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                result = SetUint32Attribute(
+                    mediaType,
+                    MF_MT_AUDIO_NUM_CHANNELS,
+                    config.channels,
+                    "CreateAudioInputType",
+                    "Failed to set audio input channel count");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                result = SetUint32Attribute(
+                    mediaType,
+                    MF_MT_AUDIO_BITS_PER_SAMPLE,
+                    config.inputBitsPerSample,
+                    "CreateAudioInputType",
+                    "Failed to set audio input bits per sample");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                result = SetUint32Attribute(
+                    mediaType,
+                    MF_MT_AUDIO_BLOCK_ALIGNMENT,
+                    config.inputBlockAlign,
+                    "CreateAudioInputType",
+                    "Failed to set audio input block alignment");
+                if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
+
+                result = SetUint32Attribute(
+                    mediaType,
+                    MF_MT_AUDIO_AVG_BYTES_PER_SECOND,
+                    config.sampleRate * config.inputBlockAlign,
+                    "CreateAudioInputType",
+                    "Failed to set audio input average bytes per second");
                 if (result.IsFailure()) return MediaTypeCreationResult{ result, {} };
 
                 return created;
@@ -604,8 +817,9 @@ namespace CaptureInterop::V2::Output
             }
         }
 
+        const bool hasConfiguredMp4Streams = plan.container == ContainerFormat::Mp4 && !mappings.empty();
         m_streamMappings = std::move(mappings);
-        m_state = plan.container == ContainerFormat::Mp4 && plan.HasVideoStream() && !plan.HasAudioStream()
+        m_state = hasConfiguredMp4Streams
             ? MediaFoundationFileSinkState::WritingReady
             : MediaFoundationFileSinkState::Opened;
         return OperationResult::Success();
@@ -906,6 +1120,24 @@ namespace CaptureInterop::V2::Output
                 continue;
             }
 
+            if (stream.kind == MediaKind::Audio)
+            {
+                MediaFoundationStreamConfigurationResult streamResult =
+                    m_sinkWriter->ConfigureAacAudioStream(BuildAacAudioStreamConfig(stream));
+                if (streamResult.result.IsFailure())
+                {
+                    return streamResult.result;
+                }
+
+                mappings.push_back(MediaFoundationSinkStreamMapping{
+                    stream.streamId,
+                    stream.kind,
+                    streamResult.sinkStreamIndex,
+                    std::nullopt
+                });
+                continue;
+            }
+
             mappings.push_back(MediaFoundationSinkStreamMapping{
                 stream.streamId,
                 stream.kind,
@@ -914,7 +1146,7 @@ namespace CaptureInterop::V2::Output
             });
         }
 
-        if (plan.HasVideoStream() && !plan.HasAudioStream())
+        if (!mappings.empty())
         {
             OperationResult beginResult = m_sinkWriter->BeginWriting();
             if (beginResult.IsFailure())
@@ -940,6 +1172,24 @@ namespace CaptureInterop::V2::Output
             1,
             1,
             stream.videoMediaType->pixelFormat
+        };
+    }
+
+    MediaFoundationAacAudioStreamConfig MediaFoundationFileSink::BuildAacAudioStreamConfig(
+        const OutputStreamPlan& stream) noexcept
+    {
+        const uint16_t inputBitsPerSample = 32;
+        const uint16_t inputBlockAlign =
+            static_cast<uint16_t>(stream.audio->channels * (inputBitsPerSample / 8));
+
+        return MediaFoundationAacAudioStreamConfig{
+            stream.streamId,
+            stream.audio->sampleRate,
+            stream.audio->channels,
+            stream.audio->bitrate,
+            AudioSampleFormat::Float32,
+            inputBitsPerSample,
+            inputBlockAlign
         };
     }
 

@@ -71,6 +71,22 @@ namespace
             };
         }
 
+        [[nodiscard]] MediaFoundationStreamConfigurationResult ConfigureAacAudioStream(
+            const MediaFoundationAacAudioStreamConfig& config) noexcept override
+        {
+            ++configureAudioCalls;
+            lastAudioConfig = config;
+            if (configureAudioResult.IsFailure())
+            {
+                return MediaFoundationStreamConfigurationResult{ configureAudioResult, 0 };
+            }
+
+            return MediaFoundationStreamConfigurationResult{
+                OperationResult::Success(),
+                nextAudioStreamIndex
+            };
+        }
+
         [[nodiscard]] OperationResult WriteVideoSample(
             uint32_t sinkStreamIndex,
             const VideoSample& sample) noexcept override
@@ -94,14 +110,18 @@ namespace
         }
 
         int configureVideoCalls{ 0 };
+        int configureAudioCalls{ 0 };
         int beginWritingCalls{ 0 };
         int writeVideoCalls{ 0 };
         int finalizeCalls{ 0 };
         uint32_t nextVideoStreamIndex{ 42 };
+        uint32_t nextAudioStreamIndex{ 77 };
         uint32_t lastWriteVideoStreamIndex{ 0 };
         std::optional<MediaFoundationH264VideoStreamConfig> lastVideoConfig;
+        std::optional<MediaFoundationAacAudioStreamConfig> lastAudioConfig;
         std::optional<VideoSample> lastVideoSample;
         OperationResult configureVideoResult{ OperationResult::Success() };
+        OperationResult configureAudioResult{ OperationResult::Success() };
         OperationResult beginWritingResult{ OperationResult::Success() };
         OperationResult writeVideoResult{ OperationResult::Success() };
         OperationResult finalizeResult{ OperationResult::Success() };
@@ -307,14 +327,27 @@ namespace CaptureInteropTests
             Assert::IsTrue(video.has_value());
             Assert::IsTrue(audio.has_value());
             Assert::AreEqual(42u, video->sinkStreamIndex);
-            Assert::AreEqual(1u, audio->sinkStreamIndex);
+            Assert::AreEqual(77u, audio->sinkStreamIndex);
             Assert::AreEqual(static_cast<int>(MediaKind::Video), static_cast<int>(video->kind));
             Assert::AreEqual(static_cast<int>(MediaKind::Audio), static_cast<int>(audio->kind));
             Assert::AreEqual(1, harness.sinkWriterFactory->session->configureVideoCalls);
-            Assert::AreEqual(0, harness.sinkWriterFactory->session->beginWritingCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->configureAudioCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->beginWritingCalls);
             Assert::AreEqual(
-                static_cast<int>(MediaFoundationFileSinkState::Opened),
+                static_cast<int>(MediaFoundationFileSinkState::WritingReady),
                 static_cast<int>(harness.sink.State()));
+
+            const auto& audioConfig = harness.sinkWriterFactory->session->lastAudioConfig;
+            Assert::IsTrue(audioConfig.has_value());
+            Assert::AreEqual(8u, audioConfig->streamId.value);
+            Assert::AreEqual(48000u, audioConfig->sampleRate);
+            Assert::AreEqual(2u, static_cast<uint32_t>(audioConfig->channels));
+            Assert::AreEqual(192000u, audioConfig->bitrate);
+            Assert::AreEqual(
+                static_cast<int>(AudioSampleFormat::Float32),
+                static_cast<int>(audioConfig->inputSampleFormat));
+            Assert::AreEqual(32u, static_cast<uint32_t>(audioConfig->inputBitsPerSample));
+            Assert::AreEqual(8u, static_cast<uint32_t>(audioConfig->inputBlockAlign));
         }
 
         TEST_METHOD(Open_Mp3PlanWithVideoStream_FailsDefensively)
@@ -381,6 +414,42 @@ namespace CaptureInteropTests
             Assert::AreEqual(
                 "Video output stream is missing required media type fields",
                 result.diagnostic->message.c_str());
+            Assert::AreEqual(0, harness.runtimeApi->startupCalls);
+            Assert::AreEqual(0, harness.sinkWriterFactory->createCalls);
+        }
+
+        TEST_METHOD(Open_InvalidAudioSampleRate_FailsBeforeRuntimeLease)
+        {
+            SinkHarness harness;
+            const OutputPlan plan = CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1), CreateAudioStream(2, AudioCodec::Aac, 0) });
+
+            const OperationResult result = harness.sink.Open(plan);
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                static_cast<uint32_t>(CoreResultCode::ValidationFailure),
+                static_cast<uint32_t>(result.code));
+            Assert::AreEqual("Audio output stream is missing required media fields", result.diagnostic->message.c_str());
+            Assert::AreEqual(0, harness.runtimeApi->startupCalls);
+            Assert::AreEqual(0, harness.sinkWriterFactory->createCalls);
+        }
+
+        TEST_METHOD(Open_InvalidAudioChannelCount_FailsBeforeRuntimeLease)
+        {
+            SinkHarness harness;
+            const OutputPlan plan = CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1), CreateAudioStream(2, AudioCodec::Aac, 48000, 0) });
+
+            const OperationResult result = harness.sink.Open(plan);
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                static_cast<uint32_t>(CoreResultCode::ValidationFailure),
+                static_cast<uint32_t>(result.code));
+            Assert::AreEqual("Audio output stream is missing required media fields", result.diagnostic->message.c_str());
             Assert::AreEqual(0, harness.runtimeApi->startupCalls);
             Assert::AreEqual(0, harness.sinkWriterFactory->createCalls);
         }
@@ -466,19 +535,23 @@ namespace CaptureInteropTests
                 static_cast<uint32_t>(result.code));
         }
 
-        TEST_METHOD(WriteSample_BeforeBeginWriting_ReturnsInvalidState)
+        TEST_METHOD(WriteSample_AudioWritingStillDeferred_ReturnsUnsupportedOperation)
         {
             SinkHarness harness;
             Assert::IsTrue(harness.sink.Open(CreatePlan(
                 ContainerFormat::Mp4,
                 { CreateVideoStream(1), CreateAudioStream(2) })).IsSuccess());
 
-            const OperationResult result = harness.sink.WriteSample(MediaSample{ CreateVideoSample() });
+            const OperationResult result =
+                harness.sink.WriteSample(MediaSample{ CreateAudioSample(StreamId::FromValue(2)) });
 
             Assert::IsTrue(result.IsFailure());
             Assert::AreEqual(
-                static_cast<uint32_t>(CoreResultCode::InvalidState),
+                static_cast<uint32_t>(CoreResultCode::UnsupportedOperation),
                 static_cast<uint32_t>(result.code));
+            Assert::AreEqual(
+                "Media Foundation audio sample writing is not implemented in this PRD slice",
+                result.diagnostic->message.c_str());
             Assert::AreEqual(0, harness.sinkWriterFactory->session->writeVideoCalls);
         }
 
@@ -622,7 +695,7 @@ namespace CaptureInteropTests
                 static_cast<int>(harness.sink.State()));
         }
 
-        TEST_METHOD(Finalize_BeforeBeginWriting_ReleasesResourcesWithoutWriterFinalize)
+        TEST_METHOD(Finalize_VideoPlusAudio_FinalizesAfterBeginWriting)
         {
             SinkHarness harness;
             Assert::IsTrue(harness.sink.Open(CreatePlan(
@@ -632,7 +705,8 @@ namespace CaptureInteropTests
             const OperationResult result = harness.sink.Finalize();
 
             Assert::IsTrue(result.IsSuccess());
-            Assert::AreEqual(0, harness.sinkWriterFactory->session->finalizeCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->beginWritingCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->finalizeCalls);
             Assert::AreEqual(0u, harness.runtime->ActiveLeaseCount());
             Assert::AreEqual(1, harness.runtimeApi->shutdownCalls);
         }
@@ -740,6 +814,29 @@ namespace CaptureInteropTests
 
             Assert::IsTrue(result.IsFailure());
             Assert::AreEqual(1, harness.sinkWriterFactory->session->configureVideoCalls);
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->beginWritingCalls);
+            Assert::AreEqual(0u, harness.runtime->ActiveLeaseCount());
+            Assert::AreEqual(1, harness.runtimeApi->shutdownCalls);
+            Assert::IsFalse(harness.sink.HasSinkWriter());
+        }
+
+        TEST_METHOD(Open_AudioStreamConfigurationFailure_ReleasesRuntimeLease)
+        {
+            SinkHarness harness;
+            harness.sinkWriterFactory->session->configureAudioResult = OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "MediaFoundationFileSink",
+                "AddAudioStream",
+                "simulated audio stream setup failure",
+                E_FAIL);
+
+            const OperationResult result = harness.sink.Open(CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1), CreateAudioStream(2) }));
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->configureVideoCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->configureAudioCalls);
             Assert::AreEqual(0, harness.sinkWriterFactory->session->beginWritingCalls);
             Assert::AreEqual(0u, harness.runtime->ActiveLeaseCount());
             Assert::AreEqual(1, harness.runtimeApi->shutdownCalls);
