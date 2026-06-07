@@ -665,6 +665,10 @@ Out of scope for this PR:
 - H.264 HDR metadata preservation.
 - Display brightness or target-nits selection.
 
+Implementation note:
+
+- The first implementation treats `HdrPolicy::Auto` as a placeholder policy. Known provider/display color metadata is preserved on the V2 media type, unknown metadata remains unknown, and HDR or wide-color input raises diagnostics that downstream tone mapping is still pending.
+
 ### PR 003-O: Provider Failure and Monitor Change Handling
 
 Scope:

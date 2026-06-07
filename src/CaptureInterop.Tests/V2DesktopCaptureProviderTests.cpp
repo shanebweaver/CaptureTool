@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "CppUnitTest.h"
+#include "V2/Desktop/DesktopColorMetadata.h"
 #include "V2/Desktop/FakeDesktopD3DDeviceDependency.h"
 #include "V2/Desktop/FakeDesktopCaptureProvider.h"
 
@@ -28,6 +29,14 @@ namespace
             SourceDescriptor{ SourceId::FromValue(1), SourceKind::Desktop, "Desktop" },
             { StreamDescriptor{ StreamId::FromValue(1), SourceId::FromValue(1), MediaKind::Video, "Desktop video" } },
             CreateMediaType());
+    }
+
+    FakeDesktopCaptureProvider CreateProvider(VideoMediaType mediaType)
+    {
+        return FakeDesktopCaptureProvider(
+            SourceDescriptor{ SourceId::FromValue(1), SourceKind::Desktop, "Desktop" },
+            { StreamDescriptor{ StreamId::FromValue(1), SourceId::FromValue(1), MediaKind::Video, "Desktop video" } },
+            mediaType);
     }
 
     std::shared_ptr<FakeDesktopD3DDeviceDependency> CreateDependency()
@@ -200,6 +209,61 @@ namespace CaptureInteropTests
             Assert::AreEqual("FakeDesktopCaptureProvider", diagnostics.providerName.c_str());
             Assert::AreEqual(2ull, diagnostics.framesProduced);
             Assert::AreEqual(0ull, diagnostics.providerFailures);
+        }
+
+        TEST_METHOD(ColorMetadata_KnownValuesAreMappedIntoMediaType)
+        {
+            VideoMediaType mediaType = CreateMediaType();
+
+            mediaType = ApplyDesktopColorMetadata(
+                mediaType,
+                DesktopColorMetadata{
+                    ColorPrimaries::Rec709,
+                    TransferFunction::Srgb,
+                    ColorRange::Full
+                });
+
+            Assert::AreEqual(static_cast<int>(ColorPrimaries::Rec709), static_cast<int>(mediaType.colorPrimaries));
+            Assert::AreEqual(static_cast<int>(TransferFunction::Srgb), static_cast<int>(mediaType.transferFunction));
+            Assert::AreEqual(static_cast<int>(ColorRange::Full), static_cast<int>(mediaType.range));
+        }
+
+        TEST_METHOD(ColorMetadata_UnknownValuesAreNotGuessed)
+        {
+            VideoMediaType mediaType = CreateMediaType();
+
+            mediaType = ApplyDesktopColorMetadata(
+                mediaType,
+                DesktopColorMetadata{
+                    ColorPrimaries::Unknown,
+                    TransferFunction::Unknown,
+                    ColorRange::Unknown
+                });
+
+            Assert::AreEqual(static_cast<int>(ColorPrimaries::Unknown), static_cast<int>(mediaType.colorPrimaries));
+            Assert::AreEqual(static_cast<int>(TransferFunction::Unknown), static_cast<int>(mediaType.transferFunction));
+            Assert::AreEqual(static_cast<int>(ColorRange::Unknown), static_cast<int>(mediaType.range));
+        }
+
+        TEST_METHOD(ColorDiagnostics_HdrAndWideColorReportPendingAutoToneMapping)
+        {
+            VideoMediaType mediaType = CreateMediaType();
+            mediaType.pixelFormat = VideoPixelFormat::Rgba16Float;
+            mediaType.colorPrimaries = ColorPrimaries::Rec2020;
+            mediaType.transferFunction = TransferFunction::St2084Pq;
+            FakeDesktopCaptureProvider provider = CreateProvider(mediaType);
+
+            const DesktopCaptureProviderDiagnostics diagnostics = provider.Diagnostics();
+
+            Assert::AreEqual(static_cast<int>(HdrPolicy::Auto), static_cast<int>(diagnostics.color.hdrPolicy));
+            Assert::AreEqual(static_cast<int>(ColorPrimaries::Rec2020), static_cast<int>(diagnostics.color.colorPrimaries));
+            Assert::AreEqual(
+                static_cast<int>(TransferFunction::St2084Pq),
+                static_cast<int>(diagnostics.color.transferFunction));
+            Assert::AreEqual(static_cast<int>(ColorRange::Unknown), static_cast<int>(diagnostics.color.colorRange));
+            Assert::IsTrue(diagnostics.color.hdrInputDetected);
+            Assert::IsTrue(diagnostics.color.wideColorInputDetected);
+            Assert::IsTrue(diagnostics.color.hdrToneMappingPending);
         }
     };
 }

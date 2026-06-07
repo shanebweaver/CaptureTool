@@ -115,6 +115,25 @@ namespace CaptureInteropTests
                 static_cast<int>(diagnostics.cursorPolicy));
         }
 
+        TEST_METHOD(Diagnostics_ReportUnknownColorMetadataByDefault)
+        {
+            WindowsGraphicsCaptureProvider provider(CreateConfig());
+
+            const DesktopCaptureProviderDiagnostics diagnostics = provider.Diagnostics();
+
+            Assert::AreEqual(static_cast<int>(HdrPolicy::Auto), static_cast<int>(diagnostics.color.hdrPolicy));
+            Assert::AreEqual(
+                static_cast<int>(ColorPrimaries::Unknown),
+                static_cast<int>(diagnostics.color.colorPrimaries));
+            Assert::AreEqual(
+                static_cast<int>(TransferFunction::Unknown),
+                static_cast<int>(diagnostics.color.transferFunction));
+            Assert::AreEqual(static_cast<int>(ColorRange::Unknown), static_cast<int>(diagnostics.color.colorRange));
+            Assert::IsFalse(diagnostics.color.hdrInputDetected);
+            Assert::IsFalse(diagnostics.color.wideColorInputDetected);
+            Assert::IsFalse(diagnostics.color.hdrToneMappingPending);
+        }
+
         TEST_METHOD(Start_WithoutDeviceDependency_ReturnsStructuredFailure)
         {
             WindowsGraphicsCaptureProvider provider(CreateConfig());

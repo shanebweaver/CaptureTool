@@ -146,6 +146,7 @@ namespace CaptureInterop::V2::Desktop
         {
             diagnostics.providerName = "WindowsGraphicsCaptureProvider";
             diagnostics.cursorPolicy = config.cursorPolicy;
+            diagnostics.color = BuildDesktopColorDiagnostics(mediaType);
         }
 
         OperationResult Activate()
@@ -321,6 +322,7 @@ namespace CaptureInterop::V2::Desktop
             mediaType.width = size.Width > 0 ? static_cast<uint32_t>(size.Width) : 0;
             mediaType.height = size.Height > 0 ? static_cast<uint32_t>(size.Height) : 0;
             diagnostics.resourcesActive = true;
+            diagnostics.color = BuildDesktopColorDiagnostics(mediaType);
             diagnostics.lastNativeStatus.reset();
             diagnostics.lastFailureOperation.clear();
             diagnostics.lastFailureMessage.clear();

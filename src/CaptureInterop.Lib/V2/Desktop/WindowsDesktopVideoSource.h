@@ -19,6 +19,7 @@ namespace CaptureInterop::V2::Desktop
         VideoFrameDimensions effectiveOutputDimensions;
         std::optional<CaptureRectangle> requestedRegion;
         CursorCapturePolicy cursorPolicy{ CursorCapturePolicy::Included };
+        DesktopColorDiagnostics color;
         uint64_t framesReceived{ 0 };
         uint64_t duplicateFrames{ 0 };
         uint64_t lateFrames{ 0 };
@@ -191,12 +192,20 @@ namespace CaptureInterop::V2::Desktop
                 ? *m_effectiveMediaType
                 : (m_provider ? m_provider->CurrentMediaType() : VideoMediaType{});
             diagnostics.effectiveOutputDimensions = VideoFrameDimensions::FromMediaType(mediaType);
+            diagnostics.color = BuildDesktopColorDiagnostics(mediaType);
 
             if (m_provider)
             {
                 const DesktopCaptureProviderDiagnostics providerDiagnostics = m_provider->Diagnostics();
                 diagnostics.providerName = providerDiagnostics.providerName;
                 diagnostics.providerFailures = providerDiagnostics.providerFailures;
+                diagnostics.color = BuildDesktopColorDiagnostics(mediaType, providerDiagnostics.color.hdrPolicy);
+                diagnostics.color.hdrInputDetected =
+                    diagnostics.color.hdrInputDetected || providerDiagnostics.color.hdrInputDetected;
+                diagnostics.color.wideColorInputDetected =
+                    diagnostics.color.wideColorInputDetected || providerDiagnostics.color.wideColorInputDetected;
+                diagnostics.color.hdrToneMappingPending =
+                    diagnostics.color.hdrToneMappingPending || providerDiagnostics.color.hdrToneMappingPending;
             }
 
             return diagnostics;

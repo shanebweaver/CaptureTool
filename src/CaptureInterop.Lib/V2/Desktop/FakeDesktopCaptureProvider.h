@@ -21,6 +21,7 @@ namespace CaptureInterop::V2::Desktop
               m_mediaType(mediaType)
         {
             m_diagnostics.providerName = ProviderName();
+            m_diagnostics.color = BuildDesktopColorDiagnostics(m_mediaType);
         }
 
         [[nodiscard]] std::string ProviderName() const override

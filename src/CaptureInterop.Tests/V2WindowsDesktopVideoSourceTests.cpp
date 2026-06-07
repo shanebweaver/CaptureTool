@@ -91,6 +91,15 @@ namespace
             CreateMediaType());
     }
 
+    std::shared_ptr<FakeDesktopCaptureProvider> CreateProvider(VideoMediaType mediaType)
+    {
+        DesktopVideoSourceConfig config = CreateConfig();
+        return std::make_shared<FakeDesktopCaptureProvider>(
+            config.SourceDescriptor(),
+            BuildDesktopVideoStreams(config),
+            mediaType);
+    }
+
     std::shared_ptr<FakeDesktopD3DDeviceDependency> CreateDependency()
     {
         return std::make_shared<FakeDesktopD3DDeviceDependency>();
@@ -642,6 +651,34 @@ namespace CaptureInteropTests
             Assert::AreEqual(600u, mediaType.height);
             Assert::AreEqual(800u, receivedSample.mediaType.width);
             Assert::AreEqual(600u, receivedSample.mediaType.height);
+        }
+
+        TEST_METHOD(Start_ValidRegion_PreservesKnownColorMetadata)
+        {
+            VideoMediaType providerMediaType = CreateMediaType();
+            providerMediaType.colorPrimaries = ColorPrimaries::Rec2020;
+            providerMediaType.transferFunction = TransferFunction::Hlg;
+            providerMediaType.range = ColorRange::Limited;
+            std::shared_ptr<FakeDesktopCaptureProvider> provider = CreateProvider(providerMediaType);
+            std::shared_ptr<FakeDesktopMonitorResolver> resolver = CreateResolverWithConfiguredMonitor();
+            WindowsDesktopVideoSource source(
+                CreateConfigWithRegion(CaptureRectangle{ 100, 200, 800, 600 }),
+                provider,
+                resolver,
+                CreateDependency());
+
+            Assert::IsTrue(source.Start().IsSuccess());
+
+            const VideoMediaType mediaType = source.EffectiveMediaType();
+            const DesktopVideoSourceDiagnostics diagnostics = source.Diagnostics();
+            Assert::AreEqual(800u, mediaType.width);
+            Assert::AreEqual(600u, mediaType.height);
+            Assert::AreEqual(static_cast<int>(ColorPrimaries::Rec2020), static_cast<int>(mediaType.colorPrimaries));
+            Assert::AreEqual(static_cast<int>(TransferFunction::Hlg), static_cast<int>(mediaType.transferFunction));
+            Assert::AreEqual(static_cast<int>(ColorRange::Limited), static_cast<int>(mediaType.range));
+            Assert::IsTrue(diagnostics.color.hdrInputDetected);
+            Assert::IsTrue(diagnostics.color.wideColorInputDetected);
+            Assert::IsTrue(diagnostics.color.hdrToneMappingPending);
         }
 
         TEST_METHOD(Start_NegativeRegionCoordinates_ReturnsValidationFailure)

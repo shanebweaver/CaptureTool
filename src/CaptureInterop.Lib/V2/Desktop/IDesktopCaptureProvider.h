@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DesktopColorMetadata.h"
 #include "DesktopD3DDeviceDependency.h"
 #include "V2/Core/MediaSamples.h"
 #include "V2/Core/PipelineInterfaces.h"
@@ -23,6 +24,7 @@ namespace CaptureInterop::V2::Desktop
         uint64_t activationFailures{ 0 };
         bool resourcesActive{ false };
         CursorCapturePolicy cursorPolicy{ CursorCapturePolicy::Included };
+        DesktopColorDiagnostics color;
         std::optional<int64_t> lastNativeStatus;
         std::string lastFailureOperation;
         std::string lastFailureMessage;

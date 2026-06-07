@@ -72,6 +72,9 @@
     <ClInclude Include="V2\Core\AudioControlProcessors.h">
       <Filter>Header Files\V2\Core</Filter>
     </ClInclude>
+    <ClInclude Include="V2\Desktop\DesktopColorMetadata.h">
+      <Filter>Header Files\V2\Desktop</Filter>
+    </ClInclude>
     <ClInclude Include="V2\Desktop\DesktopD3DDeviceDependency.h">
       <Filter>Header Files\V2\Desktop</Filter>
     </ClInclude>
