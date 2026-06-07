@@ -71,6 +71,16 @@ namespace
             };
         }
 
+        [[nodiscard]] OperationResult WriteVideoSample(
+            uint32_t sinkStreamIndex,
+            const VideoSample& sample) noexcept override
+        {
+            ++writeVideoCalls;
+            lastWriteVideoStreamIndex = sinkStreamIndex;
+            lastVideoSample = sample;
+            return writeVideoResult;
+        }
+
         [[nodiscard]] OperationResult BeginWriting() noexcept override
         {
             ++beginWritingCalls;
@@ -79,10 +89,14 @@ namespace
 
         int configureVideoCalls{ 0 };
         int beginWritingCalls{ 0 };
+        int writeVideoCalls{ 0 };
         uint32_t nextVideoStreamIndex{ 42 };
+        uint32_t lastWriteVideoStreamIndex{ 0 };
         std::optional<MediaFoundationH264VideoStreamConfig> lastVideoConfig;
+        std::optional<VideoSample> lastVideoSample;
         OperationResult configureVideoResult{ OperationResult::Success() };
         OperationResult beginWritingResult{ OperationResult::Success() };
+        OperationResult writeVideoResult{ OperationResult::Success() };
     };
 
     class FakeSinkWriterFactory final : public IMediaFoundationSinkWriterFactory
@@ -152,7 +166,7 @@ namespace
             MediaKind::Video,
             VideoEncodingSettings{ codec, bitrate, frameRate, 120, true },
             std::nullopt,
-            CreatePlannedVideoMediaType(1920, 1080, frameRate)
+            CreatePlannedVideoMediaType(2, 2, frameRate)
         };
     }
 
@@ -198,7 +212,12 @@ namespace
             MediaTime::Zero(),
             MediaDuration::FromMilliseconds(16),
             mediaType,
-            std::vector<uint8_t>{ 1, 2, 3, 4 },
+            std::vector<uint8_t>{
+                1, 2, 3, 4,
+                5, 6, 7, 8,
+                9, 10, 11, 12,
+                13, 14, 15, 16
+            },
             1,
             VideoFrameDimensions{ 2, 2 }
         };
@@ -253,8 +272,8 @@ namespace CaptureInteropTests
 
             const auto& videoConfig = harness.sinkWriterFactory->session->lastVideoConfig;
             Assert::IsTrue(videoConfig.has_value());
-            Assert::AreEqual(1920u, videoConfig->width);
-            Assert::AreEqual(1080u, videoConfig->height);
+            Assert::AreEqual(2u, videoConfig->width);
+            Assert::AreEqual(2u, videoConfig->height);
             Assert::AreEqual(8'000'000u, videoConfig->bitrate);
             Assert::AreEqual(60u, videoConfig->frameRate.numerator);
             Assert::AreEqual(1u, videoConfig->frameRate.denominator);
@@ -395,20 +414,20 @@ namespace CaptureInteropTests
                 static_cast<uint32_t>(result.code));
         }
 
-        TEST_METHOD(WriteSample_ForMappedStream_ReturnsStableNotImplemented)
+        TEST_METHOD(WriteSample_ForMappedVideoStream_WritesThroughSession)
         {
             SinkHarness harness;
             Assert::IsTrue(harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() })).IsSuccess());
 
-            const OperationResult result = harness.sink.WriteSample(MediaSample{ CreateVideoSample() });
+            VideoSample sample = CreateVideoSample();
+            sample.timestamp = MediaTime::FromTicks(100);
+            const OperationResult result = harness.sink.WriteSample(MediaSample{ sample });
 
-            Assert::IsTrue(result.IsFailure());
-            Assert::AreEqual(
-                static_cast<uint32_t>(CoreResultCode::UnsupportedOperation),
-                static_cast<uint32_t>(result.code));
-            Assert::AreEqual(
-                "Media Foundation sample writing is not implemented in this PRD slice",
-                result.diagnostic->message.c_str());
+            Assert::IsTrue(result.IsSuccess());
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->writeVideoCalls);
+            Assert::AreEqual(42u, harness.sinkWriterFactory->session->lastWriteVideoStreamIndex);
+            Assert::IsTrue(harness.sinkWriterFactory->session->lastVideoSample.has_value());
+            Assert::AreEqual(100LL, harness.sinkWriterFactory->session->lastVideoSample->timestamp.ticks100ns);
         }
 
         TEST_METHOD(WriteSample_UnknownStream_ReturnsNotFound)
@@ -437,6 +456,116 @@ namespace CaptureInteropTests
             Assert::AreEqual(
                 static_cast<uint32_t>(CoreResultCode::ValidationFailure),
                 static_cast<uint32_t>(result.code));
+        }
+
+        TEST_METHOD(WriteSample_BeforeBeginWriting_ReturnsInvalidState)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1), CreateAudioStream(2) })).IsSuccess());
+
+            const OperationResult result = harness.sink.WriteSample(MediaSample{ CreateVideoSample() });
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                static_cast<uint32_t>(CoreResultCode::InvalidState),
+                static_cast<uint32_t>(result.code));
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->writeVideoCalls);
+        }
+
+        TEST_METHOD(WriteSample_RegressingVideoTimestamp_ReturnsValidationFailure)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() })).IsSuccess());
+
+            VideoSample first = CreateVideoSample();
+            first.timestamp = MediaTime::FromTicks(200);
+            Assert::IsTrue(harness.sink.WriteSample(MediaSample{ first }).IsSuccess());
+
+            VideoSample second = CreateVideoSample();
+            second.timestamp = MediaTime::FromTicks(100);
+            const OperationResult result = harness.sink.WriteSample(MediaSample{ second });
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                "Video sample timestamp regressed for the negotiated stream",
+                result.diagnostic->message.c_str());
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->writeVideoCalls);
+        }
+
+        TEST_METHOD(WriteSample_ChangedVideoMediaType_ReturnsValidationFailure)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() })).IsSuccess());
+
+            VideoSample sample = CreateVideoSample();
+            sample.mediaType.width = 4;
+
+            const OperationResult result = harness.sink.WriteSample(MediaSample{ sample });
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                "Video sample media type does not match the negotiated output stream",
+                result.diagnostic->message.c_str());
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->writeVideoCalls);
+        }
+
+        TEST_METHOD(WriteSample_InvalidVideoBufferLength_ReturnsValidationFailure)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() })).IsSuccess());
+
+            VideoSample sample = CreateVideoSample();
+            sample.pixelData.pop_back();
+
+            const OperationResult result = harness.sink.WriteSample(MediaSample{ sample });
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                "Video sample buffer size does not match the negotiated media type",
+                result.diagnostic->message.c_str());
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->writeVideoCalls);
+        }
+
+        TEST_METHOD(WriteSample_AfterFinalize_ReturnsInvalidState)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() })).IsSuccess());
+            Assert::IsTrue(harness.sink.Finalize().IsSuccess());
+
+            const OperationResult result = harness.sink.WriteSample(MediaSample{ CreateVideoSample() });
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                static_cast<uint32_t>(CoreResultCode::InvalidState),
+                static_cast<uint32_t>(result.code));
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->writeVideoCalls);
+        }
+
+        TEST_METHOD(WriteSample_SessionFailure_DoesNotAdvanceTimestamp)
+        {
+            SinkHarness harness;
+            harness.sinkWriterFactory->session->writeVideoResult = OperationResult::Failure(
+                CoreResultCode::NativeFailure,
+                "MediaFoundationFileSink",
+                "WriteVideoSample",
+                "simulated write failure",
+                E_FAIL);
+            Assert::IsTrue(harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() })).IsSuccess());
+
+            VideoSample first = CreateVideoSample();
+            first.timestamp = MediaTime::FromTicks(200);
+            const OperationResult firstResult = harness.sink.WriteSample(MediaSample{ first });
+
+            harness.sinkWriterFactory->session->writeVideoResult = OperationResult::Success();
+            VideoSample second = CreateVideoSample();
+            second.timestamp = MediaTime::FromTicks(100);
+            const OperationResult secondResult = harness.sink.WriteSample(MediaSample{ second });
+
+            Assert::IsTrue(firstResult.IsFailure());
+            Assert::IsTrue(secondResult.IsSuccess());
+            Assert::AreEqual(2, harness.sinkWriterFactory->session->writeVideoCalls);
         }
 
         TEST_METHOD(Finalize_AfterOpen_MovesToFinalized)

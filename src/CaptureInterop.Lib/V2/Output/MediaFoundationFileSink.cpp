@@ -2,6 +2,7 @@
 #include "V2/Output/MediaFoundationFileSink.h"
 
 #include <algorithm>
+#include <cstring>
 #include <mfapi.h>
 #include <mfreadwrite.h>
 #include <utility>
@@ -141,6 +142,103 @@ namespace CaptureInterop::V2::Output
                     OperationResult::Success(),
                     sinkStreamIndex
                 };
+            }
+
+            [[nodiscard]] OperationResult WriteVideoSample(
+                uint32_t sinkStreamIndex,
+                const VideoSample& sample) noexcept override
+            {
+                if (!m_sinkWriter)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::InvalidState,
+                        "MediaFoundationFileSink",
+                        "WriteVideoSample",
+                        "Media Foundation sink writer is not available");
+                }
+
+                if (sample.pixelData.empty())
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::ValidationFailure,
+                        "MediaFoundationFileSink",
+                        "WriteVideoSample",
+                        "Video sample does not contain CPU pixel data for the current H.264 input path");
+                }
+
+                wil::com_ptr<IMFMediaBuffer> buffer;
+                HRESULT hr = MFCreateMemoryBuffer(
+                    static_cast<DWORD>(sample.pixelData.size()),
+                    buffer.put());
+                if (FAILED(hr))
+                {
+                    return NativeFailure("CreateVideoSampleBuffer", "Failed to create Media Foundation video sample buffer", hr);
+                }
+
+                BYTE* destination = nullptr;
+                DWORD maxLength = 0;
+                DWORD currentLength = 0;
+                hr = buffer->Lock(&destination, &maxLength, &currentLength);
+                if (FAILED(hr))
+                {
+                    return NativeFailure("LockVideoSampleBuffer", "Failed to lock Media Foundation video sample buffer", hr);
+                }
+
+                if (maxLength < sample.pixelData.size())
+                {
+                    buffer->Unlock();
+                    return OperationResult::Failure(
+                        CoreResultCode::ValidationFailure,
+                        "MediaFoundationFileSink",
+                        "WriteVideoSample",
+                        "Media Foundation video sample buffer is smaller than the source sample");
+                }
+
+                std::memcpy(destination, sample.pixelData.data(), sample.pixelData.size());
+                hr = buffer->Unlock();
+                if (FAILED(hr))
+                {
+                    return NativeFailure("UnlockVideoSampleBuffer", "Failed to unlock Media Foundation video sample buffer", hr);
+                }
+
+                hr = buffer->SetCurrentLength(static_cast<DWORD>(sample.pixelData.size()));
+                if (FAILED(hr))
+                {
+                    return NativeFailure("SetVideoSampleBufferLength", "Failed to set Media Foundation video sample buffer length", hr);
+                }
+
+                wil::com_ptr<IMFSample> mfSample;
+                hr = MFCreateSample(mfSample.put());
+                if (FAILED(hr))
+                {
+                    return NativeFailure("CreateVideoSample", "Failed to create Media Foundation video sample", hr);
+                }
+
+                hr = mfSample->AddBuffer(buffer.get());
+                if (FAILED(hr))
+                {
+                    return NativeFailure("AddVideoSampleBuffer", "Failed to attach video buffer to Media Foundation sample", hr);
+                }
+
+                hr = mfSample->SetSampleTime(sample.timestamp.ticks100ns);
+                if (FAILED(hr))
+                {
+                    return NativeFailure("SetVideoSampleTime", "Failed to set Media Foundation video sample time", hr);
+                }
+
+                if (sample.duration.IsPositive())
+                {
+                    hr = mfSample->SetSampleDuration(sample.duration.ticks100ns);
+                    if (FAILED(hr))
+                    {
+                        return NativeFailure("SetVideoSampleDuration", "Failed to set Media Foundation video sample duration", hr);
+                    }
+                }
+
+                hr = m_sinkWriter->WriteSample(sinkStreamIndex, mfSample.get());
+                return SUCCEEDED(hr)
+                    ? OperationResult::Success()
+                    : NativeFailure("WriteVideoSample", "Failed to write Media Foundation video sample", hr);
             }
 
             [[nodiscard]] OperationResult BeginWriting() noexcept override
@@ -503,6 +601,14 @@ namespace CaptureInterop::V2::Output
                 "Media Foundation file sink is not open");
         }
 
+        if (m_state == MediaFoundationFileSinkState::Opened)
+        {
+            return Failure(
+                CoreResultCode::InvalidState,
+                "WriteSample",
+                "Media Foundation file sink is not ready for sample writing");
+        }
+
         if (m_state == MediaFoundationFileSinkState::Finalizing
             || m_state == MediaFoundationFileSinkState::Finalized
             || m_state == MediaFoundationFileSinkState::Failed)
@@ -537,10 +643,37 @@ namespace CaptureInterop::V2::Output
                 "Sample media kind does not match the negotiated output stream");
         }
 
+        if (sample.Kind() == MediaKind::Video)
+        {
+            if (!m_sinkWriter)
+            {
+                return Failure(
+                    CoreResultCode::InvalidState,
+                    "WriteSample",
+                    "Media Foundation sink writer is not available");
+            }
+
+            const VideoSample& video = std::get<VideoSample>(sample.data);
+            OperationResult validation = ValidateVideoSample(*mapping, video);
+            if (validation.IsFailure())
+            {
+                return validation;
+            }
+
+            OperationResult writeResult = m_sinkWriter->WriteVideoSample(mapping->sinkStreamIndex, video);
+            if (writeResult.IsFailure())
+            {
+                return writeResult;
+            }
+
+            RecordWrittenTimestamp(video.streamId, video.timestamp);
+            return OperationResult::Success();
+        }
+
         return Failure(
             CoreResultCode::UnsupportedOperation,
             "WriteSample",
-            "Media Foundation sample writing is not implemented in this PRD slice");
+            "Media Foundation audio sample writing is not implemented in this PRD slice");
     }
 
     OperationResult MediaFoundationFileSink::Finalize() noexcept
@@ -749,7 +882,8 @@ namespace CaptureInterop::V2::Output
                 mappings.push_back(MediaFoundationSinkStreamMapping{
                     stream.streamId,
                     stream.kind,
-                    streamResult.sinkStreamIndex
+                    streamResult.sinkStreamIndex,
+                    stream.videoMediaType
                 });
                 continue;
             }
@@ -757,7 +891,8 @@ namespace CaptureInterop::V2::Output
             mappings.push_back(MediaFoundationSinkStreamMapping{
                 stream.streamId,
                 stream.kind,
-                static_cast<uint32_t>(mappings.size())
+                static_cast<uint32_t>(mappings.size()),
+                std::nullopt
             });
         }
 
@@ -788,6 +923,87 @@ namespace CaptureInterop::V2::Output
         };
     }
 
+    OperationResult MediaFoundationFileSink::ValidateVideoSample(
+        const MediaFoundationSinkStreamMapping& mapping,
+        const VideoSample& sample) const noexcept
+    {
+        if (!mapping.videoMediaType.has_value())
+        {
+            return Failure(
+                CoreResultCode::InvalidState,
+                "WriteSample",
+                "Video stream does not have a negotiated media type");
+        }
+
+        if (!(sample.mediaType == mapping.videoMediaType.value()))
+        {
+            return Failure(
+                CoreResultCode::ValidationFailure,
+                "WriteSample",
+                "Video sample media type does not match the negotiated output stream");
+        }
+
+        if (sample.timestamp.IsNegative())
+        {
+            return Failure(
+                CoreResultCode::ValidationFailure,
+                "WriteSample",
+                "Video sample timestamp must be recording-relative");
+        }
+
+        if (sample.mediaType.pixelFormat == VideoPixelFormat::Bgra8)
+        {
+            const uint64_t expectedBytes =
+                static_cast<uint64_t>(sample.mediaType.width) * sample.mediaType.height * 4;
+            if (sample.pixelData.size() != expectedBytes)
+            {
+                return Failure(
+                    CoreResultCode::ValidationFailure,
+                    "WriteSample",
+                    "Video sample buffer size does not match the negotiated media type");
+            }
+        }
+
+        if (HasRegressingTimestamp(mapping, sample.timestamp))
+        {
+            return Failure(
+                CoreResultCode::ValidationFailure,
+                "WriteSample",
+                "Video sample timestamp regressed for the negotiated stream");
+        }
+
+        return OperationResult::Success();
+    }
+
+    bool MediaFoundationFileSink::HasRegressingTimestamp(
+        const MediaFoundationSinkStreamMapping& mapping,
+        const MediaTime& timestamp) const noexcept
+    {
+        for (const auto& entry : m_lastVideoTimestamps)
+        {
+            if (entry.first == mapping.streamId)
+            {
+                return timestamp < entry.second;
+            }
+        }
+
+        return false;
+    }
+
+    void MediaFoundationFileSink::RecordWrittenTimestamp(StreamId streamId, MediaTime timestamp) noexcept
+    {
+        for (auto& entry : m_lastVideoTimestamps)
+        {
+            if (entry.first == streamId)
+            {
+                entry.second = timestamp;
+                return;
+            }
+        }
+
+        m_lastVideoTimestamps.emplace_back(streamId, timestamp);
+    }
+
     OperationResult MediaFoundationFileSink::Failure(
         CoreResultCode code,
         const char* operation,
@@ -800,6 +1016,7 @@ namespace CaptureInterop::V2::Output
     {
         m_sinkWriter.reset();
         m_sinkWriterCreated = false;
+        m_lastVideoTimestamps.clear();
         m_runtimeLease.Release();
     }
 }
