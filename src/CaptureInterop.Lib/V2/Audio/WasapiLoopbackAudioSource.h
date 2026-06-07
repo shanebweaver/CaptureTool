@@ -16,6 +16,11 @@
 
 namespace CaptureInterop::V2::Audio
 {
+    struct WasapiLoopbackAudioSourceDiagnostics
+    {
+        uint64_t droppedPausedFrames{ 0 };
+    };
+
     class WasapiLoopbackAudioSource final : public IAudioCaptureSource
     {
     public:
@@ -77,6 +82,18 @@ namespace CaptureInterop::V2::Audio
         {
             std::lock_guard lock(m_mutex);
             return m_gainDb;
+        }
+
+        [[nodiscard]] bool IsPaused() const noexcept
+        {
+            std::lock_guard lock(m_mutex);
+            return m_paused;
+        }
+
+        [[nodiscard]] WasapiLoopbackAudioSourceDiagnostics Diagnostics() const noexcept
+        {
+            std::lock_guard lock(m_mutex);
+            return m_diagnostics;
         }
 
         [[nodiscard]] OperationResult Start() noexcept override
@@ -229,6 +246,13 @@ namespace CaptureInterop::V2::Audio
             return OperationResult::Success();
         }
 
+        [[nodiscard]] OperationResult SetPaused(bool paused) noexcept
+        {
+            std::lock_guard lock(m_mutex);
+            m_paused = paused;
+            return OperationResult::Success();
+        }
+
         [[nodiscard]] CallbackRegistrationToken RegisterSampleArrivedHandler(AudioSampleHandler handler) override
         {
             if (!handler)
@@ -314,7 +338,23 @@ namespace CaptureInterop::V2::Audio
 
         void PublishSample(const AudioSample& sample)
         {
-            const bool muted = IsMuted();
+            bool paused = false;
+            bool muted = false;
+            {
+                std::lock_guard lock(m_mutex);
+                paused = m_paused;
+                muted = m_muted;
+                if (paused)
+                {
+                    m_diagnostics.droppedPausedFrames += sample.frameCount;
+                }
+            }
+
+            if (paused)
+            {
+                return;
+            }
+
             AudioSample outputSample = muted
                 ? AudioSilenceGenerator::CreateSilenceLike(sample)
                 : sample;
@@ -370,6 +410,8 @@ namespace CaptureInterop::V2::Audio
         std::atomic_bool m_stopRequested{ false };
         float m_gainDb{ AudioGainSettings::DefaultGainDb };
         bool m_muted{ false };
+        bool m_paused{ false };
         bool m_started{ false };
+        WasapiLoopbackAudioSourceDiagnostics m_diagnostics;
     };
 }
