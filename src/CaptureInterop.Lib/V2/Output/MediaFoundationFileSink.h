@@ -32,6 +32,7 @@ namespace CaptureInterop::V2::Output
         MediaKind kind{ MediaKind::Unknown };
         uint32_t sinkStreamIndex{ 0 };
         std::optional<VideoMediaType> videoMediaType;
+        std::optional<AudioMediaType> audioMediaType;
     };
 
     struct MediaFoundationH264VideoStreamConfig
@@ -80,6 +81,9 @@ namespace CaptureInterop::V2::Output
         [[nodiscard]] virtual OperationResult WriteVideoSample(
             uint32_t sinkStreamIndex,
             const VideoSample& sample) noexcept = 0;
+        [[nodiscard]] virtual OperationResult WriteAudioSample(
+            uint32_t sinkStreamIndex,
+            const AudioSample& sample) noexcept = 0;
         [[nodiscard]] virtual OperationResult BeginWriting() noexcept = 0;
         [[nodiscard]] virtual OperationResult Finalize() noexcept = 0;
     };
@@ -145,9 +149,14 @@ namespace CaptureInterop::V2::Output
             const OutputStreamPlan& stream) noexcept;
         [[nodiscard]] static MediaFoundationAacAudioStreamConfig BuildAacAudioStreamConfig(
             const OutputStreamPlan& stream) noexcept;
+        [[nodiscard]] static AudioMediaType BuildAudioInputMediaType(
+            const MediaFoundationAacAudioStreamConfig& config) noexcept;
         [[nodiscard]] OperationResult ValidateVideoSample(
             const MediaFoundationSinkStreamMapping& mapping,
             const VideoSample& sample) const noexcept;
+        [[nodiscard]] OperationResult ValidateAudioSample(
+            const MediaFoundationSinkStreamMapping& mapping,
+            const AudioSample& sample) const noexcept;
         [[nodiscard]] bool HasRegressingTimestamp(
             const MediaFoundationSinkStreamMapping& mapping,
             const MediaTime& timestamp) const noexcept;
@@ -165,7 +174,7 @@ namespace CaptureInterop::V2::Output
         std::shared_ptr<IMediaFoundationSinkWriterFactory> m_sinkWriterFactory;
         MediaFoundationFileSinkState m_state{ MediaFoundationFileSinkState::Created };
         std::vector<MediaFoundationSinkStreamMapping> m_streamMappings;
-        std::vector<std::pair<StreamId, MediaTime>> m_lastVideoTimestamps;
+        std::vector<std::pair<StreamId, MediaTime>> m_lastWrittenTimestamps;
         MediaFoundationRuntimeLease m_runtimeLease;
         std::shared_ptr<IMediaFoundationSinkWriterSession> m_sinkWriter;
         bool m_sinkWriterCreated{ false };

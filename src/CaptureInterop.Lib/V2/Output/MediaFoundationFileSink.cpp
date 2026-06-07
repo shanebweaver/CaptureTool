@@ -311,6 +311,103 @@ namespace CaptureInterop::V2::Output
                     : NativeFailure("WriteVideoSample", "Failed to write Media Foundation video sample", hr);
             }
 
+            [[nodiscard]] OperationResult WriteAudioSample(
+                uint32_t sinkStreamIndex,
+                const AudioSample& sample) noexcept override
+            {
+                if (!m_sinkWriter)
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::InvalidState,
+                        "MediaFoundationFileSink",
+                        "WriteAudioSample",
+                        "Media Foundation sink writer is not available");
+                }
+
+                if (sample.pcmData.empty())
+                {
+                    return OperationResult::Failure(
+                        CoreResultCode::ValidationFailure,
+                        "MediaFoundationFileSink",
+                        "WriteAudioSample",
+                        "Audio sample does not contain PCM data for the current AAC input path");
+                }
+
+                wil::com_ptr<IMFMediaBuffer> buffer;
+                HRESULT hr = MFCreateMemoryBuffer(
+                    static_cast<DWORD>(sample.pcmData.size()),
+                    buffer.put());
+                if (FAILED(hr))
+                {
+                    return NativeFailure("CreateAudioSampleBuffer", "Failed to create Media Foundation audio sample buffer", hr);
+                }
+
+                BYTE* destination = nullptr;
+                DWORD maxLength = 0;
+                DWORD currentLength = 0;
+                hr = buffer->Lock(&destination, &maxLength, &currentLength);
+                if (FAILED(hr))
+                {
+                    return NativeFailure("LockAudioSampleBuffer", "Failed to lock Media Foundation audio sample buffer", hr);
+                }
+
+                if (maxLength < sample.pcmData.size())
+                {
+                    buffer->Unlock();
+                    return OperationResult::Failure(
+                        CoreResultCode::ValidationFailure,
+                        "MediaFoundationFileSink",
+                        "WriteAudioSample",
+                        "Media Foundation audio sample buffer is smaller than the source sample");
+                }
+
+                std::memcpy(destination, sample.pcmData.data(), sample.pcmData.size());
+                hr = buffer->Unlock();
+                if (FAILED(hr))
+                {
+                    return NativeFailure("UnlockAudioSampleBuffer", "Failed to unlock Media Foundation audio sample buffer", hr);
+                }
+
+                hr = buffer->SetCurrentLength(static_cast<DWORD>(sample.pcmData.size()));
+                if (FAILED(hr))
+                {
+                    return NativeFailure("SetAudioSampleBufferLength", "Failed to set Media Foundation audio sample buffer length", hr);
+                }
+
+                wil::com_ptr<IMFSample> mfSample;
+                hr = MFCreateSample(mfSample.put());
+                if (FAILED(hr))
+                {
+                    return NativeFailure("CreateAudioSample", "Failed to create Media Foundation audio sample", hr);
+                }
+
+                hr = mfSample->AddBuffer(buffer.get());
+                if (FAILED(hr))
+                {
+                    return NativeFailure("AddAudioSampleBuffer", "Failed to attach audio buffer to Media Foundation sample", hr);
+                }
+
+                hr = mfSample->SetSampleTime(sample.timestamp.ticks100ns);
+                if (FAILED(hr))
+                {
+                    return NativeFailure("SetAudioSampleTime", "Failed to set Media Foundation audio sample time", hr);
+                }
+
+                if (sample.duration.IsPositive())
+                {
+                    hr = mfSample->SetSampleDuration(sample.duration.ticks100ns);
+                    if (FAILED(hr))
+                    {
+                        return NativeFailure("SetAudioSampleDuration", "Failed to set Media Foundation audio sample duration", hr);
+                    }
+                }
+
+                hr = m_sinkWriter->WriteSample(sinkStreamIndex, mfSample.get());
+                return SUCCEEDED(hr)
+                    ? OperationResult::Success()
+                    : NativeFailure("WriteAudioSample", "Failed to write Media Foundation audio sample", hr);
+            }
+
             [[nodiscard]] OperationResult BeginWriting() noexcept override
             {
                 if (!m_sinkWriter)
@@ -905,10 +1002,37 @@ namespace CaptureInterop::V2::Output
             return OperationResult::Success();
         }
 
+        if (sample.Kind() == MediaKind::Audio)
+        {
+            if (!m_sinkWriter)
+            {
+                return Failure(
+                    CoreResultCode::InvalidState,
+                    "WriteSample",
+                    "Media Foundation sink writer is not available");
+            }
+
+            const AudioSample& audio = std::get<AudioSample>(sample.data);
+            OperationResult validation = ValidateAudioSample(*mapping, audio);
+            if (validation.IsFailure())
+            {
+                return validation;
+            }
+
+            OperationResult writeResult = m_sinkWriter->WriteAudioSample(mapping->sinkStreamIndex, audio);
+            if (writeResult.IsFailure())
+            {
+                return writeResult;
+            }
+
+            RecordWrittenTimestamp(audio.streamId, audio.timestamp);
+            return OperationResult::Success();
+        }
+
         return Failure(
             CoreResultCode::UnsupportedOperation,
             "WriteSample",
-            "Media Foundation audio sample writing is not implemented in this PRD slice");
+            "Media sample kind is not supported by the Media Foundation file sink");
     }
 
     OperationResult MediaFoundationFileSink::Finalize() noexcept
@@ -1122,8 +1246,9 @@ namespace CaptureInterop::V2::Output
 
             if (stream.kind == MediaKind::Audio)
             {
+                const MediaFoundationAacAudioStreamConfig config = BuildAacAudioStreamConfig(stream);
                 MediaFoundationStreamConfigurationResult streamResult =
-                    m_sinkWriter->ConfigureAacAudioStream(BuildAacAudioStreamConfig(stream));
+                    m_sinkWriter->ConfigureAacAudioStream(config);
                 if (streamResult.result.IsFailure())
                 {
                     return streamResult.result;
@@ -1133,7 +1258,8 @@ namespace CaptureInterop::V2::Output
                     stream.streamId,
                     stream.kind,
                     streamResult.sinkStreamIndex,
-                    std::nullopt
+                    std::nullopt,
+                    BuildAudioInputMediaType(config)
                 });
                 continue;
             }
@@ -1193,6 +1319,18 @@ namespace CaptureInterop::V2::Output
         };
     }
 
+    AudioMediaType MediaFoundationFileSink::BuildAudioInputMediaType(
+        const MediaFoundationAacAudioStreamConfig& config) noexcept
+    {
+        return AudioMediaType{
+            config.sampleRate,
+            config.channels,
+            config.inputBitsPerSample,
+            config.inputBlockAlign,
+            config.inputSampleFormat
+        };
+    }
+
     OperationResult MediaFoundationFileSink::ValidateVideoSample(
         const MediaFoundationSinkStreamMapping& mapping,
         const VideoSample& sample) const noexcept
@@ -1245,11 +1383,67 @@ namespace CaptureInterop::V2::Output
         return OperationResult::Success();
     }
 
+    OperationResult MediaFoundationFileSink::ValidateAudioSample(
+        const MediaFoundationSinkStreamMapping& mapping,
+        const AudioSample& sample) const noexcept
+    {
+        if (!mapping.audioMediaType.has_value())
+        {
+            return Failure(
+                CoreResultCode::InvalidState,
+                "WriteSample",
+                "Audio stream does not have a negotiated media type");
+        }
+
+        if (!(sample.mediaType == mapping.audioMediaType.value()))
+        {
+            return Failure(
+                CoreResultCode::ValidationFailure,
+                "WriteSample",
+                "Audio sample media type does not match the negotiated output stream");
+        }
+
+        if (sample.timestamp.IsNegative())
+        {
+            return Failure(
+                CoreResultCode::ValidationFailure,
+                "WriteSample",
+                "Audio sample timestamp must be recording-relative");
+        }
+
+        if (sample.pcmData.empty() || sample.pcmData.size() % sample.mediaType.blockAlign != 0)
+        {
+            return Failure(
+                CoreResultCode::ValidationFailure,
+                "WriteSample",
+                "Audio sample buffer size does not match the negotiated media type");
+        }
+
+        if (sample.frameCount != 0
+            && sample.pcmData.size() != static_cast<size_t>(sample.frameCount) * sample.mediaType.blockAlign)
+        {
+            return Failure(
+                CoreResultCode::ValidationFailure,
+                "WriteSample",
+                "Audio sample frame count does not match the buffer size");
+        }
+
+        if (HasRegressingTimestamp(mapping, sample.timestamp))
+        {
+            return Failure(
+                CoreResultCode::ValidationFailure,
+                "WriteSample",
+                "Audio sample timestamp regressed for the negotiated stream");
+        }
+
+        return OperationResult::Success();
+    }
+
     bool MediaFoundationFileSink::HasRegressingTimestamp(
         const MediaFoundationSinkStreamMapping& mapping,
         const MediaTime& timestamp) const noexcept
     {
-        for (const auto& entry : m_lastVideoTimestamps)
+        for (const auto& entry : m_lastWrittenTimestamps)
         {
             if (entry.first == mapping.streamId)
             {
@@ -1262,7 +1456,7 @@ namespace CaptureInterop::V2::Output
 
     void MediaFoundationFileSink::RecordWrittenTimestamp(StreamId streamId, MediaTime timestamp) noexcept
     {
-        for (auto& entry : m_lastVideoTimestamps)
+        for (auto& entry : m_lastWrittenTimestamps)
         {
             if (entry.first == streamId)
             {
@@ -1271,7 +1465,7 @@ namespace CaptureInterop::V2::Output
             }
         }
 
-        m_lastVideoTimestamps.emplace_back(streamId, timestamp);
+        m_lastWrittenTimestamps.emplace_back(streamId, timestamp);
     }
 
     OperationResult MediaFoundationFileSink::FinalizeCore() noexcept
@@ -1303,7 +1497,7 @@ namespace CaptureInterop::V2::Output
         m_sinkWriter.reset();
         m_sinkWriterCreated = false;
         m_hasBegunWriting = false;
-        m_lastVideoTimestamps.clear();
+        m_lastWrittenTimestamps.clear();
         m_runtimeLease.Release();
     }
 }

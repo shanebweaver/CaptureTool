@@ -2,9 +2,12 @@
 #include "CppUnitTest.h"
 #include "V2/Output/MediaFoundationFileSink.h"
 
+#include <algorithm>
 #include <initializer_list>
 #include <memory>
 #include <optional>
+#include <string>
+#include <utility>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace CaptureInterop::V2;
@@ -97,6 +100,16 @@ namespace
             return writeVideoResult;
         }
 
+        [[nodiscard]] OperationResult WriteAudioSample(
+            uint32_t sinkStreamIndex,
+            const AudioSample& sample) noexcept override
+        {
+            ++writeAudioCalls;
+            lastWriteAudioStreamIndex = sinkStreamIndex;
+            lastAudioSample = sample;
+            return writeAudioResult;
+        }
+
         [[nodiscard]] OperationResult BeginWriting() noexcept override
         {
             ++beginWritingCalls;
@@ -113,17 +126,21 @@ namespace
         int configureAudioCalls{ 0 };
         int beginWritingCalls{ 0 };
         int writeVideoCalls{ 0 };
+        int writeAudioCalls{ 0 };
         int finalizeCalls{ 0 };
         uint32_t nextVideoStreamIndex{ 42 };
         uint32_t nextAudioStreamIndex{ 77 };
         uint32_t lastWriteVideoStreamIndex{ 0 };
+        uint32_t lastWriteAudioStreamIndex{ 0 };
         std::optional<MediaFoundationH264VideoStreamConfig> lastVideoConfig;
         std::optional<MediaFoundationAacAudioStreamConfig> lastAudioConfig;
         std::optional<VideoSample> lastVideoSample;
+        std::optional<AudioSample> lastAudioSample;
         OperationResult configureVideoResult{ OperationResult::Success() };
         OperationResult configureAudioResult{ OperationResult::Success() };
         OperationResult beginWritingResult{ OperationResult::Success() };
         OperationResult writeVideoResult{ OperationResult::Success() };
+        OperationResult writeAudioResult{ OperationResult::Success() };
         OperationResult finalizeResult{ OperationResult::Success() };
     };
 
@@ -226,13 +243,22 @@ namespace
         return plan;
     }
 
-    VideoSample CreateVideoSample(StreamId streamId = StreamId::FromValue(1))
+    VideoSample CreateVideoSample(
+        StreamId streamId = StreamId::FromValue(1),
+        uint32_t width = 2,
+        uint32_t height = 2)
     {
         VideoMediaType mediaType;
-        mediaType.width = 2;
-        mediaType.height = 2;
+        mediaType.width = width;
+        mediaType.height = height;
         mediaType.frameRate = Rational::From(60, 1);
         mediaType.pixelFormat = VideoPixelFormat::Bgra8;
+
+        std::vector<uint8_t> pixelData(static_cast<size_t>(width) * height * 4);
+        for (size_t i = 0; i < pixelData.size(); ++i)
+        {
+            pixelData[i] = static_cast<uint8_t>((i % 251) + 1);
+        }
 
         return VideoSample{
             SourceId::FromValue(10),
@@ -240,25 +266,28 @@ namespace
             MediaTime::Zero(),
             MediaDuration::FromMilliseconds(16),
             mediaType,
-            std::vector<uint8_t>{
-                1, 2, 3, 4,
-                5, 6, 7, 8,
-                9, 10, 11, 12,
-                13, 14, 15, 16
-            },
+            std::move(pixelData),
             1,
-            VideoFrameDimensions{ 2, 2 }
+            VideoFrameDimensions{ width, height }
         };
     }
 
-    AudioSample CreateAudioSample(StreamId streamId = StreamId::FromValue(2))
+    AudioSample CreateAudioSample(
+        StreamId streamId = StreamId::FromValue(2),
+        uint32_t frameCount = 2)
     {
         AudioMediaType mediaType;
         mediaType.sampleRate = 48000;
         mediaType.channels = 2;
-        mediaType.bitsPerSample = 16;
-        mediaType.blockAlign = 4;
-        mediaType.sampleFormat = AudioSampleFormat::Pcm16;
+        mediaType.bitsPerSample = 32;
+        mediaType.blockAlign = 8;
+        mediaType.sampleFormat = AudioSampleFormat::Float32;
+
+        std::vector<uint8_t> pcmData(static_cast<size_t>(frameCount) * mediaType.blockAlign);
+        for (size_t i = 0; i < pcmData.size(); ++i)
+        {
+            pcmData[i] = static_cast<uint8_t>((i % 127) + 1);
+        }
 
         return AudioSample{
             SourceId::FromValue(20),
@@ -266,7 +295,8 @@ namespace
             MediaTime::Zero(),
             MediaDuration::FromMilliseconds(10),
             mediaType,
-            std::vector<uint8_t>{ 1, 2, 3, 4 }
+            std::move(pcmData),
+            frameCount
         };
     }
 }
@@ -521,7 +551,7 @@ namespace CaptureInteropTests
                 static_cast<uint32_t>(result.code));
         }
 
-        TEST_METHOD(WriteSample_MismatchedKind_ReturnsValidationFailure)
+        TEST_METHOD(WriteSample_AudioSentToVideoStream_ReturnsValidationFailure)
         {
             SinkHarness harness;
             Assert::IsTrue(harness.sink.Open(CreatePlan(ContainerFormat::Mp4, { CreateVideoStream() })).IsSuccess());
@@ -535,7 +565,7 @@ namespace CaptureInteropTests
                 static_cast<uint32_t>(result.code));
         }
 
-        TEST_METHOD(WriteSample_AudioWritingStillDeferred_ReturnsUnsupportedOperation)
+        TEST_METHOD(WriteSample_VideoSentToAudioStream_ReturnsValidationFailure)
         {
             SinkHarness harness;
             Assert::IsTrue(harness.sink.Open(CreatePlan(
@@ -543,16 +573,137 @@ namespace CaptureInteropTests
                 { CreateVideoStream(1), CreateAudioStream(2) })).IsSuccess());
 
             const OperationResult result =
-                harness.sink.WriteSample(MediaSample{ CreateAudioSample(StreamId::FromValue(2)) });
+                harness.sink.WriteSample(MediaSample{ CreateVideoSample(StreamId::FromValue(2)) });
 
             Assert::IsTrue(result.IsFailure());
             Assert::AreEqual(
-                static_cast<uint32_t>(CoreResultCode::UnsupportedOperation),
+                static_cast<uint32_t>(CoreResultCode::ValidationFailure),
                 static_cast<uint32_t>(result.code));
-            Assert::AreEqual(
-                "Media Foundation audio sample writing is not implemented in this PRD slice",
-                result.diagnostic->message.c_str());
             Assert::AreEqual(0, harness.sinkWriterFactory->session->writeVideoCalls);
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->writeAudioCalls);
+        }
+
+        TEST_METHOD(WriteSample_ForMappedAudioStream_WritesThroughSession)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1), CreateAudioStream(2) })).IsSuccess());
+
+            AudioSample sample = CreateAudioSample(StreamId::FromValue(2));
+            sample.timestamp = MediaTime::FromTicks(1000);
+            const OperationResult result =
+                harness.sink.WriteSample(MediaSample{ sample });
+
+            Assert::IsTrue(result.IsSuccess());
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->writeVideoCalls);
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->writeAudioCalls);
+            Assert::AreEqual(77u, harness.sinkWriterFactory->session->lastWriteAudioStreamIndex);
+            Assert::IsTrue(harness.sinkWriterFactory->session->lastAudioSample.has_value());
+            Assert::AreEqual(1000LL, harness.sinkWriterFactory->session->lastAudioSample->timestamp.ticks100ns);
+        }
+
+        TEST_METHOD(WriteSample_SilentAudioSample_WritesSuccessfully)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1), CreateAudioStream(2) })).IsSuccess());
+
+            AudioSample sample = CreateAudioSample(StreamId::FromValue(2));
+            sample.sourceTiming.silent = true;
+            std::fill(sample.pcmData.begin(), sample.pcmData.end(), 0);
+
+            const OperationResult result = harness.sink.WriteSample(MediaSample{ sample });
+
+            Assert::IsTrue(result.IsSuccess());
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->writeAudioCalls);
+            Assert::IsTrue(harness.sinkWriterFactory->session->lastAudioSample->sourceTiming.silent);
+        }
+
+        TEST_METHOD(WriteSample_SyntheticVideoPlusAudioMp4_WritesAndFinalizes)
+        {
+            wchar_t tempDirectory[MAX_PATH] = {};
+            Assert::IsTrue(GetTempPathW(MAX_PATH, tempDirectory) > 0);
+
+            const std::wstring outputPath = std::wstring(tempDirectory) + L"capturetool-v2-pr005-09.mp4";
+            DeleteFileW(outputPath.c_str());
+
+            OutputStreamPlan videoStream = CreateVideoStream(1);
+            videoStream.videoMediaType = CreatePlannedVideoMediaType(320, 180);
+            OutputPlan plan = CreatePlan(
+                ContainerFormat::Mp4,
+                { videoStream, CreateAudioStream(2) });
+            plan.outputPath = outputPath;
+
+            MediaFoundationFileSink sink;
+            const OperationResult openResult = sink.Open(plan);
+            if (openResult.IsFailure() && openResult.diagnostic.has_value())
+            {
+                Logger::WriteMessage(openResult.diagnostic->message.c_str());
+            }
+            Assert::IsTrue(openResult.IsSuccess());
+
+            VideoSample videoSample = CreateVideoSample(StreamId::FromValue(1), 320, 180);
+            AudioSample audioSample = CreateAudioSample(StreamId::FromValue(2), 480);
+            audioSample.sourceTiming.silent = true;
+            std::fill(audioSample.pcmData.begin(), audioSample.pcmData.end(), 0);
+
+            Assert::IsTrue(sink.WriteSample(MediaSample{ videoSample }).IsSuccess());
+            Assert::IsTrue(sink.WriteSample(MediaSample{ audioSample }).IsSuccess());
+            Assert::IsTrue(sink.Finalize().IsSuccess());
+
+            WIN32_FILE_ATTRIBUTE_DATA attributes = {};
+            Assert::IsTrue(GetFileAttributesExW(
+                outputPath.c_str(),
+                GetFileExInfoStandard,
+                &attributes));
+            const uint64_t fileSize =
+                (static_cast<uint64_t>(attributes.nFileSizeHigh) << 32) | attributes.nFileSizeLow;
+            Assert::IsTrue(fileSize > 0);
+
+            DeleteFileW(outputPath.c_str());
+        }
+
+        TEST_METHOD(WriteSample_RegressingAudioTimestamp_ReturnsValidationFailure)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1), CreateAudioStream(2) })).IsSuccess());
+
+            AudioSample first = CreateAudioSample(StreamId::FromValue(2));
+            first.timestamp = MediaTime::FromTicks(200);
+            Assert::IsTrue(harness.sink.WriteSample(MediaSample{ first }).IsSuccess());
+
+            AudioSample second = CreateAudioSample(StreamId::FromValue(2));
+            second.timestamp = MediaTime::FromTicks(100);
+            const OperationResult result = harness.sink.WriteSample(MediaSample{ second });
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                "Audio sample timestamp regressed for the negotiated stream",
+                result.diagnostic->message.c_str());
+            Assert::AreEqual(1, harness.sinkWriterFactory->session->writeAudioCalls);
+        }
+
+        TEST_METHOD(WriteSample_InvalidAudioBufferLength_ReturnsValidationFailure)
+        {
+            SinkHarness harness;
+            Assert::IsTrue(harness.sink.Open(CreatePlan(
+                ContainerFormat::Mp4,
+                { CreateVideoStream(1), CreateAudioStream(2) })).IsSuccess());
+
+            AudioSample sample = CreateAudioSample(StreamId::FromValue(2));
+            sample.pcmData.pop_back();
+
+            const OperationResult result = harness.sink.WriteSample(MediaSample{ sample });
+
+            Assert::IsTrue(result.IsFailure());
+            Assert::AreEqual(
+                "Audio sample buffer size does not match the negotiated media type",
+                result.diagnostic->message.c_str());
+            Assert::AreEqual(0, harness.sinkWriterFactory->session->writeAudioCalls);
         }
 
         TEST_METHOD(WriteSample_RegressingVideoTimestamp_ReturnsValidationFailure)
