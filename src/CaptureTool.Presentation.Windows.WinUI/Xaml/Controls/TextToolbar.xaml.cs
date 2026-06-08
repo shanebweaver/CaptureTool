@@ -136,6 +136,8 @@ public sealed partial class TextToolbar : UserControlBase
     public event EventHandler<int>? TextBackgroundColorOpacityChanged;
     public event EventHandler<string>? TextFontFamilyChanged;
     public event EventHandler<int>? TextFontSizeChanged;
+    public event EventHandler? StyleInteractionStarted;
+    public event EventHandler? StyleInteractionCompleted;
 
     public TextToolbar()
     {
@@ -255,6 +257,16 @@ public sealed partial class TextToolbar : UserControlBase
     private void BackgroundColorPalette_OpacityPercentageChanged(object? sender, int opacityPercentage)
     {
         UpdateTextBackgroundColorOpacity(opacityPercentage);
+    }
+
+    private void ColorPalette_SliderInteractionStarted(object? sender, EventArgs e)
+    {
+        StyleInteractionStarted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ColorPalette_SliderInteractionCompleted(object? sender, EventArgs e)
+    {
+        StyleInteractionCompleted?.Invoke(this, EventArgs.Empty);
     }
 
     private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

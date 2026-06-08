@@ -182,6 +182,8 @@
                     StrokeColorOptions="{x:Bind ViewModel.ShapeStrokeColorOptions, Mode=OneWay}"
                     StrokeOpacity="{x:Bind ViewModel.ShapeStrokeOpacity, Mode=OneWay}"
                     StrokeOpacityChanged="ShapeToolbar_StrokeOpacityChanged"
+                    StyleInteractionCompleted="Toolbar_StyleInteractionCompleted"
+                    StyleInteractionStarted="Toolbar_StyleInteractionStarted"
                     StrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
                     StrokeWidthChanged="ShapeToolbar_StrokeWidthChanged" />
             </Grid>
@@ -205,7 +207,9 @@
                     TextFontFamily="{x:Bind ViewModel.TextFontFamily, Mode=OneWay}"
                     TextFontFamilyChanged="TextToolbar_FontFamilyChanged"
                     TextFontSize="{x:Bind ViewModel.TextFontSize, Mode=OneWay}"
-                    TextFontSizeChanged="TextToolbar_FontSizeChanged" />
+                    TextFontSizeChanged="TextToolbar_FontSizeChanged"
+                    StyleInteractionCompleted="Toolbar_StyleInteractionCompleted"
+                    StyleInteractionStarted="Toolbar_StyleInteractionStarted" />
             </Grid>
         </Grid>
 

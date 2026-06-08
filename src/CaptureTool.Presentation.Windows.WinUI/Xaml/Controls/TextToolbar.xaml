@@ -65,7 +65,9 @@
                         OpacityPercentage="{x:Bind TextFontColorOpacity, Mode=OneWay}"
                         OpacityPercentageChanged="FontColorPalette_OpacityPercentageChanged"
                         SelectedColor="{x:Bind TextFontColor, Mode=OneWay}"
-                        SelectedColorChanged="FontColorPalette_SelectedColorChanged" />
+                        SelectedColorChanged="FontColorPalette_SelectedColorChanged"
+                        SliderInteractionCompleted="ColorPalette_SliderInteractionCompleted"
+                        SliderInteractionStarted="ColorPalette_SliderInteractionStarted" />
                 </Flyout>
             </Button.Flyout>
         </Button>
@@ -117,7 +119,9 @@
                         OpacityPercentage="{x:Bind TextBackgroundColorOpacity, Mode=OneWay}"
                         OpacityPercentageChanged="BackgroundColorPalette_OpacityPercentageChanged"
                         SelectedColor="{x:Bind TextBackgroundColor, Mode=OneWay}"
-                        SelectedColorChanged="BackgroundColorPalette_SelectedColorChanged" />
+                        SelectedColorChanged="BackgroundColorPalette_SelectedColorChanged"
+                        SliderInteractionCompleted="ColorPalette_SliderInteractionCompleted"
+                        SliderInteractionStarted="ColorPalette_SliderInteractionStarted" />
                 </Flyout>
             </Button.Flyout>
         </Button>

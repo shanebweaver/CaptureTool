@@ -262,6 +262,16 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.UpdateShapeFillOpacityCommand.Execute(e);
     }
 
+    private void Toolbar_StyleInteractionStarted(object? sender, EventArgs e)
+    {
+        ImageCanvas.BeginSelectedDrawableStyleInteraction();
+    }
+
+    private void Toolbar_StyleInteractionCompleted(object? sender, EventArgs e)
+    {
+        ImageCanvas.CompleteSelectedDrawableStyleInteraction();
+    }
+
     private void TextToolbar_FontColorChanged(object _, Color e)
     {
         ViewModel.UpdateTextFontColorCommand.Execute(e);

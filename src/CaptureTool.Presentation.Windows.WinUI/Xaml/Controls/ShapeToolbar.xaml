@@ -149,6 +149,8 @@
                             OpacityPercentageChanged="StrokeColorPalette_OpacityPercentageChanged"
                             SelectedColor="{x:Bind StrokeColor, Mode=OneWay}"
                             SelectedColorChanged="StrokeColorPalette_SelectedColorChanged"
+                            SliderInteractionCompleted="ColorPalette_SliderInteractionCompleted"
+                            SliderInteractionStarted="ColorPalette_SliderInteractionStarted"
                             Thickness="{x:Bind StrokeWidth, Mode=OneWay}"
                             ThicknessChanged="StrokeColorPalette_ThicknessChanged" />
                     </Flyout>
@@ -203,7 +205,9 @@
                             OpacityPercentage="{x:Bind FillOpacity, Mode=OneWay}"
                             OpacityPercentageChanged="FillColorPalette_OpacityPercentageChanged"
                             SelectedColor="{x:Bind FillColor, Mode=OneWay}"
-                            SelectedColorChanged="FillColorPalette_SelectedColorChanged" />
+                            SelectedColorChanged="FillColorPalette_SelectedColorChanged"
+                            SliderInteractionCompleted="ColorPalette_SliderInteractionCompleted"
+                            SliderInteractionStarted="ColorPalette_SliderInteractionStarted" />
                     </Flyout>
                 </Button.Flyout>
             </Button>

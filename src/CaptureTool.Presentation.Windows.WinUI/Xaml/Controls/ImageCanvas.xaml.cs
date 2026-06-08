@@ -369,6 +369,9 @@ public sealed partial class ImageCanvas : UserControlBase
     private IDrawable? _selectedShape;
     private int _selectedShapeIndex = -1;
     private ModifyShapeOperation.ShapeState? _shapeStateBeforeModification;
+    private ModifyShapeOperation.ShapeState? _styleInteractionStateBeforeModification;
+    private int _styleInteractionShapeIndex = -1;
+    private int _styleInteractionDepth;
     private INotifyCollectionChanged? _observableDrawables;
 
     // Track if we're in a potential selection scenario
@@ -495,6 +498,12 @@ public sealed partial class ImageCanvas : UserControlBase
         _selectedShapeIndex = selectedShapeIndex;
         ShowResizeHandles(_selectedShape);
         UpdatePreviewShapeFromDrawable(_selectedShape);
+
+        if (_selectedShape is TextDrawable text)
+        {
+            UpdateSelectedTextEditor(text);
+            TextDrawableSelected?.Invoke(this, text);
+        }
     }
 
     private void CanvasScrollView_ViewChanged(ScrollView? sender, object args)
@@ -1467,6 +1476,7 @@ public sealed partial class ImageCanvas : UserControlBase
         HideSelectedTextEditor();
         _selectedShape = null;
         _selectedShapeIndex = -1;
+        ClearStyleInteraction();
         ShapeResizeOverlay.IsInteriorMoveEnabled = true;
         ShapeResizeOverlay.Visibility = Visibility.Collapsed;
         LineEndpointHandlesCanvas.Visibility = Visibility.Collapsed;
@@ -1607,10 +1617,64 @@ public sealed partial class ImageCanvas : UserControlBase
         HideSelectedTextEditor();
         _selectedShape = null;
         _selectedShapeIndex = -1;
+        ClearStyleInteraction();
         ShapeResizeOverlay.IsInteriorMoveEnabled = true;
         ShapeResizeOverlay.Visibility = Visibility.Collapsed;
         LineEndpointHandlesCanvas.Visibility = Visibility.Collapsed;
         ClearPreviewShape();
+        RenderCanvas.Invalidate();
+    }
+
+    private void ClearStyleInteraction()
+    {
+        _styleInteractionStateBeforeModification = null;
+        _styleInteractionShapeIndex = -1;
+        _styleInteractionDepth = 0;
+    }
+
+    public void BeginSelectedDrawableStyleInteraction()
+    {
+        if (_selectedShape == null)
+        {
+            return;
+        }
+
+        if (_styleInteractionDepth++ > 0)
+        {
+            return;
+        }
+
+        CommitSelectedTextEditor();
+        _styleInteractionStateBeforeModification = new ModifyShapeOperation.ShapeState(_selectedShape);
+        _styleInteractionShapeIndex = _selectedShapeIndex;
+    }
+
+    public void CompleteSelectedDrawableStyleInteraction()
+    {
+        if (_styleInteractionDepth == 0)
+        {
+            return;
+        }
+
+        _styleInteractionDepth--;
+        if (_styleInteractionDepth > 0)
+        {
+            return;
+        }
+
+        if (_selectedShape != null &&
+            _styleInteractionStateBeforeModification.HasValue &&
+            _styleInteractionShapeIndex == _selectedShapeIndex)
+        {
+            var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
+            if (!StatesAreEqual(_styleInteractionStateBeforeModification.Value, newState))
+            {
+                ShapeModified?.Invoke(this, (_selectedShapeIndex, _styleInteractionStateBeforeModification.Value, newState));
+            }
+        }
+
+        _styleInteractionStateBeforeModification = null;
+        _styleInteractionShapeIndex = -1;
         RenderCanvas.Invalidate();
     }
 
@@ -1773,6 +1837,11 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void LineStartHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (!e.GetCurrentPoint(LineEndpointHandlesCanvas).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
         _isDraggingLineStart = true;
 
         // Capture state for undo
@@ -1810,6 +1879,11 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void LineEndHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (!e.GetCurrentPoint(LineEndpointHandlesCanvas).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
         _isDraggingLineEnd = true;
 
         // Capture state for undo
@@ -1943,6 +2017,11 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void LineMoveHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (!e.GetCurrentPoint(LineEndpointHandlesCanvas).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
         _isDraggingLineMove = true;
         _lineMoveStartPoint = e.GetCurrentPoint(LineEndpointHandlesCanvas).Position;
 
@@ -2193,7 +2272,7 @@ public sealed partial class ImageCanvas : UserControlBase
         updateStyle();
         var newState = new ModifyShapeOperation.ShapeState(_selectedShape);
 
-        if (!StatesAreEqual(oldState, newState))
+        if (_styleInteractionDepth == 0 && !StatesAreEqual(oldState, newState))
         {
             ShapeModified?.Invoke(this, (_selectedShapeIndex, oldState, newState));
         }
@@ -2406,12 +2485,16 @@ public sealed partial class ImageCanvas : UserControlBase
             return;
         }
 
-        CommitSelectedTextEditor();
+        if (_styleInteractionDepth == 0)
+        {
+            CommitSelectedTextEditor();
+        }
+
         var oldState = new ModifyShapeOperation.ShapeState(text);
         updateStyle(text);
         var newState = new ModifyShapeOperation.ShapeState(text);
 
-        if (!StatesAreEqual(oldState, newState))
+        if (_styleInteractionDepth == 0 && !StatesAreEqual(oldState, newState))
         {
             ShapeModified?.Invoke(this, (_selectedShapeIndex, oldState, newState));
         }
@@ -2442,6 +2525,7 @@ public sealed partial class ImageCanvas : UserControlBase
             };
             _selectedTextEditor.TextChanged += SelectedTextEditor_TextChanged;
             _selectedTextEditor.LostFocus += SelectedTextEditor_LostFocus;
+            _selectedTextEditor.RightTapped += SelectedTextEditor_RightTapped;
             TextEditorCanvas.Children.Add(_selectedTextEditor);
         }
 
@@ -2526,6 +2610,18 @@ public sealed partial class ImageCanvas : UserControlBase
     private void SelectedTextEditor_LostFocus(object sender, RoutedEventArgs e)
     {
         CommitSelectedTextEditor();
+    }
+
+    private void SelectedTextEditor_RightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        if (!IsTextModeEnabled || _selectedShape is not TextDrawable)
+        {
+            return;
+        }
+
+        CommitSelectedTextEditor();
+        ShapeContextMenuRequested?.Invoke(this, e.GetPosition(this));
+        e.Handled = true;
     }
 
     private void CommitSelectedTextEditor()

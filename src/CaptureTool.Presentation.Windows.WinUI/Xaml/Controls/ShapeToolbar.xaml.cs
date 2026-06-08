@@ -108,6 +108,8 @@ public sealed partial class ShapeToolbar : UserControlBase
     public event EventHandler<int>? StrokeWidthChanged;
     public event EventHandler<int>? StrokeOpacityChanged;
     public event EventHandler<int>? FillOpacityChanged;
+    public event EventHandler? StyleInteractionStarted;
+    public event EventHandler? StyleInteractionCompleted;
 
     public ShapeToolbar()
     {
@@ -211,5 +213,15 @@ public sealed partial class ShapeToolbar : UserControlBase
     private void FillColorPalette_OpacityPercentageChanged(object? sender, int opacityPercentage)
     {
         UpdateFillOpacity(opacityPercentage);
+    }
+
+    private void ColorPalette_SliderInteractionStarted(object? sender, EventArgs e)
+    {
+        StyleInteractionStarted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ColorPalette_SliderInteractionCompleted(object? sender, EventArgs e)
+    {
+        StyleInteractionCompleted?.Invoke(this, EventArgs.Empty);
     }
 }

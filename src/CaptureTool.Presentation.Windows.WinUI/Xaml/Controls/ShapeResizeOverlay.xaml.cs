@@ -162,6 +162,11 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
 
     private void StartResize(ResizeHandle handle, PointerRoutedEventArgs e)
     {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
         _activeHandle = handle;
         _handleStartPoint = e.GetCurrentPoint(this).Position;
         _initialBounds = ShapeBounds;
