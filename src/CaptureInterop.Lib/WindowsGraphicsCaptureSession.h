@@ -86,6 +86,8 @@ private:
     bool InitializeSinkWriter(HRESULT* outHr);
     bool StartAudioCapture(HRESULT* outHr);
     void SetupCallbacks();
+    void SetupAudioCallback();
+    void SetupVideoCallback();
 
     // Configuration and dependencies
     CaptureSessionConfig m_config;

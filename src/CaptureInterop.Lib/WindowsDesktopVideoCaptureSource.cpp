@@ -168,7 +168,8 @@ void WindowsDesktopVideoCaptureSource::Stop()
         (void)StringCchPrintfW(
             message,
             ARRAYSIZE(message),
-            L"[CaptureInterop V1] Video frames processed=%llu dropped=%llu\r\n",
+            L"[CaptureInterop V1] Video frames received=%llu processed=%llu dropped=%llu\r\n",
+            static_cast<unsigned long long>(m_frameHandler->GetReceivedFrameCount()),
             static_cast<unsigned long long>(m_frameHandler->GetProcessedFrameCount()),
             static_cast<unsigned long long>(m_frameHandler->GetDroppedFrameCount()));
         OutputDebugStringW(message);

@@ -138,6 +138,12 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
 
 void WindowsGraphicsCaptureSession::SetupCallbacks()
 {
+    SetupAudioCallback();
+    SetupVideoCallback();
+}
+
+void WindowsGraphicsCaptureSession::SetupAudioCallback()
+{
     // Setup audio callback - writes to sink and forwards to registered callbacks
     if (m_audioAvailable)
     {
@@ -182,7 +188,10 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
             }
         );
     }
-    
+}
+
+void WindowsGraphicsCaptureSession::SetupVideoCallback()
+{
     // Setup video callback - writes to sink and forwards to registered callbacks
     m_videoCaptureSource->SetVideoFrameReadyCallback(
         [this](const VideoFrameReadyEventArgs& args) {
@@ -194,6 +203,17 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
 
             // Write to sink writer
             HRESULT hr = m_sinkWriter->WriteFrame(args.pTexture, args.timestamp);
+            if (FAILED(hr))
+            {
+                wchar_t message[192]{};
+                StringCchPrintfW(
+                    message,
+                    ARRAYSIZE(message),
+                    L"[CaptureInterop V1] Video frame write failed. HRESULT=0x%08X timestamp=%lld\r\n",
+                    static_cast<unsigned int>(hr),
+                    args.timestamp);
+                OutputDebugStringW(message);
+            }
 
             // Forward to registered callbacks if any exist
             if (m_videoCallbackRegistry.HasCallbacks())
@@ -287,8 +307,10 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
         if (outHr) *outHr = hr;
         return false;
     }
-    
-    // Initialize audio stream
+
+    // Initialize audio stream before writing begins. This keeps the MP4 topology stable
+    // for the normal audio+video path; audio initialization failure is handled earlier
+    // by leaving m_audioAvailable false.
     WAVEFORMATEX* audioFormat = m_audioAvailable && m_audioCaptureSource ? m_audioCaptureSource->GetFormat() : nullptr;
     if (audioFormat)
     {
@@ -319,8 +341,25 @@ bool WindowsGraphicsCaptureSession::StartAudioCapture(HRESULT* outHr)
     HRESULT hr = S_OK;
     if (!m_audioCaptureSource->Start(&hr))
     {
-        if (outHr) *outHr = hr;
-        return false;
+        wchar_t message[256]{};
+        StringCchPrintfW(
+            message,
+            ARRAYSIZE(message),
+            L"[CaptureInterop V1] Audio loopback start failed; continuing with video-only timing fallback. HRESULT=0x%08X\r\n",
+            static_cast<unsigned int>(hr));
+        OutputDebugStringW(message);
+
+        m_audioCaptureSource->SetAudioSampleReadyCallback(nullptr);
+        m_audioAvailable = false;
+        m_sinkWriter->Finalize();
+        if (!InitializeSinkWriter(&hr))
+        {
+            if (outHr) *outHr = hr;
+            return false;
+        }
+        SetupVideoCallback();
+        if (outHr) *outHr = S_OK;
+        return true;
     }
     
     if (outHr) *outHr = S_OK;

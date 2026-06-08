@@ -76,7 +76,20 @@ WindowsMFMP4SinkWriter::~WindowsMFMP4SinkWriter()
 
 bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, uint32_t width, uint32_t height, long* outHr)
 {
+    std::lock_guard<std::mutex> lock(m_writeMutex);
+
     if (outHr) *outHr = S_OK;
+
+    m_sinkWriter.reset();
+    m_textureProcessor.reset();
+    m_videoStreamIndex = 0;
+    m_audioStreamIndex = 0;
+    m_hasAudioStream = false;
+    m_hasBegunWriting = false;
+    m_frameIndex = 0;
+    m_prevVideoTimestamp = 0;
+    m_hasPrevVideoTimestamp = false;
+    m_lastFinalizationError = S_OK;
     
     // Check if MF was successfully initialized
     if (!m_mfLifecycle->IsInitialized())
@@ -93,10 +106,6 @@ bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device*
     device->GetImmediateContext(context.put());
     m_textureProcessor = m_textureProcessorFactory->CreateTextureProcessor(device, context.get(), width, height);
     
-    m_frameIndex = 0;
-    m_prevVideoTimestamp = 0;
-    m_hasPrevVideoTimestamp = false;
-
     // Create attributes to enable hardware acceleration and improve performance
     wil::com_ptr<IMFAttributes> attributes;
     HRESULT hr = MFCreateAttributes(attributes.put(), 3);

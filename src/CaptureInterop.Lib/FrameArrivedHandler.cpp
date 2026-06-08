@@ -138,16 +138,11 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
+    m_receivedFrameCount.fetch_add(1, std::memory_order_relaxed);
     LONGLONG timestamp = GetFrameTimestamp();
     
     {
         std::lock_guard<std::mutex> lock(m_queueMutex);
-
-        if (!ShouldAcceptFrame(timestamp))
-        {
-            m_droppedFrameCount.fetch_add(1, std::memory_order_relaxed);
-            return S_OK;
-        }
 
         if (m_pendingFrame.has_value())
         {
@@ -182,29 +177,6 @@ LONGLONG FrameArrivedHandler::GetFrameTimestamp() const
     return m_clockReader->GetRelativeTime(qpc.QuadPart);
 }
 
-bool FrameArrivedHandler::ShouldAcceptFrame(LONGLONG timestamp)
-{
-    if (!m_hasAcceptedFrame)
-    {
-        m_lastAcceptedTimestamp = timestamp;
-        m_hasAcceptedFrame = true;
-        return true;
-    }
-
-    if (timestamp <= m_lastAcceptedTimestamp)
-    {
-        return false;
-    }
-
-    if ((timestamp - m_lastAcceptedTimestamp) < TargetFrameDurationTicks)
-    {
-        return false;
-    }
-
-    m_lastAcceptedTimestamp = timestamp;
-    return true;
-}
-
 void FrameArrivedHandler::ProcessingThreadProc()
 {
     while (m_running)
@@ -234,6 +206,12 @@ void FrameArrivedHandler::ProcessingThreadProc()
         // Check if callback is still valid and we're still running before invoking
         if (frame.texture && m_callback && m_running)
         {
+            if (!m_frameAdmission.ShouldAccept(frame.relativeTimestamp))
+            {
+                m_droppedFrameCount.fetch_add(1, std::memory_order_relaxed);
+                continue;
+            }
+
             VideoFrameReadyEventArgs args;
             args.pTexture = frame.texture.get();
             args.timestamp = frame.relativeTimestamp;

@@ -42,6 +42,9 @@
     <ClCompile Include="ConfigValidationTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FrameAdmissionControllerTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ResultTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

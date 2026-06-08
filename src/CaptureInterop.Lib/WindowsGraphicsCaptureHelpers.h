@@ -222,7 +222,6 @@ namespace WindowsGraphicsCaptureHelpers
         }
 
         wil::com_ptr<IDirect3D11CaptureFramePool> framePool;
-
         hr = factory->Create(
             direct3DDevice.get(),
             DirectXPixelFormat_B8G8R8A8UIntNormalized,
