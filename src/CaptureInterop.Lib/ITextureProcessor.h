@@ -1,6 +1,7 @@
 #pragma once
 #include "Result.h"
 #include <cstdint>
+#include <span>
 #include <vector>
 
 // Forward declarations
@@ -23,6 +24,14 @@ public:
     /// <param name="outBuffer">Output buffer to receive the texture data.</param>
     /// <returns>Result indicating success or error information.</returns>
     virtual Result<void> CopyTextureToBuffer(ID3D11Texture2D* texture, std::vector<uint8_t>& outBuffer) = 0;
+
+    /// <summary>
+    /// Copy texture data directly into caller-provided memory with canonical stride.
+    /// </summary>
+    /// <param name="texture">Source D3D11 texture to copy from.</param>
+    /// <param name="outBuffer">Destination memory. Must be at least GetRequiredBufferSize() bytes.</param>
+    /// <returns>Result indicating success or error information.</returns>
+    virtual Result<void> CopyTextureToMemory(ID3D11Texture2D* texture, std::span<uint8_t> outBuffer) = 0;
 
     /// <summary>
     /// Get the required buffer size for texture data.

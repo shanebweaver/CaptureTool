@@ -60,6 +60,7 @@ bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
     HRESULT hr = S_OK;
     if (!m_captureSession->Start(&hr))
     {
+        m_captureSession->Stop();
         m_captureSession.reset();
         return false;
     }

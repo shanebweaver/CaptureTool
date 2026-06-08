@@ -86,6 +86,8 @@ private:
     bool InitializeSinkWriter(HRESULT* outHr);
     bool StartAudioCapture(HRESULT* outHr);
     void SetupCallbacks();
+    void SetupAudioCallback();
+    void SetupVideoCallback();
 
     // Configuration and dependencies
     CaptureSessionConfig m_config;
@@ -97,6 +99,8 @@ private:
     // State management
     CaptureSessionStateMachine m_stateMachine;
     std::atomic<bool> m_isShuttingDown{false}; // For thread coordination during shutdown
+    bool m_audioAvailable = false;
+    bool m_cleanupCompleted = false;
     
     // Callbacks - using registry for safer lifetime management
     CaptureInterop::CallbackRegistry<VideoFrameData> m_videoCallbackRegistry;

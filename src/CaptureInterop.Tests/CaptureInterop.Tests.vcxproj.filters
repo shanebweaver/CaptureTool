@@ -42,6 +42,9 @@
     <ClCompile Include="ConfigValidationTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FrameAdmissionControllerTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ResultTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -49,6 +52,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CaptureSessionStateTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="V1SmokeAcceptanceTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

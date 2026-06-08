@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "WindowsGraphicsCaptureSessionFactory.h"
 #include "WindowsGraphicsCaptureSession.h"
+#include <strsafe.h>
 
 WindowsGraphicsCaptureSessionFactory::WindowsGraphicsCaptureSessionFactory(
     std::unique_ptr<IMediaClockFactory> mediaClockFactory,
@@ -60,8 +61,16 @@ std::unique_ptr<ICaptureSession> WindowsGraphicsCaptureSessionFactory::CreateSes
 
     // Initialize the session - this sets up all sources and sink writer
     // If initialization fails, return nullptr (fail-fast)
-    if (!session->Initialize())
+    HRESULT hr = S_OK;
+    if (!session->Initialize(&hr))
     {
+        wchar_t message[160]{};
+        StringCchPrintfW(
+            message,
+            ARRAYSIZE(message),
+            L"[CaptureInterop V1] CreateSession initialization failed. HRESULT=0x%08X\r\n",
+            static_cast<unsigned int>(hr));
+        OutputDebugStringW(message);
         return nullptr;
     }
 

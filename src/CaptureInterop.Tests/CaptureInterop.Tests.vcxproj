@@ -72,7 +72,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>mfplat.lib;mfreadwrite.lib;mfuuid.lib;d3d11.lib;dxgi.lib;windowsapp.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mfplat.lib;mfreadwrite.lib;mfuuid.lib;d3d11.lib;dxgi.lib;windowsapp.lib;runtimeobject.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -98,6 +98,7 @@
     <ClCompile Include="CaptureSessionIntegrationTests.cpp" />
     <ClCompile Include="CaptureSessionStateTests.cpp" />
     <ClCompile Include="ConfigValidationTests.cpp" />
+    <ClCompile Include="FrameAdmissionControllerTests.cpp" />
     <ClCompile Include="MediaClockTests.cpp" />
     <ClCompile Include="MP4ComponentTests.cpp" />
     <ClCompile Include="MP4SinkWriterTests.cpp" />
@@ -109,6 +110,7 @@
     </ClCompile>
     <ClCompile Include="ResultTests.cpp" />
     <ClCompile Include="ShutdownRaceConditionTests.cpp" />
+    <ClCompile Include="V1SmokeAcceptanceTests.cpp" />
     <ClCompile Include="VideoCaptureSourceStopTests.cpp" />
   </ItemGroup>
   <ItemGroup>

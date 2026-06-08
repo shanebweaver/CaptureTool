@@ -244,6 +244,36 @@ namespace CaptureInteropTests
             Assert::AreEqual(640u * 480u * 4u, static_cast<uint32_t>(buffer.size()));
         }
 
+        TEST_METHOD(CopyTextureToMemory_WithValidTexture_Succeeds)
+        {
+            auto device = CreateTestDevice();
+            wil::com_ptr<ID3D11DeviceContext> context;
+            device->GetImmediateContext(context.put());
+
+            TextureProcessor processor(device.get(), context.get(), 320, 240);
+            auto texture = CreateTestTexture(device.get(), 320, 240, DXGI_FORMAT_B8G8R8A8_UNORM);
+
+            std::vector<uint8_t> buffer(processor.GetRequiredBufferSize());
+            auto result = processor.CopyTextureToMemory(texture.get(), std::span<uint8_t>(buffer.data(), buffer.size()));
+
+            Assert::IsTrue(result.IsOk());
+        }
+
+        TEST_METHOD(CopyTextureToMemory_WithSmallBuffer_Fails)
+        {
+            auto device = CreateTestDevice();
+            wil::com_ptr<ID3D11DeviceContext> context;
+            device->GetImmediateContext(context.put());
+
+            TextureProcessor processor(device.get(), context.get(), 320, 240);
+            auto texture = CreateTestTexture(device.get(), 320, 240, DXGI_FORMAT_B8G8R8A8_UNORM);
+
+            std::vector<uint8_t> buffer(processor.GetRequiredBufferSize() - 1);
+            auto result = processor.CopyTextureToMemory(texture.get(), std::span<uint8_t>(buffer.data(), buffer.size()));
+
+            Assert::IsTrue(result.IsError());
+        }
+
         TEST_METHOD(CopyTextureToBuffer_WithNullTexture_Fails)
         {
             auto device = CreateTestDevice();
@@ -286,6 +316,39 @@ namespace CaptureInteropTests
 
             Assert::IsTrue(result.IsOk());
             Assert::IsNotNull(result.Value().get());
+        }
+
+        TEST_METHOD(CreateVideoSampleFromBuffer_WithValidFill_Succeeds)
+        {
+            SampleBuilder builder;
+
+            auto result = builder.CreateVideoSampleFromBuffer(
+                1920 * 1080 * 4,
+                1000000,
+                333333,
+                [](std::span<uint8_t> buffer) -> Result<void> {
+                    memset(buffer.data(), 0, buffer.size());
+                    return Result<void>::Ok();
+                });
+
+            Assert::IsTrue(result.IsOk());
+            Assert::IsNotNull(result.Value().get());
+        }
+
+        TEST_METHOD(CreateVideoSampleFromBuffer_WithFailedFill_Fails)
+        {
+            SampleBuilder builder;
+
+            auto result = builder.CreateVideoSampleFromBuffer(
+                100,
+                0,
+                333333,
+                [](std::span<uint8_t>) -> Result<void> {
+                    return Result<void>::Error(
+                        ErrorInfo::FromMessage(E_FAIL, "fill failed", "CreateVideoSampleFromBuffer_WithFailedFill_Fails"));
+                });
+
+            Assert::IsTrue(result.IsError());
         }
 
         TEST_METHOD(CreateAudioSample_WithValidData_Succeeds)

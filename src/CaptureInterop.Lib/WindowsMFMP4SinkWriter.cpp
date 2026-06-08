@@ -76,7 +76,20 @@ WindowsMFMP4SinkWriter::~WindowsMFMP4SinkWriter()
 
 bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, uint32_t width, uint32_t height, long* outHr)
 {
+    std::lock_guard<std::mutex> lock(m_writeMutex);
+
     if (outHr) *outHr = S_OK;
+
+    m_sinkWriter.reset();
+    m_textureProcessor.reset();
+    m_videoStreamIndex = 0;
+    m_audioStreamIndex = 0;
+    m_hasAudioStream = false;
+    m_hasBegunWriting = false;
+    m_frameIndex = 0;
+    m_prevVideoTimestamp = 0;
+    m_hasPrevVideoTimestamp = false;
+    m_lastFinalizationError = S_OK;
     
     // Check if MF was successfully initialized
     if (!m_mfLifecycle->IsInitialized())
@@ -93,8 +106,6 @@ bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device*
     device->GetImmediateContext(context.put());
     m_textureProcessor = m_textureProcessorFactory->CreateTextureProcessor(device, context.get(), width, height);
     
-    m_frameIndex = 0;
-
     // Create attributes to enable hardware acceleration and improve performance
     wil::com_ptr<IMFAttributes> attributes;
     HRESULT hr = MFCreateAttributes(attributes.put(), 3);
@@ -195,6 +206,8 @@ bool WindowsMFMP4SinkWriter::InitializeAudioStream(WAVEFORMATEX* audioFormat, lo
 
 long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relativeTicks)
 {
+    std::lock_guard<std::mutex> lock(m_writeMutex);
+
     if (!texture || !m_sinkWriter) return E_FAIL;
 
     // For video-only recording, begin writing on first frame
@@ -205,17 +218,12 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
         m_hasBegunWriting = true;
     }
 
-    // Use texture processor to copy texture to buffer
-    std::vector<uint8_t> frameBuffer;
-    auto copyResult = m_textureProcessor->CopyTextureToBuffer(texture, frameBuffer);
-    if (copyResult.IsError())
-    {
-        return copyResult.Error().hr;
-    }
-
     // Calculate frame duration
-    if (m_prevVideoTimestamp == 0)
+    if (!m_hasPrevVideoTimestamp)
+    {
         m_prevVideoTimestamp = relativeTicks;
+        m_hasPrevVideoTimestamp = true;
+    }
 
     // Calculate frame duration using integer division
     // For standard frame rates (30, 60, etc.) that evenly divide TicksPerSecond(),
@@ -223,13 +231,20 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
     const LONGLONG frameDuration = MediaTimeConstants::TicksPerSecond() / m_videoConfig.frameRate;
     LONGLONG duration = relativeTicks - m_prevVideoTimestamp;
     if (duration <= 0) duration = frameDuration;
+    if (relativeTicks < m_prevVideoTimestamp)
+    {
+        relativeTicks = m_prevVideoTimestamp + duration;
+    }
     m_prevVideoTimestamp = relativeTicks;
 
-    // Use sample builder to create video sample
-    auto sampleResult = m_sampleBuilder->CreateVideoSample(
-        std::span<const uint8_t>(frameBuffer.data(), frameBuffer.size()),
+    const uint32_t bufferSize = m_textureProcessor->GetRequiredBufferSize();
+    auto sampleResult = m_sampleBuilder->CreateVideoSampleFromBuffer(
+        bufferSize,
         relativeTicks,
-        duration);
+        duration,
+        [this, texture](std::span<uint8_t> buffer) -> Result<void> {
+            return m_textureProcessor->CopyTextureToMemory(texture, buffer);
+        });
     
     if (sampleResult.IsError())
     {
@@ -242,6 +257,8 @@ long WindowsMFMP4SinkWriter::WriteFrame(ID3D11Texture2D* texture, int64_t relati
 
 long WindowsMFMP4SinkWriter::WriteAudioSample(std::span<const uint8_t> data, int64_t timestamp)
 {
+    std::lock_guard<std::mutex> lock(m_writeMutex);
+
     if (!m_sinkWriter || !m_hasAudioStream || data.empty())
     {
         return E_FAIL;
@@ -270,6 +287,8 @@ long WindowsMFMP4SinkWriter::WriteAudioSample(std::span<const uint8_t> data, int
 
 void WindowsMFMP4SinkWriter::Finalize()
 {
+    std::lock_guard<std::mutex> lock(m_writeMutex);
+
     m_lastFinalizationError = S_OK;
     
     if (m_sinkWriter)

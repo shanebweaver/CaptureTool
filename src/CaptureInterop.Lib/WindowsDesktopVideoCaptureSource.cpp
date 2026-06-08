@@ -2,6 +2,7 @@
 #include "WindowsDesktopVideoCaptureSource.h"
 #include "FrameArrivedHandler.h"
 #include "WindowsGraphicsCaptureHelpers.h"
+#include <strsafe.h>
 
 using namespace WindowsGraphicsCaptureHelpers;
 
@@ -32,6 +33,20 @@ WindowsDesktopVideoCaptureSource::~WindowsDesktopVideoCaptureSource()
 bool WindowsDesktopVideoCaptureSource::Initialize(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
+
+    if (!m_roInitialized)
+    {
+        hr = RoInitialize(RO_INIT_MULTITHREADED);
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
+        {
+            if (outHr) *outHr = hr;
+            return false;
+        }
+        if (SUCCEEDED(hr))
+        {
+            m_roInitialized = true;
+        }
+    }
 
     // Get the graphics capture item
     wil::com_ptr<IGraphicsCaptureItemInterop> interop = GetGraphicsCaptureItemInterop(&hr);
@@ -146,7 +161,7 @@ bool WindowsDesktopVideoCaptureSource::Start(HRESULT* outHr)
 
 void WindowsDesktopVideoCaptureSource::Stop()
 {
-    if (!m_isRunning)
+    if (!m_isRunning && !m_frameHandler && !m_captureSession && !m_framePool && !m_context && !m_device)
     {
         return;
     }
@@ -163,12 +178,27 @@ void WindowsDesktopVideoCaptureSource::Stop()
     // Principle #5 (RAII Everything): wil::com_ptr automatically calls Release()
     if (m_frameHandler)
     {
+        wchar_t message[192]{};
+        (void)StringCchPrintfW(
+            message,
+            ARRAYSIZE(message),
+            L"[CaptureInterop V1] Video frames received=%llu processed=%llu dropped=%llu\r\n",
+            static_cast<unsigned long long>(m_frameHandler->GetReceivedFrameCount()),
+            static_cast<unsigned long long>(m_frameHandler->GetProcessedFrameCount()),
+            static_cast<unsigned long long>(m_frameHandler->GetDroppedFrameCount()));
+        OutputDebugStringW(message);
+
         m_frameHandler->Stop();
         m_frameHandler.reset(); // Explicit reset for clarity, calls Release() automatically
     }
 
-    // Release capture session
-    // Principle #3 (No Nullable Pointers): wil::com_ptr handles Release() automatically
+    ReleaseResources();
+
+    m_isRunning = false;
+}
+
+void WindowsDesktopVideoCaptureSource::ReleaseResources()
+{
     if (m_captureSession)
     {
         // Explicitly close the session via IClosable before releasing the reference.
@@ -191,8 +221,26 @@ void WindowsDesktopVideoCaptureSource::Stop()
     // Release frame pool
     if (m_framePool)
     {
+        wil::com_ptr<ABI::Windows::Foundation::IClosable> closable;
+        if (SUCCEEDED(m_framePool->QueryInterface(IID_PPV_ARGS(closable.put()))))
+        {
+            (void)closable->Close(); // Best-effort: release frame-pool resources promptly
+        }
         m_framePool.reset();
     }
 
-    m_isRunning = false;
+    if (m_context)
+    {
+        m_context->ClearState();
+        m_context->Flush();
+    }
+
+    m_context.reset();
+    m_device.reset();
+
+    if (m_roInitialized)
+    {
+        RoUninitialize();
+        m_roInitialized = false;
+    }
 }
