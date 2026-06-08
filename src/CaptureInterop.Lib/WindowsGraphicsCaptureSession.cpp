@@ -12,6 +12,7 @@
 #include <strsafe.h>
 #include <d3d11.h>
 #include <Windows.h>
+#include <psapi.h>
 #include <cassert>
 
 namespace {
@@ -21,6 +22,23 @@ namespace {
     /// 200ms is sufficient for approximately 6 frames at 30fps.
     /// </summary>
     constexpr DWORD ENCODER_DRAIN_TIMEOUT_MS = 200;
+
+    void LogWorkingSet(const wchar_t* phase)
+    {
+        PROCESS_MEMORY_COUNTERS counters{};
+        counters.cb = sizeof(counters);
+        if (GetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof(counters)))
+        {
+            wchar_t message[192]{};
+            StringCchPrintfW(
+                message,
+                ARRAYSIZE(message),
+                L"[CaptureInterop V1] Stop memory %ls workingSet=%zu bytes\r\n",
+                phase,
+                static_cast<size_t>(counters.WorkingSetSize));
+            OutputDebugStringW(message);
+        }
+    }
 }
 
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
@@ -368,14 +386,20 @@ bool WindowsGraphicsCaptureSession::StartAudioCapture(HRESULT* outHr)
 
 void WindowsGraphicsCaptureSession::Stop()
 {
-    // Check if session is active (Active or Paused state)
-    if (!m_stateMachine.IsActive())
+    CaptureSessionState state = m_stateMachine.GetState();
+    if (m_cleanupCompleted || state == CaptureSessionState::Created || state == CaptureSessionState::Stopped)
     {
         return;
     }
 
     // Shutdown sequence: set flag, stop sources, clear callbacks, finalize
     m_isShuttingDown.store(true, std::memory_order_release);
+    LogWorkingSet(L"begin");
+
+    // Explicitly unregister callback handles before clearing registries so their
+    // unregister lambdas do not retain references into the session longer than needed.
+    m_videoCallbackHandle.Unregister();
+    m_audioCallbackHandle.Unregister();
 
     // Stop sources
     if (m_videoCaptureSource)
@@ -387,6 +411,7 @@ void WindowsGraphicsCaptureSession::Stop()
     {
         m_audioCaptureSource->Stop();
     }
+    LogWorkingSet(L"after-source-stop");
 
     if (m_mediaClock)
     {
@@ -410,9 +435,17 @@ void WindowsGraphicsCaptureSession::Stop()
     m_videoCallbackRegistry.Clear();
     m_audioCallbackRegistry.Clear();
 
-    // Finalize sink writer
-    Sleep(ENCODER_DRAIN_TIMEOUT_MS);
-    m_sinkWriter->Finalize();
+    // Finalize sink writer. Active recordings get a short drain; failed/initialized
+    // sessions may never have written samples, but Finalize is idempotent.
+    if (m_stateMachine.IsActive())
+    {
+        Sleep(ENCODER_DRAIN_TIMEOUT_MS);
+    }
+    if (m_sinkWriter)
+    {
+        m_sinkWriter->Finalize();
+    }
+    LogWorkingSet(L"after-sink-finalize");
 
     // Reset clock
     if (m_mediaClock)
@@ -423,6 +456,8 @@ void WindowsGraphicsCaptureSession::Stop()
     // Transition to Stopped state
     m_stateMachine.TryTransitionTo(CaptureSessionState::Stopped);
     m_isShuttingDown.store(false, std::memory_order_release);
+    m_cleanupCompleted = true;
+    LogWorkingSet(L"end");
 }
 
 void WindowsGraphicsCaptureSession::Pause()

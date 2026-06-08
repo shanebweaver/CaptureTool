@@ -10,6 +10,7 @@ AudioCaptureDevice::AudioCaptureDevice() = default;
 AudioCaptureDevice::~AudioCaptureDevice()
 {
     Stop();
+    ReleaseResources();
     // Principle #5 (RAII Everything): All COM objects automatically released via wil::com_ptr
     // - m_captureClient, m_audioClient, m_device, m_deviceEnumerator: wil::com_ptr handles Release()
     // - m_waveFormat: wil::unique_cotaskmem_ptr calls CoTaskMemFree()
@@ -23,11 +24,19 @@ AudioCaptureDevice::~AudioCaptureDevice()
 bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr)
 {
     // Initialize COM for this thread
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    HRESULT hr = S_OK;
+    if (!m_comInitialized)
+    {
+        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    }
     if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
     {
         if (outHr) *outHr = hr;
         return false;
+    }
+    if (SUCCEEDED(hr) && !m_comInitialized)
+    {
+        m_comInitialized = true;
     }
 
     // Create device enumerator
@@ -141,6 +150,21 @@ void AudioCaptureDevice::Stop()
     {
         m_audioClient->Stop();
         m_isCapturing = false;
+    }
+}
+
+void AudioCaptureDevice::ReleaseResources()
+{
+    m_captureClient.reset();
+    m_audioClient.reset();
+    m_device.reset();
+    m_deviceEnumerator.reset();
+    m_waveFormat.reset();
+
+    if (m_comInitialized)
+    {
+        CoUninitialize();
+        m_comInitialized = false;
     }
 }
 

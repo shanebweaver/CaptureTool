@@ -65,6 +65,8 @@ public:
     ID3D11Device* GetDevice() const override { return m_device.get(); }
 
 private:
+    void ReleaseResources();
+
     // Configuration
     CaptureSessionConfig m_config;
     
@@ -90,4 +92,5 @@ private:
     
     // State
     bool m_isRunning;
+    bool m_roInitialized = false;
 };

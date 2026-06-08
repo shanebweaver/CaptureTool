@@ -100,6 +100,7 @@ private:
     CaptureSessionStateMachine m_stateMachine;
     std::atomic<bool> m_isShuttingDown{false}; // For thread coordination during shutdown
     bool m_audioAvailable = false;
+    bool m_cleanupCompleted = false;
     
     // Callbacks - using registry for safer lifetime management
     CaptureInterop::CallbackRegistry<VideoFrameData> m_videoCallbackRegistry;

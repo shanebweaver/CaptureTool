@@ -73,10 +73,13 @@ public:
     void ReleaseBuffer(UINT32 numFramesRead);
 
 private:
+    void ReleaseResources();
+
     wil::com_ptr<IMMDeviceEnumerator> m_deviceEnumerator;
     wil::com_ptr<IMMDevice> m_device;
     wil::com_ptr<IAudioClient> m_audioClient;
     wil::com_ptr<IAudioCaptureClient> m_captureClient;
     wil::unique_cotaskmem_ptr<WAVEFORMATEX> m_waveFormat;
     bool m_isCapturing = false;
+    bool m_comInitialized = false;
 };

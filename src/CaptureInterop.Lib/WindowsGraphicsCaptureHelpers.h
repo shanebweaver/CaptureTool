@@ -45,15 +45,8 @@ namespace WindowsGraphicsCaptureHelpers
     {
         wil::com_ptr<IGraphicsCaptureItemInterop> interop;
 
-        HRESULT hr = RoInitialize(RO_INIT_MULTITHREADED);
-        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
-        {
-            if (outHr) *outHr = hr;
-            return nullptr;
-        }
-
         HSTRING classId{};
-        hr = WindowsCreateString(
+        HRESULT hr = WindowsCreateString(
             RuntimeClass_Windows_Graphics_Capture_GraphicsCaptureItem,
             static_cast<UINT32>(wcslen(RuntimeClass_Windows_Graphics_Capture_GraphicsCaptureItem)),
             &classId
