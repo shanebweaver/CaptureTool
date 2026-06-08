@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Domain.Edit.Drawable;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
+using Microsoft.Graphics.Canvas.Text;
 using Microsoft.UI;
 using System.Numerics;
 using Windows.Foundation;
@@ -72,9 +73,26 @@ public static partial class Win2DImageCanvasRenderer
 
     private static void DrawText(TextDrawable drawable, CanvasDrawingSession drawingSession)
     {
-        Vector2 textPosition = new(drawable.Offset.X, drawable.Offset.Y);
+        Rect textRect = new(drawable.Offset.X, drawable.Offset.Y, drawable.Size.Width, drawable.Size.Height);
+        if (drawable.BackgroundColor.A > 0)
+        {
+            Color backgroundColor = Color.FromArgb(
+                drawable.BackgroundColor.A,
+                drawable.BackgroundColor.R,
+                drawable.BackgroundColor.G,
+                drawable.BackgroundColor.B);
+            drawingSession.FillRectangle(textRect, backgroundColor);
+        }
+
         Color color = Color.FromArgb(drawable.Color.A, drawable.Color.R, drawable.Color.G, drawable.Color.B);
-        drawingSession.DrawText(drawable.Text, textPosition, color);
+        using CanvasTextFormat textFormat = new()
+        {
+            FontFamily = string.IsNullOrWhiteSpace(drawable.FontFamily) ? TextDrawable.DefaultFontFamily : drawable.FontFamily,
+            FontSize = drawable.FontSize > 0 ? drawable.FontSize : TextDrawable.DefaultFontSize,
+            WordWrapping = CanvasWordWrapping.Wrap,
+        };
+
+        drawingSession.DrawText(drawable.Text, textRect, color, textFormat);
     }
 
     private static void DrawRectangle(RectangleDrawable drawable, CanvasDrawingSession drawingSession)
