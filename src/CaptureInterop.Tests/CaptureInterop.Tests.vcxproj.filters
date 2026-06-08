@@ -45,7 +45,19 @@
     <ClCompile Include="FrameAdmissionControllerTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HdrToSdrToneMapperResourcesTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HdrToSdrVideoFrameProcessorTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ResultTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderAssetTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MonitorHdrInfoTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ShutdownRaceConditionTests.cpp">
@@ -55,6 +67,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="V1SmokeAcceptanceTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoFrameProcessorTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoFrameProcessorFactoryTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsGraphicsCaptureSessionProcessorTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

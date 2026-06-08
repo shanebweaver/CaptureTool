@@ -55,6 +55,17 @@
     <Filter Include="Source Files\Screenshot">
       <UniqueIdentifier>{b9c8d7e6-f5a4-3b2c-1d0e-9f8a7b6c5d4e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Shaders">
+      <UniqueIdentifier>{d3d20543-04d9-4c45-a45a-393f7f6e7274}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="HdrToSdrToneMapper.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="HdrToSdrToneMapperVertex.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -102,7 +113,25 @@
     <ClInclude Include="WindowsGraphicsCaptureSession.h">
       <Filter>Header Files\CaptureSession</Filter>
     </ClInclude>
+    <ClInclude Include="IMonitorHdrDetector.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="IMonitorHdrDetectorFactory.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="MonitorHdrColorSpaceMapper.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="MonitorHdrInfo.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
     <ClInclude Include="WindowsGraphicsCaptureSessionFactory.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMonitorHdrDetector.h">
+      <Filter>Header Files\CaptureSession</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMonitorHdrDetectorFactory.h">
       <Filter>Header Files\CaptureSession</Filter>
     </ClInclude>
     <ClInclude Include="WindowsGraphicsCaptureHelpers.h">
@@ -139,6 +168,24 @@
       <Filter>Header Files\VideoCapture</Filter>
     </ClInclude>
     <ClInclude Include="WindowsDesktopVideoCaptureSourceFactory.h">
+      <Filter>Header Files\VideoCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="IVideoFrameProcessor.h">
+      <Filter>Header Files\VideoCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="IVideoFrameProcessorFactory.h">
+      <Filter>Header Files\VideoCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="PassthroughVideoFrameProcessor.h">
+      <Filter>Header Files\VideoCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="HdrToSdrToneMapperResources.h">
+      <Filter>Header Files\VideoCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="HdrToSdrVideoFrameProcessor.h">
+      <Filter>Header Files\VideoCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoFrameProcessorFactory.h">
       <Filter>Header Files\VideoCapture</Filter>
     </ClInclude>
     <ClInclude Include="IMediaClockAdvancer.h">
@@ -248,6 +295,12 @@
     <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp">
       <Filter>Source Files\CaptureSession</Filter>
     </ClCompile>
+    <ClCompile Include="WindowsMonitorHdrDetector.cpp">
+      <Filter>Source Files\CaptureSession</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsMonitorHdrDetectorFactory.cpp">
+      <Filter>Source Files\CaptureSession</Filter>
+    </ClCompile>
     <ClCompile Include="WindowsLocalAudioCaptureSource.cpp">
       <Filter>Source Files\AudioCapture</Filter>
     </ClCompile>
@@ -267,6 +320,18 @@
       <Filter>Source Files\VideoCapture</Filter>
     </ClCompile>
     <ClCompile Include="WindowsDesktopVideoCaptureSourceFactory.cpp">
+      <Filter>Source Files\VideoCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="PassthroughVideoFrameProcessor.cpp">
+      <Filter>Source Files\VideoCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="HdrToSdrToneMapperResources.cpp">
+      <Filter>Source Files\VideoCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="HdrToSdrVideoFrameProcessor.cpp">
+      <Filter>Source Files\VideoCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoFrameProcessorFactory.cpp">
       <Filter>Source Files\VideoCapture</Filter>
     </ClCompile>
     <ClCompile Include="WindowsMFMP4SinkWriter.cpp">

@@ -2,11 +2,16 @@
 #include "WindowsGraphicsCaptureSession.h"
 #include "IAudioCaptureSource.h"
 #include "IVideoCaptureSource.h"
+#include "IVideoFrameProcessor.h"
+#include "IVideoFrameProcessorFactory.h"
 #include "IMediaClock.h"
 #include "CaptureSessionConfig.h"
 #include "IMP4SinkWriter.h"
 #include "CallbackTypes.h"
 #include "ICaptureSession.h"
+#include "MonitorHdrInfo.h"
+#include "PassthroughVideoFrameProcessor.h"
+#include "VideoFrameProcessorFactory.h"
 
 #include <mmreg.h>
 #include <strsafe.h>
@@ -39,6 +44,61 @@ namespace {
             OutputDebugStringW(message);
         }
     }
+
+    const wchar_t* ToDiagnosticString(MonitorHdrMode mode)
+    {
+        switch (mode)
+        {
+        case MonitorHdrMode::Sdr:
+            return L"Sdr";
+        case MonitorHdrMode::Hdr:
+            return L"Hdr";
+        case MonitorHdrMode::Unknown:
+        default:
+            return L"Unknown";
+        }
+    }
+
+    const wchar_t* ToDiagnosticString(MonitorHdrFallbackReason reason)
+    {
+        switch (reason)
+        {
+        case MonitorHdrFallbackReason::None:
+            return L"None";
+        case MonitorHdrFallbackReason::DetectorUnavailable:
+            return L"DetectorUnavailable";
+        case MonitorHdrFallbackReason::OutputNotFound:
+            return L"OutputNotFound";
+        case MonitorHdrFallbackReason::QueryFailed:
+            return L"QueryFailed";
+        case MonitorHdrFallbackReason::UnsupportedColorSpace:
+            return L"UnsupportedColorSpace";
+        case MonitorHdrFallbackReason::Unknown:
+        default:
+            return L"Unknown";
+        }
+    }
+
+    void LogVideoFrameProcessorDiagnostics(
+        const MonitorHdrInfo& monitorHdrInfo,
+        bool toneMapperEnabled,
+        const wchar_t* captureFormat,
+        HRESULT shaderInitResult)
+    {
+        wchar_t message[384]{};
+        StringCchPrintfW(
+            message,
+            ARRAYSIZE(message),
+            L"[CaptureInterop V1] VideoFrameProcessor MonitorHdrDetected=%ls ToneMapperEnabled=%ls CaptureFormat=%ls ToneMapperFallbackReason=%ls ShaderInitResult=0x%08X DetectionSucceeded=%ls SourceColorSpace=%d\r\n",
+            ToDiagnosticString(monitorHdrInfo.mode),
+            toneMapperEnabled ? L"true" : L"false",
+            captureFormat ? captureFormat : L"Unknown",
+            ToDiagnosticString(monitorHdrInfo.fallbackReason),
+            static_cast<unsigned int>(shaderInitResult),
+            monitorHdrInfo.detectionSucceeded ? L"true" : L"false",
+            monitorHdrInfo.hasSourceColorSpace ? monitorHdrInfo.sourceColorSpace : -1);
+        OutputDebugStringW(message);
+    }
 }
 
 WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
@@ -47,10 +107,28 @@ WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
     std::unique_ptr<IAudioCaptureSource> audioCaptureSource,
     std::unique_ptr<IVideoCaptureSource> videoCaptureSource,
     std::unique_ptr<IMP4SinkWriter> sinkWriter)
+    : WindowsGraphicsCaptureSession(
+        config,
+        std::move(mediaClock),
+        std::move(audioCaptureSource),
+        std::move(videoCaptureSource),
+        std::move(sinkWriter),
+        std::make_unique<VideoFrameProcessorFactory>())
+{
+}
+
+WindowsGraphicsCaptureSession::WindowsGraphicsCaptureSession(
+    const CaptureSessionConfig& config,
+    std::unique_ptr<IMediaClock> mediaClock,
+    std::unique_ptr<IAudioCaptureSource> audioCaptureSource,
+    std::unique_ptr<IVideoCaptureSource> videoCaptureSource,
+    std::unique_ptr<IMP4SinkWriter> sinkWriter,
+    std::unique_ptr<IVideoFrameProcessorFactory> videoFrameProcessorFactory)
     : m_config(config)
     , m_mediaClock(std::move(mediaClock))
     , m_audioCaptureSource(std::move(audioCaptureSource))
     , m_videoCaptureSource(std::move(videoCaptureSource))
+    , m_videoFrameProcessorFactory(std::move(videoFrameProcessorFactory))
     , m_sinkWriter(std::move(sinkWriter))
     , m_stateMachine() // Initializes in Created state
     , m_videoCallbackRegistry()
@@ -101,7 +179,7 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
     }
 
     // Validate dependencies
-    if (!m_mediaClock || !m_audioCaptureSource || !m_videoCaptureSource || !m_sinkWriter)
+    if (!m_mediaClock || !m_audioCaptureSource || !m_videoCaptureSource || !m_sinkWriter || !m_videoFrameProcessorFactory)
     {
         // Principle #3 (No Nullable Pointers): This check should never fail if the factory
         // properly initialized all dependencies. After construction, we rely on the type
@@ -135,6 +213,47 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
         OutputDebugStringW(L"[CaptureInterop V1] Audio loopback initialization failed; continuing with video-only timing fallback.\r\n");
         m_audioAvailable = false;
     }
+
+    MonitorHdrInfo monitorHdrInfo = m_videoCaptureSource->GetMonitorHdrInfo();
+    VideoFrameProcessorFactoryContext processorContext{
+        monitorHdrInfo,
+        m_videoCaptureSource->GetDevice(),
+        m_videoCaptureSource->GetWidth(),
+        m_videoCaptureSource->GetHeight()
+    };
+    auto processorResult = m_videoFrameProcessorFactory->CreateProcessor(processorContext);
+    if (processorResult.IsError())
+    {
+        LogVideoFrameProcessorDiagnostics(
+            monitorHdrInfo,
+            false,
+            L"DXGI_FORMAT_B8G8R8A8_UNORM",
+            processorResult.Error().hr);
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Created state");
+        if (outHr) *outHr = processorResult.Error().hr;
+        return false;
+    }
+
+    m_videoFrameProcessor = std::move(processorResult.Value());
+    if (!m_videoFrameProcessor)
+    {
+        LogVideoFrameProcessorDiagnostics(
+            monitorHdrInfo,
+            false,
+            L"DXGI_FORMAT_B8G8R8A8_UNORM",
+            E_FAIL);
+        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
+        assert(transitioned && "Transition to Failed should always succeed from Created state");
+        if (outHr) *outHr = E_FAIL;
+        return false;
+    }
+
+    LogVideoFrameProcessorDiagnostics(
+        monitorHdrInfo,
+        monitorHdrInfo.ShouldUseToneMapper(),
+        L"DXGI_FORMAT_B8G8R8A8_UNORM",
+        S_OK);
 
     // Initialize sink writer
     if (!InitializeSinkWriter(&hr))
@@ -219,8 +338,37 @@ void WindowsGraphicsCaptureSession::SetupVideoCallback()
                 return;
             }
 
+            ID3D11Texture2D* processedTexture = args.pTexture;
+            if (m_videoFrameProcessor)
+            {
+                auto processResult = m_videoFrameProcessor->Process(args.pTexture);
+                if (processResult.IsError())
+                {
+                    wchar_t message[192]{};
+                    StringCchPrintfW(
+                        message,
+                        ARRAYSIZE(message),
+                        L"[CaptureInterop V1] Video frame processing failed. HRESULT=0x%08X timestamp=%lld\r\n",
+                        static_cast<unsigned int>(processResult.Error().hr),
+                        args.timestamp);
+                    OutputDebugStringW(message);
+                    m_videoFrameProcessor = std::make_unique<PassthroughVideoFrameProcessor>();
+                    processedTexture = args.pTexture;
+                }
+                else
+                {
+                    processedTexture = processResult.Value().texture;
+                    if (!processedTexture)
+                    {
+                        OutputDebugStringW(L"[CaptureInterop V1] Video frame processing returned null texture.\r\n");
+                        m_videoFrameProcessor = std::make_unique<PassthroughVideoFrameProcessor>();
+                        processedTexture = args.pTexture;
+                    }
+                }
+            }
+
             // Write to sink writer
-            HRESULT hr = m_sinkWriter->WriteFrame(args.pTexture, args.timestamp);
+            HRESULT hr = m_sinkWriter->WriteFrame(processedTexture, args.timestamp);
             if (FAILED(hr))
             {
                 wchar_t message[192]{};
@@ -237,7 +385,7 @@ void WindowsGraphicsCaptureSession::SetupVideoCallback()
             if (m_videoCallbackRegistry.HasCallbacks())
             {
                 VideoFrameData frameData{};
-                frameData.pTexture = args.pTexture;
+                frameData.pTexture = processedTexture;
                 frameData.timestamp = args.timestamp;
                 frameData.width = m_videoCaptureSource->GetWidth();
                 frameData.height = m_videoCaptureSource->GetHeight();

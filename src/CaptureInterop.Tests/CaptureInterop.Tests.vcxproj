@@ -99,9 +99,12 @@
     <ClCompile Include="CaptureSessionStateTests.cpp" />
     <ClCompile Include="ConfigValidationTests.cpp" />
     <ClCompile Include="FrameAdmissionControllerTests.cpp" />
+    <ClCompile Include="HdrToSdrToneMapperResourcesTests.cpp" />
+    <ClCompile Include="HdrToSdrVideoFrameProcessorTests.cpp" />
     <ClCompile Include="MediaClockTests.cpp" />
     <ClCompile Include="MP4ComponentTests.cpp" />
     <ClCompile Include="MP4SinkWriterTests.cpp" />
+    <ClCompile Include="MonitorHdrInfoTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Create</PrecompiledHeader>
@@ -109,8 +112,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ResultTests.cpp" />
+    <ClCompile Include="ShaderAssetTests.cpp" />
     <ClCompile Include="ShutdownRaceConditionTests.cpp" />
     <ClCompile Include="V1SmokeAcceptanceTests.cpp" />
+    <ClCompile Include="VideoFrameProcessorFactoryTests.cpp" />
+    <ClCompile Include="VideoFrameProcessorTests.cpp" />
+    <ClCompile Include="WindowsGraphicsCaptureSessionProcessorTests.cpp" />
     <ClCompile Include="VideoCaptureSourceStopTests.cpp" />
   </ItemGroup>
   <ItemGroup>

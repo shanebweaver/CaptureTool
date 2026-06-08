@@ -1,6 +1,38 @@
 #include "pch.h"
 #include "StreamConfigurationBuilder.h"
 
+namespace
+{
+    Result<void> ApplySdrRec709Metadata(IMFMediaType* mediaType, const char* context)
+    {
+        HRESULT hr = mediaType->SetUINT32(MF_MT_VIDEO_PRIMARIES, MFVideoPrimaries_BT709);
+        if (FAILED(hr))
+        {
+            return Result<void>::Error(ErrorInfo::FromHResult(hr, context));
+        }
+
+        hr = mediaType->SetUINT32(MF_MT_TRANSFER_FUNCTION, MFVideoTransFunc_709);
+        if (FAILED(hr))
+        {
+            return Result<void>::Error(ErrorInfo::FromHResult(hr, context));
+        }
+
+        hr = mediaType->SetUINT32(MF_MT_YUV_MATRIX, MFVideoTransferMatrix_BT709);
+        if (FAILED(hr))
+        {
+            return Result<void>::Error(ErrorInfo::FromHResult(hr, context));
+        }
+
+        hr = mediaType->SetUINT32(MF_MT_VIDEO_NOMINAL_RANGE, MFNominalRange_0_255);
+        if (FAILED(hr))
+        {
+            return Result<void>::Error(ErrorInfo::FromHResult(hr, context));
+        }
+
+        return Result<void>::Ok();
+    }
+}
+
 Result<wil::com_ptr<IMFMediaType>> StreamConfigurationBuilder::CreateVideoOutputType(const VideoConfig& config) const
 {
     wil::com_ptr<IMFMediaType> mediaType;
@@ -59,6 +91,12 @@ Result<wil::com_ptr<IMFMediaType>> StreamConfigurationBuilder::CreateVideoOutput
     {
         return Result<wil::com_ptr<IMFMediaType>>::Error(
             ErrorInfo::FromHResult(hr, "CreateVideoOutputType: MFSetAttributeRatio pixel aspect ratio failed"));
+    }
+
+    auto colorMetadataResult = ApplySdrRec709Metadata(mediaType.get(), "CreateVideoOutputType: SDR color metadata failed");
+    if (colorMetadataResult.IsError())
+    {
+        return Result<wil::com_ptr<IMFMediaType>>::Error(colorMetadataResult.Error());
     }
 
     return Result<wil::com_ptr<IMFMediaType>>::Ok(std::move(mediaType));

@@ -1,4 +1,5 @@
 #pragma once
+#include "MonitorHdrInfo.h"
 #include <functional>
 
 struct ID3D11Device;
@@ -75,6 +76,12 @@ public:
     /// Available after successful initialization.
     /// </summary>
     virtual ID3D11Device* GetDevice() const = 0;
+
+    /// <summary>
+    /// Get detected HDR information for the monitor/source.
+    /// Defaults to unknown for sources that do not provide monitor-scoped detection.
+    /// </summary>
+    virtual MonitorHdrInfo GetMonitorHdrInfo() const { return MonitorHdrInfo::Unknown(); }
 
     /// <summary>
     /// Set the callback to be invoked when a video frame is ready.
