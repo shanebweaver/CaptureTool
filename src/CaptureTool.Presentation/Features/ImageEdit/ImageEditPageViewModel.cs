@@ -1190,7 +1190,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private static int AlphaToOpacityPercentage(Color color)
     {
         return color.Equals(Color.Transparent)
-            ? 0
+            ? 100
             : (int)Math.Round(color.A / (double)byte.MaxValue * 100);
     }
 }

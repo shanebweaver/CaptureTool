@@ -234,6 +234,9 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="ImageEdit_ShapesButton.Label" xml:space="preserve">
     <value>Formes</value>
   </data>
+  <data name="ImageEdit_TextButton.Label" xml:space="preserve">
+    <value>Texte</value>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Imprimer</value>
   </data>
@@ -248,6 +251,9 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   </data>
   <data name="ImageEdit_ShapesButton.AccessKey" xml:space="preserve">
     <value>H</value>
+  </data>
+  <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
+    <value>T</value>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -344,6 +350,9 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   </data>
   <data name="ImageEdit_ShapesButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Dessiner des formes</value>
+  </data>
+  <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Dessiner du texte</value>
   </data>
   <data name="ShapeToolbar_ShapeType.Header" xml:space="preserve">
     <value>Type de forme</value>

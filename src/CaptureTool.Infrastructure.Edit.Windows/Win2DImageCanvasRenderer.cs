@@ -13,6 +13,8 @@ namespace CaptureTool.Infrastructure.Edit.Windows;
 public static partial class Win2DImageCanvasRenderer
 {
     private static readonly Color ClearColor = Colors.Transparent;
+    private const float TextPadding = 2f;
+    private const float TextCornerRadius = 4f;
 
     public static void Render(IDrawable[] drawables, ImageCanvasRenderOptions options, CanvasDrawingSession drawingSession, float scale = 1f)
     {
@@ -81,9 +83,10 @@ public static partial class Win2DImageCanvasRenderer
                 drawable.BackgroundColor.R,
                 drawable.BackgroundColor.G,
                 drawable.BackgroundColor.B);
-            drawingSession.FillRectangle(textRect, backgroundColor);
+            drawingSession.FillRoundedRectangle(textRect, TextCornerRadius, TextCornerRadius, backgroundColor);
         }
 
+        Rect paddedTextRect = InsetRect(textRect, TextPadding);
         Color color = Color.FromArgb(drawable.Color.A, drawable.Color.R, drawable.Color.G, drawable.Color.B);
         using CanvasTextFormat textFormat = new()
         {
@@ -92,7 +95,7 @@ public static partial class Win2DImageCanvasRenderer
             WordWrapping = CanvasWordWrapping.Wrap,
         };
 
-        drawingSession.DrawText(drawable.Text, textRect, color, textFormat);
+        drawingSession.DrawText(drawable.Text, paddedTextRect, color, textFormat);
     }
 
     private static void DrawRectangle(RectangleDrawable drawable, CanvasDrawingSession drawingSession)

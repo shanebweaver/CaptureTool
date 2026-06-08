@@ -880,6 +880,17 @@ public sealed partial class ImageCanvas : UserControlBase
                 return true;
             }
         }
+        else if (IsTextModeEnabled)
+        {
+            var text = FindTextAtPoint(point.Position);
+            if (text != null)
+            {
+                SelectShape(text);
+                ShapeContextMenuRequested?.Invoke(this, menuPosition);
+                e.Handled = true;
+                return true;
+            }
+        }
 
         DeselectShape();
         ImageContextMenuRequested?.Invoke(this, menuPosition);
@@ -1204,7 +1215,7 @@ public sealed partial class ImageCanvas : UserControlBase
             TextBackgroundColor.G,
             TextBackgroundColor.B);
 
-        UpdateRectanglePreview(x, y, width, height, 1, TextBackgroundColor.A > 0);
+        UpdateRectanglePreview(x, y, width, height, 1, TextBackgroundColor.A > 0, 4);
         HideOtherPreviewShapes(ShapeType.Rectangle);
         PreviewShapeCanvas.Visibility = Visibility.Visible;
     }
@@ -1292,7 +1303,7 @@ public sealed partial class ImageCanvas : UserControlBase
         PreviewShapeCanvas.Visibility = Visibility.Collapsed;
     }
 
-    private void UpdateRectanglePreview(float x, float y, float width, float height, int strokeWidth, bool hasFill)
+    private void UpdateRectanglePreview(float x, float y, float width, float height, int strokeWidth, bool hasFill, double cornerRadius = 0)
     {
         EnsureRectanglePreview();
 
@@ -1305,6 +1316,8 @@ public sealed partial class ImageCanvas : UserControlBase
         _previewRectangle.Stroke = _previewStrokeBrush;
         _previewRectangle.Fill = null;
         _previewRectangle.StrokeThickness = normalizedStrokeWidth;
+        _previewRectangle.RadiusX = cornerRadius;
+        _previewRectangle.RadiusY = cornerRadius;
         Canvas.SetLeft(_previewRectangle, x);
         Canvas.SetTop(_previewRectangle, y);
         _previewRectangle.Visibility = strokeWidthValue > 0 && strokeHeightValue > 0 && normalizedStrokeWidth > 0
@@ -1317,6 +1330,8 @@ public sealed partial class ImageCanvas : UserControlBase
         _previewRectangleFill.Height = fillHeight;
         _previewRectangleFill.Stroke = null;
         _previewRectangleFill.Fill = hasFill ? _previewFillBrush : null;
+        _previewRectangleFill.RadiusX = Math.Max(0, cornerRadius - normalizedStrokeWidth);
+        _previewRectangleFill.RadiusY = Math.Max(0, cornerRadius - normalizedStrokeWidth);
         Canvas.SetLeft(_previewRectangleFill, x + normalizedStrokeWidth);
         Canvas.SetTop(_previewRectangleFill, y + normalizedStrokeWidth);
         _previewRectangleFill.Visibility = hasFill && fillWidth > 0 && fillHeight > 0
@@ -1472,6 +1487,11 @@ public sealed partial class ImageCanvas : UserControlBase
         for (int i = drawableList.Count - 1; i >= 0; i--)
         {
             var drawable = drawableList[i];
+            if (drawable is TextDrawable)
+            {
+                continue;
+            }
+
             if (IsPointInShape(clickPoint, drawable))
             {
                 return drawable;
@@ -2414,6 +2434,7 @@ public sealed partial class ImageCanvas : UserControlBase
             {
                 AcceptsReturn = true,
                 BorderThickness = new Thickness(0),
+                CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(4),
                 TextWrapping = TextWrapping.Wrap,
                 VerticalContentAlignment = VerticalAlignment.Top,
