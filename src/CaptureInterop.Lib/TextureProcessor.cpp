@@ -41,6 +41,13 @@ Result<void> TextureProcessor::EnsureStagingTexture()
 
 Result<void> TextureProcessor::CopyTextureToBuffer(ID3D11Texture2D* texture, std::vector<uint8_t>& outBuffer)
 {
+    const uint32_t bufferSize = GetRequiredBufferSize();
+    outBuffer.resize(bufferSize);
+    return CopyTextureToMemory(texture, std::span<uint8_t>(outBuffer.data(), outBuffer.size()));
+}
+
+Result<void> TextureProcessor::CopyTextureToMemory(ID3D11Texture2D* texture, std::span<uint8_t> outBuffer)
+{
     if (!texture)
     {
         return Result<void>::Error(
@@ -74,7 +81,12 @@ Result<void> TextureProcessor::CopyTextureToBuffer(ID3D11Texture2D* texture, std
 
     const uint32_t canonicalStride = m_width * BYTES_PER_PIXEL_RGB32;
     const uint32_t bufferSize = canonicalStride * m_height;
-    outBuffer.resize(bufferSize);
+    if (outBuffer.size() < bufferSize)
+    {
+        m_context->Unmap(m_stagingTexture.get(), 0);
+        return Result<void>::Error(
+            ErrorInfo::FromMessage(E_INVALIDARG, "Output buffer is too small", "TextureProcessor::CopyTextureToMemory"));
+    }
 
     for (uint32_t row = 0; row < m_height; ++row)
     {

@@ -1,6 +1,8 @@
 #pragma once
 #include <functional>
 
+struct ID3D11Device;
+
 /// <summary>
 /// Event arguments for video frame ready event.
 /// Contains the video frame data and timing information.
@@ -67,6 +69,12 @@ public:
     /// </summary>
     /// <returns>Frame height in pixels, or 0 if not initialized.</returns>
     virtual UINT32 GetHeight() const = 0;
+
+    /// <summary>
+    /// Get the D3D11 device that owns emitted video textures.
+    /// Available after successful initialization.
+    /// </summary>
+    virtual ID3D11Device* GetDevice() const = 0;
 
     /// <summary>
     /// Set the callback to be invoked when a video frame is ready.

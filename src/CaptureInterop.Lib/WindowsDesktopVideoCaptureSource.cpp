@@ -2,6 +2,7 @@
 #include "WindowsDesktopVideoCaptureSource.h"
 #include "FrameArrivedHandler.h"
 #include "WindowsGraphicsCaptureHelpers.h"
+#include <strsafe.h>
 
 using namespace WindowsGraphicsCaptureHelpers;
 
@@ -163,6 +164,15 @@ void WindowsDesktopVideoCaptureSource::Stop()
     // Principle #5 (RAII Everything): wil::com_ptr automatically calls Release()
     if (m_frameHandler)
     {
+        wchar_t message[192]{};
+        (void)StringCchPrintfW(
+            message,
+            ARRAYSIZE(message),
+            L"[CaptureInterop V1] Video frames processed=%llu dropped=%llu\r\n",
+            static_cast<unsigned long long>(m_frameHandler->GetProcessedFrameCount()),
+            static_cast<unsigned long long>(m_frameHandler->GetDroppedFrameCount()));
+        OutputDebugStringW(message);
+
         m_frameHandler->Stop();
         m_frameHandler.reset(); // Explicit reset for clarity, calls Release() automatically
     }

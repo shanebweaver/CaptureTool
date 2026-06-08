@@ -1,4 +1,5 @@
 #include <functional>
+#include <optional>
 
 // Forward declaration
 class IMediaClockReader;
@@ -73,16 +74,21 @@ public:
 
     // Get the count of dropped frames
     uint64_t GetDroppedFrameCount() const { return m_droppedFrameCount.load(); }
+    uint64_t GetProcessedFrameCount() const { return m_processedFrameCount.load(); }
 
 private:
+    static constexpr LONGLONG TargetFrameDurationTicks = 10'000'000 / 30;
+
     void ProcessingThreadProc();
+    LONGLONG GetFrameTimestamp() const;
+    bool ShouldAcceptFrame(LONGLONG timestamp);
 
     volatile long m_ref;
     VideoFrameReadyCallback m_callback;
     IMediaClockReader* m_clockReader;
     
     // Background processing
-    std::queue<QueuedFrame> m_frameQueue;
+    std::optional<QueuedFrame> m_pendingFrame;
     std::mutex m_queueMutex;
     std::condition_variable m_queueCV;
     std::thread m_processingThread;
@@ -90,6 +96,9 @@ private:
     std::atomic<bool> m_stopped{false};  // Guard for idempotent Stop()
     std::atomic<bool> m_processingStarted{false};  // Guard for StartProcessing()
     std::atomic<uint64_t> m_droppedFrameCount{0};  // Count of frames dropped due to full queue
+    std::atomic<uint64_t> m_processedFrameCount{0};
+    LONGLONG m_lastAcceptedTimestamp = 0;
+    bool m_hasAcceptedFrame = false;
 };
 
 // Helper to register the frame-arrived event.

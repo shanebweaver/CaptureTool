@@ -8,6 +8,7 @@
 #include <span>
 #include <wil/com.h>
 #include <memory>
+#include <mutex>
 
 // Forward declarations
 struct IMFSinkWriter;
@@ -81,6 +82,7 @@ public:
 
 private:
     long m_lastFinalizationError = S_OK;
+    std::mutex m_writeMutex;
     
     // Core components (single-responsibility)
     std::unique_ptr<IMediaFoundationLifecycleManager> m_mfLifecycle;
@@ -97,6 +99,7 @@ private:
     bool m_hasBegunWriting = false;
     uint64_t m_frameIndex = 0;
     int64_t m_prevVideoTimestamp = 0;
+    bool m_hasPrevVideoTimestamp = false;
     
     // Configuration
     IStreamConfigurationBuilder::VideoConfig m_videoConfig;

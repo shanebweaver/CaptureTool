@@ -5,7 +5,6 @@
 #include "IMediaClock.h"
 #include "CaptureSessionConfig.h"
 #include "IMP4SinkWriter.h"
-#include "WindowsDesktopVideoCaptureSource.h"
 #include "CallbackTypes.h"
 #include "ICaptureSession.h"
 
@@ -109,12 +108,14 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
         return false;
     }
 
-    if (!m_audioCaptureSource->Initialize(&hr))
+    if (m_audioCaptureSource->Initialize(&hr))
     {
-        [[maybe_unused]] bool transitioned = m_stateMachine.TryTransitionTo(CaptureSessionState::Failed);
-        assert(transitioned && "Transition to Failed should always succeed from Created state");
-        if (outHr) *outHr = hr;
-        return false;
+        m_audioAvailable = m_audioCaptureSource->GetFormat() != nullptr;
+    }
+    else
+    {
+        OutputDebugStringW(L"[CaptureInterop V1] Audio loopback initialization failed; continuing with video-only timing fallback.\r\n");
+        m_audioAvailable = false;
     }
 
     // Initialize sink writer
@@ -138,8 +139,10 @@ bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
 void WindowsGraphicsCaptureSession::SetupCallbacks()
 {
     // Setup audio callback - writes to sink and forwards to registered callbacks
-    m_audioCaptureSource->SetAudioSampleReadyCallback(
-        [this](const AudioSampleReadyEventArgs& args) {
+    if (m_audioAvailable)
+    {
+        m_audioCaptureSource->SetAudioSampleReadyCallback(
+            [this](const AudioSampleReadyEventArgs& args) {
             // Abort if shutting down
             if (m_isShuttingDown.load(std::memory_order_acquire))
             {
@@ -147,7 +150,7 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
             }
 
             // Validate audio format before processing
-            if (args.pFormat && (args.pFormat->nBlockAlign == 0 || args.pFormat->nSamplesPerSec == 0))
+            if (!args.pFormat || args.pFormat->nBlockAlign == 0 || args.pFormat->nSamplesPerSec == 0)
             {
                 // Invalid audio format - skip this sample
                 return;
@@ -176,8 +179,9 @@ void WindowsGraphicsCaptureSession::SetupCallbacks()
                 // Invoke all registered callbacks through registry
                 m_audioCallbackRegistry.Invoke(sampleData);
             }
-        }
-    );
+            }
+        );
+    }
     
     // Setup video callback - writes to sink and forwards to registered callbacks
     m_videoCaptureSource->SetVideoFrameReadyCallback(
@@ -261,7 +265,7 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
     
-    if (!m_audioCaptureSource || !m_videoCaptureSource)
+    if (!m_videoCaptureSource)
     {
         if (outHr) *outHr = hr;
         return false;
@@ -270,7 +274,12 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
     // Get video properties
     UINT32 width = m_videoCaptureSource->GetWidth();
     UINT32 height = m_videoCaptureSource->GetHeight();
-    ID3D11Device* device = static_cast<WindowsDesktopVideoCaptureSource*>(m_videoCaptureSource.get())->GetDevice();
+    ID3D11Device* device = m_videoCaptureSource->GetDevice();
+    if (!device)
+    {
+        if (outHr) *outHr = E_FAIL;
+        return false;
+    }
     
     // Initialize video stream
     if (!m_sinkWriter->Initialize(m_config.outputPath.c_str(), device, width, height, &hr))
@@ -280,7 +289,7 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
     }
     
     // Initialize audio stream
-    WAVEFORMATEX* audioFormat = m_audioCaptureSource->GetFormat();
+    WAVEFORMATEX* audioFormat = m_audioAvailable && m_audioCaptureSource ? m_audioCaptureSource->GetFormat() : nullptr;
     if (audioFormat)
     {
         if (!m_sinkWriter->InitializeAudioStream(audioFormat, &hr))
@@ -297,7 +306,7 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
 bool WindowsGraphicsCaptureSession::StartAudioCapture(HRESULT* outHr)
 {
     // Check if audio is available
-    if (!m_audioCaptureSource || !m_audioCaptureSource->GetFormat())
+    if (!m_audioAvailable || !m_audioCaptureSource || !m_audioCaptureSource->GetFormat())
     {
         if (outHr) *outHr = S_OK;
         return true;

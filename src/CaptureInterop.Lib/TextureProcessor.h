@@ -28,6 +28,7 @@ public:
 
     // ITextureProcessor implementation
     Result<void> CopyTextureToBuffer(ID3D11Texture2D* texture, std::vector<uint8_t>& outBuffer) override;
+    Result<void> CopyTextureToMemory(ID3D11Texture2D* texture, std::span<uint8_t> outBuffer) override;
     uint32_t GetRequiredBufferSize() const override { return m_width * m_height * BYTES_PER_PIXEL_RGB32; }
     uint32_t GetWidth() const override { return m_width; }
     uint32_t GetHeight() const override { return m_height; }

@@ -62,7 +62,7 @@ public:
     /// Get the D3D11 device used for video capture.
     /// Available after successful initialization.
     /// </summary>
-    ID3D11Device* GetDevice() const { return m_device.get(); }
+    ID3D11Device* GetDevice() const override { return m_device.get(); }
 
 private:
     // Configuration

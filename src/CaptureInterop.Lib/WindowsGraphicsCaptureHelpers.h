@@ -26,6 +26,8 @@ using namespace ABI::Windows::Graphics::DirectX::Direct3D11;
 
 namespace WindowsGraphicsCaptureHelpers
 {
+    inline constexpr int CaptureFramePoolBufferCount = 2;
+
     /// <summary>
     /// Helper structure containing D3D11 device and context.
     /// </summary>
@@ -224,7 +226,7 @@ namespace WindowsGraphicsCaptureHelpers
         hr = factory->Create(
             direct3DDevice.get(),
             DirectXPixelFormat_B8G8R8A8UIntNormalized,
-            6, // number of buffers - increased from 2 to prevent stalls when WriteSample blocks
+            CaptureFramePoolBufferCount,
             size,
             framePool.put());
         if (FAILED(hr))
