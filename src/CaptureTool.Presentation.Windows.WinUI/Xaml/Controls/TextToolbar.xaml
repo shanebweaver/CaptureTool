@@ -134,14 +134,14 @@
         <NumberBox
             x:Name="FontSizeNumberBox"
             x:Uid="TextToolbar_FontSizeNumberBox"
-            Width="96"
+            MinWidth="96"
             MinHeight="34"
             LargeChange="4"
             Maximum="200"
             Minimum="1"
             SmallChange="1"
             SpinButtonPlacementMode="Inline"
-            Value="{x:Bind TextFontSize, Mode=OneWay}"
-            ValueChanged="FontSizeNumberBox_ValueChanged" />
+            ValueChanged="FontSizeNumberBox_ValueChanged"
+            Value="{x:Bind TextFontSize, Mode=OneWay}" />
     </StackPanel>
 </local:UserControlBase>

@@ -24,11 +24,11 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
 {
-    private static readonly Color[] ShapesColorPalette = [
+    private static readonly Color[] DrawablesColorPalette = [
         Color.Transparent,
-        Color.FromArgb(31, 41, 55),
-        Color.FromArgb(249, 250, 251),
-        Color.FromArgb(239, 68, 68),
+        Color.FromArgb(31, 41, 55), // White
+        Color.FromArgb(249, 250, 251), // Black
+        Color.FromArgb(239, 68, 68), // Red
         Color.FromArgb(249, 115, 22),
         Color.FromArgb(245, 158, 11),
         Color.FromArgb(234, 179, 8),
@@ -357,17 +357,17 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyColor = Color.Empty;
         ChromaKeyColorOptions = [];
         SelectedShapeType = ShapeType.Rectangle;
-        ShapeStrokeColor = ShapesColorPalette[3]; // Red
-        ShapeFillColor = ShapesColorPalette[0]; // Transparent
-        ShapeStrokeColorOptions = ShapesColorPalette;
-        ShapeFillColorOptions = ShapesColorPalette;
-        TextFontColorOptions = ShapesColorPalette;
-        TextBackgroundColorOptions = ShapesColorPalette;
+        ShapeStrokeColor = DrawablesColorPalette[3]; // Red
+        ShapeFillColor = DrawablesColorPalette[0]; // Transparent
+        ShapeStrokeColorOptions = DrawablesColorPalette;
+        ShapeFillColorOptions = DrawablesColorPalette;
+        TextFontColorOptions = DrawablesColorPalette;
+        TextBackgroundColorOptions = DrawablesColorPalette;
         ShapeStrokeWidth = 3;
         ShapeStrokeOpacity = 100;
         ShapeFillOpacity = 100;
-        TextFontColor = Color.FromArgb(31, 41, 55);
-        TextBackgroundColor = Color.Transparent;
+        TextFontColor = DrawablesColorPalette[2]; // Black
+        TextBackgroundColor = DrawablesColorPalette[1]; // White
         TextFontColorOpacity = 100;
         TextBackgroundColorOpacity = 100;
         TextFontFamily = TextDrawable.DefaultFontFamily;
