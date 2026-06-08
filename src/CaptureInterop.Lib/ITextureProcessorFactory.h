@@ -28,5 +28,7 @@ public:
         ID3D11Device* device,
         ID3D11DeviceContext* context,
         uint32_t width,
-        uint32_t height) = 0;
+        uint32_t height,
+        uint32_t sourceLeft = 0,
+        uint32_t sourceTop = 0) = 0;
 };

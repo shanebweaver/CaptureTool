@@ -61,16 +61,18 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             // Scale window dimensions per monitor.
             Rectangle monitorBounds = monitor.MonitorBounds;
             float scale = monitor.Scale;
-            IEnumerable<Rectangle> monitorWindows = allWindows
-                .Select(w => w.Position)
-                .Where(p =>
-                    monitorBounds.IntersectsWith(p) ||
-                    monitorBounds.Contains(p))
-                .Select(r => new Rectangle(
-                    (int)((r.X - monitorBounds.X) / scale),
-                    (int)((r.Y - monitorBounds.Y) / scale),
-                    (int)(r.Width / scale),
-                    (int)(r.Height / scale)));
+            IEnumerable<WindowInfo> monitorWindows = allWindows
+                .Where(w =>
+                    monitorBounds.IntersectsWith(w.Position) ||
+                    monitorBounds.Contains(w.Position))
+                .Select(w => new WindowInfo(
+                    w.Handle,
+                    w.Title,
+                    new Rectangle(
+                        (int)((w.Position.X - monitorBounds.X) / scale),
+                        (int)((w.Position.Y - monitorBounds.Y) / scale),
+                        (int)(w.Position.Width / scale),
+                        (int)(w.Position.Height / scale))));
 
             SelectionOverlayWindowOptions overlayOptions = new(monitor, [.. monitorWindows], options);
             SelectionOverlayWindow window = new(overlayOptions);

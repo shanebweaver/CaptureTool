@@ -187,4 +187,36 @@ public class CaptureToolVideoCaptureHandlerTests
         handler.IsFinalizing.Should().BeFalse();
         handler.IsRecording.Should().BeFalse();
     }
+
+    [TestMethod]
+    public void StartVideoCapture_ShouldReturnToIdle_WhenRecorderStartFails()
+    {
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        screenRecorder
+            .Setup(s => s.StartRecording(It.IsAny<CaptureRecordingOptions>()))
+            .Returns(new CaptureRecorderResult(CaptureRecorderStatus.StartFailed, unchecked((int)0x80004005)));
+
+        var storageService = Fixture.Freeze<Mock<IStorageService>>();
+        storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
+
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+
+        var args = new NewCaptureArgs(
+            new MonitorCaptureResult(
+                IntPtr.Zero,
+                [],
+                96,
+                new System.Drawing.Rectangle(0, 0, 1920, 1080),
+                new System.Drawing.Rectangle(0, 0, 1920, 1080),
+                true
+            ),
+            new System.Drawing.Rectangle(0, 0, 1920, 1080)
+        );
+
+        Action act = () => handler.StartVideoCapture(args);
+
+        act.Should().Throw<Exception>();
+        handler.IsRecording.Should().BeFalse();
+        handler.IsFinalizing.Should().BeFalse();
+    }
 }

@@ -100,6 +100,28 @@ namespace WindowsGraphicsCaptureHelpers
         return item;
     }
 
+    inline wil::com_ptr<IGraphicsCaptureItem> GetGraphicsCaptureItemForWindow(
+        HWND hwnd,
+        wil::com_ptr<IGraphicsCaptureItemInterop> interop,
+        HRESULT* outHr = nullptr)
+    {
+        wil::com_ptr<IGraphicsCaptureItem> item;
+        HRESULT hr = interop->CreateForWindow(
+            hwnd,
+            __uuidof(IGraphicsCaptureItem),
+            item.put_void()
+        );
+
+        if (FAILED(hr))
+        {
+            if (outHr) *outHr = hr;
+            return nullptr;
+        }
+
+        if (outHr) *outHr = S_OK;
+        return item;
+    }
+
     /// <summary>
     /// Initialize Direct3D 11 device and context with BGRA support for capture.
     /// </summary>

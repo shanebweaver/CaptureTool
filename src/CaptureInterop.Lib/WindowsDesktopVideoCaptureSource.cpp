@@ -56,7 +56,16 @@ bool WindowsDesktopVideoCaptureSource::Initialize(HRESULT* outHr)
         return false;
     }
 
-    wil::com_ptr<IGraphicsCaptureItem> captureItem = GetGraphicsCaptureItemForMonitor(m_config.hMonitor, interop, &hr);
+    wil::com_ptr<IGraphicsCaptureItem> captureItem;
+    if (m_config.targetType == CaptureTargetType::Window)
+    {
+        captureItem = GetGraphicsCaptureItemForWindow(m_config.hwnd, interop, &hr);
+    }
+    else
+    {
+        captureItem = GetGraphicsCaptureItemForMonitor(m_config.hMonitor, interop, &hr);
+    }
+
     if (!captureItem)
     {
         if (outHr) *outHr = hr;
@@ -106,8 +115,27 @@ bool WindowsDesktopVideoCaptureSource::Initialize(HRESULT* outHr)
         return false;
     }
 
-    m_width = size.Width;
-    m_height = size.Height;
+    if (m_config.targetType == CaptureTargetType::Rectangle)
+    {
+        if (m_config.sourceLeft < 0 ||
+            m_config.sourceTop < 0 ||
+            m_config.sourceWidth == 0 ||
+            m_config.sourceHeight == 0 ||
+            static_cast<uint32_t>(m_config.sourceLeft) + m_config.sourceWidth > static_cast<uint32_t>(size.Width) ||
+            static_cast<uint32_t>(m_config.sourceTop) + m_config.sourceHeight > static_cast<uint32_t>(size.Height))
+        {
+            if (outHr) *outHr = E_INVALIDARG;
+            return false;
+        }
+
+        m_width = m_config.sourceWidth;
+        m_height = m_config.sourceHeight;
+    }
+    else
+    {
+        m_width = size.Width;
+        m_height = size.Height;
+    }
 
     if (outHr) *outHr = S_OK;
     return true;

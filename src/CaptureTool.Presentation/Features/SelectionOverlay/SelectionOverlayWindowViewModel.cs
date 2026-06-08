@@ -32,6 +32,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     ];
 
     private static readonly CaptureType[] _videoCaptureTypes = [
+        CaptureType.Rectangle,
+        CaptureType.Window,
         CaptureType.FullScreen,
     ];
 
@@ -116,6 +118,12 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         private set => Set(ref field, value);
     }
 
+    private IList<WindowInfo> WindowInfos
+    {
+        get;
+        set;
+    } = [];
+
     public AppTheme CurrentAppTheme
     {
         get;
@@ -187,7 +195,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         StartLoading();
 
         Monitor = options.Monitor;
-        MonitorWindows = [.. options.MonitorWindows];
+        WindowInfos = [.. options.MonitorWindows];
+        MonitorWindows = [.. WindowInfos.Select(w => w.Position)];
 
         var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
         UpdateSelectedCaptureMode((_supportedCaptureModes.IndexOf(targetMode), SelectionUpdateSource.Programmatic));
@@ -286,7 +295,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
                 }
                 else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
                 {
-                    NewCaptureArgs args = new(Monitor.Value, CaptureArea);
+                    CaptureType captureType = GetSelectedCaptureType() ?? CaptureType.FullScreen;
+                    NewCaptureArgs args = new(Monitor.Value, CaptureArea, captureType, GetSelectedWindowHandle(captureType, CaptureArea));
                     await _openVideoCaptureOverlayCommand.ExecuteAsync(new OpenCaptureOverlayRequest(args), CancellationToken.None);
                 }
             }
@@ -299,6 +309,25 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         {
             _telemetryService.ActivityError(nameof(RequestCaptureAsync), exception);
         }
+    }
+
+    private nint GetSelectedWindowHandle(CaptureType captureType, Rectangle captureArea)
+    {
+        if (captureType != CaptureType.Window)
+        {
+            return 0;
+        }
+
+        return WindowInfos.FirstOrDefault(w => GetSelectableWindowRectangle(w.Position) == captureArea).Handle;
+    }
+
+    private static Rectangle GetSelectableWindowRectangle(Rectangle windowRect)
+    {
+        return new Rectangle(
+            Math.Max(windowRect.X, 0),
+            Math.Max(windowRect.Y, 0),
+            windowRect.Width + Math.Min(windowRect.X, 0),
+            windowRect.Height + Math.Min(windowRect.Y, 0));
     }
 
     public override void Dispose()

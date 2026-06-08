@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "SimpleMediaClock.h"
 #include "IMediaClockAdvancer.h"
+#include "MediaTimeConstants.h"
 
 SimpleMediaClock::SimpleMediaClock()
     : m_currentTime(0)
