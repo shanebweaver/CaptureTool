@@ -1,3 +1,4 @@
+using CaptureTool.Domain.Edit;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Drawing;
@@ -10,7 +11,7 @@ public sealed partial class ShapeToolbar : UserControlBase
         nameof(SelectedShapeTypeIndex),
         typeof(int),
         typeof(ShapeToolbar),
-        new PropertyMetadata(0));
+        new PropertyMetadata(0, OnSelectedShapeTypeIndexChanged));
 
     public static readonly DependencyProperty StrokeColorProperty = DependencyProperty.Register(
         nameof(StrokeColor),
@@ -102,6 +103,8 @@ public sealed partial class ShapeToolbar : UserControlBase
         set => Set(FillOpacityProperty, value);
     }
 
+    public bool IsFillColorEnabled => (ShapeType)SelectedShapeTypeIndex is not ShapeType.Line and not ShapeType.Arrow;
+
     public event EventHandler<int>? SelectedShapeTypeIndexChanged;
     public event EventHandler<Color>? StrokeColorChanged;
     public event EventHandler<Color>? FillColorChanged;
@@ -114,6 +117,14 @@ public sealed partial class ShapeToolbar : UserControlBase
     public ShapeToolbar()
     {
         InitializeComponent();
+    }
+
+    private static void OnSelectedShapeTypeIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ShapeToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(IsFillColorEnabled));
+        }
     }
 
     private void UpdateSelectedShapeTypeIndex(int value)

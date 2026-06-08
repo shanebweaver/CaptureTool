@@ -84,6 +84,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Uid="ChromaKeyToolbar_Tolerance" VerticalAlignment="Center" />
                 <Slider
+                    x:Name="ToleranceSlider"
                     Grid.Column="1"
                     Width="150"
                     Margin="8,0"
@@ -121,6 +122,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Uid="ChromaKeyToolbar_Desaturation" VerticalAlignment="Center" />
                 <Slider
+                    x:Name="DesaturationSlider"
                     Grid.Column="1"
                     Width="150"
                     Margin="8,0"

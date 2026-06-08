@@ -156,6 +156,8 @@
                 <controls:ChromaKeyToolbar
                     HorizontalAlignment="Stretch"
                     ColorOptions="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
+                    ChromaKeyInteractionCompleted="ChromaKeyToolbar_ChromaKeyInteractionCompleted"
+                    ChromaKeyInteractionStarted="ChromaKeyToolbar_ChromaKeyInteractionStarted"
                     Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=OneWay}"
                     DesaturationChanged="ChromaKeyToolbar_DesaturationChanged"
                     SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=OneWay}"

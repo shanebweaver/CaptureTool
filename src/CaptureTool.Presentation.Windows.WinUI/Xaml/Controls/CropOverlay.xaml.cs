@@ -2,6 +2,7 @@ using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Core;
@@ -19,6 +20,7 @@ public sealed partial class CropOverlay : UserControlBase
     }
 
     private static readonly Size MinimumSelectionRectangleSize = new(50, 50);
+    private const double HandleHorizontalAlignmentOffset = -1;
 
     public static readonly DependencyProperty AnchorTopLeftProperty = DependencyProperty.Register(
         nameof(AnchorTopLeft),
@@ -86,6 +88,12 @@ public sealed partial class CropOverlay : UserControlBase
         typeof(CropOverlay),
         new PropertyMetadata(true));
 
+    public static readonly DependencyProperty HandleScaleProperty = DependencyProperty.Register(
+        nameof(HandleScale),
+        typeof(double),
+        typeof(CropOverlay),
+        new PropertyMetadata(1d, OnHandleScaleChanged));
+
     public DataTemplate AnchorTopLeft
     {
         get => (DataTemplate)GetValue(AnchorTopLeftProperty);
@@ -152,6 +160,12 @@ public sealed partial class CropOverlay : UserControlBase
         set => SetValue(CanMoveProperty, value);
     }
 
+    public double HandleScale
+    {
+        get => (double)GetValue(HandleScaleProperty);
+        set => SetValue(HandleScaleProperty, value);
+    }
+
     public event EventHandler<Rectangle>? InteractionComplete;
     public event EventHandler<Rectangle>? SelectionAreaChanged;
 
@@ -161,6 +175,7 @@ public sealed partial class CropOverlay : UserControlBase
     private FrameworkElement? _activeAnchor;
     private DragMode _dragMode = DragMode.None;
     private Rectangle _oldSelectionArea = Rectangle.Empty;
+    private IReadOnlyList<FrameworkElement> _anchorBoxes = [];
 
     public CropOverlay()
     {
@@ -191,6 +206,14 @@ public sealed partial class CropOverlay : UserControlBase
         }
     }
 
+    private static void OnHandleScaleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is CropOverlay overlay && e.NewValue is double scale)
+        {
+            overlay.UpdateHandleScale(scale);
+        }
+    }
+
     private void UpdateSelectionArea(Rectangle value)
     {
         SelectionArea = value;
@@ -208,41 +231,47 @@ public sealed partial class CropOverlay : UserControlBase
 
         Boundary.BorderThickness = new Thickness(left, top, RootCanvas.Width - right, RootCanvas.Height - bottom);
 
-        Canvas.SetLeft(Anchor_TopLeft, left - Anchor_TopLeft.Width / 2);
+        Canvas.SetLeft(Anchor_TopLeft, GetHandleLeft(left, Anchor_TopLeft));
         Canvas.SetTop(Anchor_TopLeft, top - Anchor_TopLeft.Height / 2);
 
-        Canvas.SetLeft(Anchor_TopRight, right - Anchor_TopRight.Width / 2);
+        Canvas.SetLeft(Anchor_TopRight, GetHandleLeft(right, Anchor_TopRight));
         Canvas.SetTop(Anchor_TopRight, top - Anchor_TopRight.Height / 2);
 
-        Canvas.SetLeft(Anchor_BottomLeft, left - Anchor_BottomLeft.Width / 2);
+        Canvas.SetLeft(Anchor_BottomLeft, GetHandleLeft(left, Anchor_BottomLeft));
         Canvas.SetTop(Anchor_BottomLeft, bottom - Anchor_BottomLeft.Height / 2);
 
-        Canvas.SetLeft(Anchor_BottomRight, right - Anchor_BottomRight.Width / 2);
+        Canvas.SetLeft(Anchor_BottomRight, GetHandleLeft(right, Anchor_BottomRight));
         Canvas.SetTop(Anchor_BottomRight, bottom - Anchor_BottomRight.Height / 2);
 
-        Canvas.SetLeft(Anchor_Top, centerX - Anchor_Top.Width / 2);
+        Canvas.SetLeft(Anchor_Top, GetHandleLeft(centerX, Anchor_Top));
         Canvas.SetTop(Anchor_Top, top - Anchor_Top.Height / 2);
 
-        Canvas.SetLeft(Anchor_Bottom, centerX - Anchor_Bottom.Width / 2);
+        Canvas.SetLeft(Anchor_Bottom, GetHandleLeft(centerX, Anchor_Bottom));
         Canvas.SetTop(Anchor_Bottom, bottom - Anchor_Bottom.Height / 2);
 
-        Canvas.SetLeft(Anchor_Left, left - Anchor_Left.Width / 2);
+        Canvas.SetLeft(Anchor_Left, GetHandleLeft(left, Anchor_Left));
         Canvas.SetTop(Anchor_Left, centerY - Anchor_Left.Height / 2);
 
-        Canvas.SetLeft(Anchor_Right, right - Anchor_Right.Width / 2);
+        Canvas.SetLeft(Anchor_Right, GetHandleLeft(right, Anchor_Right));
         Canvas.SetTop(Anchor_Right, centerY - Anchor_Right.Height / 2);
+    }
+
+    private static double GetHandleLeft(double anchorX, FrameworkElement handle)
+    {
+        return anchorX - handle.Width / 2 + HandleHorizontalAlignmentOffset;
     }
 
     private void AttachEventHandlers()
     {
-        var anchorBoxes = new FrameworkElement[]
-        {
+        _anchorBoxes =
+        [
             AnchorBox_TopLeft, AnchorBox_TopRight, AnchorBox_BottomLeft, AnchorBox_BottomRight,
             AnchorBox_Top, AnchorBox_Bottom, AnchorBox_Left, AnchorBox_Right,
-        };
+        ];
 
-        foreach (var anchorBox in anchorBoxes)
+        foreach (var anchorBox in _anchorBoxes)
         {
+            anchorBox.RenderTransformOrigin = GetAnchorScaleOrigin(anchorBox);
             anchorBox.PointerPressed += AnchorBox_PointerPressed;
             anchorBox.PointerMoved += AnchorBox_AnchorMoved;
             anchorBox.PointerReleased += AnchorBox_EndInteraction;
@@ -272,6 +301,52 @@ public sealed partial class CropOverlay : UserControlBase
         Boundary.PointerCanceled += EndInteraction;
 
         InitAnchorHandlers();
+        UpdateHandleScale(HandleScale);
+    }
+
+    private Point GetAnchorScaleOrigin(FrameworkElement anchorBox)
+    {
+        if (anchorBox == AnchorBox_TopLeft)
+        {
+            return new Point(0, 0);
+        }
+
+        if (anchorBox == AnchorBox_TopRight)
+        {
+            return new Point(1, 0);
+        }
+
+        if (anchorBox == AnchorBox_BottomLeft)
+        {
+            return new Point(0, 1);
+        }
+
+        if (anchorBox == AnchorBox_BottomRight)
+        {
+            return new Point(1, 1);
+        }
+
+        if (anchorBox == AnchorBox_Top)
+        {
+            return new Point(0.5, 0);
+        }
+
+        if (anchorBox == AnchorBox_Bottom)
+        {
+            return new Point(0.5, 1);
+        }
+
+        if (anchorBox == AnchorBox_Left)
+        {
+            return new Point(0, 0.5);
+        }
+
+        if (anchorBox == AnchorBox_Right)
+        {
+            return new Point(1, 0.5);
+        }
+
+        return new Point(0.5, 0.5);
     }
 
     private void InitAnchorHandlers()
@@ -576,6 +651,20 @@ public sealed partial class CropOverlay : UserControlBase
                     e.Handled = true;
                     break;
             }
+        }
+    }
+
+    private void UpdateHandleScale(double scale)
+    {
+        scale = Math.Clamp(scale, 0.1, 10);
+
+        foreach (FrameworkElement anchorBox in _anchorBoxes)
+        {
+            anchorBox.RenderTransform = new ScaleTransform
+            {
+                ScaleX = scale,
+                ScaleY = scale
+            };
         }
     }
 

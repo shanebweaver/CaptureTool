@@ -228,6 +228,16 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.UpdateSelectedColorOptionIndexCommand.Execute(e);
     }
 
+    private void ChromaKeyToolbar_ChromaKeyInteractionStarted(object? sender, EventArgs e)
+    {
+        ViewModel.BeginChromaKeyInteraction();
+    }
+
+    private void ChromaKeyToolbar_ChromaKeyInteractionCompleted(object? sender, EventArgs e)
+    {
+        ViewModel.CompleteChromaKeyInteraction();
+    }
+
     private void ShapeToolbar_SelectedShapeTypeIndexChanged(object _, int e)
     {
         if (Enum.IsDefined(typeof(CaptureTool.Domain.Edit.ShapeType), e))

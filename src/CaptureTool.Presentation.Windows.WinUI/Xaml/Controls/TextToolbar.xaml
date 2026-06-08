@@ -141,7 +141,7 @@
             MinWidth="96"
             MinHeight="34"
             LargeChange="4"
-            Maximum="200"
+            Maximum="400"
             Minimum="1"
             SmallChange="1"
             SpinButtonPlacementMode="Inline"

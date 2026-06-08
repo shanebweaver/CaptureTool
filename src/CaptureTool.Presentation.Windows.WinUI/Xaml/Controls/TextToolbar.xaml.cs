@@ -9,7 +9,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 public sealed partial class TextToolbar : UserControlBase
 {
     private const int MinimumFontSize = 1;
-    private const int MaximumFontSize = 200;
+    private const int MaximumFontSize = 400;
 
     private static readonly string[] FallbackFontFamilies = [
         "Segoe UI",

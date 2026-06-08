@@ -165,7 +165,8 @@
                 MinHeight="34"
                 Padding="8,4"
                 Background="Transparent"
-                BorderBrush="Transparent">
+                BorderBrush="Transparent"
+                IsEnabled="{x:Bind IsFillColorEnabled, Mode=OneWay}">
                 <Grid VerticalAlignment="Center" ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
