@@ -12,22 +12,10 @@
 /// from the same thread (typically the UI thread). The session is only modified through
 /// public methods and is never accessed concurrently.
 /// 
-/// Implements Rust Principles:
-/// - Principle #3 (No Nullable Pointers): Uses std::unique_ptr for session ownership.
-///   The session pointer is nullable by design (session only exists when recording),
-///   but we provide HasActiveSession() to make checks explicit rather than testing
-///   raw pointers.
-/// - Principle #5 (RAII Everything): Destructor calls StopRecording() to ensure
-///   proper cleanup even if caller forgets.
-/// - Principle #6 (No Globals): Session factory injected via constructor, no global
-///   recorder instance.
-/// 
 /// Ownership model:
 /// - ScreenRecorderImpl owns the ICaptureSessionFactory (lifetime of recorder)
 /// - ScreenRecorderImpl owns the ICaptureSession (lifetime of current recording)
 /// - Session is created in StartRecording() and destroyed in StopRecording()
-/// 
-/// See docs/RUST_PRINCIPLES.md for more details.
 /// </summary>
 class ScreenRecorderImpl
 {

@@ -80,7 +80,7 @@ WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
     //
     // All COM objects use wil::com_ptr for automatic reference counting.
     // No manual delete, free(), or Release() calls needed - the type system guarantees
-    // proper cleanup through RAII. See docs/RUST_PRINCIPLES.md principle #5.
+    // proper cleanup through RAII.
 }
 
 bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
