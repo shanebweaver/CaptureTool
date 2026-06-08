@@ -24,12 +24,6 @@
     <ClInclude Include="TextureConversionExports.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="V2\CaptureInteropV2Exports.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\CaptureInteropV2Validation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -42,9 +36,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TextureConversionExports.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="V2\CaptureInteropV2Exports.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -25,8 +25,4 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
-  <Target Name="CopyCaptureInteropDllForManagedInteropTests" AfterTargets="Build" Condition="Exists('$(MSBuildProjectDirectory)\..\..\bin\$(Configuration)\$(Platform)\CaptureInterop.dll')">
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\..\bin\$(Configuration)\$(Platform)\CaptureInterop.dll" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
-  </Target>
 </Project>

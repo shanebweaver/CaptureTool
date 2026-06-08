@@ -55,88 +55,10 @@
     <Filter Include="Source Files\Screenshot">
       <UniqueIdentifier>{b9c8d7e6-f5a4-3b2c-1d0e-9f8a7b6c5d4e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\V2">
-      <UniqueIdentifier>{aebc1671-e202-4689-97a1-96fa898a5174}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\V2\Core">
-      <UniqueIdentifier>{c09dcc5d-b658-497a-8f23-981a3fc1c605}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\V2\Audio">
-      <UniqueIdentifier>{e9d8444b-0e72-4be6-b335-b7ad8b98473e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\V2\Desktop">
-      <UniqueIdentifier>{4d226d12-1971-47e9-8ff0-5d73d549ab13}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\V2\Output">
-      <UniqueIdentifier>{7a036441-1971-4bf3-913a-8f7d5ad1f047}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\V2\Output">
-      <UniqueIdentifier>{917c6c6b-f7a7-48a5-9746-7bf52f9e5394}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\AudioControlProcessors.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Audio\FakeWasapiLoopbackAudioProvider.h">
-      <Filter>Header Files\V2\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Audio\FakeWasapiLoopbackPacketProvider.h">
-      <Filter>Header Files\V2\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Audio\IWasapiLoopbackAudioProvider.h">
-      <Filter>Header Files\V2\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Audio\IWasapiLoopbackPacketProvider.h">
-      <Filter>Header Files\V2\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Audio\OwnedAudioSampleBuilder.h">
-      <Filter>Header Files\V2\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Audio\WasapiAudioClientFactory.h">
-      <Filter>Header Files\V2\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Audio\WasapiAudioFormatMapper.h">
-      <Filter>Header Files\V2\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Audio\WasapiLoopbackAudioSource.h">
-      <Filter>Header Files\V2\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Audio\WasapiLoopbackAudioSourceConfig.h">
-      <Filter>Header Files\V2\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Audio\WindowsWasapiLoopbackPacketProvider.h">
-      <Filter>Header Files\V2\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Desktop\DesktopColorMetadata.h">
-      <Filter>Header Files\V2\Desktop</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Desktop\DesktopD3DDeviceDependency.h">
-      <Filter>Header Files\V2\Desktop</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Desktop\DesktopVideoSourceConfig.h">
-      <Filter>Header Files\V2\Desktop</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Desktop\DesktopMonitorResolver.h">
-      <Filter>Header Files\V2\Desktop</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Desktop\FakeDesktopD3DDeviceDependency.h">
-      <Filter>Header Files\V2\Desktop</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Desktop\FakeDesktopCaptureProvider.h">
-      <Filter>Header Files\V2\Desktop</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Desktop\IDesktopCaptureProvider.h">
-      <Filter>Header Files\V2\Desktop</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Desktop\WindowsDesktopVideoSource.h">
-      <Filter>Header Files\V2\Desktop</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Desktop\WindowsGraphicsCaptureProvider.h">
-      <Filter>Header Files\V2\Desktop</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
@@ -306,51 +228,6 @@
     <ClInclude Include="WindowsScreenshotCapture.h">
       <Filter>Header Files\Screenshot</Filter>
     </ClInclude>
-    <ClInclude Include="V2\Core\CapturePipelineConfig.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\CapturePipelineConfigValidator.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\CapturePipelineSession.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\MediaPrimitives.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\MediaSamples.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\MediaTypes.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\MediaFoundationSinkCapabilities.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\ResultTypes.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\OutputProfileResolver.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\RecordingClock.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\PipelineStateMachine.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\PipelineInterfaces.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Core\ProductionCapturePipelineFactories.h">
-      <Filter>Header Files\V2\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Output\MediaFoundationFileSink.h">
-      <Filter>Header Files\V2\Output</Filter>
-    </ClInclude>
-    <ClInclude Include="V2\Output\MediaFoundationRuntime.h">
-      <Filter>Header Files\V2\Output</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -424,21 +301,6 @@
     </ClCompile>
     <ClCompile Include="TextureProcessorFactory.cpp">
       <Filter>Source Files\SinkWriter</Filter>
-    </ClCompile>
-    <ClCompile Include="V2\Audio\WindowsWasapiAudioClientFactory.cpp">
-      <Filter>Source Files\AudioCapture</Filter>
-    </ClCompile>
-    <ClCompile Include="V2\Audio\WindowsWasapiLoopbackPacketProvider.cpp">
-      <Filter>Source Files\AudioCapture</Filter>
-    </ClCompile>
-    <ClCompile Include="V2\Desktop\WindowsGraphicsCaptureProvider.cpp">
-      <Filter>Source Files\VideoCapture</Filter>
-    </ClCompile>
-    <ClCompile Include="V2\Output\MediaFoundationFileSink.cpp">
-      <Filter>Source Files\V2\Output</Filter>
-    </ClCompile>
-    <ClCompile Include="V2\Output\MediaFoundationRuntime.cpp">
-      <Filter>Source Files\V2\Output</Filter>
     </ClCompile>
     <ClCompile Include="WindowsScreenshotCapture.cpp">
       <Filter>Source Files\Screenshot</Filter>
