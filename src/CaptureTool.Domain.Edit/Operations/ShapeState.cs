@@ -13,6 +13,11 @@ public sealed partial class ModifyShapeOperation
         public Color StrokeColor { get; init; }
         public Color FillColor { get; init; }
         public int StrokeWidth { get; init; }
+        public string Text { get; init; }
+        public Color TextColor { get; init; }
+        public Color TextBackgroundColor { get; init; }
+        public string FontFamily { get; init; }
+        public float FontSize { get; init; }
 
         public ShapeState(IDrawable shape)
         {
@@ -25,6 +30,11 @@ public sealed partial class ModifyShapeOperation
                     StrokeColor = rect.StrokeColor;
                     FillColor = rect.FillColor;
                     StrokeWidth = rect.StrokeWidth;
+                    Text = string.Empty;
+                    TextColor = default;
+                    TextBackgroundColor = default;
+                    FontFamily = string.Empty;
+                    FontSize = default;
                     break;
 
                 case EllipseDrawable ellipse:
@@ -34,6 +44,11 @@ public sealed partial class ModifyShapeOperation
                     StrokeColor = ellipse.StrokeColor;
                     FillColor = ellipse.FillColor;
                     StrokeWidth = ellipse.StrokeWidth;
+                    Text = string.Empty;
+                    TextColor = default;
+                    TextBackgroundColor = default;
+                    FontFamily = string.Empty;
+                    FontSize = default;
                     break;
 
                 case LineDrawable line:
@@ -43,6 +58,11 @@ public sealed partial class ModifyShapeOperation
                     StrokeColor = line.StrokeColor;
                     FillColor = default;
                     StrokeWidth = line.StrokeWidth;
+                    Text = string.Empty;
+                    TextColor = default;
+                    TextBackgroundColor = default;
+                    FontFamily = string.Empty;
+                    FontSize = default;
                     break;
 
                 case ArrowDrawable arrow:
@@ -52,6 +72,25 @@ public sealed partial class ModifyShapeOperation
                     StrokeColor = arrow.StrokeColor;
                     FillColor = default;
                     StrokeWidth = arrow.StrokeWidth;
+                    Text = string.Empty;
+                    TextColor = default;
+                    TextBackgroundColor = default;
+                    FontFamily = string.Empty;
+                    FontSize = default;
+                    break;
+
+                case TextDrawable text:
+                    Offset = text.Offset;
+                    Size = text.Size;
+                    EndPoint = default;
+                    StrokeColor = default;
+                    FillColor = default;
+                    StrokeWidth = default;
+                    Text = text.Text;
+                    TextColor = text.Color;
+                    TextBackgroundColor = text.BackgroundColor;
+                    FontFamily = text.FontFamily;
+                    FontSize = text.FontSize;
                     break;
 
                 default:
@@ -61,6 +100,11 @@ public sealed partial class ModifyShapeOperation
                     StrokeColor = default;
                     FillColor = default;
                     StrokeWidth = default;
+                    Text = string.Empty;
+                    TextColor = default;
+                    TextBackgroundColor = default;
+                    FontFamily = string.Empty;
+                    FontSize = default;
                     break;
             }
         }

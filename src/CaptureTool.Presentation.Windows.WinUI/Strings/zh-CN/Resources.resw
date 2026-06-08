@@ -234,6 +234,9 @@
   <data name="ImageEdit_ShapesButton.Label" xml:space="preserve">
     <value>形状</value>
   </data>
+  <data name="ImageEdit_TextButton.Label" xml:space="preserve">
+    <value>文本</value>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>打印</value>
   </data>
@@ -248,6 +251,9 @@
   </data>
   <data name="ImageEdit_ShapesButton.AccessKey" xml:space="preserve">
     <value>H</value>
+  </data>
+  <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
+    <value>T</value>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -392,6 +398,9 @@
   </data>
   <data name="ImageEdit_ShapesButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>绘制形状</value>
+  </data>
+  <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>绘制文本</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>旋转图像</value>
@@ -777,5 +786,21 @@ SOFTWARE.
     <value>选择填充颜色和不透明度</value>
     <comment />
     <comment>The tooltip for the fill color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>选择文本颜色和不透明度</value>
+    <comment>The tooltip for the text color picker button in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_BackgroundColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>选择文本背景颜色和不透明度</value>
+    <comment>The tooltip for the text background color picker button in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontFamilyComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>选择字体</value>
+    <comment>The tooltip for the font family selector in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontSizeNumberBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>选择字体大小</value>
+    <comment>The tooltip for the font size input in the text toolbar.</comment>
   </data>
 </root>

@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System.Collections.ObjectModel;
 using System.Drawing;
@@ -61,6 +62,7 @@ public sealed partial class ColorPalettePicker : UserControlBase
 
     private readonly ObservableCollection<object> _colorItems = [];
     private bool _isUpdatingSelection;
+    private bool _isSliderInteractionActive;
 
     public IEnumerable<Color> ColorOptions
     {
@@ -113,6 +115,8 @@ public sealed partial class ColorPalettePicker : UserControlBase
     public event EventHandler<Color>? SelectedColorChanged;
     public event EventHandler<int>? ThicknessChanged;
     public event EventHandler<int>? OpacityPercentageChanged;
+    public event EventHandler? SliderInteractionStarted;
+    public event EventHandler? SliderInteractionCompleted;
 
     public ColorPalettePicker()
     {
@@ -122,6 +126,16 @@ public sealed partial class ColorPalettePicker : UserControlBase
         UpdateColorGridSize();
         Loading += ColorPalettePicker_Loading;
         Loaded += ColorPalettePicker_Loaded;
+        RegisterSliderInteractionHandlers(ThicknessSlider);
+        RegisterSliderInteractionHandlers(OpacitySlider);
+    }
+
+    private void RegisterSliderInteractionHandlers(Slider slider)
+    {
+        slider.AddHandler(PointerPressedEvent, new PointerEventHandler(Slider_PointerPressed), true);
+        slider.AddHandler(PointerReleasedEvent, new PointerEventHandler(Slider_PointerInteractionCompleted), true);
+        slider.AddHandler(PointerCanceledEvent, new PointerEventHandler(Slider_PointerInteractionCompleted), true);
+        slider.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(Slider_PointerInteractionCompleted), true);
     }
 
     private void ColorPalettePicker_Loading(FrameworkElement sender, object args)
@@ -292,6 +306,28 @@ public sealed partial class ColorPalettePicker : UserControlBase
 
         OpacityPercentage = opacityPercentage;
         OpacityPercentageChanged?.Invoke(this, opacityPercentage);
+    }
+
+    private void Slider_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed || _isSliderInteractionActive)
+        {
+            return;
+        }
+
+        _isSliderInteractionActive = true;
+        SliderInteractionStarted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void Slider_PointerInteractionCompleted(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isSliderInteractionActive)
+        {
+            return;
+        }
+
+        _isSliderInteractionActive = false;
+        SliderInteractionCompleted?.Invoke(this, EventArgs.Empty);
     }
 
     private string FormatThickness(int thickness)

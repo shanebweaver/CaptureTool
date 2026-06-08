@@ -9,4 +9,6 @@ public interface IFeatureAvailabilityService
     bool IsAudioInputSelectionEnabled { get; }
 
     bool IsImageEditChromaKeyEnabled { get; }
+
+    bool IsImageEditTextEnabled { get; }
 }
