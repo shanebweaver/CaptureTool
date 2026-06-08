@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Abstractions.Features;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Home;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Presentation.ViewModels;
@@ -24,7 +24,7 @@ public sealed class HomePageViewModelTests
         Fixture.Freeze<Mock<IHomeNewImageCaptureUseCase>>();
         Fixture.Freeze<Mock<IHomeNewVideoCaptureUseCase>>();
         Fixture.Freeze<Mock<IHomeNewAudioCaptureUseCase>>();
-        Fixture.Freeze<Mock<IFeatureAvailabilityService>>();
+        Fixture.Freeze<Mock<IAudioCaptureFeatureAvailability>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
     }
 
@@ -63,7 +63,7 @@ public sealed class HomePageViewModelTests
     public void NewAudioCaptureCommand_ShouldInvokeAction_AndTrackTelemetry_WhenEnabled()
     {
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var featureAvailability = Fixture.Freeze<Mock<IFeatureAvailabilityService>>();
+        var featureAvailability = Fixture.Freeze<Mock<IAudioCaptureFeatureAvailability>>();
         featureAvailability.Setup(f => f.IsAudioCaptureEnabled).Returns(true);
 
         var newAudioCaptureAction = Fixture.Freeze<Mock<IHomeNewAudioCaptureUseCase>>();
@@ -80,7 +80,7 @@ public sealed class HomePageViewModelTests
     [TestMethod]
     public void IsAudioCaptureEnabled_ShouldReflectFeatureFlag()
     {
-        var featureAvailability = Fixture.Freeze<Mock<IFeatureAvailabilityService>>();
+        var featureAvailability = Fixture.Freeze<Mock<IAudioCaptureFeatureAvailability>>();
         featureAvailability.Setup(f => f.IsAudioCaptureEnabled).Returns(false);
         var vm = Create();
         Assert.IsFalse(vm.IsAudioCaptureEnabled);

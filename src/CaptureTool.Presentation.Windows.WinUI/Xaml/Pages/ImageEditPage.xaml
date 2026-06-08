@@ -62,8 +62,7 @@
                 x:Uid="ImageEdit_TextButton"
                 Command="{x:Bind ViewModel.ToggleTextModeCommand}"
                 IsChecked="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}"
-                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
-                Visibility="{x:Bind ViewModel.IsTextFeatureEnabled, Mode=OneWay}">
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="&#xE8D2;" />
                 </AppBarToggleButton.Icon>

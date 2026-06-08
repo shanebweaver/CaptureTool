@@ -25,80 +25,72 @@
                 VerticalAlignment="Stretch"
                 Stroke="White"
                 StrokeThickness="1" />
+        </Grid>
 
-            <!--  Crop anchors  -->
-            <!--  Top left  -->
-            <Grid
-                x:Name="AnchorBox_TopLeft"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Background="Transparent"
-                Visibility="{x:Bind CanResize, Mode=OneWay}">
-                <ContentPresenter x:Name="Anchor_TopLeft" ContentTemplate="{x:Bind AnchorTopLeft, Mode=OneWay}" />
-            </Grid>
-            <!--  Top right  -->
-            <Grid
-                x:Name="AnchorBox_TopRight"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Background="Transparent"
-                Visibility="{x:Bind CanResize, Mode=OneWay}">
-                <ContentPresenter x:Name="Anchor_TopRight" ContentTemplate="{x:Bind AnchorTopRight, Mode=OneWay}" />
-            </Grid>
-            <!--  Bottom left  -->
-            <Grid
-                x:Name="AnchorBox_BottomLeft"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"
-                Background="Transparent"
-                Visibility="{x:Bind CanResize, Mode=OneWay}">
-                <ContentPresenter x:Name="Anchor_BottomLeft" ContentTemplate="{x:Bind AnchorBottomLeft, Mode=OneWay}" />
-            </Grid>
-            <!--  Bottom right  -->
-            <Grid
-                x:Name="AnchorBox_BottomRight"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Bottom"
-                Background="Transparent"
-                Visibility="{x:Bind CanResize, Mode=OneWay}">
-                <ContentPresenter x:Name="Anchor_BottomRight" ContentTemplate="{x:Bind AnchorBottomRight, Mode=OneWay}" />
-            </Grid>
-            <!--  Top  -->
-            <Grid
-                x:Name="AnchorBox_Top"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Top"
-                Background="Transparent"
-                Visibility="{x:Bind CanResize, Mode=OneWay}">
-                <ContentPresenter x:Name="Anchor_Top" ContentTemplate="{x:Bind AnchorTop, Mode=OneWay}" />
-            </Grid>
-            <!--  Left  -->
-            <Grid
-                x:Name="AnchorBox_Left"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Background="Transparent"
-                Visibility="{x:Bind CanResize, Mode=OneWay}">
-                <ContentPresenter x:Name="Anchor_Left" ContentTemplate="{x:Bind AnchorLeft, Mode=OneWay}" />
-            </Grid>
-            <!--  Right  -->
-            <Grid
-                x:Name="AnchorBox_Right"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Center"
-                Background="Transparent"
-                Visibility="{x:Bind CanResize, Mode=OneWay}">
-                <ContentPresenter x:Name="Anchor_Right" ContentTemplate="{x:Bind AnchorRight, Mode=OneWay}" />
-            </Grid>
-            <!--  Bottom  -->
-            <Grid
-                x:Name="AnchorBox_Bottom"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Bottom"
-                Background="Transparent"
-                Visibility="{x:Bind CanResize, Mode=OneWay}">
-                <ContentPresenter x:Name="Anchor_Bottom" ContentTemplate="{x:Bind AnchorBottom, Mode=OneWay}" />
-            </Grid>
+        <!--  Crop anchors  -->
+        <Grid
+            x:Name="AnchorBox_TopLeft"
+            Width="40"
+            Height="40"
+            Background="Transparent"
+            Visibility="{x:Bind CanResize, Mode=OneWay}">
+            <ContentPresenter x:Name="Anchor_TopLeft" ContentTemplate="{x:Bind AnchorTopLeft, Mode=OneWay}" />
+        </Grid>
+        <Grid
+            x:Name="AnchorBox_TopRight"
+            Width="40"
+            Height="40"
+            Background="Transparent"
+            Visibility="{x:Bind CanResize, Mode=OneWay}">
+            <ContentPresenter x:Name="Anchor_TopRight" ContentTemplate="{x:Bind AnchorTopRight, Mode=OneWay}" />
+        </Grid>
+        <Grid
+            x:Name="AnchorBox_BottomLeft"
+            Width="40"
+            Height="40"
+            Background="Transparent"
+            Visibility="{x:Bind CanResize, Mode=OneWay}">
+            <ContentPresenter x:Name="Anchor_BottomLeft" ContentTemplate="{x:Bind AnchorBottomLeft, Mode=OneWay}" />
+        </Grid>
+        <Grid
+            x:Name="AnchorBox_BottomRight"
+            Width="40"
+            Height="40"
+            Background="Transparent"
+            Visibility="{x:Bind CanResize, Mode=OneWay}">
+            <ContentPresenter x:Name="Anchor_BottomRight" ContentTemplate="{x:Bind AnchorBottomRight, Mode=OneWay}" />
+        </Grid>
+        <Grid
+            x:Name="AnchorBox_Top"
+            Width="40"
+            Height="40"
+            Background="Transparent"
+            Visibility="{x:Bind CanResize, Mode=OneWay}">
+            <ContentPresenter x:Name="Anchor_Top" ContentTemplate="{x:Bind AnchorTop, Mode=OneWay}" />
+        </Grid>
+        <Grid
+            x:Name="AnchorBox_Left"
+            Width="40"
+            Height="40"
+            Background="Transparent"
+            Visibility="{x:Bind CanResize, Mode=OneWay}">
+            <ContentPresenter x:Name="Anchor_Left" ContentTemplate="{x:Bind AnchorLeft, Mode=OneWay}" />
+        </Grid>
+        <Grid
+            x:Name="AnchorBox_Right"
+            Width="40"
+            Height="40"
+            Background="Transparent"
+            Visibility="{x:Bind CanResize, Mode=OneWay}">
+            <ContentPresenter x:Name="Anchor_Right" ContentTemplate="{x:Bind AnchorRight, Mode=OneWay}" />
+        </Grid>
+        <Grid
+            x:Name="AnchorBox_Bottom"
+            Width="40"
+            Height="40"
+            Background="Transparent"
+            Visibility="{x:Bind CanResize, Mode=OneWay}">
+            <ContentPresenter x:Name="Anchor_Bottom" ContentTemplate="{x:Bind AnchorBottom, Mode=OneWay}" />
         </Grid>
     </Canvas>
 </controls:UserControlBase>

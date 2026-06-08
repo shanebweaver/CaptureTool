@@ -20,7 +20,6 @@ public sealed partial class CropOverlay : UserControlBase
     }
 
     private static readonly Size MinimumSelectionRectangleSize = new(50, 50);
-    private const double HandleHorizontalAlignmentOffset = -1;
 
     public static readonly DependencyProperty AnchorTopLeftProperty = DependencyProperty.Register(
         nameof(AnchorTopLeft),
@@ -231,34 +230,33 @@ public sealed partial class CropOverlay : UserControlBase
 
         Boundary.BorderThickness = new Thickness(left, top, RootCanvas.Width - right, RootCanvas.Height - bottom);
 
-        Canvas.SetLeft(Anchor_TopLeft, GetHandleLeft(left, Anchor_TopLeft));
-        Canvas.SetTop(Anchor_TopLeft, top - Anchor_TopLeft.Height / 2);
-
-        Canvas.SetLeft(Anchor_TopRight, GetHandleLeft(right, Anchor_TopRight));
-        Canvas.SetTop(Anchor_TopRight, top - Anchor_TopRight.Height / 2);
-
-        Canvas.SetLeft(Anchor_BottomLeft, GetHandleLeft(left, Anchor_BottomLeft));
-        Canvas.SetTop(Anchor_BottomLeft, bottom - Anchor_BottomLeft.Height / 2);
-
-        Canvas.SetLeft(Anchor_BottomRight, GetHandleLeft(right, Anchor_BottomRight));
-        Canvas.SetTop(Anchor_BottomRight, bottom - Anchor_BottomRight.Height / 2);
-
-        Canvas.SetLeft(Anchor_Top, GetHandleLeft(centerX, Anchor_Top));
-        Canvas.SetTop(Anchor_Top, top - Anchor_Top.Height / 2);
-
-        Canvas.SetLeft(Anchor_Bottom, GetHandleLeft(centerX, Anchor_Bottom));
-        Canvas.SetTop(Anchor_Bottom, bottom - Anchor_Bottom.Height / 2);
-
-        Canvas.SetLeft(Anchor_Left, GetHandleLeft(left, Anchor_Left));
-        Canvas.SetTop(Anchor_Left, centerY - Anchor_Left.Height / 2);
-
-        Canvas.SetLeft(Anchor_Right, GetHandleLeft(right, Anchor_Right));
-        Canvas.SetTop(Anchor_Right, centerY - Anchor_Right.Height / 2);
+        PositionAnchorBox(AnchorBox_TopLeft, left, top, 0, 0);
+        PositionAnchorBox(AnchorBox_TopRight, right, top, 1, 0);
+        PositionAnchorBox(AnchorBox_BottomLeft, left, bottom, 0, 1);
+        PositionAnchorBox(AnchorBox_BottomRight, right, bottom, 1, 1);
+        PositionAnchorBox(AnchorBox_Top, centerX, top, 0.5, 0);
+        PositionAnchorBox(AnchorBox_Bottom, centerX, bottom, 0.5, 1);
+        PositionAnchorBox(AnchorBox_Left, left, centerY, 0, 0.5);
+        PositionAnchorBox(AnchorBox_Right, right, centerY, 1, 0.5);
     }
 
-    private static double GetHandleLeft(double anchorX, FrameworkElement handle)
+    private static void PositionAnchorBox(FrameworkElement anchorBox, double anchorX, double anchorY, double originX, double originY)
     {
-        return anchorX - handle.Width / 2 + HandleHorizontalAlignmentOffset;
+        double width = GetLayoutSize(anchorBox.ActualWidth, anchorBox.Width);
+        double height = GetLayoutSize(anchorBox.ActualHeight, anchorBox.Height);
+
+        Canvas.SetLeft(anchorBox, anchorX - width * originX);
+        Canvas.SetTop(anchorBox, anchorY - height * originY);
+    }
+
+    private static double GetLayoutSize(double actualSize, double requestedSize)
+    {
+        if (!double.IsNaN(actualSize) && actualSize > 0)
+        {
+            return actualSize;
+        }
+
+        return !double.IsNaN(requestedSize) && requestedSize > 0 ? requestedSize : 0;
     }
 
     private void AttachEventHandlers()
@@ -666,6 +664,8 @@ public sealed partial class CropOverlay : UserControlBase
                 ScaleY = scale
             };
         }
+
+        UpdateBoundary();
     }
 
 }

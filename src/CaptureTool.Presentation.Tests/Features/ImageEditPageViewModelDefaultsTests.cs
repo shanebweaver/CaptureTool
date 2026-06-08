@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Cancellation;
-using CaptureTool.Application.Abstractions.Features;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Localization;
@@ -25,12 +24,12 @@ public sealed class ImageEditPageViewModelDefaultsTests
     {
         var filePicker = new Mock<IFilePickerService>();
         var cancellationService = new Mock<ICancellationService>();
-        var featureAvailability = new Mock<IFeatureAvailabilityService>();
+        var featureAvailability = new Mock<IChromaKeyFeatureAvailability>();
         using var linkedCts = new CancellationTokenSource();
         var imageFile = new ImageFile("large.png");
 
         featureAvailability
-            .Setup(service => service.IsImageEditChromaKeyEnabled)
+            .Setup(service => service.IsChromaKeyEnabled)
             .Returns(false);
 
         filePicker
@@ -52,13 +51,7 @@ public sealed class ImageEditPageViewModelDefaultsTests
     [TestMethod]
     public void EditModeCommands_ShouldKeepModesMutuallyExclusive()
     {
-        var featureAvailability = new Mock<IFeatureAvailabilityService>();
-
-        featureAvailability
-            .Setup(service => service.IsImageEditTextEnabled)
-            .Returns(true);
-
-        var viewModel = CreateViewModel(featureAvailability: featureAvailability.Object);
+        var viewModel = CreateViewModel();
 
         viewModel.ToggleTextModeCommand.Execute(null);
         viewModel.IsInTextMode.Should().BeTrue();
@@ -90,13 +83,13 @@ public sealed class ImageEditPageViewModelDefaultsTests
     {
         var filePicker = new Mock<IFilePickerService>();
         var cancellationService = new Mock<ICancellationService>();
-        var featureAvailability = new Mock<IFeatureAvailabilityService>();
+        var featureAvailability = new Mock<IChromaKeyFeatureAvailability>();
         var chromaKeyService = new Mock<IChromaKeyService>();
         using var linkedCts = new CancellationTokenSource();
         var imageFile = new ImageFile("green-screen.png");
 
         featureAvailability
-            .Setup(service => service.IsImageEditChromaKeyEnabled)
+            .Setup(service => service.IsChromaKeyEnabled)
             .Returns(true);
 
         filePicker
@@ -154,7 +147,7 @@ public sealed class ImageEditPageViewModelDefaultsTests
     private static ImageEditPageViewModel CreateViewModel(
         IFilePickerService? filePicker = null,
         ICancellationService? cancellationService = null,
-        IFeatureAvailabilityService? featureAvailability = null,
+        IChromaKeyFeatureAvailability? featureAvailability = null,
         IChromaKeyService? chromaKeyService = null)
     {
         return new ImageEditPageViewModel(
@@ -167,7 +160,7 @@ public sealed class ImageEditPageViewModelDefaultsTests
             Mock.Of<IImageCanvasExporter>(),
             filePicker ?? Mock.Of<IFilePickerService>(),
             chromaKeyService ?? Mock.Of<IChromaKeyService>(),
-            featureAvailability ?? Mock.Of<IFeatureAvailabilityService>(),
+            featureAvailability ?? Mock.Of<IChromaKeyFeatureAvailability>(),
             Mock.Of<IShareService>());
     }
 

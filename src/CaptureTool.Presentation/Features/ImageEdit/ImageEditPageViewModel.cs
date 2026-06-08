@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Cancellation;
-using CaptureTool.Application.Abstractions.Features;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Features.Store;
@@ -65,7 +64,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageCanvasExporter _imageCanvasExporter;
     private readonly IChromaKeyService _chromaKeyService;
     private readonly IFilePickerService _filePickerService;
-    private readonly IFeatureAvailabilityService _featureAvailability;
+    private readonly IChromaKeyFeatureAvailability _chromaKeyFeatureAvailability;
     private readonly IShareService _shareService;
     private readonly ITelemetryService _telemetryService;
 
@@ -180,12 +179,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     }
 
     public bool IsInTextMode
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public bool IsTextFeatureEnabled
     {
         get;
         private set => Set(ref field, value);
@@ -347,7 +340,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageCanvasExporter imageCanvasExporter,
         IFilePickerService filePickerService,
         IChromaKeyService chromaKeyService,
-        IFeatureAvailabilityService featureAvailability,
+        IChromaKeyFeatureAvailability chromaKeyFeatureAvailability,
         IShareService shareService)
     {
         _localizationService = localizationService;
@@ -357,7 +350,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _imageCanvasPrinter = imageCanvasPrinter;
         _chromaKeyService = chromaKeyService;
         _filePickerService = filePickerService;
-        _featureAvailability = featureAvailability;
+        _chromaKeyFeatureAvailability = chromaKeyFeatureAvailability;
         _shareService = shareService;
         _imageCanvasExporter = imageCanvasExporter;
         _telemetryService = telemetryService;
@@ -388,7 +381,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextBackgroundColorOpacity = 100;
         TextFontFamily = TextDrawable.DefaultFontFamily;
         TextFontSize = (int)TextDrawable.DefaultFontSize;
-        IsTextFeatureEnabled = _featureAvailability.IsImageEditTextEnabled;
         ZoomPercentage = 100;
         IsAutoZoomLocked = false;
         _operationsUndoStack = [];
@@ -405,7 +397,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         FlipVerticalCommand = new RelayCommand(() => Flip(FlipDirection.Vertical));
         PrintCommand = new AsyncRelayCommand(PrintAsync);
         ShareCommand = new AsyncRelayCommand(ShareAsync);
-        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, (c) => _featureAvailability.IsImageEditChromaKeyEnabled);
+        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, (c) => _chromaKeyFeatureAvailability.IsChromaKeyEnabled);
         UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
         UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
         UpdateShowChromaKeyOptionsCommand = new RelayCommand<bool>(UpdateShowChromaKeyOptions);
@@ -418,13 +410,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth);
         UpdateShapeStrokeOpacityCommand = new RelayCommand<int>(UpdateShapeStrokeOpacity);
         UpdateShapeFillOpacityCommand = new RelayCommand<int>(UpdateShapeFillOpacity);
-        ToggleTextModeCommand = new RelayCommand(ToggleTextMode, () => IsTextFeatureEnabled);
-        UpdateTextFontColorCommand = new RelayCommand<Color>(UpdateTextFontColor, _ => IsTextFeatureEnabled);
-        UpdateTextBackgroundColorCommand = new RelayCommand<Color>(UpdateTextBackgroundColor, _ => IsTextFeatureEnabled);
-        UpdateTextFontColorOpacityCommand = new RelayCommand<int>(UpdateTextFontColorOpacity, _ => IsTextFeatureEnabled);
-        UpdateTextBackgroundColorOpacityCommand = new RelayCommand<int>(UpdateTextBackgroundColorOpacity, _ => IsTextFeatureEnabled);
-        UpdateTextFontFamilyCommand = new RelayCommand<string?>(UpdateTextFontFamily, _ => IsTextFeatureEnabled);
-        UpdateTextFontSizeCommand = new RelayCommand<int>(UpdateTextFontSize, _ => IsTextFeatureEnabled);
+        ToggleTextModeCommand = new RelayCommand(ToggleTextMode);
+        UpdateTextFontColorCommand = new RelayCommand<Color>(UpdateTextFontColor);
+        UpdateTextBackgroundColorCommand = new RelayCommand<Color>(UpdateTextBackgroundColor);
+        UpdateTextFontColorOpacityCommand = new RelayCommand<int>(UpdateTextFontColorOpacity);
+        UpdateTextBackgroundColorOpacityCommand = new RelayCommand<int>(UpdateTextBackgroundColorOpacity);
+        UpdateTextFontFamilyCommand = new RelayCommand<string?>(UpdateTextFontFamily);
+        UpdateTextFontSizeCommand = new RelayCommand<int>(UpdateTextFontSize);
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
@@ -447,7 +439,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             _imageDrawable = new(topLeft, imageFile, ImageSize);
             _drawables.Add(_imageDrawable);
 
-            if (_featureAvailability.IsImageEditChromaKeyEnabled)
+            if (_chromaKeyFeatureAvailability.IsChromaKeyEnabled)
             {
                 bool isChromaKeyAddOnOwned = true;// await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
                 IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
@@ -581,11 +573,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void ToggleTextMode()
     {
-        if (!IsTextFeatureEnabled)
-        {
-            return;
-        }
-
         UpdateIsInTextMode(!IsInTextMode);
     }
 
@@ -601,11 +588,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void SetActiveEditMode(ImageEditMode mode)
     {
-        if (mode == ImageEditMode.Text && !IsTextFeatureEnabled)
-        {
-            mode = ImageEditMode.None;
-        }
-
         if (_activeEditMode == mode)
         {
             return;
@@ -818,7 +800,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnTextBoxDrawn(Vector2 startPoint, Vector2 endPoint)
     {
-        if (!IsInTextMode || !IsTextFeatureEnabled)
+        if (!IsInTextMode)
         {
             return;
         }
@@ -960,7 +942,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateChromaKeyColor(Color color)
     {
-        if (!_featureAvailability.IsImageEditChromaKeyEnabled)
+        if (!_chromaKeyFeatureAvailability.IsChromaKeyEnabled)
         {
             return;
         }
