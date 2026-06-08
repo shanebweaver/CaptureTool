@@ -27,7 +27,6 @@ public sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
     public Task<StartVideoCaptureResponse> ExecuteAsync(StartVideoCaptureRequest request, CancellationToken cancellationToken = default)
     {
         _videoCaptureHandler.StartVideoCapture(request.CaptureArgs);
-        _navigationService.Navigate(NavigationRoute.CaptureOverlay, request.CaptureArgs);
         return Task.FromResult(new StartVideoCaptureResponse());
     }
 }
