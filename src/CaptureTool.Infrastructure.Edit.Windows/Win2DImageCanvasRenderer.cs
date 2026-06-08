@@ -95,7 +95,10 @@ public static partial class Win2DImageCanvasRenderer
             WordWrapping = CanvasWordWrapping.Wrap,
         };
 
-        drawingSession.DrawText(drawable.Text, paddedTextRect, color, textFormat);
+        using (drawingSession.CreateLayer(1, paddedTextRect))
+        {
+            drawingSession.DrawText(drawable.Text, paddedTextRect, color, textFormat);
+        }
     }
 
     private static void DrawRectangle(RectangleDrawable drawable, CanvasDrawingSession drawingSession)
