@@ -2,11 +2,15 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Drawing;
 using System.Drawing.Text;
+using System.Globalization;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
 public sealed partial class TextToolbar : UserControlBase
 {
+    private const int MinimumFontSize = 1;
+    private const int MaximumFontSize = 200;
+
     private static readonly string[] FallbackFontFamilies = [
         "Segoe UI",
         "Arial",
@@ -66,7 +70,15 @@ public sealed partial class TextToolbar : UserControlBase
         nameof(TextFontSize),
         typeof(int),
         typeof(TextToolbar),
-        new PropertyMetadata(24));
+        new PropertyMetadata(24, OnTextFontSizeChanged));
+
+    private static void OnTextFontSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TextToolbar toolbar && e.NewValue is int value)
+        {
+            toolbar.SyncFontSizeNumberBox(value);
+        }
+    }
 
     public Color TextFontColor
     {
@@ -194,10 +206,34 @@ public sealed partial class TextToolbar : UserControlBase
 
     private void UpdateTextFontSize(int value)
     {
+        value = Math.Clamp(value, MinimumFontSize, MaximumFontSize);
         if (TextFontSize != value)
         {
             TextFontSize = value;
             TextFontSizeChanged?.Invoke(this, value);
+        }
+        else
+        {
+            SyncFontSizeNumberBox(value);
+        }
+    }
+
+    private void SyncFontSizeNumberBox(int value)
+    {
+        if (FontSizeNumberBox == null)
+        {
+            return;
+        }
+
+        if (FontSizeNumberBox.Value != value)
+        {
+            FontSizeNumberBox.Value = value;
+        }
+
+        string text = value.ToString(CultureInfo.CurrentCulture);
+        if (!string.Equals(FontSizeNumberBox.Text, text, StringComparison.Ordinal))
+        {
+            FontSizeNumberBox.Text = text;
         }
     }
 
@@ -235,5 +271,16 @@ public sealed partial class TextToolbar : UserControlBase
         {
             UpdateTextFontSize((int)Math.Round(args.NewValue));
         }
+    }
+
+    private void FontSizeNumberBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (double.IsNaN(FontSizeNumberBox.Value))
+        {
+            SyncFontSizeNumberBox(TextFontSize);
+            return;
+        }
+
+        UpdateTextFontSize((int)Math.Round(FontSizeNumberBox.Value));
     }
 }

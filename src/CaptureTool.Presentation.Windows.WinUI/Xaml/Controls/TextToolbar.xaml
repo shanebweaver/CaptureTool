@@ -141,6 +141,7 @@
             Minimum="1"
             SmallChange="1"
             SpinButtonPlacementMode="Inline"
+            LostFocus="FontSizeNumberBox_LostFocus"
             ValueChanged="FontSizeNumberBox_ValueChanged"
             Value="{x:Bind TextFontSize, Mode=OneWay}" />
     </StackPanel>
