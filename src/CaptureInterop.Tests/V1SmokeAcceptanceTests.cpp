@@ -8,6 +8,7 @@
 #include "CallbackTypes.h"
 #include "CaptureSessionConfig.h"
 #include "MediaFoundationLifecycleManager.h"
+#include "MediaTimeConstants.h"
 #include "SimpleMediaClock.h"
 #include "SimpleMediaClockFactory.h"
 #include "WindowsLocalAudioCaptureSource.h"

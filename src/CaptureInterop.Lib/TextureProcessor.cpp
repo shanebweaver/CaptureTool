@@ -1,11 +1,19 @@
 #include "pch.h"
 #include "TextureProcessor.h"
 
-TextureProcessor::TextureProcessor(ID3D11Device* device, ID3D11DeviceContext* context, uint32_t width, uint32_t height)
+TextureProcessor::TextureProcessor(
+    ID3D11Device* device,
+    ID3D11DeviceContext* context,
+    uint32_t width,
+    uint32_t height,
+    uint32_t sourceLeft,
+    uint32_t sourceTop)
     : m_device(device)
     , m_context(context)
     , m_width(width)
     , m_height(height)
+    , m_sourceLeft(sourceLeft)
+    , m_sourceTop(sourceTop)
 {
 }
 
@@ -63,13 +71,27 @@ Result<void> TextureProcessor::CopyTextureToMemory(ID3D11Texture2D* texture, std
             ErrorInfo::FromMessage(E_INVALIDARG, "Texture format must be DXGI_FORMAT_B8G8R8A8_UNORM", "TextureProcessor::CopyTextureToBuffer"));
     }
 
+    if (m_sourceLeft + m_width > desc.Width || m_sourceTop + m_height > desc.Height)
+    {
+        return Result<void>::Error(
+            ErrorInfo::FromMessage(E_INVALIDARG, "Requested source rectangle is outside texture bounds", "TextureProcessor::CopyTextureToMemory"));
+    }
+
     auto stagingResult = EnsureStagingTexture();
     if (stagingResult.IsError())
     {
         return stagingResult;
     }
 
-    m_context->CopyResource(m_stagingTexture.get(), texture);
+    D3D11_BOX sourceBox{};
+    sourceBox.left = m_sourceLeft;
+    sourceBox.top = m_sourceTop;
+    sourceBox.front = 0;
+    sourceBox.right = m_sourceLeft + m_width;
+    sourceBox.bottom = m_sourceTop + m_height;
+    sourceBox.back = 1;
+
+    m_context->CopySubresourceRegion(m_stagingTexture.get(), 0, 0, 0, 0, texture, 0, &sourceBox);
 
     D3D11_MAPPED_SUBRESOURCE mapped{};
     HRESULT hr = m_context->Map(m_stagingTexture.get(), 0, D3D11_MAP_READ, 0, &mapped);

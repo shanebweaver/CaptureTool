@@ -74,7 +74,14 @@ WindowsMFMP4SinkWriter::~WindowsMFMP4SinkWriter()
     Finalize();
 }
 
-bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device* device, uint32_t width, uint32_t height, long* outHr)
+bool WindowsMFMP4SinkWriter::Initialize(
+    const wchar_t* outputPath,
+    ID3D11Device* device,
+    uint32_t width,
+    uint32_t height,
+    long* outHr,
+    uint32_t sourceLeft,
+    uint32_t sourceTop)
 {
     std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -104,7 +111,7 @@ bool WindowsMFMP4SinkWriter::Initialize(const wchar_t* outputPath, ID3D11Device*
     // Create texture processor for video frame handling using factory
     wil::com_ptr<ID3D11DeviceContext> context;
     device->GetImmediateContext(context.put());
-    m_textureProcessor = m_textureProcessorFactory->CreateTextureProcessor(device, context.get(), width, height);
+    m_textureProcessor = m_textureProcessorFactory->CreateTextureProcessor(device, context.get(), width, height, sourceLeft, sourceTop);
     
     // Create attributes to enable hardware acceleration and improve performance
     wil::com_ptr<IMFAttributes> attributes;

@@ -25,7 +25,14 @@ public:
     /// <param name="height">Video frame height in pixels.</param>
     /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
     /// <returns>True if initialization succeeded, false otherwise.</returns>
-    virtual bool Initialize(const wchar_t* outputPath, ID3D11Device* device, uint32_t width, uint32_t height, long* outHr = nullptr) = 0;
+    virtual bool Initialize(
+        const wchar_t* outputPath,
+        ID3D11Device* device,
+        uint32_t width,
+        uint32_t height,
+        long* outHr = nullptr,
+        uint32_t sourceLeft = 0,
+        uint32_t sourceTop = 0) = 0;
 
     /// <summary>
     /// Initialize the audio stream for the MP4 file.
