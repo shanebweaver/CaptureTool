@@ -32,6 +32,36 @@
                 VerticalAlignment="Stretch"
                 Background="Transparent" />
 
+            <!--  Border move handles for controls that need editable interiors.  -->
+            <Grid
+                x:Name="BorderMoveTop"
+                Height="8"
+                Margin="8,-4,8,0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Top"
+                Background="Transparent" />
+            <Grid
+                x:Name="BorderMoveBottom"
+                Height="8"
+                Margin="8,0,8,-4"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Bottom"
+                Background="Transparent" />
+            <Grid
+                x:Name="BorderMoveLeft"
+                Width="8"
+                Margin="-4,8,0,8"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Stretch"
+                Background="Transparent" />
+            <Grid
+                x:Name="BorderMoveRight"
+                Width="8"
+                Margin="0,8,-4,8"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Stretch"
+                Background="Transparent" />
+
             <!--  Resize Handles  -->
             <!--  Top left  -->
             <Ellipse

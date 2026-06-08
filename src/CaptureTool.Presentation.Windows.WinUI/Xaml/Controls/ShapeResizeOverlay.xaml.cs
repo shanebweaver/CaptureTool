@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using System.Drawing;
 using Point = Windows.Foundation.Point;
 
@@ -14,6 +15,12 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         typeof(ShapeResizeOverlay),
         new PropertyMetadata(RectangleF.Empty, OnShapeBoundsChanged));
 
+    public static readonly DependencyProperty IsInteriorMoveEnabledProperty = DependencyProperty.Register(
+        nameof(IsInteriorMoveEnabled),
+        typeof(bool),
+        typeof(ShapeResizeOverlay),
+        new PropertyMetadata(true, OnIsInteriorMoveEnabledChanged));
+
     private static void OnShapeBoundsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is ShapeResizeOverlay overlay && e.NewValue is RectangleF bounds)
@@ -26,6 +33,12 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
     {
         get => Get<RectangleF>(ShapeBoundsProperty);
         set => Set(ShapeBoundsProperty, value);
+    }
+
+    public bool IsInteriorMoveEnabled
+    {
+        get => Get<bool>(IsInteriorMoveEnabledProperty);
+        set => Set(IsInteriorMoveEnabledProperty, value);
     }
 
     public event EventHandler<RectangleF>? BoundsChanged;
@@ -122,10 +135,38 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         MoveHandle.PointerReleased += (s, e) => EndResize(e);
         MoveHandle.PointerEntered += (s, e) => SetCursorForHandle(ResizeHandle.Move);
         MoveHandle.PointerExited += (s, e) => ResetCursor();
+
+        AttachBorderMoveHandle(BorderMoveTop);
+        AttachBorderMoveHandle(BorderMoveBottom);
+        AttachBorderMoveHandle(BorderMoveLeft);
+        AttachBorderMoveHandle(BorderMoveRight);
+    }
+
+    private void AttachBorderMoveHandle(UIElement handle)
+    {
+        handle.PointerPressed += (s, e) => StartResize(ResizeHandle.Move, e);
+        handle.PointerMoved += (s, e) => ContinueResize(e);
+        handle.PointerReleased += (s, e) => EndResize(e);
+        handle.PointerEntered += (s, e) => SetCursorForHandle(ResizeHandle.Move);
+        handle.PointerExited += (s, e) => ResetCursor();
+    }
+
+    private static void OnIsInteriorMoveEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ShapeResizeOverlay overlay && e.NewValue is bool isEnabled)
+        {
+            overlay.MoveHandle.Visibility = isEnabled ? Visibility.Visible : Visibility.Collapsed;
+            overlay.Boundary.Background = isEnabled ? new SolidColorBrush(Microsoft.UI.Colors.Transparent) : null;
+        }
     }
 
     private void StartResize(ResizeHandle handle, PointerRoutedEventArgs e)
     {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
         _activeHandle = handle;
         _handleStartPoint = e.GetCurrentPoint(this).Position;
         _initialBounds = ShapeBounds;

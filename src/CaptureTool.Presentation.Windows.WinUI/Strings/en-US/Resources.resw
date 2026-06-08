@@ -273,6 +273,10 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Shapes</value>
     <comment>The label for the shapes button on the image edit page.</comment>
   </data>
+  <data name="ImageEdit_TextButton.Label" xml:space="preserve">
+    <value>Text</value>
+    <comment>The label for the text button on the image edit page.</comment>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Print</value>
     <comment>The label for the print button on the image edit page.</comment>
@@ -292,6 +296,10 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="ImageEdit_ShapesButton.AccessKey" xml:space="preserve">
     <value>H</value>
     <comment>The access key for the shapes button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
+    <value>T</value>
+    <comment>The access key for the text button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -420,6 +428,10 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="ImageEdit_ShapesButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Draw shapes</value>
     <comment>The tooltip for the shapes button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Draw text</value>
+    <comment>The tooltip for the text button on the image edit page.</comment>
   </data>
   <data name="ShapeTypeComboBox.Header" xml:space="preserve">
     <value>Shape Type</value>
@@ -991,5 +1003,21 @@ SOFTWARE.
     <value>Choose fill color and opacity</value>
     <comment />
     <comment>The tooltip for the fill color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose text color and opacity</value>
+    <comment>The tooltip for the text color picker button in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_BackgroundColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose text background color and opacity</value>
+    <comment>The tooltip for the text background color picker button in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontFamilyComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose font family</value>
+    <comment>The tooltip for the font family selector in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontSizeNumberBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose font size</value>
+    <comment>The tooltip for the font size input in the text toolbar.</comment>
   </data>
 </root>

@@ -1,19 +1,54 @@
 #pragma once
 #include <windows.h>
+#include <cstdint>
 #include "CallbackTypes.h"
 
-// Export the callback types and structures from CallbackTypes.h
-// These are used at the managed/native boundary
+enum class CaptureRecorderStatus : int32_t
+{
+    Success = 0,
+    InvalidArgument = 1,
+    InvalidState = 2,
+    StartFailed = 3,
+    NoActiveSession = 4
+};
+
+enum class CaptureRecordingTargetKind : int32_t
+{
+    Monitor = 0,
+    Window = 1,
+    Rectangle = 2
+};
+
+struct CaptureRecorderResult
+{
+    CaptureRecorderStatus status;
+    HRESULT hresult;
+};
+
+struct CaptureRecordingOptions
+{
+    CaptureRecordingTargetKind targetKind;
+    HMONITOR hMonitor;
+    HWND hwnd;
+    int32_t left;
+    int32_t top;
+    int32_t width;
+    int32_t height;
+    const wchar_t* outputPath;
+    uint32_t captureAudio;
+    uint32_t frameRate;
+    uint32_t videoBitrate;
+    uint32_t audioBitrate;
+};
 
 extern "C"
-{    
-    __declspec(dllexport) bool TryStartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool captureAudio = false);
-    __declspec(dllexport) void TryPauseRecording();
-    __declspec(dllexport) void TryResumeRecording();
-    __declspec(dllexport) void TryStopRecording();
-    __declspec(dllexport) void TryToggleAudioCapture(bool enabled);
-    
-    // Callback registration functions
-    __declspec(dllexport) void SetVideoFrameCallback(VideoFrameCallback callback);
-    __declspec(dllexport) void SetAudioSampleCallback(AudioSampleCallback callback);
+{
+    __declspec(dllexport) CaptureRecorderResult StartScreenRecording(const CaptureRecordingOptions* options);
+    __declspec(dllexport) CaptureRecorderResult PauseScreenRecording();
+    __declspec(dllexport) CaptureRecorderResult ResumeScreenRecording();
+    __declspec(dllexport) CaptureRecorderResult StopScreenRecording();
+    __declspec(dllexport) CaptureRecorderResult SetScreenRecordingAudioEnabled(uint32_t enabled);
+
+    __declspec(dllexport) CaptureRecorderResult RegisterVideoFrameCallback(VideoFrameCallback callback);
+    __declspec(dllexport) CaptureRecorderResult RegisterAudioSampleCallback(AudioSampleCallback callback);
 }

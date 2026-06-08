@@ -66,14 +66,43 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             throw new InvalidOperationException("A video is already being recorded.");
         }
 
-        UpdateCaptureState(CaptureState.Recording);
-
         _tempVideoPath = Path.Combine(
             _storageService.GetApplicationTemporaryFolderPath(),
             GetNewCaptureFileName()
         );
 
-        _screenRecorder.StartRecording(args.Monitor.HMonitor, _tempVideoPath, IsDesktopAudioEnabled);
+        try
+        {
+            CaptureRecordingTarget target = CreateRecordingTarget(args);
+            var startResult = _screenRecorder.StartRecording(new CaptureRecordingOptions(
+                target,
+                _tempVideoPath,
+                IsDesktopAudioEnabled));
+
+            startResult.EnsureSuccess();
+            UpdateCaptureState(CaptureState.Recording);
+        }
+        catch
+        {
+            _tempVideoPath = null;
+            UpdateCaptureState(CaptureState.Idle);
+            throw;
+        }
+    }
+
+    private static CaptureRecordingTarget CreateRecordingTarget(NewCaptureArgs args)
+    {
+        return args.CaptureType switch
+        {
+            CaptureType.Window when args.WindowHandle != 0 => CaptureRecordingTarget.Window(args.WindowHandle),
+            CaptureType.Rectangle or CaptureType.Window => CaptureRecordingTarget.Rectangle(
+                args.Monitor.HMonitor,
+                (int)Math.Round(args.Area.Left * args.Monitor.Scale),
+                (int)Math.Round(args.Area.Top * args.Monitor.Scale),
+                Math.Max(1, (int)Math.Round(args.Area.Width * args.Monitor.Scale)),
+                Math.Max(1, (int)Math.Round(args.Area.Height * args.Monitor.Scale))),
+            _ => CaptureRecordingTarget.Monitor(args.Monitor.HMonitor)
+        };
     }
 
     public PendingVideoFile StopVideoCapture()
@@ -98,7 +127,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     {
         try
         {
-            _screenRecorder.StopRecording();
+            _screenRecorder.StopRecording().EnsureSuccess();
 
             pendingVideo.Complete();
 
@@ -128,8 +157,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
                 return;
             }
 
-            _screenRecorder.SetAudioSampleCallback(null);
-            _screenRecorder.SetVideoFrameCallback(null);
+            _screenRecorder.RegisterAudioSampleCallback(null);
+            _screenRecorder.RegisterVideoFrameCallback(null);
             _screenRecorder.StopRecording();
         }
         finally
@@ -150,7 +179,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     {
         if (_captureState == CaptureState.Recording)
         {
-            _screenRecorder.ToggleAudioCapture(enabled);
+            _screenRecorder.SetAudioCaptureEnabled(enabled);
         }
     }
 

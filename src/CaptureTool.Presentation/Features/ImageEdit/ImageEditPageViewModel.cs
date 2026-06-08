@@ -24,11 +24,11 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
 {
-    private static readonly Color[] ShapesColorPalette = [
+    private static readonly Color[] DrawablesColorPalette = [
         Color.Transparent,
-        Color.FromArgb(31, 41, 55),
-        Color.FromArgb(249, 250, 251),
-        Color.FromArgb(239, 68, 68),
+        Color.FromArgb(31, 41, 55), // White
+        Color.FromArgb(249, 250, 251), // Black
+        Color.FromArgb(239, 68, 68), // Red
         Color.FromArgb(249, 115, 22),
         Color.FromArgb(245, 158, 11),
         Color.FromArgb(234, 179, 8),
@@ -86,6 +86,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IRelayCommand<int> UpdateShapeStrokeWidthCommand { get; }
     public IRelayCommand<int> UpdateShapeStrokeOpacityCommand { get; }
     public IRelayCommand<int> UpdateShapeFillOpacityCommand { get; }
+    public IRelayCommand ToggleTextModeCommand { get; }
+    public IRelayCommand<Color> UpdateTextFontColorCommand { get; }
+    public IRelayCommand<Color> UpdateTextBackgroundColorCommand { get; }
+    public IRelayCommand<int> UpdateTextFontColorOpacityCommand { get; }
+    public IRelayCommand<int> UpdateTextBackgroundColorOpacityCommand { get; }
+    public IRelayCommand<string?> UpdateTextFontFamilyCommand { get; }
+    public IRelayCommand<int> UpdateTextFontSizeCommand { get; }
     public IRelayCommand<int> UpdateZoomPercentageCommand { get; }
     public IRelayCommand<bool> UpdateAutoZoomLockCommand { get; }
     public IRelayCommand ZoomAndCenterCommand { get; }
@@ -156,6 +163,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public bool IsInTextMode
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsTextFeatureEnabled
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public ShapeType SelectedShapeType
     {
         get;
@@ -191,6 +210,46 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     }
 
     public int ShapeFillOpacity
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public Color TextFontColor
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public Color TextBackgroundColor
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public IReadOnlyList<Color> TextFontColorOptions { get; }
+
+    public IReadOnlyList<Color> TextBackgroundColorOptions { get; }
+
+    public int TextFontColorOpacity
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public int TextBackgroundColorOpacity
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public string TextFontFamily
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public int TextFontSize
     {
         get;
         private set => Set(ref field, value);
@@ -298,13 +357,22 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyColor = Color.Empty;
         ChromaKeyColorOptions = [];
         SelectedShapeType = ShapeType.Rectangle;
-        ShapeStrokeColor = ShapesColorPalette[3]; // Red
-        ShapeFillColor = ShapesColorPalette[0]; // Transparent
-        ShapeStrokeColorOptions = ShapesColorPalette;
-        ShapeFillColorOptions = ShapesColorPalette;
+        ShapeStrokeColor = DrawablesColorPalette[3]; // Red
+        ShapeFillColor = DrawablesColorPalette[0]; // Transparent
+        ShapeStrokeColorOptions = DrawablesColorPalette;
+        ShapeFillColorOptions = DrawablesColorPalette;
+        TextFontColorOptions = DrawablesColorPalette;
+        TextBackgroundColorOptions = DrawablesColorPalette;
         ShapeStrokeWidth = 3;
         ShapeStrokeOpacity = 100;
         ShapeFillOpacity = 100;
+        TextFontColor = DrawablesColorPalette[2]; // Black
+        TextBackgroundColor = DrawablesColorPalette[1]; // White
+        TextFontColorOpacity = 100;
+        TextBackgroundColorOpacity = 100;
+        TextFontFamily = TextDrawable.DefaultFontFamily;
+        TextFontSize = (int)TextDrawable.DefaultFontSize;
+        IsTextFeatureEnabled = _featureAvailability.IsImageEditTextEnabled;
         ZoomPercentage = 100;
         IsAutoZoomLocked = false;
         _operationsUndoStack = [];
@@ -334,6 +402,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth);
         UpdateShapeStrokeOpacityCommand = new RelayCommand<int>(UpdateShapeStrokeOpacity);
         UpdateShapeFillOpacityCommand = new RelayCommand<int>(UpdateShapeFillOpacity);
+        ToggleTextModeCommand = new RelayCommand(ToggleTextMode, () => IsTextFeatureEnabled);
+        UpdateTextFontColorCommand = new RelayCommand<Color>(UpdateTextFontColor, _ => IsTextFeatureEnabled);
+        UpdateTextBackgroundColorCommand = new RelayCommand<Color>(UpdateTextBackgroundColor, _ => IsTextFeatureEnabled);
+        UpdateTextFontColorOpacityCommand = new RelayCommand<int>(UpdateTextFontColorOpacity, _ => IsTextFeatureEnabled);
+        UpdateTextBackgroundColorOpacityCommand = new RelayCommand<int>(UpdateTextBackgroundColorOpacity, _ => IsTextFeatureEnabled);
+        UpdateTextFontFamilyCommand = new RelayCommand<string?>(UpdateTextFontFamily, _ => IsTextFeatureEnabled);
+        UpdateTextFontSizeCommand = new RelayCommand<int>(UpdateTextFontSize, _ => IsTextFeatureEnabled);
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
@@ -426,6 +501,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             {
                 IsInShapesMode = false;
             }
+            if (IsInTextMode)
+            {
+                IsInTextMode = false;
+            }
         }
     }
 
@@ -472,6 +551,16 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateIsInShapesMode(!IsInShapesMode);
     }
 
+    private void ToggleTextMode()
+    {
+        if (!IsTextFeatureEnabled)
+        {
+            return;
+        }
+
+        UpdateIsInTextMode(!IsInTextMode);
+    }
+
     private void UpdateIsInShapesMode(bool value)
     {
         IsInShapesMode = value;
@@ -481,6 +570,36 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             if (IsInCropMode)
             {
                 IsInCropMode = false;
+            }
+            if (ShowChromaKeyOptions)
+            {
+                ShowChromaKeyOptions = false;
+            }
+            if (IsInTextMode)
+            {
+                IsInTextMode = false;
+            }
+        }
+    }
+
+    private void UpdateIsInTextMode(bool value)
+    {
+        if (!IsTextFeatureEnabled)
+        {
+            IsInTextMode = false;
+            return;
+        }
+
+        IsInTextMode = value;
+        if (value)
+        {
+            if (IsInCropMode)
+            {
+                IsInCropMode = false;
+            }
+            if (IsInShapesMode)
+            {
+                IsInShapesMode = false;
             }
             if (ShowChromaKeyOptions)
             {
@@ -519,6 +638,43 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         ShapeFillOpacity = Math.Clamp(value, 0, 100);
         ShapeFillColor = ApplyOpacity(ShapeFillColor, ShapeFillOpacity);
+    }
+
+    private void UpdateTextFontColor(Color value)
+    {
+        TextFontColor = ApplyOpacity(value, TextFontColorOpacity);
+    }
+
+    private void UpdateTextBackgroundColor(Color value)
+    {
+        TextBackgroundColor = ApplyOpacity(value, TextBackgroundColorOpacity);
+    }
+
+    private void UpdateTextFontColorOpacity(int value)
+    {
+        TextFontColorOpacity = Math.Clamp(value, 0, 100);
+        TextFontColor = ApplyOpacity(TextFontColor, TextFontColorOpacity);
+    }
+
+    private void UpdateTextBackgroundColorOpacity(int value)
+    {
+        TextBackgroundColorOpacity = Math.Clamp(value, 0, 100);
+        TextBackgroundColor = ApplyOpacity(TextBackgroundColor, TextBackgroundColorOpacity);
+    }
+
+    private void UpdateTextFontFamily(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        TextFontFamily = value;
+    }
+
+    private void UpdateTextFontSize(int value)
+    {
+        TextFontSize = Math.Clamp(value, 1, 200);
     }
 
     private static Color ApplyOpacity(Color color, int opacityPercentage)
@@ -628,9 +784,56 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
+    public void OnTextBoxDrawn(Vector2 startPoint, Vector2 endPoint)
+    {
+        if (!IsInTextMode || !IsTextFeatureEnabled)
+        {
+            return;
+        }
+
+        float x = Math.Min(startPoint.X, endPoint.X);
+        float y = Math.Min(startPoint.Y, endPoint.Y);
+        float width = Math.Abs(endPoint.X - startPoint.X);
+        float height = Math.Abs(endPoint.Y - startPoint.Y);
+
+        if (width < 2 || height < 2)
+        {
+            return;
+        }
+
+        var newText = new TextDrawable(
+            new Vector2(x, y),
+            new Size((int)Math.Ceiling(width), (int)Math.Ceiling(height)),
+            string.Empty,
+            TextFontColor,
+            TextBackgroundColor,
+            TextFontFamily,
+            TextFontSize);
+
+        var operation = new AddShapeOperation(
+            _drawables,
+            newText,
+            () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
+
+        _operationsUndoStack.Push(operation);
+        _operationsRedoStack.Clear();
+        UpdateUndoRedoStackProperties();
+        operation.Redo();
+    }
+
+    public void OnTextDrawableSelected(TextDrawable text)
+    {
+        TextFontColor = text.Color;
+        TextBackgroundColor = text.BackgroundColor;
+        TextFontColorOpacity = AlphaToOpacityPercentage(text.Color);
+        TextBackgroundColorOpacity = AlphaToOpacityPercentage(text.BackgroundColor);
+        TextFontFamily = text.FontFamily;
+        TextFontSize = Math.Clamp((int)Math.Round(text.FontSize), 1, 200);
+    }
+
     public void OnShapeDeleted(int shapeIndex)
     {
-        if (!IsInShapesMode)
+        if (!IsInShapesMode && !IsInTextMode)
         {
             return;
         }
@@ -657,7 +860,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnShapeModified(int shapeIndex, ModifyShapeOperation.ShapeState oldState, ModifyShapeOperation.ShapeState newState)
     {
-        if (!IsInShapesMode)
+        if (!IsInShapesMode && !IsInTextMode)
         {
             return;
         }
@@ -982,5 +1185,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void RequestZoomAndCenter()
     {
         ForceZoomAndCenterRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private static int AlphaToOpacityPercentage(Color color)
+    {
+        return color.Equals(Color.Transparent)
+            ? 100
+            : (int)Math.Round(color.A / (double)byte.MaxValue * 100);
     }
 }

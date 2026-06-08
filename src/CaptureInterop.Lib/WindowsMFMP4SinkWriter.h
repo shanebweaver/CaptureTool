@@ -71,7 +71,14 @@ public:
     ~WindowsMFMP4SinkWriter() override;
 
     // IMP4SinkWriter implementation
-    bool Initialize(const wchar_t* outputPath, ID3D11Device* device, uint32_t width, uint32_t height, long* outHr = nullptr) override;
+    bool Initialize(
+        const wchar_t* outputPath,
+        ID3D11Device* device,
+        uint32_t width,
+        uint32_t height,
+        long* outHr = nullptr,
+        uint32_t sourceLeft = 0,
+        uint32_t sourceTop = 0) override;
     bool InitializeAudioStream(WAVEFORMATEX* audioFormat, long* outHr = nullptr) override;
     long WriteFrame(ID3D11Texture2D* texture, int64_t relativeTicks) override;
     long WriteAudioSample(std::span<const uint8_t> data, int64_t timestamp) override;

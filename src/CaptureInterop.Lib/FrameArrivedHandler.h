@@ -30,13 +30,6 @@ struct QueuedFrame
 /// Handles new capture frames and forwards them via callback.
 /// Uses a background thread to avoid blocking the event callback thread.
 /// 
-/// Implements Rust Principles:
-/// - Principle #5 (RAII Everything): Destructor calls Stop() to join background thread.
-///   Frame textures use wil::com_ptr for automatic COM Release().
-/// - Principle #6 (No Globals): Callback and clock reader passed via constructor.
-/// - Principle #8 (Thread Safety by Design): Uses mutex and condition variable for thread-safe
-///   queue access. Atomics for state flags (m_running, m_stopped, m_processingStarted).
-/// 
 /// COM pattern:
 /// - Implements IUnknown with manual reference counting (required for COM event handlers)
 /// - Reference count starts at 1 in constructor
@@ -49,8 +42,6 @@ struct QueuedFrame
 /// - ProcessingThreadProc() runs on dedicated background thread
 /// - Queue protected by mutex, signaled via condition variable
 /// - Stop() is idempotent and thread-safe via atomic m_stopped flag
-/// 
-/// See docs/RUST_PRINCIPLES.md for more details.
 /// </summary>
 class FrameArrivedHandler final
     : public ITypedEventHandler<Direct3D11CaptureFramePool*, IInspectable*>

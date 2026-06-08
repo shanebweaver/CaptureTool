@@ -38,15 +38,23 @@ ScreenRecorderImpl::~ScreenRecorderImpl()
     // Principle #5 (RAII Everything): Destructor ensures cleanup even if caller forgets
 }
 
-bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
+bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config, HRESULT* outHr)
 {
-    // Stop any existing session
     StopRecording();
 
-    // Create a new capture session using the factory with the config
-    m_captureSession = m_factory->CreateSession(config);
+    if (!config.IsValid())
+    {
+        if (outHr) *outHr = E_INVALIDARG;
+        return false;
+    }
 
-    // Apply stored callbacks to the new session
+    m_captureSession = m_factory->CreateSession(config);
+    if (!m_captureSession)
+    {
+        if (outHr) *outHr = E_FAIL;
+        return false;
+    }
+
     if (m_videoFrameCallback)
     {
         m_captureSession->SetVideoFrameCallback(m_videoFrameCallback);
@@ -56,63 +64,68 @@ bool ScreenRecorderImpl::StartRecording(const CaptureSessionConfig& config)
         m_captureSession->SetAudioSampleCallback(m_audioSampleCallback);
     }
 
-    // Start the session
     HRESULT hr = S_OK;
     if (!m_captureSession->Start(&hr))
     {
         m_captureSession->Stop();
         m_captureSession.reset();
+        if (outHr) *outHr = hr;
         return false;
     }
 
+    if (outHr) *outHr = S_OK;
     return true;
 }
 
-bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool audioEnabled)
+bool ScreenRecorderImpl::StartRecording(HMONITOR hMonitor, const wchar_t* outputPath, bool audioEnabled, HRESULT* outHr)
 {
-    // Create config and delegate to config-based method
     CaptureSessionConfig config(hMonitor, outputPath, audioEnabled);
-    return StartRecording(config);
+    return StartRecording(config, outHr);
 }
 
-void ScreenRecorderImpl::PauseRecording()
+bool ScreenRecorderImpl::PauseRecording()
 {
-    // Principle #3: Use HasActiveSession() for explicit null checking
-    // Note: Direct access to m_captureSession after check is safe because this class
-    // is documented to require single-threaded access (see class documentation).
-    if (HasActiveSession() && m_captureSession->IsActive())
+    if (!HasActiveSession() || !m_captureSession->IsActive())
     {
-        m_captureSession->Pause();
+        return false;
     }
+
+    m_captureSession->Pause();
+    return true;
 }
 
-void ScreenRecorderImpl::ResumeRecording()
+bool ScreenRecorderImpl::ResumeRecording()
 {
-    // Principle #3: Use HasActiveSession() for explicit null checking
-    if (HasActiveSession() && m_captureSession->IsActive())
+    if (!HasActiveSession() || !m_captureSession->IsActive())
     {
-        m_captureSession->Resume();
+        return false;
     }
+
+    m_captureSession->Resume();
+    return true;
 }
 
-void ScreenRecorderImpl::StopRecording()
+bool ScreenRecorderImpl::StopRecording()
 {
-    // Principle #3: Use HasActiveSession() for explicit null checking
-    if (HasActiveSession())
+    if (!HasActiveSession())
     {
-        m_captureSession->Stop();
-        m_captureSession.reset();
-        // Principle #5 (RAII): Session cleanup happens automatically via unique_ptr
+        return false;
     }
+
+    m_captureSession->Stop();
+    m_captureSession.reset();
+    return true;
 }
 
-void ScreenRecorderImpl::ToggleAudioCapture(bool enabled)
+bool ScreenRecorderImpl::SetAudioCaptureEnabled(bool enabled)
 {
-    // Principle #3: Use HasActiveSession() for explicit null checking
-    if (HasActiveSession() && m_captureSession->IsActive())
+    if (!HasActiveSession() || !m_captureSession->IsActive())
     {
-        m_captureSession->ToggleAudioCapture(enabled);
+        return false;
     }
+
+    m_captureSession->ToggleAudioCapture(enabled);
+    return true;
 }
 
 void ScreenRecorderImpl::SetVideoFrameCallback(VideoFrameCallback callback)

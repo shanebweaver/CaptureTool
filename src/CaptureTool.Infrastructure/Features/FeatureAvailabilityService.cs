@@ -19,4 +19,6 @@ public sealed class FeatureAvailabilityService : IFeatureAvailabilityService
     public bool IsAudioInputSelectionEnabled => _featureManager.IsEnabled(AppFeatures.Feature_AudioInputSelection);
 
     public bool IsImageEditChromaKeyEnabled => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_ChromaKey);
+
+    public bool IsImageEditTextEnabled => _featureManager.IsEnabled(AppFeatures.Feature_ImageEdit_Text);
 }

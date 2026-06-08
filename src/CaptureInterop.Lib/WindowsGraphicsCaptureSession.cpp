@@ -158,7 +158,7 @@ WindowsGraphicsCaptureSession::~WindowsGraphicsCaptureSession()
     //
     // All COM objects use wil::com_ptr for automatic reference counting.
     // No manual delete, free(), or Release() calls needed - the type system guarantees
-    // proper cleanup through RAII. See docs/RUST_PRINCIPLES.md principle #5.
+    // proper cleanup through RAII.
 }
 
 bool WindowsGraphicsCaptureSession::Initialize(HRESULT* outHr)
@@ -468,7 +468,14 @@ bool WindowsGraphicsCaptureSession::InitializeSinkWriter(HRESULT* outHr)
     }
     
     // Initialize video stream
-    if (!m_sinkWriter->Initialize(m_config.outputPath.c_str(), device, width, height, &hr))
+    uint32_t sourceLeft = m_config.targetType == CaptureTargetType::Rectangle
+        ? static_cast<uint32_t>(m_config.sourceLeft)
+        : 0;
+    uint32_t sourceTop = m_config.targetType == CaptureTargetType::Rectangle
+        ? static_cast<uint32_t>(m_config.sourceTop)
+        : 0;
+
+    if (!m_sinkWriter->Initialize(m_config.outputPath.c_str(), device, width, height, &hr, sourceLeft, sourceTop))
     {
         if (outHr) *outHr = hr;
         return false;
