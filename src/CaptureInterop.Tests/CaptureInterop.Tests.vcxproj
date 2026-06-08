@@ -34,7 +34,6 @@
     <VcpkgTriplet Condition="'$(Platform)'=='ARM64'">arm64-windows</VcpkgTriplet>
     <VcpkgRoot>$(SolutionDir)\vcpkg</VcpkgRoot>
     <VcpkgInstalledDir>$(SolutionDir)\vcpkg_installed</VcpkgInstalledDir>
-    <VcpkgXUseBuiltInApplocalDeps>true</VcpkgXUseBuiltInApplocalDeps>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
@@ -64,7 +63,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(VCInstallDir)UnitTest\include;$(SolutionDir)src\CaptureInterop.Lib;$(SolutionDir)src\CaptureInterop;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VCInstallDir)UnitTest\include;$(SolutionDir)src\CaptureInterop.Lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UseFullPaths>true</UseFullPaths>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -111,46 +110,11 @@
     <ClCompile Include="ResultTests.cpp" />
     <ClCompile Include="ShutdownRaceConditionTests.cpp" />
     <ClCompile Include="VideoCaptureSourceStopTests.cpp" />
-    <ClCompile Include="V2DesktopCaptureProviderTests.cpp" />
-    <ClCompile Include="V2DesktopSourceConfigTests.cpp" />
-    <ClCompile Include="V2NativeAbiFoundationTests.cpp" />
-    <ClCompile Include="V2NativeCallbackRegistrationTests.cpp" />
-    <ClCompile Include="V2NativeDtoValidationTests.cpp" />
-    <ClCompile Include="V2NativeErrorReportingTests.cpp" />
-    <ClCompile Include="V2NativeLifecycleCommandTests.cpp" />
-    <ClCompile Include="V2OwnedAudioSampleBuilderTests.cpp" />
-    <ClCompile Include="V2WasapiAudioClientFactoryTests.cpp" />
-    <ClCompile Include="V2WasapiAudioFormatMapperTests.cpp" />
-    <ClCompile Include="V2WasapiLoopbackAudioSourceTests.cpp" />
-    <ClCompile Include="V2WindowsGraphicsCaptureProviderTests.cpp" />
-    <ClCompile Include="V2WindowsDesktopVideoSourceTests.cpp" />
-    <ClCompile Include="V2CoreAudioControlProcessorTests.cpp" />
-    <ClCompile Include="V2CoreCapturePipelineConfigTests.cpp" />
-    <ClCompile Include="V2CoreCapturePipelineConfigValidatorTests.cpp" />
-    <ClCompile Include="V2CoreCapturePipelineSessionTests.cpp" />
-    <ClCompile Include="V2CoreCapturePipelineSessionRoutingTests.cpp" />
-    <ClCompile Include="V2CoreFakeComponentsTests.cpp" />
-    <ClCompile Include="V2CoreMediaTypesTests.cpp" />
-    <ClCompile Include="V2MediaFoundationFileSinkTests.cpp" />
-    <ClCompile Include="V2MediaFoundationSinkCapabilitiesTests.cpp" />
-    <ClCompile Include="V2MediaFoundationRuntimeTests.cpp" />
-    <ClCompile Include="V2CoreOutputProfileResolverTests.cpp" />
-    <ClCompile Include="V2CorePipelineInterfacesTests.cpp" />
-    <ClCompile Include="V2CorePipelineStateMachineTests.cpp" />
-    <ClCompile Include="V2ProductionCapturePipelineFactoriesTests.cpp" />
-    <ClCompile Include="V2CorePrimitiveValueObjectsTests.cpp" />
-    <ClCompile Include="V2CoreRecordingClockTests.cpp" />
-    <ClCompile Include="V2CoreResultDiagnosticsTests.cpp" />
-    <ClCompile Include="V2CoreSessionDiagnosticsTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="V2CoreTestComponents.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj">
-      <Project>{e576bd23-e4b5-4a1e-a385-87cb932e6d32}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\CaptureInterop.Lib\CaptureInterop.Lib.vcxproj">
       <Project>{8B5E7A7C-3D1F-4E9A-9C2B-1F6D8E3A5B4C}</Project>
     </ProjectReference>
@@ -158,9 +122,6 @@
   <ItemGroup>
     <None Include="CaptureInterop.Tests.vcxproj.new" />
   </ItemGroup>
-  <Target Name="CopyCaptureInteropDllForNativeTests" AfterTargets="Build" Condition="Exists('$(SolutionDir)bin\$(Configuration)\$(Platform)\CaptureInterop.dll')">
-    <Copy SourceFiles="$(SolutionDir)bin\$(Configuration)\$(Platform)\CaptureInterop.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
-  </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

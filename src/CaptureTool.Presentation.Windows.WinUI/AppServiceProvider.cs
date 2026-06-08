@@ -1,5 +1,4 @@
 using CaptureTool.Application.DependencyInjection;
-using CaptureTool.FeatureManagement;
 using CaptureTool.FeatureManagement.DependencyInjection;
 using CaptureTool.Infrastructure.Capture.Windows.DependencyInjection;
 using CaptureTool.Infrastructure.DependencyInjection;
@@ -29,9 +28,7 @@ public partial class AppServiceProvider : IServiceProvider, IDisposable
         collection.AddWindowsServices(App.Current.DispatcherQueue);
 
         // Windows domains
-        var featureManager = new MicrosoftFeatureManager();
-        collection.AddWindowsCaptureDomains(options =>
-            options.UseCaptureV2ScreenRecorder = featureManager.IsEnabled(AppFeatures.Feature_Capture_V2));
+        collection.AddWindowsCaptureDomains();
         collection.AddWindowsEditDomains();
 
         // Application layer
