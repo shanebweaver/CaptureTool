@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Cancellation;
-using CaptureTool.Application.Abstractions.Features;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Features.Store;
@@ -24,6 +23,20 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
 {
+    private const int MinimumShapeStrokeWidth = 1;
+    private const int MaximumShapeStrokeWidth = 100;
+    private const int MinimumTextFontSize = 1;
+    private const int MaximumTextFontSize = 400;
+
+    private enum ImageEditMode
+    {
+        None,
+        Crop,
+        Shapes,
+        Text,
+        ChromaKey
+    }
+
     private static readonly Color[] DrawablesColorPalette = [
         Color.Transparent,
         Color.FromArgb(31, 41, 55), // White
@@ -51,13 +64,15 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageCanvasExporter _imageCanvasExporter;
     private readonly IChromaKeyService _chromaKeyService;
     private readonly IFilePickerService _filePickerService;
-    private readonly IFeatureAvailabilityService _featureAvailability;
+    private readonly IChromaKeyFeatureAvailability _chromaKeyFeatureAvailability;
     private readonly IShareService _shareService;
     private readonly ITelemetryService _telemetryService;
 
     private ImageDrawable? _imageDrawable;
     private readonly Stack<CanvasOperation> _operationsUndoStack;
     private readonly Stack<CanvasOperation> _operationsRedoStack;
+    private ImageEditMode _activeEditMode;
+    private ChromaKeyOperation.ChromaKeyState? _pendingChromaKeyInteractionState;
 
     public event EventHandler? InvalidateCanvasRequested;
     public event EventHandler? ForceZoomAndCenterRequested;
@@ -164,12 +179,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     }
 
     public bool IsInTextMode
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public bool IsTextFeatureEnabled
     {
         get;
         private set => Set(ref field, value);
@@ -331,7 +340,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageCanvasExporter imageCanvasExporter,
         IFilePickerService filePickerService,
         IChromaKeyService chromaKeyService,
-        IFeatureAvailabilityService featureAvailability,
+        IChromaKeyFeatureAvailability chromaKeyFeatureAvailability,
         IShareService shareService)
     {
         _localizationService = localizationService;
@@ -341,7 +350,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _imageCanvasPrinter = imageCanvasPrinter;
         _chromaKeyService = chromaKeyService;
         _filePickerService = filePickerService;
-        _featureAvailability = featureAvailability;
+        _chromaKeyFeatureAvailability = chromaKeyFeatureAvailability;
         _shareService = shareService;
         _imageCanvasExporter = imageCanvasExporter;
         _telemetryService = telemetryService;
@@ -372,7 +381,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextBackgroundColorOpacity = 100;
         TextFontFamily = TextDrawable.DefaultFontFamily;
         TextFontSize = (int)TextDrawable.DefaultFontSize;
-        IsTextFeatureEnabled = _featureAvailability.IsImageEditTextEnabled;
         ZoomPercentage = 100;
         IsAutoZoomLocked = false;
         _operationsUndoStack = [];
@@ -389,7 +397,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         FlipVerticalCommand = new RelayCommand(() => Flip(FlipDirection.Vertical));
         PrintCommand = new AsyncRelayCommand(PrintAsync);
         ShareCommand = new AsyncRelayCommand(ShareAsync);
-        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, (c) => _featureAvailability.IsImageEditChromaKeyEnabled);
+        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, (c) => _chromaKeyFeatureAvailability.IsChromaKeyEnabled);
         UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
         UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
         UpdateShowChromaKeyOptionsCommand = new RelayCommand<bool>(UpdateShowChromaKeyOptions);
@@ -402,13 +410,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth);
         UpdateShapeStrokeOpacityCommand = new RelayCommand<int>(UpdateShapeStrokeOpacity);
         UpdateShapeFillOpacityCommand = new RelayCommand<int>(UpdateShapeFillOpacity);
-        ToggleTextModeCommand = new RelayCommand(ToggleTextMode, () => IsTextFeatureEnabled);
-        UpdateTextFontColorCommand = new RelayCommand<Color>(UpdateTextFontColor, _ => IsTextFeatureEnabled);
-        UpdateTextBackgroundColorCommand = new RelayCommand<Color>(UpdateTextBackgroundColor, _ => IsTextFeatureEnabled);
-        UpdateTextFontColorOpacityCommand = new RelayCommand<int>(UpdateTextFontColorOpacity, _ => IsTextFeatureEnabled);
-        UpdateTextBackgroundColorOpacityCommand = new RelayCommand<int>(UpdateTextBackgroundColorOpacity, _ => IsTextFeatureEnabled);
-        UpdateTextFontFamilyCommand = new RelayCommand<string?>(UpdateTextFontFamily, _ => IsTextFeatureEnabled);
-        UpdateTextFontSizeCommand = new RelayCommand<int>(UpdateTextFontSize, _ => IsTextFeatureEnabled);
+        ToggleTextModeCommand = new RelayCommand(ToggleTextMode);
+        UpdateTextFontColorCommand = new RelayCommand<Color>(UpdateTextFontColor);
+        UpdateTextBackgroundColorCommand = new RelayCommand<Color>(UpdateTextBackgroundColor);
+        UpdateTextFontColorOpacityCommand = new RelayCommand<int>(UpdateTextFontColorOpacity);
+        UpdateTextBackgroundColorOpacityCommand = new RelayCommand<int>(UpdateTextBackgroundColorOpacity);
+        UpdateTextFontFamilyCommand = new RelayCommand<string?>(UpdateTextFontFamily);
+        UpdateTextFontSizeCommand = new RelayCommand<int>(UpdateTextFontSize);
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
@@ -426,13 +434,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             ImageFile = imageFile;
             ImageSize = _filePickerService.GetImageFileSize(imageFile);
             CropRect = new(Point.Empty, ImageSize);
+            ApplyImageSizeBasedDefaults(ImageSize);
 
             _imageDrawable = new(topLeft, imageFile, ImageSize);
             _drawables.Add(_imageDrawable);
 
-            if (_featureAvailability.IsImageEditChromaKeyEnabled)
+            if (_chromaKeyFeatureAvailability.IsChromaKeyEnabled)
             {
-                bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
+                bool isChromaKeyAddOnOwned = true;// await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
                 IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
                 if (isChromaKeyAddOnOwned)
                 {
@@ -462,6 +471,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public override void Dispose()
     {
         _imageDrawable = null;
+        _pendingChromaKeyInteractionState = null;
+        SetActiveEditMode(ImageEditMode.None);
         CropRect = Rectangle.Empty;
         ImageSize = Size.Empty;
         Orientation = ImageOrientation.RotateNoneFlipNone;
@@ -472,13 +483,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateDesaturation(int value)
     {
-        ChromaKeyDesaturation = value;
+        ChromaKeyDesaturation = Math.Clamp(value, 0, 100);
         UpdateChromaKeyEffectValues();
     }
 
     private void UpdateTolerance(int value)
     {
-        ChromaKeyTolerance = value;
+        ChromaKeyTolerance = Math.Clamp(value, 0, 100);
         UpdateChromaKeyEffectValues();
     }
 
@@ -488,40 +499,49 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateChromaKeyColor(value);
     }
 
+    public void BeginChromaKeyInteraction()
+    {
+        _pendingChromaKeyInteractionState ??= CaptureChromaKeyState();
+    }
+
+    public void CompleteChromaKeyInteraction()
+    {
+        if (_pendingChromaKeyInteractionState is not { } oldState)
+        {
+            return;
+        }
+
+        _pendingChromaKeyInteractionState = null;
+        ChromaKeyOperation.ChromaKeyState newState = CaptureChromaKeyState();
+
+        if (oldState.Equals(newState))
+        {
+            return;
+        }
+
+        _operationsUndoStack.Push(new ChromaKeyOperation(
+            ApplyChromaKeyState,
+            oldState,
+            newState));
+        _operationsRedoStack.Clear();
+        UpdateUndoRedoStackProperties();
+    }
+
     private void UpdateShowChromaKeyOptions(bool value)
     {
-        ShowChromaKeyOptions = value;
         if (value)
         {
-            if (IsInCropMode)
-            {
-                IsInCropMode = false;
-            }
-            if (IsInShapesMode)
-            {
-                IsInShapesMode = false;
-            }
-            if (IsInTextMode)
-            {
-                IsInTextMode = false;
-            }
+            SetActiveEditMode(ImageEditMode.ChromaKey);
+        }
+        else if (_activeEditMode == ImageEditMode.ChromaKey)
+        {
+            SetActiveEditMode(ImageEditMode.None);
         }
     }
 
     private void UpdateIsInCropMode(bool value)
     {
-        IsInCropMode = value;
-        if (value)
-        {
-            if (ShowChromaKeyOptions)
-            {
-                ShowChromaKeyOptions = false;
-            }
-            if (IsInShapesMode)
-            {
-                IsInShapesMode = false;
-            }
-        }
+        SetActiveEditMode(value ? ImageEditMode.Crop : ImageEditMode.None);
     }
 
     private async Task CopyAsync()
@@ -553,59 +573,31 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void ToggleTextMode()
     {
-        if (!IsTextFeatureEnabled)
-        {
-            return;
-        }
-
         UpdateIsInTextMode(!IsInTextMode);
     }
 
     private void UpdateIsInShapesMode(bool value)
     {
-        IsInShapesMode = value;
-        if (value)
-        {
-            // Disable other modes when shapes mode is enabled
-            if (IsInCropMode)
-            {
-                IsInCropMode = false;
-            }
-            if (ShowChromaKeyOptions)
-            {
-                ShowChromaKeyOptions = false;
-            }
-            if (IsInTextMode)
-            {
-                IsInTextMode = false;
-            }
-        }
+        SetActiveEditMode(value ? ImageEditMode.Shapes : ImageEditMode.None);
     }
 
     private void UpdateIsInTextMode(bool value)
     {
-        if (!IsTextFeatureEnabled)
+        SetActiveEditMode(value ? ImageEditMode.Text : ImageEditMode.None);
+    }
+
+    private void SetActiveEditMode(ImageEditMode mode)
+    {
+        if (_activeEditMode == mode)
         {
-            IsInTextMode = false;
             return;
         }
 
-        IsInTextMode = value;
-        if (value)
-        {
-            if (IsInCropMode)
-            {
-                IsInCropMode = false;
-            }
-            if (IsInShapesMode)
-            {
-                IsInShapesMode = false;
-            }
-            if (ShowChromaKeyOptions)
-            {
-                ShowChromaKeyOptions = false;
-            }
-        }
+        _activeEditMode = mode;
+        IsInCropMode = mode == ImageEditMode.Crop;
+        IsInShapesMode = mode == ImageEditMode.Shapes;
+        IsInTextMode = mode == ImageEditMode.Text;
+        ShowChromaKeyOptions = mode == ImageEditMode.ChromaKey;
     }
 
     private void UpdateSelectedShapeType(ShapeType value)
@@ -625,7 +617,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateShapeStrokeWidth(int value)
     {
-        ShapeStrokeWidth = value;
+        ShapeStrokeWidth = Math.Clamp(value, MinimumShapeStrokeWidth, MaximumShapeStrokeWidth);
     }
 
     private void UpdateShapeStrokeOpacity(int value)
@@ -674,7 +666,29 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateTextFontSize(int value)
     {
-        TextFontSize = Math.Clamp(value, 1, 200);
+        TextFontSize = Math.Clamp(value, MinimumTextFontSize, MaximumTextFontSize);
+    }
+
+    private void ApplyImageSizeBasedDefaults(Size imageSize)
+    {
+        int largestEdge = Math.Max(imageSize.Width, imageSize.Height);
+        int smallestEdge = Math.Min(imageSize.Width, imageSize.Height);
+
+        if (largestEdge > 0)
+        {
+            ShapeStrokeWidth = Math.Clamp(
+                (int)Math.Round(largestEdge / 900d),
+                3,
+                MaximumShapeStrokeWidth);
+        }
+
+        if (smallestEdge > 0)
+        {
+            TextFontSize = Math.Clamp(
+                (int)Math.Round(smallestEdge / 40d),
+                (int)TextDrawable.DefaultFontSize,
+                MaximumTextFontSize);
+        }
     }
 
     private static Color ApplyOpacity(Color color, int opacityPercentage)
@@ -786,7 +800,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnTextBoxDrawn(Vector2 startPoint, Vector2 endPoint)
     {
-        if (!IsInTextMode || !IsTextFeatureEnabled)
+        if (!IsInTextMode)
         {
             return;
         }
@@ -828,7 +842,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextFontColorOpacity = AlphaToOpacityPercentage(text.Color);
         TextBackgroundColorOpacity = AlphaToOpacityPercentage(text.BackgroundColor);
         TextFontFamily = text.FontFamily;
-        TextFontSize = Math.Clamp((int)Math.Round(text.FontSize), 1, 200);
+        TextFontSize = Math.Clamp((int)Math.Round(text.FontSize), MinimumTextFontSize, MaximumTextFontSize);
     }
 
     public void OnShapeDeleted(int shapeIndex)
@@ -928,12 +942,30 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateChromaKeyColor(Color color)
     {
-        if (!_featureAvailability.IsImageEditChromaKeyEnabled)
+        if (!_chromaKeyFeatureAvailability.IsChromaKeyEnabled)
         {
             return;
         }
 
         ChromaKeyColor = color;
+        UpdateChromaKeyEffectValues();
+    }
+
+    private ChromaKeyOperation.ChromaKeyState CaptureChromaKeyState()
+    {
+        return new(
+            SelectedChromaKeyColorOption,
+            ChromaKeyColor,
+            ChromaKeyTolerance,
+            ChromaKeyDesaturation);
+    }
+
+    private void ApplyChromaKeyState(ChromaKeyOperation.ChromaKeyState state)
+    {
+        SelectedChromaKeyColorOption = state.SelectedColorOptionIndex;
+        ChromaKeyColor = state.Color;
+        ChromaKeyTolerance = state.Tolerance;
+        ChromaKeyDesaturation = state.Desaturation;
         UpdateChromaKeyEffectValues();
     }
 

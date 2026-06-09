@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Features;
 using CaptureTool.Application.Abstractions.Features.About.LeaveAboutPage;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Localization;
@@ -39,7 +39,7 @@ public sealed class ViewModelContractTests
     {
         var openSelectionOverlay = new Mock<IOpenSelectionOverlayUseCase>();
         var openAudioCapturePage = Mock.Of<IOpenAudioCapturePageUseCase>();
-        var featureAvailability = new Mock<IFeatureAvailabilityService>();
+        var featureAvailability = new Mock<IAudioCaptureFeatureAvailability>();
 
         var viewModel = new HomePageViewModel(openSelectionOverlay.Object, openAudioCapturePage, featureAvailability.Object, Mock.Of<ITelemetryService>());
 

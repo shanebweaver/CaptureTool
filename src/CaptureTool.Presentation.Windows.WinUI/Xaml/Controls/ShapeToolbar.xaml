@@ -29,8 +29,14 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid>
-        <StackPanel Orientation="Horizontal" Spacing="4">
+    <Border
+        Padding="8,6"
+        Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
+        BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+        BorderThickness="1"
+        CornerRadius="8">
+        <Grid>
+            <StackPanel Orientation="Horizontal" Spacing="4">
             <!--  Shape Type  -->
             <ComboBox
                 x:Name="ShapeTypeComboBox"
@@ -165,7 +171,8 @@
                 MinHeight="34"
                 Padding="8,4"
                 Background="Transparent"
-                BorderBrush="Transparent">
+                BorderBrush="Transparent"
+                IsEnabled="{x:Bind IsFillColorEnabled, Mode=OneWay}">
                 <Grid VerticalAlignment="Center" ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -211,6 +218,7 @@
                     </Flyout>
                 </Button.Flyout>
             </Button>
-        </StackPanel>
-    </Grid>
+            </StackPanel>
+        </Grid>
+    </Border>
 </local:UserControlBase>

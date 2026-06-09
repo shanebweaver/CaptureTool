@@ -17,8 +17,14 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid>
-        <StackPanel Orientation="Horizontal" Spacing="4">
+    <Border
+        Padding="8,6"
+        Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
+        BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+        BorderThickness="1"
+        CornerRadius="8">
+        <Grid>
+            <StackPanel Orientation="Horizontal" Spacing="4">
             <!--  Key color  -->
             <Button
                 x:Name="KeyColorButton"
@@ -84,6 +90,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Uid="ChromaKeyToolbar_Tolerance" VerticalAlignment="Center" />
                 <Slider
+                    x:Name="ToleranceSlider"
                     Grid.Column="1"
                     Width="150"
                     Margin="8,0"
@@ -121,6 +128,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Uid="ChromaKeyToolbar_Desaturation" VerticalAlignment="Center" />
                 <Slider
+                    x:Name="DesaturationSlider"
                     Grid.Column="1"
                     Width="150"
                     Margin="8,0"
@@ -145,6 +153,7 @@
                     ValueChanged="DesaturationNumberBox_ValueChanged"
                     Value="{x:Bind Desaturation, Mode=OneWay}" />
             </Grid>
-        </StackPanel>
-    </Grid>
+            </StackPanel>
+        </Grid>
+    </Border>
 </local:UserControlBase>
