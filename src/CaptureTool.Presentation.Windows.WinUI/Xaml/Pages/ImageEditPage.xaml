@@ -146,74 +146,6 @@
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
         </CommandBar>
 
-        <Grid Padding="12,0" Row="1">
-            <!--  Chroma key options  -->
-            <Grid
-                Margin="0,0,0,6"
-                HorizontalAlignment="Center"
-                Visibility="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}">
-                <controls:ChromaKeyToolbar
-                    HorizontalAlignment="Stretch"
-                    ColorOptions="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
-                    ChromaKeyInteractionCompleted="ChromaKeyToolbar_ChromaKeyInteractionCompleted"
-                    ChromaKeyInteractionStarted="ChromaKeyToolbar_ChromaKeyInteractionStarted"
-                    Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=OneWay}"
-                    DesaturationChanged="ChromaKeyToolbar_DesaturationChanged"
-                    SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=OneWay}"
-                    SelectedColorOptionIndexChanged="ChromaKeyToolbar_SelectedColorOptionIndexChanged"
-                    Tolerance="{x:Bind ViewModel.ChromaKeyTolerance, Mode=OneWay}"
-                    ToleranceChanged="ChromaKeyToolbar_ToleranceChanged" />
-            </Grid>
-
-            <!--  Shapes options  -->
-            <Grid
-                Margin="0,0,0,6"
-                HorizontalAlignment="Center"
-                Visibility="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}">
-                <controls:ShapeToolbar
-                    FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
-                    FillColorChanged="ShapeToolbar_FillColorChanged"
-                    FillColorOptions="{x:Bind ViewModel.ShapeFillColorOptions, Mode=OneWay}"
-                    FillOpacity="{x:Bind ViewModel.ShapeFillOpacity, Mode=OneWay}"
-                    FillOpacityChanged="ShapeToolbar_FillOpacityChanged"
-                    SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay, Converter={StaticResource ShapeTypeToIntConverter}}"
-                    SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
-                    StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
-                    StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
-                    StrokeColorOptions="{x:Bind ViewModel.ShapeStrokeColorOptions, Mode=OneWay}"
-                    StrokeOpacity="{x:Bind ViewModel.ShapeStrokeOpacity, Mode=OneWay}"
-                    StrokeOpacityChanged="ShapeToolbar_StrokeOpacityChanged"
-                    StyleInteractionCompleted="Toolbar_StyleInteractionCompleted"
-                    StyleInteractionStarted="Toolbar_StyleInteractionStarted"
-                    StrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
-                    StrokeWidthChanged="ShapeToolbar_StrokeWidthChanged" />
-            </Grid>
-
-            <!--  Text options  -->
-            <Grid
-                Margin="0,0,0,6"
-                HorizontalAlignment="Center"
-                Visibility="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}">
-                <controls:TextToolbar
-                    TextBackgroundColor="{x:Bind ViewModel.TextBackgroundColor, Mode=OneWay}"
-                    TextBackgroundColorChanged="TextToolbar_BackgroundColorChanged"
-                    TextBackgroundColorOpacity="{x:Bind ViewModel.TextBackgroundColorOpacity, Mode=OneWay}"
-                    TextBackgroundColorOpacityChanged="TextToolbar_BackgroundColorOpacityChanged"
-                    TextBackgroundColorOptions="{x:Bind ViewModel.TextBackgroundColorOptions, Mode=OneWay}"
-                    TextFontColor="{x:Bind ViewModel.TextFontColor, Mode=OneWay}"
-                    TextFontColorChanged="TextToolbar_FontColorChanged"
-                    TextFontColorOpacity="{x:Bind ViewModel.TextFontColorOpacity, Mode=OneWay}"
-                    TextFontColorOpacityChanged="TextToolbar_FontColorOpacityChanged"
-                    TextFontColorOptions="{x:Bind ViewModel.TextFontColorOptions, Mode=OneWay}"
-                    TextFontFamily="{x:Bind ViewModel.TextFontFamily, Mode=OneWay}"
-                    TextFontFamilyChanged="TextToolbar_FontFamilyChanged"
-                    TextFontSize="{x:Bind ViewModel.TextFontSize, Mode=OneWay}"
-                    TextFontSizeChanged="TextToolbar_FontSizeChanged"
-                    StyleInteractionCompleted="Toolbar_StyleInteractionCompleted"
-                    StyleInteractionStarted="Toolbar_StyleInteractionStarted" />
-            </Grid>
-        </Grid>
-
         <!--  Canvas  -->
         <Grid
             x:Name="CanvasContainer"
@@ -246,6 +178,86 @@
                 TextFontFamily="{x:Bind ViewModel.TextFontFamily, Mode=OneWay}"
                 TextFontSize="{x:Bind ViewModel.TextFontSize, Mode=OneWay}"
                 TextForegroundColor="{x:Bind ViewModel.TextFontColor, Mode=OneWay}" />
+
+            <Grid
+                x:Name="FloatingToolbarLayer"
+                Margin="12,8,12,0"
+                HorizontalAlignment="stretch"
+                VerticalAlignment="Top">
+                <!--  Chroma key options  -->
+                <controls:ChromaKeyToolbar
+                    x:Name="ChromaKeyToolbarHost"
+                    HorizontalAlignment="Center"
+                    ChromaKeyInteractionCompleted="ChromaKeyToolbar_ChromaKeyInteractionCompleted"
+                    ChromaKeyInteractionStarted="ChromaKeyToolbar_ChromaKeyInteractionStarted"
+                    ColorOptions="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
+                    Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=OneWay}"
+                    DesaturationChanged="ChromaKeyToolbar_DesaturationChanged"
+                    Opacity="0"
+                    SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=OneWay}"
+                    SelectedColorOptionIndexChanged="ChromaKeyToolbar_SelectedColorOptionIndexChanged"
+                    Tolerance="{x:Bind ViewModel.ChromaKeyTolerance, Mode=OneWay}"
+                    ToleranceChanged="ChromaKeyToolbar_ToleranceChanged"
+                    Visibility="Collapsed">
+                    <controls:ChromaKeyToolbar.RenderTransform>
+                        <TranslateTransform Y="-8" />
+                    </controls:ChromaKeyToolbar.RenderTransform>
+                </controls:ChromaKeyToolbar>
+
+                <!--  Shapes options  -->
+                <controls:ShapeToolbar
+                    x:Name="ShapeToolbarHost"
+                    HorizontalAlignment="Center"
+                    FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
+                    FillColorChanged="ShapeToolbar_FillColorChanged"
+                    FillColorOptions="{x:Bind ViewModel.ShapeFillColorOptions, Mode=OneWay}"
+                    FillOpacity="{x:Bind ViewModel.ShapeFillOpacity, Mode=OneWay}"
+                    FillOpacityChanged="ShapeToolbar_FillOpacityChanged"
+                    Opacity="0"
+                    SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay, Converter={StaticResource ShapeTypeToIntConverter}}"
+                    SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
+                    StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
+                    StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
+                    StrokeColorOptions="{x:Bind ViewModel.ShapeStrokeColorOptions, Mode=OneWay}"
+                    StrokeOpacity="{x:Bind ViewModel.ShapeStrokeOpacity, Mode=OneWay}"
+                    StrokeOpacityChanged="ShapeToolbar_StrokeOpacityChanged"
+                    StrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
+                    StrokeWidthChanged="ShapeToolbar_StrokeWidthChanged"
+                    StyleInteractionCompleted="Toolbar_StyleInteractionCompleted"
+                    StyleInteractionStarted="Toolbar_StyleInteractionStarted"
+                    Visibility="Collapsed">
+                    <controls:ShapeToolbar.RenderTransform>
+                        <TranslateTransform Y="-8" />
+                    </controls:ShapeToolbar.RenderTransform>
+                </controls:ShapeToolbar>
+
+                <!--  Text options  -->
+                <controls:TextToolbar
+                    x:Name="TextToolbarHost"
+                    HorizontalAlignment="Center"
+                    Opacity="0"
+                    StyleInteractionCompleted="Toolbar_StyleInteractionCompleted"
+                    StyleInteractionStarted="Toolbar_StyleInteractionStarted"
+                    TextBackgroundColor="{x:Bind ViewModel.TextBackgroundColor, Mode=OneWay}"
+                    TextBackgroundColorChanged="TextToolbar_BackgroundColorChanged"
+                    TextBackgroundColorOpacity="{x:Bind ViewModel.TextBackgroundColorOpacity, Mode=OneWay}"
+                    TextBackgroundColorOpacityChanged="TextToolbar_BackgroundColorOpacityChanged"
+                    TextBackgroundColorOptions="{x:Bind ViewModel.TextBackgroundColorOptions, Mode=OneWay}"
+                    TextFontColor="{x:Bind ViewModel.TextFontColor, Mode=OneWay}"
+                    TextFontColorChanged="TextToolbar_FontColorChanged"
+                    TextFontColorOpacity="{x:Bind ViewModel.TextFontColorOpacity, Mode=OneWay}"
+                    TextFontColorOpacityChanged="TextToolbar_FontColorOpacityChanged"
+                    TextFontColorOptions="{x:Bind ViewModel.TextFontColorOptions, Mode=OneWay}"
+                    TextFontFamily="{x:Bind ViewModel.TextFontFamily, Mode=OneWay}"
+                    TextFontFamilyChanged="TextToolbar_FontFamilyChanged"
+                    TextFontSize="{x:Bind ViewModel.TextFontSize, Mode=OneWay}"
+                    TextFontSizeChanged="TextToolbar_FontSizeChanged"
+                    Visibility="Collapsed">
+                    <controls:TextToolbar.RenderTransform>
+                        <TranslateTransform Y="-8" />
+                    </controls:TextToolbar.RenderTransform>
+                </controls:TextToolbar>
+            </Grid>
         </Grid>
 
         <ProgressRing

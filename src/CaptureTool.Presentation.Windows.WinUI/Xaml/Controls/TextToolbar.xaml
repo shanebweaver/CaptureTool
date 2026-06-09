@@ -17,8 +17,14 @@
         </Style>
     </UserControl.Resources>
 
-    <StackPanel Orientation="Horizontal" Spacing="4">
-        <Button
+    <Border
+        Padding="8,6"
+        Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
+        BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+        BorderThickness="1"
+        CornerRadius="8">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+            <Button
             x:Name="FontColorButton"
             x:Uid="TextToolbar_FontColorButton"
             MinWidth="68"
@@ -126,7 +132,7 @@
             </Button.Flyout>
         </Button>
 
-        <ComboBox
+            <ComboBox
             x:Name="FontFamilyComboBox"
             x:Uid="TextToolbar_FontFamilyComboBox"
             Width="180"
@@ -135,7 +141,7 @@
             SelectedItem="{x:Bind TextFontFamily, Mode=OneWay}"
             SelectionChanged="FontFamilyComboBox_SelectionChanged" />
 
-        <NumberBox
+            <NumberBox
             x:Name="FontSizeNumberBox"
             x:Uid="TextToolbar_FontSizeNumberBox"
             MinWidth="96"
@@ -147,6 +153,7 @@
             SpinButtonPlacementMode="Inline"
             LostFocus="FontSizeNumberBox_LostFocus"
             ValueChanged="FontSizeNumberBox_ValueChanged"
-            Value="{x:Bind TextFontSize, Mode=OneWay}" />
-    </StackPanel>
+                Value="{x:Bind TextFontSize, Mode=OneWay}" />
+        </StackPanel>
+    </Border>
 </local:UserControlBase>
