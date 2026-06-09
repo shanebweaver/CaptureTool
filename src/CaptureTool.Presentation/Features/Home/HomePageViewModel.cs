@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Features;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Telemetry;
@@ -20,10 +20,10 @@ public sealed partial class HomePageViewModel : ViewModelBase
     public HomePageViewModel(
         IOpenSelectionOverlayUseCase openSelectionOverlayCommand,
         IOpenAudioCapturePageUseCase openAudioCapturePageCommand,
-        IFeatureAvailabilityService featureAvailability,
+        IAudioCaptureFeatureAvailability audioCaptureFeatureAvailability,
         ITelemetryService telemetryService)
     {
-        IsAudioCaptureEnabled = featureAvailability.IsAudioCaptureEnabled;
+        IsAudioCaptureEnabled = audioCaptureFeatureAvailability.IsAudioCaptureEnabled;
 
         NewImageCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault), telemetryService);
         NewVideoCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault), telemetryService);

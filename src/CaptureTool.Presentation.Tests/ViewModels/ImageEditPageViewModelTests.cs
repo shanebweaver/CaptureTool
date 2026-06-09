@@ -1,7 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Abstractions.Cancellation;
-using CaptureTool.Application.Abstractions.Features;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Share;
@@ -49,7 +48,7 @@ public sealed class ImageEditPageViewModelTests
         Fixture.Freeze<Mock<IImageCanvasExporter>>();
         Fixture.Freeze<Mock<IFilePickerService>>();
         Fixture.Freeze<Mock<IChromaKeyService>>();
-        Fixture.Freeze<Mock<IFeatureAvailabilityService>>();
+        Fixture.Freeze<Mock<IChromaKeyFeatureAvailability>>();
         Fixture.Freeze<Mock<IShareService>>();
     }
 
@@ -63,11 +62,11 @@ public sealed class ImageEditPageViewModelTests
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
         var filePicker = Fixture.Freeze<Mock<IFilePickerService>>();
         var cancel = Fixture.Freeze<Mock<ICancellationService>>();
-        var featureAvailability = Fixture.Freeze<Mock<IFeatureAvailabilityService>>();
+        var featureAvailability = Fixture.Freeze<Mock<IChromaKeyFeatureAvailability>>();
         var storeService = Fixture.Freeze<Mock<IStoreService>>();
         var chromaService = Fixture.Freeze<Mock<IChromaKeyService>>();
 
-        featureAvailability.Setup(f => f.IsImageEditChromaKeyEnabled).Returns(false);
+        featureAvailability.Setup(f => f.IsChromaKeyEnabled).Returns(false);
 
         storeService.Setup(s => s.IsAddonPurchasedAsync(It.IsAny<string>()))
                     .ReturnsAsync(false);

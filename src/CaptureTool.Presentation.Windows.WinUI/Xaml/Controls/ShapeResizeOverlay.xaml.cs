@@ -21,6 +21,12 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         typeof(ShapeResizeOverlay),
         new PropertyMetadata(true, OnIsInteriorMoveEnabledChanged));
 
+    public static readonly DependencyProperty HandleScaleProperty = DependencyProperty.Register(
+        nameof(HandleScale),
+        typeof(double),
+        typeof(ShapeResizeOverlay),
+        new PropertyMetadata(1d, OnHandleScaleChanged));
+
     private static void OnShapeBoundsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is ShapeResizeOverlay overlay && e.NewValue is RectangleF bounds)
@@ -41,6 +47,12 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
         set => Set(IsInteriorMoveEnabledProperty, value);
     }
 
+    public double HandleScale
+    {
+        get => Get<double>(HandleScaleProperty);
+        set => Set(HandleScaleProperty, value);
+    }
+
     public event EventHandler<RectangleF>? BoundsChanged;
     public event EventHandler? ResizeStarted;
     public event EventHandler? ResizeComplete;
@@ -50,6 +62,8 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
     private ResizeHandle _activeHandle = ResizeHandle.None;
     private Point _handleStartPoint;
     private RectangleF _initialBounds;
+    private IReadOnlyList<FrameworkElement> _resizeHandles = [];
+    private IReadOnlyList<FrameworkElement> _borderMoveHandles = [];
 
     private enum ResizeHandle
     {
@@ -68,7 +82,60 @@ public sealed partial class ShapeResizeOverlay : UserControlBase
     public ShapeResizeOverlay()
     {
         InitializeComponent();
+        InitializeHandleScaling();
         AttachHandleEvents();
+    }
+
+    private static void OnHandleScaleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ShapeResizeOverlay overlay && e.NewValue is double scale)
+        {
+            overlay.UpdateHandleScale(scale);
+        }
+    }
+
+    private void InitializeHandleScaling()
+    {
+        _resizeHandles =
+        [
+            Handle_TopLeft,
+            Handle_TopRight,
+            Handle_BottomLeft,
+            Handle_BottomRight,
+            Handle_Top,
+            Handle_Bottom,
+            Handle_Left,
+            Handle_Right
+        ];
+
+        _borderMoveHandles =
+        [
+            BorderMoveTop,
+            BorderMoveBottom,
+            BorderMoveLeft,
+            BorderMoveRight
+        ];
+
+        foreach (FrameworkElement handle in _resizeHandles.Concat(_borderMoveHandles))
+        {
+            handle.RenderTransformOrigin = new Point(0.5, 0.5);
+        }
+
+        UpdateHandleScale(HandleScale);
+    }
+
+    private void UpdateHandleScale(double scale)
+    {
+        scale = Math.Clamp(scale, 0.1, 10);
+
+        foreach (FrameworkElement handle in _resizeHandles.Concat(_borderMoveHandles))
+        {
+            handle.RenderTransform = new ScaleTransform
+            {
+                ScaleX = scale,
+                ScaleY = scale
+            };
+        }
     }
 
     private void AttachHandleEvents()
