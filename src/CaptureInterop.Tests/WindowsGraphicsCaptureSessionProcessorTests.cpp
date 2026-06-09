@@ -110,7 +110,14 @@ namespace CaptureInteropTests
         class FakeSinkWriter final : public IMP4SinkWriter
         {
         public:
-            bool Initialize(const wchar_t*, ID3D11Device*, uint32_t, uint32_t, long* outHr = nullptr) override
+            bool Initialize(
+                const wchar_t*,
+                ID3D11Device*,
+                uint32_t,
+                uint32_t,
+                long* outHr = nullptr,
+                uint32_t = 0,
+                uint32_t = 0) override
             {
                 if (outHr) *outHr = S_OK;
                 return true;
