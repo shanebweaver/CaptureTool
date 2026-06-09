@@ -18,7 +18,13 @@ struct ID3D11Texture2D;
 class TextureProcessor : public ITextureProcessor
 {
 public:
-    TextureProcessor(ID3D11Device* device, ID3D11DeviceContext* context, uint32_t width, uint32_t height);
+    TextureProcessor(
+        ID3D11Device* device,
+        ID3D11DeviceContext* context,
+        uint32_t width,
+        uint32_t height,
+        uint32_t sourceLeft = 0,
+        uint32_t sourceTop = 0);
     ~TextureProcessor() override = default;
 
     TextureProcessor(const TextureProcessor&) = delete;
@@ -28,6 +34,7 @@ public:
 
     // ITextureProcessor implementation
     Result<void> CopyTextureToBuffer(ID3D11Texture2D* texture, std::vector<uint8_t>& outBuffer) override;
+    Result<void> CopyTextureToMemory(ID3D11Texture2D* texture, std::span<uint8_t> outBuffer) override;
     uint32_t GetRequiredBufferSize() const override { return m_width * m_height * BYTES_PER_PIXEL_RGB32; }
     uint32_t GetWidth() const override { return m_width; }
     uint32_t GetHeight() const override { return m_height; }
@@ -40,6 +47,8 @@ private:
     wil::com_ptr<ID3D11Texture2D> m_stagingTexture;
     uint32_t m_width;
     uint32_t m_height;
+    uint32_t m_sourceLeft;
+    uint32_t m_sourceTop;
 
     Result<void> EnsureStagingTexture();
 };

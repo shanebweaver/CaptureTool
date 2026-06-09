@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Project properties -->
   <PropertyGroup>
@@ -38,21 +38,36 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Application.Interfaces\CaptureTool.Application.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Application.Implementations\CaptureTool.Application.Implementations.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Edit.Implementations.Windows\CaptureTool.Domain.Edit.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Edit.Interfaces\CaptureTool.Domain.Edit.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture.Implementations.Windows\CaptureTool.Domain.Capture.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture.Interfaces\CaptureTool.Domain.Capture.Interfaces.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations.FeatureManagement\CaptureTool.Infrastructure.Implementations.FeatureManagement.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations.Windows\CaptureTool.Infrastructure.Implementations.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Implementations\CaptureTool.Infrastructure.Implementations.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Interfaces\CaptureTool.Infrastructure.Interfaces.csproj" />
+    <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.Application\CaptureTool.Application.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Edit.Windows\CaptureTool.Infrastructure.Edit.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Capture.Windows\CaptureTool.Infrastructure.Capture.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture\CaptureTool.Domain.Capture.csproj" />
+    <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Windows\CaptureTool.Infrastructure.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure\CaptureTool.Infrastructure.csproj" />
+    <ProjectReference Include="..\CaptureTool.Presentation\CaptureTool.Presentation.csproj" />
   </ItemGroup>
 
   <!-- Content files -->
   <ItemGroup>
     <Content Include="Fonts\FluentSystemIcons-Regular.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="D:\Git\CaptureTool\bin\Debug\x64\CaptureInterop.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="D:\Git\CaptureTool\bin\Debug\x64\CaptureInterop.dll" />
+  </ItemGroup>
+
+  <!-- Native DLL references for MSIX packaging -->
+  <ItemGroup>
+    <Content Include="$(SolutionDir)bin\$(Configuration)\$(Platform)\CaptureInterop.dll">
+      <Link>CaptureInterop.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
     
   <!-- 

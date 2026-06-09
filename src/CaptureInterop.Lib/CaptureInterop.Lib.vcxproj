@@ -37,7 +37,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <OutDir>$(SolutionDir)bin\$(Configuration)\$(PlatformTarget)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\$(PlatformTarget)\</IntDir>
@@ -67,7 +67,7 @@
     </ClCompile>
     <Lib>
       <AdditionalDependencies>
-        mfplat.lib;mfreadwrite.lib;mfuuid.lib;d3d11.lib;dxgi.lib;windowsapp.lib;runtimeobject.lib;%(AdditionalDependencies)
+        mfplat.lib;mfreadwrite.lib;mfuuid.lib;d3d11.lib;dxgi.lib;windowsapp.lib;runtimeobject.lib;psapi.lib;%(AdditionalDependencies)
       </AdditionalDependencies>
       <AdditionalOptions>/IGNORE:4006 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
@@ -97,6 +97,7 @@
     <ClInclude Include="CaptureSessionConfig.h" />
     <ClInclude Include="CaptureSessionState.h" />
     <ClInclude Include="ErrorInfo.h" />
+    <ClInclude Include="FrameAdmissionController.h" />
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="IAudioCaptureSource.h" />

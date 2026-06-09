@@ -1,5 +1,4 @@
-using CaptureTool.Application.Interfaces.FeatureManagement;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Domain.Capture;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -51,11 +50,7 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
     public int SelectedCaptureTypeIndex
     {
         get => Get<int>(SelectedCaptureTypeIndexProperty);
-        set
-        {
-            Set(SelectedCaptureTypeIndexProperty, value);
-            CaptureTypeSelectionChanged?.Invoke(this, value);
-        }
+        set => Set(SelectedCaptureTypeIndexProperty, value);
     }
 
     public object SupportedCaptureModes
@@ -67,11 +62,7 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
     public int SelectedCaptureModeIndex
     {
         get => Get<int>(SelectedCaptureModeIndexProperty);
-        set
-        {
-            Set(SelectedCaptureModeIndexProperty, value);
-            CaptureModeSelectionChanged?.Invoke(this, value);
-        }
+        set => Set(SelectedCaptureModeIndexProperty, value);
     }
 
     public ICommand CloseCommand
@@ -83,11 +74,6 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
     public SelectionOverlayToolbar()
     {
         InitializeComponent();
-
-        if (AppServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture))
-        {
-            CaptureModeSegmentedControl.Visibility = Visibility.Visible;
-        }
     }
 
     // Function converters for {x:Bind} - maps enum to glyph resource key
@@ -118,6 +104,7 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
         if (sender is Segmented segmentedControl)
         {
             SelectedCaptureModeIndex = segmentedControl.SelectedIndex;
+            CaptureModeSelectionChanged?.Invoke(this, segmentedControl.SelectedIndex);
         }
     }
 
@@ -126,6 +113,7 @@ public sealed partial class SelectionOverlayToolbar : UserControlBase
         if (sender is ComboBox comboBox)
         {
             SelectedCaptureTypeIndex = comboBox.SelectedIndex;
+            CaptureTypeSelectionChanged?.Invoke(this, comboBox.SelectedIndex);
         }
     }
 }

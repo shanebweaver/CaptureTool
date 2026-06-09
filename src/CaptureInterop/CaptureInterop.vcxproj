@@ -33,11 +33,12 @@
     <VcpkgTriplet Condition="'$(Platform)'=='ARM64'">arm64-windows</VcpkgTriplet>
     <VcpkgRoot>$(SolutionDir)\vcpkg</VcpkgRoot>
     <VcpkgInstalledDir>$(SolutionDir)\vcpkg_installed</VcpkgInstalledDir>
+    <VcpkgXUseBuiltInApplocalDeps>true</VcpkgXUseBuiltInApplocalDeps>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <OutDir>$(SolutionDir)bin\$(Configuration)\$(PlatformTarget)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\$(PlatformTarget)\</IntDir>
@@ -70,7 +71,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>
-        mfplat.lib;mfreadwrite.lib;mfuuid.lib;d3d11.lib;dxgi.lib;windowsapp.lib;runtimeobject.lib;%(AdditionalDependencies)
+        mfplat.lib;mfreadwrite.lib;mfuuid.lib;d3d11.lib;dxgi.lib;windowsapp.lib;runtimeobject.lib;psapi.lib;%(AdditionalDependencies)
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -107,13 +108,4 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <Target Name="CopyNativeDllToWinUI" AfterTargets="Link">
-    <PropertyGroup>
-      <ManagedProjectPath>src\CaptureTool.Presentation.Windows.WinUI\</ManagedProjectPath>
-      <ManagedOutDir>$(SolutionDir)$(ManagedProjectPath)bin\$(Platform)\$(Configuration)\net10.0-windows10.0.26100.0\win-$(Platform)\AppX\</ManagedOutDir>
-    </PropertyGroup>
-    <Message Text="Copying native DLL to $(ManagedOutDir)" Importance="high" />
-    <MakeDir Directories="$(ManagedOutDir)" Condition="!Exists('$(ManagedOutDir)')" />
-    <Copy SourceFiles="$(OutDir)$(TargetName)$(TargetExt)" DestinationFolder="$(ManagedOutDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
-  </Target>
 </Project>

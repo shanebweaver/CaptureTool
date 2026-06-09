@@ -46,11 +46,11 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
-    private void MetadataAutoSaveToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    private void VideoDefaultLocalAudioToggleSwitch_Toggled(object sender, RoutedEventArgs e)
     {
         if (sender is ToggleSwitch toggleSwitch)
         {
-            _ = ViewModel.UpdateVideoMetadataAutoSaveCommand.ExecuteAsync(toggleSwitch.IsOn);
+            _ = ViewModel.UpdateVideoCaptureDefaultLocalAudioCommand.ExecuteAsync(toggleSwitch.IsOn);
         }
     }
 

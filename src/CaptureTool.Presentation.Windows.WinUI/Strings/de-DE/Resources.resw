@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -231,6 +231,12 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="ImageEdit_CropButton.Label" xml:space="preserve">
     <value>Zuschneiden</value>
   </data>
+  <data name="ImageEdit_ShapesButton.Label" xml:space="preserve">
+    <value>Formen</value>
+  </data>
+  <data name="ImageEdit_TextButton.Label" xml:space="preserve">
+    <value>Text</value>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Drucken</value>
   </data>
@@ -242,6 +248,12 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   </data>
   <data name="ImageEdit_CropButton.AccessKey" xml:space="preserve">
     <value>I</value>
+  </data>
+  <data name="ImageEdit_ShapesButton.AccessKey" xml:space="preserve">
+    <value>H</value>
+  </data>
+  <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
+    <value>T</value>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -319,10 +331,76 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
     <value>Control</value>
   </data>
   <data name="AppMenu_NewCaptureItem.Text" xml:space="preserve">
-    <value>Neue Aufnahme</value>
+    <value>Neue Bildaufnahme</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem.AccessKey" xml:space="preserve">
+    <value>V</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value>Control,Shift</value>
+  </data>
+  <data name="AppMenu_NewVideoCaptureItem.Text" xml:space="preserve">
+    <value>Neue Videoaufnahme</value>
+  </data>
+  <data name="ShapeToolbar_ShapeType.Header" xml:space="preserve">
+    <value>Formtyp</value>
+    <comment>The header for the shape type selector in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_RectangleItem.Text" xml:space="preserve">
+    <value>Rechteck</value>
+    <comment>The rectangle shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_EllipseItem.Text" xml:space="preserve">
+    <value>Ellipse</value>
+    <comment>The ellipse shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_LineItem.Text" xml:space="preserve">
+    <value>Linie</value>
+    <comment>The line shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_ArrowItem.Text" xml:space="preserve">
+    <value>Pfeil</value>
+    <comment>The arrow shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_RectangleOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Rechteckform</value>
+    <comment>The tooltip for the rectangle shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_EllipseOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ellipsenform</value>
+    <comment>The tooltip for the ellipse shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_LineOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Linienform</value>
+    <comment>The tooltip for the line shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_ArrowOption.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pfeilform</value>
+    <comment>The tooltip for the arrow shape option in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeColor.Text" xml:space="preserve">
+    <value>Konturfarbe</value>
+    <comment>The label for the stroke color picker in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColor.Text" xml:space="preserve">
+    <value>Füllfarbe</value>
+    <comment>The label for the fill color picker in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeWidth.Text" xml:space="preserve">
+    <value>Konturbreite</value>
+    <comment>The label for the stroke width control in the shape toolbar.</comment>
   </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Bild zuschneiden</value>
+  </data>
+  <data name="ImageEdit_ShapesButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Formen zeichnen</value>
+  </data>
+  <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Text zeichnen</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Bild drehen</value>
@@ -359,6 +437,15 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   </data>
   <data name="NewCaptureButton_Video.AutomationProperties.Name" xml:space="preserve">
     <value>Bildschirmaufnahme</value>
+  </data>
+  <data name="NewCaptureButton_Audio_Label.Text" xml:space="preserve">
+    <value>Audioaufnahme</value>
+  </data>
+  <data name="NewCaptureButton_Audio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Neue Audioaufnahme</value>
+  </data>
+  <data name="NewCaptureButton_Audio.AutomationProperties.Name" xml:space="preserve">
+    <value>Audioaufnahme</value>
   </data>
   <data name="AppLanguage_SystemDefault" xml:space="preserve">
     <value>Systemstandard verwenden</value>
@@ -461,6 +548,18 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   </data>
   <data name="Settings_VideoAutoCopy_SubtitleLabel.Text" xml:space="preserve">
     <value>Videos nach der Aufnahme automatisch in die Zwischenablage kopieren.</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_HeaderLabel.Text" xml:space="preserve">
+    <value>Standardeinstellung für lokales Audio</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_SubtitleLabel.Text" xml:space="preserve">
+    <value>Standardzustand des lokalen Audios beim Starten der Bildschirmaufzeichnung.</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_Toggle.OnContent" xml:space="preserve">
+    <value>Ein</value>
+  </data>
+  <data name="Settings_VideoDefaultLocalAudio_Toggle.OffContent" xml:space="preserve">
+    <value>Aus</value>
   </data>
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Videos nach der Aufnahme automatisch im Videoordner speichern.</value>
@@ -614,5 +713,94 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_Info_Mirrored.ToolTipService.ToolTip" xml:space="preserve">
     <value>Gespiegelt</value>
+  </data>
+  <data name="ImageEdit_ZoomLabel.Text" xml:space="preserve">
+    <value>Zoom:</value>
+  </data>
+  <data name="ShapeToolbar_StrokeColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Konturfarbe, Stärke und Deckkraft auswählen</value>
+    <comment />
+    <comment>The tooltip for the outline color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeColorButtonLabel.Text" xml:space="preserve">
+    <value>Kontur</value>
+    <comment />
+    <comment>The visible label inside the outline color button in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_ShapeTypeComboBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Formtyp</value>
+    <comment />
+    <comment>The accessibility name for the shape type selector in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_ShapeTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Formtyp auswählen</value>
+    <comment />
+    <comment>The tooltip for the shape type selector in the shape toolbar.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColorButtonLabel.Text" xml:space="preserve">
+    <value>Füllung</value>
+    <comment />
+    <comment>The visible label inside the fill color button in the shape toolbar.</comment>
+  </data>
+  <data name="ColorPalettePicker_ThicknessSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Stärke</value>
+    <comment />
+    <comment>The accessibility name for the thickness slider in the color palette picker.</comment>
+  </data>
+  <data name="ColorPalettePicker_ThicknessSlider.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Konturstärke anpassen</value>
+    <comment />
+    <comment>The tooltip for the thickness slider in the color palette picker.</comment>
+  </data>
+  <data name="ColorPalettePicker_ThicknessLabel.Text" xml:space="preserve">
+    <value>Stärke</value>
+    <comment />
+    <comment>The label for the thickness slider in the color palette picker.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColorButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Füllfarbe</value>
+    <comment />
+    <comment>The accessibility name for the fill color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="ColorPalettePicker_OpacityLabel.Text" xml:space="preserve">
+    <value>Deckkraft</value>
+    <comment />
+    <comment>The label for the opacity slider in the color palette picker.</comment>
+  </data>
+  <data name="ShapeToolbar_StrokeColorButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Konturfarbe</value>
+    <comment />
+    <comment>The accessibility name for the outline color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="ColorPalettePicker_OpacitySlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Deckkraft</value>
+    <comment />
+    <comment>The accessibility name for the opacity slider in the color palette picker.</comment>
+  </data>
+  <data name="ColorPalettePicker_OpacitySlider.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Deckkraft anpassen</value>
+    <comment />
+    <comment>The tooltip for the opacity slider in the color palette picker.</comment>
+  </data>
+  <data name="ShapeToolbar_FillColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Füllfarbe und Deckkraft auswählen</value>
+    <comment />
+    <comment>The tooltip for the fill color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Textfarbe und Deckkraft auswählen</value>
+    <comment>The tooltip for the text color picker button in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_BackgroundColorButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Texthintergrundfarbe und Deckkraft auswählen</value>
+    <comment>The tooltip for the text background color picker button in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontFamilyComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Schriftart auswählen</value>
+    <comment>The tooltip for the font family selector in the text toolbar.</comment>
+  </data>
+  <data name="TextToolbar_FontSizeNumberBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Schriftgröße auswählen</value>
+    <comment>The tooltip for the font size input in the text toolbar.</comment>
   </data>
 </root>

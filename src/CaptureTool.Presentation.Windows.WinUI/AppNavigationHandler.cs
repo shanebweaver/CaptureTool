@@ -1,9 +1,10 @@
-using CaptureTool.Application.Implementations.Services.Navigation;
-using CaptureTool.Application.Interfaces.Navigation;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces.Navigation;
-using CaptureTool.Infrastructure.Interfaces.Shutdown;
-using CaptureTool.Infrastructure.Interfaces.Windowing;
+using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.Windowing;
+using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;
 
 namespace CaptureTool.Presentation.Windows.WinUI;
@@ -19,8 +20,9 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
     }
 
     private readonly IShutdownHandler _shutdownHandler;
-    private readonly IAppNavigation _appNavigation;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly INavigationService _navigationService;
+    private readonly IShowMainWindowUseCase _showMainWindowCommand;
 
     private readonly SemaphoreSlim _semaphoreNavigation = new(1, 1);
     private SelectionOverlayHost? _selectionOverlayHost;
@@ -31,12 +33,14 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
 
     public AppNavigationHandler(
         IShutdownHandler shutdownHandler,
-        IAppNavigation appNavigation,
-        IVideoCaptureHandler videoCaptureHandler)
+        IVideoCaptureHandler videoCaptureHandler,
+        INavigationService navigationService,
+        IShowMainWindowUseCase showMainWindowCommand)
     {
         _shutdownHandler = shutdownHandler;
-        _appNavigation = appNavigation;
         _videoCaptureHandler = videoCaptureHandler;
+        _navigationService = navigationService;
+        _showMainWindowCommand = showMainWindowCommand;
     }
 
     public async void HandleNavigationRequest(INavigationRequest request)
@@ -70,7 +74,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                 _mainWindowHost.HandleNavigationRequest(request);
                 _activeHost = UXHost.MainWindow;
             }
-            else if (request.Route is CaptureToolNavigationRoute imageRoute && imageRoute == CaptureToolNavigationRoute.ImageCapture)
+            else if (request.Route is NavigationRoute imageRoute && imageRoute == NavigationRoute.SelectionOverlay)
             {
                 if (request.Parameter is not CaptureOptions options)
                 {
@@ -99,7 +103,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                 await CreateSelectionOverlayHostAsync(options);
                 _activeHost = UXHost.SelectionOverlay;
             }
-            else if (request.Route is CaptureToolNavigationRoute videoRoute && videoRoute == CaptureToolNavigationRoute.VideoCapture)
+            else if (request.Route is NavigationRoute videoRoute && videoRoute == NavigationRoute.CaptureOverlay)
             {
                 if (request.Parameter is not NewCaptureArgs args)
                 {
@@ -215,11 +219,11 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
         });
     }
 
-    private void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
+    private async void OnSelectionOverlayHostLostFocus(object? sender, EventArgs e)
     {
-        if (_appNavigation.CanGoBack)
+        if (_navigationService.CanGoBack)
         {
-            _appNavigation.GoBackToMainWindow();
+            await _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest());
         }
         else
         {

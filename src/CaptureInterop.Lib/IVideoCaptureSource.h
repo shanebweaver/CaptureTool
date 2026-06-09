@@ -1,6 +1,8 @@
 #pragma once
 #include <functional>
 
+struct ID3D11Device;
+
 /// <summary>
 /// Event arguments for video frame ready event.
 /// Contains the video frame data and timing information.
@@ -20,17 +22,10 @@ using VideoFrameReadyCallback = std::function<void(const VideoFrameReadyEventArg
 /// Interface for video capture sources that can be captured and written to an output stream.
 /// Implementations provide different video sources (screen capture, window capture, etc.)
 /// 
-/// Implements Rust Principles:
-/// - Principle #7 (Const Correctness): Read-only methods are const (GetWidth, GetHeight, IsRunning)
-/// - Principle #8 (Thread Safety by Design): Implementations handle thread-safe callback
-///   invocation from background processing threads
-/// 
 /// Design notes:
 /// - Video frames are captured asynchronously and delivered via callback
 /// - Callbacks are invoked on a background thread, not the calling thread
 /// - Frame timestamps are synchronized with the media clock for A/V sync
-/// 
-/// See docs/RUST_PRINCIPLES.md for more details on these principles.
 /// </summary>
 class IVideoCaptureSource
 {
@@ -67,6 +62,12 @@ public:
     /// </summary>
     /// <returns>Frame height in pixels, or 0 if not initialized.</returns>
     virtual UINT32 GetHeight() const = 0;
+
+    /// <summary>
+    /// Get the D3D11 device that owns emitted video textures.
+    /// Available after successful initialization.
+    /// </summary>
+    virtual ID3D11Device* GetDevice() const = 0;
 
     /// <summary>
     /// Set the callback to be invoked when a video frame is ready.

@@ -1,0 +1,30 @@
+﻿<Project Sdk="MSTest.Sdk/4.0.2">
+
+  <!-- Project properties -->
+  <PropertyGroup>
+    <UseVSTest>true</UseVSTest>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="ViewModels\**\*.cs" />
+  </ItemGroup>
+	
+  <!-- Project references -->
+  <ItemGroup>
+	<PackageReference Include="AutoFixture.AutoMoq" />
+	<PackageReference Include="FluentAssertions" />
+	<PackageReference Include="Microsoft.CodeCoverage" />
+	<PackageReference Include="Moq" />
+	<PackageReference Update="MSTest.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
+  </ItemGroup>
+	
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Presentation\CaptureTool.Presentation.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -2,6 +2,7 @@
 #include "WindowsDesktopVideoCaptureSource.h"
 #include "FrameArrivedHandler.h"
 #include "WindowsGraphicsCaptureHelpers.h"
+#include <strsafe.h>
 
 using namespace WindowsGraphicsCaptureHelpers;
 
@@ -33,6 +34,20 @@ bool WindowsDesktopVideoCaptureSource::Initialize(HRESULT* outHr)
 {
     HRESULT hr = S_OK;
 
+    if (!m_roInitialized)
+    {
+        hr = RoInitialize(RO_INIT_MULTITHREADED);
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
+        {
+            if (outHr) *outHr = hr;
+            return false;
+        }
+        if (SUCCEEDED(hr))
+        {
+            m_roInitialized = true;
+        }
+    }
+
     // Get the graphics capture item
     wil::com_ptr<IGraphicsCaptureItemInterop> interop = GetGraphicsCaptureItemInterop(&hr);
     if (!interop)
@@ -41,7 +56,16 @@ bool WindowsDesktopVideoCaptureSource::Initialize(HRESULT* outHr)
         return false;
     }
 
-    wil::com_ptr<IGraphicsCaptureItem> captureItem = GetGraphicsCaptureItemForMonitor(m_config.hMonitor, interop, &hr);
+    wil::com_ptr<IGraphicsCaptureItem> captureItem;
+    if (m_config.targetType == CaptureTargetType::Window)
+    {
+        captureItem = GetGraphicsCaptureItemForWindow(m_config.hwnd, interop, &hr);
+    }
+    else
+    {
+        captureItem = GetGraphicsCaptureItemForMonitor(m_config.hMonitor, interop, &hr);
+    }
+
     if (!captureItem)
     {
         if (outHr) *outHr = hr;
@@ -91,8 +115,27 @@ bool WindowsDesktopVideoCaptureSource::Initialize(HRESULT* outHr)
         return false;
     }
 
-    m_width = size.Width;
-    m_height = size.Height;
+    if (m_config.targetType == CaptureTargetType::Rectangle)
+    {
+        if (m_config.sourceLeft < 0 ||
+            m_config.sourceTop < 0 ||
+            m_config.sourceWidth == 0 ||
+            m_config.sourceHeight == 0 ||
+            static_cast<uint32_t>(m_config.sourceLeft) + m_config.sourceWidth > static_cast<uint32_t>(size.Width) ||
+            static_cast<uint32_t>(m_config.sourceTop) + m_config.sourceHeight > static_cast<uint32_t>(size.Height))
+        {
+            if (outHr) *outHr = E_INVALIDARG;
+            return false;
+        }
+
+        m_width = m_config.sourceWidth;
+        m_height = m_config.sourceHeight;
+    }
+    else
+    {
+        m_width = size.Width;
+        m_height = size.Height;
+    }
 
     if (outHr) *outHr = S_OK;
     return true;
@@ -146,7 +189,7 @@ bool WindowsDesktopVideoCaptureSource::Start(HRESULT* outHr)
 
 void WindowsDesktopVideoCaptureSource::Stop()
 {
-    if (!m_isRunning)
+    if (!m_isRunning && !m_frameHandler && !m_captureSession && !m_framePool && !m_context && !m_device)
     {
         return;
     }
@@ -163,22 +206,69 @@ void WindowsDesktopVideoCaptureSource::Stop()
     // Principle #5 (RAII Everything): wil::com_ptr automatically calls Release()
     if (m_frameHandler)
     {
+        wchar_t message[192]{};
+        (void)StringCchPrintfW(
+            message,
+            ARRAYSIZE(message),
+            L"[CaptureInterop V1] Video frames received=%llu processed=%llu dropped=%llu\r\n",
+            static_cast<unsigned long long>(m_frameHandler->GetReceivedFrameCount()),
+            static_cast<unsigned long long>(m_frameHandler->GetProcessedFrameCount()),
+            static_cast<unsigned long long>(m_frameHandler->GetDroppedFrameCount()));
+        OutputDebugStringW(message);
+
         m_frameHandler->Stop();
         m_frameHandler.reset(); // Explicit reset for clarity, calls Release() automatically
     }
 
-    // Release capture session
-    // Principle #3 (No Nullable Pointers): wil::com_ptr handles Release() automatically
+    ReleaseResources();
+
+    m_isRunning = false;
+}
+
+void WindowsDesktopVideoCaptureSource::ReleaseResources()
+{
     if (m_captureSession)
     {
+        // Explicitly close the session via IClosable before releasing the reference.
+        // The WinRT GraphicsCaptureSession destructor calls Close() -> StopCapture()
+        // internally. If StopCapture() fails (e.g., the display was disconnected),
+        // the WinRT layer converts the failure into a C++ exception via
+        // winrt::check_hresult, which propagates out of the destructor and crashes.
+        // Calling Close() here via the ABI IClosable interface (which returns HRESULT
+        // instead of throwing) ensures the session is already closed before reset()
+        // releases the last reference, preventing the destructor from calling
+        // StopCapture() in an unknown state.
+        wil::com_ptr<ABI::Windows::Foundation::IClosable> closable;
+        if (SUCCEEDED(m_captureSession->QueryInterface(IID_PPV_ARGS(closable.put()))))
+        {
+            (void)closable->Close(); // Best-effort: ignore HRESULT if close fails
+        }
         m_captureSession.reset();
     }
 
     // Release frame pool
     if (m_framePool)
     {
+        wil::com_ptr<ABI::Windows::Foundation::IClosable> closable;
+        if (SUCCEEDED(m_framePool->QueryInterface(IID_PPV_ARGS(closable.put()))))
+        {
+            (void)closable->Close(); // Best-effort: release frame-pool resources promptly
+        }
         m_framePool.reset();
     }
 
-    m_isRunning = false;
+    if (m_context)
+    {
+        m_context->ClearState();
+        m_context->Flush();
+    }
+
+    m_context.reset();
+    m_device.reset();
+
+    if (m_roInitialized)
+    {
+        RoUninitialize();
+        m_roInitialized = false;
+    }
 }

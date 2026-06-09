@@ -4,13 +4,17 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:converters="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
+    xmlns:imageedit="using:CaptureTool.Presentation.Features.ImageEdit"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Application.Interfaces.ViewModels"
-    d:DataContext="{d:DesignInstance Type=viewmodels:IImageEditPageViewModel}"
+    d:DataContext="{d:DesignInstance Type=imageedit:ImageEditPageViewModel}"
     mc:Ignorable="d">
+
+    <Page.Resources>
+        <converters:ShapeTypeToIntConverter x:Key="ShapeTypeToIntConverter" />
+    </Page.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -41,28 +45,37 @@
             <!--  Crop and orientation  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_CropButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ToggleCropModeCommand)}"
+                Command="{x:Bind ViewModel.ToggleCropModeCommand}"
                 Icon="Crop"
                 IsChecked="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
             <AppBarToggleButton
                 x:Uid="ImageEdit_ShapesButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ToggleShapesModeCommand)}"
+                Command="{x:Bind ViewModel.ToggleShapesModeCommand}"
                 IsChecked="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
-                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
-                Visibility="{x:Bind ViewModel.IsShapesFeatureEnabled, Mode=OneWay}">
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="&#xE91B;" />
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
+            <AppBarToggleButton
+                x:Uid="ImageEdit_TextButton"
+                Command="{x:Bind ViewModel.ToggleTextModeCommand}"
+                IsChecked="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsTextFeatureEnabled, Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE8D2;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
             <AppBarButton
                 x:Uid="ImageEdit_RotateButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RotateCommand)}"
+                Command="{x:Bind ViewModel.RotateCommand}"
                 Icon="Rotate"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
             <AppBarButton
                 x:Uid="ImageEdit_FlipXButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.FlipHorizontalCommand)}"
+                Command="{x:Bind ViewModel.FlipHorizontalCommand}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.Icon>
                     <FontIcon
@@ -73,7 +86,7 @@
             </AppBarButton>
             <AppBarButton
                 x:Uid="ImageEdit_FlipYButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.FlipVerticalCommand)}"
+                Command="{x:Bind ViewModel.FlipVerticalCommand}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.Icon>
                     <FontIcon
@@ -86,12 +99,12 @@
             <AppBarSeparator />
             <AppBarButton
                 x:Uid="ImageEdit_UndoButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.UndoCommand)}"
+                Command="{x:Bind ViewModel.UndoCommand}"
                 Icon="Undo"
                 IsEnabled="{x:Bind ViewModel.HasUndoStack, Mode=OneWay}" />
             <AppBarButton
                 x:Uid="ImageEdit_RedoButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.RedoCommand)}"
+                Command="{x:Bind ViewModel.RedoCommand}"
                 Icon="Redo"
                 IsEnabled="{x:Bind ViewModel.HasRedoStack, Mode=OneWay}" />
             <!--  Export  -->
@@ -99,7 +112,7 @@
             <!--  Copy  -->
             <AppBarButton
                 x:Uid="ImageEdit_CopyButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.CopyCommand)}"
+                Command="{x:Bind ViewModel.CopyCommand}"
                 Icon="Copy"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
@@ -109,7 +122,7 @@
             <!--  Save  -->
             <AppBarButton
                 x:Uid="ImageEdit_SaveButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.SaveCommand)}"
+                Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
@@ -119,7 +132,7 @@
             <!--  Print  -->
             <AppBarButton
                 x:Uid="ImageEdit_PrintButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.PrintCommand)}"
+                Command="{x:Bind ViewModel.PrintCommand}"
                 Icon="Print"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarButton.KeyboardAccelerators>
@@ -129,56 +142,83 @@
             <!--  Share  -->
             <AppBarButton
                 x:Uid="ImageEdit_ShareButton"
-                Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ShareCommand)}"
+                Command="{x:Bind ViewModel.ShareCommand}"
                 Icon="Share"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
         </CommandBar>
 
-        <!--  Chroma key options  -->
-        <Grid
-            Margin="0,8"
-            HorizontalAlignment="Stretch"
-            Row="1"
-            Visibility="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}">
-            <controls:ChromaKeyToolbar
-                HorizontalAlignment="Stretch"
-                ColorOptions="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
-                Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=OneWay}"
-                DesaturationChanged="ChromaKeyToolbar_DesaturationChanged"
-                SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=OneWay}"
-                SelectedColorOptionIndexChanged="ChromaKeyToolbar_SelectedColorOptionIndexChanged"
-                Tolerance="{x:Bind ViewModel.ChromaKeyTolerance, Mode=OneWay}"
-                ToleranceChanged="ChromaKeyToolbar_ToleranceChanged" />
-        </Grid>
+        <Grid Padding="12,0" Row="1">
+            <!--  Chroma key options  -->
+            <Grid
+                Margin="0,0,0,6"
+                HorizontalAlignment="Center"
+                Visibility="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}">
+                <controls:ChromaKeyToolbar
+                    HorizontalAlignment="Stretch"
+                    ColorOptions="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
+                    Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=OneWay}"
+                    DesaturationChanged="ChromaKeyToolbar_DesaturationChanged"
+                    SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=OneWay}"
+                    SelectedColorOptionIndexChanged="ChromaKeyToolbar_SelectedColorOptionIndexChanged"
+                    Tolerance="{x:Bind ViewModel.ChromaKeyTolerance, Mode=OneWay}"
+                    ToleranceChanged="ChromaKeyToolbar_ToleranceChanged" />
+            </Grid>
 
-        <!--  Shapes options  -->
-        <Grid
-            Margin="0,8"
-            Padding="12,8"
-            HorizontalAlignment="Center"
-            Row="1"
-            Visibility="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <ComboBox
-                    x:Name="ShapeTypeComboBox"
-                    x:Uid="ShapeTypeComboBox"
-                    Width="120"
-                    SelectedIndex="0">
-                    <ComboBoxItem x:Uid="ShapeTypeComboBox_RectangleItem" Tag="0" />
-                    <ComboBoxItem x:Uid="ShapeTypeComboBox_EllipseItem" Tag="1" />
-                    <ComboBoxItem x:Uid="ShapeTypeComboBox_LineItem" Tag="2" />
-                    <ComboBoxItem x:Uid="ShapeTypeComboBox_ArrowItem" Tag="3" />
-                </ComboBox>
-            </StackPanel>
+            <!--  Shapes options  -->
+            <Grid
+                Margin="0,0,0,6"
+                HorizontalAlignment="Center"
+                Visibility="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}">
+                <controls:ShapeToolbar
+                    FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
+                    FillColorChanged="ShapeToolbar_FillColorChanged"
+                    FillColorOptions="{x:Bind ViewModel.ShapeFillColorOptions, Mode=OneWay}"
+                    FillOpacity="{x:Bind ViewModel.ShapeFillOpacity, Mode=OneWay}"
+                    FillOpacityChanged="ShapeToolbar_FillOpacityChanged"
+                    SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay, Converter={StaticResource ShapeTypeToIntConverter}}"
+                    SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
+                    StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
+                    StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
+                    StrokeColorOptions="{x:Bind ViewModel.ShapeStrokeColorOptions, Mode=OneWay}"
+                    StrokeOpacity="{x:Bind ViewModel.ShapeStrokeOpacity, Mode=OneWay}"
+                    StrokeOpacityChanged="ShapeToolbar_StrokeOpacityChanged"
+                    StyleInteractionCompleted="Toolbar_StyleInteractionCompleted"
+                    StyleInteractionStarted="Toolbar_StyleInteractionStarted"
+                    StrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
+                    StrokeWidthChanged="ShapeToolbar_StrokeWidthChanged" />
+            </Grid>
+
+            <!--  Text options  -->
+            <Grid
+                Margin="0,0,0,6"
+                HorizontalAlignment="Center"
+                Visibility="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}">
+                <controls:TextToolbar
+                    TextBackgroundColor="{x:Bind ViewModel.TextBackgroundColor, Mode=OneWay}"
+                    TextBackgroundColorChanged="TextToolbar_BackgroundColorChanged"
+                    TextBackgroundColorOpacity="{x:Bind ViewModel.TextBackgroundColorOpacity, Mode=OneWay}"
+                    TextBackgroundColorOpacityChanged="TextToolbar_BackgroundColorOpacityChanged"
+                    TextBackgroundColorOptions="{x:Bind ViewModel.TextBackgroundColorOptions, Mode=OneWay}"
+                    TextFontColor="{x:Bind ViewModel.TextFontColor, Mode=OneWay}"
+                    TextFontColorChanged="TextToolbar_FontColorChanged"
+                    TextFontColorOpacity="{x:Bind ViewModel.TextFontColorOpacity, Mode=OneWay}"
+                    TextFontColorOpacityChanged="TextToolbar_FontColorOpacityChanged"
+                    TextFontColorOptions="{x:Bind ViewModel.TextFontColorOptions, Mode=OneWay}"
+                    TextFontFamily="{x:Bind ViewModel.TextFontFamily, Mode=OneWay}"
+                    TextFontFamilyChanged="TextToolbar_FontFamilyChanged"
+                    TextFontSize="{x:Bind ViewModel.TextFontSize, Mode=OneWay}"
+                    TextFontSizeChanged="TextToolbar_FontSizeChanged"
+                    StyleInteractionCompleted="Toolbar_StyleInteractionCompleted"
+                    StyleInteractionStarted="Toolbar_StyleInteractionStarted" />
+            </Grid>
         </Grid>
 
         <!--  Canvas  -->
         <Grid
             x:Name="CanvasContainer"
-            Margin="0,-1,0,0"
             Background="{ThemeResource ImageEditCanvasBackgroundBrush}"
             BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
-            BorderThickness="0,1,0,0"
+            BorderThickness="0,1"
             Row="2">
             <controls:ImageCanvas
                 x:Name="ImageCanvas"
@@ -190,8 +230,21 @@
                 IsAutoZoomLocked="{x:Bind ViewModel.IsAutoZoomLocked, Mode=OneWay}"
                 IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
                 IsShapesModeEnabled="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
+                IsTextModeEnabled="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}"
-                ShapeDrawn="ImageCanvas_ShapeDrawn" />
+                SelectedShapeType="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay}"
+                ShapeDeleted="ImageCanvas_ShapeDeleted"
+                ShapeDrawn="ImageCanvas_ShapeDrawn"
+                ShapeFillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
+                ShapeModified="ImageCanvas_ShapeModified"
+                ShapeStrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
+                ShapeStrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
+                TextBackgroundColor="{x:Bind ViewModel.TextBackgroundColor, Mode=OneWay}"
+                TextBoxDrawn="ImageCanvas_TextBoxDrawn"
+                TextDrawableSelected="ImageCanvas_TextDrawableSelected"
+                TextFontFamily="{x:Bind ViewModel.TextFontFamily, Mode=OneWay}"
+                TextFontSize="{x:Bind ViewModel.TextFontSize, Mode=OneWay}"
+                TextForegroundColor="{x:Bind ViewModel.TextFontColor, Mode=OneWay}" />
         </Grid>
 
         <ProgressRing
@@ -208,44 +261,58 @@
             Padding="8"
             Row="3">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <StackPanel
+                x:Name="InfoPanel"
                 Grid.Column="0"
                 VerticalAlignment="Center"
                 Orientation="Horizontal"
                 Spacing="12">
                 <TextBlock
+                    x:Name="DimensionsTextBlock"
                     x:Uid="ImageEdit_Info_Dimensions"
+                    MinWidth="72"
                     FontSize="12"
-                    FontWeight="SemiLight">
+                    FontWeight="SemiLight"
+                    TextAlignment="Right">
                     <Run Text="{x:Bind ViewModel.CropRect.Width, Mode=OneWay}" />
                     <Run Text="×" />
                     <Run Text="{x:Bind ViewModel.CropRect.Height, Mode=OneWay}" /><Run Text="px" />
                 </TextBlock>
                 <TextBlock
+                    x:Name="OffsetTextBlock"
                     x:Uid="ImageEdit_Info_Offset"
+                    MinWidth="72"
                     FontSize="12"
-                    FontWeight="SemiLight">
+                    FontWeight="SemiLight"
+                    TextAlignment="Right">
                     <Run Text="(" /><Run Text="{x:Bind ViewModel.CropRect.Left, Mode=OneWay}" /><Run Text="," />
-                    <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text=")" />
+                    <Run Text="{x:Bind ViewModel.CropRect.Top, Mode=OneWay}" /><Run Text=")" /><Run Text="px" />
                 </TextBlock>
                 <TextBlock
+                    x:Name="RotationTextBlock"
                     x:Uid="ImageEdit_Info_Rotation"
+                    MinWidth="36"
                     FontSize="12"
                     FontWeight="SemiLight"
-                    Text="{x:Bind ViewModel.RotationDisplayName, Mode=OneWay}" />
+                    Text="{x:Bind ViewModel.RotationDisplayName, Mode=OneWay}"
+                    TextAlignment="Right" />
                 <TextBlock
+                    x:Name="MirroredTextBlock"
                     x:Uid="ImageEdit_Info_Mirrored"
+                    MinWidth="72"
                     FontSize="12"
                     FontWeight="SemiLight"
-                    Text="{x:Bind ViewModel.MirroredDisplayName, Mode=OneWay}" />
+                    Text="{x:Bind ViewModel.MirroredDisplayName, Mode=OneWay}"
+                    TextAlignment="Right" />
             </StackPanel>
 
             <StackPanel
-                Grid.Column="1"
+                Grid.Column="2"
                 VerticalAlignment="Center"
                 Orientation="Horizontal"
                 Spacing="8">
@@ -264,14 +331,14 @@
                     x:Uid="ImageEdit_ZoomAndCenterButton"
                     MinWidth="32"
                     Padding="8,4"
-                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.ZoomAndCenterCommand)}"
+                    Command="{x:Bind ViewModel.ZoomAndCenterCommand}"
                     IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                     <FontIcon FontSize="16" Glyph="&#xE71E;" />
                 </Button>
                 <TextBlock
+                    x:Uid="ImageEdit_ZoomLabel"
                     VerticalAlignment="Center"
-                    FontSize="12"
-                    Text="Zoom:" />
+                    FontSize="12" />
                 <Slider
                     x:Name="ZoomSlider"
                     Width="120"
@@ -283,10 +350,65 @@
                     ValueChanged="ZoomSlider_ValueChanged"
                     Value="{x:Bind ViewModel.ZoomPercentage, Mode=OneWay}" />
                 <TextBlock
+                    MinWidth="32"
                     VerticalAlignment="Center"
                     FontSize="12"
-                    Text="{x:Bind FormatZoomPercentage(ViewModel.ZoomPercentage), Mode=OneWay}" />
+                    Text="{x:Bind FormatZoomPercentage(ViewModel.ZoomPercentage), Mode=OneWay}"
+                    TextAlignment="Right" />
             </StackPanel>
         </Grid>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="CommonStates">
+                <!--  Minimal: Show only dimensions (smallest screens)  -->
+                <VisualState x:Name="MinimalState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DimensionsTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="OffsetTextBlock.Visibility" Value="Collapsed" />
+                        <Setter Target="RotationTextBlock.Visibility" Value="Collapsed" />
+                        <Setter Target="MirroredTextBlock.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <!--  Narrow: Show Dimensions and Offset  -->
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="550" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DimensionsTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="OffsetTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="RotationTextBlock.Visibility" Value="Collapsed" />
+                        <Setter Target="MirroredTextBlock.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <!--  Medium: Show Dimensions, Offset, and Rotation  -->
+                <VisualState x:Name="MediumState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="600" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DimensionsTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="OffsetTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="RotationTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="MirroredTextBlock.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <!--  Wide: Show all info  -->
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="650" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DimensionsTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="OffsetTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="RotationTextBlock.Visibility" Value="Visible" />
+                        <Setter Target="MirroredTextBlock.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 </local:ImageEditPageBase>

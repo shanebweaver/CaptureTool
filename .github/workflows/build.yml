@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
 
     strategy:
       matrix:
@@ -14,17 +14,17 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         submodules: recursive
         
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: '10.0.x'
 
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Setup vcpkg
       run: |
@@ -39,13 +39,64 @@ jobs:
       shell: pwsh
 
     - name: Restore .NET dependencies
-      run: dotnet restore
+      run: msbuild CaptureTool.slnx /t:Restore /p:Configuration=Release /p:Platform=${{ matrix.platform }}
 
     - name: Build solution
       run: msbuild CaptureTool.slnx /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:UapAppxPackageBuildMode=StoreUpload
 
+    - name: Install coverage tools
+      if: matrix.platform == 'x64'
+      run: |
+        dotnet tool install --global dotnet-coverage
+        dotnet tool install --global dotnet-reportgenerator-globaltool
+
+    - name: Run .NET tests with coverage
+      if: matrix.platform == 'x64'
+      run: |
+        dotnet-coverage collect "powershell -NoProfile -ExecutionPolicy Bypass -File .github\scripts\run-managed-tests.ps1" -f cobertura -o coverage.cobertura.xml
+
+    - name: Generate coverage report
+      if: matrix.platform == 'x64'
+      run: |
+        reportgenerator -reports:coverage.cobertura.xml -targetdir:coverage-report -reporttypes:"HtmlInline_AzurePipelines;MarkdownSummaryGithub" -title:"CaptureTool Coverage"
+
+    - name: Enforce coverage threshold
+      if: matrix.platform == 'x64'
+      run: |
+        [xml]$coverage = Get-Content coverage.cobertura.xml
+        $lineRate = [double]$coverage.coverage.'line-rate'
+        $coveragePercent = [math]::Round($lineRate * 100, 2)
+        $minimumCoveragePercent = 25
+        "Line coverage: $coveragePercent%" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+        "Minimum line coverage: $minimumCoveragePercent%" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+        if ($coveragePercent -lt $minimumCoveragePercent) {
+          throw "Line coverage $coveragePercent% is below the required $minimumCoveragePercent%."
+        }
+
+    - name: Publish coverage summary
+      if: matrix.platform == 'x64'
+      run: |
+        Get-Content coverage-report\SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+
+    - name: Upload coverage report artifact
+      if: matrix.platform == 'x64'
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-report
+        path: |
+          coverage.cobertura.xml
+          coverage-report
+
+    - name: Upload coverage to Codecov
+      if: matrix.platform == 'x64'
+      uses: codecov/codecov-action@v6
+      with:
+        files: coverage.cobertura.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true
+
     - name: Upload Package Artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: StorePackage-${{ matrix.platform }}
         path: 'output\${{ matrix.platform }}\*\*.msix'

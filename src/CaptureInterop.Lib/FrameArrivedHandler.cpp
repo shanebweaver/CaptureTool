@@ -60,8 +60,8 @@ void FrameArrivedHandler::Stop()
         m_processingThread.join();
     }
     
-    // Log any remaining frames as a warning
     std::lock_guard<std::mutex> lock(m_queueMutex);
+    m_pendingFrame.reset();
 }
 
 HRESULT STDMETHODCALLTYPE FrameArrivedHandler::QueryInterface(REFIID riid, void** ppvObject)
@@ -138,60 +138,64 @@ HRESULT STDMETHODCALLTYPE FrameArrivedHandler::Invoke(IDirect3D11CaptureFramePoo
         return hr;
     }
 
-    LONGLONG timestamp = 0;
-    if (m_clockReader && m_clockReader->IsRunning())
-    {
-        timestamp = m_clockReader->GetCurrentTime();
-    }
+    m_receivedFrameCount.fetch_add(1, std::memory_order_relaxed);
+    LONGLONG timestamp = GetFrameTimestamp();
     
     {
         std::lock_guard<std::mutex> lock(m_queueMutex);
-        
-        // Keep queue size at 3 frames to reduce memory pressure while providing minimal buffering
-        // Reduced from 6 to minimize memory accumulation during encoding delays
-        if (m_frameQueue.size() < 3)
+
+        if (m_pendingFrame.has_value())
         {
-            QueuedFrame queuedFrame;
-            queuedFrame.texture = texture;
-            queuedFrame.relativeTimestamp = timestamp;
-            m_frameQueue.push(std::move(queuedFrame));
-            m_queueCV.notify_one();
-        }
-        else
-        {
-            // Queue full - drop frame to prevent memory buildup
-            // Increment dropped frame counter
             m_droppedFrameCount.fetch_add(1, std::memory_order_relaxed);
-            
-            // Explicitly reset texture to encourage immediate GPU memory release
-            texture.reset();
         }
+
+        QueuedFrame queuedFrame;
+        queuedFrame.texture = std::move(texture);
+        queuedFrame.relativeTimestamp = timestamp;
+        m_pendingFrame = std::move(queuedFrame);
+        m_queueCV.notify_one();
     }
 
     return S_OK;
 }
 
+LONGLONG FrameArrivedHandler::GetFrameTimestamp() const
+{
+    if (!m_clockReader || !m_clockReader->IsRunning())
+    {
+        return 0;
+    }
+
+    LONGLONG timestamp = m_clockReader->GetCurrentTime();
+    if (timestamp > 0)
+    {
+        return timestamp;
+    }
+
+    LARGE_INTEGER qpc{};
+    QueryPerformanceCounter(&qpc);
+    return m_clockReader->GetRelativeTime(qpc.QuadPart);
+}
+
 void FrameArrivedHandler::ProcessingThreadProc()
 {
-    int processedCount = 0;
-    
     while (m_running)
     {
         QueuedFrame frame;
         
         {
             std::unique_lock<std::mutex> lock(m_queueMutex);
-            m_queueCV.wait(lock, [this] { return !m_frameQueue.empty() || !m_running; });
+            m_queueCV.wait(lock, [this] { return m_pendingFrame.has_value() || !m_running; });
             
-            if (!m_running && m_frameQueue.empty())
+            if (!m_running && !m_pendingFrame.has_value())
             {
                 break;
             }
             
-            if (!m_frameQueue.empty())
+            if (m_pendingFrame.has_value())
             {
-                frame = std::move(m_frameQueue.front());
-                m_frameQueue.pop();
+                frame = std::move(*m_pendingFrame);
+                m_pendingFrame.reset();
             }
             else
             {
@@ -202,17 +206,23 @@ void FrameArrivedHandler::ProcessingThreadProc()
         // Check if callback is still valid and we're still running before invoking
         if (frame.texture && m_callback && m_running)
         {
+            if (!m_frameAdmission.ShouldAccept(frame.relativeTimestamp))
+            {
+                m_droppedFrameCount.fetch_add(1, std::memory_order_relaxed);
+                continue;
+            }
+
             VideoFrameReadyEventArgs args;
             args.pTexture = frame.texture.get();
             args.timestamp = frame.relativeTimestamp;
             
             m_callback(args);
-            processedCount++;
+            m_processedFrameCount.fetch_add(1, std::memory_order_relaxed);
         }
     }
     
-    // Don't drain remaining frames after stopping to prevent callbacks after shutdown
-    // Frames in the queue will be automatically cleaned up when the queue is destroyed
+    // Don't drain the remaining frame after stopping to prevent callbacks after shutdown.
+    // The pending texture is released by Stop().
 }
 
 EventRegistrationToken RegisterFrameArrivedHandler(

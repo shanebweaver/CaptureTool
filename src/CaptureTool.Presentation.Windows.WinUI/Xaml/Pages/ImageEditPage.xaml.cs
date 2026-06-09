@@ -1,32 +1,112 @@
-using CaptureTool.Infrastructure.Interfaces.Loading;
+using CaptureTool.Domain.Edit.Operations;
+using CaptureTool.Domain.Edit.Drawable;
+using CaptureTool.Presentation.Loading;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Drawing;
+using Point = global::Windows.Foundation.Point;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class ImageEditPage : ImageEditPageBase
 {
+    private MenuFlyout? _imageContextMenu;
+    private MenuFlyout? _shapeContextMenu;
+    private MenuFlyoutItem? _saveMenuItem;
+    private MenuFlyoutItem? _copyMenuItem;
+    private MenuFlyoutItem? _shareMenuItem;
+    private MenuFlyoutItem? _undoMenuItem;
+    private MenuFlyoutItem? _redoMenuItem;
+
     public ImageEditPage()
     {
         InitializeComponent();
+        InitializeContextMenus();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
-        ShapeTypeComboBox.SelectionChanged += ShapeTypeComboBox_SelectionChanged;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
+        ImageCanvas.ImageContextMenuRequested += ImageCanvas_ImageContextMenuRequested;
+        ImageCanvas.ShapeContextMenuRequested += ImageCanvas_ShapeContextMenuRequested;
     }
 
     ~ImageEditPage()
     {
         ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
-        ShapeTypeComboBox.SelectionChanged -= ShapeTypeComboBox_SelectionChanged;
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
         ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
+        ImageCanvas.ShapeDeleted -= ImageCanvas_ShapeDeleted;
+        ImageCanvas.ShapeModified -= ImageCanvas_ShapeModified;
+        ImageCanvas.ImageContextMenuRequested -= ImageCanvas_ImageContextMenuRequested;
+        ImageCanvas.ShapeContextMenuRequested -= ImageCanvas_ShapeContextMenuRequested;
+    }
+
+    private void InitializeContextMenus()
+    {
+        _imageContextMenu = new MenuFlyout();
+        _saveMenuItem = CreateMenuItem(
+            "Save",
+            new SymbolIcon(Symbol.Save),
+            ViewModel.SaveCommand);
+        _copyMenuItem = CreateMenuItem(
+            "Copy",
+            new SymbolIcon(Symbol.Copy),
+            ViewModel.CopyCommand);
+        _shareMenuItem = CreateMenuItem(
+            "Share",
+            new SymbolIcon(Symbol.Share),
+            ViewModel.ShareCommand);
+        _undoMenuItem = CreateMenuItem(
+            "Undo",
+            new SymbolIcon(Symbol.Undo),
+            ViewModel.UndoCommand);
+        _redoMenuItem = CreateMenuItem(
+            "Redo",
+            new SymbolIcon(Symbol.Redo),
+            ViewModel.RedoCommand);
+
+        _imageContextMenu.Items.Add(_saveMenuItem!);
+        _imageContextMenu.Items.Add(_copyMenuItem!);
+        _imageContextMenu.Items.Add(_shareMenuItem!);
+        _imageContextMenu.Items.Add(new MenuFlyoutSeparator());
+        _imageContextMenu.Items.Add(_undoMenuItem!);
+        _imageContextMenu.Items.Add(_redoMenuItem!);
+
+        _shapeContextMenu = new MenuFlyout();
+        var deleteMenuItem = new MenuFlyoutItem
+        {
+            Text = "Delete",
+            Icon = new SymbolIcon(Symbol.Delete)
+        };
+        deleteMenuItem.Click += (_, _) => ImageCanvas.DeleteSelectedShape();
+        _shapeContextMenu.Items.Add(deleteMenuItem);
+    }
+
+    private void UpdateImageContextMenuState()
+    {
+        _saveMenuItem?.IsEnabled = ViewModel.IsLoaded;
+
+        _copyMenuItem?.IsEnabled = ViewModel.IsLoaded;
+
+        _shareMenuItem?.IsEnabled = ViewModel.IsLoaded;
+
+        _undoMenuItem?.IsEnabled = ViewModel.HasUndoStack;
+
+        _redoMenuItem?.IsEnabled = ViewModel.HasRedoStack;
+    }
+
+    private static MenuFlyoutItem CreateMenuItem(string text, IconElement icon, System.Windows.Input.ICommand command)
+    {
+        return new()
+        {
+            Text = text,
+            Icon = icon,
+            Command = command
+        };
     }
 
     private string FormatZoomPercentage(int zoomPercentage)
@@ -94,6 +174,37 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.OnShapeDrawn(e.Start, e.End);
     }
 
+    private void ImageCanvas_ShapeDeleted(object? _, int shapeIndex)
+    {
+        ViewModel.OnShapeDeleted(shapeIndex);
+    }
+
+    private void ImageCanvas_ShapeModified(object? _, (int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState) e)
+    {
+        ViewModel.OnShapeModified(e.ShapeIndex, e.OldState, e.NewState);
+    }
+
+    private void ImageCanvas_TextBoxDrawn(object? _, (System.Numerics.Vector2 Start, System.Numerics.Vector2 End) e)
+    {
+        ViewModel.OnTextBoxDrawn(e.Start, e.End);
+    }
+
+    private void ImageCanvas_TextDrawableSelected(object? _, TextDrawable e)
+    {
+        ViewModel.OnTextDrawableSelected(e);
+    }
+
+    private void ImageCanvas_ImageContextMenuRequested(object? _, Point position)
+    {
+        UpdateImageContextMenuState();
+        _imageContextMenu?.ShowAt(ImageCanvas, new FlyoutShowOptions { Position = position });
+    }
+
+    private void ImageCanvas_ShapeContextMenuRequested(object? _, Point position)
+    {
+        _shapeContextMenu?.ShowAt(ImageCanvas, new FlyoutShowOptions { Position = position });
+    }
+
     private void ChromaKeyAppBarToggleButton_IsCheckedChanged(object sender, RoutedEventArgs _)
     {
         if (sender is AppBarToggleButton toggleButton)
@@ -117,16 +228,78 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.UpdateSelectedColorOptionIndexCommand.Execute(e);
     }
 
-    private void ShapeTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void ShapeToolbar_SelectedShapeTypeIndexChanged(object _, int e)
     {
-        if (sender is ComboBox comboBox && comboBox.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is string tag)
+        if (Enum.IsDefined(typeof(CaptureTool.Domain.Edit.ShapeType), e))
         {
-            if (int.TryParse(tag, out int shapeTypeValue) && Enum.IsDefined(typeof(CaptureTool.Domain.Edit.Interfaces.ShapeType), shapeTypeValue))
-            {
-                var shapeType = (CaptureTool.Domain.Edit.Interfaces.ShapeType)shapeTypeValue;
-                ViewModel.UpdateSelectedShapeTypeCommand.Execute(shapeType);
-            }
+            var shapeType = (CaptureTool.Domain.Edit.ShapeType)e;
+            ViewModel.UpdateSelectedShapeTypeCommand.Execute(shapeType);
         }
+    }
+
+    private void ShapeToolbar_StrokeColorChanged(object _, Color e)
+    {
+        ViewModel.UpdateShapeStrokeColorCommand.Execute(e);
+    }
+
+    private void ShapeToolbar_FillColorChanged(object _, Color e)
+    {
+        ViewModel.UpdateShapeFillColorCommand.Execute(e);
+    }
+
+    private void ShapeToolbar_StrokeWidthChanged(object _, int e)
+    {
+        ViewModel.UpdateShapeStrokeWidthCommand.Execute(e);
+    }
+
+    private void ShapeToolbar_StrokeOpacityChanged(object _, int e)
+    {
+        ViewModel.UpdateShapeStrokeOpacityCommand.Execute(e);
+    }
+
+    private void ShapeToolbar_FillOpacityChanged(object _, int e)
+    {
+        ViewModel.UpdateShapeFillOpacityCommand.Execute(e);
+    }
+
+    private void Toolbar_StyleInteractionStarted(object? sender, EventArgs e)
+    {
+        ImageCanvas.BeginSelectedDrawableStyleInteraction();
+    }
+
+    private void Toolbar_StyleInteractionCompleted(object? sender, EventArgs e)
+    {
+        ImageCanvas.CompleteSelectedDrawableStyleInteraction();
+    }
+
+    private void TextToolbar_FontColorChanged(object _, Color e)
+    {
+        ViewModel.UpdateTextFontColorCommand.Execute(e);
+    }
+
+    private void TextToolbar_FontColorOpacityChanged(object _, int e)
+    {
+        ViewModel.UpdateTextFontColorOpacityCommand.Execute(e);
+    }
+
+    private void TextToolbar_BackgroundColorChanged(object _, Color e)
+    {
+        ViewModel.UpdateTextBackgroundColorCommand.Execute(e);
+    }
+
+    private void TextToolbar_BackgroundColorOpacityChanged(object _, int e)
+    {
+        ViewModel.UpdateTextBackgroundColorOpacityCommand.Execute(e);
+    }
+
+    private void TextToolbar_FontFamilyChanged(object _, string e)
+    {
+        ViewModel.UpdateTextFontFamilyCommand.Execute(e);
+    }
+
+    private void TextToolbar_FontSizeChanged(object _, int e)
+    {
+        ViewModel.UpdateTextFontSizeCommand.Execute(e);
     }
 
     private async void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)

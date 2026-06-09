@@ -5,12 +5,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:helpers="using:CaptureTool.Presentation.Windows.WinUI.Helpers"
+    xmlns:home="using:CaptureTool.Presentation.Features.Home"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:CaptureTool.Application.Interfaces.ViewModels"
     xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
-    d:DataContext="{d:DesignInstance Type=viewmodels:IHomePageViewModel}"
+    d:DataContext="{d:DesignInstance Type=home:HomePageViewModel}"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -46,7 +45,7 @@
                 <Button
                     x:Name="NewImageCaptureButton"
                     x:Uid="NewCaptureButton_Image"
-                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewImageCaptureCommand)}"
+                    Command="{x:Bind ViewModel.NewImageCaptureCommand}"
                     Style="{StaticResource NewCaptureButtonStyle}">
                     <StackPanel Spacing="4">
                         <SymbolIcon Symbol="{StaticResource NewImageCaptureSymbol}" />
@@ -59,13 +58,26 @@
                 <Button
                     x:Name="NewVideoCaptureButton"
                     x:Uid="NewCaptureButton_Video"
-                    Command="{x:Bind helpers:XamlCommandHelpers.ToICommand(ViewModel.NewVideoCaptureCommand)}"
-                    Style="{StaticResource NewCaptureButtonStyle}"
-                    Visibility="{x:Bind ViewModel.IsVideoCaptureEnabled}">
+                    Command="{x:Bind ViewModel.NewVideoCaptureCommand}"
+                    Style="{StaticResource NewCaptureButtonStyle}">
                     <StackPanel Spacing="4">
                         <SymbolIcon Symbol="{StaticResource NewVideoCaptureSymbol}" />
                         <TextBlock
                             x:Uid="NewCaptureButton_Video_Label"
+                            TextAlignment="Center"
+                            TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    x:Name="NewAudioCaptureButton"
+                    x:Uid="NewCaptureButton_Audio"
+                    Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
+                    Style="{StaticResource NewCaptureButtonStyle}"
+                    Visibility="{x:Bind ViewModel.IsAudioCaptureEnabled}">
+                    <StackPanel Spacing="4">
+                        <SymbolIcon Symbol="Audio" />
+                        <TextBlock
+                            x:Uid="NewCaptureButton_Audio_Label"
                             TextAlignment="Center"
                             TextWrapping="WrapWholeWords" />
                     </StackPanel>

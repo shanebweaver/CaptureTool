@@ -10,6 +10,15 @@ Result<wil::com_ptr<IMFSample>> SampleBuilder::CreateVideoSample(
     return CreateSampleFromData(data, timestamp, duration, "CreateVideoSample");
 }
 
+Result<wil::com_ptr<IMFSample>> SampleBuilder::CreateVideoSampleFromBuffer(
+    uint32_t bufferSize,
+    int64_t timestamp,
+    int64_t duration,
+    const std::function<Result<void>(std::span<uint8_t>)>& fillBuffer) const
+{
+    return CreateSampleFromBuffer(bufferSize, timestamp, duration, "CreateVideoSampleFromBuffer", fillBuffer);
+}
+
 Result<wil::com_ptr<IMFSample>> SampleBuilder::CreateAudioSample(
     std::span<const uint8_t> data,
     int64_t timestamp,
@@ -37,6 +46,30 @@ Result<wil::com_ptr<IMFSample>> SampleBuilder::CreateSampleFromData(
     }
 
     UINT32 bufferSize = static_cast<UINT32>(data.size());
+    return CreateSampleFromBuffer(
+        bufferSize,
+        timestamp,
+        duration,
+        context,
+        [&data](std::span<uint8_t> buffer) -> Result<void> {
+            memcpy(buffer.data(), data.data(), data.size());
+            return Result<void>::Ok();
+        });
+}
+
+Result<wil::com_ptr<IMFSample>> SampleBuilder::CreateSampleFromBuffer(
+    uint32_t bufferSize,
+    int64_t timestamp,
+    int64_t duration,
+    const char* context,
+    const std::function<Result<void>(std::span<uint8_t>)>& fillBuffer) const
+{
+    if (bufferSize == 0 || !fillBuffer)
+    {
+        return Result<wil::com_ptr<IMFSample>>::Error(
+            ErrorInfo::FromMessage(E_INVALIDARG, "Buffer size or fill callback is invalid", context));
+    }
+
     wil::com_ptr<IMFMediaBuffer> buffer;
     HRESULT hr = MFCreateMemoryBuffer(bufferSize, buffer.put());
     if (FAILED(hr))
@@ -57,7 +90,13 @@ Result<wil::com_ptr<IMFSample>> SampleBuilder::CreateSampleFromData(
             ErrorInfo::FromHResult(hr, errorContext.c_str()));
     }
 
-    memcpy(pBufferData, data.data(), bufferSize);
+    auto fillResult = fillBuffer(std::span<uint8_t>(pBufferData, bufferSize));
+    if (fillResult.IsError())
+    {
+        buffer->Unlock();
+        return Result<wil::com_ptr<IMFSample>>::Error(fillResult.Error());
+    }
+
     buffer->SetCurrentLength(bufferSize);
     buffer->Unlock();
 

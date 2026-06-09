@@ -1,6 +1,7 @@
-using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Domain.Capture.Interfaces;
-using CaptureTool.Infrastructure.Interfaces.Themes;
+using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Presentation.Features.SelectionOverlay;
+using CaptureTool.Presentation.Loading;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
@@ -44,9 +45,31 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
             {
                 SelectionOverlay.CaptureType = selectedCaptureType.Value;
             }
+
+            // Subscribe to toolbar events only after ViewModel is fully loaded
+            if (ViewModel.IsPrimary)
+            {
+                SelectionToolbar.CaptureModeSelectionChanged += SelectionToolbar_CaptureModeSelectionChanged;
+                SelectionToolbar.CaptureTypeSelectionChanged += SelectionToolbar_CaptureTypeSelectionChanged;
+            }
+        }
+        else
+        {
+            // Subscribe when loading completes
+            ViewModel.LoadStateChanged += OnViewModelLoadStateChanged;
         }
 
         SetFocus();
+    }
+
+    private void OnViewModelLoadStateChanged(object? sender, LoadState e)
+    {
+        if (e == LoadState.Loaded && ViewModel.IsPrimary)
+        {
+            SelectionToolbar.CaptureModeSelectionChanged += SelectionToolbar_CaptureModeSelectionChanged;
+            SelectionToolbar.CaptureTypeSelectionChanged += SelectionToolbar_CaptureTypeSelectionChanged;
+            ViewModel.LoadStateChanged -= OnViewModelLoadStateChanged;
+        }
     }
 
     private void ViewModel_CaptureOptionsUpdated(object? sender, CaptureOptions e)
@@ -67,24 +90,31 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
         ViewModel.CaptureOptionsUpdated -= ViewModel_CaptureOptionsUpdated;
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        ViewModel.LoadStateChanged -= OnViewModelLoadStateChanged;
         SelectionOverlay.SelectionComplete -= SelectionOverlay_SelectionComplete;
+
+        if (ViewModel.IsPrimary)
+        {
+            SelectionToolbar.CaptureModeSelectionChanged -= SelectionToolbar_CaptureModeSelectionChanged;
+            SelectionToolbar.CaptureTypeSelectionChanged -= SelectionToolbar_CaptureTypeSelectionChanged;
+        }
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
         {
-            case nameof(ISelectionOverlayWindowViewModel.SelectedCaptureTypeIndex):
+            case nameof(SelectionOverlayWindowViewModel.SelectedCaptureTypeIndex):
                 var selectedCaptureType = ViewModel.GetSelectedCaptureType();
                 if (selectedCaptureType != null)
                 {
                     SelectionOverlay.CaptureType = selectedCaptureType.Value;
                 }
                 break;
-            case nameof(ISelectionOverlayWindowViewModel.CaptureArea):
+            case nameof(SelectionOverlayWindowViewModel.CaptureArea):
                 SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
                 break;
-            case nameof(ISelectionOverlayWindowViewModel.MonitorWindows):
+            case nameof(SelectionOverlayWindowViewModel.MonitorWindows):
                 SelectionOverlay.WindowRects = ViewModel.MonitorWindows;
                 break;
         }
@@ -120,26 +150,26 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
         if (captureArea.Height >= 40 && captureArea.Width >= 40)
         {
-            ViewModel.RequestCaptureCommand.Execute();
+            ViewModel.RequestCaptureCommand.Execute(_);
         }
     }
 
-    private void SelectionToolbar_CaptureModeSelectionChanged(object _, int e)
+    private void SelectionToolbar_CaptureModeSelectionChanged(object? sender, int e)
     {
-        ViewModel.UpdateSelectedCaptureModeCommand.Execute(e);
+        ViewModel.UpdateSelectedCaptureModeCommand.Execute((e, SelectionUpdateSource.UserInteraction));
     }
 
-    private void SelectionToolbar_CaptureTypeSelectionChanged(object _, int e)
+    private void SelectionToolbar_CaptureTypeSelectionChanged(object? sender, int e)
     {
-        ViewModel.UpdateSelectedCaptureTypeCommand.Execute(e);
+        ViewModel.UpdateSelectedCaptureTypeCommand.Execute((e, SelectionUpdateSource.UserInteraction));
     }
 
-    private void SelectionOverlayContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
+    private void SelectionOverlayContainer_PointerMoved(object _, PointerRoutedEventArgs __)
     {
         ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Cross, 1));
     }
 
-    private void ToolbarContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
+    private void ToolbarContainer_PointerMoved(object _, PointerRoutedEventArgs __)
     {
         ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(0, 1));
     }

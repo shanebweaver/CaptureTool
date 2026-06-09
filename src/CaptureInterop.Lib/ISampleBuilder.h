@@ -3,6 +3,7 @@
 #include <wil/com.h>
 #include <span>
 #include <cstdint>
+#include <functional>
 
 // Forward declarations
 struct IMFSample;
@@ -27,6 +28,15 @@ public:
         std::span<const uint8_t> data,
         int64_t timestamp,
         int64_t duration) const = 0;
+
+    /// <summary>
+    /// Create a Media Foundation video sample by filling the sample buffer directly.
+    /// </summary>
+    virtual Result<wil::com_ptr<IMFSample>> CreateVideoSampleFromBuffer(
+        uint32_t bufferSize,
+        int64_t timestamp,
+        int64_t duration,
+        const std::function<Result<void>(std::span<uint8_t>)>& fillBuffer) const = 0;
 
     /// <summary>
     /// Create a Media Foundation sample from audio data.

@@ -1,4 +1,4 @@
-using CaptureTool.Infrastructure.Interfaces.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Windows;

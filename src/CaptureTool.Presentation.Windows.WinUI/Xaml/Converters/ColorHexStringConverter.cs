@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Data;
 using System.Globalization;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Converters;

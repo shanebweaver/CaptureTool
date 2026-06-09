@@ -1,5 +1,6 @@
-using CaptureTool.Application.Interfaces.FeatureManagement;
+using CaptureTool.Application.Abstractions.Audio;
 using Microsoft.UI.Xaml;
+using System.Collections;
 using System.Windows.Input;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
@@ -66,14 +67,63 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(TimeSpan.Zero));
 
+    public static readonly DependencyProperty AudioInputSourcesProperty = DependencyProperty.Register(
+        nameof(AudioInputSources),
+        typeof(IEnumerable),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(Array.Empty<AudioInputSource>(), OnAudioInputBindablePropertyChanged));
+
+    public static readonly DependencyProperty SelectedAudioInputSourceProperty = DependencyProperty.Register(
+        nameof(SelectedAudioInputSource),
+        typeof(AudioInputSource),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(null, OnAudioInputBindablePropertyChanged));
+
+    public static readonly DependencyProperty SelectedAudioInputSourceIndexProperty = DependencyProperty.Register(
+        nameof(SelectedAudioInputSourceIndex),
+        typeof(int),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(-1, OnAudioInputBindablePropertyChanged));
+
+    public static readonly DependencyProperty IsAudioInputSelectionAvailableProperty = DependencyProperty.Register(
+        nameof(IsAudioInputSelectionAvailable),
+        typeof(bool),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(false, OnAudioInputBindablePropertyChanged));
+
+    public static readonly DependencyProperty IsAudioInputMutedProperty = DependencyProperty.Register(
+        nameof(IsAudioInputMuted),
+        typeof(bool),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(false, OnAudioInputBindablePropertyChanged));
+
+    public static readonly DependencyProperty IsAudioInputSelectionFeatureEnabledProperty = DependencyProperty.Register(
+        nameof(IsAudioInputSelectionFeatureEnabled),
+        typeof(bool),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(false, OnAudioInputBindablePropertyChanged));
+
+    public static readonly DependencyProperty AudioInputSelectionStatusProperty = DependencyProperty.Register(
+        nameof(AudioInputSelectionStatus),
+        typeof(string),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(string.Empty, OnAudioInputBindablePropertyChanged));
+
+    public static readonly DependencyProperty SelectAudioInputSourceCommandProperty = DependencyProperty.Register(
+        nameof(SelectAudioInputSourceCommand),
+        typeof(ICommand),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(null));
+
+    public static readonly DependencyProperty ToggleAudioInputMuteCommandProperty = DependencyProperty.Register(
+        nameof(ToggleAudioInputMuteCommand),
+        typeof(ICommand),
+        typeof(CaptureOverlayToolbar),
+        new PropertyMetadata(null, OnAudioInputBindablePropertyChanged));
+
     public CaptureOverlayToolbar()
     {
         InitializeComponent();
-
-        if (AppServiceLocator.FeatureManager.IsEnabled(CaptureToolFeatures.Feature_VideoCapture_LocalAudio))
-        {
-            LocalAudioToggleButton.Visibility = Visibility.Visible;
-        }
     }
 
     public bool IsRunning => IsRecording && !IsPaused;
@@ -144,5 +194,112 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     {
         get => Get<TimeSpan>(CaptureTimeProperty);
         set => Set(CaptureTimeProperty, value);
+    }
+
+    public IEnumerable AudioInputSources
+    {
+        get => Get<IEnumerable>(AudioInputSourcesProperty);
+        set => Set(AudioInputSourcesProperty, value);
+    }
+
+    public AudioInputSource? SelectedAudioInputSource
+    {
+        get => Get<AudioInputSource?>(SelectedAudioInputSourceProperty);
+        set => Set(SelectedAudioInputSourceProperty, value);
+    }
+
+    public int SelectedAudioInputSourceIndex
+    {
+        get => Get<int>(SelectedAudioInputSourceIndexProperty);
+        set => Set(SelectedAudioInputSourceIndexProperty, value);
+    }
+
+    public bool IsAudioInputSelectionAvailable
+    {
+        get => Get<bool>(IsAudioInputSelectionAvailableProperty);
+        set => Set(IsAudioInputSelectionAvailableProperty, value);
+    }
+
+    public bool IsAudioInputMuted
+    {
+        get => Get<bool>(IsAudioInputMutedProperty);
+        set => Set(IsAudioInputMutedProperty, value);
+    }
+
+    public bool IsAudioInputSelectionFeatureEnabled
+    {
+        get => Get<bool>(IsAudioInputSelectionFeatureEnabledProperty);
+        set => Set(IsAudioInputSelectionFeatureEnabledProperty, value);
+    }
+
+    public string AudioInputSelectionStatus
+    {
+        get => Get<string>(AudioInputSelectionStatusProperty);
+        set => Set(AudioInputSelectionStatusProperty, value);
+    }
+
+    public ICommand SelectAudioInputSourceCommand
+    {
+        get => Get<ICommand>(SelectAudioInputSourceCommandProperty);
+        set => Set(SelectAudioInputSourceCommandProperty, value);
+    }
+
+    public ICommand ToggleAudioInputMuteCommand
+    {
+        get => Get<ICommand>(ToggleAudioInputMuteCommandProperty);
+        set => Set(ToggleAudioInputMuteCommandProperty, value);
+    }
+
+    private static void OnAudioInputBindablePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is CaptureOverlayToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(GetPropertyName(e.Property));
+        }
+    }
+
+    private static string GetPropertyName(DependencyProperty property)
+    {
+        if (property == AudioInputSourcesProperty)
+        {
+            return nameof(AudioInputSources);
+        }
+
+        if (property == SelectedAudioInputSourceProperty)
+        {
+            return nameof(SelectedAudioInputSource);
+        }
+
+        if (property == SelectedAudioInputSourceIndexProperty)
+        {
+            return nameof(SelectedAudioInputSourceIndex);
+        }
+
+        if (property == IsAudioInputSelectionAvailableProperty)
+        {
+            return nameof(IsAudioInputSelectionAvailable);
+        }
+
+        if (property == IsAudioInputMutedProperty)
+        {
+            return nameof(IsAudioInputMuted);
+        }
+
+        if (property == IsAudioInputSelectionFeatureEnabledProperty)
+        {
+            return nameof(IsAudioInputSelectionFeatureEnabled);
+        }
+
+        if (property == AudioInputSelectionStatusProperty)
+        {
+            return nameof(AudioInputSelectionStatus);
+        }
+
+        if (property == ToggleAudioInputMuteCommandProperty)
+        {
+            return nameof(ToggleAudioInputMuteCommand);
+        }
+
+        return string.Empty;
     }
 }

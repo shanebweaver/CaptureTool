@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Project properties -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <Platforms>x64;ARM64</Platforms>
+  </PropertyGroup>
+  
+  <!-- Package references -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Graphics.Win2D" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
+    <PackageReference Include="System.Drawing.Common" />
+  </ItemGroup>
+
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" />
+  </ItemGroup>
+
+  <!-- Chroma key shader source is kept for maintenance; the compiled bytecode is embedded at runtime. -->
+  <ItemGroup>
+    <EmbeddedResource
+      Include="ChromaKey\ChromaKeyShader.bin"
+      LogicalName="CaptureTool.Infrastructure.Edit.Windows.ChromaKey.ChromaKeyShader.bin" />
+    <None Include="ChromaKey\ChromaKeyShader.hlsl" />
+  </ItemGroup>
+
+</Project>

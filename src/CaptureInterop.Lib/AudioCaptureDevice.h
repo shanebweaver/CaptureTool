@@ -4,13 +4,6 @@
 /// WASAPI-based audio capture device wrapper.
 /// Supports both loopback capture (system audio) and microphone input.
 /// 
-/// Implements Rust Principles:
-/// - Principle #3 (No Nullable Pointers): Uses wil::com_ptr and wil::unique_cotaskmem_ptr
-///   for COM object lifetime management, avoiding raw nullable pointers.
-/// - Principle #5 (RAII Everything): Destructor calls Stop() to release WASAPI resources.
-///   All COM objects are automatically released via wil::com_ptr RAII wrappers.
-/// - Principle #6 (No Globals): No global state, each device is independent.
-/// 
 /// Ownership model:
 /// - AudioCaptureDevice owns all COM interface pointers via wil::com_ptr
 /// - WAVEFORMATEX is owned via wil::unique_cotaskmem_ptr (CoTaskMemFree on destruction)
@@ -24,8 +17,6 @@
 /// - Thin wrapper over WASAPI IAudioClient and IAudioCaptureClient
 /// - Handles both loopback (system audio) and microphone capture modes
 /// - No manual Release() calls needed - wil::com_ptr handles reference counting
-/// 
-/// See docs/RUST_PRINCIPLES.md for more details.
 /// </summary>
 class AudioCaptureDevice
 {
@@ -73,10 +64,13 @@ public:
     void ReleaseBuffer(UINT32 numFramesRead);
 
 private:
+    void ReleaseResources();
+
     wil::com_ptr<IMMDeviceEnumerator> m_deviceEnumerator;
     wil::com_ptr<IMMDevice> m_device;
     wil::com_ptr<IAudioClient> m_audioClient;
     wil::com_ptr<IAudioCaptureClient> m_captureClient;
     wil::unique_cotaskmem_ptr<WAVEFORMATEX> m_waveFormat;
     bool m_isCapturing = false;
+    bool m_comInitialized = false;
 };

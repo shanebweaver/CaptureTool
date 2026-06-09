@@ -26,6 +26,8 @@ using namespace ABI::Windows::Graphics::DirectX::Direct3D11;
 
 namespace WindowsGraphicsCaptureHelpers
 {
+    inline constexpr int CaptureFramePoolBufferCount = 2;
+
     /// <summary>
     /// Helper structure containing D3D11 device and context.
     /// </summary>
@@ -43,15 +45,8 @@ namespace WindowsGraphicsCaptureHelpers
     {
         wil::com_ptr<IGraphicsCaptureItemInterop> interop;
 
-        HRESULT hr = RoInitialize(RO_INIT_MULTITHREADED);
-        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
-        {
-            if (outHr) *outHr = hr;
-            return nullptr;
-        }
-
         HSTRING classId{};
-        hr = WindowsCreateString(
+        HRESULT hr = WindowsCreateString(
             RuntimeClass_Windows_Graphics_Capture_GraphicsCaptureItem,
             static_cast<UINT32>(wcslen(RuntimeClass_Windows_Graphics_Capture_GraphicsCaptureItem)),
             &classId
@@ -91,6 +86,28 @@ namespace WindowsGraphicsCaptureHelpers
         wil::com_ptr<IGraphicsCaptureItem> item;
         HRESULT hr = interop->CreateForMonitor(
             hMonitor,
+            __uuidof(IGraphicsCaptureItem),
+            item.put_void()
+        );
+
+        if (FAILED(hr))
+        {
+            if (outHr) *outHr = hr;
+            return nullptr;
+        }
+
+        if (outHr) *outHr = S_OK;
+        return item;
+    }
+
+    inline wil::com_ptr<IGraphicsCaptureItem> GetGraphicsCaptureItemForWindow(
+        HWND hwnd,
+        wil::com_ptr<IGraphicsCaptureItemInterop> interop,
+        HRESULT* outHr = nullptr)
+    {
+        wil::com_ptr<IGraphicsCaptureItem> item;
+        HRESULT hr = interop->CreateForWindow(
+            hwnd,
             __uuidof(IGraphicsCaptureItem),
             item.put_void()
         );
@@ -220,11 +237,10 @@ namespace WindowsGraphicsCaptureHelpers
         }
 
         wil::com_ptr<IDirect3D11CaptureFramePool> framePool;
-
         hr = factory->Create(
             direct3DDevice.get(),
             DirectXPixelFormat_B8G8R8A8UIntNormalized,
-            6, // number of buffers - increased from 2 to prevent stalls when WriteSample blocks
+            CaptureFramePoolBufferCount,
             size,
             framePool.put());
         if (FAILED(hr))

@@ -5,6 +5,13 @@
 #include <string>
 #include <vector>
 
+enum class CaptureTargetType : uint32_t
+{
+    Monitor = 0,
+    Window = 1,
+    Rectangle = 2
+};
+
 /// <summary>
 /// Result of configuration validation with detailed error information.
 /// Provides comprehensive feedback about validation failures.
@@ -65,10 +72,18 @@ struct ConfigValidationResult
 /// </summary>
 struct CaptureSessionConfig
 {
+    CaptureTargetType targetType;
+
     /// <summary>
     /// Handle to the monitor to capture.
     /// </summary>
     HMONITOR hMonitor;
+
+    HWND hwnd;
+    int32_t sourceLeft;
+    int32_t sourceTop;
+    uint32_t sourceWidth;
+    uint32_t sourceHeight;
 
     /// <summary>
     /// Path to the output MP4 file.
@@ -106,7 +121,13 @@ struct CaptureSessionConfig
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
         uint32_t audBitrate = 128'000)
-        : hMonitor(monitor)
+        : targetType(CaptureTargetType::Monitor)
+        , hMonitor(monitor)
+        , hwnd(nullptr)
+        , sourceLeft(0)
+        , sourceTop(0)
+        , sourceWidth(0)
+        , sourceHeight(0)
         , outputPath(path ? path : L"")
         , audioEnabled(audio)
         , frameRate(fps)
@@ -125,7 +146,13 @@ struct CaptureSessionConfig
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
         uint32_t audBitrate = 128'000)
-        : hMonitor(monitor)
+        : targetType(CaptureTargetType::Monitor)
+        , hMonitor(monitor)
+        , hwnd(nullptr)
+        , sourceLeft(0)
+        , sourceTop(0)
+        , sourceWidth(0)
+        , sourceHeight(0)
         , outputPath(std::move(path))
         , audioEnabled(audio)
         , frameRate(fps)
@@ -138,13 +165,67 @@ struct CaptureSessionConfig
     /// Default constructor.
     /// </summary>
     CaptureSessionConfig()
-        : hMonitor(nullptr)
+        : targetType(CaptureTargetType::Monitor)
+        , hMonitor(nullptr)
+        , hwnd(nullptr)
+        , sourceLeft(0)
+        , sourceTop(0)
+        , sourceWidth(0)
+        , sourceHeight(0)
         , outputPath(L"")
         , audioEnabled(false)
         , frameRate(30)
         , videoBitrate(5'000'000)
         , audioBitrate(128'000)
     {
+    }
+
+    static CaptureSessionConfig ForMonitor(
+        HMONITOR monitor,
+        std::wstring path,
+        bool audio = false,
+        uint32_t fps = 30,
+        uint32_t vidBitrate = 5'000'000,
+        uint32_t audBitrate = 128'000)
+    {
+        CaptureSessionConfig config(monitor, std::move(path), audio, fps, vidBitrate, audBitrate);
+        config.targetType = CaptureTargetType::Monitor;
+        return config;
+    }
+
+    static CaptureSessionConfig ForWindow(
+        HWND window,
+        std::wstring path,
+        bool audio = false,
+        uint32_t fps = 30,
+        uint32_t vidBitrate = 5'000'000,
+        uint32_t audBitrate = 128'000)
+    {
+        CaptureSessionConfig config(nullptr, std::move(path), audio, fps, vidBitrate, audBitrate);
+        config.targetType = CaptureTargetType::Window;
+        config.hwnd = window;
+        return config;
+    }
+
+    static CaptureSessionConfig ForRectangle(
+        HMONITOR monitor,
+        int32_t left,
+        int32_t top,
+        uint32_t width,
+        uint32_t height,
+        std::wstring path,
+        bool audio = false,
+        uint32_t fps = 30,
+        uint32_t vidBitrate = 5'000'000,
+        uint32_t audBitrate = 128'000)
+    {
+        CaptureSessionConfig config(monitor, std::move(path), audio, fps, vidBitrate, audBitrate);
+        config.targetType = CaptureTargetType::Rectangle;
+        config.sourceLeft = left;
+        config.sourceTop = top;
+        config.sourceWidth = width;
+        config.sourceHeight = height;
+        return config;
     }
 
     /// <summary>
@@ -165,10 +246,25 @@ struct CaptureSessionConfig
     {
         ConfigValidationResult result = ConfigValidationResult::Ok();
         
-        // Required fields
-        if (hMonitor == nullptr)
+        if (targetType == CaptureTargetType::Monitor && hMonitor == nullptr)
         {
             result.AddError("hMonitor is required");
+        }
+        else if (targetType == CaptureTargetType::Window && hwnd == nullptr)
+        {
+            result.AddError("hwnd is required");
+        }
+        else if (targetType == CaptureTargetType::Rectangle)
+        {
+            if (hMonitor == nullptr)
+            {
+                result.AddError("hMonitor is required");
+            }
+
+            if (sourceWidth == 0 || sourceHeight == 0)
+            {
+                result.AddError("rectangle width and height are required");
+            }
         }
             
         if (outputPath.empty())

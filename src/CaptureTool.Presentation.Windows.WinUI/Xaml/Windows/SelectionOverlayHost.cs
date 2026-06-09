@@ -1,7 +1,7 @@
-﻿using CaptureTool.Application.Interfaces.ViewModels;
-using CaptureTool.Application.Interfaces.ViewModels.Options;
-using CaptureTool.Domain.Capture.Implementations.Windows;
-using CaptureTool.Domain.Capture.Interfaces;
+using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Infrastructure.Capture.Windows;
+using CaptureTool.Presentation.Features.SelectionOverlay;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using System.Drawing;
@@ -18,7 +18,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private readonly HashSet<MonitorCaptureResult> _monitors = [];
     private readonly HashSet<SelectionOverlayWindow> _windows = [];
     private readonly HashSet<nint> _windowHandles = [];
-    private ISelectionOverlayHostViewModel? _viewModel;
+    private SelectionOverlayHostViewModel? _viewModel;
     private DispatcherTimer? _foregroundTimer;
     private SelectionOverlayWindow? _primaryWindow;
     private bool _disposed;
@@ -41,7 +41,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         {
             return;
         }
-        _viewModel = ViewModelLocator.GetViewModel<ISelectionOverlayHostViewModel>();
+        _viewModel = ViewModelLocator.GetViewModel<SelectionOverlayHostViewModel>();
         _viewModel.AllScreensCaptureRequested += OnAllScreensCaptureRequested;
 
         var allWindows = WindowInfoHelper.GetAllWindows();
@@ -61,16 +61,18 @@ internal sealed partial class SelectionOverlayHost : IDisposable
             // Scale window dimensions per monitor.
             Rectangle monitorBounds = monitor.MonitorBounds;
             float scale = monitor.Scale;
-            IEnumerable<Rectangle> monitorWindows = allWindows
-                .Select(w => w.Position)
-                .Where(p =>
-                    monitorBounds.IntersectsWith(p) ||
-                    monitorBounds.Contains(p))
-                .Select(r => new Rectangle(
-                    (int)((r.X - monitorBounds.X) / scale),
-                    (int)((r.Y - monitorBounds.Y) / scale),
-                    (int)(r.Width / scale),
-                    (int)(r.Height / scale)));
+            IEnumerable<WindowInfo> monitorWindows = allWindows
+                .Where(w =>
+                    monitorBounds.IntersectsWith(w.Position) ||
+                    monitorBounds.Contains(w.Position))
+                .Select(w => new WindowInfo(
+                    w.Handle,
+                    w.Title,
+                    new Rectangle(
+                        (int)((w.Position.X - monitorBounds.X) / scale),
+                        (int)((w.Position.Y - monitorBounds.Y) / scale),
+                        (int)(w.Position.Width / scale),
+                        (int)(w.Position.Height / scale))));
 
             SelectionOverlayWindowOptions overlayOptions = new(monitor, [.. monitorWindows], options);
             SelectionOverlayWindow window = new(overlayOptions);
@@ -94,7 +96,7 @@ internal sealed partial class SelectionOverlayHost : IDisposable
     private void OnAllScreensCaptureRequested(object? sender, EventArgs e)
     {
         ImageFile image = AppServiceLocator.ImageCapture.PerformMultiMonitorImageCapture([.. _monitors]);
-        AppServiceLocator.Navigation.GoToImageEdit(image);
+        AppServiceLocator.Navigation.Navigate(NavigationRoute.ImageEdit, image, true);
     }
 
     public void Activate()

@@ -1,7 +1,7 @@
-using CaptureTool.Application.Interfaces.ViewModels;
+using CaptureTool.Presentation.Shell;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 
-public abstract partial class AppMenuViewBase : ViewBase<IAppMenuViewModel>
+public abstract partial class AppMenuViewBase : ViewBase<AppMenuViewModel>
 {
 }

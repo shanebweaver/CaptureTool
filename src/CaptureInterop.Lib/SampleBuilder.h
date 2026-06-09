@@ -26,6 +26,12 @@ public:
         int64_t timestamp,
         int64_t duration) const override;
 
+    Result<wil::com_ptr<IMFSample>> CreateVideoSampleFromBuffer(
+        uint32_t bufferSize,
+        int64_t timestamp,
+        int64_t duration,
+        const std::function<Result<void>(std::span<uint8_t>)>& fillBuffer) const override;
+
     Result<wil::com_ptr<IMFSample>> CreateAudioSample(
         std::span<const uint8_t> data,
         int64_t timestamp,
@@ -37,4 +43,11 @@ private:
         int64_t timestamp,
         int64_t duration,
         const char* context) const;
+
+    Result<wil::com_ptr<IMFSample>> CreateSampleFromBuffer(
+        uint32_t bufferSize,
+        int64_t timestamp,
+        int64_t duration,
+        const char* context,
+        const std::function<Result<void>(std::span<uint8_t>)>& fillBuffer) const;
 };

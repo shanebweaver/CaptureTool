@@ -3,7 +3,7 @@
     x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.CaptureOverlayToolbar"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:capture="using:CaptureTool.Domain.Capture.Interfaces"
+    xmlns:capture="using:CaptureTool.Domain.Capture"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -75,8 +75,7 @@
             <Button
                 x:Name="LocalAudioToggleButton"
                 Command="{x:Bind ToggleLocalAudioCommand, Mode=OneWay}"
-                Style="{StaticResource IconButtonStyle}"
-                Visibility="Collapsed">
+                Style="{StaticResource IconButtonStyle}">
                 <Grid>
                     <FontIcon
                         FontFamily="{StaticResource FluentSystemIcons}"
@@ -88,6 +87,17 @@
                         Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsLocalAudioEnabled), Mode=OneWay}" />
                 </Grid>
             </Button>
+
+            <local:AudioInputSelector
+                AudioInputSources="{x:Bind AudioInputSources, Mode=OneWay}"
+                IsAvailable="{x:Bind IsAudioInputSelectionAvailable, Mode=OneWay}"
+                IsMuted="{x:Bind IsAudioInputMuted, Mode=OneWay}"
+                SelectedAudioInputSource="{x:Bind SelectedAudioInputSource, Mode=OneWay}"
+                SelectedAudioInputSourceIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
+                SelectionChangedCommand="{x:Bind SelectAudioInputSourceCommand, Mode=OneWay}"
+                StatusText="{x:Bind AudioInputSelectionStatus, Mode=OneWay}"
+                ToggleMuteCommand="{x:Bind ToggleAudioInputMuteCommand, Mode=OneWay}"
+                Visibility="{x:Bind IsAudioInputSelectionFeatureEnabled, Mode=OneWay}" />
 
             <Button
                 x:Uid="SelectionOverlay_CloseButton"
