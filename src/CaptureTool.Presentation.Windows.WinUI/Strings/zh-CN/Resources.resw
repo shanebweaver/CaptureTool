@@ -666,6 +666,66 @@ SOFTWARE.
   <data name="VideoEdit_CopyButton.AccessKey" xml:space="preserve">
     <value>C</value>
   </data>
+  <data name="VideoEdit_TrimButton.Label" xml:space="preserve">
+    <value>修剪</value>
+  </data>
+  <data name="VideoEdit_TrimButton.AccessKey" xml:space="preserve">
+    <value>T</value>
+  </data>
+  <data name="VideoEdit_TrimPreviewPlayButton.AutomationProperties.Name" xml:space="preserve">
+    <value>播放修剪预览</value>
+  </data>
+  <data name="VideoEdit_TrimPreviewPlayButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>播放修剪预览</value>
+  </data>
+  <data name="VideoEdit_RenderingTrimPreviewText.Text" xml:space="preserve">
+    <value>正在准备预览...</value>
+  </data>
+  <data name="VideoEdit_FinalizingText.Text" xml:space="preserve">
+    <value>正在完成视频...</value>
+  </data>
+  <data name="VideoEdit_TrimStartTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>修剪开始时间</value>
+  </data>
+  <data name="VideoEdit_TrimStartTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>修剪开始时间</value>
+  </data>
+  <data name="VideoEdit_SelectedTrimDurationText.AutomationProperties.Name" xml:space="preserve">
+    <value>所选修剪时长</value>
+  </data>
+  <data name="VideoEdit_SelectedTrimDurationText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>所选修剪时长</value>
+  </data>
+  <data name="VideoEdit_TrimEndTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>修剪结束时间</value>
+  </data>
+  <data name="VideoEdit_TrimEndTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>修剪结束时间</value>
+  </data>
+  <data name="VideoEdit_PlayheadTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>预览播放头时间</value>
+  </data>
+  <data name="VideoEdit_PlayheadTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>预览播放头时间</value>
+  </data>
+  <data name="VideoTrimRangeSlider_StartThumb.AutomationProperties.Name" xml:space="preserve">
+    <value>修剪开始手柄</value>
+  </data>
+  <data name="VideoTrimRangeSlider_StartThumb.ToolTipService.ToolTip" xml:space="preserve">
+    <value>移动修剪开始位置</value>
+  </data>
+  <data name="VideoTrimRangeSlider_EndThumb.AutomationProperties.Name" xml:space="preserve">
+    <value>修剪结束手柄</value>
+  </data>
+  <data name="VideoTrimRangeSlider_EndThumb.ToolTipService.ToolTip" xml:space="preserve">
+    <value>移动修剪结束位置</value>
+  </data>
+  <data name="VideoTrimRangeSlider_Playhead.AutomationProperties.Name" xml:space="preserve">
+    <value>修剪预览播放头</value>
+  </data>
+  <data name="VideoTrimRangeSlider_Playhead.ToolTipService.ToolTip" xml:space="preserve">
+    <value>移动预览播放头</value>
+  </data>
   <data name="StartVideoCaptureButtonTextBlock.Text" xml:space="preserve">
     <value>录制</value>
   </data>
