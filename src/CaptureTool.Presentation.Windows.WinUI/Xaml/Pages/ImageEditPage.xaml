@@ -168,6 +168,7 @@
                 SelectedShapeType="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay}"
                 ShapeDeleted="ImageCanvas_ShapeDeleted"
                 ShapeDrawn="ImageCanvas_ShapeDrawn"
+                ShapeDrawableSelected="ImageCanvas_ShapeDrawableSelected"
                 ShapeFillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
                 ShapeModified="ImageCanvas_ShapeModified"
                 ShapeStrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"

@@ -370,6 +370,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.OnShapeDeleted(shapeIndex);
     }
 
+    private void ImageCanvas_ShapeDrawableSelected(object? _, IDrawable e)
+    {
+        ViewModel.OnShapeDrawableSelected(e);
+    }
+
     private void ImageCanvas_ShapeModified(object? _, (int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState) e)
     {
         ViewModel.OnShapeModified(e.ShapeIndex, e.OldState, e.NewState);

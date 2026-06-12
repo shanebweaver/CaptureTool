@@ -28,43 +28,43 @@ public sealed partial class TextToolbar : UserControlBase
         nameof(TextFontColor),
         typeof(Color),
         typeof(TextToolbar),
-        new PropertyMetadata(Color.Black));
+        new PropertyMetadata(Color.Black, OnTextFontColorChanged));
 
     public static readonly DependencyProperty TextFontColorOptionsProperty = DependencyProperty.Register(
         nameof(TextFontColorOptions),
         typeof(IEnumerable<Color>),
         typeof(TextToolbar),
-        new PropertyMetadata(Array.Empty<Color>()));
+        new PropertyMetadata(Array.Empty<Color>(), OnTextFontColorOptionsChanged));
 
     public static readonly DependencyProperty TextFontColorOpacityProperty = DependencyProperty.Register(
         nameof(TextFontColorOpacity),
         typeof(int),
         typeof(TextToolbar),
-        new PropertyMetadata(100));
+        new PropertyMetadata(100, OnTextFontColorOpacityChanged));
 
     public static readonly DependencyProperty TextBackgroundColorProperty = DependencyProperty.Register(
         nameof(TextBackgroundColor),
         typeof(Color),
         typeof(TextToolbar),
-        new PropertyMetadata(Color.Transparent));
+        new PropertyMetadata(Color.Transparent, OnTextBackgroundColorChanged));
 
     public static readonly DependencyProperty TextBackgroundColorOptionsProperty = DependencyProperty.Register(
         nameof(TextBackgroundColorOptions),
         typeof(IEnumerable<Color>),
         typeof(TextToolbar),
-        new PropertyMetadata(Array.Empty<Color>()));
+        new PropertyMetadata(Array.Empty<Color>(), OnTextBackgroundColorOptionsChanged));
 
     public static readonly DependencyProperty TextBackgroundColorOpacityProperty = DependencyProperty.Register(
         nameof(TextBackgroundColorOpacity),
         typeof(int),
         typeof(TextToolbar),
-        new PropertyMetadata(100));
+        new PropertyMetadata(100, OnTextBackgroundColorOpacityChanged));
 
     public static readonly DependencyProperty TextFontFamilyProperty = DependencyProperty.Register(
         nameof(TextFontFamily),
         typeof(string),
         typeof(TextToolbar),
-        new PropertyMetadata("Segoe UI"));
+        new PropertyMetadata("Segoe UI", OnTextFontFamilyChanged));
 
     public static readonly DependencyProperty TextFontSizeProperty = DependencyProperty.Register(
         nameof(TextFontSize),
@@ -76,7 +76,64 @@ public sealed partial class TextToolbar : UserControlBase
     {
         if (d is TextToolbar toolbar && e.NewValue is int value)
         {
+            toolbar.RaisePropertyChanged(nameof(TextFontSize));
             toolbar.SyncFontSizeNumberBox(value);
+        }
+    }
+
+    private static void OnTextFontColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TextToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(TextFontColor));
+        }
+    }
+
+    private static void OnTextFontColorOptionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TextToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(TextFontColorOptions));
+        }
+    }
+
+    private static void OnTextFontColorOpacityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TextToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(TextFontColorOpacity));
+        }
+    }
+
+    private static void OnTextBackgroundColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TextToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(TextBackgroundColor));
+        }
+    }
+
+    private static void OnTextBackgroundColorOptionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TextToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(TextBackgroundColorOptions));
+        }
+    }
+
+    private static void OnTextBackgroundColorOpacityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TextToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(TextBackgroundColorOpacity));
+        }
+    }
+
+    private static void OnTextFontFamilyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TextToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(TextFontFamily));
         }
     }
 
