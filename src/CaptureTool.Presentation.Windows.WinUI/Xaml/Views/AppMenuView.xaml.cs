@@ -1,10 +1,16 @@
 using CaptureTool.Domain.Capture;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Windows.Storage;
+using Windows.Storage.FileProperties;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 
 public sealed partial class AppMenuView : AppMenuViewBase
 {
+    private const uint RecentCaptureThumbnailSize = 32;
+
     public AppMenuView()
     {
         InitializeComponent();
@@ -48,24 +54,72 @@ public sealed partial class AppMenuView : AppMenuViewBase
 
                 foreach (var recentCapture in ViewModel.RecentCaptures)
                 {
-                    string iconGlyph = recentCapture.CaptureFileType switch
-                    {
-                        CaptureFileType.Image => "\uE722", // Image icon
-                        CaptureFileType.Video => "\uE714", // Video icon
-                        _ => "\uE7C3" // Generic file icon
-                    };
-
                     MenuFlyoutItem recentCaptureItem = new()
                     {
-                        Icon = new FontIcon { Glyph = iconGlyph },
+                        Icon = CreateFallbackIcon(recentCapture.CaptureFileType),
                         Text = recentCapture.FileName,
                         Command = ViewModel.OpenRecentCaptureCommand,
                         CommandParameter = recentCapture
                     };
 
                     RecentCapturesSubMenu.Items.Add(recentCaptureItem);
+                    _ = LoadRecentCaptureThumbnailAsync(recentCapture.FilePath, recentCapture.CaptureFileType, recentCaptureItem);
                 }
             }
         });
+    }
+
+    private static async Task LoadRecentCaptureThumbnailAsync(
+        string filePath,
+        CaptureFileType fileType,
+        MenuFlyoutItem recentCaptureItem)
+    {
+        try
+        {
+            StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
+            using var thumbnail = await file.GetThumbnailAsync(
+                ThumbnailMode.SingleItem,
+                RecentCaptureThumbnailSize,
+                ThumbnailOptions.UseCurrentScale);
+
+            if (thumbnail.Size == 0)
+            {
+                return;
+            }
+
+            BitmapImage thumbnailImage = new();
+            await thumbnailImage.SetSourceAsync(thumbnail);
+            recentCaptureItem.Icon = new ImageIcon
+            {
+                Width = RecentCaptureThumbnailSize,
+                Height = RecentCaptureThumbnailSize,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Source = thumbnailImage
+            };
+        }
+        catch
+        {
+            recentCaptureItem.Icon = CreateFallbackIcon(fileType);
+        }
+    }
+
+    private static FontIcon CreateFallbackIcon(CaptureFileType fileType)
+    {
+        string iconGlyph = fileType switch
+        {
+            CaptureFileType.Image => "\uE722", // Image icon
+            CaptureFileType.Video => "\uE714", // Video icon
+            _ => "\uE7C3" // Generic file icon
+        };
+
+        return new FontIcon
+        {
+            Width = RecentCaptureThumbnailSize,
+            Height = RecentCaptureThumbnailSize,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Glyph = iconGlyph
+        };
     }
 }
