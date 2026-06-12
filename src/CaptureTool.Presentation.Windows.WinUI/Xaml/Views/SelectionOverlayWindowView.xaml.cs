@@ -110,6 +110,10 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
                 {
                     SelectionOverlay.CaptureType = selectedCaptureType.Value;
                 }
+                UpdateSelectionOverlayCursor();
+                break;
+            case nameof(SelectionOverlayWindowViewModel.UsesCrosshairCursor):
+                UpdateSelectionOverlayCursor();
                 break;
             case nameof(SelectionOverlayWindowViewModel.CaptureArea):
                 SelectionOverlay.SelectionRect = ViewModel.CaptureArea;
@@ -166,12 +170,21 @@ public sealed partial class SelectionOverlayWindowView : SelectionOverlayWindowV
 
     private void SelectionOverlayContainer_PointerMoved(object _, PointerRoutedEventArgs __)
     {
-        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Cross, 1));
+        UpdateSelectionOverlayCursor();
     }
 
     private void ToolbarContainer_PointerMoved(object _, PointerRoutedEventArgs __)
     {
-        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(0, 1));
+        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 1));
+    }
+
+    private void UpdateSelectionOverlayCursor()
+    {
+        CoreCursorType cursorType = ViewModel.UsesCrosshairCursor
+            ? CoreCursorType.Cross
+            : CoreCursorType.Arrow;
+
+        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(cursorType, 1));
     }
 
     public void SetFocus()
