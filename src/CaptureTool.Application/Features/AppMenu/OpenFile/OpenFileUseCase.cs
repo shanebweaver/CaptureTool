@@ -38,7 +38,12 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
             ?? throw new OperationCanceledException("No file was selected.");
         cancellationToken.ThrowIfCancellationRequested();
 
-        string filePath = CopyFileToTemporaryFolder(file.FilePath);
+        string temporaryFolderPath = _storageService.GetApplicationTemporaryFolderPath();
+        string filePath = IsFileInFolder(file.FilePath, temporaryFolderPath)
+            ? file.FilePath
+            : CopyFileToFolder(file.FilePath, temporaryFolderPath);
+        MarkFileAsRecentlyOpened(filePath);
+
         CaptureFileType fileType = _fileTypeDetector.DetectFileType(filePath);
         switch (fileType)
         {
@@ -57,16 +62,29 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
         return new OpenFileResponse();
     }
 
-    private string CopyFileToTemporaryFolder(string sourcePath)
+    private static bool IsFileInFolder(string sourcePath, string folderPath)
     {
-        string temporaryFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-        Directory.CreateDirectory(temporaryFolderPath);
+        string fullFolderPath = Path.GetFullPath(folderPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        string fullSourcePath = Path.GetFullPath(sourcePath);
+
+        return fullSourcePath.StartsWith(fullFolderPath, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string CopyFileToFolder(string sourcePath, string folderPath)
+    {
+        Directory.CreateDirectory(folderPath);
 
         string destinationPath = Path.Combine(
-            temporaryFolderPath,
-            $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}{Path.GetExtension(sourcePath)}");
+            folderPath,
+            Path.GetFileName(sourcePath));
 
         File.Copy(sourcePath, destinationPath, true);
         return destinationPath;
+    }
+
+    private static void MarkFileAsRecentlyOpened(string filePath)
+    {
+        File.SetLastWriteTimeUtc(filePath, DateTime.UtcNow);
     }
 }

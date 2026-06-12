@@ -24,6 +24,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 {
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly IOpenFileUseCase _openFileCommand;
     private readonly IOpenRecentCaptureUseCase _openRecentCaptureCommand;
     private readonly IGetRecentCapturesUseCase _getRecentCapturesQuery;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
@@ -72,6 +73,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         _imageCaptureHandler = imageCaptureHandler;
         _videoCaptureHandler = videoCaptureHandler;
+        _openFileCommand = openFileCommand;
         _openRecentCaptureCommand = openRecentCaptureCommand;
         _getRecentCapturesQuery = getRecentCapturesQuery;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
@@ -79,7 +81,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
         NewImageCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault), telemetryService);
         NewVideoCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault), telemetryService);
-        OpenFileCommand = openFileCommand.ToAsyncRelayCommand(() => new OpenFileRequest(), telemetryService);
+        OpenFileCommand = new AsyncRelayCommand(OpenFileAsync);
         NavigateToSettingsCommand = openSettingsPageCommand.ToRelayCommand(() => new OpenSettingsPageRequest(), telemetryService);
         ShowAboutAppCommand = openAboutPageCommand.ToRelayCommand(() => new OpenAboutPageRequest(), telemetryService);
         ShowAddOnsCommand = openStorePageCommand.ToRelayCommand(() => new OpenStorePageRequest(), telemetryService);
@@ -118,6 +120,23 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private void OnNewVideoCaptured(object? sender, IVideoFile e)
     {
         _ = RefreshRecentCapturesAsync();
+    }
+
+    private async Task OpenFileAsync()
+    {
+        try
+        {
+            await _openFileCommand.ExecuteAsync(new OpenFileRequest(), CancellationToken.None);
+            await RefreshRecentCapturesAsync();
+        }
+        catch (OperationCanceledException exception)
+        {
+            _telemetryService.ActivityCanceled(nameof(OpenFileAsync), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(OpenFileAsync), exception);
+        }
     }
 
     private async Task OpenRecentCaptureAsync(RecentCaptureViewModel? model)
