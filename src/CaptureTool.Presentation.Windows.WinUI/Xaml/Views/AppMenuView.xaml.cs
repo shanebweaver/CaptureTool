@@ -61,6 +61,7 @@ public sealed partial class AppMenuView : AppMenuViewBase
                         Command = ViewModel.OpenRecentCaptureCommand,
                         CommandParameter = recentCapture
                     };
+                    ToolTipService.SetToolTip(recentCaptureItem, recentCapture.FileName);
 
                     RecentCapturesSubMenu.Items.Add(recentCaptureItem);
                     _ = LoadRecentCaptureThumbnailAsync(recentCapture.FilePath, recentCapture.CaptureFileType, recentCaptureItem);
