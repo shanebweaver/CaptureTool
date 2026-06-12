@@ -666,6 +666,66 @@ SOFTWARE.
   <data name="VideoEdit_CopyButton.AccessKey" xml:space="preserve">
     <value>C</value>
   </data>
+  <data name="VideoEdit_TrimButton.Label" xml:space="preserve">
+    <value>Zuschneiden</value>
+  </data>
+  <data name="VideoEdit_TrimButton.AccessKey" xml:space="preserve">
+    <value>Z</value>
+  </data>
+  <data name="VideoEdit_TrimPreviewPlayButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Trim-Vorschau wiedergeben</value>
+  </data>
+  <data name="VideoEdit_TrimPreviewPlayButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Trim-Vorschau wiedergeben</value>
+  </data>
+  <data name="VideoEdit_RenderingTrimPreviewText.Text" xml:space="preserve">
+    <value>Vorschau wird vorbereitet...</value>
+  </data>
+  <data name="VideoEdit_FinalizingText.Text" xml:space="preserve">
+    <value>Video wird finalisiert...</value>
+  </data>
+  <data name="VideoEdit_TrimStartTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Startzeit des Zuschnitts</value>
+  </data>
+  <data name="VideoEdit_TrimStartTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Startzeit des Zuschnitts</value>
+  </data>
+  <data name="VideoEdit_SelectedTrimDurationText.AutomationProperties.Name" xml:space="preserve">
+    <value>Ausgewählte Zuschnittdauer</value>
+  </data>
+  <data name="VideoEdit_SelectedTrimDurationText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ausgewählte Zuschnittdauer</value>
+  </data>
+  <data name="VideoEdit_TrimEndTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Endzeit des Zuschnitts</value>
+  </data>
+  <data name="VideoEdit_TrimEndTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Endzeit des Zuschnitts</value>
+  </data>
+  <data name="VideoEdit_PlayheadTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Zeitposition der Vorschau</value>
+  </data>
+  <data name="VideoEdit_PlayheadTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Zeitposition der Vorschau</value>
+  </data>
+  <data name="VideoTrimRangeSlider_StartThumb.AutomationProperties.Name" xml:space="preserve">
+    <value>Griff für Zuschnittstart</value>
+  </data>
+  <data name="VideoTrimRangeSlider_StartThumb.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Zuschnittstart verschieben</value>
+  </data>
+  <data name="VideoTrimRangeSlider_EndThumb.AutomationProperties.Name" xml:space="preserve">
+    <value>Griff für Zuschnittende</value>
+  </data>
+  <data name="VideoTrimRangeSlider_EndThumb.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Zuschnittende verschieben</value>
+  </data>
+  <data name="VideoTrimRangeSlider_Playhead.AutomationProperties.Name" xml:space="preserve">
+    <value>Abspielkopf der Trim-Vorschau</value>
+  </data>
+  <data name="VideoTrimRangeSlider_Playhead.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Abspielkopf der Vorschau verschieben</value>
+  </data>
   <data name="StartVideoCaptureButtonTextBlock.Text" xml:space="preserve">
     <value>Aufnehmen</value>
   </data>

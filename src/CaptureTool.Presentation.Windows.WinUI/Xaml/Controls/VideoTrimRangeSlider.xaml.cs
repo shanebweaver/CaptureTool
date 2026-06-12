@@ -1,6 +1,9 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Input;
+using Windows.System;
+using Windows.UI.Core;
 using Point = Windows.Foundation.Point;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
@@ -35,6 +38,8 @@ public sealed partial class VideoTrimRangeSlider : UserControlBase
     private const double PlayheadWidth = 4;
     private const double TrackHeight = 8;
     private const double VerticalCenter = 24;
+    private const double KeyboardStepSeconds = 1;
+    private const double LargeKeyboardStepSeconds = 5;
     private DragTarget _dragTarget = DragTarget.None;
 
     public event EventHandler<double>? StartSecondsChanged;
@@ -142,8 +147,66 @@ public sealed partial class VideoTrimRangeSlider : UserControlBase
     private void BeginDrag(DragTarget dragTarget, UIElement element, PointerRoutedEventArgs e)
     {
         _dragTarget = dragTarget;
+        _ = element.Focus(FocusState.Pointer);
         element.CapturePointer(e.Pointer);
         e.Handled = true;
+    }
+
+    private void Thumb_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.SizeWestEast, 1));
+    }
+
+    private void Thumb_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        ProtectedCursor = null;
+    }
+
+    private void StartThumb_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (TryGetKeyboardDelta(e, out double delta))
+        {
+            StartSecondsChanged?.Invoke(this, Math.Clamp(StartSeconds + delta, 0, EndSeconds));
+            e.Handled = true;
+        }
+    }
+
+    private void EndThumb_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (TryGetKeyboardDelta(e, out double delta))
+        {
+            EndSecondsChanged?.Invoke(this, Math.Clamp(EndSeconds + delta, StartSeconds, DurationSeconds));
+            e.Handled = true;
+        }
+    }
+
+    private void Playhead_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (TryGetKeyboardDelta(e, out double delta))
+        {
+            PlayheadSecondsChanged?.Invoke(this, Math.Clamp(PlayheadSeconds + delta, StartSeconds, EndSeconds));
+            e.Handled = true;
+        }
+    }
+
+    private static bool TryGetKeyboardDelta(KeyRoutedEventArgs e, out double delta)
+    {
+        delta = 0;
+        double step = (Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down
+            ? LargeKeyboardStepSeconds
+            : KeyboardStepSeconds;
+
+        switch (e.Key)
+        {
+            case VirtualKey.Left:
+                delta = -step;
+                return true;
+            case VirtualKey.Right:
+                delta = step;
+                return true;
+            default:
+                return false;
+        }
     }
 
     private double SecondsFromPointer(Point pointerPosition)
