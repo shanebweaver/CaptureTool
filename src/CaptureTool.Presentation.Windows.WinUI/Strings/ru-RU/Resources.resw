@@ -666,6 +666,66 @@ SOFTWARE.
   <data name="VideoEdit_CopyButton.AccessKey" xml:space="preserve">
     <value>C</value>
   </data>
+  <data name="VideoEdit_TrimButton.Label" xml:space="preserve">
+    <value>Обрезать</value>
+  </data>
+  <data name="VideoEdit_TrimButton.AccessKey" xml:space="preserve">
+    <value>О</value>
+  </data>
+  <data name="VideoEdit_TrimPreviewPlayButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Воспроизвести предпросмотр обрезки</value>
+  </data>
+  <data name="VideoEdit_TrimPreviewPlayButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Воспроизвести предпросмотр обрезки</value>
+  </data>
+  <data name="VideoEdit_RenderingTrimPreviewText.Text" xml:space="preserve">
+    <value>Подготовка предпросмотра...</value>
+  </data>
+  <data name="VideoEdit_FinalizingText.Text" xml:space="preserve">
+    <value>Завершение видео...</value>
+  </data>
+  <data name="VideoEdit_TrimStartTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Время начала обрезки</value>
+  </data>
+  <data name="VideoEdit_TrimStartTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Время начала обрезки</value>
+  </data>
+  <data name="VideoEdit_SelectedTrimDurationText.AutomationProperties.Name" xml:space="preserve">
+    <value>Длительность выбранной обрезки</value>
+  </data>
+  <data name="VideoEdit_SelectedTrimDurationText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Длительность выбранной обрезки</value>
+  </data>
+  <data name="VideoEdit_TrimEndTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Время окончания обрезки</value>
+  </data>
+  <data name="VideoEdit_TrimEndTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Время окончания обрезки</value>
+  </data>
+  <data name="VideoEdit_PlayheadTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Время позиции предпросмотра</value>
+  </data>
+  <data name="VideoEdit_PlayheadTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Время позиции предпросмотра</value>
+  </data>
+  <data name="VideoTrimRangeSlider_StartThumb.AutomationProperties.Name" xml:space="preserve">
+    <value>Маркер начала обрезки</value>
+  </data>
+  <data name="VideoTrimRangeSlider_StartThumb.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Переместить начало обрезки</value>
+  </data>
+  <data name="VideoTrimRangeSlider_EndThumb.AutomationProperties.Name" xml:space="preserve">
+    <value>Маркер окончания обрезки</value>
+  </data>
+  <data name="VideoTrimRangeSlider_EndThumb.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Переместить окончание обрезки</value>
+  </data>
+  <data name="VideoTrimRangeSlider_Playhead.AutomationProperties.Name" xml:space="preserve">
+    <value>Индикатор предпросмотра обрезки</value>
+  </data>
+  <data name="VideoTrimRangeSlider_Playhead.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Переместить индикатор предпросмотра</value>
+  </data>
   <data name="StartVideoCaptureButtonTextBlock.Text" xml:space="preserve">
     <value>Начать</value>
   </data>
