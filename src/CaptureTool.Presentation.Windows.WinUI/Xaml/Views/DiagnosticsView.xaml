@@ -16,17 +16,19 @@
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Spacing="4">
+        <StackPanel>
             <ToggleSwitch
                 x:Uid="Diagnostics_LoggingToggle"
                 IsOn="{x:Bind ViewModel.IsLoggingEnabled, Mode=OneWay}"
                 Toggled="ToggleSwitch_Toggled" />
-            <Button Command="{x:Bind ViewModel.ClearLogsCommand}">
-                <TextBlock x:Uid="Diagnostics_ClearLogsButtonLabel" />
-            </Button>
-            <Button Command="{x:Bind ViewModel.ExportLogsCommand}">
-                <TextBlock x:Uid="Diagnostics_ExportLogsButtonLabel" />
-            </Button>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Button Command="{x:Bind ViewModel.ClearLogsCommand}">
+                    <TextBlock x:Uid="Diagnostics_ClearLogsButtonLabel" />
+                </Button>
+                <Button Command="{x:Bind ViewModel.ExportLogsCommand}">
+                    <TextBlock x:Uid="Diagnostics_ExportLogsButtonLabel" />
+                </Button>
+            </StackPanel>
         </StackPanel>
 
         <ScrollView Grid.Row="1">
