@@ -353,6 +353,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<(System.Numerics.Vector2 Start, System.Numerics.Vector2 End)>? TextBoxDrawn;
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
     public event EventHandler<int>? ShapeDeleted;
+    public event EventHandler<IDrawable>? ShapeDrawableSelected;
     public event EventHandler<(int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState)>? ShapeModified;
     public event EventHandler<TextDrawable>? TextDrawableSelected;
     public event EventHandler<Point>? ImageContextMenuRequested;
@@ -511,6 +512,10 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             UpdateSelectedTextEditor(text);
             TextDrawableSelected?.Invoke(this, text);
+        }
+        else
+        {
+            ShapeDrawableSelected?.Invoke(this, _selectedShape);
         }
     }
 
@@ -1566,6 +1571,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 ShowResizeHandles(drawable);
                 UpdatePreviewShapeFromDrawable(drawable);
                 ShowSelectedTextEditor(drawable);
+                NotifyDrawableSelected(drawable);
 
                 // Ensure preview canvas is visible
                 PreviewShapeCanvas.Visibility = Visibility.Visible;
@@ -1603,6 +1609,7 @@ public sealed partial class ImageCanvas : UserControlBase
             ShowResizeHandles(shape);
             UpdatePreviewShapeFromDrawable(shape);
             ShowSelectedTextEditor(shape);
+            NotifyDrawableSelected(shape);
 
             // Ensure preview canvas is visible
             PreviewShapeCanvas.Visibility = Visibility.Visible;
@@ -1612,6 +1619,16 @@ public sealed partial class ImageCanvas : UserControlBase
             // Set focus to enable keyboard events
             Focus(FocusState.Programmatic);
         }
+    }
+
+    private void NotifyDrawableSelected(IDrawable drawable)
+    {
+        if (drawable is TextDrawable)
+        {
+            return;
+        }
+
+        ShapeDrawableSelected?.Invoke(this, drawable);
     }
 
     public void DeleteSelectedShape()
