@@ -1,3 +1,4 @@
+using CaptureTool.Domain.Edit;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Drawing;
@@ -10,49 +11,49 @@ public sealed partial class ShapeToolbar : UserControlBase
         nameof(SelectedShapeTypeIndex),
         typeof(int),
         typeof(ShapeToolbar),
-        new PropertyMetadata(0));
+        new PropertyMetadata(0, OnSelectedShapeTypeIndexChanged));
 
     public static readonly DependencyProperty StrokeColorProperty = DependencyProperty.Register(
         nameof(StrokeColor),
         typeof(Color),
         typeof(ShapeToolbar),
-        new PropertyMetadata(Color.Black));
+        new PropertyMetadata(Color.Black, OnStrokeColorChanged));
 
     public static readonly DependencyProperty FillColorProperty = DependencyProperty.Register(
         nameof(FillColor),
         typeof(Color),
         typeof(ShapeToolbar),
-        new PropertyMetadata(Color.Transparent));
+        new PropertyMetadata(Color.Transparent, OnFillColorChanged));
 
     public static readonly DependencyProperty StrokeColorOptionsProperty = DependencyProperty.Register(
         nameof(StrokeColorOptions),
         typeof(IEnumerable<Color>),
         typeof(ShapeToolbar),
-        new PropertyMetadata(Array.Empty<Color>()));
+        new PropertyMetadata(Array.Empty<Color>(), OnStrokeColorOptionsChanged));
 
     public static readonly DependencyProperty FillColorOptionsProperty = DependencyProperty.Register(
         nameof(FillColorOptions),
         typeof(IEnumerable<Color>),
         typeof(ShapeToolbar),
-        new PropertyMetadata(Array.Empty<Color>()));
+        new PropertyMetadata(Array.Empty<Color>(), OnFillColorOptionsChanged));
 
     public static readonly DependencyProperty StrokeWidthProperty = DependencyProperty.Register(
         nameof(StrokeWidth),
         typeof(int),
         typeof(ShapeToolbar),
-        new PropertyMetadata(3));
+        new PropertyMetadata(3, OnStrokeWidthChanged));
 
     public static readonly DependencyProperty StrokeOpacityProperty = DependencyProperty.Register(
         nameof(StrokeOpacity),
         typeof(int),
         typeof(ShapeToolbar),
-        new PropertyMetadata(100));
+        new PropertyMetadata(100, OnStrokeOpacityChanged));
 
     public static readonly DependencyProperty FillOpacityProperty = DependencyProperty.Register(
         nameof(FillOpacity),
         typeof(int),
         typeof(ShapeToolbar),
-        new PropertyMetadata(100));
+        new PropertyMetadata(100, OnFillOpacityChanged));
 
     public int SelectedShapeTypeIndex
     {
@@ -102,6 +103,8 @@ public sealed partial class ShapeToolbar : UserControlBase
         set => Set(FillOpacityProperty, value);
     }
 
+    public bool IsFillColorEnabled => (ShapeType)SelectedShapeTypeIndex is not ShapeType.Line and not ShapeType.Arrow;
+
     public event EventHandler<int>? SelectedShapeTypeIndexChanged;
     public event EventHandler<Color>? StrokeColorChanged;
     public event EventHandler<Color>? FillColorChanged;
@@ -114,6 +117,71 @@ public sealed partial class ShapeToolbar : UserControlBase
     public ShapeToolbar()
     {
         InitializeComponent();
+    }
+
+    private static void OnSelectedShapeTypeIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ShapeToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(SelectedShapeTypeIndex));
+            toolbar.RaisePropertyChanged(nameof(IsFillColorEnabled));
+        }
+    }
+
+    private static void OnStrokeColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ShapeToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(StrokeColor));
+        }
+    }
+
+    private static void OnFillColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ShapeToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(FillColor));
+        }
+    }
+
+    private static void OnStrokeColorOptionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ShapeToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(StrokeColorOptions));
+        }
+    }
+
+    private static void OnFillColorOptionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ShapeToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(FillColorOptions));
+        }
+    }
+
+    private static void OnStrokeWidthChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ShapeToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(StrokeWidth));
+        }
+    }
+
+    private static void OnStrokeOpacityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ShapeToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(StrokeOpacity));
+        }
+    }
+
+    private static void OnFillOpacityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ShapeToolbar toolbar)
+        {
+            toolbar.RaisePropertyChanged(nameof(FillOpacity));
+        }
     }
 
     private void UpdateSelectedShapeTypeIndex(int value)
@@ -193,11 +261,13 @@ public sealed partial class ShapeToolbar : UserControlBase
     private void StrokeColorPalette_SelectedColorChanged(object? sender, Color color)
     {
         UpdateStrokeColor(color);
+        StrokeColorButton.Flyout?.Hide();
     }
 
     private void FillColorPalette_SelectedColorChanged(object? sender, Color color)
     {
         UpdateFillColor(color);
+        FillColorButton.Flyout?.Hide();
     }
 
     private void StrokeColorPalette_ThicknessChanged(object? sender, int thickness)

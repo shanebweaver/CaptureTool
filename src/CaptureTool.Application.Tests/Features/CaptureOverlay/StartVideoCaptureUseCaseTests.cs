@@ -27,11 +27,13 @@ public class StartVideoCaptureUseCaseTests
                 true),
             new Rectangle(10, 20, 300, 200));
 
-        await useCase.ExecuteAsync(new StartVideoCaptureRequest(args));
+        await useCase.ExecuteAsync(new StartVideoCaptureRequest(args), TestContext.CancellationToken);
 
         videoCaptureHandler.Verify(handler => handler.StartVideoCapture(args), Times.Once);
         navigationService.Verify(
             service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
             Times.Never);
     }
+
+    public TestContext TestContext { get; set; }
 }

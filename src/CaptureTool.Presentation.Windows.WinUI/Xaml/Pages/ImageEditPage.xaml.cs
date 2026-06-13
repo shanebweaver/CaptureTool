@@ -1,10 +1,13 @@
-using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Domain.Edit.Drawable;
+using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Presentation.Loading;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
+using System.ComponentModel;
 using System.Drawing;
 using Point = global::Windows.Foundation.Point;
 
@@ -19,14 +22,21 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private MenuFlyoutItem? _shareMenuItem;
     private MenuFlyoutItem? _undoMenuItem;
     private MenuFlyoutItem? _redoMenuItem;
+    private readonly Dictionary<FrameworkElement, Storyboard> _toolbarAnimations = [];
+
+    private const int ToolbarFadeDurationMilliseconds = 130;
+    private const int ToolbarSlideDurationMilliseconds = 160;
+    private const double ToolbarHiddenOffset = -8;
 
     public ImageEditPage()
     {
         InitializeComponent();
         InitializeContextMenus();
+        InitializeToolbarHosts();
         ViewModel.LoadStateChanged += ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested += ViewModel_InvalidateCanvasRequested;
         ViewModel.ForceZoomAndCenterRequested += ViewModel_ForceZoomAndCenterRequested;
+        ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         ImageCanvas.ZoomFactorChanged += ImageCanvas_ZoomFactorChanged;
         ImageCanvas.ImageContextMenuRequested += ImageCanvas_ImageContextMenuRequested;
         ImageCanvas.ShapeContextMenuRequested += ImageCanvas_ShapeContextMenuRequested;
@@ -37,6 +47,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.LoadStateChanged -= ViewModel_LoadStateChanged;
         ViewModel.InvalidateCanvasRequested -= ViewModel_InvalidateCanvasRequested;
         ViewModel.ForceZoomAndCenterRequested -= ViewModel_ForceZoomAndCenterRequested;
+        ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         ImageCanvas.ZoomFactorChanged -= ImageCanvas_ZoomFactorChanged;
         ImageCanvas.ShapeDrawn -= ImageCanvas_ShapeDrawn;
         ImageCanvas.ShapeDeleted -= ImageCanvas_ShapeDeleted;
@@ -84,6 +95,186 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         };
         deleteMenuItem.Click += (_, _) => ImageCanvas.DeleteSelectedShape();
         _shapeContextMenu.Items.Add(deleteMenuItem);
+    }
+
+    private void InitializeToolbarHosts()
+    {
+        SetToolbarHostState(ChromaKeyToolbarHost, ViewModel.ShowChromaKeyOptions);
+        SetToolbarHostState(ShapeToolbarHost, ViewModel.IsInShapesMode);
+        SetToolbarHostState(TextToolbarHost, ViewModel.IsInTextMode);
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(ViewModel.ShowChromaKeyOptions):
+                AnimateToolbarHost(ChromaKeyToolbarHost, ViewModel.ShowChromaKeyOptions);
+                break;
+            case nameof(ViewModel.IsInShapesMode):
+                AnimateToolbarHost(ShapeToolbarHost, ViewModel.IsInShapesMode);
+                break;
+            case nameof(ViewModel.IsInTextMode):
+                AnimateToolbarHost(TextToolbarHost, ViewModel.IsInTextMode);
+                break;
+        }
+    }
+
+    private void SetToolbarHostState(FrameworkElement host, bool isVisible)
+    {
+        StopToolbarAnimation(host);
+        host.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
+        host.Opacity = isVisible ? 1 : 0;
+        GetToolbarTranslateTransform(host).Y = isVisible ? 0 : ToolbarHiddenOffset;
+    }
+
+    private void AnimateToolbarHost(FrameworkElement host, bool show)
+    {
+        if (show)
+        {
+            AnimateToolbarIn(host);
+        }
+        else
+        {
+            AnimateToolbarOut(host);
+        }
+    }
+
+    private void AnimateToolbarIn(FrameworkElement host)
+    {
+        StopToolbarAnimation(host);
+
+        host.Visibility = Visibility.Visible;
+        host.Opacity = 0;
+        TranslateTransform translate = GetToolbarTranslateTransform(host);
+        translate.Y = ToolbarHiddenOffset;
+
+        Storyboard storyboard = CreateToolbarStoryboard(
+            host,
+            translate,
+            0,
+            1,
+            ToolbarHiddenOffset,
+            0,
+            EasingMode.EaseOut);
+
+        _toolbarAnimations[host] = storyboard;
+        storyboard.Completed += (_, _) =>
+        {
+            if (_toolbarAnimations.TryGetValue(host, out Storyboard? active) && active == storyboard)
+            {
+                _toolbarAnimations.Remove(host);
+                host.Opacity = 1;
+                translate.Y = 0;
+            }
+        };
+        storyboard.Begin();
+    }
+
+    private void AnimateToolbarOut(FrameworkElement host)
+    {
+        StopToolbarAnimation(host);
+
+        if (host.Visibility != Visibility.Visible)
+        {
+            SetToolbarHostState(host, false);
+            return;
+        }
+
+        TranslateTransform translate = GetToolbarTranslateTransform(host);
+        Storyboard storyboard = CreateToolbarStoryboard(
+            host,
+            translate,
+            host.Opacity,
+            0,
+            translate.Y,
+            ToolbarHiddenOffset,
+            EasingMode.EaseIn);
+
+        _toolbarAnimations[host] = storyboard;
+        storyboard.Completed += (_, _) =>
+        {
+            if (_toolbarAnimations.TryGetValue(host, out Storyboard? active) && active == storyboard)
+            {
+                _toolbarAnimations.Remove(host);
+                SetToolbarHostState(host, false);
+            }
+        };
+        storyboard.Begin();
+    }
+
+    private void StopToolbarAnimation(FrameworkElement host)
+    {
+        if (_toolbarAnimations.Remove(host, out Storyboard? storyboard))
+        {
+            storyboard.Stop();
+        }
+    }
+
+    private static TranslateTransform GetToolbarTranslateTransform(FrameworkElement host)
+    {
+        if (host.RenderTransform is TranslateTransform translate)
+        {
+            return translate;
+        }
+
+        translate = new TranslateTransform();
+        host.RenderTransform = translate;
+        return translate;
+    }
+
+    private static Storyboard CreateToolbarStoryboard(
+        FrameworkElement host,
+        TranslateTransform translate,
+        double fromOpacity,
+        double toOpacity,
+        double fromY,
+        double toY,
+        EasingMode easingMode)
+    {
+        var storyboard = new Storyboard();
+        AddDoubleAnimation(
+            storyboard,
+            host,
+            nameof(UIElement.Opacity),
+            fromOpacity,
+            toOpacity,
+            ToolbarFadeDurationMilliseconds,
+            new SineEase { EasingMode = easingMode });
+
+        AddDoubleAnimation(
+            storyboard,
+            translate,
+            nameof(TranslateTransform.Y),
+            fromY,
+            toY,
+            ToolbarSlideDurationMilliseconds,
+            new SineEase { EasingMode = easingMode });
+
+        return storyboard;
+    }
+
+    private static void AddDoubleAnimation(
+        Storyboard storyboard,
+        DependencyObject target,
+        string targetProperty,
+        double from,
+        double to,
+        int durationMilliseconds,
+        EasingFunctionBase easingFunction)
+    {
+        var animation = new DoubleAnimation
+        {
+            From = from,
+            To = to,
+            Duration = TimeSpan.FromMilliseconds(durationMilliseconds),
+            EasingFunction = easingFunction,
+            EnableDependentAnimation = true
+        };
+
+        Storyboard.SetTarget(animation, target);
+        Storyboard.SetTargetProperty(animation, targetProperty);
+        storyboard.Children.Add(animation);
     }
 
     private void UpdateImageContextMenuState()
@@ -179,6 +370,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.OnShapeDeleted(shapeIndex);
     }
 
+    private void ImageCanvas_ShapeDrawableSelected(object? _, IDrawable e)
+    {
+        ViewModel.OnShapeDrawableSelected(e);
+    }
+
     private void ImageCanvas_ShapeModified(object? _, (int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState) e)
     {
         ViewModel.OnShapeModified(e.ShapeIndex, e.OldState, e.NewState);
@@ -226,6 +422,16 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void ChromaKeyToolbar_SelectedColorOptionIndexChanged(object _, int e)
     {
         ViewModel.UpdateSelectedColorOptionIndexCommand.Execute(e);
+    }
+
+    private void ChromaKeyToolbar_ChromaKeyInteractionStarted(object? sender, EventArgs e)
+    {
+        ViewModel.BeginChromaKeyInteraction();
+    }
+
+    private void ChromaKeyToolbar_ChromaKeyInteractionCompleted(object? sender, EventArgs e)
+    {
+        ViewModel.CompleteChromaKeyInteraction();
     }
 
     private void ShapeToolbar_SelectedShapeTypeIndexChanged(object _, int e)

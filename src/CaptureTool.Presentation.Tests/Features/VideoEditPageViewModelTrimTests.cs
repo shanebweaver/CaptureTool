@@ -111,7 +111,7 @@ public class VideoEditPageViewModelTrimTests
     {
         var sourcePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mp4");
         var destinationPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mp4");
-        await File.WriteAllTextAsync(sourcePath, "video");
+        await File.WriteAllTextAsync(sourcePath, "video", TestContext.CancellationToken);
 
         var trimmer = new Mock<IVideoFileTrimmer>();
         var viewModel = CreateViewModel(saveAction: CreateSaveUseCase(trimmer, destinationPath));
@@ -154,7 +154,7 @@ public class VideoEditPageViewModelTrimTests
         destinationPath ??= Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mp4");
         var filePicker = new Mock<IFilePickerService>();
         filePicker
-            .Setup(service => service.PickSaveFileAsync(It.IsAny<nint>(), FilePickerType.Video, UserFolder.Videos))
+            .Setup(service => service.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos))
             .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == destinationPath));
 
         var videoTrimmer = trimmer ?? new Mock<IVideoFileTrimmer>();
@@ -195,4 +195,6 @@ public class VideoEditPageViewModelTrimTests
 
         return useCase.Object;
     }
+
+    public TestContext TestContext { get; set; }
 }

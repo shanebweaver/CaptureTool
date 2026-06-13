@@ -1,7 +1,9 @@
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Drawing;
@@ -12,6 +14,7 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
 {
     private const int MinimumEffectPercentage = 0;
     private const int MaximumEffectPercentage = 100;
+    private static readonly TimeSpan SliderCommitDelay = TimeSpan.FromMilliseconds(300);
 
     public static readonly DependencyProperty ColorOptionsProperty = DependencyProperty.Register(
         nameof(ColorOptions),
@@ -66,10 +69,13 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
 
     private readonly ObservableCollection<ChromaKeyColorOption> _bindableColorOptions = [];
     private INotifyCollectionChanged? _colorOptionsCollection;
+    private readonly DispatcherQueueTimer _sliderCommitTimer;
     private IReadOnlyList<Color> _paletteColorOptions = [];
     private Color _selectedColor = Color.Empty;
     private bool _hasColorOptions;
     private bool _areEffectOptionsEnabled;
+    private bool _isSliderInteractionActive;
+    private bool _isChromaKeyInteractionOpen;
 
     public IReadOnlyList<Color> PaletteColorOptions
     {
@@ -98,10 +104,25 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
     public event EventHandler<int>? SelectedColorOptionIndexChanged;
     public event EventHandler<int>? ToleranceChanged;
     public event EventHandler<int>? DesaturationChanged;
+    public event EventHandler? ChromaKeyInteractionStarted;
+    public event EventHandler? ChromaKeyInteractionCompleted;
 
     public ChromaKeyToolbar()
     {
         InitializeComponent();
+        _sliderCommitTimer = DispatcherQueue.CreateTimer();
+        _sliderCommitTimer.Interval = SliderCommitDelay;
+        _sliderCommitTimer.Tick += SliderCommitTimer_Tick;
+        RegisterSliderInteractionHandlers(ToleranceSlider);
+        RegisterSliderInteractionHandlers(DesaturationSlider);
+    }
+
+    private void RegisterSliderInteractionHandlers(Slider slider)
+    {
+        slider.AddHandler(PointerPressedEvent, new PointerEventHandler(Slider_PointerPressed), true);
+        slider.AddHandler(PointerReleasedEvent, new PointerEventHandler(Slider_PointerInteractionCompleted), true);
+        slider.AddHandler(PointerCanceledEvent, new PointerEventHandler(Slider_PointerInteractionCompleted), true);
+        slider.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(Slider_PointerInteractionCompleted), true);
     }
 
     private static void OnColorOptionsChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
@@ -177,47 +198,51 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
             !_bindableColorOptions[SelectedColorOptionIndex].IsEmpty;
     }
 
-    private void UpdateSelectedColorOptionIndex(int value)
+    private bool UpdateSelectedColorOptionIndex(int value)
     {
         if (SelectedColorOptionIndex == value)
         {
-            return;
+            return false;
         }
 
         SelectedColorOptionIndex = value;
         SelectedColorOptionIndexChanged?.Invoke(this, value);
         UpdateSelectedColor();
         UpdateSliderEnablement();
+        return true;
     }
 
-    private void UpdateTolerance(int value)
+    private bool UpdateTolerance(int value)
     {
         value = Math.Clamp(value, MinimumEffectPercentage, MaximumEffectPercentage);
         if (Tolerance == value)
         {
-            return;
+            return false;
         }
 
         Tolerance = value;
         ToleranceChanged?.Invoke(this, value);
+        return true;
     }
 
-    private void UpdateDesaturation(int value)
+    private bool UpdateDesaturation(int value)
     {
         value = Math.Clamp(value, MinimumEffectPercentage, MaximumEffectPercentage);
         if (Desaturation == value)
         {
-            return;
+            return false;
         }
 
         Desaturation = value;
         DesaturationChanged?.Invoke(this, value);
+        return true;
     }
 
     private void KeyColorPalette_SelectedColorChanged(object? sender, Color color)
     {
         int colorOptionIndex = FindColorOptionIndex(color);
-        UpdateSelectedColorOptionIndex(colorOptionIndex);
+        RunDiscreteChromaKeyInteraction(() => UpdateSelectedColorOptionIndex(colorOptionIndex));
+        KeyColorButton.Flyout?.Hide();
     }
 
     private int FindColorOptionIndex(Color color)
@@ -235,12 +260,12 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
 
     private void ToleranceSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs args)
     {
-        UpdateTolerance((int)Math.Round(args.NewValue));
+        UpdateFromSlider(() => UpdateTolerance((int)Math.Round(args.NewValue)));
     }
 
     private void DesaturationSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs args)
     {
-        UpdateDesaturation((int)Math.Round(args.NewValue));
+        UpdateFromSlider(() => UpdateDesaturation((int)Math.Round(args.NewValue)));
     }
 
     private void ToleranceNumberBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
@@ -256,7 +281,7 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
             MinimumEffectPercentage,
             MaximumEffectPercentage));
         sender.Value = value;
-        UpdateTolerance(value);
+        RunDiscreteChromaKeyInteraction(() => UpdateTolerance(value));
     }
 
     private void DesaturationNumberBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
@@ -272,6 +297,111 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
             MinimumEffectPercentage,
             MaximumEffectPercentage));
         sender.Value = value;
-        UpdateDesaturation(value);
+        RunDiscreteChromaKeyInteraction(() => UpdateDesaturation(value));
+    }
+
+    private void UpdateFromSlider(Func<bool> update)
+    {
+        bool changed = RunChromaKeySliderInteraction(update);
+        if (changed)
+        {
+            RestartSliderCommitTimer();
+        }
+    }
+
+    private bool RunChromaKeySliderInteraction(Func<bool> update)
+    {
+        EnsureChromaKeyInteractionStarted();
+        bool changed = update();
+        if (!changed && !_isSliderInteractionActive)
+        {
+            CompleteChromaKeyInteraction();
+        }
+
+        return changed;
+    }
+
+    private void RunDiscreteChromaKeyInteraction(Func<bool> update)
+    {
+        EnsureChromaKeyInteractionStarted();
+        bool changed = update();
+        if (changed)
+        {
+            CompleteChromaKeyInteraction();
+        }
+        else
+        {
+            CancelChromaKeyInteraction();
+        }
+    }
+
+    private void Slider_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed || _isSliderInteractionActive)
+        {
+            return;
+        }
+
+        _isSliderInteractionActive = true;
+        EnsureChromaKeyInteractionStarted();
+    }
+
+    private void Slider_PointerInteractionCompleted(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isSliderInteractionActive)
+        {
+            return;
+        }
+
+        _isSliderInteractionActive = false;
+        CompleteChromaKeyInteraction();
+    }
+
+    private void SliderCommitTimer_Tick(DispatcherQueueTimer sender, object args)
+    {
+        sender.Stop();
+        _isSliderInteractionActive = false;
+        CompleteChromaKeyInteraction();
+    }
+
+    private void RestartSliderCommitTimer()
+    {
+        _sliderCommitTimer.Stop();
+        _sliderCommitTimer.Start();
+    }
+
+    private void EnsureChromaKeyInteractionStarted()
+    {
+        if (_isChromaKeyInteractionOpen)
+        {
+            return;
+        }
+
+        _isChromaKeyInteractionOpen = true;
+        ChromaKeyInteractionStarted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void CompleteChromaKeyInteraction()
+    {
+        if (!_isChromaKeyInteractionOpen)
+        {
+            return;
+        }
+
+        _sliderCommitTimer.Stop();
+        _isChromaKeyInteractionOpen = false;
+        ChromaKeyInteractionCompleted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void CancelChromaKeyInteraction()
+    {
+        if (!_isChromaKeyInteractionOpen)
+        {
+            return;
+        }
+
+        _sliderCommitTimer.Stop();
+        _isChromaKeyInteractionOpen = false;
+        ChromaKeyInteractionCompleted?.Invoke(this, EventArgs.Empty);
     }
 }

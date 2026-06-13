@@ -854,9 +854,73 @@ SOFTWARE.
     <value>Play trim preview</value>
     <comment>The accessible name for the play button in the video trim controls.</comment>
   </data>
+  <data name="VideoEdit_TrimPreviewPlayButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Play trim preview</value>
+    <comment>The tooltip for the play button in the video trim controls.</comment>
+  </data>
   <data name="VideoEdit_RenderingTrimPreviewText.Text" xml:space="preserve">
     <value>Preparing preview...</value>
     <comment>The loading text shown while rendering the trimmed video preview.</comment>
+  </data>
+  <data name="VideoEdit_FinalizingText.Text" xml:space="preserve">
+    <value>Finalizing video...</value>
+    <comment>The loading text shown while a captured video is being finalized.</comment>
+  </data>
+  <data name="VideoEdit_TrimStartTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Trim start time</value>
+    <comment>The accessible name for the trim start timestamp.</comment>
+  </data>
+  <data name="VideoEdit_TrimStartTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Trim start time</value>
+    <comment>The tooltip for the trim start timestamp.</comment>
+  </data>
+  <data name="VideoEdit_SelectedTrimDurationText.AutomationProperties.Name" xml:space="preserve">
+    <value>Selected trim duration</value>
+    <comment>The accessible name for the selected trim duration timestamp.</comment>
+  </data>
+  <data name="VideoEdit_SelectedTrimDurationText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Selected trim duration</value>
+    <comment>The tooltip for the selected trim duration timestamp.</comment>
+  </data>
+  <data name="VideoEdit_TrimEndTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Trim end time</value>
+    <comment>The accessible name for the trim end timestamp.</comment>
+  </data>
+  <data name="VideoEdit_TrimEndTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Trim end time</value>
+    <comment>The tooltip for the trim end timestamp.</comment>
+  </data>
+  <data name="VideoEdit_PlayheadTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Preview playhead time</value>
+    <comment>The accessible name for the trim preview playhead timestamp.</comment>
+  </data>
+  <data name="VideoEdit_PlayheadTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Preview playhead time</value>
+    <comment>The tooltip for the trim preview playhead timestamp.</comment>
+  </data>
+  <data name="VideoTrimRangeSlider_StartThumb.AutomationProperties.Name" xml:space="preserve">
+    <value>Trim start handle</value>
+    <comment>The accessible name for the trim start handle.</comment>
+  </data>
+  <data name="VideoTrimRangeSlider_StartThumb.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Move the trim start</value>
+    <comment>The tooltip for the trim start handle.</comment>
+  </data>
+  <data name="VideoTrimRangeSlider_EndThumb.AutomationProperties.Name" xml:space="preserve">
+    <value>Trim end handle</value>
+    <comment>The accessible name for the trim end handle.</comment>
+  </data>
+  <data name="VideoTrimRangeSlider_EndThumb.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Move the trim end</value>
+    <comment>The tooltip for the trim end handle.</comment>
+  </data>
+  <data name="VideoTrimRangeSlider_Playhead.AutomationProperties.Name" xml:space="preserve">
+    <value>Trim preview playhead</value>
+    <comment>The accessible name for the trim preview playhead.</comment>
+  </data>
+  <data name="VideoTrimRangeSlider_Playhead.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Move the preview playhead</value>
+    <comment>The tooltip for the trim preview playhead.</comment>
   </data>
   <data name="StartVideoCaptureButtonTextBlock.Text" xml:space="preserve">
     <value>Record</value>
@@ -1019,5 +1083,21 @@ SOFTWARE.
   <data name="TextToolbar_FontSizeNumberBox.ToolTipService.ToolTip" xml:space="preserve">
     <value>Choose font size</value>
     <comment>The tooltip for the font size input in the text toolbar.</comment>
+  </data>
+  <data name="Diagnostics_Title" xml:space="preserve">
+    <value>Diagnostics</value>
+    <comment>The title for the diagnostics dialog.</comment>
+  </data>
+  <data name="Diagnostics_LoggingToggle.Header" xml:space="preserve">
+    <value>Logging</value>
+    <comment>The header for the diagnostics logging toggle.</comment>
+  </data>
+  <data name="Diagnostics_ClearLogsButtonLabel.Text" xml:space="preserve">
+    <value>Clear logs</value>
+    <comment>The label for the button that clears diagnostic logs.</comment>
+  </data>
+  <data name="Diagnostics_ExportLogsButtonLabel.Text" xml:space="preserve">
+    <value>Export logs</value>
+    <comment>The label for the button that exports diagnostic logs.</comment>
   </data>
 </root>

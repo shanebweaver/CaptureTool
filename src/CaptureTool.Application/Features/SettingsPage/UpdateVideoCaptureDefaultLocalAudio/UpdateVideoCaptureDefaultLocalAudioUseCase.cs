@@ -1,7 +1,8 @@
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateVideoCaptureDefaultLocalAudio;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Features.Settings;
 
-namespace CaptureTool.Application.Features.Settings.UpdateVideoCaptureDefaultLocalAudio;
+namespace CaptureTool.Application.Features.SettingsPage.UpdateVideoCaptureDefaultLocalAudio;
 
 public sealed class UpdateVideoCaptureDefaultLocalAudioUseCase : IUpdateVideoCaptureDefaultLocalAudioUseCase
 {

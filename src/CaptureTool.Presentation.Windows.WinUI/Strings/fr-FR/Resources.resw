@@ -666,6 +666,66 @@ SOFTWARE.
   <data name="VideoEdit_CopyButton.AccessKey" xml:space="preserve">
     <value>C</value>
   </data>
+  <data name="VideoEdit_TrimButton.Label" xml:space="preserve">
+    <value>Découper</value>
+  </data>
+  <data name="VideoEdit_TrimButton.AccessKey" xml:space="preserve">
+    <value>D</value>
+  </data>
+  <data name="VideoEdit_TrimPreviewPlayButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Lire l’aperçu du découpage</value>
+  </data>
+  <data name="VideoEdit_TrimPreviewPlayButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Lire l’aperçu du découpage</value>
+  </data>
+  <data name="VideoEdit_RenderingTrimPreviewText.Text" xml:space="preserve">
+    <value>Préparation de l’aperçu...</value>
+  </data>
+  <data name="VideoEdit_FinalizingText.Text" xml:space="preserve">
+    <value>Finalisation de la vidéo...</value>
+  </data>
+  <data name="VideoEdit_TrimStartTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Heure de début du découpage</value>
+  </data>
+  <data name="VideoEdit_TrimStartTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Heure de début du découpage</value>
+  </data>
+  <data name="VideoEdit_SelectedTrimDurationText.AutomationProperties.Name" xml:space="preserve">
+    <value>Durée du découpage sélectionné</value>
+  </data>
+  <data name="VideoEdit_SelectedTrimDurationText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Durée du découpage sélectionné</value>
+  </data>
+  <data name="VideoEdit_TrimEndTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Heure de fin du découpage</value>
+  </data>
+  <data name="VideoEdit_TrimEndTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Heure de fin du découpage</value>
+  </data>
+  <data name="VideoEdit_PlayheadTimeText.AutomationProperties.Name" xml:space="preserve">
+    <value>Temps de la tête de lecture d’aperçu</value>
+  </data>
+  <data name="VideoEdit_PlayheadTimeText.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Temps de la tête de lecture d’aperçu</value>
+  </data>
+  <data name="VideoTrimRangeSlider_StartThumb.AutomationProperties.Name" xml:space="preserve">
+    <value>Poignée de début du découpage</value>
+  </data>
+  <data name="VideoTrimRangeSlider_StartThumb.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Déplacer le début du découpage</value>
+  </data>
+  <data name="VideoTrimRangeSlider_EndThumb.AutomationProperties.Name" xml:space="preserve">
+    <value>Poignée de fin du découpage</value>
+  </data>
+  <data name="VideoTrimRangeSlider_EndThumb.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Déplacer la fin du découpage</value>
+  </data>
+  <data name="VideoTrimRangeSlider_Playhead.AutomationProperties.Name" xml:space="preserve">
+    <value>Tête de lecture d’aperçu du découpage</value>
+  </data>
+  <data name="VideoTrimRangeSlider_Playhead.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Déplacer la tête de lecture d’aperçu</value>
+  </data>
   <data name="StartVideoCaptureButtonTextBlock.Text" xml:space="preserve">
     <value>Enregistrer</value>
   </data>
@@ -802,5 +862,21 @@ SOFTWARE.
   <data name="TextToolbar_FontSizeNumberBox.ToolTipService.ToolTip" xml:space="preserve">
     <value>Choisir la taille de police</value>
     <comment>The tooltip for the font size input in the text toolbar.</comment>
+  </data>
+  <data name="Diagnostics_Title" xml:space="preserve">
+    <value>Diagnostics</value>
+    <comment>The title for the diagnostics dialog.</comment>
+  </data>
+  <data name="Diagnostics_LoggingToggle.Header" xml:space="preserve">
+    <value>Journalisation</value>
+    <comment>The header for the diagnostics logging toggle.</comment>
+  </data>
+  <data name="Diagnostics_ClearLogsButtonLabel.Text" xml:space="preserve">
+    <value>Effacer les journaux</value>
+    <comment>The label for the button that clears diagnostic logs.</comment>
+  </data>
+  <data name="Diagnostics_ExportLogsButtonLabel.Text" xml:space="preserve">
+    <value>Exporter les journaux</value>
+    <comment>The label for the button that exports diagnostic logs.</comment>
   </data>
 </root>

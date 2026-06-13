@@ -9,6 +9,20 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class UseCaseCommandExtensionsTests
 {
     [TestMethod]
+    public async Task ToAsyncRelayCommand_ShouldLogInitiatedAndCompleted_WhenUseCaseSucceeds()
+    {
+        var telemetry = new Mock<ITelemetryService>();
+        var useCase = new SuccessfulUseCase();
+        var command = useCase.ToAsyncRelayCommand(() => new TestRequest(), telemetry.Object, "TestActivity");
+
+        command.Execute(null);
+        await command.ExecutionTask!;
+
+        telemetry.Verify(service => service.ActivityInitiated("TestActivity", null), Times.Once);
+        telemetry.Verify(service => service.ActivityCompleted("TestActivity", null), Times.Once);
+    }
+
+    [TestMethod]
     public async Task ToAsyncRelayCommand_ShouldLogError_AndComplete_WhenUseCaseThrows()
     {
         var exception = new InvalidOperationException("Command failed.");
@@ -19,6 +33,8 @@ public sealed class UseCaseCommandExtensionsTests
         command.Execute(null);
         await command.ExecutionTask!;
 
+        telemetry.Verify(service => service.ActivityInitiated("TestActivity", null), Times.Once);
+        telemetry.Verify(service => service.ActivityCompleted(It.IsAny<string>(), It.IsAny<string?>()), Times.Never);
         telemetry.Verify(
             service => service.ActivityError(
                 "TestActivity",
@@ -42,6 +58,8 @@ public sealed class UseCaseCommandExtensionsTests
         command.Execute(null);
         await command.ExecutionTask!;
 
+        telemetry.Verify(service => service.ActivityInitiated("TestActivity", null), Times.Once);
+        telemetry.Verify(service => service.ActivityCompleted(It.IsAny<string>(), It.IsAny<string?>()), Times.Never);
         telemetry.Verify(
             service => service.ActivityCanceled("TestActivity", "Command canceled."),
             Times.Once);
@@ -60,6 +78,14 @@ public sealed class UseCaseCommandExtensionsTests
     private sealed record TestRequest;
 
     private sealed record TestResponse;
+
+    private sealed class SuccessfulUseCase : IUseCase<TestRequest, TestResponse>
+    {
+        public Task<TestResponse> ExecuteAsync(TestRequest request, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new TestResponse());
+        }
+    }
 
     private sealed class ThrowingUseCase : IUseCase<TestRequest, TestResponse>
     {

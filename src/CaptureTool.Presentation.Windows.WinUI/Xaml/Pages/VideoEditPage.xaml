@@ -135,15 +135,18 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock
+                        x:Uid="VideoEdit_TrimStartTimeText"
                         MinWidth="56"
                         FontSize="12"
                         Text="{x:Bind FormatTime(ViewModel.TrimStartSeconds), Mode=OneWay}" />
                     <TextBlock
+                        x:Uid="VideoEdit_SelectedTrimDurationText"
                         Grid.Column="1"
                         HorizontalAlignment="Center"
                         FontSize="12"
                         Text="{x:Bind FormatTrimDuration(ViewModel.TrimStartSeconds, ViewModel.TrimEndSeconds), Mode=OneWay}" />
                     <TextBlock
+                        x:Uid="VideoEdit_TrimEndTimeText"
                         Grid.Column="2"
                         MinWidth="56"
                         FontSize="12"
@@ -181,6 +184,7 @@
                 </Grid>
 
                 <TextBlock
+                    x:Uid="VideoEdit_PlayheadTimeText"
                     Grid.Row="1"
                     Grid.Column="2"
                     MinWidth="56"

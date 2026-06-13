@@ -8,6 +8,7 @@ using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using System.Collections.Specialized;
 using System.Drawing;
 using System.Numerics;
@@ -352,6 +353,7 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<(System.Numerics.Vector2 Start, System.Numerics.Vector2 End)>? TextBoxDrawn;
     public event EventHandler<(double ZoomFactor, ZoomUpdateSource Source)>? ZoomFactorChanged;
     public event EventHandler<int>? ShapeDeleted;
+    public event EventHandler<IDrawable>? ShapeDrawableSelected;
     public event EventHandler<(int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState)>? ShapeModified;
     public event EventHandler<TextDrawable>? TextDrawableSelected;
     public event EventHandler<Point>? ImageContextMenuRequested;
@@ -360,6 +362,11 @@ public sealed partial class ImageCanvas : UserControlBase
     private readonly Lock _zoomUpdateLock = new Lock();
 
     private const int LineHandleRadius = 6; // Half of handle diameter (12px total)
+    private const double MinimumHandleScale = 0.1;
+    private const double MaximumHandleScale = 10;
+    private const double CanvasContainerBaseMargin = 24;
+    private const double LineSelectionStrokeThickness = 1;
+    private const double LineMoveHandleStrokeThickness = 20;
 
     private bool _isPointerDown;
     private Point _lastPointerPosition;
@@ -391,6 +398,8 @@ public sealed partial class ImageCanvas : UserControlBase
     private Color _cachedFillColor;
     private TextBox? _selectedTextEditor;
     private bool _isUpdatingTextEditor;
+    private XamlRoot? _observedXamlRoot;
+    private double _lastRasterizationScale = 1;
 
     // Line endpoint manipulation
     private bool _isDraggingLineStart = false;
@@ -403,6 +412,8 @@ public sealed partial class ImageCanvas : UserControlBase
     public ImageCanvas()
     {
         InitializeComponent();
+        LineStartHandle.RenderTransformOrigin = new Point(0.5, 0.5);
+        LineEndHandle.RenderTransformOrigin = new Point(0.5, 0.5);
         Loaded += ImageCanvas_Loaded;
         Unloaded += ImageCanvas_Unloaded;
         KeyDown += ImageCanvas_KeyDown;
@@ -439,6 +450,7 @@ public sealed partial class ImageCanvas : UserControlBase
             CanvasScrollView.ViewChanged += CanvasScrollView_ViewChanged;
         }
 
+        AttachXamlRootChanged();
         SetObservableDrawables(Drawables as INotifyCollectionChanged);
     }
 
@@ -450,7 +462,70 @@ public sealed partial class ImageCanvas : UserControlBase
             CanvasScrollView.ViewChanged -= CanvasScrollView_ViewChanged;
         }
 
+        DetachXamlRootChanged();
         SetObservableDrawables(null);
+    }
+
+    private void AttachXamlRootChanged()
+    {
+        XamlRoot? root = XamlRoot;
+        if (ReferenceEquals(_observedXamlRoot, root))
+        {
+            return;
+        }
+
+        DetachXamlRootChanged();
+        _observedXamlRoot = root;
+        if (_observedXamlRoot == null)
+        {
+            return;
+        }
+
+        _lastRasterizationScale = _observedXamlRoot.RasterizationScale;
+        ApplyRasterizationScale(_lastRasterizationScale, false);
+        _observedXamlRoot.Changed += XamlRoot_Changed;
+    }
+
+    private void DetachXamlRootChanged()
+    {
+        _observedXamlRoot?.Changed -= XamlRoot_Changed;
+        _observedXamlRoot = null;
+    }
+
+    private void XamlRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args)
+    {
+        double rasterizationScale = sender.RasterizationScale;
+        if (Math.Abs(rasterizationScale - _lastRasterizationScale) < 0.001)
+        {
+            return;
+        }
+
+        _lastRasterizationScale = rasterizationScale;
+        ApplyRasterizationScale(rasterizationScale, true);
+        InvalidateCanvas();
+    }
+
+    private double GetCurrentRasterizationScale()
+    {
+        return _observedXamlRoot?.RasterizationScale
+            ?? XamlRoot?.RasterizationScale
+            ?? _lastRasterizationScale;
+    }
+
+    private void ApplyRasterizationScale(double rasterizationScale, bool forceResourceRefresh)
+    {
+        if (RenderCanvas == null || rasterizationScale <= 0)
+        {
+            return;
+        }
+
+        float dpiScale = (float)rasterizationScale;
+        if (forceResourceRefresh && Math.Abs(RenderCanvas.DpiScale - dpiScale) < 0.0001f)
+        {
+            RenderCanvas.DpiScale = dpiScale + 0.0001f;
+        }
+
+        RenderCanvas.DpiScale = dpiScale;
     }
 
     private void SetObservableDrawables(INotifyCollectionChanged? drawables)
@@ -504,6 +579,10 @@ public sealed partial class ImageCanvas : UserControlBase
             UpdateSelectedTextEditor(text);
             TextDrawableSelected?.Invoke(this, text);
         }
+        else
+        {
+            ShapeDrawableSelected?.Invoke(this, _selectedShape);
+        }
     }
 
     private void CanvasScrollView_ViewChanged(ScrollView? sender, object args)
@@ -512,6 +591,8 @@ public sealed partial class ImageCanvas : UserControlBase
         {
             return;
         }
+
+        UpdateOverlayHandleScale();
 
         lock (_zoomUpdateLock)
         {
@@ -584,6 +665,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
             CropOverlay.Width = width;
             CropOverlay.Height = height;
+            UpdateOverlayHandleScale();
 
             RenderCanvas.Width = width;
             RenderCanvas.Height = height;
@@ -607,13 +689,11 @@ public sealed partial class ImageCanvas : UserControlBase
             int canvasWidth = renderSize.Width;
             int canvasHeight = renderSize.Height;
 
-            // Add padding
-            int padding = 48;
-            canvasWidth += padding;
-            canvasHeight += padding;
+            double availableWidth = Math.Max(1, containerWidth - (CanvasContainerBaseMargin * 2));
+            double availableHeight = Math.Max(1, containerHeight - (CanvasContainerBaseMargin * 2));
 
-            double scaleX = containerWidth / canvasWidth;
-            double scaleY = containerHeight / canvasHeight;
+            double scaleX = availableWidth / canvasWidth;
+            double scaleY = availableHeight / canvasHeight;
 
             // Choose the smaller scale to ensure the image fits within the container
             double targetZoomFactor = Math.Min(1, Math.Min(scaleX, scaleY));
@@ -623,6 +703,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 null,
                 new(ScrollingAnimationMode.Auto)
             );
+            UpdateOverlayHandleScale(targetZoomFactor);
 
             ZoomFactorChanged?.Invoke(this, (targetZoomFactor, ZoomUpdateSource.ZoomAndCenter));
         }
@@ -648,6 +729,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 null,
                 new(ScrollingAnimationMode.Auto)
             );
+            UpdateOverlayHandleScale(zoomLevel);
         }
 
         // For non-programmatic sources, fire the event immediately
@@ -671,7 +753,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public void ForceCanvasRedrawWithResources()
     {
-        RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? 1.0001f : 1f;
+        ApplyRasterizationScale(GetCurrentRasterizationScale(), true);
         InvalidateCanvas();
     }
 
@@ -1555,6 +1637,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 ShowResizeHandles(drawable);
                 UpdatePreviewShapeFromDrawable(drawable);
                 ShowSelectedTextEditor(drawable);
+                NotifyDrawableSelected(drawable);
 
                 // Ensure preview canvas is visible
                 PreviewShapeCanvas.Visibility = Visibility.Visible;
@@ -1592,6 +1675,7 @@ public sealed partial class ImageCanvas : UserControlBase
             ShowResizeHandles(shape);
             UpdatePreviewShapeFromDrawable(shape);
             ShowSelectedTextEditor(shape);
+            NotifyDrawableSelected(shape);
 
             // Ensure preview canvas is visible
             PreviewShapeCanvas.Visibility = Visibility.Visible;
@@ -1601,6 +1685,16 @@ public sealed partial class ImageCanvas : UserControlBase
             // Set focus to enable keyboard events
             Focus(FocusState.Programmatic);
         }
+    }
+
+    private void NotifyDrawableSelected(IDrawable drawable)
+    {
+        if (drawable is TextDrawable)
+        {
+            return;
+        }
+
+        ShapeDrawableSelected?.Invoke(this, drawable);
     }
 
     public void DeleteSelectedShape()
@@ -1806,6 +1900,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void ShowLineEndpointHandles(float x1, float y1, float x2, float y2)
     {
+        UpdateOverlayHandleScale();
         LineEndpointHandlesCanvas.Visibility = Visibility.Visible;
         Point displayStart = CanvasPointToDisplayPoint(new Vector2(x1, y1));
         Point displayEnd = CanvasPointToDisplayPoint(new Vector2(x2, y2));
@@ -1833,6 +1928,38 @@ public sealed partial class ImageCanvas : UserControlBase
         // Position end handle (center the handle on the endpoint)
         Canvas.SetLeft(LineEndHandle, displayX2 - LineHandleRadius);
         Canvas.SetTop(LineEndHandle, displayY2 - LineHandleRadius);
+    }
+
+    private double GetOverlayHandleScale(double? zoomFactor = null)
+    {
+        double zoom = zoomFactor ?? CanvasScrollView?.ZoomFactor ?? 1;
+        if (double.IsNaN(zoom) || zoom <= 0)
+        {
+            zoom = 1;
+        }
+
+        return Math.Clamp(1d / zoom, MinimumHandleScale, MaximumHandleScale);
+    }
+
+    private void UpdateOverlayHandleScale(double? zoomFactor = null)
+    {
+        double scale = GetOverlayHandleScale(zoomFactor);
+
+        CanvasContainer.Margin = new Thickness(CanvasContainerBaseMargin * scale);
+        CropOverlay.HandleScale = scale;
+        ShapeResizeOverlay.HandleScale = scale;
+        LineStartHandle.RenderTransform = new ScaleTransform
+        {
+            ScaleX = scale,
+            ScaleY = scale
+        };
+        LineEndHandle.RenderTransform = new ScaleTransform
+        {
+            ScaleX = scale,
+            ScaleY = scale
+        };
+        LineSelectionVisual.StrokeThickness = LineSelectionStrokeThickness * scale;
+        LineMoveHandle.StrokeThickness = LineMoveHandleStrokeThickness * scale;
     }
 
     private void LineStartHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -2518,7 +2645,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 AcceptsReturn = true,
                 BorderThickness = new Thickness(0),
                 CornerRadius = new CornerRadius(4),
-                Padding = new Thickness(2,3,2,3),
+                Padding = new Thickness(2, 3, 2, 3),
                 TextWrapping = TextWrapping.Wrap,
                 VerticalContentAlignment = VerticalAlignment.Top,
                 HorizontalContentAlignment = HorizontalAlignment.Left,

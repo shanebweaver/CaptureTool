@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.Features;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.CloseCaptureOverlay;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GetAudioInputSources;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GoBackFromCaptureOverlay;
@@ -31,7 +31,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IGetAudioInputSourcesUseCase _getAudioInputSourcesCommand;
     private readonly ISelectAudioInputSourceUseCase _selectAudioInputSourceCommand;
     private readonly IAudioInputDetectionService _audioInputDetectionService;
-    private readonly IFeatureAvailabilityService _featureAvailability;
+    private readonly IAudioInputSelectionFeatureAvailability _audioInputSelectionFeatureAvailability;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ITelemetryService _telemetryService;
@@ -139,7 +139,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IGetAudioInputSourcesUseCase getAudioInputSourcesCommand,
         ISelectAudioInputSourceUseCase selectAudioInputSourceCommand,
         IAudioInputDetectionService audioInputDetectionService,
-        IFeatureAvailabilityService featureAvailability,
+        IAudioInputSelectionFeatureAvailability audioInputSelectionFeatureAvailability,
         IThemeService themeService,
         IVideoCaptureHandler videoCaptureHandler,
         ITaskEnvironment taskEnvironment,
@@ -151,7 +151,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _getAudioInputSourcesCommand = getAudioInputSourcesCommand;
         _selectAudioInputSourceCommand = selectAudioInputSourceCommand;
         _audioInputDetectionService = audioInputDetectionService;
-        _featureAvailability = featureAvailability;
+        _audioInputSelectionFeatureAvailability = audioInputSelectionFeatureAvailability;
         _videoCaptureHandler = videoCaptureHandler;
         _taskEnvironment = taskEnvironment;
         _telemetryService = telemetryService;
@@ -182,7 +182,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IsPaused = _videoCaptureHandler.IsPaused;
         _videoCaptureHandler.PausedStateChanged += OnPausedStateChanged;
 
-        IsAudioInputSelectionFeatureEnabled = _featureAvailability.IsAudioInputSelectionEnabled;
+        IsAudioInputSelectionFeatureEnabled = _audioInputSelectionFeatureAvailability.IsAudioInputSelectionEnabled;
         if (IsAudioInputSelectionFeatureEnabled)
         {
             _audioInputDetectionService.AudioInputSourcesChanged += OnAudioInputSourcesChanged;

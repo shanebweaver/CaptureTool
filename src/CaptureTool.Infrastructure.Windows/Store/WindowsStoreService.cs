@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Windowing;
 using Windows.Services.Store;
 
 namespace CaptureTool.Infrastructure.Windows.Store;
@@ -7,12 +8,16 @@ namespace CaptureTool.Infrastructure.Windows.Store;
 public sealed partial class WindowsStoreService : IStoreService
 {
     private readonly ITelemetryService _telemetryService;
+    private readonly IWindowHandleProvider _windowHandleProvider;
     private readonly StoreContext _storeContext;
     private readonly Dictionary<string, StoreLicense> _licenseCache;
 
-    public WindowsStoreService(ITelemetryService telemetryService)
+    public WindowsStoreService(
+        ITelemetryService telemetryService,
+        IWindowHandleProvider windowHandleProvider)
     {
         _telemetryService = telemetryService;
+        _windowHandleProvider = windowHandleProvider;
         _storeContext = StoreContext.GetDefault();
         _licenseCache = [];
     }
@@ -60,13 +65,14 @@ public sealed partial class WindowsStoreService : IStoreService
     /// Prompts the user to purchase the specified add-on.
     /// Returns true if the purchase succeeded.
     /// </summary>
-    public async Task<bool> PurchaseAddonAsync(string storeProductId, nint hwnd, CancellationToken cancellationToken)
+    public async Task<bool> PurchaseAddonAsync(string storeProductId, CancellationToken cancellationToken)
     {
         string activityId = $"{nameof(WindowsStoreService)}.{nameof(PurchaseAddonAsync)}";
         try
         {
             _telemetryService.ActivityInitiated(activityId);
 
+            nint hwnd = _windowHandleProvider.GetMainWindowHandle();
             WinRT.Interop.InitializeWithWindow.Initialize(_storeContext, hwnd);
             StorePurchaseResult purchaseResult = await _storeContext.RequestPurchaseAsync(storeProductId);
 

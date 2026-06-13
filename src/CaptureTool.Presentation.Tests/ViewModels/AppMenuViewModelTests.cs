@@ -1,6 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using CaptureTool.Application.Abstractions.Features;
+using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.ImageCapture;
 using CaptureTool.Application.Abstractions.UseCases.AppMenu;
 using CaptureTool.Application.Abstractions.VideoCapture;
@@ -31,7 +31,7 @@ public sealed class AppMenuViewModelTests
 
         Fixture.Freeze<Mock<IAppMenuUseCases>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
-        Fixture.Freeze<Mock<IFeatureAvailabilityService>>();
+        Fixture.Freeze<Mock<IStoreFeatureAvailability>>();
         Fixture.Freeze<Mock<IImageCaptureHandler>>();
         Fixture.Freeze<Mock<IVideoCaptureHandler>>();
     }

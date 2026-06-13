@@ -32,10 +32,13 @@
             <controls:SelectionOverlay x:Name="SelectionOverlay" />
         </Grid>
 
-        <Grid PointerMoved="ToolbarContainer_PointerMoved" Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}">
+        <Grid Visibility="{x:Bind ViewModel.IsPrimary, Mode=OneWay}">
             <controls:SelectionOverlayToolbar
                 x:Name="SelectionToolbar"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
                 CloseCommand="{x:Bind ViewModel.CloseOverlayCommand), Mode=OneWay}"
+                PointerMoved="ToolbarContainer_PointerMoved"
                 SelectedCaptureModeIndex="{x:Bind ViewModel.SelectedCaptureModeIndex, Mode=OneWay}"
                 SelectedCaptureTypeIndex="{x:Bind ViewModel.SelectedCaptureTypeIndex, Mode=OneWay}"
                 SupportedCaptureModes="{x:Bind ViewModel.SupportedCaptureModes}"

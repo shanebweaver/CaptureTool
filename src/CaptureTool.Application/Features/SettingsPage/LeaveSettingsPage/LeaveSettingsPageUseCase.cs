@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Features.Settings.LeaveSettingsPage;
 using CaptureTool.Application.Abstractions.Navigation;
 
-namespace CaptureTool.Application.Features.Settings.LeaveSettingsPage;
+namespace CaptureTool.Application.Features.SettingsPage.LeaveSettingsPage;
 
 public sealed class LeaveSettingsPageUseCase : ILeaveSettingsPageUseCase
 {

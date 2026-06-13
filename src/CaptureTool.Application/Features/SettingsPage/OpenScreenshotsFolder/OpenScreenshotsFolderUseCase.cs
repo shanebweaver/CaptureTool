@@ -1,9 +1,10 @@
 using CaptureTool.Application.Abstractions.Features.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Features.Settings;
 using System.Diagnostics;
 
-namespace CaptureTool.Application.Features.Settings.OpenScreenshotsFolder;
+namespace CaptureTool.Application.Features.SettingsPage.OpenScreenshotsFolder;
 
 public sealed class OpenScreenshotsFolderUseCase : IOpenScreenshotsFolderUseCase
 {

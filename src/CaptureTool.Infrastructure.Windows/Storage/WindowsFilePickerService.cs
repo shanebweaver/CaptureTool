@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.Capture.Files;
 using System.Drawing;
 using Windows.Storage;
@@ -8,7 +9,14 @@ namespace CaptureTool.Infrastructure.Windows.Storage;
 
 public sealed partial class WindowsFilePickerService : IFilePickerService
 {
-    public async Task<IFolder?> PickFolderAsync(nint hwnd, UserFolder userFolder)
+    private readonly IWindowHandleProvider _windowHandleProvider;
+
+    public WindowsFilePickerService(IWindowHandleProvider windowHandleProvider)
+    {
+        _windowHandleProvider = windowHandleProvider;
+    }
+
+    public async Task<IFolder?> PickFolderAsync(UserFolder userFolder)
     {
         PickerLocationId locationId = GetPickerLocationIdForUserFolder(userFolder);
 
@@ -19,6 +27,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         };
         picker.FileTypeFilter.Add("*");
 
+        nint hwnd = _windowHandleProvider.GetMainWindowHandle();
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
         StorageFolder folder = await picker.PickSingleFolderAsync();
@@ -30,7 +39,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         return new WindowsFolder(folder.Path);
     }
 
-    public async Task<IFile?> PickFileAsync(nint hwnd, FilePickerType fileType, UserFolder userFolder)
+    public async Task<IFile?> PickFileAsync(FilePickerType fileType, UserFolder userFolder)
     {
         PickerLocationId locationId = GetPickerLocationIdForUserFolder(userFolder);
 
@@ -77,6 +86,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
                 throw new InvalidOperationException("Unexpected file type value.");
         }
 
+        nint hwnd = _windowHandleProvider.GetMainWindowHandle();
         WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
 
         StorageFile file = await filePicker.PickSingleFileAsync();
@@ -88,11 +98,11 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         return new WindowsFile(file.Path);
     }
 
-    public async Task<IFile?> PickSaveFileAsync(nint hwnd, FilePickerType fileType, UserFolder userFolder)
+    public async Task<IFile?> PickSaveFileAsync(FilePickerType fileType, UserFolder userFolder)
     {
         var filePicker = new FileSavePicker
         {
-            SuggestedStartLocation = PickerLocationId.PicturesLibrary
+            SuggestedStartLocation = GetPickerLocationIdForUserFolder(userFolder)
         };
 
         switch (fileType)
@@ -130,10 +140,21 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
             case FilePickerType.ImageOrVideo:
                 throw new InvalidOperationException("Image/video picker type is only supported for opening files.");
 
+            case FilePickerType.Text:
+                unsafe
+                {
+#pragma warning disable IDE0028 // Simplify collection initialization
+                    filePicker.FileTypeChoices.Add("Text", new List<string>() { ".txt" });
+#pragma warning restore IDE0028 // Simplify collection initialization
+                }
+                filePicker.SuggestedFileName = "CaptureToolLogs";
+                break;
+
             default:
                 throw new InvalidOperationException("Unexpected file type value.");
         }
 
+        nint hwnd = _windowHandleProvider.GetMainWindowHandle();
         WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
 
         StorageFile file = await filePicker.PickSaveFileAsync();
@@ -152,6 +173,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
             UserFolder.Pictures => PickerLocationId.PicturesLibrary,
             UserFolder.Music => PickerLocationId.MusicLibrary,
             UserFolder.Videos => PickerLocationId.VideosLibrary,
+            UserFolder.Documents => PickerLocationId.DocumentsLibrary,
             _ => throw new InvalidOperationException("Unexpected user folder value."),
         };
 
