@@ -113,7 +113,9 @@ internal static class UseCaseCommandExtensions
 
         try
         {
+            telemetryService?.ActivityInitiated(resolvedActivityId);
             await useCase.ExecuteAsync(requestFactory(), cancellationToken);
+            telemetryService?.ActivityCompleted(resolvedActivityId);
         }
         catch (OperationCanceledException exception)
         {

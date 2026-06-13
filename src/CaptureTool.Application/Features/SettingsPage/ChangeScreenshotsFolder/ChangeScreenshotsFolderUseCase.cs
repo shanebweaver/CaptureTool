@@ -1,19 +1,19 @@
 using CaptureTool.Application.Abstractions.Features.Settings.ChangeScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Abstractions.Windowing;
+using CaptureTool.Application.Features.Settings;
 
-namespace CaptureTool.Application.Features.Settings.ChangeScreenshotsFolder;
+namespace CaptureTool.Application.Features.SettingsPage.ChangeScreenshotsFolder;
 
 public sealed class ChangeScreenshotsFolderUseCase : IChangeScreenshotsFolderUseCase
 {
-    private readonly IWindowHandleProvider _windowing;
     private readonly IFilePickerService _picker;
     private readonly ISettingsService _settings;
 
-    public ChangeScreenshotsFolderUseCase(IWindowHandleProvider windowing, IFilePickerService picker, ISettingsService settings)
+    public ChangeScreenshotsFolderUseCase(
+        IFilePickerService picker,
+        ISettingsService settings)
     {
-        _windowing = windowing;
         _picker = picker;
         _settings = settings;
     }
@@ -22,8 +22,7 @@ public sealed class ChangeScreenshotsFolderUseCase : IChangeScreenshotsFolderUse
 
     public async Task<ChangeScreenshotsFolderResponse> ExecuteAsync(ChangeScreenshotsFolderRequest request, CancellationToken cancellationToken = default)
     {
-        var hwnd = _windowing.GetMainWindowHandle();
-        var folder = await _picker.PickFolderAsync(hwnd, UserFolder.Pictures) ?? throw new OperationCanceledException("No folder was selected.");
+        var folder = await _picker.PickFolderAsync(UserFolder.Pictures) ?? throw new OperationCanceledException("No folder was selected.");
         _settings.Set(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder, folder.FolderPath);
         await _settings.TrySaveAsync(cancellationToken);
         return new ChangeScreenshotsFolderResponse();

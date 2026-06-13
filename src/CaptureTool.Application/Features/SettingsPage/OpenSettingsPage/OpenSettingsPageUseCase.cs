@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Features.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.Navigation;
 
-namespace CaptureTool.Application.Features.Settings.OpenSettingsPage;
+namespace CaptureTool.Application.Features.SettingsPage.OpenSettingsPage;
 
 public sealed class OpenSettingsPageUseCase : IOpenSettingsPageUseCase
 {

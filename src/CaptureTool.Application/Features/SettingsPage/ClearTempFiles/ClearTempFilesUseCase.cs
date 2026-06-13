@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Features.Settings.ClearTempFiles;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Storage;
 
-namespace CaptureTool.Application.Features.Settings.ClearTempFiles;
+namespace CaptureTool.Application.Features.SettingsPage.ClearTempFiles;
 
 public sealed class ClearTempFilesUseCase : IClearTempFilesUseCase
 {

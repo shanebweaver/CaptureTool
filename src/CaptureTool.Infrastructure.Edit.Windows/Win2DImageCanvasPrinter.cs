@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
+using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.Edit.Drawable;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Printing;
@@ -9,12 +10,14 @@ namespace CaptureTool.Infrastructure.Edit.Windows;
 public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
 {
     private const uint PageCount = 1;
+    private readonly IWindowHandleProvider _windowHandleProvider;
 
-    public Win2DImageCanvasPrinter()
+    public Win2DImageCanvasPrinter(IWindowHandleProvider windowHandleProvider)
     {
+        _windowHandleProvider = windowHandleProvider;
     }
 
-    public async Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options, nint hwnd)
+    public async Task ShowPrintUIAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
         if (!PrintManager.IsSupported())
         {
@@ -25,6 +28,7 @@ public partial class Win2DImageCanvasPrinter : IImageCanvasPrinter
         printDocument.Preview += PrintDocument_Preview;
         printDocument.Print += PrintDocument_Print;
 
+        nint hwnd = _windowHandleProvider.GetMainWindowHandle();
         PrintManager printManager = PrintManagerInterop.GetForWindow(hwnd);
         printManager.PrintTaskRequested -= OnPrintTaskRequested;
         printManager.PrintTaskRequested += OnPrintTaskRequested;

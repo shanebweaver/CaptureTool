@@ -1,6 +1,5 @@
 using CaptureTool.Application.Abstractions.Features.AudioEdit.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.Capture.Files;
 
 namespace CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
@@ -8,14 +7,10 @@ namespace CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
 public sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
 {
     private readonly IFilePickerService _filePickerService;
-    private readonly IWindowHandleProvider _windowingService;
 
-    public SaveAudioFileUseCase(
-        IFilePickerService filePickerService,
-        IWindowHandleProvider windowingService)
+    public SaveAudioFileUseCase(IFilePickerService filePickerService)
     {
         _filePickerService = filePickerService;
-        _windowingService = windowingService;
     }
 
     public bool CanExecute(SaveAudioFileRequest request)
@@ -33,8 +28,7 @@ public sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
             throw new InvalidOperationException("Cannot save audio without a valid filepath.");
         }
 
-        nint hwnd = _windowingService.GetMainWindowHandle();
-        IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Audio, UserFolder.Music)
+        IFile file = await _filePickerService.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music)
             ?? throw new OperationCanceledException("No file was selected.");
 
         File.Copy(filePath, file.FilePath, true);

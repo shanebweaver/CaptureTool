@@ -54,7 +54,7 @@ public sealed partial class AboutPage : AboutPageBase
         ContentDialog dialog = new()
         {
             XamlRoot = XamlRoot,
-            Title = "Diagnostics",
+            Title = new ResourceLoader().GetString("Diagnostics_Title"),
             PrimaryButtonText = closeButtonText,
             Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
             DefaultButton = ContentDialogButton.Primary,

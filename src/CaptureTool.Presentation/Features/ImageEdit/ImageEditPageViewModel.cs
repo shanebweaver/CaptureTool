@@ -1,13 +1,11 @@
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
-using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Domain.Edit;
@@ -58,7 +56,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private readonly ILocalizationService _localizationService;
     private readonly IStoreService _storeService;
-    private readonly IWindowHandleProvider _windowingService;
     private readonly ICancellationService _cancellationService;
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
     private readonly IImageCanvasExporter _imageCanvasExporter;
@@ -333,7 +330,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public ImageEditPageViewModel(
         ILocalizationService localizationService,
         IStoreService storeService,
-        IWindowHandleProvider windowingService,
         ICancellationService cancellationService,
         ITelemetryService telemetryService,
         IImageCanvasPrinter imageCanvasPrinter,
@@ -345,7 +341,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         _localizationService = localizationService;
         _storeService = storeService;
-        _windowingService = windowingService;
         _cancellationService = cancellationService;
         _imageCanvasPrinter = imageCanvasPrinter;
         _chromaKeyService = chromaKeyService;
@@ -973,8 +968,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         try
         {
-            nint hwnd = _windowingService.GetMainWindowHandle();
-            IFile? file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Image, UserFolder.Pictures);
+            IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures);
 
             if (file is null)
             {
@@ -1098,8 +1092,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         try
         {
-            nint hwnd = _windowingService.GetMainWindowHandle();
-            await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions(), hwnd);
+            await _imageCanvasPrinter.ShowPrintUIAsync([.. Drawables], GetImageCanvasRenderOptions());
         }
         catch (OperationCanceledException exception)
         {
@@ -1120,10 +1113,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 throw new InvalidOperationException("No image to share");
             }
 
-            nint hwnd = _windowingService.GetMainWindowHandle();
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             using MemoryStream renderedStream = await _imageCanvasExporter.RenderToStreamAsync([.. Drawables], options);
-            await _shareService.ShareStreamAsync(renderedStream, hwnd);
+            await _shareService.ShareStreamAsync(renderedStream);
         }
         catch (OperationCanceledException exception)
         {

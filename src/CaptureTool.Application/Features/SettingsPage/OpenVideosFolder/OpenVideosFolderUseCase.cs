@@ -1,9 +1,10 @@
 using CaptureTool.Application.Abstractions.Features.Settings.OpenVideosFolder;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Features.Settings;
 using System.Diagnostics;
 
-namespace CaptureTool.Application.Features.Settings.OpenVideosFolder;
+namespace CaptureTool.Application.Features.SettingsPage.OpenVideosFolder;
 
 public sealed class OpenVideosFolderUseCase : IOpenVideosFolderUseCase
 {

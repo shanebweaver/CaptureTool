@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppTheme;
 using CaptureTool.Application.Abstractions.Themes;
 
-namespace CaptureTool.Application.Features.Settings.UpdateAppTheme;
+namespace CaptureTool.Application.Features.SettingsPage.UpdateAppTheme;
 
 public sealed class UpdateAppThemeUseCase : IUpdateAppThemeUseCase
 {

@@ -1084,4 +1084,20 @@ SOFTWARE.
     <value>Choose font size</value>
     <comment>The tooltip for the font size input in the text toolbar.</comment>
   </data>
+  <data name="Diagnostics_Title" xml:space="preserve">
+    <value>Diagnostics</value>
+    <comment>The title for the diagnostics dialog.</comment>
+  </data>
+  <data name="Diagnostics_LoggingToggle.Header" xml:space="preserve">
+    <value>Logging</value>
+    <comment>The header for the diagnostics logging toggle.</comment>
+  </data>
+  <data name="Diagnostics_ClearLogsButtonLabel.Text" xml:space="preserve">
+    <value>Clear logs</value>
+    <comment>The label for the button that clears diagnostic logs.</comment>
+  </data>
+  <data name="Diagnostics_ExportLogsButtonLabel.Text" xml:space="preserve">
+    <value>Export logs</value>
+    <comment>The label for the button that exports diagnostic logs.</comment>
+  </data>
 </root>

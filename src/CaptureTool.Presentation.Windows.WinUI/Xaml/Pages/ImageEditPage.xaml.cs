@@ -1,5 +1,5 @@
-using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Domain.Edit.Drawable;
+using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Presentation.Loading;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI.Xaml;

@@ -1,7 +1,8 @@
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateVideoCaptureAutoCopy;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Features.Settings;
 
-namespace CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoCopy;
+namespace CaptureTool.Application.Features.SettingsPage.UpdateVideoCaptureAutoCopy;
 
 public sealed class UpdateVideoCaptureAutoCopyUseCase : IUpdateVideoCaptureAutoCopyUseCase
 {

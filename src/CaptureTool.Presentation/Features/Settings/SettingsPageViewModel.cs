@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Features.Settings;
 using CaptureTool.Application.Abstractions.Features.Settings.ChangeScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Features.Settings.ChangeVideosFolder;
 using CaptureTool.Application.Abstractions.Features.Settings.ClearTempFiles;

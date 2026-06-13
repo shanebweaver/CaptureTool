@@ -1,8 +1,9 @@
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppLanguage;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Features.Settings;
 
-namespace CaptureTool.Application.Features.Settings.UpdateAppLanguage;
+namespace CaptureTool.Application.Features.SettingsPage.UpdateAppLanguage;
 
 public sealed class UpdateAppLanguageUseCase : IUpdateAppLanguageUseCase
 {

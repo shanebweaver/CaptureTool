@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Features.Settings.RestartSettingsApplication;
 using CaptureTool.Application.Abstractions.Shutdown;
 
-namespace CaptureTool.Application.Features.Settings.RestartSettingsApplication;
+namespace CaptureTool.Application.Features.SettingsPage.RestartSettingsApplication;
 
 public sealed class RestartSettingsApplicationUseCase : IRestartSettingsApplicationUseCase
 {
