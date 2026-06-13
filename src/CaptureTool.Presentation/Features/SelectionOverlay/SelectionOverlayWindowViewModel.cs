@@ -75,6 +75,12 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             ? SupportedCaptureTypes[SelectedCaptureTypeIndex].CaptureType
             : null;
 
+    public bool UsesCrosshairCursor
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     private ObservableCollection<CaptureModeViewModel> _supportedCaptureModes = [];
 
     public ObservableCollection<CaptureModeViewModel> SupportedCaptureModes
@@ -250,6 +256,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private void UpdateSelectedCaptureType((int Index, SelectionUpdateSource Source) args)
     {
         SelectedCaptureTypeIndex = args.Index;
+        UpdateUsesCrosshairCursor();
 
         // Raise event with source information for propagation control
         CaptureTypeIndexChanged?.Invoke(this, args);
@@ -261,6 +268,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         if (SupportedCaptureModes.Count == 0)
         {
             SelectedCaptureTypeIndex = -1;
+            UpdateUsesCrosshairCursor();
             return;
         }
 
@@ -276,8 +284,28 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
             _supportedCaptureTypes.Add(_captureTypeViewModelFactory.Create(supportedCaptureType));
         }
 
-        SelectedCaptureTypeIndex = 0;
-        CaptureTypeIndexChanged?.Invoke(this, (0, SelectionUpdateSource.Programmatic));
+        CaptureType defaultCaptureType = GetDefaultCaptureType(GetSelectedCaptureMode());
+        int defaultCaptureTypeIndex = SupportedCaptureTypes
+            .Select((vm, index) => (vm.CaptureType, Index: index))
+            .FirstOrDefault(item => item.CaptureType == defaultCaptureType).Index;
+
+        SelectedCaptureTypeIndex = defaultCaptureTypeIndex;
+        UpdateUsesCrosshairCursor();
+        CaptureTypeIndexChanged?.Invoke(this, (defaultCaptureTypeIndex, SelectionUpdateSource.Programmatic));
+    }
+
+    private void UpdateUsesCrosshairCursor()
+    {
+        UsesCrosshairCursor = GetSelectedCaptureType() == CaptureType.Rectangle;
+    }
+
+    private static CaptureType GetDefaultCaptureType(CaptureMode? captureMode)
+    {
+        return captureMode switch
+        {
+            CaptureMode.Video => CaptureType.FullScreen,
+            _ => CaptureType.Rectangle
+        };
     }
 
     private async Task RequestCaptureAsync()
