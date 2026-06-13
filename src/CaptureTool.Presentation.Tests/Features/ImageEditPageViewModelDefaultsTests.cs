@@ -159,7 +159,6 @@ public sealed class ImageEditPageViewModelDefaultsTests
         return new ImageEditPageViewModel(
             Mock.Of<ILocalizationService>(),
             storeService ?? Mock.Of<IStoreService>(),
-            Mock.Of<IWindowHandleProvider>(),
             cancellationService ?? Mock.Of<ICancellationService>(),
             Mock.Of<ITelemetryService>(),
             Mock.Of<IImageCanvasPrinter>(),
