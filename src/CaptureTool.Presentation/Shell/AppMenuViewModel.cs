@@ -44,17 +44,11 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     public bool ShowAddOnsOption { get; }
 
-    private ObservableCollection<RecentCaptureViewModel> _recentCaptures = [];
-
     public IReadOnlyList<RecentCaptureViewModel> RecentCaptures
     {
-        get => _recentCaptures;
-        set
-        {
-            _recentCaptures = value as ObservableCollection<RecentCaptureViewModel> ?? new ObservableCollection<RecentCaptureViewModel>(value);
-            RaisePropertyChanged(nameof(RecentCaptures));
-        }
-    }
+        get;
+        set => Set(ref field, value as ObservableCollection<RecentCaptureViewModel> ?? new ObservableCollection<RecentCaptureViewModel>(value));
+    } = [];
 
     public AppMenuViewModel(
         IOpenSelectionOverlayUseCase openSelectionOverlayCommand,
@@ -171,12 +165,9 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         {
             var recentCaptures = (await _getRecentCapturesQuery.ExecuteAsync(new GetRecentCapturesRequest(), CancellationToken.None)).Captures;
 
-            _recentCaptures.Clear();
-            foreach (var recentCapture in recentCaptures)
-            {
-                var recentCaptureViewModel = _recentCaptureViewModelFactory.Create(recentCapture.FilePath);
-                _recentCaptures.Add(recentCaptureViewModel);
-            }
+            RecentCaptures = recentCaptures
+                .Select(recentCapture => _recentCaptureViewModelFactory.Create(recentCapture.FilePath))
+                .ToList();
 
             RecentCapturesUpdated?.Invoke(this, EventArgs.Empty);
         }

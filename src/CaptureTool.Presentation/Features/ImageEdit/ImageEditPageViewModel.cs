@@ -122,17 +122,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
-    private ObservableCollection<IDrawable> _drawables = [];
-
     public IReadOnlyList<IDrawable> Drawables
     {
-        get => _drawables;
-        private set
-        {
-            _drawables = value as ObservableCollection<IDrawable> ?? new ObservableCollection<IDrawable>(value);
-            RaisePropertyChanged(nameof(Drawables));
-        }
-    }
+        get;
+        private set => Set(ref field, value as ObservableCollection<IDrawable> ?? new ObservableCollection<IDrawable>(value));
+    } = new ObservableCollection<IDrawable>();
+
+    private ObservableCollection<IDrawable> MutableDrawables => (ObservableCollection<IDrawable>)Drawables;
 
     public ImageFile? ImageFile
     {
@@ -292,17 +288,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
-    private ObservableCollection<ChromaKeyColorOption> _chromaKeyColorOptions = [];
-
     public IReadOnlyList<ChromaKeyColorOption> ChromaKeyColorOptions
     {
-        get => _chromaKeyColorOptions;
-        private set
-        {
-            _chromaKeyColorOptions = value as ObservableCollection<ChromaKeyColorOption> ?? new ObservableCollection<ChromaKeyColorOption>(value);
-            RaisePropertyChanged(nameof(ChromaKeyColorOptions));
-        }
-    }
+        get;
+        private set => Set(ref field, value as ObservableCollection<ChromaKeyColorOption> ?? new ObservableCollection<ChromaKeyColorOption>(value));
+    } = new ObservableCollection<ChromaKeyColorOption>();
+
+    private ObservableCollection<ChromaKeyColorOption> MutableChromaKeyColorOptions => (ObservableCollection<ChromaKeyColorOption>)ChromaKeyColorOptions;
 
     public int SelectedChromaKeyColorOption
     {
@@ -433,7 +425,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             ApplyImageSizeBasedDefaults(ImageSize);
 
             _imageDrawable = new(topLeft, imageFile, ImageSize);
-            _drawables.Add(_imageDrawable);
+            MutableDrawables.Add(_imageDrawable);
 
             if (_chromaKeyFeatureAvailability.IsChromaKeyEnabled)
             {
@@ -442,14 +434,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 if (isChromaKeyAddOnOwned)
                 {
                     // Empty option disables the effect.
-                    _chromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
+                    MutableChromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
 
                     // Add top detected colors
                     var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 15, 16);
                     foreach (var topColor in topColors)
                     {
                         ChromaKeyColorOption colorOption = new(topColor);
-                        _chromaKeyColorOptions.Add(colorOption);
+                        MutableChromaKeyColorOptions.Add(colorOption);
                     }
                 }
             }
@@ -473,7 +465,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ImageSize = Size.Empty;
         Orientation = ImageOrientation.RotateNoneFlipNone;
         MirroredDisplayName = string.Empty;
-        _drawables.Clear();
+        MutableDrawables.Clear();
         base.Dispose();
     }
 
@@ -781,7 +773,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             // Add to undo stack
             var operation = new AddShapeOperation(
-                _drawables,
+                MutableDrawables,
                 newShape,
                 () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
 
@@ -821,7 +813,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             TextFontSize);
 
         var operation = new AddShapeOperation(
-            _drawables,
+            MutableDrawables,
             newText,
             () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
 
@@ -883,13 +875,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
-        if (shapeIndex >= 0 && shapeIndex < _drawables.Count)
+        if (shapeIndex >= 0 && shapeIndex < MutableDrawables.Count)
         {
-            var shape = _drawables[shapeIndex];
+            var shape = MutableDrawables[shapeIndex];
 
             // Add to undo stack
             var operation = new DeleteShapeOperation(
-                _drawables,
+                MutableDrawables,
                 shape,
                 shapeIndex,
                 () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
@@ -910,9 +902,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
-        if (shapeIndex >= 0 && shapeIndex < _drawables.Count)
+        if (shapeIndex >= 0 && shapeIndex < MutableDrawables.Count)
         {
-            var currentShape = _drawables[shapeIndex];
+            var currentShape = MutableDrawables[shapeIndex];
 
             // Add to undo stack
             var operation = new ModifyShapeOperation(
@@ -937,7 +929,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
-        _drawables.Add(drawable);
+        MutableDrawables.Add(drawable);
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 

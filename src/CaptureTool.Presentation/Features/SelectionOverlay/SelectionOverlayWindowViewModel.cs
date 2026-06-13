@@ -50,24 +50,16 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     public bool IsPrimary => Monitor?.IsPrimary ?? false;
 
-    private ObservableCollection<CaptureTypeViewModel> _supportedCaptureTypes = [];
-
     public ObservableCollection<CaptureTypeViewModel> SupportedCaptureTypes
     {
-        get => _supportedCaptureTypes;
-        private set
-        {
-            _supportedCaptureTypes = value;
-            RaisePropertyChanged(nameof(SupportedCaptureTypes));
-        }
-    }
-
-    private int _selectedCaptureTypeIndex;
+        get;
+        private set => Set(ref field, value);
+    } = [];
 
     public int SelectedCaptureTypeIndex
     {
-        get => _selectedCaptureTypeIndex;
-        private set => Set(ref _selectedCaptureTypeIndex, value);
+        get;
+        private set => Set(ref field, value);
     }
 
     public CaptureType? GetSelectedCaptureType()
@@ -81,24 +73,16 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         private set => Set(ref field, value);
     }
 
-    private ObservableCollection<CaptureModeViewModel> _supportedCaptureModes = [];
-
     public ObservableCollection<CaptureModeViewModel> SupportedCaptureModes
     {
-        get => _supportedCaptureModes;
-        private set
-        {
-            _supportedCaptureModes = value;
-            RaisePropertyChanged(nameof(SupportedCaptureModes));
-        }
-    }
-
-    private int _selectedCaptureModeIndex;
+        get;
+        private set => Set(ref field, value);
+    } = [];
 
     public int SelectedCaptureModeIndex
     {
-        get => _selectedCaptureModeIndex;
-        private set => Set(ref _selectedCaptureModeIndex, value);
+        get;
+        private set => Set(ref field, value);
     }
 
     public CaptureMode? GetSelectedCaptureMode()
@@ -187,10 +171,10 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         UpdateCaptureOptionsCommand = new RelayCommand<CaptureOptions>(UpdateCaptureOptions);
 
         CaptureModeViewModel imageModeVM = captureModeViewModelFactory.Create(CaptureMode.Image);
-        _supportedCaptureModes.Add(imageModeVM);
+        SupportedCaptureModes.Add(imageModeVM);
 
         CaptureModeViewModel videoModeVM = captureModeViewModelFactory.Create(CaptureMode.Video);
-        _supportedCaptureModes.Add(videoModeVM);
+        SupportedCaptureModes.Add(videoModeVM);
 
         IsDesktopAudioEnabled = true;
     }
@@ -205,10 +189,10 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         MonitorWindows = [.. WindowInfos.Select(w => w.Position)];
 
         var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureOptions.CaptureMode);
-        UpdateSelectedCaptureMode((_supportedCaptureModes.IndexOf(targetMode), SelectionUpdateSource.Programmatic));
+        UpdateSelectedCaptureMode((SupportedCaptureModes.IndexOf(targetMode), SelectionUpdateSource.Programmatic));
 
         var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureOptions.CaptureType);
-        UpdateSelectedCaptureType((_supportedCaptureTypes.IndexOf(targetType), SelectionUpdateSource.Programmatic));
+        UpdateSelectedCaptureType((SupportedCaptureTypes.IndexOf(targetType), SelectionUpdateSource.Programmatic));
 
         base.Load(options);
     }
@@ -234,10 +218,10 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private void UpdateCaptureOptions(CaptureOptions options)
     {
         var targetMode = SupportedCaptureModes.First(vm => vm.CaptureMode == options.CaptureMode);
-        UpdateSelectedCaptureMode((_supportedCaptureModes.IndexOf(targetMode), SelectionUpdateSource.Programmatic));
+        UpdateSelectedCaptureMode((SupportedCaptureModes.IndexOf(targetMode), SelectionUpdateSource.Programmatic));
 
         var targetType = SupportedCaptureTypes.First(vm => vm.CaptureType == options.CaptureType);
-        UpdateSelectedCaptureType((_supportedCaptureTypes.IndexOf(targetType), SelectionUpdateSource.Programmatic));
+        UpdateSelectedCaptureType((SupportedCaptureTypes.IndexOf(targetType), SelectionUpdateSource.Programmatic));
 
         UpdateCaptureArea(Rectangle.Empty);
 
@@ -264,7 +248,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private void UpdateSupportedCaptureTypes()
     {
-        _supportedCaptureTypes.Clear();
+        SupportedCaptureTypes.Clear();
         if (SupportedCaptureModes.Count == 0)
         {
             SelectedCaptureTypeIndex = -1;
@@ -281,7 +265,7 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
         foreach (var supportedCaptureType in supportedCaptureTypes)
         {
-            _supportedCaptureTypes.Add(_captureTypeViewModelFactory.Create(supportedCaptureType));
+            SupportedCaptureTypes.Add(_captureTypeViewModelFactory.Create(supportedCaptureType));
         }
 
         CaptureType defaultCaptureType = GetDefaultCaptureType(GetSelectedCaptureMode());
@@ -365,8 +349,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         MonitorWindows = [];
 
         // Clear collections to release any remaining references
-        _supportedCaptureTypes.Clear();
-        _supportedCaptureModes.Clear();
+        SupportedCaptureTypes.Clear();
+        SupportedCaptureModes.Clear();
 
         base.Dispose();
     }
