@@ -14,17 +14,20 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
     private readonly IFileTypeDetector _fileTypeDetector;
     private readonly IFilePickerService _filePickerService;
     private readonly INavigationService _navigationService;
+    private readonly IStorageService _storageService;
     private readonly IWindowHandleProvider _windowHandleProvider;
 
     public OpenFileUseCase(
         IFileTypeDetector fileTypeDetector,
         IFilePickerService filePickerService,
         INavigationService navigationService,
+        IStorageService storageService,
         IWindowHandleProvider windowHandleProvider)
     {
         _fileTypeDetector = fileTypeDetector;
         _filePickerService = filePickerService;
         _navigationService = navigationService;
+        _storageService = storageService;
         _windowHandleProvider = windowHandleProvider;
     }
 
@@ -35,15 +38,21 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
             ?? throw new OperationCanceledException("No file was selected.");
         cancellationToken.ThrowIfCancellationRequested();
 
-        CaptureFileType fileType = _fileTypeDetector.DetectFileType(file.FilePath);
+        string temporaryFolderPath = _storageService.GetApplicationTemporaryFolderPath();
+        string filePath = IsFileInFolder(file.FilePath, temporaryFolderPath)
+            ? file.FilePath
+            : CopyFileToFolder(file.FilePath, temporaryFolderPath);
+        MarkFileAsRecentlyOpened(filePath);
+
+        CaptureFileType fileType = _fileTypeDetector.DetectFileType(filePath);
         switch (fileType)
         {
             case CaptureFileType.Image:
-                _navigationService.Navigate(NavigationRoute.ImageEdit, new ImageFile(file.FilePath));
+                _navigationService.Navigate(NavigationRoute.ImageEdit, new ImageFile(filePath));
                 break;
 
             case CaptureFileType.Video:
-                _navigationService.Navigate(NavigationRoute.VideoEdit, new VideoFile(file.FilePath));
+                _navigationService.Navigate(NavigationRoute.VideoEdit, new VideoFile(filePath));
                 break;
 
             default:
@@ -51,5 +60,31 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
         }
 
         return new OpenFileResponse();
+    }
+
+    private static bool IsFileInFolder(string sourcePath, string folderPath)
+    {
+        string fullFolderPath = Path.GetFullPath(folderPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        string fullSourcePath = Path.GetFullPath(sourcePath);
+
+        return fullSourcePath.StartsWith(fullFolderPath, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string CopyFileToFolder(string sourcePath, string folderPath)
+    {
+        Directory.CreateDirectory(folderPath);
+
+        string destinationPath = Path.Combine(
+            folderPath,
+            Path.GetFileName(sourcePath));
+
+        File.Copy(sourcePath, destinationPath, true);
+        return destinationPath;
+    }
+
+    private static void MarkFileAsRecentlyOpened(string filePath)
+    {
+        File.SetLastWriteTimeUtc(filePath, DateTime.UtcNow);
     }
 }
