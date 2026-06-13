@@ -22,7 +22,11 @@
         Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
         BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
         BorderThickness="1"
-        CornerRadius="8">
+        CornerRadius="8"
+        Translation="0,0,16">
+        <Border.Shadow>
+            <ThemeShadow />
+        </Border.Shadow>
         <Grid>
             <StackPanel Orientation="Horizontal" Spacing="4">
             <!--  Key color  -->
