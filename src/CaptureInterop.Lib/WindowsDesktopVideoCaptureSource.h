@@ -6,12 +6,14 @@
 #include <d3d11.h>
 #include <Windows.h>
 #include <EventToken.h>
+#include <memory>
 #include <windows.graphics.capture.h>
 #include <wil/com.h>
 
 // Forward declarations
 class FrameArrivedHandler;
 class IMediaClockReader;
+class IMonitorHdrDetector;
 
 /// <summary>
 /// Windows Graphics Capture API implementation of IVideoCaptureSource.
@@ -31,6 +33,10 @@ class WindowsDesktopVideoCaptureSource : public IVideoCaptureSource
 {
 public:
     WindowsDesktopVideoCaptureSource(const CaptureSessionConfig& config, IMediaClockReader* clockReader);
+    WindowsDesktopVideoCaptureSource(
+        const CaptureSessionConfig& config,
+        IMediaClockReader* clockReader,
+        std::unique_ptr<IMonitorHdrDetector> monitorHdrDetector);
     ~WindowsDesktopVideoCaptureSource() override;
 
     // Delete copy and move operations
@@ -45,6 +51,7 @@ public:
     void Stop() override;
     UINT32 GetWidth() const override { return m_width; }
     UINT32 GetHeight() const override { return m_height; }
+    MonitorHdrInfo GetMonitorHdrInfo() const override { return m_monitorHdrInfo; }
     void SetVideoFrameReadyCallback(VideoFrameReadyCallback callback) override { m_callback = callback; }
     bool IsRunning() const override { return m_isRunning; }
 
@@ -75,6 +82,8 @@ private:
     // Callback
     VideoFrameReadyCallback m_callback;
     IMediaClockReader* m_clockReader;
+    std::unique_ptr<IMonitorHdrDetector> m_monitorHdrDetector;
+    MonitorHdrInfo m_monitorHdrInfo = MonitorHdrInfo::Unknown();
     
     // Video dimensions
     UINT32 m_width;

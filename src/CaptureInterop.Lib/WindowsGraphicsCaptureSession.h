@@ -14,6 +14,8 @@
 class FrameArrivedHandler;
 class IAudioCaptureSource;
 class IVideoCaptureSource;
+class IVideoFrameProcessor;
+class IVideoFrameProcessorFactory;
 class IMediaClock;
 
 // Callback data structures
@@ -35,6 +37,13 @@ public:
         std::unique_ptr<IAudioCaptureSource> audioCaptureSource,
         std::unique_ptr<IVideoCaptureSource> videoCaptureSource,
         std::unique_ptr<IMP4SinkWriter> sinkWriter);
+    WindowsGraphicsCaptureSession(
+        const CaptureSessionConfig& config,
+        std::unique_ptr<IMediaClock> mediaClock,
+        std::unique_ptr<IAudioCaptureSource> audioCaptureSource,
+        std::unique_ptr<IVideoCaptureSource> videoCaptureSource,
+        std::unique_ptr<IMP4SinkWriter> sinkWriter,
+        std::unique_ptr<IVideoFrameProcessorFactory> videoFrameProcessorFactory);
     ~WindowsGraphicsCaptureSession() override;
 
     // Delete copy and move operations
@@ -79,6 +88,8 @@ private:
     std::unique_ptr<IMP4SinkWriter> m_sinkWriter;
     std::unique_ptr<IAudioCaptureSource> m_audioCaptureSource;
     std::unique_ptr<IVideoCaptureSource> m_videoCaptureSource;
+    std::unique_ptr<IVideoFrameProcessorFactory> m_videoFrameProcessorFactory;
+    std::unique_ptr<IVideoFrameProcessor> m_videoFrameProcessor;
     std::unique_ptr<IMediaClock> m_mediaClock;
     
     // State management

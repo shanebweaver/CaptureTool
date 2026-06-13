@@ -1,15 +1,26 @@
 #include "pch.h"
 #include "WindowsDesktopVideoCaptureSource.h"
 #include "FrameArrivedHandler.h"
+#include "IMonitorHdrDetector.h"
 #include "WindowsGraphicsCaptureHelpers.h"
+#include "WindowsMonitorHdrDetector.h"
 #include <strsafe.h>
 
 using namespace WindowsGraphicsCaptureHelpers;
 
 WindowsDesktopVideoCaptureSource::WindowsDesktopVideoCaptureSource(const CaptureSessionConfig& config, IMediaClockReader* clockReader)
+    : WindowsDesktopVideoCaptureSource(config, clockReader, std::make_unique<WindowsMonitorHdrDetector>())
+{
+}
+
+WindowsDesktopVideoCaptureSource::WindowsDesktopVideoCaptureSource(
+    const CaptureSessionConfig& config,
+    IMediaClockReader* clockReader,
+    std::unique_ptr<IMonitorHdrDetector> monitorHdrDetector)
     : m_config(config)
     , m_frameHandler(nullptr)
     , m_clockReader(clockReader)
+    , m_monitorHdrDetector(std::move(monitorHdrDetector))
     , m_width(0)
     , m_height(0)
     , m_isRunning(false)
@@ -70,6 +81,15 @@ bool WindowsDesktopVideoCaptureSource::Initialize(HRESULT* outHr)
     {
         if (outHr) *outHr = hr;
         return false;
+    }
+
+    if (m_monitorHdrDetector)
+    {
+        m_monitorHdrInfo = m_monitorHdrDetector->Detect(m_config.hMonitor);
+    }
+    else
+    {
+        m_monitorHdrInfo = MonitorHdrInfo::Failed(MonitorHdrFallbackReason::DetectorUnavailable, E_POINTER);
     }
 
     // Initialize D3D device

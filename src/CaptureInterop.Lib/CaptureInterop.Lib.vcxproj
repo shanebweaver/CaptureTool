@@ -100,6 +100,8 @@
     <ClInclude Include="FrameAdmissionController.h" />
     <ClInclude Include="FrameArrivedHandler.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="HdrToSdrToneMapperResources.h" />
+    <ClInclude Include="HdrToSdrVideoFrameProcessor.h" />
     <ClInclude Include="IAudioCaptureSource.h" />
     <ClInclude Include="IAudioCaptureSourceFactory.h" />
     <ClInclude Include="ICaptureSession.h" />
@@ -112,6 +114,8 @@
     <ClInclude Include="IMediaClockWriter.h" />
     <ClInclude Include="IMediaFoundationLifecycleManager.h" />
     <ClInclude Include="IMediaFoundationLifecycleManagerFactory.h" />
+    <ClInclude Include="IMonitorHdrDetector.h" />
+    <ClInclude Include="IMonitorHdrDetectorFactory.h" />
     <ClInclude Include="IMP4SinkWriter.h" />
     <ClInclude Include="IMP4SinkWriterFactory.h" />
     <ClInclude Include="ISampleBuilder.h" />
@@ -123,9 +127,14 @@
     <ClInclude Include="ITextureProcessorFactory.h" />
     <ClInclude Include="IVideoCaptureSource.h" />
     <ClInclude Include="IVideoCaptureSourceFactory.h" />
+    <ClInclude Include="IVideoFrameProcessor.h" />
+    <ClInclude Include="IVideoFrameProcessorFactory.h" />
     <ClInclude Include="MediaFoundationLifecycleManager.h" />
     <ClInclude Include="MediaFoundationLifecycleManagerFactory.h" />
     <ClInclude Include="MediaTimeConstants.h" />
+    <ClInclude Include="MonitorHdrColorSpaceMapper.h" />
+    <ClInclude Include="MonitorHdrInfo.h" />
+    <ClInclude Include="PassthroughVideoFrameProcessor.h" />
     <ClInclude Include="Result.h" />
     <ClInclude Include="SampleBuilder.h" />
     <ClInclude Include="SampleBuilderFactory.h" />
@@ -137,6 +146,7 @@
     <ClInclude Include="StreamConfigurationBuilderFactory.h" />
     <ClInclude Include="TextureProcessor.h" />
     <ClInclude Include="TextureProcessorFactory.h" />
+    <ClInclude Include="VideoFrameProcessorFactory.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSource.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSourceFactory.h" />
     <ClInclude Include="WindowsLocalAudioCaptureSource.h" />
@@ -144,17 +154,36 @@
     <ClInclude Include="WindowsGraphicsCaptureHelpers.h" />
     <ClInclude Include="WindowsGraphicsCaptureSession.h" />
     <ClInclude Include="WindowsLocalAudioCaptureSourceFactory.h" />
+    <ClInclude Include="WindowsMonitorHdrDetector.h" />
+    <ClInclude Include="WindowsMonitorHdrDetectorFactory.h" />
     <ClInclude Include="WindowsMFMP4SinkWriter.h" />
     <ClInclude Include="WindowsMFMP4SinkWriterFactory.h" />
     <ClInclude Include="WindowsScreenshotCapture.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="HdrToSdrToneMapper.hlsl">
+      <ShaderType>Pixel</ShaderType>
+      <ShaderModel>5.0</ShaderModel>
+      <EntryPointName>PSMain</EntryPointName>
+      <ObjectFileOutput>$(IntDir)HdrToSdrToneMapper.cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="HdrToSdrToneMapperVertex.hlsl">
+      <ShaderType>Vertex</ShaderType>
+      <ShaderModel>5.0</ShaderModel>
+      <EntryPointName>VSMain</EntryPointName>
+      <ObjectFileOutput>$(IntDir)HdrToSdrToneMapperVertex.cso</ObjectFileOutput>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="AudioCaptureDevice.cpp" />
     <ClCompile Include="AudioCaptureHandler.cpp" />
     <ClCompile Include="FrameArrivedHandler.cpp" />
+    <ClCompile Include="HdrToSdrToneMapperResources.cpp" />
+    <ClCompile Include="HdrToSdrVideoFrameProcessor.cpp" />
     <ClCompile Include="IStreamConfigurationBuilder.cpp" />
     <ClCompile Include="MediaFoundationLifecycleManager.cpp" />
     <ClCompile Include="MediaFoundationLifecycleManagerFactory.cpp" />
+    <ClCompile Include="PassthroughVideoFrameProcessor.cpp" />
     <ClCompile Include="SampleBuilder.cpp" />
     <ClCompile Include="SampleBuilderFactory.cpp" />
     <ClCompile Include="SimpleMediaClock.cpp" />
@@ -170,15 +199,22 @@
     <ClCompile Include="StreamConfigurationBuilderFactory.cpp" />
     <ClCompile Include="TextureProcessor.cpp" />
     <ClCompile Include="TextureProcessorFactory.cpp" />
+    <ClCompile Include="VideoFrameProcessorFactory.cpp" />
     <ClCompile Include="WindowsDesktopVideoCaptureSource.cpp" />
     <ClCompile Include="WindowsDesktopVideoCaptureSourceFactory.cpp" />
     <ClCompile Include="WindowsLocalAudioCaptureSource.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSession.cpp" />
     <ClCompile Include="WindowsLocalAudioCaptureSourceFactory.cpp" />
+    <ClCompile Include="WindowsMonitorHdrDetector.cpp" />
+    <ClCompile Include="WindowsMonitorHdrDetectorFactory.cpp" />
     <ClCompile Include="WindowsMFMP4SinkWriter.cpp" />
     <ClCompile Include="WindowsMFMP4SinkWriterFactory.cpp" />
     <ClCompile Include="WindowsScreenshotCapture.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="CopyHdrToSdrToneMapperShader" AfterTargets="Build" Inputs="$(IntDir)HdrToSdrToneMapper.cso;$(IntDir)HdrToSdrToneMapperVertex.cso" Outputs="$(OutDir)HdrToSdrToneMapper.cso;$(OutDir)HdrToSdrToneMapperVertex.cso">
+    <Copy SourceFiles="$(IntDir)HdrToSdrToneMapper.cso" DestinationFiles="$(OutDir)HdrToSdrToneMapper.cso" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(IntDir)HdrToSdrToneMapperVertex.cso" DestinationFiles="$(OutDir)HdrToSdrToneMapperVertex.cso" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

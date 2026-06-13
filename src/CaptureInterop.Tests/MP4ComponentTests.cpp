@@ -59,6 +59,36 @@ namespace CaptureInteropTests
             Assert::IsNotNull(result.Value().get());
         }
 
+        TEST_METHOD(CreateVideoOutputType_WithDefaultConfig_SetsSdrColorMetadata)
+        {
+            StreamConfigurationBuilder builder;
+            auto config = StreamConfigurationBuilder::VideoConfig::Default(1920, 1080);
+
+            auto result = builder.CreateVideoOutputType(config);
+
+            Assert::IsTrue(result.IsOk());
+            UINT32 value = 0;
+            Assert::AreEqual(
+                static_cast<long>(S_OK),
+                static_cast<long>(result.Value()->GetUINT32(MF_MT_VIDEO_PRIMARIES, &value)));
+            Assert::AreEqual(static_cast<UINT32>(MFVideoPrimaries_BT709), value);
+
+            Assert::AreEqual(
+                static_cast<long>(S_OK),
+                static_cast<long>(result.Value()->GetUINT32(MF_MT_TRANSFER_FUNCTION, &value)));
+            Assert::AreEqual(static_cast<UINT32>(MFVideoTransFunc_709), value);
+
+            Assert::AreEqual(
+                static_cast<long>(S_OK),
+                static_cast<long>(result.Value()->GetUINT32(MF_MT_YUV_MATRIX, &value)));
+            Assert::AreEqual(static_cast<UINT32>(MFVideoTransferMatrix_BT709), value);
+
+            Assert::AreEqual(
+                static_cast<long>(S_OK),
+                static_cast<long>(result.Value()->GetUINT32(MF_MT_VIDEO_NOMINAL_RANGE, &value)));
+            Assert::AreEqual(static_cast<UINT32>(MFNominalRange_0_255), value);
+        }
+
         TEST_METHOD(CreateVideoInputType_WithDefaultConfig_Succeeds)
         {
             StreamConfigurationBuilder builder;
