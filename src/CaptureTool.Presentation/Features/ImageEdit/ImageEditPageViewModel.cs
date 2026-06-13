@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
+using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
