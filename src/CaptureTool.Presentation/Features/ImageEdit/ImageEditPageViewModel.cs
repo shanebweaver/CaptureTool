@@ -441,7 +441,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             if (_chromaKeyFeatureAvailability.IsChromaKeyEnabled)
             {
-                bool isChromaKeyAddOnOwned = true;// await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
+                bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
                 IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
                 if (isChromaKeyAddOnOwned)
                 {
@@ -843,6 +843,41 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextBackgroundColorOpacity = AlphaToOpacityPercentage(text.BackgroundColor);
         TextFontFamily = text.FontFamily;
         TextFontSize = Math.Clamp((int)Math.Round(text.FontSize), MinimumTextFontSize, MaximumTextFontSize);
+    }
+
+    public void OnShapeDrawableSelected(IDrawable drawable)
+    {
+        switch (drawable)
+        {
+            case RectangleDrawable rectangle:
+                SelectedShapeType = ShapeType.Rectangle;
+                ShapeStrokeColor = rectangle.StrokeColor;
+                ShapeFillColor = rectangle.FillColor;
+                ShapeStrokeWidth = Math.Clamp(rectangle.StrokeWidth, MinimumShapeStrokeWidth, MaximumShapeStrokeWidth);
+                ShapeStrokeOpacity = AlphaToOpacityPercentage(rectangle.StrokeColor);
+                ShapeFillOpacity = AlphaToOpacityPercentage(rectangle.FillColor);
+                break;
+            case EllipseDrawable ellipse:
+                SelectedShapeType = ShapeType.Ellipse;
+                ShapeStrokeColor = ellipse.StrokeColor;
+                ShapeFillColor = ellipse.FillColor;
+                ShapeStrokeWidth = Math.Clamp(ellipse.StrokeWidth, MinimumShapeStrokeWidth, MaximumShapeStrokeWidth);
+                ShapeStrokeOpacity = AlphaToOpacityPercentage(ellipse.StrokeColor);
+                ShapeFillOpacity = AlphaToOpacityPercentage(ellipse.FillColor);
+                break;
+            case LineDrawable line:
+                SelectedShapeType = ShapeType.Line;
+                ShapeStrokeColor = line.StrokeColor;
+                ShapeStrokeWidth = Math.Clamp(line.StrokeWidth, MinimumShapeStrokeWidth, MaximumShapeStrokeWidth);
+                ShapeStrokeOpacity = AlphaToOpacityPercentage(line.StrokeColor);
+                break;
+            case ArrowDrawable arrow:
+                SelectedShapeType = ShapeType.Arrow;
+                ShapeStrokeColor = arrow.StrokeColor;
+                ShapeStrokeWidth = Math.Clamp(arrow.StrokeWidth, MinimumShapeStrokeWidth, MaximumShapeStrokeWidth);
+                ShapeStrokeOpacity = AlphaToOpacityPercentage(arrow.StrokeColor);
+                break;
+        }
     }
 
     public void OnShapeDeleted(int shapeIndex)

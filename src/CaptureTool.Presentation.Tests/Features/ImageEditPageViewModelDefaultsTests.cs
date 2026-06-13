@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
+using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
@@ -85,6 +86,7 @@ public sealed class ImageEditPageViewModelDefaultsTests
         var cancellationService = new Mock<ICancellationService>();
         var featureAvailability = new Mock<IChromaKeyFeatureAvailability>();
         var chromaKeyService = new Mock<IChromaKeyService>();
+        var storeService = new Mock<IStoreService>();
         using var linkedCts = new CancellationTokenSource();
         var imageFile = new ImageFile("green-screen.png");
 
@@ -103,12 +105,16 @@ public sealed class ImageEditPageViewModelDefaultsTests
         chromaKeyService
             .Setup(service => service.GetTopColorsAsync(imageFile, It.IsAny<uint>(), It.IsAny<byte>()))
             .ReturnsAsync([Color.Green]);
+        storeService
+            .Setup(service => service.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var viewModel = CreateViewModel(
             filePicker.Object,
             cancellationService.Object,
             featureAvailability.Object,
-            chromaKeyService.Object);
+            chromaKeyService.Object,
+            storeService.Object);
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);
 
@@ -148,11 +154,12 @@ public sealed class ImageEditPageViewModelDefaultsTests
         IFilePickerService? filePicker = null,
         ICancellationService? cancellationService = null,
         IChromaKeyFeatureAvailability? featureAvailability = null,
-        IChromaKeyService? chromaKeyService = null)
+        IChromaKeyService? chromaKeyService = null,
+        IStoreService? storeService = null)
     {
         return new ImageEditPageViewModel(
             Mock.Of<ILocalizationService>(),
-            Mock.Of<IStoreService>(),
+            storeService ?? Mock.Of<IStoreService>(),
             Mock.Of<IWindowHandleProvider>(),
             cancellationService ?? Mock.Of<ICancellationService>(),
             Mock.Of<ITelemetryService>(),

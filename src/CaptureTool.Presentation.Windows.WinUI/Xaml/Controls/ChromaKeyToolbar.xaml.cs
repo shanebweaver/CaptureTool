@@ -242,6 +242,7 @@ public sealed partial class ChromaKeyToolbar : UserControlBase
     {
         int colorOptionIndex = FindColorOptionIndex(color);
         RunDiscreteChromaKeyInteraction(() => UpdateSelectedColorOptionIndex(colorOptionIndex));
+        KeyColorButton.Flyout?.Hide();
     }
 
     private int FindColorOptionIndex(Color color)
