@@ -29,38 +29,56 @@
                 CornerRadius="4" />
             <Border
                 x:Name="StartThumb"
+                x:Uid="VideoTrimRangeSlider_StartThumb"
                 Width="14"
                 Height="34"
                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="3"
+                IsTabStop="True"
+                KeyDown="StartThumb_KeyDown"
                 PointerCanceled="Thumb_PointerReleased"
+                PointerEntered="Thumb_PointerEntered"
+                PointerExited="Thumb_PointerExited"
                 PointerMoved="Thumb_PointerMoved"
                 PointerPressed="StartThumb_PointerPressed"
-                PointerReleased="Thumb_PointerReleased" />
+                PointerReleased="Thumb_PointerReleased"
+                UseSystemFocusVisuals="True" />
             <Border
                 x:Name="EndThumb"
+                x:Uid="VideoTrimRangeSlider_EndThumb"
                 Width="14"
                 Height="34"
                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="3"
+                IsTabStop="True"
+                KeyDown="EndThumb_KeyDown"
                 PointerCanceled="Thumb_PointerReleased"
+                PointerEntered="Thumb_PointerEntered"
+                PointerExited="Thumb_PointerExited"
                 PointerMoved="Thumb_PointerMoved"
                 PointerPressed="EndThumb_PointerPressed"
-                PointerReleased="Thumb_PointerReleased" />
+                PointerReleased="Thumb_PointerReleased"
+                UseSystemFocusVisuals="True" />
             <Border
                 x:Name="Playhead"
+                x:Uid="VideoTrimRangeSlider_Playhead"
                 Width="4"
                 Height="44"
                 Background="{ThemeResource TextFillColorPrimaryBrush}"
                 CornerRadius="2"
+                IsTabStop="True"
+                KeyDown="Playhead_KeyDown"
                 PointerCanceled="Thumb_PointerReleased"
+                PointerEntered="Thumb_PointerEntered"
+                PointerExited="Thumb_PointerExited"
                 PointerMoved="Thumb_PointerMoved"
                 PointerPressed="Playhead_PointerPressed"
-                PointerReleased="Thumb_PointerReleased" />
+                PointerReleased="Thumb_PointerReleased"
+                UseSystemFocusVisuals="True" />
         </Canvas>
     </Grid>
 </local:UserControlBase>
