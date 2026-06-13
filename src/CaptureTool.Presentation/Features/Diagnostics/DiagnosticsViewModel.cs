@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Features.Diagnostics.ClearLogs;
+using CaptureTool.Application.Abstractions.Features.Diagnostics.ExportLogs;
 using CaptureTool.Application.Abstractions.Features.Diagnostics.GetCurrentLogs;
 using CaptureTool.Application.Abstractions.Features.Diagnostics.GetIsLoggingEnabled;
 using CaptureTool.Application.Abstractions.Features.Diagnostics.UpdateLoggingState;
@@ -12,6 +13,7 @@ namespace CaptureTool.Presentation.Features.Diagnostics;
 public sealed partial class DiagnosticsViewModel : ViewModelBase
 {
     private readonly IClearLogsUseCase _clearLogsCommand;
+    private readonly IExportLogsUseCase _exportLogsCommand;
     private readonly IUpdateLoggingStateUseCase _updateLoggingStateCommand;
     private readonly IGetIsLoggingEnabledUseCase _getIsLoggingEnabledQuery;
     private readonly IGetCurrentLogsUseCase _getCurrentLogsQuery;
@@ -19,6 +21,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
     private readonly ITelemetryService _telemetryService;
 
     public IAsyncRelayCommand ClearLogsCommand { get; }
+    public IAsyncRelayCommand ExportLogsCommand { get; }
     public IAsyncRelayCommand<bool> UpdateLoggingEnablementCommand { get; }
 
     public string Logs
@@ -35,6 +38,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
 
     public DiagnosticsViewModel(
         IClearLogsUseCase clearLogsCommand,
+        IExportLogsUseCase exportLogsCommand,
         IUpdateLoggingStateUseCase updateLoggingEnablementCommand,
         IGetIsLoggingEnabledUseCase getIsLoggingEnabledQuery,
         IGetCurrentLogsUseCase getCurrentLogsQuery,
@@ -42,6 +46,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         ITelemetryService telemetryService)
     {
         _clearLogsCommand = clearLogsCommand;
+        _exportLogsCommand = exportLogsCommand;
         _updateLoggingStateCommand = updateLoggingEnablementCommand;
         _getIsLoggingEnabledQuery = getIsLoggingEnabledQuery;
         _getCurrentLogsQuery = getCurrentLogsQuery;
@@ -51,6 +56,7 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         _logService.LogAdded += OnLogAdded;
 
         ClearLogsCommand = new AsyncRelayCommand(ClearLogsAsync);
+        ExportLogsCommand = new AsyncRelayCommand(ExportLogsAsync);
         UpdateLoggingEnablementCommand = new AsyncRelayCommand<bool>(UpdateLoggingEnablementAsync);
 
         IsLoggingEnabled = false;
@@ -113,6 +119,22 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
         catch (Exception exception)
         {
             _telemetryService.ActivityError(nameof(ClearLogsAsync), exception);
+        }
+    }
+
+    private async Task ExportLogsAsync()
+    {
+        try
+        {
+            await _exportLogsCommand.ExecuteAsync(new ExportLogsRequest(), CancellationToken.None);
+        }
+        catch (OperationCanceledException exception)
+        {
+            _telemetryService.ActivityCanceled(nameof(ExportLogsAsync), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            _telemetryService.ActivityError(nameof(ExportLogsAsync), exception);
         }
     }
 }

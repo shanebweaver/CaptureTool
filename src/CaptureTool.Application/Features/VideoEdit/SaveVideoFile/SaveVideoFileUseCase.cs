@@ -1,7 +1,6 @@
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.Capture.Files;
 
 namespace CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
@@ -9,16 +8,13 @@ namespace CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
 public sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
 {
     private readonly IFilePickerService _filePickerService;
-    private readonly IWindowHandleProvider _windowingService;
     private readonly IVideoFileTrimmer _videoFileTrimmer;
 
     public SaveVideoFileUseCase(
         IFilePickerService filePickerService,
-        IWindowHandleProvider windowingService,
         IVideoFileTrimmer videoFileTrimmer)
     {
         _filePickerService = filePickerService;
-        _windowingService = windowingService;
         _videoFileTrimmer = videoFileTrimmer;
     }
 
@@ -34,8 +30,7 @@ public sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
             throw new InvalidOperationException("Cannot save video without a valid filepath.");
         }
 
-        nint hwnd = _windowingService.GetMainWindowHandle();
-        IFile file = await _filePickerService.PickSaveFileAsync(hwnd, FilePickerType.Video, UserFolder.Videos)
+        IFile file = await _filePickerService.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos)
             ?? throw new OperationCanceledException("No file was selected.");
 
         cancellationToken.ThrowIfCancellationRequested();

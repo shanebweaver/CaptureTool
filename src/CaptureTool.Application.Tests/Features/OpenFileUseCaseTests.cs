@@ -3,7 +3,6 @@ using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Application.Features.AppMenu.OpenFile;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
@@ -21,17 +20,16 @@ public class OpenFileUseCaseTests
         Mock<IFilePickerService> filePickerService = new();
         Mock<INavigationService> navigationService = new();
         Mock<IStorageService> storageService = new();
-        Mock<IWindowHandleProvider> windowHandleProvider = new();
         string tempFolder = CreateTestFolder();
         string sourceFolder = CreateTestFolder();
         string sourcePath = Path.Combine(sourceFolder, "source.png");
         string copiedPath = Path.Combine(tempFolder, "source.png");
-        await File.WriteAllTextAsync(sourcePath, "image");
+        await File.WriteAllTextAsync(sourcePath, "image", TestContext.CancellationToken);
         DateTime oldLastWriteTimeUtc = new(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         File.SetLastWriteTimeUtc(sourcePath, oldLastWriteTimeUtc);
 
         filePickerService
-            .Setup(service => service.PickFileAsync(It.IsAny<nint>(), FilePickerType.ImageOrVideo, UserFolder.Pictures))
+            .Setup(service => service.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures))
             .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == sourcePath));
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
@@ -44,10 +42,9 @@ public class OpenFileUseCaseTests
             fileTypeDetector.Object,
             filePickerService.Object,
             navigationService.Object,
-            storageService.Object,
-            windowHandleProvider.Object);
+            storageService.Object);
 
-        await useCase.ExecuteAsync(new OpenFileRequest());
+        await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
         Assert.IsTrue(File.Exists(copiedPath));
         Assert.IsTrue(File.GetLastWriteTimeUtc(copiedPath) > oldLastWriteTimeUtc);
@@ -66,17 +63,16 @@ public class OpenFileUseCaseTests
         Mock<IFilePickerService> filePickerService = new();
         Mock<INavigationService> navigationService = new();
         Mock<IStorageService> storageService = new();
-        Mock<IWindowHandleProvider> windowHandleProvider = new();
         string tempFolder = CreateTestFolder();
         string sourceFolder = CreateTestFolder();
         string sourcePath = Path.Combine(sourceFolder, "source.mp4");
         string copiedPath = Path.Combine(tempFolder, "source.mp4");
-        await File.WriteAllTextAsync(sourcePath, "video");
+        await File.WriteAllTextAsync(sourcePath, "video", TestContext.CancellationToken);
         DateTime oldLastWriteTimeUtc = new(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         File.SetLastWriteTimeUtc(sourcePath, oldLastWriteTimeUtc);
 
         filePickerService
-            .Setup(service => service.PickFileAsync(It.IsAny<nint>(), FilePickerType.ImageOrVideo, UserFolder.Pictures))
+            .Setup(service => service.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures))
             .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == sourcePath));
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
@@ -89,10 +85,9 @@ public class OpenFileUseCaseTests
             fileTypeDetector.Object,
             filePickerService.Object,
             navigationService.Object,
-            storageService.Object,
-            windowHandleProvider.Object);
+            storageService.Object);
 
-        await useCase.ExecuteAsync(new OpenFileRequest());
+        await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
         Assert.IsTrue(File.Exists(copiedPath));
         Assert.IsTrue(File.GetLastWriteTimeUtc(copiedPath) > oldLastWriteTimeUtc);
@@ -111,15 +106,14 @@ public class OpenFileUseCaseTests
         Mock<IFilePickerService> filePickerService = new();
         Mock<INavigationService> navigationService = new();
         Mock<IStorageService> storageService = new();
-        Mock<IWindowHandleProvider> windowHandleProvider = new();
         string tempFolder = CreateTestFolder();
         string sourcePath = Path.Combine(tempFolder, "source.png");
-        await File.WriteAllTextAsync(sourcePath, "image");
+        await File.WriteAllTextAsync(sourcePath, "image", TestContext.CancellationToken);
         DateTime oldLastWriteTimeUtc = new(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         File.SetLastWriteTimeUtc(sourcePath, oldLastWriteTimeUtc);
 
         filePickerService
-            .Setup(service => service.PickFileAsync(It.IsAny<nint>(), FilePickerType.ImageOrVideo, UserFolder.Pictures))
+            .Setup(service => service.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures))
             .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == sourcePath));
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
@@ -132,10 +126,9 @@ public class OpenFileUseCaseTests
             fileTypeDetector.Object,
             filePickerService.Object,
             navigationService.Object,
-            storageService.Object,
-            windowHandleProvider.Object);
+            storageService.Object);
 
-        await useCase.ExecuteAsync(new OpenFileRequest());
+        await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
         Assert.IsTrue(File.GetLastWriteTimeUtc(sourcePath) > oldLastWriteTimeUtc);
         navigationService.Verify(
@@ -152,4 +145,6 @@ public class OpenFileUseCaseTests
         Directory.CreateDirectory(path);
         return path;
     }
+
+    public TestContext TestContext { get; set; }
 }

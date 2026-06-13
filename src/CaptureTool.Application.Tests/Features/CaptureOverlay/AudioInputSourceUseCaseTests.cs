@@ -29,7 +29,7 @@ public sealed class AudioInputSourceUseCaseTests
         GetAudioInputSourcesUseCase useCase = new(service.Object);
 
         // Act
-        GetAudioInputSourcesResponse response = await useCase.ExecuteAsync(new GetAudioInputSourcesRequest());
+        GetAudioInputSourcesResponse response = await useCase.ExecuteAsync(new GetAudioInputSourcesRequest(), TestContext.CancellationToken);
 
         // Assert
         response.Sources.Should().BeEquivalentTo(sources);
@@ -52,7 +52,7 @@ public sealed class AudioInputSourceUseCaseTests
         SelectAudioInputSourceUseCase useCase = new(service.Object);
 
         // Act
-        SelectAudioInputSourceResponse response = await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("default"));
+        SelectAudioInputSourceResponse response = await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("default"), TestContext.CancellationToken);
 
         // Assert
         response.IsAvailable.Should().BeTrue();
@@ -71,10 +71,12 @@ public sealed class AudioInputSourceUseCaseTests
         SelectAudioInputSourceUseCase useCase = new(service.Object);
 
         // Act
-        SelectAudioInputSourceResponse response = await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("missing"));
+        SelectAudioInputSourceResponse response = await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("missing"), TestContext.CancellationToken);
 
         // Assert
         response.IsAvailable.Should().BeFalse();
         response.WasRemoved.Should().BeTrue();
     }
+
+    public TestContext TestContext { get; set; }
 }

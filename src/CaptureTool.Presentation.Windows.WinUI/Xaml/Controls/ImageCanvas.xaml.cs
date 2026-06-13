@@ -2579,7 +2579,7 @@ public sealed partial class ImageCanvas : UserControlBase
                 AcceptsReturn = true,
                 BorderThickness = new Thickness(0),
                 CornerRadius = new CornerRadius(4),
-                Padding = new Thickness(2,3,2,3),
+                Padding = new Thickness(2, 3, 2, 3),
                 TextWrapping = TextWrapping.Wrap,
                 VerticalContentAlignment = VerticalAlignment.Top,
                 HorizontalContentAlignment = HorizontalAlignment.Left,

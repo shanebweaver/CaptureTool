@@ -1,7 +1,8 @@
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateImageAutoCopy;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Features.Settings;
 
-namespace CaptureTool.Application.Features.Settings.UpdateImageAutoCopy;
+namespace CaptureTool.Application.Features.SettingsPage.UpdateImageAutoCopy;
 
 public sealed class UpdateImageAutoCopyUseCase : IUpdateImageAutoCopyUseCase
 {

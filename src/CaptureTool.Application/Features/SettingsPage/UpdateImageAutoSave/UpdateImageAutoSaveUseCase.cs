@@ -1,7 +1,8 @@
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateImageAutoSave;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Features.Settings;
 
-namespace CaptureTool.Application.Features.Settings.UpdateImageAutoSave;
+namespace CaptureTool.Application.Features.SettingsPage.UpdateImageAutoSave;
 
 public sealed class UpdateImageAutoSaveUseCase : IUpdateImageAutoSaveUseCase
 {

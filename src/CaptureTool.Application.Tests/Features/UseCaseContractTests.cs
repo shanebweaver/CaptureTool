@@ -4,7 +4,7 @@ using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppTheme;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.AudioCapture.MuteAudioCapture;
-using CaptureTool.Application.Features.Settings.UpdateAppTheme;
+using CaptureTool.Application.Features.SettingsPage.UpdateAppTheme;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;
@@ -18,7 +18,7 @@ public sealed class UseCaseContractTests
         var audioCaptureHandler = new Mock<IAudioCaptureHandler>();
         var useCase = new MuteAudioCaptureUseCase(audioCaptureHandler.Object);
 
-        await useCase.ExecuteAsync(new MuteAudioCaptureRequest());
+        await useCase.ExecuteAsync(new MuteAudioCaptureRequest(), TestContext.CancellationToken);
 
         audioCaptureHandler.Verify(handler => handler.ToggleMute(), Times.Once);
     }
@@ -41,8 +41,10 @@ public sealed class UseCaseContractTests
         var themes = new Mock<IThemeService>();
         var useCase = new UpdateAppThemeUseCase(themes.Object);
 
-        await useCase.ExecuteAsync(new UpdateAppThemeRequest(1));
+        await useCase.ExecuteAsync(new UpdateAppThemeRequest(1), TestContext.CancellationToken);
 
         themes.Verify(themeService => themeService.UpdateCurrentTheme(AppTheme.Dark), Times.Once);
     }
+
+    public TestContext TestContext { get; set; }
 }

@@ -4,5 +4,6 @@ public enum UserFolder
 {
     Pictures,
     Music,
-    Videos
+    Videos,
+    Documents
 }

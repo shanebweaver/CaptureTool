@@ -19,12 +19,12 @@ public sealed class GetRecentCapturesUseCaseTests
         string oldFilePath = Path.Combine(tempFolder, "old.png");
         string recentFilePath = Path.Combine(tempFolder, "recent.png");
 
-        await File.WriteAllTextAsync(oldFilePath, "old");
-        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-1.png"), "1");
-        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-2.png"), "2");
-        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-3.png"), "3");
-        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-4.png"), "4");
-        await File.WriteAllTextAsync(recentFilePath, "recent");
+        await File.WriteAllTextAsync(oldFilePath, "old", TestContext.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-1.png"), "1", TestContext.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-2.png"), "2", TestContext.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-3.png"), "3", TestContext.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(tempFolder, "capture-4.png"), "4", TestContext.CancellationToken);
+        await File.WriteAllTextAsync(recentFilePath, "recent", TestContext.CancellationToken);
 
         File.SetLastWriteTimeUtc(oldFilePath, new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
         File.SetLastWriteTimeUtc(recentFilePath, DateTime.UtcNow);
@@ -38,7 +38,7 @@ public sealed class GetRecentCapturesUseCaseTests
 
         GetRecentCapturesUseCase useCase = new(storageService.Object, fileTypeDetector.Object);
 
-        GetRecentCapturesResponse response = await useCase.ExecuteAsync(new GetRecentCapturesRequest());
+        GetRecentCapturesResponse response = await useCase.ExecuteAsync(new GetRecentCapturesRequest(), TestContext.CancellationToken);
 
         Assert.HasCount(5, response.Captures);
         Assert.AreEqual(recentFilePath, response.Captures[0].FilePath);
@@ -51,4 +51,6 @@ public sealed class GetRecentCapturesUseCaseTests
         Directory.CreateDirectory(path);
         return path;
     }
+
+    public TestContext TestContext { get; set; }
 }

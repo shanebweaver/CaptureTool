@@ -1,9 +1,9 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.CloseCaptureOverlay;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GetAudioInputSources;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GoBackFromCaptureOverlay;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.SelectAudioInputSource;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StartVideoCapture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StopVideoCapture;

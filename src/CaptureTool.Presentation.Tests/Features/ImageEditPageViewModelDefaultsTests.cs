@@ -7,7 +7,6 @@ using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Presentation.Features.ImageEdit;
@@ -160,7 +159,6 @@ public sealed class ImageEditPageViewModelDefaultsTests
         return new ImageEditPageViewModel(
             Mock.Of<ILocalizationService>(),
             storeService ?? Mock.Of<IStoreService>(),
-            Mock.Of<IWindowHandleProvider>(),
             cancellationService ?? Mock.Of<ICancellationService>(),
             Mock.Of<ITelemetryService>(),
             Mock.Of<IImageCanvasPrinter>(),

@@ -1,5 +1,4 @@
 using CaptureTool.Domain.Capture;
-using System.Drawing;
 
 namespace CaptureTool.Presentation.Features.SelectionOverlay;
 

@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Features.Settings.OpenTempFolder;
 using CaptureTool.Application.Abstractions.Storage;
 using System.Diagnostics;
 
-namespace CaptureTool.Application.Features.Settings.OpenTempFolder;
+namespace CaptureTool.Application.Features.SettingsPage.OpenTempFolder;
 
 public sealed class OpenTempFolderUseCase : IOpenTempFolderUseCase
 {

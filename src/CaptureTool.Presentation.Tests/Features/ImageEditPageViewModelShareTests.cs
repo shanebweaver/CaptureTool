@@ -1,14 +1,12 @@
 using CaptureTool.Application.Abstractions.Cancellation;
-using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Presentation.Features.ImageEdit;
 using Moq;
@@ -25,7 +23,6 @@ public sealed class ImageEditPageViewModelShareTests
     {
         var localization = Mock.Of<ILocalizationService>();
         var storeService = Mock.Of<IStoreService>();
-        var windowingService = new Mock<IWindowHandleProvider>();
         var cancellationService = new Mock<ICancellationService>();
         var telemetry = Mock.Of<ITelemetryService>();
         var printer = Mock.Of<IImageCanvasPrinter>();
@@ -35,7 +32,6 @@ public sealed class ImageEditPageViewModelShareTests
         var featureAvailability = new Mock<IChromaKeyFeatureAvailability>();
         var shareService = new Mock<IShareService>();
 
-        const nint hwnd = 123;
         using var renderedStream = new MemoryStream([1, 2, 3]);
         using var linkedCts = new CancellationTokenSource();
         var imageFile = new ImageFile("test.png");
@@ -58,10 +54,6 @@ public sealed class ImageEditPageViewModelShareTests
             .Setup(picker => picker.GetImageFileSize(imageFile))
             .Returns(new Size(100, 200));
 
-        windowingService
-            .Setup(service => service.GetMainWindowHandle())
-            .Returns(hwnd);
-
         exporter
             .Setup(service => service.RenderToStreamAsync(
                 It.IsAny<IDrawable[]>(),
@@ -71,7 +63,6 @@ public sealed class ImageEditPageViewModelShareTests
         var viewModel = new ImageEditPageViewModel(
             localization,
             storeService,
-            windowingService.Object,
             cancellationService.Object,
             telemetry,
             printer,
@@ -94,7 +85,7 @@ public sealed class ImageEditPageViewModelShareTests
                     options.CropRect == new Rectangle(0, 0, 100, 200))),
             Times.Once);
 
-        shareService.Verify(service => service.ShareStreamAsync(renderedStream, hwnd), Times.Once);
-        shareService.Verify(service => service.ShareAsync(It.IsAny<string>(), It.IsAny<nint>()), Times.Never);
+        shareService.Verify(service => service.ShareStreamAsync(renderedStream), Times.Once);
+        shareService.Verify(service => service.ShareAsync(It.IsAny<string>()), Times.Never);
     }
 }
