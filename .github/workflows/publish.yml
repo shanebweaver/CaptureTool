@@ -1,6 +1,11 @@
 name: Publish to Microsoft Store
 
 on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: GitHub Actions run ID from a successful Build workflow
+        required: true
   workflow_run:
     workflows: ["Build"]
     types:
@@ -11,7 +16,10 @@ on:
 jobs:
   publish:
     runs-on: windows-2025-vs2026
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    concurrency:
+      group: microsoft-store-publish
+      cancel-in-progress: false
     
     strategy:
       matrix:
@@ -27,7 +35,7 @@ jobs:
       with:
         name: StorePackage-${{ matrix.platform }}
         path: packages
-        run-id: ${{ github.event.workflow_run.id }}
+        run-id: ${{ github.event.workflow_run.id || inputs.build_run_id }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Setup Microsoft Store Developer CLI
@@ -52,9 +60,23 @@ jobs:
       env:
         STORE_PRODUCT_ID: ${{ secrets.STORE_PRODUCT_ID }}
       run: |
-        $msixFile = Get-ChildItem -Path packages -Recurse -Filter "*.msix" | Select-Object -First 1
-        if (-not $msixFile) {
-          throw "No .msix file found for ${{ matrix.platform }}"
+        $packageFiles = Get-ChildItem -Path packages -Recurse -File -Include "*.msixupload", "*.msix"
+        $packageFile = $packageFiles |
+          Where-Object { $_.Extension -ieq ".msixupload" } |
+          Sort-Object FullName |
+          Select-Object -First 1
+
+        if (-not $packageFile) {
+          $packageFile = $packageFiles |
+            Where-Object { $_.Name -match "_${{ matrix.platform }}\.msix$" -and $_.Name -notmatch "_scale-" } |
+            Sort-Object FullName |
+            Select-Object -First 1
         }
-        
-        msstore publish "$($msixFile.FullName)" -id $env:STORE_PRODUCT_ID -v
+
+        if (-not $packageFile) {
+          $availablePackages = ($packageFiles | ForEach-Object FullName) -join [Environment]::NewLine
+          throw "No publishable package found for ${{ matrix.platform }}. Available packages:$([Environment]::NewLine)$availablePackages"
+        }
+
+        Write-Host "Publishing $($packageFile.FullName)"
+        msstore publish "$($packageFile.FullName)" -id $env:STORE_PRODUCT_ID -v

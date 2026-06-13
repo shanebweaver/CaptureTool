@@ -99,4 +99,6 @@ jobs:
       uses: actions/upload-artifact@v7
       with:
         name: StorePackage-${{ matrix.platform }}
-        path: 'output\${{ matrix.platform }}\*\*.msix'
+        path: |
+          output\${{ matrix.platform }}\*\*.msix
+          output\${{ matrix.platform }}\*\*.msixupload
