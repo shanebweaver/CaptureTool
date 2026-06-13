@@ -18,6 +18,8 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     private MediaPlayer? _renderedTrimMediaPlayer;
     private string? _originalVideoPath;
     private string? _renderedTrimPreviewPath;
+    private double? _renderedTrimPreviewStartSeconds;
+    private double? _renderedTrimPreviewEndSeconds;
     private bool _hasLoadedOriginalDuration;
     private bool _isRenderedTrimPlayerActive;
     private bool _isUpdatingPlayheadFromMedia;
@@ -393,6 +395,12 @@ public sealed partial class VideoEditPage : VideoEditPageBase
             return;
         }
 
+        if (IsRenderedTrimPreviewCurrent())
+        {
+            ShowRenderedTrimPlayer();
+            return;
+        }
+
         int renderVersion = ++_renderedTrimPreviewVersion;
         try
         {
@@ -412,6 +420,8 @@ public sealed partial class VideoEditPage : VideoEditPageBase
             }
 
             await LoadMediaSourceAsync(_renderedTrimMediaPlayer, _renderedTrimPreviewPath);
+            _renderedTrimPreviewStartSeconds = ViewModel.TrimStartSeconds;
+            _renderedTrimPreviewEndSeconds = ViewModel.TrimEndSeconds;
             ViewModel.UpdatePlayhead(ViewModel.TrimStartSeconds);
             ShowRenderedTrimPlayer();
         }
@@ -470,6 +480,14 @@ public sealed partial class VideoEditPage : VideoEditPageBase
             $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}.mp4");
     }
 
+    private bool IsRenderedTrimPreviewCurrent()
+    {
+        return !string.IsNullOrEmpty(_renderedTrimPreviewPath) &&
+            File.Exists(_renderedTrimPreviewPath) &&
+            _renderedTrimPreviewStartSeconds == ViewModel.TrimStartSeconds &&
+            _renderedTrimPreviewEndSeconds == ViewModel.TrimEndSeconds;
+    }
+
     private void DeleteRenderedTrimPreview()
     {
         if (string.IsNullOrEmpty(_renderedTrimPreviewPath))
@@ -491,6 +509,8 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         finally
         {
             _renderedTrimPreviewPath = null;
+            _renderedTrimPreviewStartSeconds = null;
+            _renderedTrimPreviewEndSeconds = null;
         }
     }
 
