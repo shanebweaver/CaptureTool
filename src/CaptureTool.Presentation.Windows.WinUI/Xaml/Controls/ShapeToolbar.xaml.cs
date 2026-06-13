@@ -261,11 +261,13 @@ public sealed partial class ShapeToolbar : UserControlBase
     private void StrokeColorPalette_SelectedColorChanged(object? sender, Color color)
     {
         UpdateStrokeColor(color);
+        StrokeColorButton.Flyout?.Hide();
     }
 
     private void FillColorPalette_SelectedColorChanged(object? sender, Color color)
     {
         UpdateFillColor(color);
+        FillColorButton.Flyout?.Hide();
     }
 
     private void StrokeColorPalette_ThicknessChanged(object? sender, int thickness)

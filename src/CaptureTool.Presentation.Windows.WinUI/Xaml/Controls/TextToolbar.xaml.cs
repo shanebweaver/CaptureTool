@@ -299,6 +299,7 @@ public sealed partial class TextToolbar : UserControlBase
     private void FontColorPalette_SelectedColorChanged(object? sender, Color color)
     {
         UpdateTextFontColor(color);
+        FontColorButton.Flyout?.Hide();
     }
 
     private void FontColorPalette_OpacityPercentageChanged(object? sender, int opacityPercentage)
@@ -309,6 +310,7 @@ public sealed partial class TextToolbar : UserControlBase
     private void BackgroundColorPalette_SelectedColorChanged(object? sender, Color color)
     {
         UpdateTextBackgroundColor(color);
+        BackgroundColorButton.Flyout?.Hide();
     }
 
     private void BackgroundColorPalette_OpacityPercentageChanged(object? sender, int opacityPercentage)
