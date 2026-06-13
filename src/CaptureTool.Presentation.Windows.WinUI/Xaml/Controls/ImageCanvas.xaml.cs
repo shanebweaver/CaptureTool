@@ -398,6 +398,8 @@ public sealed partial class ImageCanvas : UserControlBase
     private Color _cachedFillColor;
     private TextBox? _selectedTextEditor;
     private bool _isUpdatingTextEditor;
+    private XamlRoot? _observedXamlRoot;
+    private double _lastRasterizationScale = 1;
 
     // Line endpoint manipulation
     private bool _isDraggingLineStart = false;
@@ -448,6 +450,7 @@ public sealed partial class ImageCanvas : UserControlBase
             CanvasScrollView.ViewChanged += CanvasScrollView_ViewChanged;
         }
 
+        AttachXamlRootChanged();
         SetObservableDrawables(Drawables as INotifyCollectionChanged);
     }
 
@@ -459,7 +462,70 @@ public sealed partial class ImageCanvas : UserControlBase
             CanvasScrollView.ViewChanged -= CanvasScrollView_ViewChanged;
         }
 
+        DetachXamlRootChanged();
         SetObservableDrawables(null);
+    }
+
+    private void AttachXamlRootChanged()
+    {
+        XamlRoot? root = XamlRoot;
+        if (ReferenceEquals(_observedXamlRoot, root))
+        {
+            return;
+        }
+
+        DetachXamlRootChanged();
+        _observedXamlRoot = root;
+        if (_observedXamlRoot == null)
+        {
+            return;
+        }
+
+        _lastRasterizationScale = _observedXamlRoot.RasterizationScale;
+        ApplyRasterizationScale(_lastRasterizationScale, false);
+        _observedXamlRoot.Changed += XamlRoot_Changed;
+    }
+
+    private void DetachXamlRootChanged()
+    {
+        _observedXamlRoot?.Changed -= XamlRoot_Changed;
+        _observedXamlRoot = null;
+    }
+
+    private void XamlRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args)
+    {
+        double rasterizationScale = sender.RasterizationScale;
+        if (Math.Abs(rasterizationScale - _lastRasterizationScale) < 0.001)
+        {
+            return;
+        }
+
+        _lastRasterizationScale = rasterizationScale;
+        ApplyRasterizationScale(rasterizationScale, true);
+        InvalidateCanvas();
+    }
+
+    private double GetCurrentRasterizationScale()
+    {
+        return _observedXamlRoot?.RasterizationScale
+            ?? XamlRoot?.RasterizationScale
+            ?? _lastRasterizationScale;
+    }
+
+    private void ApplyRasterizationScale(double rasterizationScale, bool forceResourceRefresh)
+    {
+        if (RenderCanvas == null || rasterizationScale <= 0)
+        {
+            return;
+        }
+
+        float dpiScale = (float)rasterizationScale;
+        if (forceResourceRefresh && Math.Abs(RenderCanvas.DpiScale - dpiScale) < 0.0001f)
+        {
+            RenderCanvas.DpiScale = dpiScale + 0.0001f;
+        }
+
+        RenderCanvas.DpiScale = dpiScale;
     }
 
     private void SetObservableDrawables(INotifyCollectionChanged? drawables)
@@ -687,7 +753,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
     public void ForceCanvasRedrawWithResources()
     {
-        RenderCanvas.DpiScale = RenderCanvas.DpiScale == 1 ? 1.0001f : 1f;
+        ApplyRasterizationScale(GetCurrentRasterizationScale(), true);
         InvalidateCanvas();
     }
 
