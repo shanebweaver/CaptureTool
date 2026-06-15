@@ -24,18 +24,17 @@ public sealed class ExportLogsUseCase : IExportLogsUseCase
 
     public async Task<ExportLogsResponse> ExecuteAsync(ExportLogsRequest request, CancellationToken cancellationToken = default)
     {
-        IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents);
-        if (file is null)
-        {
-            return new ExportLogsResponse(false);
-        }
-
         const string activityId = nameof(ExportLogsUseCase);
-        _telemetryService.ActivityInitiated(activityId);
 
         try
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents);
+            if (file is null || cancellationToken.IsCancellationRequested)
+            {
+                return new ExportLogsResponse(false);
+            }
+
+            _telemetryService.ActivityInitiated(activityId);
 
             string logs = string.Join(Environment.NewLine, _logService.GetLogs().Select(log => log.ToString()));
             await File.WriteAllTextAsync(file.FilePath, logs, cancellationToken);
@@ -46,12 +45,12 @@ public sealed class ExportLogsUseCase : IExportLogsUseCase
         catch (OperationCanceledException exception)
         {
             _telemetryService.ActivityCanceled(activityId, exception.Message);
-            throw;
+            return new ExportLogsResponse(false);
         }
         catch (Exception exception)
         {
             _telemetryService.ActivityError(activityId, exception);
-            throw;
+            return new ExportLogsResponse(false);
         }
     }
 }

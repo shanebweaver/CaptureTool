@@ -29,17 +29,33 @@ public sealed class GoBackFromCaptureOverlayUseCase : IGoBackFromCaptureOverlayU
 
     public Task<GoBackFromCaptureOverlayResponse> ExecuteAsync(GoBackFromCaptureOverlayRequest request, CancellationToken cancellationToken = default)
     {
+        bool videoCaptureCanceled = TryCancelVideoCapture();
+
+        try
+        {
+            if (!_navigationService.TryGoBack())
+            {
+                _navigationService.Navigate(NavigationRoute.SelectionOverlay, CaptureOptions.VideoDefault, true);
+            }
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new GoBackFromCaptureOverlayResponse(videoCaptureCanceled));
+        }
+
+        return Task.FromResult(new GoBackFromCaptureOverlayResponse(videoCaptureCanceled));
+    }
+
+    private bool TryCancelVideoCapture()
+    {
         try
         {
             _videoCaptureHandler.CancelVideoCapture();
+            return true;
         }
-        catch { }
-
-        if (!_navigationService.TryGoBack())
+        catch (Exception)
         {
-            _navigationService.Navigate(NavigationRoute.SelectionOverlay, CaptureOptions.VideoDefault, true);
+            return false;
         }
-
-        return Task.FromResult(new GoBackFromCaptureOverlayResponse());
     }
 }

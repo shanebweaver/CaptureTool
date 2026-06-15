@@ -15,7 +15,14 @@ public sealed class OpenSelectionOverlayUseCase : IOpenSelectionOverlayUseCase
 
     public Task<OpenSelectionOverlayResponse> ExecuteAsync(OpenSelectionOverlayRequest request, CancellationToken cancellationToken = default)
     {
-        _navigationService.Navigate(NavigationRoute.SelectionOverlay, request.CaptureOptions);
-        return Task.FromResult(new OpenSelectionOverlayResponse());
+        try
+        {
+            _navigationService.Navigate(NavigationRoute.SelectionOverlay, request.CaptureOptions);
+            return Task.FromResult(new OpenSelectionOverlayResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new OpenSelectionOverlayResponse(false));
+        }
     }
 }

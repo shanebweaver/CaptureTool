@@ -15,7 +15,14 @@ public sealed class ShowHomePageUseCase : IShowHomePageUseCase
 
     public Task<ShowHomePageResponse> ExecuteAsync(ShowHomePageRequest request, CancellationToken cancellationToken = default)
     {
-        _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
-        return Task.FromResult(new ShowHomePageResponse());
+        try
+        {
+            _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
+            return Task.FromResult(new ShowHomePageResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new ShowHomePageResponse(false));
+        }
     }
 }

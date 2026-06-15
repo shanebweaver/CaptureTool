@@ -20,7 +20,14 @@ public sealed class OpenImageEditPageUseCase : IOpenImageEditPageUseCase
 
     public Task<OpenImageEditPageResponse> ExecuteAsync(OpenImageEditPageRequest request, CancellationToken cancellationToken = default)
     {
-        _navigationService.Navigate(NavigationRoute.ImageEdit, request.ImageFile);
-        return Task.FromResult(new OpenImageEditPageResponse());
+        try
+        {
+            _navigationService.Navigate(NavigationRoute.ImageEdit, request.ImageFile);
+            return Task.FromResult(new OpenImageEditPageResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new OpenImageEditPageResponse(false));
+        }
     }
 }

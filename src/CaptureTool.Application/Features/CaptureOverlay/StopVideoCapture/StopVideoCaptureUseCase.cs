@@ -26,8 +26,15 @@ public sealed class StopVideoCaptureUseCase : IStopVideoCaptureUseCase
 
     public Task<StopVideoCaptureResponse> ExecuteAsync(StopVideoCaptureRequest request, CancellationToken cancellationToken = default)
     {
-        var pendingVideo = _videoCaptureHandler.StopVideoCapture();
-        _navigationService.Navigate(NavigationRoute.VideoEdit, pendingVideo);
-        return Task.FromResult(new StopVideoCaptureResponse());
+        try
+        {
+            var pendingVideo = _videoCaptureHandler.StopVideoCapture();
+            _navigationService.Navigate(NavigationRoute.VideoEdit, pendingVideo);
+            return Task.FromResult(new StopVideoCaptureResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new StopVideoCaptureResponse(false));
+        }
     }
 }

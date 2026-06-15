@@ -1,3 +1,3 @@
 namespace CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
 
-public sealed record OpenImageEditPageResponse;
+public sealed record OpenImageEditPageResponse(bool Succeeded = true);

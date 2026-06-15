@@ -14,7 +14,14 @@ public sealed class ToggleLocalAudioCaptureUseCase : IToggleLocalAudioCaptureUse
 
     public Task<ToggleLocalAudioCaptureResponse> ExecuteAsync(ToggleLocalAudioCaptureRequest request, CancellationToken cancellationToken = default)
     {
-        _audioCaptureHandler.ToggleLocalAudio();
-        return Task.FromResult(new ToggleLocalAudioCaptureResponse());
+        try
+        {
+            _audioCaptureHandler.ToggleLocalAudio();
+            return Task.FromResult(new ToggleLocalAudioCaptureResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new ToggleLocalAudioCaptureResponse(false));
+        }
     }
 }

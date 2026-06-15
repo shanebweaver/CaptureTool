@@ -22,16 +22,26 @@ public sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
 
     public async Task<SaveAudioFileResponse> ExecuteAsync(SaveAudioFileRequest request, CancellationToken cancellationToken = default)
     {
-        string filePath = request.AudioFilePath;
-        if (string.IsNullOrEmpty(filePath))
+        try
         {
-            throw new InvalidOperationException("Cannot save audio without a valid filepath.");
+            string filePath = request.AudioFilePath;
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                return new SaveAudioFileResponse(false);
+            }
+
+            IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music);
+            if (file is null)
+            {
+                return new SaveAudioFileResponse(false);
+            }
+
+            File.Copy(filePath, file.FilePath, true);
+            return new SaveAudioFileResponse();
         }
-
-        IFile file = await _filePickerService.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music)
-            ?? throw new OperationCanceledException("No file was selected.");
-
-        File.Copy(filePath, file.FilePath, true);
-        return new SaveAudioFileResponse();
+        catch (Exception)
+        {
+            return new SaveAudioFileResponse(false);
+        }
     }
 }

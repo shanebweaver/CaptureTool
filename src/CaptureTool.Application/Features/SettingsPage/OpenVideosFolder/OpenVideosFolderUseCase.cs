@@ -21,21 +21,28 @@ public sealed class OpenVideosFolderUseCase : IOpenVideosFolderUseCase
 
     public Task<OpenVideosFolderResponse> ExecuteAsync(OpenVideosFolderRequest request, CancellationToken cancellationToken = default)
     {
-        var path = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
-        if (string.IsNullOrWhiteSpace(path))
+        try
         {
-            path = _storageService.GetSystemDefaultVideosFolderPath();
-        }
+            var path = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                path = _storageService.GetSystemDefaultVideosFolderPath();
+            }
 
-        if (Directory.Exists(path))
-        {
-            Process.Start("explorer.exe", $"/open, {path}");
-        }
-        else
-        {
-            throw new DirectoryNotFoundException($"The videos folder path '{path}' does not exist.");
-        }
+            if (Directory.Exists(path))
+            {
+                Process.Start("explorer.exe", $"/open, {path}");
+            }
+            else
+            {
+                return Task.FromResult(new OpenVideosFolderResponse(false));
+            }
 
-        return Task.FromResult(new OpenVideosFolderResponse());
+            return Task.FromResult(new OpenVideosFolderResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new OpenVideosFolderResponse(false));
+        }
     }
 }

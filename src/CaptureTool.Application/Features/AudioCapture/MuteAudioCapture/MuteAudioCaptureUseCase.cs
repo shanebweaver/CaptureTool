@@ -14,7 +14,14 @@ public sealed class MuteAudioCaptureUseCase : IMuteAudioCaptureUseCase
 
     public Task<MuteAudioCaptureResponse> ExecuteAsync(MuteAudioCaptureRequest request, CancellationToken cancellationToken = default)
     {
-        _audioCaptureHandler.ToggleMute();
-        return Task.FromResult(new MuteAudioCaptureResponse());
+        try
+        {
+            _audioCaptureHandler.ToggleMute();
+            return Task.FromResult(new MuteAudioCaptureResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new MuteAudioCaptureResponse(false));
+        }
     }
 }

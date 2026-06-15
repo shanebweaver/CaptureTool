@@ -26,7 +26,14 @@ public sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
 
     public Task<StartVideoCaptureResponse> ExecuteAsync(StartVideoCaptureRequest request, CancellationToken cancellationToken = default)
     {
-        _videoCaptureHandler.StartVideoCapture(request.CaptureArgs);
-        return Task.FromResult(new StartVideoCaptureResponse());
+        try
+        {
+            _videoCaptureHandler.StartVideoCapture(request.CaptureArgs);
+            return Task.FromResult(new StartVideoCaptureResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new StartVideoCaptureResponse(false));
+        }
     }
 }

@@ -1,3 +1,3 @@
 namespace CaptureTool.Application.Abstractions.Features.Settings.UpdateVideoCaptureAutoSave;
 
-public sealed record UpdateVideoCaptureAutoSaveResponse;
+public sealed record UpdateVideoCaptureAutoSaveResponse(bool Succeeded = true);

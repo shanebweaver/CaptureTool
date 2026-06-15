@@ -20,11 +20,14 @@ public sealed class PurchaseChromaKeyAddOnUseCase : IPurchaseChromaKeyAddOnUseCa
 
     public async Task<PurchaseChromaKeyAddOnResponse> ExecuteAsync(PurchaseChromaKeyAddOnRequest request, CancellationToken cancellationToken = default)
     {
-        bool success = await _storeService.PurchaseAddonAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
-        if (!success)
+        try
         {
-            throw new Exception("Failed to purchase Chroma Key Background Removal add-on.");
+            bool success = await _storeService.PurchaseAddonAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
+            return new PurchaseChromaKeyAddOnResponse(success);
         }
-        return new PurchaseChromaKeyAddOnResponse();
+        catch (Exception)
+        {
+            return new PurchaseChromaKeyAddOnResponse(false);
+        }
     }
 }

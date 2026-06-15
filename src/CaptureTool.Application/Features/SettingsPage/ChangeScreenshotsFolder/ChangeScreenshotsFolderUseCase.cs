@@ -22,9 +22,21 @@ public sealed class ChangeScreenshotsFolderUseCase : IChangeScreenshotsFolderUse
 
     public async Task<ChangeScreenshotsFolderResponse> ExecuteAsync(ChangeScreenshotsFolderRequest request, CancellationToken cancellationToken = default)
     {
-        var folder = await _picker.PickFolderAsync(UserFolder.Pictures) ?? throw new OperationCanceledException("No folder was selected.");
-        _settings.Set(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder, folder.FolderPath);
-        await _settings.TrySaveAsync(cancellationToken);
-        return new ChangeScreenshotsFolderResponse();
+        try
+        {
+            var folder = await _picker.PickFolderAsync(UserFolder.Pictures);
+            if (folder is null)
+            {
+                return new ChangeScreenshotsFolderResponse(false);
+            }
+
+            _settings.Set(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder, folder.FolderPath);
+            await _settings.TrySaveAsync(cancellationToken);
+            return new ChangeScreenshotsFolderResponse();
+        }
+        catch (Exception)
+        {
+            return new ChangeScreenshotsFolderResponse(false);
+        }
     }
 }

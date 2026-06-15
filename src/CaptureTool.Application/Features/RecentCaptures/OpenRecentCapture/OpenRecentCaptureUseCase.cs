@@ -33,29 +33,37 @@ public sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
 
     public async Task<OpenRecentCaptureResponse> ExecuteAsync(OpenRecentCaptureRequest request, CancellationToken cancellationToken = default)
     {
-        if (!File.Exists(request.FilePath))
+        try
         {
-            throw new FileNotFoundException($"File not found: {request.FilePath}");
-        }
+            if (!File.Exists(request.FilePath))
+            {
+                return new OpenRecentCaptureResponse(false);
+            }
 
-        var fileType = _fileTypeDetector.DetectFileType(request.FilePath);
-        switch (fileType)
+            var fileType = _fileTypeDetector.DetectFileType(request.FilePath);
+            switch (fileType)
+            {
+                case CaptureFileType.Audio:
+                    await _goToAudioEdit.ExecuteAsync(new OpenAudioEditPageRequest(new AudioFile(request.FilePath)), cancellationToken);
+                    break;
+
+                case CaptureFileType.Image:
+                    await _goToImageEdit.ExecuteAsync(new OpenImageEditPageRequest(new ImageFile(request.FilePath)), cancellationToken);
+                    break;
+
+                case CaptureFileType.Video:
+                    await _goToVideoEdit.ExecuteAsync(new OpenVideoEditPageRequest(new VideoFile(request.FilePath)), cancellationToken);
+                    break;
+
+                default:
+                    return new OpenRecentCaptureResponse(false);
+            }
+
+            return new OpenRecentCaptureResponse();
+        }
+        catch (Exception)
         {
-            case CaptureFileType.Audio:
-                await _goToAudioEdit.ExecuteAsync(new OpenAudioEditPageRequest(new AudioFile(request.FilePath)), cancellationToken);
-                break;
-
-            case CaptureFileType.Image:
-                await _goToImageEdit.ExecuteAsync(new OpenImageEditPageRequest(new ImageFile(request.FilePath)), cancellationToken);
-                break;
-
-            case CaptureFileType.Video:
-                await _goToVideoEdit.ExecuteAsync(new OpenVideoEditPageRequest(new VideoFile(request.FilePath)), cancellationToken);
-                break;
-
-            default:
-                throw new InvalidOperationException($"Unknown file type: {fileType}");
+            return new OpenRecentCaptureResponse(false);
         }
-        return new OpenRecentCaptureResponse();
     }
 }

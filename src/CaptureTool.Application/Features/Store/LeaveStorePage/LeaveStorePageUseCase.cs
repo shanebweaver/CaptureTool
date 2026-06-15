@@ -15,11 +15,18 @@ public sealed class LeaveStorePageUseCase : ILeaveStorePageUseCase
 
     public Task<LeaveStorePageResponse> ExecuteAsync(LeaveStorePageRequest request, CancellationToken cancellationToken = default)
     {
-        if (!_navigationService.TryGoBack())
+        try
         {
-            _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
-        }
+            if (!_navigationService.TryGoBack())
+            {
+                _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
+            }
 
-        return Task.FromResult(new LeaveStorePageResponse());
+            return Task.FromResult(new LeaveStorePageResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new LeaveStorePageResponse(false));
+        }
     }
 }

@@ -17,7 +17,14 @@ public sealed class OpenSettingsPageUseCase : IOpenSettingsPageUseCase
 
     public Task<OpenSettingsPageResponse> ExecuteAsync(OpenSettingsPageRequest request, CancellationToken cancellationToken = default)
     {
-        _navigationService.Navigate(NavigationRoute.Settings);
-        return Task.FromResult(new OpenSettingsPageResponse());
+        try
+        {
+            _navigationService.Navigate(NavigationRoute.Settings);
+            return Task.FromResult(new OpenSettingsPageResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new OpenSettingsPageResponse(false));
+        }
     }
 }

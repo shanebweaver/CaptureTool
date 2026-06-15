@@ -25,31 +25,44 @@ public sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
 
     public async Task<SaveVideoFileResponse> ExecuteAsync(SaveVideoFileRequest request, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(request.VideoPath))
+        try
         {
-            throw new InvalidOperationException("Cannot save video without a valid filepath.");
+            if (string.IsNullOrEmpty(request.VideoPath) || !File.Exists(request.VideoPath))
+            {
+                return new SaveVideoFileResponse(false);
+            }
+
+            IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos);
+            if (file is null)
+            {
+                return new SaveVideoFileResponse(false);
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new SaveVideoFileResponse(false);
+            }
+
+            if (TryGetTrim(request, out TimeSpan trimStart, out TimeSpan trimEnd))
+            {
+                await _videoFileTrimmer.TrimAsync(
+                    request.VideoPath,
+                    file.FilePath,
+                    trimStart,
+                    trimEnd,
+                    cancellationToken);
+            }
+            else
+            {
+                File.Copy(request.VideoPath, file.FilePath, true);
+            }
+
+            return new SaveVideoFileResponse();
         }
-
-        IFile file = await _filePickerService.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos)
-            ?? throw new OperationCanceledException("No file was selected.");
-
-        cancellationToken.ThrowIfCancellationRequested();
-
-        if (TryGetTrim(request, out TimeSpan trimStart, out TimeSpan trimEnd))
+        catch (Exception)
         {
-            await _videoFileTrimmer.TrimAsync(
-                request.VideoPath,
-                file.FilePath,
-                trimStart,
-                trimEnd,
-                cancellationToken);
+            return new SaveVideoFileResponse(false);
         }
-        else
-        {
-            File.Copy(request.VideoPath, file.FilePath, true);
-        }
-
-        return new SaveVideoFileResponse();
     }
 
     private static bool TryGetTrim(SaveVideoFileRequest request, out TimeSpan trimStart, out TimeSpan trimEnd)

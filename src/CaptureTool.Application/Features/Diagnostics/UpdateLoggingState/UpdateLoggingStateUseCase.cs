@@ -20,17 +20,24 @@ public sealed class UpdateLoggingStateUseCase : IUpdateLoggingStateUseCase
 
     public async Task<UpdateLoggingStateResponse> ExecuteAsync(UpdateLoggingStateRequest request, CancellationToken cancellationToken = default)
     {
-        if (request.IsEnabled)
+        try
         {
-            _logService.Enable();
-        }
-        else
-        {
-            _logService.Disable();
-        }
+            if (request.IsEnabled)
+            {
+                _logService.Enable();
+            }
+            else
+            {
+                _logService.Disable();
+            }
 
-        _settingsService.Set(CaptureToolSettings.VerboseLogging, request.IsEnabled);
-        await _settingsService.TrySaveAsync(cancellationToken);
-        return new UpdateLoggingStateResponse();
+            _settingsService.Set(CaptureToolSettings.VerboseLogging, request.IsEnabled);
+            await _settingsService.TrySaveAsync(cancellationToken);
+            return new UpdateLoggingStateResponse();
+        }
+        catch (Exception)
+        {
+            return new UpdateLoggingStateResponse(false);
+        }
     }
 }

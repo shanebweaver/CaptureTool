@@ -17,8 +17,15 @@ public sealed class UpdateVideoCaptureDefaultLocalAudioUseCase : IUpdateVideoCap
 
     public async Task<UpdateVideoCaptureDefaultLocalAudioResponse> ExecuteAsync(UpdateVideoCaptureDefaultLocalAudioRequest request, CancellationToken cancellationToken = default)
     {
-        _settingsService.Set(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled, request.IsEnabled);
-        await _settingsService.TrySaveAsync(cancellationToken);
-        return new UpdateVideoCaptureDefaultLocalAudioResponse();
+        try
+        {
+            _settingsService.Set(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled, request.IsEnabled);
+            await _settingsService.TrySaveAsync(cancellationToken);
+            return new UpdateVideoCaptureDefaultLocalAudioResponse();
+        }
+        catch (Exception)
+        {
+            return new UpdateVideoCaptureDefaultLocalAudioResponse(false);
+        }
     }
 }

@@ -20,7 +20,18 @@ public sealed class GetChromaKeyAddOnUseCase : IGetChromaKeyAddOnUseCase
 
     public async Task<GetChromaKeyAddOnResponse> ExecuteAsync(GetChromaKeyAddOnRequest request, CancellationToken cancellationToken = default)
     {
-        IStoreAddOn? addOn = await _storeService.GetAddonProductInfoAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
-        return new GetChromaKeyAddOnResponse(addOn);
+        try
+        {
+            IStoreAddOn? addOn = await _storeService.GetAddonProductInfoAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
+            return new GetChromaKeyAddOnResponse(addOn);
+        }
+        catch (OperationCanceledException)
+        {
+            return new GetChromaKeyAddOnResponse(null);
+        }
+        catch (Exception)
+        {
+            return new GetChromaKeyAddOnResponse(null);
+        }
     }
 }

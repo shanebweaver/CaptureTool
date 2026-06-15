@@ -15,7 +15,14 @@ public sealed class OpenAboutPageUseCase : IOpenAboutPageUseCase
 
     public Task<OpenAboutPageResponse> ExecuteAsync(OpenAboutPageRequest request, CancellationToken cancellationToken = default)
     {
-        _navigationService.Navigate(NavigationRoute.About);
-        return Task.FromResult(new OpenAboutPageResponse());
+        try
+        {
+            _navigationService.Navigate(NavigationRoute.About);
+            return Task.FromResult(new OpenAboutPageResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new OpenAboutPageResponse(false));
+        }
     }
 }

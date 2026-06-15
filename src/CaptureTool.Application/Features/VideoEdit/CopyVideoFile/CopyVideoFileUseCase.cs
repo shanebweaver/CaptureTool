@@ -28,30 +28,37 @@ public sealed class CopyVideoFileUseCase : ICopyVideoFileUseCase
 
     public async Task<CopyVideoFileResponse> ExecuteAsync(CopyVideoFileRequest request, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(request.VideoPath))
+        try
         {
-            throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
-        }
+            if (string.IsNullOrEmpty(request.VideoPath) || !File.Exists(request.VideoPath))
+            {
+                return new CopyVideoFileResponse(false);
+            }
 
-        string clipboardVideoPath = request.VideoPath;
-        if (TryGetTrim(request, out TimeSpan trimStart, out TimeSpan trimEnd))
+            string clipboardVideoPath = request.VideoPath;
+            if (TryGetTrim(request, out TimeSpan trimStart, out TimeSpan trimEnd))
+            {
+                clipboardVideoPath = Path.Combine(
+                    _storageService.GetApplicationTemporaryFolderPath(),
+                    $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}.mp4");
+
+                await _videoFileTrimmer.TrimAsync(
+                    request.VideoPath,
+                    clipboardVideoPath,
+                    trimStart,
+                    trimEnd,
+                    cancellationToken);
+            }
+
+            ClipboardFile clipboardVideo = new(clipboardVideoPath);
+            Task task = _clipboardService.CopyFileAsync(clipboardVideo);
+            await task.WaitAsync(cancellationToken);
+            return new CopyVideoFileResponse();
+        }
+        catch (Exception)
         {
-            clipboardVideoPath = Path.Combine(
-                _storageService.GetApplicationTemporaryFolderPath(),
-                $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}.mp4");
-
-            await _videoFileTrimmer.TrimAsync(
-                request.VideoPath,
-                clipboardVideoPath,
-                trimStart,
-                trimEnd,
-                cancellationToken);
+            return new CopyVideoFileResponse(false);
         }
-
-        ClipboardFile clipboardVideo = new(clipboardVideoPath);
-        Task task = _clipboardService.CopyFileAsync(clipboardVideo);
-        await task.WaitAsync(cancellationToken);
-        return new CopyVideoFileResponse();
     }
 
     private static bool TryGetTrim(CopyVideoFileRequest request, out TimeSpan trimStart, out TimeSpan trimEnd)

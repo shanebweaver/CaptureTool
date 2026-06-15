@@ -8,7 +8,6 @@ using CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCap
 using CaptureTool.Application.Abstractions.Features.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
-using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Presentation.Factories;
@@ -28,7 +27,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private readonly IOpenRecentCaptureUseCase _openRecentCaptureCommand;
     private readonly IGetRecentCapturesUseCase _getRecentCapturesQuery;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
-    private readonly ITelemetryService _telemetryService;
 
     public event EventHandler? RecentCapturesUpdated;
 
@@ -68,8 +66,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IStoreFeatureAvailability storeFeatureAvailability,
         IImageCaptureHandler imageCaptureHandler,
         IVideoCaptureHandler videoCaptureHandler,
-        IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory,
-        ITelemetryService telemetryService)
+        IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory)
     {
         _imageCaptureHandler = imageCaptureHandler;
         _videoCaptureHandler = videoCaptureHandler;
@@ -77,17 +74,16 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _openRecentCaptureCommand = openRecentCaptureCommand;
         _getRecentCapturesQuery = getRecentCapturesQuery;
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
-        _telemetryService = telemetryService;
 
-        NewImageCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault), telemetryService);
-        NewVideoCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault), telemetryService);
-        OpenFileCommand = new AsyncRelayCommand(OpenFileAsync);
-        NavigateToSettingsCommand = openSettingsPageCommand.ToRelayCommand(() => new OpenSettingsPageRequest(), telemetryService);
-        ShowAboutAppCommand = openAboutPageCommand.ToRelayCommand(() => new OpenAboutPageRequest(), telemetryService);
-        ShowAddOnsCommand = openStorePageCommand.ToRelayCommand(() => new OpenStorePageRequest(), telemetryService);
-        ExitApplicationCommand = exitApplicationCommand.ToRelayCommand(() => new ExitApplicationRequest(), telemetryService);
-        RefreshRecentCapturesCommand = new AsyncRelayCommand(RefreshRecentCapturesAsync);
-        OpenRecentCaptureCommand = new AsyncRelayCommand<RecentCaptureViewModel>(OpenRecentCaptureAsync);
+        NewImageCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault));
+        NewVideoCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault));
+        OpenFileCommand = new AsyncRelayCommand(OpenFileAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        NavigateToSettingsCommand = openSettingsPageCommand.ToRelayCommand(() => new OpenSettingsPageRequest());
+        ShowAboutAppCommand = openAboutPageCommand.ToRelayCommand(() => new OpenAboutPageRequest());
+        ShowAddOnsCommand = openStorePageCommand.ToRelayCommand(() => new OpenStorePageRequest());
+        ExitApplicationCommand = exitApplicationCommand.ToRelayCommand(() => new ExitApplicationRequest());
+        RefreshRecentCapturesCommand = new AsyncRelayCommand(RefreshRecentCapturesAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        OpenRecentCaptureCommand = new AsyncRelayCommand<RecentCaptureViewModel>(OpenRecentCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
 
         ShowAddOnsOption = storeFeatureAvailability.IsStoreEnabled;
         RecentCaptures = [];
@@ -124,69 +120,44 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     private async Task OpenFileAsync()
     {
-        try
+        var response = await _openFileCommand.ExecuteAsync(new OpenFileRequest(), CancellationToken.None);
+        if (response.Opened)
         {
-            await _openFileCommand.ExecuteAsync(new OpenFileRequest(), CancellationToken.None);
             await RefreshRecentCapturesAsync();
-        }
-        catch (OperationCanceledException exception)
-        {
-            _telemetryService.ActivityCanceled(nameof(OpenFileAsync), exception.Message);
-        }
-        catch (Exception exception)
-        {
-            _telemetryService.ActivityError(nameof(OpenFileAsync), exception);
         }
     }
 
     private async Task OpenRecentCaptureAsync(RecentCaptureViewModel? model)
     {
-        try
+        if (model == null)
         {
-            if (model != null)
-            {
-                if (!File.Exists(model.FilePath))
-                {
-                    await RefreshRecentCapturesAsync();
-                }
-                else
-                {
-                    await _openRecentCaptureCommand.ExecuteAsync(new OpenRecentCaptureRequest(model.FilePath), CancellationToken.None);
-                }
-            }
+            return;
         }
-        catch (OperationCanceledException exception)
+
+        if (!File.Exists(model.FilePath))
         {
-            _telemetryService.ActivityCanceled(nameof(OpenRecentCaptureAsync), exception.Message);
+            await RefreshRecentCapturesAsync();
+            return;
         }
-        catch (Exception exception)
+
+        var response = await _openRecentCaptureCommand.ExecuteAsync(new OpenRecentCaptureRequest(model.FilePath), CancellationToken.None);
+        if (!response.Opened)
         {
-            _telemetryService.ActivityError(nameof(OpenRecentCaptureAsync), exception);
+            await RefreshRecentCapturesAsync();
         }
     }
 
     public async Task RefreshRecentCapturesAsync()
     {
-        try
-        {
-            var recentCaptures = (await _getRecentCapturesQuery.ExecuteAsync(new GetRecentCapturesRequest(), CancellationToken.None)).Captures;
+        var recentCaptures = (await _getRecentCapturesQuery.ExecuteAsync(new GetRecentCapturesRequest(), CancellationToken.None)).Captures;
 
-            _recentCaptures.Clear();
-            foreach (var recentCapture in recentCaptures)
-            {
-                var recentCaptureViewModel = _recentCaptureViewModelFactory.Create(recentCapture.FilePath);
-                _recentCaptures.Add(recentCaptureViewModel);
-            }
+        _recentCaptures.Clear();
+        foreach (var recentCapture in recentCaptures)
+        {
+            var recentCaptureViewModel = _recentCaptureViewModelFactory.Create(recentCapture.FilePath);
+            _recentCaptures.Add(recentCaptureViewModel);
+        }
 
-            RecentCapturesUpdated?.Invoke(this, EventArgs.Empty);
-        }
-        catch (OperationCanceledException exception)
-        {
-            _telemetryService.ActivityCanceled(nameof(RefreshRecentCapturesAsync), exception.Message);
-        }
-        catch (Exception exception)
-        {
-            _telemetryService.ActivityError(nameof(RefreshRecentCapturesAsync), exception);
-        }
+        RecentCapturesUpdated?.Invoke(this, EventArgs.Empty);
     }
 }

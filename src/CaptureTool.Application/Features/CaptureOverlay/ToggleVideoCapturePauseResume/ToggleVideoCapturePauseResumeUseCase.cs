@@ -19,8 +19,15 @@ public sealed class ToggleVideoCapturePauseResumeUseCase : IToggleVideoCapturePa
 
     public Task<ToggleVideoCapturePauseResumeResponse> ExecuteAsync(ToggleVideoCapturePauseResumeRequest request, CancellationToken cancellationToken = default)
     {
-        bool newValue = !_videoCaptureHandler.IsPaused;
-        _videoCaptureHandler.ToggleIsPaused(newValue);
-        return Task.FromResult(new ToggleVideoCapturePauseResumeResponse());
+        try
+        {
+            bool newValue = !_videoCaptureHandler.IsPaused;
+            _videoCaptureHandler.ToggleIsPaused(newValue);
+            return Task.FromResult(new ToggleVideoCapturePauseResumeResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new ToggleVideoCapturePauseResumeResponse(false));
+        }
     }
 }

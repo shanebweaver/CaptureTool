@@ -14,9 +14,16 @@ public sealed class ToggleVideoCaptureDesktopAudioUseCase : IToggleVideoCaptureD
 
     public Task<ToggleVideoCaptureDesktopAudioResponse> ExecuteAsync(ToggleVideoCaptureDesktopAudioRequest request, CancellationToken cancellationToken = default)
     {
-        bool newValue = !_videoCaptureHandler.IsDesktopAudioEnabled;
-        _videoCaptureHandler.SetIsDesktopAudioEnabled(newValue);
-        _videoCaptureHandler.ToggleDesktopAudioCapture(newValue);
-        return Task.FromResult(new ToggleVideoCaptureDesktopAudioResponse());
+        try
+        {
+            bool newValue = !_videoCaptureHandler.IsDesktopAudioEnabled;
+            _videoCaptureHandler.SetIsDesktopAudioEnabled(newValue);
+            _videoCaptureHandler.ToggleDesktopAudioCapture(newValue);
+            return Task.FromResult(new ToggleVideoCaptureDesktopAudioResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new ToggleVideoCaptureDesktopAudioResponse(false));
+        }
     }
 }

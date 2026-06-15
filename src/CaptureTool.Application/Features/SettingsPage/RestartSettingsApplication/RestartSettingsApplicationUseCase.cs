@@ -16,7 +16,14 @@ public sealed class RestartSettingsApplicationUseCase : IRestartSettingsApplicat
 
     public Task<RestartSettingsApplicationResponse> ExecuteAsync(RestartSettingsApplicationRequest request, CancellationToken cancellationToken = default)
     {
-        _shutdownHandler.TryRestart();
-        return Task.FromResult(new RestartSettingsApplicationResponse());
+        try
+        {
+            _shutdownHandler.TryRestart();
+            return Task.FromResult(new RestartSettingsApplicationResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new RestartSettingsApplicationResponse(false));
+        }
     }
 }

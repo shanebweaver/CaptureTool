@@ -20,12 +20,19 @@ public sealed class ShowMainWindowUseCase : IShowMainWindowUseCase
 
     public Task<ShowMainWindowResponse> ExecuteAsync(ShowMainWindowRequest request, CancellationToken cancellationToken = default)
     {
-        bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRouteHelper.IsMainWindowRoute(r.Route));
-        if (!success)
+        try
         {
-            _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
-        }
+            bool success = _navigationService.TryGoBackTo(r => CaptureToolNavigationRouteHelper.IsMainWindowRoute(r.Route));
+            if (!success)
+            {
+                _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
+            }
 
-        return Task.FromResult(new ShowMainWindowResponse());
+            return Task.FromResult(new ShowMainWindowResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new ShowMainWindowResponse(false));
+        }
     }
 }

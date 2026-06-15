@@ -17,8 +17,15 @@ public sealed class UpdateImageAutoSaveUseCase : IUpdateImageAutoSaveUseCase
 
     public async Task<UpdateImageAutoSaveResponse> ExecuteAsync(UpdateImageAutoSaveRequest request, CancellationToken cancellationToken = default)
     {
-        _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, request.IsEnabled);
-        await _settingsService.TrySaveAsync(cancellationToken);
-        return new UpdateImageAutoSaveResponse();
+        try
+        {
+            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, request.IsEnabled);
+            await _settingsService.TrySaveAsync(cancellationToken);
+            return new UpdateImageAutoSaveResponse();
+        }
+        catch (Exception)
+        {
+            return new UpdateImageAutoSaveResponse(false);
+        }
     }
 }

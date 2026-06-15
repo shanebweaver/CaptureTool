@@ -15,7 +15,14 @@ public sealed class OpenVideoEditPageUseCase : IOpenVideoEditPageUseCase
 
     public Task<OpenVideoEditPageResponse> ExecuteAsync(OpenVideoEditPageRequest request, CancellationToken cancellationToken = default)
     {
-        _navigationService.Navigate(NavigationRoute.VideoEdit, request.VideoFile);
-        return Task.FromResult(new OpenVideoEditPageResponse());
+        try
+        {
+            _navigationService.Navigate(NavigationRoute.VideoEdit, request.VideoFile);
+            return Task.FromResult(new OpenVideoEditPageResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new OpenVideoEditPageResponse(false));
+        }
     }
 }

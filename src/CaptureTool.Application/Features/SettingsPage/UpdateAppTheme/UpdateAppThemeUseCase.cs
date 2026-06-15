@@ -20,11 +20,18 @@ public sealed class UpdateAppThemeUseCase : IUpdateAppThemeUseCase
 
     public Task<UpdateAppThemeResponse> ExecuteAsync(UpdateAppThemeRequest request, CancellationToken cancellationToken = default)
     {
-        if (request.ThemeIndex >= 0 && request.ThemeIndex < SupportedThemes.Length)
+        try
         {
-            _themes.UpdateCurrentTheme(SupportedThemes[request.ThemeIndex]);
-        }
+            if (request.ThemeIndex >= 0 && request.ThemeIndex < SupportedThemes.Length)
+            {
+                _themes.UpdateCurrentTheme(SupportedThemes[request.ThemeIndex]);
+            }
 
-        return Task.FromResult(new UpdateAppThemeResponse());
+            return Task.FromResult(new UpdateAppThemeResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new UpdateAppThemeResponse(false));
+        }
     }
 }

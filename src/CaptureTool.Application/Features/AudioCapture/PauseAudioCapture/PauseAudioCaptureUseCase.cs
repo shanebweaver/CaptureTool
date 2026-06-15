@@ -14,7 +14,14 @@ public sealed class PauseAudioCaptureUseCase : IPauseAudioCaptureUseCase
 
     public Task<PauseAudioCaptureResponse> ExecuteAsync(PauseAudioCaptureRequest request, CancellationToken cancellationToken = default)
     {
-        _audioCaptureHandler.PauseCapture();
-        return Task.FromResult(new PauseAudioCaptureResponse());
+        try
+        {
+            _audioCaptureHandler.PauseCapture();
+            return Task.FromResult(new PauseAudioCaptureResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new PauseAudioCaptureResponse(false));
+        }
     }
 }

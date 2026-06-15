@@ -2,7 +2,6 @@ using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Presentation.Features.VideoEdit;
@@ -143,8 +142,7 @@ public class VideoEditPageViewModelTrimTests
     {
         return new(
             saveAction ?? CreateSaveUseCase(),
-            copyAction ?? CreateCopyUseCase(),
-            Mock.Of<ITelemetryService>());
+            copyAction ?? CreateCopyUseCase());
     }
 
     private static ISaveVideoFileUseCase CreateSaveUseCase(

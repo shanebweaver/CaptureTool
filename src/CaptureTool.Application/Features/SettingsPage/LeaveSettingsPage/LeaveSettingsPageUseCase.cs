@@ -15,11 +15,18 @@ public sealed class LeaveSettingsPageUseCase : ILeaveSettingsPageUseCase
 
     public Task<LeaveSettingsPageResponse> ExecuteAsync(LeaveSettingsPageRequest request, CancellationToken cancellationToken = default)
     {
-        if (!_navigationService.TryGoBack())
+        try
         {
-            _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
-        }
+            if (!_navigationService.TryGoBack())
+            {
+                _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
+            }
 
-        return Task.FromResult(new LeaveSettingsPageResponse());
+            return Task.FromResult(new LeaveSettingsPageResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new LeaveSettingsPageResponse(false));
+        }
     }
 }

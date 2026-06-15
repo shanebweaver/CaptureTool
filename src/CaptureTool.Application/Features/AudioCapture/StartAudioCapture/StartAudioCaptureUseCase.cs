@@ -14,7 +14,14 @@ public sealed class StartAudioCaptureUseCase : IStartAudioCaptureUseCase
 
     public Task<StartAudioCaptureResponse> ExecuteAsync(StartAudioCaptureRequest request, CancellationToken cancellationToken = default)
     {
-        _audioCaptureHandler.StartCapture();
-        return Task.FromResult(new StartAudioCaptureResponse());
+        try
+        {
+            _audioCaptureHandler.StartCapture();
+            return Task.FromResult(new StartAudioCaptureResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new StartAudioCaptureResponse(false));
+        }
     }
 }

@@ -19,9 +19,16 @@ public sealed class RestoreDefaultsUseCase : IRestoreDefaultsUseCase
 
     public async Task<RestoreDefaultsResponse> ExecuteAsync(RestoreDefaultsRequest request, CancellationToken cancellationToken = default)
     {
-        _settingsService.ClearAllSettings();
-        _localizationService.OverrideLanguage(null);
-        await _settingsService.TrySaveAsync(cancellationToken);
-        return new RestoreDefaultsResponse();
+        try
+        {
+            _settingsService.ClearAllSettings();
+            _localizationService.OverrideLanguage(null);
+            await _settingsService.TrySaveAsync(cancellationToken);
+            return new RestoreDefaultsResponse();
+        }
+        catch (Exception)
+        {
+            return new RestoreDefaultsResponse(false);
+        }
     }
 }

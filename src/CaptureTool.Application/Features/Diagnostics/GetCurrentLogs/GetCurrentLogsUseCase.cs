@@ -14,6 +14,13 @@ public sealed class GetCurrentLogsUseCase : IGetCurrentLogsUseCase
 
     public Task<GetCurrentLogsResponse> ExecuteAsync(GetCurrentLogsRequest request, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(new GetCurrentLogsResponse(_logService.GetLogs()));
+        try
+        {
+            return Task.FromResult(new GetCurrentLogsResponse(_logService.GetLogs()));
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new GetCurrentLogsResponse([]));
+        }
     }
 }

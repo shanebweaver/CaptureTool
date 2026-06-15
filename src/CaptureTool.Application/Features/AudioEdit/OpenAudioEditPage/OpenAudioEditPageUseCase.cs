@@ -21,7 +21,14 @@ public sealed class OpenAudioEditPageUseCase : IOpenAudioEditPageUseCase
 
     public Task<OpenAudioEditPageResponse> ExecuteAsync(OpenAudioEditPageRequest request, CancellationToken cancellationToken = default)
     {
-        _navigationService.Navigate(NavigationRoute.AudioEdit, request.AudioFile);
-        return Task.FromResult(new OpenAudioEditPageResponse());
+        try
+        {
+            _navigationService.Navigate(NavigationRoute.AudioEdit, request.AudioFile);
+            return Task.FromResult(new OpenAudioEditPageResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new OpenAudioEditPageResponse(false));
+        }
     }
 }

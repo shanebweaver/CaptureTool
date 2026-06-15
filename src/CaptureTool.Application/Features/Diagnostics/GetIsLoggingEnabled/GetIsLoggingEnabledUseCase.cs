@@ -14,6 +14,13 @@ public sealed class GetIsLoggingEnabledUseCase : IGetIsLoggingEnabledUseCase
 
     public Task<GetIsLoggingEnabledResponse> ExecuteAsync(GetIsLoggingEnabledRequest request, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(new GetIsLoggingEnabledResponse(_logService.IsEnabled));
+        try
+        {
+            return Task.FromResult(new GetIsLoggingEnabledResponse(_logService.IsEnabled));
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new GetIsLoggingEnabledResponse(false));
+        }
     }
 }

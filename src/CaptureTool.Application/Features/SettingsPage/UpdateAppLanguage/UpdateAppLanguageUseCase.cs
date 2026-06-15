@@ -24,25 +24,32 @@ public sealed class UpdateAppLanguageUseCase : IUpdateAppLanguageUseCase
 
     public async Task<UpdateAppLanguageResponse> ExecuteAsync(UpdateAppLanguageRequest request, CancellationToken cancellationToken = default)
     {
-        var languages = _localization.SupportedLanguages;
-        if (request.LanguageIndex < 0 || request.LanguageIndex > languages.Length)
+        try
         {
+            var languages = _localization.SupportedLanguages;
+            if (request.LanguageIndex < 0 || request.LanguageIndex > languages.Length)
+            {
+                return new UpdateAppLanguageResponse(false);
+            }
+
+            var language = request.LanguageIndex == languages.Length ? null : languages[request.LanguageIndex];
+            _localization.OverrideLanguage(language);
+
+            if (language?.Value is string value)
+            {
+                _settings.Set(CaptureToolSettings.Settings_LanguageOverride, value);
+            }
+            else
+            {
+                _settings.Unset(CaptureToolSettings.Settings_LanguageOverride);
+            }
+
+            await _settings.TrySaveAsync(cancellationToken);
             return new UpdateAppLanguageResponse();
         }
-
-        var language = request.LanguageIndex == languages.Length ? null : languages[request.LanguageIndex];
-        _localization.OverrideLanguage(language);
-
-        if (language?.Value is string value)
+        catch (Exception)
         {
-            _settings.Set(CaptureToolSettings.Settings_LanguageOverride, value);
+            return new UpdateAppLanguageResponse(false);
         }
-        else
-        {
-            _settings.Unset(CaptureToolSettings.Settings_LanguageOverride);
-        }
-
-        await _settings.TrySaveAsync(cancellationToken);
-        return new UpdateAppLanguageResponse();
     }
 }

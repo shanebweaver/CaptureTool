@@ -15,7 +15,14 @@ public sealed class OpenCaptureOverlayUseCase : IOpenCaptureOverlayUseCase
 
     public Task<OpenCaptureOverlayResponse> ExecuteAsync(OpenCaptureOverlayRequest request, CancellationToken cancellationToken = default)
     {
-        _navigationService.Navigate(NavigationRoute.CaptureOverlay, request.CaptureArgs);
-        return Task.FromResult(new OpenCaptureOverlayResponse());
+        try
+        {
+            _navigationService.Navigate(NavigationRoute.CaptureOverlay, request.CaptureArgs);
+            return Task.FromResult(new OpenCaptureOverlayResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new OpenCaptureOverlayResponse(false));
+        }
     }
 }

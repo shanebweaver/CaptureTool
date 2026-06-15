@@ -1,3 +1,3 @@
 namespace CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
 
-public sealed record ExitApplicationResponse;
+public sealed record ExitApplicationResponse(bool Succeeded = true);

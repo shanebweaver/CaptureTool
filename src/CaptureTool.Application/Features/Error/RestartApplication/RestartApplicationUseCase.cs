@@ -19,7 +19,14 @@ public sealed class RestartApplicationUseCase : IRestartApplicationUseCase
 
     public Task<RestartApplicationResponse> ExecuteAsync(RestartApplicationRequest request, CancellationToken cancellationToken = default)
     {
-        _shutdownHandler.TryRestart();
-        return Task.FromResult(new RestartApplicationResponse());
+        try
+        {
+            _shutdownHandler.TryRestart();
+            return Task.FromResult(new RestartApplicationResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new RestartApplicationResponse(false));
+        }
     }
 }

@@ -3,7 +3,6 @@ using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Localization;
-using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Features.About;
 using CaptureTool.Presentation.Features.Home;
@@ -22,7 +21,7 @@ public sealed class ViewModelContractTests
         localization.Setup(service => service.GetString("About_ThirdParty_DialogTitle")).Returns("Third-party");
         localization.Setup(service => service.GetString("About_ThirdParty_DialogContent")).Returns("Notices");
 
-        var viewModel = new AboutPageViewModel(goBack, localization.Object, Mock.Of<ITelemetryService>());
+        var viewModel = new AboutPageViewModel(goBack, localization.Object);
 
         (string title, string content)? dialog = null;
         viewModel.ShowDialogRequested += (_, args) => dialog = args;
@@ -41,7 +40,7 @@ public sealed class ViewModelContractTests
         var openAudioCapturePage = Mock.Of<IOpenAudioCapturePageUseCase>();
         var featureAvailability = new Mock<IAudioCaptureFeatureAvailability>();
 
-        var viewModel = new HomePageViewModel(openSelectionOverlay.Object, openAudioCapturePage, featureAvailability.Object, Mock.Of<ITelemetryService>());
+        var viewModel = new HomePageViewModel(openSelectionOverlay.Object, openAudioCapturePage, featureAvailability.Object);
 
         viewModel.NewImageCaptureCommand.Execute(null);
 

@@ -17,16 +17,23 @@ public sealed class OpenTempFolderUseCase : IOpenTempFolderUseCase
 
     public Task<OpenTempFolderResponse> ExecuteAsync(OpenTempFolderRequest request, CancellationToken cancellationToken = default)
     {
-        var tempFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-        if (Directory.Exists(tempFolderPath))
+        try
         {
-            Process.Start("explorer.exe", $"/open, {tempFolderPath}");
-        }
-        else
-        {
-            throw new DirectoryNotFoundException($"The temporary folder path '{tempFolderPath}' does not exist.");
-        }
+            var tempFolderPath = _storageService.GetApplicationTemporaryFolderPath();
+            if (Directory.Exists(tempFolderPath))
+            {
+                Process.Start("explorer.exe", $"/open, {tempFolderPath}");
+            }
+            else
+            {
+                return Task.FromResult(new OpenTempFolderResponse(false));
+            }
 
-        return Task.FromResult(new OpenTempFolderResponse());
+            return Task.FromResult(new OpenTempFolderResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new OpenTempFolderResponse(false));
+        }
     }
 }

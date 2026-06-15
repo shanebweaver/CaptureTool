@@ -15,11 +15,18 @@ public sealed class LeaveAboutPageUseCase : ILeaveAboutPageUseCase
 
     public Task<LeaveAboutPageResponse> ExecuteAsync(LeaveAboutPageRequest request, CancellationToken cancellationToken = default)
     {
-        if (!_navigationService.TryGoBack())
+        try
         {
-            _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
-        }
+            if (!_navigationService.TryGoBack())
+            {
+                _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
+            }
 
-        return Task.FromResult(new LeaveAboutPageResponse());
+            return Task.FromResult(new LeaveAboutPageResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new LeaveAboutPageResponse(false));
+        }
     }
 }

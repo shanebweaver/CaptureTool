@@ -21,13 +21,20 @@ public sealed class CopyAudioFileUseCase : ICopyAudioFileUseCase
 
     public async Task<CopyAudioFileResponse> ExecuteAsync(CopyAudioFileRequest request, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(request.AudioPath))
+        try
         {
-            throw new InvalidOperationException("Cannot copy audio to clipboard without a valid filepath.");
-        }
+            if (string.IsNullOrEmpty(request.AudioPath) || !File.Exists(request.AudioPath))
+            {
+                return new CopyAudioFileResponse(false);
+            }
 
-        ClipboardFile clipboardAudio = new(request.AudioPath);
-        await _clipboardService.CopyFileAsync(clipboardAudio);
-        return new CopyAudioFileResponse();
+            ClipboardFile clipboardAudio = new(request.AudioPath);
+            await _clipboardService.CopyFileAsync(clipboardAudio);
+            return new CopyAudioFileResponse();
+        }
+        catch (Exception)
+        {
+            return new CopyAudioFileResponse(false);
+        }
     }
 }

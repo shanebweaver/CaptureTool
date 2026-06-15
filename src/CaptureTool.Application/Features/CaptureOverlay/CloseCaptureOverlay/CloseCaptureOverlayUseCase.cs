@@ -32,13 +32,30 @@ public sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
 
     public async Task<CloseCaptureOverlayResponse> ExecuteAsync(CloseCaptureOverlayRequest request, CancellationToken cancellationToken = default)
     {
+        bool videoCaptureCanceled = TryCancelVideoCapture();
+
+        try
+        {
+            await _showMainWindow.ExecuteAsync(new ShowMainWindowRequest(), cancellationToken);
+        }
+        catch (Exception)
+        {
+            return new CloseCaptureOverlayResponse(videoCaptureCanceled);
+        }
+
+        return new CloseCaptureOverlayResponse(videoCaptureCanceled);
+    }
+
+    private bool TryCancelVideoCapture()
+    {
         try
         {
             _videoCaptureHandler.CancelVideoCapture();
+            return true;
         }
-        catch { }
-
-        await _showMainWindow.ExecuteAsync(new ShowMainWindowRequest(), cancellationToken);
-        return new CloseCaptureOverlayResponse();
+        catch (Exception)
+        {
+            return false;
+        }
     }
 }

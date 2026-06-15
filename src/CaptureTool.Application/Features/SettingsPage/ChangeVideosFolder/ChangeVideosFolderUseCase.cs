@@ -20,9 +20,21 @@ public sealed class ChangeVideosFolderUseCase : IChangeVideosFolderUseCase
 
     public async Task<ChangeVideosFolderResponse> ExecuteAsync(ChangeVideosFolderRequest request, CancellationToken cancellationToken = default)
     {
-        var folder = await _picker.PickFolderAsync(UserFolder.Videos) ?? throw new OperationCanceledException("No folder was selected.");
-        _settings.Set(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder, folder.FolderPath);
-        await _settings.TrySaveAsync(cancellationToken);
-        return new ChangeVideosFolderResponse();
+        try
+        {
+            var folder = await _picker.PickFolderAsync(UserFolder.Videos);
+            if (folder is null)
+            {
+                return new ChangeVideosFolderResponse(false);
+            }
+
+            _settings.Set(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder, folder.FolderPath);
+            await _settings.TrySaveAsync(cancellationToken);
+            return new ChangeVideosFolderResponse();
+        }
+        catch (Exception)
+        {
+            return new ChangeVideosFolderResponse(false);
+        }
     }
 }

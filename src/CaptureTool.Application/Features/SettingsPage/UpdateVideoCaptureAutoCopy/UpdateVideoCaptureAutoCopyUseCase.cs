@@ -17,8 +17,15 @@ public sealed class UpdateVideoCaptureAutoCopyUseCase : IUpdateVideoCaptureAutoC
 
     public async Task<UpdateVideoCaptureAutoCopyResponse> ExecuteAsync(UpdateVideoCaptureAutoCopyRequest request, CancellationToken cancellationToken = default)
     {
-        _settingsService.Set(CaptureToolSettings.Settings_VideoCapture_AutoCopy, request.IsEnabled);
-        await _settingsService.TrySaveAsync(cancellationToken);
-        return new UpdateVideoCaptureAutoCopyResponse();
+        try
+        {
+            _settingsService.Set(CaptureToolSettings.Settings_VideoCapture_AutoCopy, request.IsEnabled);
+            await _settingsService.TrySaveAsync(cancellationToken);
+            return new UpdateVideoCaptureAutoCopyResponse();
+        }
+        catch (Exception)
+        {
+            return new UpdateVideoCaptureAutoCopyResponse(false);
+        }
     }
 }

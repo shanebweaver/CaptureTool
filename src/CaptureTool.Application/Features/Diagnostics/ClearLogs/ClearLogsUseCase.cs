@@ -14,7 +14,14 @@ public sealed class ClearLogsUseCase : IClearLogsUseCase
 
     public Task<ClearLogsResponse> ExecuteAsync(ClearLogsRequest request, CancellationToken cancellationToken = default)
     {
-        _logService.ClearLogs();
-        return Task.FromResult(new ClearLogsResponse());
+        try
+        {
+            _logService.ClearLogs();
+            return Task.FromResult(new ClearLogsResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new ClearLogsResponse(false));
+        }
     }
 }

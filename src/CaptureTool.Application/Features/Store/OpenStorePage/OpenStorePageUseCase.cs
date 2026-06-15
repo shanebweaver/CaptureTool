@@ -15,7 +15,14 @@ public sealed class OpenStorePageUseCase : IOpenStorePageUseCase
 
     public Task<OpenStorePageResponse> ExecuteAsync(OpenStorePageRequest request, CancellationToken cancellationToken = default)
     {
-        _navigationService.Navigate(NavigationRoute.Store);
-        return Task.FromResult(new OpenStorePageResponse());
+        try
+        {
+            _navigationService.Navigate(NavigationRoute.Store);
+            return Task.FromResult(new OpenStorePageResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new OpenStorePageResponse(false));
+        }
     }
 }

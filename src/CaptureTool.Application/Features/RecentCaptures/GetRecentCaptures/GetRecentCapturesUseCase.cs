@@ -25,18 +25,25 @@ public sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
 
     public Task<GetRecentCapturesResponse> ExecuteAsync(GetRecentCapturesRequest request, CancellationToken cancellationToken = default)
     {
-        string recentCapturesFolder = _storageService.GetApplicationTemporaryFolderPath();
+        try
+        {
+            string recentCapturesFolder = _storageService.GetApplicationTemporaryFolderPath();
 
-        IReadOnlyList<RecentCapture> recentCaptures = Directory.GetFiles(recentCapturesFolder, "*.*")
-            .OrderByDescending(File.GetLastWriteTimeUtc)
-            .Take(5)
-            .Where(filePath => !string.IsNullOrEmpty(filePath) && File.Exists(filePath))
-            .Select(filePath => new RecentCapture(
-                filePath,
-                Path.GetFileName(filePath),
-                _fileTypeDetector.DetectFileType(filePath)))
-            .ToArray();
+            IReadOnlyList<RecentCapture> recentCaptures = Directory.GetFiles(recentCapturesFolder, "*.*")
+                .OrderByDescending(File.GetLastWriteTimeUtc)
+                .Take(5)
+                .Where(filePath => !string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                .Select(filePath => new RecentCapture(
+                    filePath,
+                    Path.GetFileName(filePath),
+                    _fileTypeDetector.DetectFileType(filePath)))
+                .ToArray();
 
-        return Task.FromResult(new GetRecentCapturesResponse(recentCaptures));
+            return Task.FromResult(new GetRecentCapturesResponse(recentCaptures));
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new GetRecentCapturesResponse([]));
+        }
     }
 }

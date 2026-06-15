@@ -20,7 +20,14 @@ public sealed class ExitApplicationUseCase : IExitApplicationUseCase
 
     public Task<ExitApplicationResponse> ExecuteAsync(ExitApplicationRequest request, CancellationToken cancellationToken = default)
     {
-        _shutdownHandler.Shutdown();
-        return Task.FromResult(new ExitApplicationResponse());
+        try
+        {
+            _shutdownHandler.Shutdown();
+            return Task.FromResult(new ExitApplicationResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new ExitApplicationResponse(false));
+        }
     }
 }

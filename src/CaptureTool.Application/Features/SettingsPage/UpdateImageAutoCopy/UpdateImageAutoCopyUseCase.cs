@@ -17,8 +17,15 @@ public sealed class UpdateImageAutoCopyUseCase : IUpdateImageAutoCopyUseCase
 
     public async Task<UpdateImageAutoCopyResponse> ExecuteAsync(UpdateImageAutoCopyRequest request, CancellationToken cancellationToken = default)
     {
-        _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, request.IsEnabled);
-        await _settingsService.TrySaveAsync(cancellationToken);
-        return new UpdateImageAutoCopyResponse();
+        try
+        {
+            _settingsService.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, request.IsEnabled);
+            await _settingsService.TrySaveAsync(cancellationToken);
+            return new UpdateImageAutoCopyResponse();
+        }
+        catch (Exception)
+        {
+            return new UpdateImageAutoCopyResponse(false);
+        }
     }
 }

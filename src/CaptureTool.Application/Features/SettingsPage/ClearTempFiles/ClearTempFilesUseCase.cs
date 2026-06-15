@@ -19,26 +19,33 @@ public sealed class ClearTempFilesUseCase : IClearTempFilesUseCase
 
     public Task<ClearTempFilesResponse> ExecuteAsync(ClearTempFilesRequest request, CancellationToken cancellationToken = default)
     {
-        string tempFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-        foreach (var entry in Directory.EnumerateFileSystemEntries(tempFolderPath))
+        try
         {
-            try
+            string tempFolderPath = _storageService.GetApplicationTemporaryFolderPath();
+            foreach (var entry in Directory.EnumerateFileSystemEntries(tempFolderPath))
             {
-                if (Directory.Exists(entry))
+                try
                 {
-                    Directory.Delete(entry, true);
+                    if (Directory.Exists(entry))
+                    {
+                        Directory.Delete(entry, true);
+                    }
+                    else
+                    {
+                        File.Delete(entry);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    File.Delete(entry);
+                    _logService.LogException(ex, $"Failed to delete temporary file or folder: {entry}");
                 }
             }
-            catch (Exception ex)
-            {
-                _logService.LogException(ex, $"Failed to delete temporary file or folder: {entry}");
-            }
-        }
 
-        return Task.FromResult(new ClearTempFilesResponse());
+            return Task.FromResult(new ClearTempFilesResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new ClearTempFilesResponse(false));
+        }
     }
 }

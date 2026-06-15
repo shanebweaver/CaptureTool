@@ -19,7 +19,16 @@ public sealed class SelectAudioInputSourceUseCase : ISelectAudioInputSourceUseCa
             return new SelectAudioInputSourceResponse(false, false);
         }
 
-        IReadOnlyList<AudioInputSource> sources = await _audioInputDetectionService.GetAudioInputSourcesAsync(cancellationToken);
+        IReadOnlyList<AudioInputSource> sources;
+        try
+        {
+            sources = await _audioInputDetectionService.GetAudioInputSourcesAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            return new SelectAudioInputSourceResponse(false, false);
+        }
+
         bool isAvailable = sources.Any(source => string.Equals(source.Id, request.SourceId, StringComparison.OrdinalIgnoreCase));
 
         return new SelectAudioInputSourceResponse(isAvailable, !isAvailable);

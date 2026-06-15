@@ -14,7 +14,18 @@ public sealed class GetAudioInputSourcesUseCase : IGetAudioInputSourcesUseCase
 
     public async Task<GetAudioInputSourcesResponse> ExecuteAsync(GetAudioInputSourcesRequest request, CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<AudioInputSource> sources = await _audioInputDetectionService.GetAudioInputSourcesAsync(cancellationToken);
-        return new GetAudioInputSourcesResponse(sources);
+        try
+        {
+            IReadOnlyList<AudioInputSource> sources = await _audioInputDetectionService.GetAudioInputSourcesAsync(cancellationToken);
+            return new GetAudioInputSourcesResponse(sources);
+        }
+        catch (OperationCanceledException)
+        {
+            return new GetAudioInputSourcesResponse([]);
+        }
+        catch (Exception)
+        {
+            return new GetAudioInputSourcesResponse([]);
+        }
     }
 }

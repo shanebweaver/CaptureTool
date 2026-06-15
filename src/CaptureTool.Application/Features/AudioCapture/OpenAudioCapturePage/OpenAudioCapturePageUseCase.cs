@@ -15,7 +15,14 @@ public sealed class OpenAudioCapturePageUseCase : IOpenAudioCapturePageUseCase
 
     public Task<OpenAudioCapturePageResponse> ExecuteAsync(OpenAudioCapturePageRequest request, CancellationToken cancellationToken = default)
     {
-        _navigationService.Navigate(NavigationRoute.AudioCapture);
-        return Task.FromResult(new OpenAudioCapturePageResponse());
+        try
+        {
+            _navigationService.Navigate(NavigationRoute.AudioCapture);
+            return Task.FromResult(new OpenAudioCapturePageResponse());
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(new OpenAudioCapturePageResponse(false));
+        }
     }
 }

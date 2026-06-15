@@ -160,7 +160,6 @@ public sealed class ImageEditPageViewModelDefaultsTests
             Mock.Of<ILocalizationService>(),
             storeService ?? Mock.Of<IStoreService>(),
             cancellationService ?? Mock.Of<ICancellationService>(),
-            Mock.Of<ITelemetryService>(),
             Mock.Of<IImageCanvasPrinter>(),
             Mock.Of<IImageCanvasExporter>(),
             filePicker ?? Mock.Of<IFilePickerService>(),
