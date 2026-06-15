@@ -94,7 +94,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
-    public ObservableCollection<AudioInputSource> AudioInputSources { get; } = [];
+    public ObservableCollection<AudioInputSource> AudioInputSources { get; }
 
     public AudioInputSource? SelectedAudioInputSource
     {
@@ -106,19 +106,13 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         get;
         private set => Set(ref field, value);
-    } = -1;
+    }
 
     public bool IsAudioInputSelectionAvailable
     {
         get;
         private set => Set(ref field, value);
     }
-
-    public string AudioInputSelectionStatus
-    {
-        get;
-        private set => Set(ref field, value);
-    } = "Loading audio inputs";
 
     public IRelayCommand CloseOverlayCommand { get; }
     public IRelayCommand GoBackCommand { get; }
@@ -158,6 +152,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
+        SelectedAudioInputSourceIndex = -1;
+        AudioInputSources = [];
 
         CloseOverlayCommand = closeOverlayCommand.ToRelayCommand(() => new CloseCaptureOverlayRequest(), telemetryService);
         GoBackCommand = goBackCommand.ToRelayCommand(() => new GoBackFromCaptureOverlayRequest(), telemetryService);
@@ -233,7 +229,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
             IsAudioInputSelectionAvailable = false;
-            AudioInputSelectionStatus = "Audio inputs unavailable";
         }
     }
 
@@ -376,7 +371,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
                 SelectedAudioInputSource = null;
                 SelectedAudioInputSourceIndex = -1;
                 IsAudioInputSelectionAvailable = false;
-                AudioInputSelectionStatus = "Audio inputs unavailable";
             });
         }
     }
@@ -404,7 +398,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         {
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
-            AudioInputSelectionStatus = "No audio inputs found";
             _hasInitializedAudioInputSelection = false;
             return;
         }
@@ -413,10 +406,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(SelectedAudioInputSource);
 
         _hasInitializedAudioInputSelection = true;
-
-        AudioInputSelectionStatus = selectedSourceRemoved
-            ? "Selected audio input was removed"
-            : string.Empty;
     }
 
     private AudioInputSource GetAudioInputSourceToSelect(string? selectedSourceId, bool selectedSourceRemoved)
@@ -457,18 +446,15 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             {
                 SelectedAudioInputSource = source;
                 SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(source);
-                AudioInputSelectionStatus = string.Empty;
             }
             else if (response.WasRemoved)
             {
-                AudioInputSelectionStatus = "Selected audio input was removed";
                 await RefreshAudioInputSourcesAsync();
             }
         }
         catch (Exception exception)
         {
             _telemetryService.ActivityError(nameof(SelectAudioInputSource), exception);
-            AudioInputSelectionStatus = "Audio input selection unavailable";
         }
     }
 

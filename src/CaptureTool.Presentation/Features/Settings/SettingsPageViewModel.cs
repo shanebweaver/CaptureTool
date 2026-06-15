@@ -59,7 +59,6 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         AppTheme.SystemDefault,
     ];
 
-
     public IAsyncRelayCommand ChangeScreenshotsFolderCommand { get; }
     public IAsyncRelayCommand OpenScreenshotsFolderCommand { get; }
     public IAsyncRelayCommand ChangeVideosFolderCommand { get; }
@@ -77,16 +76,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public IAsyncRelayCommand ClearTemporaryFilesCommand { get; }
     public IAsyncRelayCommand RestoreDefaultSettingsCommand { get; }
 
-    private ObservableCollection<AppLanguageViewModel> _appLanguages = [];
-
     public ObservableCollection<AppLanguageViewModel> AppLanguages
     {
-        get => _appLanguages;
-        private set
-        {
-            _appLanguages = value;
-            RaisePropertyChanged(nameof(AppLanguages));
-        }
+        get;
+        private set => Set(ref field, value);
     }
 
     public int SelectedAppLanguageIndex
@@ -101,16 +94,10 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
-    private ObservableCollection<AppThemeViewModel> _appThemes = [];
-
     public ObservableCollection<AppThemeViewModel> AppThemes
     {
-        get => _appThemes;
-        private set
-        {
-            _appThemes = value;
-            RaisePropertyChanged(nameof(AppThemes));
-        }
+        get;
+        private set => Set(ref field, value);
     }
 
     public int SelectedAppThemeIndex
@@ -258,14 +245,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         {
             IAppLanguage language = languages[i];
             AppLanguageViewModel vm = _appLanguageViewModelFactory.Create(language);
-            _appLanguages.Add(vm);
+            AppLanguages.Add(vm);
 
             if (language.Value == _localizationService.LanguageOverride?.Value)
             {
                 appLanguageIndex = i;
             }
         }
-        _appLanguages.Add(_appLanguageViewModelFactory.Create(null)); // Null for system default
+        AppLanguages.Add(_appLanguageViewModelFactory.Create(null)); // Null for system default
         if (appLanguageIndex != -1)
         {
             SelectedAppLanguageIndex = appLanguageIndex;
@@ -279,12 +266,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         // Themes
         AppTheme currentTheme = _themeService.CurrentTheme;
         int appThemeIndex = -1;
-        _appThemes.Clear();
+        AppThemes.Clear();
         for (var i = 0; i < SupportedAppThemes.Length; i++)
         {
             AppTheme supportedTheme = SupportedAppThemes[i];
             AppThemeViewModel vm = _appThemeViewModelFactory.Create(supportedTheme);
-            _appThemes.Add(vm);
+            AppThemes.Add(vm);
 
             if (supportedTheme == currentTheme)
             {
