@@ -14,7 +14,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     concurrency:
       group: microsoft-store-draft-submission
-      cancel-in-progress: false
+      cancel-in-progress: true
     
     permissions:
       actions: read
@@ -61,4 +61,4 @@ jobs:
         }
 
         Write-Host "Creating draft Store submission from $($packageFile.FullName)"
-        msstore publish "$($packageFile.FullName)" -id $env:PARTNER_CENTER_STORE_PRODUCT_ID --noCommit -v
+        msstore publish "$($packageFile.FullName)" -id $env:PARTNER_CENTER_STORE_PRODUCT_ID -v
