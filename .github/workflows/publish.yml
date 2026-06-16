@@ -50,11 +50,11 @@ jobs:
     - name: Publish ${{ matrix.platform }} package
       shell: pwsh
       env:
-        STORE_PRODUCT_ID: ${{ secrets.STORE_PRODUCT_ID }}
+        PARTNER_CENTER_STORE_PRODUCT_ID: ${{ secrets.PARTNER_CENTER_STORE_PRODUCT_ID }}
       run: |
         $msixFile = Get-ChildItem -Path packages -Recurse -Filter "*.msix" | Select-Object -First 1
         if (-not $msixFile) {
           throw "No .msix file found for ${{ matrix.platform }}"
         }
         
-        msstore publish "$($msixFile.FullName)" -id $env:STORE_PRODUCT_ID -v
+        msstore publish "$($msixFile.FullName)" -id $env:PARTNER_CENTER_STORE_PRODUCT_ID -v
