@@ -8,10 +8,6 @@ jobs:
   build:
     runs-on: windows-2025-vs2026
 
-    strategy:
-      matrix:
-        platform: [x64, arm64]
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -38,30 +34,32 @@ jobs:
         echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" >> $env:GITHUB_ENV
       shell: pwsh
 
-    - name: Restore .NET dependencies
-      run: msbuild CaptureTool.slnx /t:Restore /p:Configuration=Release /p:Platform=${{ matrix.platform }}
+    - name: Restore ARM64 dependencies
+      run: msbuild CaptureTool.slnx /t:Restore /p:Configuration=Release /p:Platform=ARM64
 
-    - name: Build solution
-      run: msbuild CaptureTool.slnx /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:UapAppxPackageBuildMode=StoreUpload
+    - name: Build ARM64 package for Store bundle
+      run: msbuild CaptureTool.slnx /p:Configuration=Release /p:Platform=ARM64 /p:UapAppxPackageBuildMode=StoreUpload /p:AppxBundle=Always /p:AppxBundlePlatforms="arm64|x64"
+
+    - name: Restore x64 dependencies
+      run: msbuild CaptureTool.slnx /t:Restore /p:Configuration=Release /p:Platform=x64
+
+    - name: Build x64 package and combined Store bundle
+      run: msbuild CaptureTool.slnx /p:Configuration=Release /p:Platform=x64 /p:UapAppxPackageBuildMode=StoreUpload /p:AppxBundle=Always /p:AppxBundlePlatforms="arm64|x64"
 
     - name: Install coverage tools
-      if: matrix.platform == 'x64'
       run: |
         dotnet tool install --global dotnet-coverage
         dotnet tool install --global dotnet-reportgenerator-globaltool
 
     - name: Run .NET tests with coverage
-      if: matrix.platform == 'x64'
       run: |
         dotnet-coverage collect "powershell -NoProfile -ExecutionPolicy Bypass -File .github\scripts\run-managed-tests.ps1" -f cobertura -o coverage.cobertura.xml
 
     - name: Generate coverage report
-      if: matrix.platform == 'x64'
       run: |
         reportgenerator -reports:coverage.cobertura.xml -targetdir:coverage-report -reporttypes:"HtmlInline_AzurePipelines;MarkdownSummaryGithub" -title:"CaptureTool Coverage"
 
     - name: Enforce coverage threshold
-      if: matrix.platform == 'x64'
       run: |
         [xml]$coverage = Get-Content coverage.cobertura.xml
         $lineRate = [double]$coverage.coverage.'line-rate'
@@ -74,12 +72,10 @@ jobs:
         }
 
     - name: Publish coverage summary
-      if: matrix.platform == 'x64'
       run: |
         Get-Content coverage-report\SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
 
     - name: Upload coverage report artifact
-      if: matrix.platform == 'x64'
       uses: actions/upload-artifact@v7
       with:
         name: coverage-report
@@ -88,7 +84,6 @@ jobs:
           coverage-report
 
     - name: Upload coverage to Codecov
-      if: matrix.platform == 'x64'
       uses: codecov/codecov-action@v7
       with:
         files: coverage.cobertura.xml
@@ -98,5 +93,7 @@ jobs:
     - name: Upload Package Artifacts
       uses: actions/upload-artifact@v7
       with:
-        name: StorePackage-${{ matrix.platform }}
-        path: 'output\${{ matrix.platform }}\*\*.msix'
+        name: StorePackage
+        path: |
+          output\x64\**\*.msixbundle
+          output\x64\**\*.msixupload

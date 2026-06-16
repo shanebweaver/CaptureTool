@@ -12,20 +12,19 @@ jobs:
   publish:
     runs-on: windows-2025-vs2026
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    
-    strategy:
-      matrix:
-        platform: [x64, arm64]
+    concurrency:
+      group: microsoft-store-draft-submission
+      cancel-in-progress: false
     
     permissions:
       actions: read
       contents: read
     
     steps:
-    - name: Download ${{ matrix.platform }} artifacts
+    - name: Download Store package artifact
       uses: actions/download-artifact@v8
       with:
-        name: StorePackage-${{ matrix.platform }}
+        name: StorePackage
         path: packages
         run-id: ${{ github.event.workflow_run.id }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -47,14 +46,21 @@ jobs:
           --clientId $env:PARTNER_CENTER_CLIENT_ID `
           --clientSecret $env:PARTNER_CENTER_CLIENT_SECRET
     
-    - name: Publish ${{ matrix.platform }} package
+    - name: Create draft Store submission
       shell: pwsh
       env:
         PARTNER_CENTER_STORE_PRODUCT_ID: ${{ secrets.PARTNER_CENTER_STORE_PRODUCT_ID }}
       run: |
-        $msixFile = Get-ChildItem -Path packages -Recurse -Filter "*.msix" | Select-Object -First 1
-        if (-not $msixFile) {
-          throw "No .msix file found for ${{ matrix.platform }}"
+        $packageFiles = Get-ChildItem -Path packages -Recurse -File -Include "*.msixupload", "*.msixbundle"
+        $packageFile = $packageFiles |
+          Where-Object { $_.Name -match "x64.*arm64|arm64.*x64" } |
+          Sort-Object FullName |
+          Select-Object -First 1
+
+        if (-not $packageFile) {
+          $availablePackages = ($packageFiles | ForEach-Object FullName) -join [Environment]::NewLine
+          throw "No combined .msixupload or .msixbundle package found. Available packages:$([Environment]::NewLine)$availablePackages"
         }
-        
-        msstore publish "$($msixFile.FullName)" -id $env:PARTNER_CENTER_STORE_PRODUCT_ID -v
+
+        Write-Host "Creating draft Store submission from $($packageFile.FullName)"
+        msstore publish "$($packageFile.FullName)" -id $env:PARTNER_CENTER_STORE_PRODUCT_ID --noCommit -v
