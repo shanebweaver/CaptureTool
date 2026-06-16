@@ -7,6 +7,7 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <NoWarn>$(NoWarn);RS1035;RS2008</NoWarn>
   </PropertyGroup>
 

@@ -51,15 +51,13 @@ jobs:
       env:
         PARTNER_CENTER_STORE_PRODUCT_ID: ${{ secrets.PARTNER_CENTER_STORE_PRODUCT_ID }}
       run: |
-        $packageFiles = Get-ChildItem -Path packages -Recurse -File -Include "*.msixupload", "*.msixbundle"
-        $packageFile = $packageFiles |
-          Where-Object { $_.Name -match "x64.*arm64|arm64.*x64" } |
-          Sort-Object FullName |
+        $packageFile = Get-ChildItem -Path packages -Recurse -File -Filter "*_bundle.msixupload" |
+          Sort-Object Length -Descending |
           Select-Object -First 1
 
         if (-not $packageFile) {
-          $availablePackages = ($packageFiles | ForEach-Object FullName) -join [Environment]::NewLine
-          throw "No combined .msixupload or .msixbundle package found. Available packages:$([Environment]::NewLine)$availablePackages"
+          $availablePackages = (Get-ChildItem -Path packages -Recurse -File -Include "*.msixupload", "*.msixbundle" | ForEach-Object FullName) -join [Environment]::NewLine
+          throw "No final .msixupload package found. Available packages:$([Environment]::NewLine)$availablePackages"
         }
 
         Write-Host "Creating draft Store submission from $($packageFile.FullName)"
