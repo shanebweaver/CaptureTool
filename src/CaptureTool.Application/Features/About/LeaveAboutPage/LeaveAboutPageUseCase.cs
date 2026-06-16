@@ -30,7 +30,7 @@ public sealed class LeaveAboutPageUseCase : ILeaveAboutPageUseCase
             if (cancellationToken.IsCancellationRequested)
             {
                 _telemetryService.ActivityCanceled(ActivityId);
-                return Task.FromResult(new UseCaseResponse<LeaveAboutPageResponse> { Result = UseCaseResult.Cancelled });
+                return UseCaseResponse<LeaveAboutPageResponse>.CancelledAsync();
             }
 
             if (!_navigationService.TryGoBack())
@@ -39,17 +39,17 @@ public sealed class LeaveAboutPageUseCase : ILeaveAboutPageUseCase
             }
 
             _telemetryService.ActivityCompleted(ActivityId);
-            return Task.FromResult(new UseCaseResponse<LeaveAboutPageResponse> { Value = new LeaveAboutPageResponse() });
+            return UseCaseResponse<LeaveAboutPageResponse>.SuccessAsync(new LeaveAboutPageResponse());
         }
         catch (OperationCanceledException exception)
         {
             _telemetryService.ActivityCanceled(ActivityId, exception.Message);
-            return Task.FromResult(new UseCaseResponse<LeaveAboutPageResponse> { Result = UseCaseResult.Cancelled });
+            return UseCaseResponse<LeaveAboutPageResponse>.CancelledAsync();
         }
         catch (Exception exception)
         {
             _telemetryService.ActivityError(ActivityId, exception);
-            return Task.FromResult(new UseCaseResponse<LeaveAboutPageResponse> { Result = UseCaseResult.Failed });
+            return UseCaseResponse<LeaveAboutPageResponse>.FailureAsync();
         }
     }
 }

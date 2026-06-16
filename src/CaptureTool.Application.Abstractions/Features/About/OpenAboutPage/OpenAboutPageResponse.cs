@@ -1,3 +1,3 @@
 namespace CaptureTool.Application.Abstractions.Features.About.OpenAboutPage;
 
-public sealed record OpenAboutPageResponse(bool Succeeded = true);
+public sealed record OpenAboutPageResponse();
