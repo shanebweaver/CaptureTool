@@ -34,17 +34,37 @@ jobs:
         echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" >> $env:GITHUB_ENV
       shell: pwsh
 
+    - name: Install Store vcpkg dependencies
+      run: |
+        .\vcpkg\vcpkg.exe install `
+          wil:x64-windows `
+          wil:arm64-windows `
+          --classic `
+          --x-install-root="${{ github.workspace }}\vcpkg_installed"
+      shell: pwsh
+
     - name: Restore ARM64 dependencies
-      run: msbuild CaptureTool.slnx /t:Restore /p:Configuration=Release /p:Platform=ARM64
+      run: |
+        $project = "src\CaptureTool.Presentation.Windows.WinUI\CaptureTool.Presentation.Windows.WinUI.csproj"
+        $solutionDir = "${{ github.workspace }}\"
+        msbuild $project /t:Restore /p:Configuration=Release /p:Platform=ARM64 /p:SolutionDir="$solutionDir"
+      shell: pwsh
 
-    - name: Build ARM64 package for Store bundle
-      run: msbuild CaptureTool.slnx /p:Configuration=Release /p:Platform=ARM64 /p:UapAppxPackageBuildMode=StoreUpload /p:AppxBundle=Always /p:AppxBundlePlatforms="arm64|x64"
-
-    - name: Restore x64 dependencies
-      run: msbuild CaptureTool.slnx /t:Restore /p:Configuration=Release /p:Platform=x64
-
-    - name: Build x64 package and combined Store bundle
-      run: msbuild CaptureTool.slnx /p:Configuration=Release /p:Platform=x64 /p:UapAppxPackageBuildMode=StoreUpload /p:AppxBundle=Always /p:AppxBundlePlatforms="arm64|x64"
+    - name: Build combined Store package
+      run: |
+        $project = "src\CaptureTool.Presentation.Windows.WinUI\CaptureTool.Presentation.Windows.WinUI.csproj"
+        $solutionDir = "${{ github.workspace }}\"
+        msbuild $project `
+          /p:Configuration=Release `
+          /p:Platform=ARM64 `
+          /p:SolutionDir="$solutionDir" `
+          /p:GenerateAppxPackageOnBuild=true `
+          /p:UapAppxPackageBuildMode=StoreUpload `
+          /p:AppxBundle=Always `
+          /p:AppxBundlePlatforms="arm64|x64" `
+          /p:AppxPackageDir="${solutionDir}output\x64\" `
+          /p:GenerateTemporaryStoreCertificate=false
+      shell: pwsh
 
     - name: Install coverage tools
       run: |
@@ -90,10 +110,57 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: true
 
+    - name: Verify combined Store package
+      shell: pwsh
+      run: |
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+        $packageFile = Get-ChildItem -Path output\x64 -Recurse -File -Filter "*_bundle.msixupload" -ErrorAction SilentlyContinue |
+          Sort-Object Length -Descending |
+          Select-Object -First 1
+
+        if (-not $packageFile) {
+          throw "No final .msixupload package was found under output\x64."
+        }
+
+        $uploadRoot = Join-Path $env:RUNNER_TEMP "store-upload-inspect"
+        $bundleRoot = Join-Path $env:RUNNER_TEMP "store-bundle-inspect"
+
+        foreach ($path in @($uploadRoot, $bundleRoot)) {
+          Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path $path -Force | Out-Null
+        }
+
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($packageFile.FullName, $uploadRoot)
+        $bundleFile = Get-ChildItem -Path $uploadRoot -Recurse -File -Filter "*.msixbundle" |
+          Select-Object -First 1
+
+        if (-not $bundleFile) {
+          throw "The upload package does not contain an .msixbundle."
+        }
+
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($bundleFile.FullName, $bundleRoot)
+        $bundleEntries = Get-ChildItem -Path $bundleRoot -Recurse -File |
+          Select-Object -ExpandProperty Name
+
+        $bundleEntries | ForEach-Object { Write-Host "Bundle entry: $_" }
+
+        if (-not ($bundleEntries -match "_x64\.msix$")) {
+          throw "The final Store bundle does not contain an x64 app package."
+        }
+
+        if (-not ($bundleEntries -match "_arm64\.msix$")) {
+          throw "The final Store bundle does not contain an ARM64 app package."
+        }
+
+        Write-Host "Verified combined Store package: $($packageFile.FullName)"
+
     - name: Upload Package Artifacts
       uses: actions/upload-artifact@v7
       with:
         name: StorePackage
+        if-no-files-found: error
         path: |
-          output\x64\**\*.msixbundle
-          output\x64\**\*.msixupload
+          output/**/*.msix
+          output/**/*.msixbundle
+          output/**/*.msixupload
