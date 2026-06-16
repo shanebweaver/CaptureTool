@@ -402,7 +402,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private async Task ChangeScreenshotsFolderAsync()
     {
         var response = await _changeScreenshotsFolderAction.ExecuteAsync(new ChangeScreenshotsFolderRequest(), CancellationToken.None);
-        if (!response.Changed)
+        if (response.Value?.Changed != true)
         {
             return;
         }
@@ -418,7 +418,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private async Task ChangeVideosFolderAsync()
     {
         var response = await _changeVideosFolderAction.ExecuteAsync(new ChangeVideosFolderRequest(), CancellationToken.None);
-        if (!response.Changed)
+        if (response.Value?.Changed != true)
         {
             return;
         }

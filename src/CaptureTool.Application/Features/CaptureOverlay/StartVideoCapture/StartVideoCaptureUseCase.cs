@@ -2,18 +2,23 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StartVideoCapture;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.StartVideoCapture;
 
 public sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
 {
+    private const string ActivityId = "StartVideoCapture";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly INavigationService _navigationService;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
 
-    public StartVideoCaptureUseCase(
-        INavigationService navigationService,
-        IVideoCaptureHandler videoCaptureHandler)
+    public StartVideoCaptureUseCase(INavigationService navigationService,
+        IVideoCaptureHandler videoCaptureHandler,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _navigationService = navigationService;
         _videoCaptureHandler = videoCaptureHandler;
     }
@@ -24,16 +29,15 @@ public sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
         return canExecute;
     }
 
-    public Task<StartVideoCaptureResponse> ExecuteAsync(StartVideoCaptureRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<StartVideoCaptureResponse>> ExecuteAsync(StartVideoCaptureRequest request, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            _videoCaptureHandler.StartVideoCapture(request.CaptureArgs);
-            return Task.FromResult(new StartVideoCaptureResponse());
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(new StartVideoCaptureResponse(false));
-        }
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
+            {
+                _videoCaptureHandler.StartVideoCapture(request.CaptureArgs);
+                return new StartVideoCaptureResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

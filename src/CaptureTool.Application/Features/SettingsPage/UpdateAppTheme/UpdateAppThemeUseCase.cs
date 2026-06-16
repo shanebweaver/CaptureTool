@@ -1,15 +1,21 @@
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppTheme;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.SettingsPage.UpdateAppTheme;
 
 public sealed class UpdateAppThemeUseCase : IUpdateAppThemeUseCase
 {
+    private const string ActivityId = "UpdateAppTheme";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private static readonly AppTheme[] SupportedThemes = [AppTheme.Light, AppTheme.Dark, AppTheme.SystemDefault];
     private readonly IThemeService _themes;
 
-    public UpdateAppThemeUseCase(IThemeService themes)
+    public UpdateAppThemeUseCase(IThemeService themes,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _themes = themes;
     }
 
@@ -18,20 +24,19 @@ public sealed class UpdateAppThemeUseCase : IUpdateAppThemeUseCase
         return request.ThemeIndex >= 0 && request.ThemeIndex < SupportedThemes.Length;
     }
 
-    public Task<UpdateAppThemeResponse> ExecuteAsync(UpdateAppThemeRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<UpdateAppThemeResponse>> ExecuteAsync(UpdateAppThemeRequest request, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            if (request.ThemeIndex >= 0 && request.ThemeIndex < SupportedThemes.Length)
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
             {
-                _themes.UpdateCurrentTheme(SupportedThemes[request.ThemeIndex]);
-            }
+                if (request.ThemeIndex >= 0 && request.ThemeIndex < SupportedThemes.Length)
+                {
+                    _themes.UpdateCurrentTheme(SupportedThemes[request.ThemeIndex]);
+                }
 
-            return Task.FromResult(new UpdateAppThemeResponse());
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(new UpdateAppThemeResponse(false));
-        }
+                return new UpdateAppThemeResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

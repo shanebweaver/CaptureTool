@@ -16,7 +16,7 @@ public sealed class UseCaseContractTests
     public async Task MuteAudioCaptureUseCase_ShouldToggleMute()
     {
         var audioCaptureHandler = new Mock<IAudioCaptureHandler>();
-        var useCase = new MuteAudioCaptureUseCase(audioCaptureHandler.Object);
+        var useCase = new MuteAudioCaptureUseCase(audioCaptureHandler.Object, TestUseCaseExecutor.Instance);
 
         await useCase.ExecuteAsync(new MuteAudioCaptureRequest(), TestContext.CancellationToken);
 
@@ -26,7 +26,7 @@ public sealed class UseCaseContractTests
     [TestMethod]
     public void UpdateAppThemeUseCase_CanExecute_ShouldValidateThemeIndexSynchronously()
     {
-        var useCase = new UpdateAppThemeUseCase(Mock.Of<IThemeService>());
+        var useCase = new UpdateAppThemeUseCase(Mock.Of<IThemeService>(), TestUseCaseExecutor.Instance);
         var conditional = (IConditional<UpdateAppThemeRequest>)useCase;
 
         Assert.IsTrue(conditional.CanExecute(new UpdateAppThemeRequest(0)));
@@ -39,12 +39,12 @@ public sealed class UseCaseContractTests
     public async Task UpdateAppThemeUseCase_ShouldUpdateTheme_WhenIndexIsValid()
     {
         var themes = new Mock<IThemeService>();
-        var useCase = new UpdateAppThemeUseCase(themes.Object);
+        var useCase = new UpdateAppThemeUseCase(themes.Object, TestUseCaseExecutor.Instance);
 
         await useCase.ExecuteAsync(new UpdateAppThemeRequest(1), TestContext.CancellationToken);
 
         themes.Verify(themeService => themeService.UpdateCurrentTheme(AppTheme.Dark), Times.Once);
     }
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext { get; set; } = null!;
 }

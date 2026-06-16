@@ -42,7 +42,8 @@ public class OpenFileUseCaseTests
             fileTypeDetector.Object,
             filePickerService.Object,
             navigationService.Object,
-            storageService.Object);
+            storageService.Object,
+            TestUseCaseExecutor.Instance);
 
         await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
@@ -85,7 +86,8 @@ public class OpenFileUseCaseTests
             fileTypeDetector.Object,
             filePickerService.Object,
             navigationService.Object,
-            storageService.Object);
+            storageService.Object,
+            TestUseCaseExecutor.Instance);
 
         await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
@@ -126,7 +128,8 @@ public class OpenFileUseCaseTests
             fileTypeDetector.Object,
             filePickerService.Object,
             navigationService.Object,
-            storageService.Object);
+            storageService.Object,
+            TestUseCaseExecutor.Instance);
 
         await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
@@ -146,5 +149,5 @@ public class OpenFileUseCaseTests
         return path;
     }
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext { get; set; } = null!;
 }

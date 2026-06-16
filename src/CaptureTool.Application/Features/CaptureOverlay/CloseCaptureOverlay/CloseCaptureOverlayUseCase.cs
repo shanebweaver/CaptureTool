@@ -3,20 +3,25 @@ using CaptureTool.Application.Abstractions.Features.CaptureOverlay.CloseCaptureO
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.CloseCaptureOverlay;
 
 public sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
 {
+    private const string ActivityId = "CloseCaptureOverlay";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly IShowMainWindowUseCase _showMainWindow;
     private readonly INavigationService _navigationService;
 
-    public CloseCaptureOverlayUseCase(
-        IVideoCaptureHandler videoCaptureHandler,
+    public CloseCaptureOverlayUseCase(IVideoCaptureHandler videoCaptureHandler,
         IShowMainWindowUseCase showMainWindow,
-        INavigationService navigationService)
+        INavigationService navigationService,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _videoCaptureHandler = videoCaptureHandler;
         _showMainWindow = showMainWindow;
         _navigationService = navigationService;
@@ -30,20 +35,19 @@ public sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
         return canExecute;
     }
 
-    public async Task<CloseCaptureOverlayResponse> ExecuteAsync(CloseCaptureOverlayRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<CloseCaptureOverlayResponse>> ExecuteAsync(CloseCaptureOverlayRequest request, CancellationToken cancellationToken = default)
     {
-        bool videoCaptureCanceled = TryCancelVideoCapture();
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: async _ =>
+            {
+                bool videoCaptureCanceled = TryCancelVideoCapture();
 
-        try
-        {
-            await _showMainWindow.ExecuteAsync(new ShowMainWindowRequest(), cancellationToken);
-        }
-        catch (Exception)
-        {
-            return new CloseCaptureOverlayResponse(videoCaptureCanceled);
-        }
+                await _showMainWindow.ExecuteAsync(new ShowMainWindowRequest(), cancellationToken);
 
-        return new CloseCaptureOverlayResponse(videoCaptureCanceled);
+                return new CloseCaptureOverlayResponse(videoCaptureCanceled);
+            },
+            cancellationToken: cancellationToken);
     }
 
     private bool TryCancelVideoCapture()

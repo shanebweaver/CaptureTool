@@ -62,8 +62,8 @@ public sealed partial class DiagnosticsViewModel : ViewModelBase
 
     private async Task InitializeAsync()
     {
-        IsLoggingEnabled = (await _getIsLoggingEnabledQuery.ExecuteAsync(new GetIsLoggingEnabledRequest(), CancellationToken.None)).IsEnabled;
-        Logs = string.Join(Environment.NewLine, (await _getCurrentLogsQuery.ExecuteAsync(new GetCurrentLogsRequest(), CancellationToken.None)).Logs.Select(log => log.ToString()));
+        IsLoggingEnabled = (await _getIsLoggingEnabledQuery.ExecuteAsync(new GetIsLoggingEnabledRequest(), CancellationToken.None)).Value?.IsEnabled == true;
+        Logs = string.Join(Environment.NewLine, ((await _getCurrentLogsQuery.ExecuteAsync(new GetCurrentLogsRequest(), CancellationToken.None)).Value?.Logs ?? []).Select(log => log.ToString()));
     }
 
     ~DiagnosticsViewModel()

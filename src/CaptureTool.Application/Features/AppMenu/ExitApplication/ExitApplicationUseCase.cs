@@ -1,14 +1,20 @@
 using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
 using CaptureTool.Application.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.AppMenu.ExitApplication;
 
 public sealed class ExitApplicationUseCase : IExitApplicationUseCase
 {
+    private const string ActivityId = "ExitApplication";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IShutdownHandler _shutdownHandler;
 
-    public ExitApplicationUseCase(IShutdownHandler shutdownHandler)
+    public ExitApplicationUseCase(IShutdownHandler shutdownHandler,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _shutdownHandler = shutdownHandler;
     }
 
@@ -18,16 +24,15 @@ public sealed class ExitApplicationUseCase : IExitApplicationUseCase
         return result;
     }
 
-    public Task<ExitApplicationResponse> ExecuteAsync(ExitApplicationRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<ExitApplicationResponse>> ExecuteAsync(ExitApplicationRequest request, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            _shutdownHandler.Shutdown();
-            return Task.FromResult(new ExitApplicationResponse());
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(new ExitApplicationResponse(false));
-        }
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
+            {
+                _shutdownHandler.Shutdown();
+                return new ExitApplicationResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

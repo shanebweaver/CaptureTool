@@ -310,11 +310,11 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private async Task RefreshAudioInputSourcesAsync()
     {
-        GetAudioInputSourcesResponse response = await _getAudioInputSourcesCommand.ExecuteAsync(new GetAudioInputSourcesRequest(), CancellationToken.None);
+        GetAudioInputSourcesResponse? response = (await _getAudioInputSourcesCommand.ExecuteAsync(new GetAudioInputSourcesRequest(), CancellationToken.None)).Value;
 
         _taskEnvironment.TryExecute(() =>
         {
-            UpdateAudioInputSources(response.Sources, AudioInputSourcesChangeReason.EnumerationCompleted);
+            UpdateAudioInputSources(response?.Sources ?? [], AudioInputSourcesChangeReason.EnumerationCompleted);
         });
     }
 
@@ -379,16 +379,16 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             return;
         }
 
-        SelectAudioInputSourceResponse response = await _selectAudioInputSourceCommand.ExecuteAsync(
+        SelectAudioInputSourceResponse? response = (await _selectAudioInputSourceCommand.ExecuteAsync(
             new SelectAudioInputSourceRequest(source.Id),
-            CancellationToken.None);
+            CancellationToken.None)).Value;
 
-        if (response.IsAvailable)
+        if (response?.IsAvailable == true)
         {
             SelectedAudioInputSource = source;
             SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(source);
         }
-        else if (response.WasRemoved)
+        else if (response?.WasRemoved == true)
         {
             await RefreshAudioInputSourcesAsync();
         }

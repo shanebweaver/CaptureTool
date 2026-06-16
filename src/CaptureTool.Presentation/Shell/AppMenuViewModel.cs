@@ -121,7 +121,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     private async Task OpenFileAsync()
     {
         var response = await _openFileCommand.ExecuteAsync(new OpenFileRequest(), CancellationToken.None);
-        if (response.Opened)
+        if (response.Value?.Opened == true)
         {
             await RefreshRecentCapturesAsync();
         }
@@ -141,7 +141,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         }
 
         var response = await _openRecentCaptureCommand.ExecuteAsync(new OpenRecentCaptureRequest(model.FilePath), CancellationToken.None);
-        if (!response.Opened)
+        if (response.Value?.Opened != true)
         {
             await RefreshRecentCapturesAsync();
         }
@@ -149,7 +149,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     public async Task RefreshRecentCapturesAsync()
     {
-        var recentCaptures = (await _getRecentCapturesQuery.ExecuteAsync(new GetRecentCapturesRequest(), CancellationToken.None)).Captures;
+        var recentCaptures = (await _getRecentCapturesQuery.ExecuteAsync(new GetRecentCapturesRequest(), CancellationToken.None)).Value?.Captures ?? [];
 
         _recentCaptures.Clear();
         foreach (var recentCapture in recentCaptures)

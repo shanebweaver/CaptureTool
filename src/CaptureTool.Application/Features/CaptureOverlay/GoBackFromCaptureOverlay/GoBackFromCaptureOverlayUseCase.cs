@@ -3,18 +3,23 @@ using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GoBackFromCap
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.GoBackFromCaptureOverlay;
 
 public sealed class GoBackFromCaptureOverlayUseCase : IGoBackFromCaptureOverlayUseCase
 {
+    private const string ActivityId = "GoBackFromCaptureOverlay";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly INavigationService _navigationService;
 
-    public GoBackFromCaptureOverlayUseCase(
-        IVideoCaptureHandler videoCaptureHandler,
-        INavigationService navigationService)
+    public GoBackFromCaptureOverlayUseCase(IVideoCaptureHandler videoCaptureHandler,
+        INavigationService navigationService,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _videoCaptureHandler = videoCaptureHandler;
         _navigationService = navigationService;
     }
@@ -27,23 +32,22 @@ public sealed class GoBackFromCaptureOverlayUseCase : IGoBackFromCaptureOverlayU
         return canExecute;
     }
 
-    public Task<GoBackFromCaptureOverlayResponse> ExecuteAsync(GoBackFromCaptureOverlayRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<GoBackFromCaptureOverlayResponse>> ExecuteAsync(GoBackFromCaptureOverlayRequest request, CancellationToken cancellationToken = default)
     {
-        bool videoCaptureCanceled = TryCancelVideoCapture();
-
-        try
-        {
-            if (!_navigationService.TryGoBack())
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
             {
-                _navigationService.Navigate(NavigationRoute.SelectionOverlay, CaptureOptions.VideoDefault, true);
-            }
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(new GoBackFromCaptureOverlayResponse(videoCaptureCanceled));
-        }
+                bool videoCaptureCanceled = TryCancelVideoCapture();
 
-        return Task.FromResult(new GoBackFromCaptureOverlayResponse(videoCaptureCanceled));
+                if (!_navigationService.TryGoBack())
+                {
+                    _navigationService.Navigate(NavigationRoute.SelectionOverlay, CaptureOptions.VideoDefault, true);
+                }
+
+                return new GoBackFromCaptureOverlayResponse(videoCaptureCanceled);
+            },
+            cancellationToken: cancellationToken);
     }
 
     private bool TryCancelVideoCapture()

@@ -1,51 +1,56 @@
 using CaptureTool.Application.Abstractions.Features.Settings.ClearTempFiles;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.SettingsPage.ClearTempFiles;
 
 public sealed class ClearTempFilesUseCase : IClearTempFilesUseCase
 {
+    private const string ActivityId = "ClearTempFiles";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly ILogService _logService;
     private readonly IStorageService _storageService;
 
-    public ClearTempFilesUseCase(ILogService logService, IStorageService storageService)
+    public ClearTempFilesUseCase(ILogService logService, IStorageService storageService,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _logService = logService;
         _storageService = storageService;
     }
 
     public bool CanExecute(ClearTempFilesRequest request) => true;
 
-    public Task<ClearTempFilesResponse> ExecuteAsync(ClearTempFilesRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<ClearTempFilesResponse>> ExecuteAsync(ClearTempFilesRequest request, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            string tempFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-            foreach (var entry in Directory.EnumerateFileSystemEntries(tempFolderPath))
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
             {
-                try
+                string tempFolderPath = _storageService.GetApplicationTemporaryFolderPath();
+                foreach (var entry in Directory.EnumerateFileSystemEntries(tempFolderPath))
                 {
-                    if (Directory.Exists(entry))
+                    try
                     {
-                        Directory.Delete(entry, true);
+                        if (Directory.Exists(entry))
+                        {
+                            Directory.Delete(entry, true);
+                        }
+                        else
+                        {
+                            File.Delete(entry);
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        File.Delete(entry);
+                        _logService.LogException(ex, $"Failed to delete temporary file or folder: {entry}");
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logService.LogException(ex, $"Failed to delete temporary file or folder: {entry}");
-                }
-            }
 
-            return Task.FromResult(new ClearTempFilesResponse());
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(new ClearTempFilesResponse(false));
-        }
+                return new ClearTempFilesResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

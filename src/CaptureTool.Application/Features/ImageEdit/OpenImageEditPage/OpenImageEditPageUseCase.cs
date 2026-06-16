@@ -1,16 +1,23 @@
 using CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.ImageEdit.OpenImageEditPage;
 
 public sealed class OpenImageEditPageUseCase : IOpenImageEditPageUseCase
 {
-    private readonly INavigationService _navigationService;
+    private const string ActivityId = "OpenImageEditPage";
 
-    public OpenImageEditPageUseCase(INavigationService navigationService)
+    private readonly INavigationService _navigationService;
+    private readonly IUseCaseExecutor _useCaseExecutor;
+
+    public OpenImageEditPageUseCase(
+        INavigationService navigationService,
+        IUseCaseExecutor useCaseExecutor)
     {
         _navigationService = navigationService;
+        _useCaseExecutor = useCaseExecutor;
     }
 
     public bool CanExecute(OpenImageEditPageRequest request)
@@ -18,16 +25,15 @@ public sealed class OpenImageEditPageUseCase : IOpenImageEditPageUseCase
         return true;
     }
 
-    public Task<OpenImageEditPageResponse> ExecuteAsync(OpenImageEditPageRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<OpenImageEditPageResponse>> ExecuteAsync(OpenImageEditPageRequest request, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            _navigationService.Navigate(NavigationRoute.ImageEdit, request.ImageFile);
-            return Task.FromResult(new OpenImageEditPageResponse());
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(new OpenImageEditPageResponse(false));
-        }
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
+            {
+                _navigationService.Navigate(NavigationRoute.ImageEdit, request.ImageFile);
+                return new OpenImageEditPageResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

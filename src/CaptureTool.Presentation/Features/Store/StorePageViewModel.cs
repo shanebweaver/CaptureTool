@@ -67,7 +67,7 @@ public sealed partial class StorePageViewModel : AsyncLoadableViewModelBase
         var cts = _cancellationService.GetLinkedCancellationTokenSource(cancellationToken);
         try
         {
-            IStoreAddOn? addOn = (await _getChromaKeyAddOnQuery.ExecuteAsync(new GetChromaKeyAddOnRequest(), cancellationToken)).AddOn;
+            IStoreAddOn? addOn = (await _getChromaKeyAddOnQuery.ExecuteAsync(new GetChromaKeyAddOnRequest(), cancellationToken)).Value?.AddOn;
 
             if (addOn != null)
             {

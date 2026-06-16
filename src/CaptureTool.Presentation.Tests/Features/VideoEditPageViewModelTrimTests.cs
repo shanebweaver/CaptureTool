@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Presentation.Features.VideoEdit;
@@ -165,7 +166,7 @@ public class VideoEditPageViewModelTrimTests
                 {
                     await videoTrimmer.Object.TrimAsync(request.VideoPath, destinationPath, request.TrimStart.Value, request.TrimEnd.Value, cancellationToken);
                 }
-                return new SaveVideoFileResponse();
+                return UseCaseResponse<SaveVideoFileResponse>.Success(new SaveVideoFileResponse());
             });
 
         return useCase.Object;
@@ -188,11 +189,11 @@ public class VideoEditPageViewModelTrimTests
                     string destinationPath = Path.Combine(storage.Object.GetApplicationTemporaryFolderPath(), storage.Object.GetTemporaryFileName());
                     await videoTrimmer.Object.TrimAsync(request.VideoPath, destinationPath, request.TrimStart.Value, request.TrimEnd.Value, cancellationToken);
                 }
-                return new CopyVideoFileResponse();
+                return UseCaseResponse<CopyVideoFileResponse>.Success(new CopyVideoFileResponse());
             });
 
         return useCase.Object;
     }
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext { get; set; } = null!;
 }

@@ -1,16 +1,23 @@
 using CaptureTool.Application.Abstractions.Features.AudioEdit.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.AudioEdit.OpenAudioEditPage;
 
 public sealed class OpenAudioEditPageUseCase : IOpenAudioEditPageUseCase
 {
-    private readonly INavigationService _navigationService;
+    private const string ActivityId = "OpenAudioEditPage";
 
-    public OpenAudioEditPageUseCase(INavigationService navigationService)
+    private readonly INavigationService _navigationService;
+    private readonly IUseCaseExecutor _useCaseExecutor;
+
+    public OpenAudioEditPageUseCase(
+        INavigationService navigationService,
+        IUseCaseExecutor useCaseExecutor)
     {
         _navigationService = navigationService;
+        _useCaseExecutor = useCaseExecutor;
     }
 
     public bool CanExecute(OpenAudioEditPageRequest request)
@@ -19,16 +26,15 @@ public sealed class OpenAudioEditPageUseCase : IOpenAudioEditPageUseCase
         return canExecute;
     }
 
-    public Task<OpenAudioEditPageResponse> ExecuteAsync(OpenAudioEditPageRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<OpenAudioEditPageResponse>> ExecuteAsync(OpenAudioEditPageRequest request, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            _navigationService.Navigate(NavigationRoute.AudioEdit, request.AudioFile);
-            return Task.FromResult(new OpenAudioEditPageResponse());
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(new OpenAudioEditPageResponse(false));
-        }
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
+            {
+                _navigationService.Navigate(NavigationRoute.AudioEdit, request.AudioFile);
+                return new OpenAudioEditPageResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

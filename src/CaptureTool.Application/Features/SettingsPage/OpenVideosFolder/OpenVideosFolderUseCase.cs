@@ -3,46 +3,51 @@ using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Features.Settings;
 using System.Diagnostics;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.SettingsPage.OpenVideosFolder;
 
 public sealed class OpenVideosFolderUseCase : IOpenVideosFolderUseCase
 {
+    private const string ActivityId = "OpenVideosFolder";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
 
-    public OpenVideosFolderUseCase(ISettingsService settingsService, IStorageService storageService)
+    public OpenVideosFolderUseCase(ISettingsService settingsService, IStorageService storageService,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _settingsService = settingsService;
         _storageService = storageService;
     }
 
     public bool CanExecute(OpenVideosFolderRequest request) => true;
 
-    public Task<OpenVideosFolderResponse> ExecuteAsync(OpenVideosFolderRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<OpenVideosFolderResponse>> ExecuteAsync(OpenVideosFolderRequest request, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var path = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
-            if (string.IsNullOrWhiteSpace(path))
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
             {
-                path = _storageService.GetSystemDefaultVideosFolderPath();
-            }
+                var path = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    path = _storageService.GetSystemDefaultVideosFolderPath();
+                }
 
-            if (Directory.Exists(path))
-            {
-                Process.Start("explorer.exe", $"/open, {path}");
-            }
-            else
-            {
-                return Task.FromResult(new OpenVideosFolderResponse(false));
-            }
+                if (Directory.Exists(path))
+                {
+                    Process.Start("explorer.exe", $"/open, {path}");
+                }
+                else
+                {
+                    return new OpenVideosFolderResponse(false);
+                }
 
-            return Task.FromResult(new OpenVideosFolderResponse());
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(new OpenVideosFolderResponse(false));
-        }
+                return new OpenVideosFolderResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

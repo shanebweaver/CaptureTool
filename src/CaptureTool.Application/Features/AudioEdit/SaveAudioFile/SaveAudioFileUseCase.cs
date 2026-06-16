@@ -1,15 +1,21 @@
 using CaptureTool.Application.Abstractions.Features.AudioEdit.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
 
 public sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
 {
+    private const string ActivityId = "SaveAudioFile";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IFilePickerService _filePickerService;
 
-    public SaveAudioFileUseCase(IFilePickerService filePickerService)
+    public SaveAudioFileUseCase(IFilePickerService filePickerService,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _filePickerService = filePickerService;
     }
 
@@ -20,28 +26,27 @@ public sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
         return canExecute;
     }
 
-    public async Task<SaveAudioFileResponse> ExecuteAsync(SaveAudioFileRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<SaveAudioFileResponse>> ExecuteAsync(SaveAudioFileRequest request, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            string filePath = request.AudioFilePath;
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: async _ =>
             {
-                return new SaveAudioFileResponse(false);
-            }
+                string filePath = request.AudioFilePath;
+                if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                {
+                    return new SaveAudioFileResponse(false);
+                }
 
-            IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music);
-            if (file is null)
-            {
-                return new SaveAudioFileResponse(false);
-            }
+                IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music);
+                if (file is null)
+                {
+                    return new SaveAudioFileResponse(false);
+                }
 
-            File.Copy(filePath, file.FilePath, true);
-            return new SaveAudioFileResponse();
-        }
-        catch (Exception)
-        {
-            return new SaveAudioFileResponse(false);
-        }
+                File.Copy(filePath, file.FilePath, true);
+                return new SaveAudioFileResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

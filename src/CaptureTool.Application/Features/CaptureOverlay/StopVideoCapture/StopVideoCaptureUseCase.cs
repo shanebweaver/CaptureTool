@@ -2,18 +2,23 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StopVideoCapture;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.StopVideoCapture;
 
 public sealed class StopVideoCaptureUseCase : IStopVideoCaptureUseCase
 {
+    private const string ActivityId = "StopVideoCapture";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly INavigationService _navigationService;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
 
-    public StopVideoCaptureUseCase(
-        INavigationService navigationService,
-        IVideoCaptureHandler videoCaptureHandler)
+    public StopVideoCaptureUseCase(INavigationService navigationService,
+        IVideoCaptureHandler videoCaptureHandler,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _navigationService = navigationService;
         _videoCaptureHandler = videoCaptureHandler;
     }
@@ -24,17 +29,16 @@ public sealed class StopVideoCaptureUseCase : IStopVideoCaptureUseCase
         return canExecute;
     }
 
-    public Task<StopVideoCaptureResponse> ExecuteAsync(StopVideoCaptureRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<StopVideoCaptureResponse>> ExecuteAsync(StopVideoCaptureRequest request, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var pendingVideo = _videoCaptureHandler.StopVideoCapture();
-            _navigationService.Navigate(NavigationRoute.VideoEdit, pendingVideo);
-            return Task.FromResult(new StopVideoCaptureResponse());
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(new StopVideoCaptureResponse(false));
-        }
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
+            {
+                var pendingVideo = _videoCaptureHandler.StopVideoCapture();
+                _navigationService.Navigate(NavigationRoute.VideoEdit, pendingVideo);
+                return new StopVideoCaptureResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

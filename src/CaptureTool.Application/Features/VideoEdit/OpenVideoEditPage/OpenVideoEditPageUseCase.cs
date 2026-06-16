@@ -1,28 +1,34 @@
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.VideoEdit.OpenVideoEditPage;
 
 public sealed class OpenVideoEditPageUseCase : IOpenVideoEditPageUseCase
 {
-    private readonly INavigationService _navigationService;
+    private const string ActivityId = "OpenVideoEditPage";
 
-    public OpenVideoEditPageUseCase(INavigationService navigationService)
+    private readonly INavigationService _navigationService;
+    private readonly IUseCaseExecutor _useCaseExecutor;
+
+    public OpenVideoEditPageUseCase(
+        INavigationService navigationService,
+        IUseCaseExecutor useCaseExecutor)
     {
         _navigationService = navigationService;
+        _useCaseExecutor = useCaseExecutor;
     }
 
-    public Task<OpenVideoEditPageResponse> ExecuteAsync(OpenVideoEditPageRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<OpenVideoEditPageResponse>> ExecuteAsync(OpenVideoEditPageRequest request, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            _navigationService.Navigate(NavigationRoute.VideoEdit, request.VideoFile);
-            return Task.FromResult(new OpenVideoEditPageResponse());
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(new OpenVideoEditPageResponse(false));
-        }
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
+            {
+                _navigationService.Navigate(NavigationRoute.VideoEdit, request.VideoFile);
+                return new OpenVideoEditPageResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

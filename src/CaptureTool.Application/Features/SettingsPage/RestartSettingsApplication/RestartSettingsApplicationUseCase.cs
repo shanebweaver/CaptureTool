@@ -1,29 +1,34 @@
 using CaptureTool.Application.Abstractions.Features.Settings.RestartSettingsApplication;
 using CaptureTool.Application.Abstractions.Shutdown;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.SettingsPage.RestartSettingsApplication;
 
 public sealed class RestartSettingsApplicationUseCase : IRestartSettingsApplicationUseCase
 {
+    private const string ActivityId = "RestartSettingsApplication";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IShutdownHandler _shutdownHandler;
 
-    public RestartSettingsApplicationUseCase(IShutdownHandler shutdownHandler)
+    public RestartSettingsApplicationUseCase(IShutdownHandler shutdownHandler,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _shutdownHandler = shutdownHandler;
     }
 
     public bool CanExecute(RestartSettingsApplicationRequest request) => !_shutdownHandler.IsShuttingDown;
 
-    public Task<RestartSettingsApplicationResponse> ExecuteAsync(RestartSettingsApplicationRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<RestartSettingsApplicationResponse>> ExecuteAsync(RestartSettingsApplicationRequest request, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            _shutdownHandler.TryRestart();
-            return Task.FromResult(new RestartSettingsApplicationResponse());
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(new RestartSettingsApplicationResponse(false));
-        }
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
+            {
+                _shutdownHandler.TryRestart();
+                return new RestartSettingsApplicationResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }
