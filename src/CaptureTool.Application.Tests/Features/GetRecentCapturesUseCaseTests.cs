@@ -36,10 +36,11 @@ public sealed class GetRecentCapturesUseCaseTests
             .Setup(detector => detector.DetectFileType(It.IsAny<string>()))
             .Returns(CaptureFileType.Image);
 
-        GetRecentCapturesUseCase useCase = new(storageService.Object, fileTypeDetector.Object);
+        GetRecentCapturesUseCase useCase = new(storageService.Object, fileTypeDetector.Object, TestUseCaseExecutor.Instance);
 
-        GetRecentCapturesResponse response = await useCase.ExecuteAsync(new GetRecentCapturesRequest(), TestContext.CancellationToken);
+        GetRecentCapturesResponse? response = (await useCase.ExecuteAsync(new GetRecentCapturesRequest(), TestContext.CancellationToken)).Value;
 
+        Assert.IsNotNull(response);
         Assert.HasCount(5, response.Captures);
         Assert.AreEqual(recentFilePath, response.Captures[0].FilePath);
         Assert.IsFalse(response.Captures.Any(capture => capture.FilePath == oldFilePath));
@@ -52,5 +53,5 @@ public sealed class GetRecentCapturesUseCaseTests
         return path;
     }
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext { get; set; } = null!;
 }

@@ -4,7 +4,6 @@ using CaptureTool.Application.Abstractions.Features.AudioCapture.PauseAudioCaptu
 using CaptureTool.Application.Abstractions.Features.AudioCapture.StartAudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.StopAudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.ToggleLocalAudioCapture;
-using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
@@ -58,16 +57,15 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         IStopAudioCaptureUseCase stopAction,
         IPauseAudioCaptureUseCase pauseAction,
         IMuteAudioCaptureUseCase muteAction,
-        IToggleLocalAudioCaptureUseCase toggleDesktopAudioAction,
-        ITelemetryService telemetryService)
+        IToggleLocalAudioCaptureUseCase toggleDesktopAudioAction)
     {
         _audioCaptureHandler = audioCaptureHandler;
 
-        StartCommand = startAction.ToRelayCommand(() => new StartAudioCaptureRequest(), telemetryService);
-        StopCommand = stopAction.ToRelayCommand(() => new StopAudioCaptureRequest(), telemetryService);
-        PauseCommand = pauseAction.ToRelayCommand(() => new PauseAudioCaptureRequest(), telemetryService);
-        MuteCommand = muteAction.ToRelayCommand(() => new MuteAudioCaptureRequest(), telemetryService);
-        ToggleDesktopAudioCommand = toggleDesktopAudioAction.ToRelayCommand(() => new ToggleLocalAudioCaptureRequest(), telemetryService);
+        StartCommand = startAction.ToRelayCommand(() => new StartAudioCaptureRequest());
+        StopCommand = stopAction.ToRelayCommand(() => new StopAudioCaptureRequest());
+        PauseCommand = pauseAction.ToRelayCommand(() => new PauseAudioCaptureRequest());
+        MuteCommand = muteAction.ToRelayCommand(() => new MuteAudioCaptureRequest());
+        ToggleDesktopAudioCommand = toggleDesktopAudioAction.ToRelayCommand(() => new ToggleLocalAudioCaptureRequest());
 
         // Subscribe to service events for state synchronization
         _audioCaptureHandler.CaptureStateChanged += OnCaptureStateChanged;

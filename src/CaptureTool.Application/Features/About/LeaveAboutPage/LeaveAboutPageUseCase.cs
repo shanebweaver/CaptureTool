@@ -1,25 +1,38 @@
 using CaptureTool.Application.Abstractions.Features.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.About.LeaveAboutPage;
 
 public sealed class LeaveAboutPageUseCase : ILeaveAboutPageUseCase
 {
-    private readonly INavigationService _navigationService;
+    private const string ActivityId = "LeaveAboutPage";
 
-    public LeaveAboutPageUseCase(INavigationService navigationService)
+    private readonly INavigationService _navigationService;
+    private readonly IUseCaseExecutor _useCaseExecutor;
+
+    public LeaveAboutPageUseCase(
+        INavigationService navigationService,
+        IUseCaseExecutor useCaseExecutor)
     {
         _navigationService = navigationService;
+        _useCaseExecutor = useCaseExecutor;
     }
 
-    public Task<LeaveAboutPageResponse> ExecuteAsync(LeaveAboutPageRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<LeaveAboutPageResponse>> ExecuteAsync(LeaveAboutPageRequest request, CancellationToken cancellationToken = default)
     {
-        if (!_navigationService.TryGoBack())
-        {
-            _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
-        }
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
+            {
+                if (!_navigationService.TryGoBack())
+                {
+                    _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
+                }
 
-        return Task.FromResult(new LeaveAboutPageResponse());
+                return new LeaveAboutPageResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

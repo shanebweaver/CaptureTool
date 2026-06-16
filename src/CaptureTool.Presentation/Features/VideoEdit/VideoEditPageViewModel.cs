@@ -1,6 +1,5 @@
 using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
-using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Presentation.ViewModels;
@@ -78,19 +77,16 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     private readonly ISaveVideoFileUseCase _saveAction;
     private readonly ICopyVideoFileUseCase _copyAction;
-    private readonly ITelemetryService _telemetryService;
 
     public VideoEditPageViewModel(
         ISaveVideoFileUseCase saveAction,
-        ICopyVideoFileUseCase copyAction,
-        ITelemetryService telemetryService)
+        ICopyVideoFileUseCase copyAction)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
-        _telemetryService = telemetryService;
 
-        SaveCommand = new AsyncRelayCommand(SaveAsync);
-        CopyCommand = new AsyncRelayCommand(CopyAsync);
+        SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleTrimModeCommand = new RelayCommand(ToggleTrimMode);
 
         IsVideoReady = false;
@@ -191,48 +187,26 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     private async Task SaveAsync()
     {
-        try
+        if (string.IsNullOrEmpty(VideoPath))
         {
-            if (string.IsNullOrEmpty(VideoPath))
-            {
-                throw new InvalidOperationException("Cannot save video without a valid filepath.");
-            }
+            return;
+        }
 
-            await _saveAction.ExecuteAsync(
-                new SaveVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
-                CancellationToken.None);
-        }
-        catch (OperationCanceledException exception)
-        {
-            _telemetryService.ActivityCanceled(nameof(SaveAsync), exception.Message);
-        }
-        catch (Exception exception)
-        {
-            _telemetryService.ActivityError(nameof(SaveAsync), exception);
-        }
+        await _saveAction.ExecuteAsync(
+            new SaveVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
+            CancellationToken.None);
     }
 
     private async Task CopyAsync()
     {
-        try
+        if (string.IsNullOrEmpty(VideoPath))
         {
-            if (string.IsNullOrEmpty(VideoPath))
-            {
-                throw new InvalidOperationException("Cannot copy video to clipboard without a valid filepath.");
-            }
+            return;
+        }
 
-            await _copyAction.ExecuteAsync(
-                new CopyVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
-                CancellationToken.None);
-        }
-        catch (OperationCanceledException exception)
-        {
-            _telemetryService.ActivityCanceled(nameof(CopyAsync), exception.Message);
-        }
-        catch (Exception exception)
-        {
-            _telemetryService.ActivityError(nameof(CopyAsync), exception);
-        }
+        await _copyAction.ExecuteAsync(
+            new CopyVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
+            CancellationToken.None);
     }
 
     private TimeSpan? GetTrimStartForRequest()

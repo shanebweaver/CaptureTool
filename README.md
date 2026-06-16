@@ -18,6 +18,16 @@ Capture Tool is a lightweight and efficient screen capture utility designed for 
 
 Developed by Shane Weaver
 
+## Building
+
+Use the repository build script for full solution builds:
+
+```powershell
+.\build.ps1
+```
+
+The solution includes C++ projects, so the script uses Visual Studio MSBuild instead of `dotnet build` to resolve the Visual C++ targets reliably.
+
 [![Get it from Microsoft](https://get.microsoft.com/images/en-us%20light.svg)](https://apps.microsoft.com/detail/9n7w6j13c4w0)
 
 ![Home screen](StoreAssets/home_light.png)

@@ -81,9 +81,9 @@ public sealed class UseCaseCommandExtensionsTests
 
     private sealed class SuccessfulUseCase : IUseCase<TestRequest, TestResponse>
     {
-        public Task<TestResponse> ExecuteAsync(TestRequest request, CancellationToken cancellationToken = default)
+        public Task<UseCaseResponse<TestResponse>> ExecuteAsync(TestRequest request, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(new TestResponse());
+            return Task.FromResult(UseCaseResponse<TestResponse>.Success(new TestResponse()));
         }
     }
 
@@ -96,7 +96,7 @@ public sealed class UseCaseCommandExtensionsTests
             _exception = exception;
         }
 
-        public Task<TestResponse> ExecuteAsync(TestRequest request, CancellationToken cancellationToken = default)
+        public Task<UseCaseResponse<TestResponse>> ExecuteAsync(TestRequest request, CancellationToken cancellationToken = default)
         {
             throw _exception;
         }

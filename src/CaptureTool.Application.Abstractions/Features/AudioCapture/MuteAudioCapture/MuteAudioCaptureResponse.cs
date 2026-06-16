@@ -1,3 +1,3 @@
 namespace CaptureTool.Application.Abstractions.Features.AudioCapture.MuteAudioCapture;
 
-public sealed record MuteAudioCaptureResponse;
+public sealed record MuteAudioCaptureResponse(bool Succeeded = true);

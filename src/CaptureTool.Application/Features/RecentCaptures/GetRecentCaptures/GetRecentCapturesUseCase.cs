@@ -2,18 +2,23 @@ using CaptureTool.Application.Abstractions.Features.RecentCaptures;
 using CaptureTool.Application.Abstractions.Features.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.RecentCaptures.GetRecentCaptures;
 
 public sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
 {
+    private const string ActivityId = "GetRecentCaptures";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IStorageService _storageService;
     private readonly IFileTypeDetector _fileTypeDetector;
 
-    public GetRecentCapturesUseCase(
-        IStorageService storageService,
-        IFileTypeDetector fileTypeDetector)
+    public GetRecentCapturesUseCase(IStorageService storageService,
+        IFileTypeDetector fileTypeDetector,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _storageService = storageService;
         _fileTypeDetector = fileTypeDetector;
     }
@@ -23,20 +28,26 @@ public sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
         return true;
     }
 
-    public Task<GetRecentCapturesResponse> ExecuteAsync(GetRecentCapturesRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<GetRecentCapturesResponse>> ExecuteAsync(GetRecentCapturesRequest request, CancellationToken cancellationToken = default)
     {
-        string recentCapturesFolder = _storageService.GetApplicationTemporaryFolderPath();
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
+            {
+                string recentCapturesFolder = _storageService.GetApplicationTemporaryFolderPath();
 
-        IReadOnlyList<RecentCapture> recentCaptures = Directory.GetFiles(recentCapturesFolder, "*.*")
-            .OrderByDescending(File.GetLastWriteTimeUtc)
-            .Take(5)
-            .Where(filePath => !string.IsNullOrEmpty(filePath) && File.Exists(filePath))
-            .Select(filePath => new RecentCapture(
+                IReadOnlyList<RecentCapture> recentCaptures = Directory.GetFiles(recentCapturesFolder, "*.*")
+                .OrderByDescending(File.GetLastWriteTimeUtc)
+                .Take(5)
+                .Where(filePath => !string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                .Select(filePath => new RecentCapture(
                 filePath,
                 Path.GetFileName(filePath),
                 _fileTypeDetector.DetectFileType(filePath)))
-            .ToArray();
+                .ToArray();
 
-        return Task.FromResult(new GetRecentCapturesResponse(recentCaptures));
+                return new GetRecentCapturesResponse(recentCaptures);
+            },
+            cancellationToken: cancellationToken);
     }
 }

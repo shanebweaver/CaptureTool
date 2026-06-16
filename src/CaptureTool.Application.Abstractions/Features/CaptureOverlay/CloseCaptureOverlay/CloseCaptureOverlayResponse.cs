@@ -1,3 +1,3 @@
 namespace CaptureTool.Application.Abstractions.Features.CaptureOverlay.CloseCaptureOverlay;
 
-public sealed record CloseCaptureOverlayResponse;
+public sealed record CloseCaptureOverlayResponse(bool VideoCaptureCanceled = true);

@@ -75,7 +75,6 @@ public sealed class SelectionOverlayWindowViewModelTests
             Mock.Of<IOpenImageEditPageUseCase>(),
             Mock.Of<IOpenCaptureOverlayUseCase>(),
             Mock.Of<IShowMainWindowUseCase>(),
-            Mock.Of<ITelemetryService>(),
             themeService.Object,
             Mock.Of<IShutdownHandler>(),
             Mock.Of<IImageCaptureHandler>(),

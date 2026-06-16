@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>17.0</VCProjectVersion>
+    <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{e576bd23-e4b5-4a1e-a385-87cb932e6d32}</ProjectGuid>
     <RootNamespace>CaptureInterop</RootNamespace>

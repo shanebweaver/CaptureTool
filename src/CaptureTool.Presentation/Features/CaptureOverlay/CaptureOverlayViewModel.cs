@@ -10,7 +10,6 @@ using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StopVideoCapt
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.ToggleVideoCaptureDesktopAudio;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.ToggleVideoCapturePauseResume;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
-using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Shared.Commands;
@@ -34,7 +33,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IAudioInputSelectionFeatureAvailability _audioInputSelectionFeatureAvailability;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
     private readonly ITaskEnvironment _taskEnvironment;
-    private readonly ITelemetryService _telemetryService;
 
     private MonitorCaptureResult? _monitorCaptureResult;
     private Rectangle? _captureArea;
@@ -94,7 +92,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
-    public ObservableCollection<AudioInputSource> AudioInputSources { get; } = [];
+    public ObservableCollection<AudioInputSource> AudioInputSources { get; }
 
     public AudioInputSource? SelectedAudioInputSource
     {
@@ -106,19 +104,13 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         get;
         private set => Set(ref field, value);
-    } = -1;
+    }
 
     public bool IsAudioInputSelectionAvailable
     {
         get;
         private set => Set(ref field, value);
     }
-
-    public string AudioInputSelectionStatus
-    {
-        get;
-        private set => Set(ref field, value);
-    } = "Loading audio inputs";
 
     public IRelayCommand CloseOverlayCommand { get; }
     public IRelayCommand GoBackCommand { get; }
@@ -142,8 +134,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IAudioInputSelectionFeatureAvailability audioInputSelectionFeatureAvailability,
         IThemeService themeService,
         IVideoCaptureHandler videoCaptureHandler,
-        ITaskEnvironment taskEnvironment,
-        ITelemetryService telemetryService)
+        ITaskEnvironment taskEnvironment)
     {
         _startVideoCaptureCommand = startVideoCaptureCommand;
         _stopVideoCaptureCommand = stopVideoCaptureCommand;
@@ -154,19 +145,20 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _audioInputSelectionFeatureAvailability = audioInputSelectionFeatureAvailability;
         _videoCaptureHandler = videoCaptureHandler;
         _taskEnvironment = taskEnvironment;
-        _telemetryService = telemetryService;
 
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
+        SelectedAudioInputSourceIndex = -1;
+        AudioInputSources = [];
 
-        CloseOverlayCommand = closeOverlayCommand.ToRelayCommand(() => new CloseCaptureOverlayRequest(), telemetryService);
-        GoBackCommand = goBackCommand.ToRelayCommand(() => new GoBackFromCaptureOverlayRequest(), telemetryService);
-        StartVideoCaptureCommand = new AsyncRelayCommand(StartVideoCaptureAsync);
-        StopVideoCaptureCommand = new AsyncRelayCommand(StopVideoCaptureAsync);
-        ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand.ToRelayCommand(() => new ToggleVideoCaptureDesktopAudioRequest(), telemetryService);
+        CloseOverlayCommand = closeOverlayCommand.ToRelayCommand(() => new CloseCaptureOverlayRequest());
+        GoBackCommand = goBackCommand.ToRelayCommand(() => new GoBackFromCaptureOverlayRequest());
+        StartVideoCaptureCommand = new AsyncRelayCommand(StartVideoCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        StopVideoCaptureCommand = new AsyncRelayCommand(StopVideoCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand.ToRelayCommand(() => new ToggleVideoCaptureDesktopAudioRequest());
         ToggleAudioInputMuteCommand = new RelayCommand(ToggleAudioInputMute);
-        TogglePauseResumeCommand = new AsyncRelayCommand(TogglePauseResumeAsync);
-        SelectAudioInputSourceCommand = new RelayCommand<AudioInputSource>(SelectAudioInputSource);
+        TogglePauseResumeCommand = new AsyncRelayCommand(TogglePauseResumeAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        SelectAudioInputSourceCommand = new AsyncRelayCommand<AudioInputSource>(SelectAudioInputSourceAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
     }
 
     public override void Load(CaptureOverlayViewModelOptions options)
@@ -226,14 +218,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             _audioInputDetectionService.StartWatching();
             _ = RefreshAudioInputSourcesAsync();
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            _telemetryService.ActivityError(nameof(StartAudioInputDetection), exception);
             AudioInputSources.Clear();
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
             IsAudioInputSelectionAvailable = false;
-            AudioInputSelectionStatus = "Audio inputs unavailable";
         }
     }
 
@@ -248,9 +238,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             {
                 _audioInputDetectionService.StopWatching();
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                _telemetryService.ActivityError(nameof(Dispose), exception);
                 // The capture overlay can still close if the platform watcher is already gone.
             }
         }
@@ -274,111 +263,59 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private async Task StartVideoCaptureAsync()
     {
-        try
+        if (IsRecording || _monitorCaptureResult == null || _captureArea == null)
         {
-            if (!IsRecording && _monitorCaptureResult != null && _captureArea != null)
-            {
-                IsRecording = true;
-                CaptureTime = TimeSpan.Zero;
-                _captureStartTime = DateTime.UtcNow;
-                _pausedDuration = TimeSpan.Zero;
-                _pauseStartTime = null;
-                StartTimer();
-                NewCaptureArgs args = new(_monitorCaptureResult.Value, _captureArea.Value);
+            return;
+        }
 
-                await _startVideoCaptureCommand.ExecuteAsync(new StartVideoCaptureRequest(args), CancellationToken.None);
-            }
-            else
-            {
-                throw new InvalidOperationException("Cannot start video capture. Monitor or capture area is not set.");
-            }
-        }
-        catch (OperationCanceledException exception)
-        {
-            _telemetryService.ActivityCanceled(nameof(StartVideoCaptureAsync), exception.Message);
-        }
-        catch (Exception exception)
-        {
-            _telemetryService.ActivityError(nameof(StartVideoCaptureAsync), exception);
-        }
+        IsRecording = true;
+        CaptureTime = TimeSpan.Zero;
+        _captureStartTime = DateTime.UtcNow;
+        _pausedDuration = TimeSpan.Zero;
+        _pauseStartTime = null;
+        StartTimer();
+        NewCaptureArgs args = new(_monitorCaptureResult.Value, _captureArea.Value);
+
+        await _startVideoCaptureCommand.ExecuteAsync(new StartVideoCaptureRequest(args), CancellationToken.None);
     }
 
     private async Task StopVideoCaptureAsync()
     {
-        try
+        if (!IsRecording)
         {
-            if (IsRecording)
-            {
-                IsRecording = false;
-                StopTimer();
-                await _stopVideoCaptureCommand.ExecuteAsync(new StopVideoCaptureRequest(), CancellationToken.None);
-            }
-            else
-            {
-                throw new InvalidOperationException("Cannot stop video capture. No recording is in progress.");
-            }
+            return;
         }
-        catch (OperationCanceledException exception)
-        {
-            _telemetryService.ActivityCanceled(nameof(StopVideoCaptureAsync), exception.Message);
-        }
-        catch (Exception exception)
-        {
-            _telemetryService.ActivityError(nameof(StopVideoCaptureAsync), exception);
-        }
+
+        IsRecording = false;
+        StopTimer();
+        await _stopVideoCaptureCommand.ExecuteAsync(new StopVideoCaptureRequest(), CancellationToken.None);
     }
 
     private async Task TogglePauseResumeAsync()
     {
-        try
-        {
-            IsPaused = !IsPaused;
+        IsPaused = !IsPaused;
 
-            if (IsPaused)
-            {
-                _pauseStartTime = DateTime.UtcNow;
-            }
-            else if (_pauseStartTime.HasValue)
-            {
-                _pausedDuration += DateTime.UtcNow - _pauseStartTime.Value;
-                _pauseStartTime = null;
-            }
+        if (IsPaused)
+        {
+            _pauseStartTime = DateTime.UtcNow;
+        }
+        else if (_pauseStartTime.HasValue)
+        {
+            _pausedDuration += DateTime.UtcNow - _pauseStartTime.Value;
+            _pauseStartTime = null;
+        }
 
-            await _toggleVideoCapturePauseResumeCommand.ExecuteAsync(new ToggleVideoCapturePauseResumeRequest(), CancellationToken.None);
-        }
-        catch (OperationCanceledException exception)
-        {
-            _telemetryService.ActivityCanceled(nameof(TogglePauseResumeAsync), exception.Message);
-        }
-        catch (Exception exception)
-        {
-            _telemetryService.ActivityError(nameof(TogglePauseResumeAsync), exception);
-        }
+        await _toggleVideoCapturePauseResumeCommand.ExecuteAsync(new ToggleVideoCapturePauseResumeRequest(), CancellationToken.None);
     }
 
     private async Task RefreshAudioInputSourcesAsync()
     {
-        try
-        {
-            GetAudioInputSourcesResponse response = await _getAudioInputSourcesCommand.ExecuteAsync(new GetAudioInputSourcesRequest(), CancellationToken.None);
+        GetAudioInputSourcesResponse? response = (await _getAudioInputSourcesCommand.ExecuteAsync(new GetAudioInputSourcesRequest(), CancellationToken.None)).Value;
 
-            _taskEnvironment.TryExecute(() =>
-            {
-                UpdateAudioInputSources(response.Sources, AudioInputSourcesChangeReason.EnumerationCompleted);
-            });
-        }
-        catch (Exception exception)
+        _taskEnvironment.TryExecute(() =>
         {
-            _telemetryService.ActivityError(nameof(RefreshAudioInputSourcesAsync), exception);
-            _taskEnvironment.TryExecute(() =>
-            {
-                AudioInputSources.Clear();
-                SelectedAudioInputSource = null;
-                SelectedAudioInputSourceIndex = -1;
-                IsAudioInputSelectionAvailable = false;
-                AudioInputSelectionStatus = "Audio inputs unavailable";
-            });
-        }
+            UpdateAudioInputSources(response?.Sources ?? [], AudioInputSourcesChangeReason.EnumerationCompleted);
+        });
     }
 
     private void UpdateAudioInputSources(
@@ -404,7 +341,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         {
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
-            AudioInputSelectionStatus = "No audio inputs found";
             _hasInitializedAudioInputSelection = false;
             return;
         }
@@ -413,10 +349,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(SelectedAudioInputSource);
 
         _hasInitializedAudioInputSelection = true;
-
-        AudioInputSelectionStatus = selectedSourceRemoved
-            ? "Selected audio input was removed"
-            : string.Empty;
     }
 
     private AudioInputSource GetAudioInputSourceToSelect(string? selectedSourceId, bool selectedSourceRemoved)
@@ -440,35 +372,25 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IsAudioInputMuted = !IsAudioInputMuted;
     }
 
-    private async void SelectAudioInputSource(AudioInputSource? source)
+    private async Task SelectAudioInputSourceAsync(AudioInputSource? source)
     {
         if (source == null)
         {
             return;
         }
 
-        try
-        {
-            SelectAudioInputSourceResponse response = await _selectAudioInputSourceCommand.ExecuteAsync(
-                new SelectAudioInputSourceRequest(source.Id),
-                CancellationToken.None);
+        SelectAudioInputSourceResponse? response = (await _selectAudioInputSourceCommand.ExecuteAsync(
+            new SelectAudioInputSourceRequest(source.Id),
+            CancellationToken.None)).Value;
 
-            if (response.IsAvailable)
-            {
-                SelectedAudioInputSource = source;
-                SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(source);
-                AudioInputSelectionStatus = string.Empty;
-            }
-            else if (response.WasRemoved)
-            {
-                AudioInputSelectionStatus = "Selected audio input was removed";
-                await RefreshAudioInputSourcesAsync();
-            }
-        }
-        catch (Exception exception)
+        if (response?.IsAvailable == true)
         {
-            _telemetryService.ActivityError(nameof(SelectAudioInputSource), exception);
-            AudioInputSelectionStatus = "Audio input selection unavailable";
+            SelectedAudioInputSource = source;
+            SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(source);
+        }
+        else if (response?.WasRemoved == true)
+        {
+            await RefreshAudioInputSourcesAsync();
         }
     }
 

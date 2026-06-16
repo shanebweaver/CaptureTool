@@ -3,7 +3,6 @@ using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenCaptureOv
 using CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.Shutdown;
-using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Factories;
@@ -19,7 +18,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly IOpenCaptureOverlayUseCase _openVideoCaptureOverlayCommand;
     private readonly IOpenImageEditPageUseCase _openImageEditCommand;
     private readonly IShowMainWindowUseCase _showMainWindowCommand;
-    private readonly ITelemetryService _telemetryService;
     private readonly IShutdownHandler _shutdownHandler;
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
@@ -158,7 +156,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         IOpenImageEditPageUseCase openImageEditPageCommand,
         IOpenCaptureOverlayUseCase openVideoCaptureOverlayCommand,
         IShowMainWindowUseCase showMainWindowCommand,
-        ITelemetryService telemetryService,
         IThemeService themeService,
         IShutdownHandler shutdownHandler,
         IImageCaptureHandler imageCaptureHandler,
@@ -168,7 +165,6 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         _openImageEditCommand = openImageEditPageCommand;
         _openVideoCaptureOverlayCommand = openVideoCaptureOverlayCommand;
         _showMainWindowCommand = showMainWindowCommand;
-        _telemetryService = telemetryService;
         _shutdownHandler = shutdownHandler;
         _imageCaptureHandler = imageCaptureHandler;
         _captureTypeViewModelFactory = captureTypeViewModelFactory;
@@ -179,8 +175,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         DefaultAppTheme = themeService.DefaultTheme;
         CurrentAppTheme = themeService.CurrentTheme;
 
-        RequestCaptureCommand = new AsyncRelayCommand(RequestCaptureAsync);
-        CloseOverlayCommand = new AsyncRelayCommand(CloseOverlayAsync);
+        RequestCaptureCommand = new AsyncRelayCommand(RequestCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        CloseOverlayCommand = new AsyncRelayCommand(CloseOverlayAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateSelectedCaptureModeCommand = new RelayCommand<(int Index, SelectionUpdateSource Source)>(UpdateSelectedCaptureMode);
         UpdateSelectedCaptureTypeCommand = new RelayCommand<(int Index, SelectionUpdateSource Source)>(UpdateSelectedCaptureType);
         UpdateCaptureAreaCommand = new RelayCommand<Rectangle>(UpdateCaptureArea);
@@ -219,9 +215,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         {
             await _showMainWindowCommand.ExecuteAsync(new ShowMainWindowRequest(), CancellationToken.None);
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            _telemetryService.ActivityError(nameof(CloseOverlayAsync), exception);
             _shutdownHandler.Shutdown();
         }
     }
@@ -310,32 +305,22 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
 
     private async Task RequestCaptureAsync()
     {
-        try
+        if (Monitor == null || CaptureArea == Rectangle.Empty)
         {
-            if (Monitor != null && CaptureArea != Rectangle.Empty)
-            {
-                if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
-                {
-                    NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-                    ImageFile image = _imageCaptureHandler.PerformImageCapture(args);
-                    await _openImageEditCommand.ExecuteAsync(new OpenImageEditPageRequest(image), CancellationToken.None);
+            return;
+        }
 
-                }
-                else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
-                {
-                    CaptureType captureType = GetSelectedCaptureType() ?? CaptureType.FullScreen;
-                    NewCaptureArgs args = new(Monitor.Value, CaptureArea, captureType, GetSelectedWindowHandle(captureType, CaptureArea));
-                    await _openVideoCaptureOverlayCommand.ExecuteAsync(new OpenCaptureOverlayRequest(args), CancellationToken.None);
-                }
-            }
-        }
-        catch (OperationCanceledException exception)
+        if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
         {
-            _telemetryService.ActivityCanceled(nameof(RequestCaptureAsync), exception.Message);
+            NewCaptureArgs args = new(Monitor.Value, CaptureArea);
+            ImageFile image = _imageCaptureHandler.PerformImageCapture(args);
+            await _openImageEditCommand.ExecuteAsync(new OpenImageEditPageRequest(image), CancellationToken.None);
         }
-        catch (Exception exception)
+        else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
         {
-            _telemetryService.ActivityError(nameof(RequestCaptureAsync), exception);
+            CaptureType captureType = GetSelectedCaptureType() ?? CaptureType.FullScreen;
+            NewCaptureArgs args = new(Monitor.Value, CaptureArea, captureType, GetSelectedWindowHandle(captureType, CaptureArea));
+            await _openVideoCaptureOverlayCommand.ExecuteAsync(new OpenCaptureOverlayRequest(args), CancellationToken.None);
         }
     }
 

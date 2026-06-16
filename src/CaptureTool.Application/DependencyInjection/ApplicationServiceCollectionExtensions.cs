@@ -1,3 +1,5 @@
+using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.DependencyInjection;
@@ -7,6 +9,7 @@ public static class ApplicationServiceCollectionExtensions
     public static IServiceCollection AddApplicationServices(this ServiceCollection services)
     {
         services
+            .AddUseCaseServices()
             .AddActivationServices()
             .AddAppMenuUseCases()
             .AddAudioCaptureServices()
@@ -22,6 +25,13 @@ public static class ApplicationServiceCollectionExtensions
             .AddVideoCaptureServices()
             .AddVideoEditUseCases()
             .AddWindowingUseCases();
+
+        return services;
+    }
+
+    private static IServiceCollection AddUseCaseServices(this IServiceCollection services)
+    {
+        services.AddTransient<IUseCaseExecutor, UseCaseExecutor>();
 
         return services;
     }

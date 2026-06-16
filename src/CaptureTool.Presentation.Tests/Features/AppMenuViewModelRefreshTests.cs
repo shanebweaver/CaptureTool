@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.Features.RecentCaptures;
@@ -33,10 +34,10 @@ public sealed class AppMenuViewModelRefreshTests
 
         openFileUseCase
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenFileRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new OpenFileResponse());
+            .ReturnsAsync(UseCaseResponse<OpenFileResponse>.Success(new OpenFileResponse()));
         getRecentCapturesUseCase
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<GetRecentCapturesRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new GetRecentCapturesResponse([recentCapture]));
+            .ReturnsAsync(UseCaseResponse<GetRecentCapturesResponse>.Success(new GetRecentCapturesResponse([recentCapture])));
         fileTypeDetector
             .Setup(detector => detector.DetectFileType(recentCapture.FilePath))
             .Returns(CaptureFileType.Image);
@@ -56,8 +57,7 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IStoreFeatureAvailability>(),
             Mock.Of<IImageCaptureHandler>(),
             Mock.Of<IVideoCaptureHandler>(),
-            recentCaptureFactory.Object,
-            Mock.Of<ITelemetryService>());
+            recentCaptureFactory.Object);
 
         viewModel.OpenFileCommand.Execute(null);
         await viewModel.OpenFileCommand.ExecutionTask!;
