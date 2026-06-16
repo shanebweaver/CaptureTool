@@ -1,3 +1,3 @@
 namespace CaptureTool.Application.Abstractions.Features.Settings.ChangeScreenshotsFolder;
 
-public sealed record ChangeScreenshotsFolderResponse;
+public sealed record ChangeScreenshotsFolderResponse(bool Changed = true);

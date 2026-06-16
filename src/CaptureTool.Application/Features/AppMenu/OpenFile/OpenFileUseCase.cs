@@ -5,56 +5,74 @@ using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.AppMenu.OpenFile;
 
 public sealed class OpenFileUseCase : IOpenFileUseCase
 {
+    private const string ActivityId = "OpenFile";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IFileTypeDetector _fileTypeDetector;
     private readonly IFilePickerService _filePickerService;
     private readonly INavigationService _navigationService;
     private readonly IStorageService _storageService;
 
-    public OpenFileUseCase(
-        IFileTypeDetector fileTypeDetector,
+    public OpenFileUseCase(IFileTypeDetector fileTypeDetector,
         IFilePickerService filePickerService,
         INavigationService navigationService,
-        IStorageService storageService)
+        IStorageService storageService,
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _fileTypeDetector = fileTypeDetector;
         _filePickerService = filePickerService;
         _navigationService = navigationService;
         _storageService = storageService;
     }
 
-    public async Task<OpenFileResponse> ExecuteAsync(OpenFileRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<OpenFileResponse>> ExecuteAsync(OpenFileRequest request, CancellationToken cancellationToken = default)
     {
-        IFile file = await _filePickerService.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures)
-            ?? throw new OperationCanceledException("No file was selected.");
-        cancellationToken.ThrowIfCancellationRequested();
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: async _ =>
+            {
+                IFile? file = await _filePickerService.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures);
+                if (file is null)
+                {
+                    return new OpenFileResponse(false);
+                }
 
-        string temporaryFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-        string filePath = IsFileInFolder(file.FilePath, temporaryFolderPath)
-            ? file.FilePath
-            : CopyFileToFolder(file.FilePath, temporaryFolderPath);
-        MarkFileAsRecentlyOpened(filePath);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return new OpenFileResponse(false);
+                }
 
-        CaptureFileType fileType = _fileTypeDetector.DetectFileType(filePath);
-        switch (fileType)
-        {
-            case CaptureFileType.Image:
-                _navigationService.Navigate(NavigationRoute.ImageEdit, new ImageFile(filePath));
-                break;
+                string temporaryFolderPath = _storageService.GetApplicationTemporaryFolderPath();
+                string filePath = IsFileInFolder(file.FilePath, temporaryFolderPath)
+                ? file.FilePath
+                : CopyFileToFolder(file.FilePath, temporaryFolderPath);
+                MarkFileAsRecentlyOpened(filePath);
 
-            case CaptureFileType.Video:
-                _navigationService.Navigate(NavigationRoute.VideoEdit, new VideoFile(filePath));
-                break;
+                CaptureFileType fileType = _fileTypeDetector.DetectFileType(filePath);
+                switch (fileType)
+                {
+                    case CaptureFileType.Image:
+                        _navigationService.Navigate(NavigationRoute.ImageEdit, new ImageFile(filePath));
+                        break;
 
-            default:
-                throw new InvalidOperationException($"Unknown file type: {fileType}");
-        }
+                    case CaptureFileType.Video:
+                        _navigationService.Navigate(NavigationRoute.VideoEdit, new VideoFile(filePath));
+                        break;
 
-        return new OpenFileResponse();
+                    default:
+                        return new OpenFileResponse(false);
+                }
+
+                return new OpenFileResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 
     private static bool IsFileInFolder(string sourcePath, string folderPath)

@@ -16,7 +16,7 @@ public class StartVideoCaptureUseCaseTests
     {
         var navigationService = new Mock<INavigationService>();
         var videoCaptureHandler = new Mock<IVideoCaptureHandler>();
-        var useCase = new StartVideoCaptureUseCase(navigationService.Object, videoCaptureHandler.Object);
+        var useCase = new StartVideoCaptureUseCase(navigationService.Object, videoCaptureHandler.Object, TestUseCaseExecutor.Instance);
         var args = new NewCaptureArgs(
             new MonitorCaptureResult(
                 1,
@@ -35,5 +35,5 @@ public class StartVideoCaptureUseCaseTests
             Times.Never);
     }
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext { get; set; } = null!;
 }

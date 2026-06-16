@@ -1,3 +1,3 @@
 namespace CaptureTool.Application.Abstractions.Features.Home.ShowHomePage;
 
-public sealed record ShowHomePageResponse;
+public sealed record ShowHomePageResponse(bool Succeeded = true);

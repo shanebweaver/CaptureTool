@@ -1,3 +1,3 @@
 namespace CaptureTool.Application.Abstractions.Features.Settings.UpdateImageAutoCopy;
 
-public sealed record UpdateImageAutoCopyResponse;
+public sealed record UpdateImageAutoCopyResponse(bool Succeeded = true);

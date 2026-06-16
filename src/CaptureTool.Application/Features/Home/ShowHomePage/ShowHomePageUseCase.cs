@@ -1,21 +1,34 @@
 using CaptureTool.Application.Abstractions.Features.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.Home.ShowHomePage;
 
 public sealed class ShowHomePageUseCase : IShowHomePageUseCase
 {
-    private readonly INavigationService _navigationService;
+    private const string ActivityId = "ShowHomePage";
 
-    public ShowHomePageUseCase(INavigationService navigationService)
+    private readonly INavigationService _navigationService;
+    private readonly IUseCaseExecutor _useCaseExecutor;
+
+    public ShowHomePageUseCase(
+        INavigationService navigationService,
+        IUseCaseExecutor useCaseExecutor)
     {
         _navigationService = navigationService;
+        _useCaseExecutor = useCaseExecutor;
     }
 
-    public Task<ShowHomePageResponse> ExecuteAsync(ShowHomePageRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<ShowHomePageResponse>> ExecuteAsync(ShowHomePageRequest request, CancellationToken cancellationToken = default)
     {
-        _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
-        return Task.FromResult(new ShowHomePageResponse());
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: () =>
+            {
+                _navigationService.Navigate(NavigationRoute.Home, clearHistory: true);
+                return new ShowHomePageResponse();
+            },
+            cancellationToken: cancellationToken);
     }
 }

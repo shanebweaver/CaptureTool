@@ -26,13 +26,14 @@ public sealed class AudioInputSourceUseCaseTests
             .Setup(x => x.GetAudioInputSourcesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(sources);
 
-        GetAudioInputSourcesUseCase useCase = new(service.Object);
+        GetAudioInputSourcesUseCase useCase = new(service.Object, TestUseCaseExecutor.Instance);
 
         // Act
-        GetAudioInputSourcesResponse response = await useCase.ExecuteAsync(new GetAudioInputSourcesRequest(), TestContext.CancellationToken);
+        GetAudioInputSourcesResponse? response = (await useCase.ExecuteAsync(new GetAudioInputSourcesRequest(), TestContext.CancellationToken)).Value;
 
         // Assert
-        response.Sources.Should().BeEquivalentTo(sources);
+        response.Should().NotBeNull();
+        response!.Sources.Should().BeEquivalentTo(sources);
     }
 
     [TestMethod]
@@ -49,13 +50,14 @@ public sealed class AudioInputSourceUseCaseTests
             .Setup(x => x.GetAudioInputSourcesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(sources);
 
-        SelectAudioInputSourceUseCase useCase = new(service.Object);
+        SelectAudioInputSourceUseCase useCase = new(service.Object, TestUseCaseExecutor.Instance);
 
         // Act
-        SelectAudioInputSourceResponse response = await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("default"), TestContext.CancellationToken);
+        SelectAudioInputSourceResponse? response = (await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("default"), TestContext.CancellationToken)).Value;
 
         // Assert
-        response.IsAvailable.Should().BeTrue();
+        response.Should().NotBeNull();
+        response!.IsAvailable.Should().BeTrue();
         response.WasRemoved.Should().BeFalse();
     }
 
@@ -68,15 +70,16 @@ public sealed class AudioInputSourceUseCaseTests
             .Setup(x => x.GetAudioInputSourcesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        SelectAudioInputSourceUseCase useCase = new(service.Object);
+        SelectAudioInputSourceUseCase useCase = new(service.Object, TestUseCaseExecutor.Instance);
 
         // Act
-        SelectAudioInputSourceResponse response = await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("missing"), TestContext.CancellationToken);
+        SelectAudioInputSourceResponse? response = (await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("missing"), TestContext.CancellationToken)).Value;
 
         // Assert
-        response.IsAvailable.Should().BeFalse();
+        response.Should().NotBeNull();
+        response!.IsAvailable.Should().BeFalse();
         response.WasRemoved.Should().BeTrue();
     }
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext { get; set; } = null!;
 }

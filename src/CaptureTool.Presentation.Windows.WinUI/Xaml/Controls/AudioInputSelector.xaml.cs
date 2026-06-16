@@ -38,12 +38,6 @@ public sealed partial class AudioInputSelector : UserControlBase
         typeof(AudioInputSelector),
         new PropertyMetadata(false, OnBindablePropertyChanged));
 
-    public static readonly DependencyProperty StatusTextProperty = DependencyProperty.Register(
-        nameof(StatusText),
-        typeof(string),
-        typeof(AudioInputSelector),
-        new PropertyMetadata(string.Empty, OnStatusTextChanged));
-
     public static readonly DependencyProperty SelectionChangedCommandProperty = DependencyProperty.Register(
         nameof(SelectionChangedCommand),
         typeof(ICommand),
@@ -93,14 +87,6 @@ public sealed partial class AudioInputSelector : UserControlBase
         set => Set(IsMutedProperty, value);
     }
 
-    public string StatusText
-    {
-        get => Get<string>(StatusTextProperty);
-        set => Set(StatusTextProperty, value);
-    }
-
-    public bool HasStatusText => !string.IsNullOrWhiteSpace(StatusText);
-
     public ICommand SelectionChangedCommand
     {
         get => Get<ICommand>(SelectionChangedCommandProperty);
@@ -111,15 +97,6 @@ public sealed partial class AudioInputSelector : UserControlBase
     {
         get => Get<ICommand>(ToggleMuteCommandProperty);
         set => Set(ToggleMuteCommandProperty, value);
-    }
-
-    private static void OnStatusTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is AudioInputSelector selector)
-        {
-            selector.RaisePropertyChanged(nameof(StatusText));
-            selector.RaisePropertyChanged(nameof(HasStatusText));
-        }
     }
 
     private static void OnBindablePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

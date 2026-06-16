@@ -1,57 +1,45 @@
 using CaptureTool.Application.Abstractions.Features.Diagnostics.ExportLogs;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture.Files;
 
 namespace CaptureTool.Application.Features.Diagnostics.ExportLogs;
 
 public sealed class ExportLogsUseCase : IExportLogsUseCase
 {
+    private const string ActivityId = "ExportLogs";
+
+    private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IFilePickerService _filePickerService;
     private readonly ILogService _logService;
-    private readonly ITelemetryService _telemetryService;
 
-    public ExportLogsUseCase(
-        IFilePickerService filePickerService,
+    public ExportLogsUseCase(IFilePickerService filePickerService,
         ILogService logService,
-        ITelemetryService telemetryService)
+        IUseCaseExecutor useCaseExecutor)
     {
+        _useCaseExecutor = useCaseExecutor;
         _filePickerService = filePickerService;
         _logService = logService;
-        _telemetryService = telemetryService;
     }
 
-    public async Task<ExportLogsResponse> ExecuteAsync(ExportLogsRequest request, CancellationToken cancellationToken = default)
+    public Task<UseCaseResponse<ExportLogsResponse>> ExecuteAsync(ExportLogsRequest request, CancellationToken cancellationToken = default)
     {
-        IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents);
-        if (file is null)
-        {
-            return new ExportLogsResponse(false);
-        }
+        return _useCaseExecutor.ExecuteAsync(
+            activityId: ActivityId,
+            useCase: async _ =>
+            {
+                IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents);
+                if (file is null || cancellationToken.IsCancellationRequested)
+                {
+                    return new ExportLogsResponse(false);
+                }
 
-        const string activityId = nameof(ExportLogsUseCase);
-        _telemetryService.ActivityInitiated(activityId);
+                string logs = string.Join(Environment.NewLine, _logService.GetLogs().Select(log => log.ToString()));
+                await File.WriteAllTextAsync(file.FilePath, logs, cancellationToken);
 
-        try
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            string logs = string.Join(Environment.NewLine, _logService.GetLogs().Select(log => log.ToString()));
-            await File.WriteAllTextAsync(file.FilePath, logs, cancellationToken);
-
-            _telemetryService.ActivityCompleted(activityId, file.FilePath);
-            return new ExportLogsResponse(true);
-        }
-        catch (OperationCanceledException exception)
-        {
-            _telemetryService.ActivityCanceled(activityId, exception.Message);
-            throw;
-        }
-        catch (Exception exception)
-        {
-            _telemetryService.ActivityError(activityId, exception);
-            throw;
-        }
+                return new ExportLogsResponse(true);
+            },
+            cancellationToken: cancellationToken);
     }
 }

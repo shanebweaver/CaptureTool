@@ -1,3 +1,3 @@
 namespace CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCapture;
 
-public sealed record OpenRecentCaptureResponse;
+public sealed record OpenRecentCaptureResponse(bool Opened = true);

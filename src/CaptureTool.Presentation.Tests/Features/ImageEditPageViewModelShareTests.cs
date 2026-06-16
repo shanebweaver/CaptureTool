@@ -24,7 +24,6 @@ public sealed class ImageEditPageViewModelShareTests
         var localization = Mock.Of<ILocalizationService>();
         var storeService = Mock.Of<IStoreService>();
         var cancellationService = new Mock<ICancellationService>();
-        var telemetry = Mock.Of<ITelemetryService>();
         var printer = Mock.Of<IImageCanvasPrinter>();
         var exporter = new Mock<IImageCanvasExporter>();
         var filePicker = new Mock<IFilePickerService>();
@@ -64,7 +63,6 @@ public sealed class ImageEditPageViewModelShareTests
             localization,
             storeService,
             cancellationService.Object,
-            telemetry,
             printer,
             exporter.Object,
             filePicker.Object,
