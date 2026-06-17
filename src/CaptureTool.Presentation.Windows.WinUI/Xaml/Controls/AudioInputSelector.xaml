@@ -13,16 +13,16 @@
     <Grid ToolTipService.ToolTip="{x:Bind GetToolTipText(IsAvailable, SelectedAudioInputSource), Mode=OneWay}">
         <ToggleSplitButton
             x:Name="AudioInputToggleSplitButton"
-            Width="64"
             Height="32"
-            MinWidth="64"
             AutomationProperties.Name="{x:Bind GetMuteButtonText(IsMuted), Mode=OneWay}"
+            Background="Transparent"
+            BorderBrush="Transparent"
             Click="AudioInputToggleSplitButton_Click"
             IsChecked="{x:Bind IsMuted, Mode=OneWay}"
             IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
             ToolTipService.ToolTip="{x:Bind GetMuteButtonText(IsMuted), Mode=OneWay}">
             <ToggleSplitButton.Content>
-                <Grid Width="20">
+                <Grid>
                     <FontIcon
                         FontFamily="{StaticResource FluentSystemIcons}"
                         Glyph="{StaticResource Mic20Regular}"
