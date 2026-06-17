@@ -47,8 +47,8 @@
                     Glyph="{StaticResource Microphone}"
                     Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsMuted), Mode=OneWay}" />
                 <FontIcon
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="{StaticResource Cancel}"
+                    FontFamily="{StaticResource FluentSystemIcons}"
+                    Glyph="{StaticResource MicOff20Regular}"
                     Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsMuted), Mode=OneWay}" />
             </Grid>
         </Button>
@@ -74,14 +74,13 @@
 
                         <ListView
                             x:Name="AudioInputListView"
-                            MaxHeight="168"
                             Padding="0"
                             Background="Transparent"
                             IsItemClickEnabled="True"
                             ItemContainerStyle="{StaticResource AudioInputListViewItemStyle}"
                             ItemsSource="{x:Bind AudioInputSources, Mode=OneWay}"
-                            ScrollViewer.VerticalScrollBarVisibility="Auto"
-                            ScrollViewer.VerticalScrollMode="Enabled"
+                            ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollMode="Disabled"
                             SelectedIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
                             SelectionChanged="AudioInputListView_SelectionChanged"
                             SelectionMode="Single"
