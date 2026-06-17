@@ -54,9 +54,62 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             new AudioInputSourcesChangedEventArgs(AudioInputSourcesChangeReason.EnumerationCompleted, []));
 
         Assert.IsFalse(context.ViewModel.IsAudioInputSelectionAvailable);
+        Assert.IsTrue(context.ViewModel.IsAudioInputMuted);
         Assert.IsNull(context.ViewModel.SelectedAudioInputSource);
         Assert.AreEqual(-1, context.ViewModel.SelectedAudioInputSourceIndex);
         context.VideoCaptureHandler.Verify(handler => handler.SelectAudioInputSource(null), Times.AtLeastOnce);
+        context.VideoCaptureHandler.Verify(handler => handler.SetIsAudioInputMuted(true), Times.AtLeastOnce);
+    }
+
+    [TestMethod]
+    public void AudioInputSourcesChanged_WhenInputBecomesAvailable_ShouldStayMuted()
+    {
+        AudioInputSource[] sources =
+        [
+            new("default", "Built-in microphone", true)
+        ];
+        TestContext context = CreateViewModel([]);
+
+        context.ViewModel.Load(CreateOptions());
+        context.AudioInputDetection.Raise(
+            service => service.AudioInputSourcesChanged += null!,
+            new AudioInputSourcesChangedEventArgs(AudioInputSourcesChangeReason.EnumerationCompleted, []));
+        context.AudioInputDetection.Raise(
+            service => service.AudioInputSourcesChanged += null!,
+            new AudioInputSourcesChangedEventArgs(AudioInputSourcesChangeReason.Added, sources));
+
+        Assert.IsTrue(context.ViewModel.IsAudioInputSelectionAvailable);
+        Assert.IsTrue(context.ViewModel.IsAudioInputMuted);
+        Assert.AreEqual("default", context.ViewModel.SelectedAudioInputSource?.Id);
+        context.VideoCaptureHandler.Verify(handler => handler.SetIsAudioInputMuted(true), Times.AtLeastOnce);
+    }
+
+    [TestMethod]
+    public void AudioInputSourcesChanged_WhenSelectedInputIsRemoved_ShouldMuteInputSelection()
+    {
+        AudioInputSource[] sources =
+        [
+            new("external", "External microphone", false),
+            new("default", "Built-in microphone", true)
+        ];
+        AudioInputSource[] updatedSources =
+        [
+            new("external", "External microphone", true)
+        ];
+        TestContext context = CreateViewModel(sources);
+
+        context.ViewModel.Load(CreateOptions());
+        context.AudioInputDetection.Raise(
+            service => service.AudioInputSourcesChanged += null!,
+            new AudioInputSourcesChangedEventArgs(AudioInputSourcesChangeReason.EnumerationCompleted, sources));
+        context.AudioInputDetection.Raise(
+            service => service.AudioInputSourcesChanged += null!,
+            new AudioInputSourcesChangedEventArgs(AudioInputSourcesChangeReason.Removed, updatedSources));
+
+        Assert.IsTrue(context.ViewModel.IsAudioInputSelectionAvailable);
+        Assert.IsTrue(context.ViewModel.IsAudioInputMuted);
+        Assert.AreEqual("external", context.ViewModel.SelectedAudioInputSource?.Id);
+        context.VideoCaptureHandler.Verify(handler => handler.SetIsAudioInputMuted(true), Times.AtLeastOnce);
     }
 
     private static TestContext CreateViewModel(IReadOnlyList<AudioInputSource> sources)

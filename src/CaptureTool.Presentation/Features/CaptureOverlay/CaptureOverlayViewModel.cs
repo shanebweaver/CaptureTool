@@ -210,6 +210,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
             IsAudioInputSelectionAvailable = false;
+            SetAudioInputMuted(true);
         }
     }
 
@@ -303,6 +304,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void UpdateAudioInputSources(IReadOnlyList<AudioInputSource> sources)
     {
+        string? selectedAudioInputSourceId = SelectedAudioInputSource?.Id;
         AudioInputSources.Clear();
         foreach (AudioInputSource source in sources)
         {
@@ -316,7 +318,17 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
             _videoCaptureHandler.SelectAudioInputSource(null);
+            SetAudioInputMuted(true);
             return;
+        }
+
+        bool wasSelectedSourceRemoved =
+            !string.IsNullOrWhiteSpace(selectedAudioInputSourceId) &&
+            AudioInputSources.All(source => source.Id != selectedAudioInputSourceId);
+
+        if (wasSelectedSourceRemoved)
+        {
+            SetAudioInputMuted(true);
         }
 
         SelectedAudioInputSource = GetAudioInputSourceToSelect();
@@ -343,8 +355,13 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     private void ToggleAudioInputMute()
     {
-        IsAudioInputMuted = !IsAudioInputMuted;
-        _videoCaptureHandler.SetIsAudioInputMuted(IsAudioInputMuted);
+        SetAudioInputMuted(!IsAudioInputMuted);
+    }
+
+    private void SetAudioInputMuted(bool isMuted)
+    {
+        IsAudioInputMuted = isMuted;
+        _videoCaptureHandler.SetIsAudioInputMuted(isMuted);
     }
 
     private async Task SelectAudioInputSourceAsync(AudioInputSource? source)
