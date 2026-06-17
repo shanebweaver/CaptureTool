@@ -66,7 +66,7 @@
                 <Flyout FlyoutPresenterStyle="{StaticResource AudioInputFlyoutPresenterStyle}" Placement="Bottom">
                     <Grid
                         Width="300"
-                        Height="190"
+                        Height="236"
                         ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -75,7 +75,8 @@
 
                         <ListView
                             x:Name="AudioInputListView"
-                            Height="190"
+                            Height="168"
+                            VerticalAlignment="Top"
                             Padding="0"
                             Background="Transparent"
                             IsItemClickEnabled="True"
@@ -97,10 +98,14 @@
                             </ListView.ItemTemplate>
                         </ListView>
 
-                        <Grid Grid.Column="1" Width="58">
+                        <Grid
+                            Grid.Column="1"
+                            Width="58"
+                            Height="236"
+                            RowSpacing="6">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
+                                <RowDefinition Height="180" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
@@ -110,7 +115,6 @@
                             <Slider
                                 x:Name="VolumeSlider"
                                 Grid.Row="1"
-                                Height="130"
                                 HorizontalAlignment="Center"
                                 Maximum="100"
                                 Minimum="0"
