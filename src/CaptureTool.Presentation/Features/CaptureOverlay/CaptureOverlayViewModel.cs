@@ -42,7 +42,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private DateTime _captureStartTime;
     private TimeSpan _pausedDuration;
     private DateTime? _pauseStartTime;
-    private bool _hasInitializedAudioInputSelection;
+    private const string DefaultAudioInputSuffix = " (Default)";
 
     public bool IsRecording
     {
@@ -86,12 +86,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
-    public int AudioInputVolumePercentage
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
     public bool IsAudioInputSelectionFeatureEnabled
     {
         get;
@@ -124,7 +118,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public IAsyncRelayCommand StopVideoCaptureCommand { get; }
     public IRelayCommand ToggleDesktopAudioCommand { get; }
     public IRelayCommand ToggleAudioInputMuteCommand { get; }
-    public IRelayCommand<int> SetAudioInputVolumeCommand { get; }
     public IAsyncRelayCommand TogglePauseResumeCommand { get; }
     public IRelayCommand<AudioInputSource> SelectAudioInputSourceCommand { get; }
 
@@ -164,7 +157,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         StopVideoCaptureCommand = new AsyncRelayCommand(StopVideoCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand.ToRelayCommand(() => new ToggleVideoCaptureDesktopAudioRequest());
         ToggleAudioInputMuteCommand = new RelayCommand(ToggleAudioInputMute);
-        SetAudioInputVolumeCommand = new RelayCommand<int>(SetAudioInputVolume);
         TogglePauseResumeCommand = new AsyncRelayCommand(TogglePauseResumeAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         SelectAudioInputSourceCommand = new AsyncRelayCommand<AudioInputSource>(SelectAudioInputSourceAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
     }
@@ -177,7 +169,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _videoCaptureHandler.PrepareForVideoCapture();
 
         IsDesktopAudioEnabled = _videoCaptureHandler.IsDesktopAudioEnabled;
-        AudioInputVolumePercentage = _videoCaptureHandler.AudioInputVolumePercentage;
         _videoCaptureHandler.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
 
         IsPaused = _videoCaptureHandler.IsPaused;
@@ -216,7 +207,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         _taskEnvironment.TryExecute(() =>
         {
-            UpdateAudioInputSources(e.Sources, e.Reason, e.AffectedSourceId);
+            UpdateAudioInputSources(e.Sources);
         });
     }
 
@@ -323,25 +314,16 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
         _taskEnvironment.TryExecute(() =>
         {
-            UpdateAudioInputSources(response?.Sources ?? [], AudioInputSourcesChangeReason.EnumerationCompleted);
+            UpdateAudioInputSources(response?.Sources ?? []);
         });
     }
 
-    private void UpdateAudioInputSources(
-        IReadOnlyList<AudioInputSource> sources,
-        AudioInputSourcesChangeReason reason,
-        string? affectedSourceId = null)
+    private void UpdateAudioInputSources(IReadOnlyList<AudioInputSource> sources)
     {
-        string? selectedSourceId = SelectedAudioInputSource?.Id;
-        bool selectedSourceRemoved =
-            reason is AudioInputSourcesChangeReason.Removed &&
-            !string.IsNullOrWhiteSpace(selectedSourceId) &&
-            string.Equals(selectedSourceId, affectedSourceId, StringComparison.OrdinalIgnoreCase);
-
         AudioInputSources.Clear();
         foreach (AudioInputSource source in sources)
         {
-            AudioInputSources.Add(source);
+            AudioInputSources.Add(GetDisplayAudioInputSource(source));
         }
 
         IsAudioInputSelectionAvailable = AudioInputSources.Count > 0;
@@ -351,43 +333,35 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
             _videoCaptureHandler.SelectAudioInputSource(null);
-            _hasInitializedAudioInputSelection = false;
             return;
         }
 
-        SelectedAudioInputSource = GetAudioInputSourceToSelect(selectedSourceId, selectedSourceRemoved);
+        SelectedAudioInputSource = GetAudioInputSourceToSelect();
         SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(SelectedAudioInputSource);
         _videoCaptureHandler.SelectAudioInputSource(SelectedAudioInputSource.Id);
-
-        _hasInitializedAudioInputSelection = true;
     }
 
-    private AudioInputSource GetAudioInputSourceToSelect(string? selectedSourceId, bool selectedSourceRemoved)
+    private AudioInputSource GetAudioInputSourceToSelect()
     {
-        if (_hasInitializedAudioInputSelection && !selectedSourceRemoved)
-        {
-            AudioInputSource? existingSelection = AudioInputSources.FirstOrDefault(source => string.Equals(source.Id, selectedSourceId, StringComparison.OrdinalIgnoreCase));
-            if (existingSelection != null)
-            {
-                return existingSelection;
-            }
-        }
-
         return
             AudioInputSources.FirstOrDefault(source => source.IsDefault) ??
             AudioInputSources[0];
+    }
+
+    private static AudioInputSource GetDisplayAudioInputSource(AudioInputSource source)
+    {
+        if (!source.IsDefault || source.DisplayName.EndsWith(DefaultAudioInputSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            return source;
+        }
+
+        return source with { DisplayName = $"{source.DisplayName}{DefaultAudioInputSuffix}" };
     }
 
     private void ToggleAudioInputMute()
     {
         IsAudioInputMuted = !IsAudioInputMuted;
         _videoCaptureHandler.SetIsAudioInputMuted(IsAudioInputMuted);
-    }
-
-    private void SetAudioInputVolume(int volumePercentage)
-    {
-        AudioInputVolumePercentage = Math.Clamp(volumePercentage, 0, 100);
-        _videoCaptureHandler.SetAudioInputVolume(AudioInputVolumePercentage);
     }
 
     private async Task SelectAudioInputSourceAsync(AudioInputSource? source)

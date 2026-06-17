@@ -97,12 +97,6 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(false, OnAudioInputBindablePropertyChanged));
 
-    public static readonly DependencyProperty AudioInputVolumePercentageProperty = DependencyProperty.Register(
-        nameof(AudioInputVolumePercentage),
-        typeof(int),
-        typeof(CaptureOverlayToolbar),
-        new PropertyMetadata(100, OnAudioInputBindablePropertyChanged));
-
     public static readonly DependencyProperty IsAudioInputSelectionFeatureEnabledProperty = DependencyProperty.Register(
         nameof(IsAudioInputSelectionFeatureEnabled),
         typeof(bool),
@@ -117,12 +111,6 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
 
     public static readonly DependencyProperty ToggleAudioInputMuteCommandProperty = DependencyProperty.Register(
         nameof(ToggleAudioInputMuteCommand),
-        typeof(ICommand),
-        typeof(CaptureOverlayToolbar),
-        new PropertyMetadata(null, OnAudioInputBindablePropertyChanged));
-
-    public static readonly DependencyProperty SetAudioInputVolumeCommandProperty = DependencyProperty.Register(
-        nameof(SetAudioInputVolumeCommand),
         typeof(ICommand),
         typeof(CaptureOverlayToolbar),
         new PropertyMetadata(null, OnAudioInputBindablePropertyChanged));
@@ -232,12 +220,6 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         set => Set(IsAudioInputMutedProperty, value);
     }
 
-    public int AudioInputVolumePercentage
-    {
-        get => Get<int>(AudioInputVolumePercentageProperty);
-        set => Set(AudioInputVolumePercentageProperty, value);
-    }
-
     public bool IsAudioInputSelectionFeatureEnabled
     {
         get => Get<bool>(IsAudioInputSelectionFeatureEnabledProperty);
@@ -254,12 +236,6 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
     {
         get => Get<ICommand>(ToggleAudioInputMuteCommandProperty);
         set => Set(ToggleAudioInputMuteCommandProperty, value);
-    }
-
-    public ICommand SetAudioInputVolumeCommand
-    {
-        get => Get<ICommand>(SetAudioInputVolumeCommandProperty);
-        set => Set(SetAudioInputVolumeCommandProperty, value);
     }
 
     private static void OnAudioInputBindablePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -297,11 +273,6 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
             return nameof(IsAudioInputMuted);
         }
 
-        if (property == AudioInputVolumePercentageProperty)
-        {
-            return nameof(AudioInputVolumePercentage);
-        }
-
         if (property == IsAudioInputSelectionFeatureEnabledProperty)
         {
             return nameof(IsAudioInputSelectionFeatureEnabled);
@@ -310,11 +281,6 @@ public sealed partial class CaptureOverlayToolbar : UserControlBase
         if (property == ToggleAudioInputMuteCommandProperty)
         {
             return nameof(ToggleAudioInputMuteCommand);
-        }
-
-        if (property == SetAudioInputVolumeCommandProperty)
-        {
-            return nameof(SetAudioInputVolumeCommand);
         }
 
         return string.Empty;

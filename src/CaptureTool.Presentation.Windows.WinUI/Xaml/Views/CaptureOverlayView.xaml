@@ -17,7 +17,6 @@
             <controls:CaptureOverlayToolbar
                 x:Name="Toolbar"
                 AudioInputSources="{x:Bind ViewModel.AudioInputSources, Mode=OneWay}"
-                AudioInputVolumePercentage="{x:Bind ViewModel.AudioInputVolumePercentage, Mode=OneWay}"
                 CaptureTime="{x:Bind ViewModel.CaptureTime, Mode=OneWay}"
                 CloseCommand="{x:Bind ViewModel.CloseOverlayCommand}"
                 GoBackCommand="{x:Bind ViewModel.GoBackCommand}"
@@ -30,7 +29,6 @@
                 SelectAudioInputSourceCommand="{x:Bind ViewModel.SelectAudioInputSourceCommand}"
                 SelectedAudioInputSource="{x:Bind ViewModel.SelectedAudioInputSource, Mode=OneWay}"
                 SelectedAudioInputSourceIndex="{x:Bind ViewModel.SelectedAudioInputSourceIndex, Mode=OneWay}"
-                SetAudioInputVolumeCommand="{x:Bind ViewModel.SetAudioInputVolumeCommand}"
                 StartVideoCaptureCommand="{x:Bind ViewModel.StartVideoCaptureCommand}"
                 StopVideoCaptureCommand="{x:Bind ViewModel.StopVideoCaptureCommand}"
                 ToggleAudioInputMuteCommand="{x:Bind ViewModel.ToggleAudioInputMuteCommand}"

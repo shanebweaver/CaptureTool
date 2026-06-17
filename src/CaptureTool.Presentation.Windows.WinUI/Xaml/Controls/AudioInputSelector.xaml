@@ -17,7 +17,6 @@
             <Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="MinHeight" Value="256" />
             <Setter Property="Padding" Value="10" />
         </Style>
         <Style x:Key="AudioInputListViewItemStyle" TargetType="ListViewItem">
@@ -31,7 +30,7 @@
         Width="64"
         Height="32"
         ColumnSpacing="0"
-        ToolTipService.ToolTip="{x:Bind SelectedAudioInputSource.DisplayName, Mode=OneWay}">
+        ToolTipService.ToolTip="{x:Bind GetToolTipText(IsAvailable, SelectedAudioInputSource), Mode=OneWay}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="32" />
             <ColumnDefinition Width="32" />
@@ -66,21 +65,16 @@
             <Button.Flyout>
                 <Flyout
                     FlyoutPresenterStyle="{StaticResource AudioInputFlyoutPresenterStyle}"
-                    Placement="Bottom"
-                    ShouldConstrainToRootBounds="False">
-                    <Grid
-                        Width="300"
-                        Height="236"
-                        ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="58" />
-                        </Grid.ColumnDefinitions>
+                    Placement="Bottom">
+                    <Grid Width="300" RowSpacing="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
                         <ListView
                             x:Name="AudioInputListView"
-                            Height="168"
-                            VerticalAlignment="Top"
+                            MaxHeight="168"
                             Padding="0"
                             Background="Transparent"
                             IsItemClickEnabled="True"
@@ -102,38 +96,21 @@
                             </ListView.ItemTemplate>
                         </ListView>
 
-                        <Grid
-                            Grid.Column="1"
-                            Width="58"
-                            Height="236"
-                            RowSpacing="6">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <SymbolIcon
+                        <Button
+                            Grid.Row="1"
+                            HorizontalAlignment="Stretch"
+                            Click="ChangeDefaultSettingsButton_Click">
+                            <StackPanel
                                 HorizontalAlignment="Center"
-                                Symbol="Volume" />
-                            <Slider
-                                x:Name="VolumeSlider"
-                                Grid.Row="1"
-                                Height="180"
-                                HorizontalAlignment="Center"
-                                Maximum="100"
-                                Minimum="0"
-                                Orientation="Vertical"
-                                StepFrequency="1"
-                                TickFrequency="10"
-                                Value="{x:Bind VolumePercentage, Mode=OneWay}"
-                                ValueChanged="VolumeSlider_ValueChanged" />
-                            <TextBlock
-                                Grid.Row="2"
-                                HorizontalAlignment="Center"
-                                Text="{x:Bind FormatVolume(VolumePercentage), Mode=OneWay}"
-                                TextAlignment="Center" />
-                        </Grid>
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    FontSize="14"
+                                    Glyph="{StaticResource Settings}" />
+                                <TextBlock Text="Change Default in Settings" />
+                            </StackPanel>
+                        </Button>
                     </Grid>
                 </Flyout>
             </Button.Flyout>
