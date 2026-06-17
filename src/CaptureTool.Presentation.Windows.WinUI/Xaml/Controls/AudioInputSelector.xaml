@@ -11,17 +11,16 @@
     d:DataContext="{d:DesignInstance Type=local:AudioInputSelector}"
     mc:Ignorable="d">
     <Grid ToolTipService.ToolTip="{x:Bind GetToolTipText(IsAvailable, SelectedAudioInputSource), Mode=OneWay}">
-        <ToggleSplitButton
-            x:Name="AudioInputToggleSplitButton"
+        <SplitButton
+            x:Name="AudioInputSplitButton"
             Height="32"
             AutomationProperties.Name="{x:Bind GetMuteButtonText(IsMuted), Mode=OneWay}"
             Background="Transparent"
             BorderBrush="Transparent"
-            Click="AudioInputToggleSplitButton_Click"
-            IsChecked="{x:Bind IsMuted, Mode=OneWay}"
+            Click="AudioInputSplitButton_Click"
             IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
             ToolTipService.ToolTip="{x:Bind GetMuteButtonText(IsMuted), Mode=OneWay}">
-            <ToggleSplitButton.Content>
+            <SplitButton.Content>
                 <Grid>
                     <FontIcon
                         FontFamily="{StaticResource FluentSystemIcons}"
@@ -32,9 +31,9 @@
                         Glyph="{StaticResource MicOff20Regular}"
                         Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsMuted), Mode=OneWay}" />
                 </Grid>
-            </ToggleSplitButton.Content>
+            </SplitButton.Content>
 
-            <ToggleSplitButton.Flyout>
+            <SplitButton.Flyout>
                 <Flyout Placement="Bottom" ShouldConstrainToRootBounds="False">
                     <Grid Width="300" RowSpacing="10">
                         <Grid.RowDefinitions>
@@ -83,7 +82,7 @@
                         </Button>
                     </Grid>
                 </Flyout>
-            </ToggleSplitButton.Flyout>
-        </ToggleSplitButton>
+            </SplitButton.Flyout>
+        </SplitButton>
     </Grid>
 </local:UserControlBase>
