@@ -43,8 +43,8 @@
             Style="{StaticResource IconButtonStyle}">
             <Grid>
                 <FontIcon
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="{StaticResource Microphone}"
+                    FontFamily="{StaticResource FluentSystemIcons}"
+                    Glyph="{StaticResource Mic20Regular}"
                     Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsMuted), Mode=OneWay}" />
                 <FontIcon
                     FontFamily="{StaticResource FluentSystemIcons}"
@@ -65,7 +65,8 @@
             <Button.Flyout>
                 <Flyout
                     FlyoutPresenterStyle="{StaticResource AudioInputFlyoutPresenterStyle}"
-                    Placement="Bottom">
+                    Placement="Bottom"
+                    ShouldConstrainToRootBounds="False">
                     <Grid Width="300" RowSpacing="10">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />

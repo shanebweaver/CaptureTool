@@ -207,6 +207,7 @@
     <x:String x:Key="DesktopSpeaker24Regular">&#xE4A5;</x:String>
     <x:String x:Key="DesktopSpeakerOff20Regular">&#xE4A6;</x:String>
     <x:String x:Key="DesktopSpeakerOff24Regular">&#xE4A7;</x:String>
+    <x:String x:Key="Mic20Regular">&#xE7F9;</x:String>
     <x:String x:Key="MicOff20Regular">&#xE7FE;</x:String>
 
     <!--  Segoe Fluent Icons  -->
