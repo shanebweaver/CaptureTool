@@ -14,11 +14,14 @@
     <UserControl.Resources>
         <Style x:Key="AudioInputFlyoutPresenterStyle" TargetType="FlyoutPresenter">
             <Setter Property="Background" Value="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" />
-            <Setter Property="Padding" Value="8" />
+            <Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10" />
         </Style>
         <Style x:Key="AudioInputListViewItemStyle" TargetType="ListViewItem">
-            <Setter Property="MinHeight" Value="36" />
-            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Padding" Value="8,6" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         </Style>
     </UserControl.Resources>
@@ -62,22 +65,24 @@
             <Button.Flyout>
                 <Flyout FlyoutPresenterStyle="{StaticResource AudioInputFlyoutPresenterStyle}" Placement="Bottom">
                     <Grid
-                        Width="280"
-                        Padding="4"
-                        RowSpacing="10">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+                        Width="300"
+                        Height="190"
+                        ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="58" />
+                        </Grid.ColumnDefinitions>
 
                         <ListView
                             x:Name="AudioInputListView"
-                            MaxHeight="220"
+                            Height="190"
                             Padding="0"
                             Background="Transparent"
                             IsItemClickEnabled="True"
                             ItemContainerStyle="{StaticResource AudioInputListViewItemStyle}"
                             ItemsSource="{x:Bind AudioInputSources, Mode=OneWay}"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            ScrollViewer.VerticalScrollMode="Enabled"
                             SelectedIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
                             SelectionChanged="AudioInputListView_SelectionChanged"
                             SelectionMode="Single"
@@ -92,30 +97,33 @@
                             </ListView.ItemTemplate>
                         </ListView>
 
-                        <Grid Grid.Row="1" ColumnSpacing="10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="44" />
-                            </Grid.ColumnDefinitions>
+                        <Grid Grid.Column="1" Width="58">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
                             <SymbolIcon
-                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
                                 Symbol="Volume" />
                             <Slider
                                 x:Name="VolumeSlider"
-                                Grid.Column="1"
+                                Grid.Row="1"
+                                Height="130"
+                                HorizontalAlignment="Center"
                                 Maximum="100"
                                 Minimum="0"
+                                Orientation="Vertical"
                                 StepFrequency="1"
                                 TickFrequency="10"
                                 Value="{x:Bind VolumePercentage, Mode=OneWay}"
                                 ValueChanged="VolumeSlider_ValueChanged" />
                             <TextBlock
-                                Grid.Column="2"
-                                VerticalAlignment="Center"
+                                Grid.Row="2"
+                                HorizontalAlignment="Center"
                                 Text="{x:Bind FormatVolume(VolumePercentage), Mode=OneWay}"
-                                TextAlignment="Right" />
+                                TextAlignment="Center" />
                         </Grid>
                     </Grid>
                 </Flyout>
