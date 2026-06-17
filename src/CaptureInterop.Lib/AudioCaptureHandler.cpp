@@ -33,9 +33,9 @@ AudioCaptureHandler::~AudioCaptureHandler()
 // Initialization and Lifecycle
 // ============================================================================
 
-bool AudioCaptureHandler::Initialize(bool loopback, HRESULT* outHr)
+bool AudioCaptureHandler::Initialize(bool loopback, const wchar_t* deviceId, HRESULT* outHr)
 {
-    if (!m_device.Initialize(loopback, outHr))
+    if (!m_device.Initialize(loopback, deviceId, outHr))
     {
         return false;
     }
@@ -51,6 +51,30 @@ bool AudioCaptureHandler::Initialize(bool loopback, HRESULT* outHr)
         m_silentBuffer.resize(maxBufferSize, 0);
     }
     
+    return true;
+}
+
+bool AudioCaptureHandler::SetInputDevice(bool loopback, const wchar_t* deviceId, HRESULT* outHr)
+{
+    bool wasRunning = m_isRunning.load();
+    bool wasEnabled = m_isEnabled.load();
+
+    Stop();
+    m_sampleRate = 0;
+    m_silentBuffer.clear();
+
+    if (!Initialize(loopback, deviceId, outHr))
+    {
+        return false;
+    }
+
+    m_isEnabled = wasEnabled;
+    if (wasRunning && !Start(outHr))
+    {
+        return false;
+    }
+
+    if (outHr) *outHr = S_OK;
     return true;
 }
 

@@ -22,6 +22,9 @@ public partial class WindowsScreenRecorder : IScreenRecorder
     public CaptureRecorderResult SetAudioCaptureEnabled(bool enabled)
         => CaptureInterop.SetScreenRecordingAudioEnabled(enabled ? 1u : 0u);
 
+    public CaptureRecorderResult SetAudioInputSource(string? sourceId)
+        => CaptureInterop.SetScreenRecordingAudioInputSource(sourceId);
+
     public CaptureRecorderResult RegisterVideoFrameCallback(VideoFrameCallback? callback)
         => CaptureInterop.RegisterVideoFrameCallback(callback);
 

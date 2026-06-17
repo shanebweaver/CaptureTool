@@ -30,7 +30,7 @@ public:
     /// <param name="loopback">True for system audio (loopback), false for microphone input.</param>
     /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
     /// <returns>True if initialization succeeded, false otherwise.</returns>
-    bool Initialize(bool loopback, HRESULT* outHr = nullptr);
+    bool Initialize(bool loopback, const wchar_t* deviceId = nullptr, HRESULT* outHr = nullptr);
     
     /// <summary>
     /// Start audio capture from the initialized device.

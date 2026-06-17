@@ -97,6 +97,11 @@ struct CaptureSessionConfig
     bool audioEnabled;
 
     /// <summary>
+    /// Optional Windows audio input endpoint id. Empty uses the existing default audio source.
+    /// </summary>
+    std::wstring audioInputSourceId;
+
+    /// <summary>
     /// Target video frame rate (FPS). Default is 30.
     /// </summary>
     uint32_t frameRate;
@@ -120,7 +125,8 @@ struct CaptureSessionConfig
         bool audio = false,
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
-        uint32_t audBitrate = 128'000)
+        uint32_t audBitrate = 128'000,
+        std::wstring audioSourceId = L"")
         : targetType(CaptureTargetType::Monitor)
         , hMonitor(monitor)
         , hwnd(nullptr)
@@ -133,6 +139,7 @@ struct CaptureSessionConfig
         , frameRate(fps)
         , videoBitrate(vidBitrate)
         , audioBitrate(audBitrate)
+        , audioInputSourceId(std::move(audioSourceId))
     {
     }
 
@@ -145,7 +152,8 @@ struct CaptureSessionConfig
         bool audio = false,
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
-        uint32_t audBitrate = 128'000)
+        uint32_t audBitrate = 128'000,
+        std::wstring audioSourceId = L"")
         : targetType(CaptureTargetType::Monitor)
         , hMonitor(monitor)
         , hwnd(nullptr)
@@ -158,6 +166,7 @@ struct CaptureSessionConfig
         , frameRate(fps)
         , videoBitrate(vidBitrate)
         , audioBitrate(audBitrate)
+        , audioInputSourceId(std::move(audioSourceId))
     {
     }
 
@@ -177,6 +186,7 @@ struct CaptureSessionConfig
         , frameRate(30)
         , videoBitrate(5'000'000)
         , audioBitrate(128'000)
+        , audioInputSourceId(L"")
     {
     }
 
@@ -186,9 +196,10 @@ struct CaptureSessionConfig
         bool audio = false,
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
-        uint32_t audBitrate = 128'000)
+        uint32_t audBitrate = 128'000,
+        std::wstring audioSourceId = L"")
     {
-        CaptureSessionConfig config(monitor, std::move(path), audio, fps, vidBitrate, audBitrate);
+        CaptureSessionConfig config(monitor, std::move(path), audio, fps, vidBitrate, audBitrate, std::move(audioSourceId));
         config.targetType = CaptureTargetType::Monitor;
         return config;
     }
@@ -199,9 +210,10 @@ struct CaptureSessionConfig
         bool audio = false,
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
-        uint32_t audBitrate = 128'000)
+        uint32_t audBitrate = 128'000,
+        std::wstring audioSourceId = L"")
     {
-        CaptureSessionConfig config(nullptr, std::move(path), audio, fps, vidBitrate, audBitrate);
+        CaptureSessionConfig config(nullptr, std::move(path), audio, fps, vidBitrate, audBitrate, std::move(audioSourceId));
         config.targetType = CaptureTargetType::Window;
         config.hwnd = window;
         return config;
@@ -217,9 +229,10 @@ struct CaptureSessionConfig
         bool audio = false,
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
-        uint32_t audBitrate = 128'000)
+        uint32_t audBitrate = 128'000,
+        std::wstring audioSourceId = L"")
     {
-        CaptureSessionConfig config(monitor, std::move(path), audio, fps, vidBitrate, audBitrate);
+        CaptureSessionConfig config(monitor, std::move(path), audio, fps, vidBitrate, audBitrate, std::move(audioSourceId));
         config.targetType = CaptureTargetType::Rectangle;
         config.sourceLeft = left;
         config.sourceTop = top;

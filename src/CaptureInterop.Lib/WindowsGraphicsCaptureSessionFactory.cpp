@@ -31,7 +31,7 @@ std::unique_ptr<ICaptureSession> WindowsGraphicsCaptureSessionFactory::CreateSes
     }
 
     // Create audio capture source with clock reader
-    auto audioCaptureSource = m_audioCaptureSourceFactory->CreateAudioCaptureSource(mediaClock.get());
+    auto audioCaptureSource = m_audioCaptureSourceFactory->CreateAudioCaptureSource(mediaClock.get(), config.audioInputSourceId);
     if (!audioCaptureSource)
     {
         return nullptr;

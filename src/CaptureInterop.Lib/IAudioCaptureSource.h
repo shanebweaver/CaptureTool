@@ -84,4 +84,10 @@ public:
     /// </summary>
     /// <returns>True if capture is active, false otherwise.</returns>
     virtual bool IsRunning() const = 0;
+
+    /// <summary>
+    /// Switch to another audio input source. Empty source ids restore the default source.
+    /// </summary>
+    /// <returns>True if the source was switched successfully, false otherwise.</returns>
+    virtual bool SetInputDeviceId(const wchar_t* sourceId, HRESULT* outHr = nullptr) = 0;
 };

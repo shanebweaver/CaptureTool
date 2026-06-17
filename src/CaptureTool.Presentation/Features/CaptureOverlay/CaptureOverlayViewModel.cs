@@ -341,12 +341,14 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         {
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
+            _videoCaptureHandler.SelectAudioInputSource(null);
             _hasInitializedAudioInputSelection = false;
             return;
         }
 
         SelectedAudioInputSource = GetAudioInputSourceToSelect(selectedSourceId, selectedSourceRemoved);
         SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(SelectedAudioInputSource);
+        _videoCaptureHandler.SelectAudioInputSource(SelectedAudioInputSource.Id);
 
         _hasInitializedAudioInputSelection = true;
     }
@@ -370,6 +372,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private void ToggleAudioInputMute()
     {
         IsAudioInputMuted = !IsAudioInputMuted;
+        _videoCaptureHandler.SetIsAudioInputMuted(IsAudioInputMuted);
     }
 
     private async Task SelectAudioInputSourceAsync(AudioInputSource? source)

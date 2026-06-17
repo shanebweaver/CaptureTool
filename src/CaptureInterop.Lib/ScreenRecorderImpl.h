@@ -71,6 +71,11 @@ public:
     bool SetAudioCaptureEnabled(bool enabled);
 
     /// <summary>
+    /// Change the audio input source during recording.
+    /// </summary>
+    bool SetAudioInputSource(const wchar_t* sourceId);
+
+    /// <summary>
     /// Set the callback to be invoked when a video frame is ready.
     /// Callback is stored and automatically applied to new sessions.
     /// </summary>

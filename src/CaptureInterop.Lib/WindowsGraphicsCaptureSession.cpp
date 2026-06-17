@@ -495,6 +495,32 @@ void WindowsGraphicsCaptureSession::ToggleAudioCapture(bool enabled)
     }
 }
 
+bool WindowsGraphicsCaptureSession::SetAudioInputSource(const wchar_t* sourceId)
+{
+    if (!m_audioCaptureSource)
+    {
+        return false;
+    }
+
+    HRESULT hr = S_OK;
+    bool wasEnabled = m_audioCaptureSource->IsEnabled();
+    if (!m_audioCaptureSource->SetInputDeviceId(sourceId, &hr))
+    {
+        wchar_t message[256]{};
+        StringCchPrintfW(
+            message,
+            ARRAYSIZE(message),
+            L"[CaptureInterop V1] Audio input source switch failed. HRESULT=0x%08X\r\n",
+            static_cast<unsigned int>(hr));
+        OutputDebugStringW(message);
+        return false;
+    }
+
+    m_audioAvailable = m_audioCaptureSource->GetFormat() != nullptr;
+    m_audioCaptureSource->SetEnabled(wasEnabled);
+    return true;
+}
+
 void WindowsGraphicsCaptureSession::SetVideoFrameCallback(VideoFrameCallback callback)
 {
     try

@@ -51,6 +51,13 @@ public:
     virtual void ToggleAudioCapture(bool enabled) = 0;
 
     /// <summary>
+    /// Change the audio input source for the active recording.
+    /// </summary>
+    /// <param name="sourceId">Audio endpoint id, or an empty string for the default source.</param>
+    /// <returns>True if the source was changed, false otherwise.</returns>
+    virtual bool SetAudioInputSource(const wchar_t* sourceId) = 0;
+
+    /// <summary>
     /// Check if the session is currently active.
     /// </summary>
     /// <returns>True if session is running, false otherwise.</returns>

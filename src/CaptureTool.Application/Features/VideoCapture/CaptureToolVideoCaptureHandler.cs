@@ -30,9 +30,11 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private CaptureState _captureState = CaptureState.Idle;
 
     public bool IsDesktopAudioEnabled { get; private set; }
+    public bool IsAudioInputMuted { get; private set; }
     public bool IsRecording => _captureState == CaptureState.Recording;
     public bool IsFinalizing => _captureState == CaptureState.Finalizing;
     public bool IsPaused { get; private set; }
+    public string? SelectedAudioInputSourceId { get; private set; }
 
     public event EventHandler<IVideoFile>? NewVideoCaptured;
     public event EventHandler<bool>? DesktopAudioStateChanged;
@@ -57,6 +59,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     public void PrepareForVideoCapture()
     {
         IsDesktopAudioEnabled = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
+        IsAudioInputMuted = false;
     }
 
     public void StartVideoCapture(NewCaptureArgs args)
@@ -77,7 +80,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
             var startResult = _screenRecorder.StartRecording(new CaptureRecordingOptions(
                 target,
                 _tempVideoPath,
-                IsDesktopAudioEnabled));
+                ShouldCaptureAudio(),
+                AudioInputSourceId: SelectedAudioInputSourceId));
 
             startResult.EnsureSuccess();
             UpdateCaptureState(CaptureState.Recording);
@@ -179,9 +183,45 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     {
         if (_captureState == CaptureState.Recording)
         {
-            _screenRecorder.SetAudioCaptureEnabled(enabled);
+            _screenRecorder.SetAudioCaptureEnabled(ShouldCaptureAudio());
         }
     }
+
+    public void SetIsAudioInputMuted(bool value)
+    {
+        IsAudioInputMuted = value;
+
+        if (_captureState == CaptureState.Recording)
+        {
+            _screenRecorder.SetAudioCaptureEnabled(ShouldCaptureAudio());
+        }
+    }
+
+    public void SelectAudioInputSource(string? sourceId)
+    {
+        if (string.IsNullOrWhiteSpace(sourceId))
+        {
+            SelectedAudioInputSourceId = null;
+            if (_captureState == CaptureState.Recording)
+            {
+                _screenRecorder.SetAudioInputSource(null);
+                _screenRecorder.SetAudioCaptureEnabled(ShouldCaptureAudio());
+            }
+
+            return;
+        }
+
+        SelectedAudioInputSourceId = sourceId;
+
+        if (_captureState == CaptureState.Recording)
+        {
+            _screenRecorder.SetAudioInputSource(sourceId);
+            _screenRecorder.SetAudioCaptureEnabled(ShouldCaptureAudio());
+        }
+    }
+
+    private bool ShouldCaptureAudio()
+        => !IsAudioInputMuted && (IsDesktopAudioEnabled || !string.IsNullOrWhiteSpace(SelectedAudioInputSourceId));
 
     public void ToggleIsPaused(bool isPaused)
     {

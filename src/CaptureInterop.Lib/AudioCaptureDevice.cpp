@@ -21,8 +21,10 @@ AudioCaptureDevice::~AudioCaptureDevice()
 // Device Initialization
 // ============================================================================
 
-bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr)
+bool AudioCaptureDevice::Initialize(bool loopback, const wchar_t* deviceId, HRESULT* outHr)
 {
+    ReleaseResources();
+
     // Initialize COM for this thread
     HRESULT hr = S_OK;
     if (!m_comInitialized)
@@ -53,13 +55,20 @@ bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr)
         return false;
     }
 
-    // Get default audio endpoint
-    EDataFlow dataFlow = loopback ? eRender : eCapture;
-    hr = m_deviceEnumerator->GetDefaultAudioEndpoint(
-        dataFlow,
-        eConsole,
-        m_device.put()
-    );
+    // Get selected audio endpoint or fall back to the default endpoint.
+    if (deviceId && deviceId[0] != L'\0')
+    {
+        hr = m_deviceEnumerator->GetDevice(deviceId, m_device.put());
+    }
+    else
+    {
+        EDataFlow dataFlow = loopback ? eRender : eCapture;
+        hr = m_deviceEnumerator->GetDefaultAudioEndpoint(
+            dataFlow,
+            eConsole,
+            m_device.put()
+        );
+    }
     if (FAILED(hr))
     {
         if (outHr) *outHr = hr;
