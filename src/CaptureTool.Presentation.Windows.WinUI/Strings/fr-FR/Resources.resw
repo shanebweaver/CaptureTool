@@ -942,4 +942,16 @@ SOFTWARE.
   <data name="CaptureOverlay_Timer.ToolTipService.ToolTip" xml:space="preserve">
     <value>Durée d’enregistrement</value>
   </data>
+  <data name="SelectionOverlay_CaptureModeSegmentedControl.AutomationProperties.Name" xml:space="preserve">
+    <value>Mode de capture</value>
+  </data>
+  <data name="SelectionOverlay_CaptureModeSegmentedControl.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choisir le mode de capture</value>
+  </data>
+  <data name="SelectionOverlay_CaptureTypeComboBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Zone de capture</value>
+  </data>
+  <data name="SelectionOverlay_CaptureTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choisir la zone de capture</value>
+  </data>
 </root>

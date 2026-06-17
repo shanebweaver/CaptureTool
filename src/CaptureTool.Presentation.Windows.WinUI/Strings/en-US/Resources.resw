@@ -1163,4 +1163,16 @@ SOFTWARE.
   <data name="CaptureOverlay_Timer.ToolTipService.ToolTip" xml:space="preserve">
     <value>Recording duration</value>
   </data>
+  <data name="SelectionOverlay_CaptureModeSegmentedControl.AutomationProperties.Name" xml:space="preserve">
+    <value>Capture mode</value>
+  </data>
+  <data name="SelectionOverlay_CaptureModeSegmentedControl.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose capture mode</value>
+  </data>
+  <data name="SelectionOverlay_CaptureTypeComboBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Capture area</value>
+  </data>
+  <data name="SelectionOverlay_CaptureTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose capture area</value>
+  </data>
 </root>

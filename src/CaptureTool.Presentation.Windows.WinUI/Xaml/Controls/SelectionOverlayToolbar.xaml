@@ -26,6 +26,7 @@
         <!--  Capture mode  -->
         <toolkit:Segmented
             x:Name="CaptureModeSegmentedControl"
+            x:Uid="SelectionOverlay_CaptureModeSegmentedControl"
             ItemsSource="{x:Bind SupportedCaptureModes, Mode=OneWay}"
             SelectedIndex="{x:Bind SelectedCaptureModeIndex, Mode=OneWay}"
             SelectionChanged="CaptureModeSegmentedControl_SelectionChanged"
@@ -36,13 +37,15 @@
                     <FontIcon
                         AutomationProperties.Name="{x:Bind AutomationName}"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="{x:Bind local:SelectionOverlayToolbar.GetCaptureModeGlyph(CaptureMode)}" />
+                        Glyph="{x:Bind local:SelectionOverlayToolbar.GetCaptureModeGlyph(CaptureMode)}"
+                        ToolTipService.ToolTip="{x:Bind DisplayName}" />
                 </DataTemplate>
             </toolkit:Segmented.ItemTemplate>
         </toolkit:Segmented>
 
         <!--  Capture type  -->
         <ComboBox
+            x:Uid="SelectionOverlay_CaptureTypeComboBox"
             MinWidth="148"
             Background="Transparent"
             BorderThickness="0"
