@@ -125,6 +125,7 @@ public sealed partial class AudioInputSelector : UserControlBase
         {
             SelectedAudioInputSourceIndex = AudioInputListView.SelectedIndex;
             SelectionChangedCommand.Execute(source);
+            AudioInputFlyoutButton.Flyout.Hide();
             return;
         }
 
