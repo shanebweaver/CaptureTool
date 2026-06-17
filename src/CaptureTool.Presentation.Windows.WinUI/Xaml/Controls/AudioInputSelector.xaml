@@ -41,9 +41,11 @@
 
         <Button
             x:Name="MuteButton"
+            AutomationProperties.Name="{x:Bind GetMuteButtonText(IsMuted), Mode=OneWay}"
             Command="{x:Bind ToggleMuteCommand, Mode=OneWay}"
             IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
-            Style="{StaticResource IconButtonStyle}">
+            Style="{StaticResource IconButtonStyle}"
+            ToolTipService.ToolTip="{x:Bind GetMuteButtonText(IsMuted), Mode=OneWay}">
             <Grid>
                 <FontIcon
                     FontFamily="{StaticResource FluentSystemIcons}"
@@ -58,6 +60,7 @@
 
         <Button
             x:Name="AudioInputFlyoutButton"
+            x:Uid="AudioInputSelector_InputFlyoutButton"
             Grid.Column="1"
             IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
             Style="{StaticResource IconButtonStyle}">
@@ -78,6 +81,7 @@
 
                         <ListView
                             x:Name="AudioInputListView"
+                            x:Uid="AudioInputSelector_InputList"
                             Padding="0"
                             Background="Transparent"
                             IsItemClickEnabled="True"
@@ -100,6 +104,7 @@
                         </ListView>
 
                         <Button
+                            x:Uid="AudioInputSelector_ChangeDefaultSettingsButton"
                             Grid.Row="1"
                             HorizontalAlignment="Stretch"
                             Click="ChangeDefaultSettingsButton_Click">
@@ -111,7 +116,7 @@
                                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                                     FontSize="14"
                                     Glyph="{StaticResource Settings}" />
-                                <TextBlock Text="Change Default in Settings" />
+                                <TextBlock x:Uid="AudioInputSelector_ChangeDefaultSettingsButtonLabel" />
                             </StackPanel>
                         </Button>
                     </Grid>

@@ -879,4 +879,67 @@ SOFTWARE.
     <value>导出日志</value>
     <comment>The label for the button that exports diagnostic logs.</comment>
   </data>
+  <data name="AudioInputSelector_ChangeDefaultSettingsButton.AutomationProperties.Name" xml:space="preserve">
+    <value>在设置中更改默认麦克风</value>
+  </data>
+  <data name="AudioInputSelector_ChangeDefaultSettingsButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>打开声音设置以更改默认麦克风</value>
+  </data>
+  <data name="AudioInputSelector_ChangeDefaultSettingsButtonLabel.Text" xml:space="preserve">
+    <value>在设置中更改默认设备</value>
+  </data>
+  <data name="AudioInputSelector_InputFlyoutButton.AutomationProperties.Name" xml:space="preserve">
+    <value>选择麦克风输入</value>
+  </data>
+  <data name="AudioInputSelector_InputFlyoutButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>选择麦克风输入</value>
+  </data>
+  <data name="AudioInputSelector_InputList.AutomationProperties.Name" xml:space="preserve">
+    <value>麦克风输入设备</value>
+  </data>
+  <data name="AudioInputSelector_MuteButton" xml:space="preserve">
+    <value>将麦克风静音</value>
+  </data>
+  <data name="AudioInputSelector_NoInputDevice" xml:space="preserve">
+    <value>没有输入设备</value>
+  </data>
+  <data name="AudioInputSelector_UnmuteButton" xml:space="preserve">
+    <value>取消麦克风静音</value>
+  </data>
+  <data name="CaptureOverlay_BackButton.AutomationProperties.Name" xml:space="preserve">
+    <value>返回</value>
+  </data>
+  <data name="CaptureOverlay_BackButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>返回</value>
+  </data>
+  <data name="CaptureOverlay_LocalAudioToggleButton.AutomationProperties.Name" xml:space="preserve">
+    <value>系统音频</value>
+  </data>
+  <data name="CaptureOverlay_LocalAudioToggleButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>切换系统音频捕获</value>
+  </data>
+  <data name="CaptureOverlay_PauseResumeButton.AutomationProperties.Name" xml:space="preserve">
+    <value>暂停或继续录制</value>
+  </data>
+  <data name="CaptureOverlay_PauseResumeButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>暂停或继续录制</value>
+  </data>
+  <data name="CaptureOverlay_StartVideoCaptureButton.AutomationProperties.Name" xml:space="preserve">
+    <value>开始录制</value>
+  </data>
+  <data name="CaptureOverlay_StartVideoCaptureButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>开始录制</value>
+  </data>
+  <data name="CaptureOverlay_StopVideoCaptureButton.AutomationProperties.Name" xml:space="preserve">
+    <value>停止录制</value>
+  </data>
+  <data name="CaptureOverlay_StopVideoCaptureButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>停止录制</value>
+  </data>
+  <data name="CaptureOverlay_Timer.AutomationProperties.Name" xml:space="preserve">
+    <value>录制时长</value>
+  </data>
+  <data name="CaptureOverlay_Timer.ToolTipService.ToolTip" xml:space="preserve">
+    <value>录制时长</value>
+  </data>
 </root>

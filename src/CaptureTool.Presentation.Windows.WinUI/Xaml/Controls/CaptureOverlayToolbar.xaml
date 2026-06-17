@@ -21,11 +21,15 @@
         CornerRadius="4">
 
         <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Command="{x:Bind GoBackCommand, Mode=OneWay}" Style="{StaticResource IconButtonStyle}">
+            <Button
+                x:Uid="CaptureOverlay_BackButton"
+                Command="{x:Bind GoBackCommand, Mode=OneWay}"
+                Style="{StaticResource IconButtonStyle}">
                 <SymbolIcon Symbol="Back" />
             </Button>
 
             <Button
+                x:Uid="CaptureOverlay_PauseResumeButton"
                 Command="{x:Bind TogglePauseResumeCommand, Mode=OneWay}"
                 Style="{StaticResource IconButtonStyle}"
                 Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsRecording), Mode=OneWay}">
@@ -37,6 +41,7 @@
 
             <Grid>
                 <Button
+                    x:Uid="CaptureOverlay_StartVideoCaptureButton"
                     MinWidth="100"
                     Background="#AAFF3340"
                     Command="{x:Bind StartVideoCaptureCommand, Mode=OneWay}"
@@ -52,6 +57,7 @@
                     </StackPanel>
                 </Button>
                 <Button
+                    x:Uid="CaptureOverlay_StopVideoCaptureButton"
                     MinWidth="100"
                     Background="#AAFF3340"
                     Command="{x:Bind StopVideoCaptureCommand, Mode=OneWay}"
@@ -68,12 +74,16 @@
                 </Button>
             </Grid>
 
-            <Grid Margin="8,0" VerticalAlignment="Center">
+            <Grid
+                x:Uid="CaptureOverlay_Timer"
+                Margin="8,0"
+                VerticalAlignment="Center">
                 <local:ClockTimer Time="{x:Bind CaptureTime, Mode=OneWay}" />
             </Grid>
 
             <Button
                 x:Name="LocalAudioToggleButton"
+                x:Uid="CaptureOverlay_LocalAudioToggleButton"
                 Command="{x:Bind ToggleLocalAudioCommand, Mode=OneWay}"
                 Style="{StaticResource IconButtonStyle}">
                 <Grid>

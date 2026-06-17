@@ -879,4 +879,67 @@ SOFTWARE.
     <value>Экспортировать журналы</value>
     <comment>The label for the button that exports diagnostic logs.</comment>
   </data>
+  <data name="AudioInputSelector_ChangeDefaultSettingsButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Изменить микрофон по умолчанию в параметрах</value>
+  </data>
+  <data name="AudioInputSelector_ChangeDefaultSettingsButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Открыть параметры звука, чтобы изменить микрофон по умолчанию</value>
+  </data>
+  <data name="AudioInputSelector_ChangeDefaultSettingsButtonLabel.Text" xml:space="preserve">
+    <value>Изменить устройство по умолчанию в параметрах</value>
+  </data>
+  <data name="AudioInputSelector_InputFlyoutButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Выбрать вход микрофона</value>
+  </data>
+  <data name="AudioInputSelector_InputFlyoutButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Выбрать вход микрофона</value>
+  </data>
+  <data name="AudioInputSelector_InputList.AutomationProperties.Name" xml:space="preserve">
+    <value>Устройства ввода микрофона</value>
+  </data>
+  <data name="AudioInputSelector_MuteButton" xml:space="preserve">
+    <value>Отключить микрофон</value>
+  </data>
+  <data name="AudioInputSelector_NoInputDevice" xml:space="preserve">
+    <value>Нет устройства ввода</value>
+  </data>
+  <data name="AudioInputSelector_UnmuteButton" xml:space="preserve">
+    <value>Включить микрофон</value>
+  </data>
+  <data name="CaptureOverlay_BackButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="CaptureOverlay_BackButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Вернуться</value>
+  </data>
+  <data name="CaptureOverlay_LocalAudioToggleButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Системный звук</value>
+  </data>
+  <data name="CaptureOverlay_LocalAudioToggleButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Включить или отключить запись системного звука</value>
+  </data>
+  <data name="CaptureOverlay_PauseResumeButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Приостановить или возобновить запись</value>
+  </data>
+  <data name="CaptureOverlay_PauseResumeButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Приостановить или возобновить запись</value>
+  </data>
+  <data name="CaptureOverlay_StartVideoCaptureButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Начать запись</value>
+  </data>
+  <data name="CaptureOverlay_StartVideoCaptureButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Начать запись</value>
+  </data>
+  <data name="CaptureOverlay_StopVideoCaptureButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Остановить запись</value>
+  </data>
+  <data name="CaptureOverlay_StopVideoCaptureButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Остановить запись</value>
+  </data>
+  <data name="CaptureOverlay_Timer.AutomationProperties.Name" xml:space="preserve">
+    <value>Длительность записи</value>
+  </data>
+  <data name="CaptureOverlay_Timer.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Длительность записи</value>
+  </data>
 </root>
