@@ -129,7 +129,7 @@ public sealed partial class AudioInputSelector : UserControlBase
         {
             SelectedAudioInputSourceIndex = AudioInputListView.SelectedIndex;
             SelectionChangedCommand.Execute(source);
-            AudioInputFlyoutButton.Flyout.Hide();
+            AudioInputToggleSplitButton.Flyout.Hide();
             return;
         }
 
@@ -143,7 +143,15 @@ public sealed partial class AudioInputSelector : UserControlBase
     {
         if (e.ClickedItem is AudioInputSource source && source == SelectedAudioInputSource)
         {
-            AudioInputFlyoutButton.Flyout.Hide();
+            AudioInputToggleSplitButton.Flyout.Hide();
+        }
+    }
+
+    private void AudioInputToggleSplitButton_Click(SplitButton sender, SplitButtonClickEventArgs args)
+    {
+        if (ToggleMuteCommand?.CanExecute(null) == true)
+        {
+            ToggleMuteCommand.Execute(null);
         }
     }
 

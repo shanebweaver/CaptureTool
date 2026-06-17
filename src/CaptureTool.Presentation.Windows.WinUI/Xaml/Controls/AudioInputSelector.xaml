@@ -10,46 +10,31 @@
     xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     d:DataContext="{d:DesignInstance Type=local:AudioInputSelector}"
     mc:Ignorable="d">
-    <Grid
-        Width="64"
-        Height="32"
-        ColumnSpacing="0"
-        ToolTipService.ToolTip="{x:Bind GetToolTipText(IsAvailable, SelectedAudioInputSource), Mode=OneWay}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="32" />
-            <ColumnDefinition Width="32" />
-        </Grid.ColumnDefinitions>
-
-        <Button
-            x:Name="MuteButton"
+    <Grid ToolTipService.ToolTip="{x:Bind GetToolTipText(IsAvailable, SelectedAudioInputSource), Mode=OneWay}">
+        <ToggleSplitButton
+            x:Name="AudioInputToggleSplitButton"
+            Width="64"
+            Height="32"
+            MinWidth="64"
             AutomationProperties.Name="{x:Bind GetMuteButtonText(IsMuted), Mode=OneWay}"
-            Command="{x:Bind ToggleMuteCommand, Mode=OneWay}"
+            Click="AudioInputToggleSplitButton_Click"
+            IsChecked="{x:Bind IsMuted, Mode=OneWay}"
             IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
-            Style="{StaticResource IconButtonStyle}"
             ToolTipService.ToolTip="{x:Bind GetMuteButtonText(IsMuted), Mode=OneWay}">
-            <Grid>
-                <FontIcon
-                    FontFamily="{StaticResource FluentSystemIcons}"
-                    Glyph="{StaticResource Mic20Regular}"
-                    Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsMuted), Mode=OneWay}" />
-                <FontIcon
-                    FontFamily="{StaticResource FluentSystemIcons}"
-                    Glyph="{StaticResource MicOff20Regular}"
-                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsMuted), Mode=OneWay}" />
-            </Grid>
-        </Button>
+            <ToggleSplitButton.Content>
+                <Grid Width="20">
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        Glyph="{StaticResource Mic20Regular}"
+                        Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsMuted), Mode=OneWay}" />
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        Glyph="{StaticResource MicOff20Regular}"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsMuted), Mode=OneWay}" />
+                </Grid>
+            </ToggleSplitButton.Content>
 
-        <Button
-            x:Name="AudioInputFlyoutButton"
-            x:Uid="AudioInputSelector_InputFlyoutButton"
-            Grid.Column="1"
-            IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
-            Style="{StaticResource IconButtonStyle}">
-            <FontIcon
-                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                FontSize="12"
-                Glyph="&#xE70D;" />
-            <Button.Flyout>
+            <ToggleSplitButton.Flyout>
                 <Flyout Placement="Bottom" ShouldConstrainToRootBounds="False">
                     <Grid Width="300" RowSpacing="10">
                         <Grid.RowDefinitions>
@@ -98,7 +83,7 @@
                         </Button>
                     </Grid>
                 </Flyout>
-            </Button.Flyout>
-        </Button>
+            </ToggleSplitButton.Flyout>
+        </ToggleSplitButton>
     </Grid>
 </local:UserControlBase>
