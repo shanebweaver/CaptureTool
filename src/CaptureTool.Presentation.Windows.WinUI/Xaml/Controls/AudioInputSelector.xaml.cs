@@ -54,6 +54,7 @@ public sealed partial class AudioInputSelector : UserControlBase
     public AudioInputSelector()
     {
         InitializeComponent();
+        AudioInputListView.ItemClick += AudioInputListView_ItemClick;
     }
 
     private bool _isApplyingSelection;
@@ -132,6 +133,14 @@ public sealed partial class AudioInputSelector : UserControlBase
         if (e.AddedItems.Count == 0 && e.RemovedItems.Count > 0)
         {
             RestoreSelectedAudioInputSourceIfStillAvailable();
+        }
+    }
+
+    private void AudioInputListView_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is AudioInputSource source && source == SelectedAudioInputSource)
+        {
+            AudioInputFlyoutButton.Flyout.Hide();
         }
     }
 
