@@ -58,6 +58,11 @@ public:
     virtual bool SetAudioInputSource(const wchar_t* sourceId) = 0;
 
     /// <summary>
+    /// Set the microphone/input volume percentage for the active recording.
+    /// </summary>
+    virtual void SetAudioInputVolume(uint32_t volumePercentage) = 0;
+
+    /// <summary>
     /// Check if the session is currently active.
     /// </summary>
     /// <returns>True if session is running, false otherwise.</returns>

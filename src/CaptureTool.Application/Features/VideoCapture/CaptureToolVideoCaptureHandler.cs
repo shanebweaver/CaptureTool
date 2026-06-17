@@ -31,6 +31,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     public bool IsDesktopAudioEnabled { get; private set; }
     public bool IsAudioInputMuted { get; private set; }
+    public int AudioInputVolumePercentage { get; private set; } = 100;
     public bool IsRecording => _captureState == CaptureState.Recording;
     public bool IsFinalizing => _captureState == CaptureState.Finalizing;
     public bool IsPaused { get; private set; }
@@ -60,6 +61,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     {
         IsDesktopAudioEnabled = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
         IsAudioInputMuted = false;
+        AudioInputVolumePercentage = 100;
     }
 
     public void StartVideoCapture(NewCaptureArgs args)
@@ -81,7 +83,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
                 target,
                 _tempVideoPath,
                 ShouldCaptureAudio(),
-                AudioInputSourceId: SelectedAudioInputSourceId));
+                AudioInputSourceId: SelectedAudioInputSourceId,
+                AudioInputVolumePercentage: AudioInputVolumePercentage));
 
             startResult.EnsureSuccess();
             UpdateCaptureState(CaptureState.Recording);
@@ -217,6 +220,16 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         {
             _screenRecorder.SetAudioInputSource(sourceId);
             _screenRecorder.SetAudioCaptureEnabled(ShouldCaptureAudio());
+        }
+    }
+
+    public void SetAudioInputVolume(int volumePercentage)
+    {
+        AudioInputVolumePercentage = Math.Clamp(volumePercentage, 0, 100);
+
+        if (_captureState == CaptureState.Recording)
+        {
+            _screenRecorder.SetAudioInputVolume(AudioInputVolumePercentage);
         }
     }
 

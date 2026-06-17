@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Audio;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Collections;
 using System.Windows.Input;
 
@@ -38,6 +39,12 @@ public sealed partial class AudioInputSelector : UserControlBase
         typeof(AudioInputSelector),
         new PropertyMetadata(false, OnBindablePropertyChanged));
 
+    public static readonly DependencyProperty VolumePercentageProperty = DependencyProperty.Register(
+        nameof(VolumePercentage),
+        typeof(int),
+        typeof(AudioInputSelector),
+        new PropertyMetadata(100, OnBindablePropertyChanged));
+
     public static readonly DependencyProperty SelectionChangedCommandProperty = DependencyProperty.Register(
         nameof(SelectionChangedCommand),
         typeof(ICommand),
@@ -50,12 +57,19 @@ public sealed partial class AudioInputSelector : UserControlBase
         typeof(AudioInputSelector),
         new PropertyMetadata(null, OnBindablePropertyChanged));
 
+    public static readonly DependencyProperty SetVolumeCommandProperty = DependencyProperty.Register(
+        nameof(SetVolumeCommand),
+        typeof(ICommand),
+        typeof(AudioInputSelector),
+        new PropertyMetadata(null, OnBindablePropertyChanged));
+
     public AudioInputSelector()
     {
         InitializeComponent();
     }
 
     private bool _isApplyingSelection;
+    private bool _isApplyingVolume;
 
     public IEnumerable AudioInputSources
     {
@@ -87,6 +101,12 @@ public sealed partial class AudioInputSelector : UserControlBase
         set => Set(IsMutedProperty, value);
     }
 
+    public int VolumePercentage
+    {
+        get => Get<int>(VolumePercentageProperty);
+        set => Set(VolumePercentageProperty, value);
+    }
+
     public ICommand SelectionChangedCommand
     {
         get => Get<ICommand>(SelectionChangedCommandProperty);
@@ -99,6 +119,12 @@ public sealed partial class AudioInputSelector : UserControlBase
         set => Set(ToggleMuteCommandProperty, value);
     }
 
+    public ICommand SetVolumeCommand
+    {
+        get => Get<ICommand>(SetVolumeCommandProperty);
+        set => Set(SetVolumeCommandProperty, value);
+    }
+
     private static void OnBindablePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is AudioInputSelector selector)
@@ -109,10 +135,15 @@ public sealed partial class AudioInputSelector : UserControlBase
             {
                 selector.ApplySelectedAudioInputSourceIndex();
             }
+
+            if (e.Property == VolumePercentageProperty)
+            {
+                selector.ApplyVolumePercentage();
+            }
         }
     }
 
-    private void AudioInputComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void AudioInputListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isApplyingSelection)
         {
@@ -122,8 +153,28 @@ public sealed partial class AudioInputSelector : UserControlBase
         if (e.AddedItems.FirstOrDefault() is AudioInputSource source &&
             SelectionChangedCommand?.CanExecute(source) == true)
         {
-            SelectedAudioInputSourceIndex = AudioInputComboBox.SelectedIndex;
+            SelectedAudioInputSourceIndex = AudioInputListView.SelectedIndex;
             SelectionChangedCommand.Execute(source);
+        }
+    }
+
+    private void VolumeSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        if (_isApplyingVolume)
+        {
+            return;
+        }
+
+        int volumePercentage = (int)Math.Round(e.NewValue);
+        if (VolumePercentage == volumePercentage)
+        {
+            return;
+        }
+
+        VolumePercentage = volumePercentage;
+        if (SetVolumeCommand?.CanExecute(volumePercentage) == true)
+        {
+            SetVolumeCommand.Execute(volumePercentage);
         }
     }
 
@@ -139,7 +190,7 @@ public sealed partial class AudioInputSelector : UserControlBase
         try
         {
             int selectedIndex = SelectedAudioInputSourceIndex;
-            AudioInputComboBox.SelectedIndex = selectedIndex >= 0 && selectedIndex < AudioInputComboBox.Items.Count
+            AudioInputListView.SelectedIndex = selectedIndex >= 0 && selectedIndex < AudioInputListView.Items.Count
                 ? selectedIndex
                 : -1;
         }
@@ -147,6 +198,30 @@ public sealed partial class AudioInputSelector : UserControlBase
         {
             _isApplyingSelection = false;
         }
+    }
+
+    private void ApplyVolumePercentage()
+    {
+        _ = DispatcherQueue.TryEnqueue(ApplyVolumePercentageCore);
+    }
+
+    private void ApplyVolumePercentageCore()
+    {
+        _isApplyingVolume = true;
+
+        try
+        {
+            VolumeSlider.Value = Math.Clamp(VolumePercentage, 0, 100);
+        }
+        finally
+        {
+            _isApplyingVolume = false;
+        }
+    }
+
+    private string FormatVolume(int volumePercentage)
+    {
+        return $"{Math.Clamp(volumePercentage, 0, 100)}%";
     }
 
     private static string GetPropertyName(DependencyProperty property)
@@ -176,9 +251,19 @@ public sealed partial class AudioInputSelector : UserControlBase
             return nameof(IsMuted);
         }
 
+        if (property == VolumePercentageProperty)
+        {
+            return nameof(VolumePercentage);
+        }
+
         if (property == ToggleMuteCommandProperty)
         {
             return nameof(ToggleMuteCommand);
+        }
+
+        if (property == SetVolumeCommandProperty)
+        {
+            return nameof(SetVolumeCommand);
         }
 
         return string.Empty;

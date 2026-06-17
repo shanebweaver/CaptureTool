@@ -51,6 +51,7 @@ namespace CaptureInteropTests
             void SetAudioSampleReadyCallback(AudioSampleReadyCallback) override {}
             void SetEnabled(bool) override {}
             bool IsEnabled() const override { return false; }
+            void SetVolume(uint32_t) override {}
             bool IsRunning() const override { return false; }
             bool SetInputDeviceId(const wchar_t*, HRESULT* outHr = nullptr) override
             {
@@ -89,6 +90,7 @@ namespace CaptureInteropTests
             void SetAudioSampleReadyCallback(AudioSampleReadyCallback callback) override { m_callback = std::move(callback); }
             void SetEnabled(bool enabled) override { m_isEnabled.store(enabled); }
             bool IsEnabled() const override { return m_isEnabled.load(); }
+            void SetVolume(uint32_t) override {}
             bool IsRunning() const override { return false; }
             bool SetInputDeviceId(const wchar_t*, HRESULT* outHr = nullptr) override
             {
@@ -168,6 +170,7 @@ namespace CaptureInteropTests
             void SetAudioSampleReadyCallback(AudioSampleReadyCallback callback) override { m_callback = std::move(callback); }
             void SetEnabled(bool enabled) override { m_isEnabled.store(enabled); }
             bool IsEnabled() const override { return m_isEnabled.load(); }
+            void SetVolume(uint32_t) override {}
             bool IsRunning() const override { return m_isRunning.load(); }
             bool SetInputDeviceId(const wchar_t*, HRESULT* outHr = nullptr) override
             {

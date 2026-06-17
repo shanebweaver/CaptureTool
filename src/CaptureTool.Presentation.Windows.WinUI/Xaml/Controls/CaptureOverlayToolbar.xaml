@@ -90,11 +90,13 @@
 
             <local:AudioInputSelector
                 AudioInputSources="{x:Bind AudioInputSources, Mode=OneWay}"
+                VolumePercentage="{x:Bind AudioInputVolumePercentage, Mode=OneWay}"
                 IsAvailable="{x:Bind IsAudioInputSelectionAvailable, Mode=OneWay}"
                 IsMuted="{x:Bind IsAudioInputMuted, Mode=OneWay}"
                 SelectedAudioInputSource="{x:Bind SelectedAudioInputSource, Mode=OneWay}"
                 SelectedAudioInputSourceIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
                 SelectionChangedCommand="{x:Bind SelectAudioInputSourceCommand, Mode=OneWay}"
+                SetVolumeCommand="{x:Bind SetAudioInputVolumeCommand, Mode=OneWay}"
                 ToggleMuteCommand="{x:Bind ToggleAudioInputMuteCommand, Mode=OneWay}"
                 Visibility="{x:Bind IsAudioInputSelectionFeatureEnabled, Mode=OneWay}" />
 

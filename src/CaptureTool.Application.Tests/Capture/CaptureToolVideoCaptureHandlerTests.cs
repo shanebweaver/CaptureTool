@@ -229,11 +229,13 @@ public class CaptureToolVideoCaptureHandlerTests
 
         var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
         handler.SelectAudioInputSource("microphone-id");
+        handler.SetAudioInputVolume(42);
 
         handler.StartVideoCapture(CreateCaptureArgs());
 
         screenRecorder.Verify(s => s.StartRecording(It.Is<CaptureRecordingOptions>(options =>
             options.AudioInputSourceId == "microphone-id" &&
+            options.AudioInputVolumePercentage == 42 &&
             options.CaptureAudio)), Times.Once);
     }
 
@@ -263,6 +265,19 @@ public class CaptureToolVideoCaptureHandlerTests
 
         handler.IsAudioInputMuted.Should().BeTrue();
         screenRecorder.Verify(s => s.SetAudioCaptureEnabled(false), Times.Once);
+    }
+
+    [TestMethod]
+    public void SetAudioInputVolume_ShouldUpdateRecorder_WhenRecording()
+    {
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+        handler.UpdateCaptureState(CaptureToolVideoCaptureHandler.CaptureState.Recording);
+
+        handler.SetAudioInputVolume(37);
+
+        handler.AudioInputVolumePercentage.Should().Be(37);
+        screenRecorder.Verify(s => s.SetAudioInputVolume(37), Times.Once);
     }
 
     [TestMethod]

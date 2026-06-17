@@ -76,6 +76,11 @@ public:
     bool SetAudioInputSource(const wchar_t* sourceId);
 
     /// <summary>
+    /// Set microphone/input volume during recording.
+    /// </summary>
+    bool SetAudioInputVolume(uint32_t volumePercentage);
+
+    /// <summary>
     /// Set the callback to be invoked when a video frame is ready.
     /// Callback is stored and automatically applied to new sessions.
     /// </summary>

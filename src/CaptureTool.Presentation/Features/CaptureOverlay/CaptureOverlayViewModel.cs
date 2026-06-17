@@ -86,6 +86,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         private set => Set(ref field, value);
     }
 
+    public int AudioInputVolumePercentage
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public bool IsAudioInputSelectionFeatureEnabled
     {
         get;
@@ -118,6 +124,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     public IAsyncRelayCommand StopVideoCaptureCommand { get; }
     public IRelayCommand ToggleDesktopAudioCommand { get; }
     public IRelayCommand ToggleAudioInputMuteCommand { get; }
+    public IRelayCommand<int> SetAudioInputVolumeCommand { get; }
     public IAsyncRelayCommand TogglePauseResumeCommand { get; }
     public IRelayCommand<AudioInputSource> SelectAudioInputSourceCommand { get; }
 
@@ -157,6 +164,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         StopVideoCaptureCommand = new AsyncRelayCommand(StopVideoCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleDesktopAudioCommand = toggleVideoCaptureDesktopAudioCommand.ToRelayCommand(() => new ToggleVideoCaptureDesktopAudioRequest());
         ToggleAudioInputMuteCommand = new RelayCommand(ToggleAudioInputMute);
+        SetAudioInputVolumeCommand = new RelayCommand<int>(SetAudioInputVolume);
         TogglePauseResumeCommand = new AsyncRelayCommand(TogglePauseResumeAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         SelectAudioInputSourceCommand = new AsyncRelayCommand<AudioInputSource>(SelectAudioInputSourceAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
     }
@@ -169,6 +177,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _videoCaptureHandler.PrepareForVideoCapture();
 
         IsDesktopAudioEnabled = _videoCaptureHandler.IsDesktopAudioEnabled;
+        AudioInputVolumePercentage = _videoCaptureHandler.AudioInputVolumePercentage;
         _videoCaptureHandler.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
 
         IsPaused = _videoCaptureHandler.IsPaused;
@@ -373,6 +382,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     {
         IsAudioInputMuted = !IsAudioInputMuted;
         _videoCaptureHandler.SetIsAudioInputMuted(IsAudioInputMuted);
+    }
+
+    private void SetAudioInputVolume(int volumePercentage)
+    {
+        AudioInputVolumePercentage = Math.Clamp(volumePercentage, 0, 100);
+        _videoCaptureHandler.SetAudioInputVolume(AudioInputVolumePercentage);
     }
 
     private async Task SelectAudioInputSourceAsync(AudioInputSource? source)

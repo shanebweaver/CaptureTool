@@ -11,6 +11,7 @@ public interface IVideoCaptureHandler
 
     bool IsDesktopAudioEnabled { get; }
     bool IsAudioInputMuted { get; }
+    int AudioInputVolumePercentage { get; }
     bool IsRecording { get; }
     bool IsFinalizing { get; }
     bool IsPaused { get; }
@@ -23,6 +24,7 @@ public interface IVideoCaptureHandler
     void SetIsDesktopAudioEnabled(bool value);
     void SetIsAudioInputMuted(bool value);
     void SelectAudioInputSource(string? sourceId);
+    void SetAudioInputVolume(int volumePercentage);
     void ToggleDesktopAudioCapture(bool enabled);
     void ToggleIsPaused(bool isPaused);
 }

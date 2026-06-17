@@ -52,6 +52,11 @@ bool WindowsLocalAudioCaptureSource::IsEnabled() const
     return m_handler->IsEnabled();
 }
 
+void WindowsLocalAudioCaptureSource::SetVolume(uint32_t volumePercentage)
+{
+    m_handler->SetVolume(volumePercentage);
+}
+
 bool WindowsLocalAudioCaptureSource::IsRunning() const
 {
     return m_handler->IsRunning();

@@ -10,13 +10,31 @@
     xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     d:DataContext="{d:DesignInstance Type=local:AudioInputSelector}"
     mc:Ignorable="d">
-    <Grid ColumnSpacing="8">
+
+    <UserControl.Resources>
+        <Style x:Key="AudioInputFlyoutPresenterStyle" TargetType="FlyoutPresenter">
+            <Setter Property="Background" Value="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" />
+            <Setter Property="Padding" Value="8" />
+        </Style>
+        <Style x:Key="AudioInputListViewItemStyle" TargetType="ListViewItem">
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid
+        Width="64"
+        Height="32"
+        ColumnSpacing="0"
+        ToolTipService.ToolTip="{x:Bind SelectedAudioInputSource.DisplayName, Mode=OneWay}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="32" />
+            <ColumnDefinition Width="32" />
         </Grid.ColumnDefinitions>
 
         <Button
+            x:Name="MuteButton"
             Command="{x:Bind ToggleMuteCommand, Mode=OneWay}"
             IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
             Style="{StaticResource IconButtonStyle}">
@@ -32,24 +50,76 @@
             </Grid>
         </Button>
 
-        <ComboBox
-            x:Name="AudioInputComboBox"
+        <Button
+            x:Name="AudioInputFlyoutButton"
             Grid.Column="1"
-            HorizontalAlignment="Stretch"
             IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
-            ItemsSource="{x:Bind AudioInputSources, Mode=OneWay}"
-            PlaceholderText="No microphone"
-            SelectedIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
-            SelectionChanged="AudioInputComboBox_SelectionChanged"
-            ToolTipService.ToolTip="{x:Bind SelectedAudioInputSource.DisplayName, Mode=OneWay}">
-            <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="audio:AudioInputSource">
-                    <TextBlock
-                        MaxLines="1"
-                        Text="{x:Bind DisplayName}"
-                        TextTrimming="CharacterEllipsis" />
-                </DataTemplate>
-            </ComboBox.ItemTemplate>
-        </ComboBox>
+            Style="{StaticResource IconButtonStyle}">
+            <FontIcon
+                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                FontSize="12"
+                Glyph="&#xE70D;" />
+            <Button.Flyout>
+                <Flyout FlyoutPresenterStyle="{StaticResource AudioInputFlyoutPresenterStyle}" Placement="Bottom">
+                    <Grid
+                        Width="280"
+                        Padding="4"
+                        RowSpacing="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <ListView
+                            x:Name="AudioInputListView"
+                            MaxHeight="220"
+                            Padding="0"
+                            Background="Transparent"
+                            IsItemClickEnabled="True"
+                            ItemContainerStyle="{StaticResource AudioInputListViewItemStyle}"
+                            ItemsSource="{x:Bind AudioInputSources, Mode=OneWay}"
+                            SelectedIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
+                            SelectionChanged="AudioInputListView_SelectionChanged"
+                            SelectionMode="Single"
+                            SingleSelectionFollowsFocus="False">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="audio:AudioInputSource">
+                                    <TextBlock
+                                        MaxLines="1"
+                                        Text="{x:Bind DisplayName}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                        <Grid Grid.Row="1" ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="44" />
+                            </Grid.ColumnDefinitions>
+
+                            <SymbolIcon
+                                VerticalAlignment="Center"
+                                Symbol="Volume" />
+                            <Slider
+                                x:Name="VolumeSlider"
+                                Grid.Column="1"
+                                Maximum="100"
+                                Minimum="0"
+                                StepFrequency="1"
+                                TickFrequency="10"
+                                Value="{x:Bind VolumePercentage, Mode=OneWay}"
+                                ValueChanged="VolumeSlider_ValueChanged" />
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Text="{x:Bind FormatVolume(VolumePercentage), Mode=OneWay}"
+                                TextAlignment="Right" />
+                        </Grid>
+                    </Grid>
+                </Flyout>
+            </Button.Flyout>
+        </Button>
     </Grid>
 </local:UserControlBase>

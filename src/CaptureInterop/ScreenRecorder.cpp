@@ -43,7 +43,8 @@ extern "C"
                 options->frameRate,
                 options->videoBitrate,
                 options->audioBitrate,
-                options->audioInputSourceId ? options->audioInputSourceId : L"");
+                options->audioInputSourceId ? options->audioInputSourceId : L"",
+                options->audioInputVolumePercentage);
             break;
 
         case CaptureRecordingTargetKind::Window:
@@ -58,7 +59,8 @@ extern "C"
                 options->frameRate,
                 options->videoBitrate,
                 options->audioBitrate,
-                options->audioInputSourceId ? options->audioInputSourceId : L"");
+                options->audioInputSourceId ? options->audioInputSourceId : L"",
+                options->audioInputVolumePercentage);
             break;
 
         case CaptureRecordingTargetKind::Rectangle:
@@ -77,7 +79,8 @@ extern "C"
                 options->frameRate,
                 options->videoBitrate,
                 options->audioBitrate,
-                options->audioInputSourceId ? options->audioInputSourceId : L"");
+                options->audioInputSourceId ? options->audioInputSourceId : L"",
+                options->audioInputVolumePercentage);
             break;
 
         default:
@@ -124,6 +127,13 @@ extern "C"
     __declspec(dllexport) CaptureRecorderResult SetScreenRecordingAudioInputSource(const wchar_t* sourceId)
     {
         return g_recorder.SetAudioInputSource(sourceId ? sourceId : L"")
+            ? Success()
+            : NoActiveSession();
+    }
+
+    __declspec(dllexport) CaptureRecorderResult SetScreenRecordingAudioInputVolume(uint32_t volumePercentage)
+    {
+        return g_recorder.SetAudioInputVolume(volumePercentage)
             ? Success()
             : NoActiveSession();
     }

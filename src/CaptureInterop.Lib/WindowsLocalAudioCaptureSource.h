@@ -38,6 +38,7 @@ public:
     void SetAudioSampleReadyCallback(AudioSampleReadyCallback callback) override;
     void SetEnabled(bool enabled) override;
     bool IsEnabled() const override;
+    void SetVolume(uint32_t volumePercentage) override;
     bool IsRunning() const override;
     bool SetInputDeviceId(const wchar_t* sourceId, HRESULT* outHr = nullptr) override;
 

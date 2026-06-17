@@ -102,6 +102,11 @@ struct CaptureSessionConfig
     std::wstring audioInputSourceId;
 
     /// <summary>
+    /// Microphone/input volume as a percentage. 100 preserves the captured signal.
+    /// </summary>
+    uint32_t audioInputVolumePercentage;
+
+    /// <summary>
     /// Target video frame rate (FPS). Default is 30.
     /// </summary>
     uint32_t frameRate;
@@ -126,7 +131,8 @@ struct CaptureSessionConfig
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
         uint32_t audBitrate = 128'000,
-        std::wstring audioSourceId = L"")
+        std::wstring audioSourceId = L"",
+        uint32_t audioVolumePercentage = 100)
         : targetType(CaptureTargetType::Monitor)
         , hMonitor(monitor)
         , hwnd(nullptr)
@@ -140,6 +146,7 @@ struct CaptureSessionConfig
         , videoBitrate(vidBitrate)
         , audioBitrate(audBitrate)
         , audioInputSourceId(std::move(audioSourceId))
+        , audioInputVolumePercentage(audioVolumePercentage)
     {
     }
 
@@ -153,7 +160,8 @@ struct CaptureSessionConfig
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
         uint32_t audBitrate = 128'000,
-        std::wstring audioSourceId = L"")
+        std::wstring audioSourceId = L"",
+        uint32_t audioVolumePercentage = 100)
         : targetType(CaptureTargetType::Monitor)
         , hMonitor(monitor)
         , hwnd(nullptr)
@@ -167,6 +175,7 @@ struct CaptureSessionConfig
         , videoBitrate(vidBitrate)
         , audioBitrate(audBitrate)
         , audioInputSourceId(std::move(audioSourceId))
+        , audioInputVolumePercentage(audioVolumePercentage)
     {
     }
 
@@ -187,6 +196,7 @@ struct CaptureSessionConfig
         , videoBitrate(5'000'000)
         , audioBitrate(128'000)
         , audioInputSourceId(L"")
+        , audioInputVolumePercentage(100)
     {
     }
 
@@ -197,9 +207,10 @@ struct CaptureSessionConfig
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
         uint32_t audBitrate = 128'000,
-        std::wstring audioSourceId = L"")
+        std::wstring audioSourceId = L"",
+        uint32_t audioVolumePercentage = 100)
     {
-        CaptureSessionConfig config(monitor, std::move(path), audio, fps, vidBitrate, audBitrate, std::move(audioSourceId));
+        CaptureSessionConfig config(monitor, std::move(path), audio, fps, vidBitrate, audBitrate, std::move(audioSourceId), audioVolumePercentage);
         config.targetType = CaptureTargetType::Monitor;
         return config;
     }
@@ -211,9 +222,10 @@ struct CaptureSessionConfig
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
         uint32_t audBitrate = 128'000,
-        std::wstring audioSourceId = L"")
+        std::wstring audioSourceId = L"",
+        uint32_t audioVolumePercentage = 100)
     {
-        CaptureSessionConfig config(nullptr, std::move(path), audio, fps, vidBitrate, audBitrate, std::move(audioSourceId));
+        CaptureSessionConfig config(nullptr, std::move(path), audio, fps, vidBitrate, audBitrate, std::move(audioSourceId), audioVolumePercentage);
         config.targetType = CaptureTargetType::Window;
         config.hwnd = window;
         return config;
@@ -230,9 +242,10 @@ struct CaptureSessionConfig
         uint32_t fps = 30,
         uint32_t vidBitrate = 5'000'000,
         uint32_t audBitrate = 128'000,
-        std::wstring audioSourceId = L"")
+        std::wstring audioSourceId = L"",
+        uint32_t audioVolumePercentage = 100)
     {
-        CaptureSessionConfig config(monitor, std::move(path), audio, fps, vidBitrate, audBitrate, std::move(audioSourceId));
+        CaptureSessionConfig config(monitor, std::move(path), audio, fps, vidBitrate, audBitrate, std::move(audioSourceId), audioVolumePercentage);
         config.targetType = CaptureTargetType::Rectangle;
         config.sourceLeft = left;
         config.sourceTop = top;
@@ -330,6 +343,12 @@ struct CaptureSessionConfig
                               std::to_string(MIN_AUDIO_BITRATE) + " and " + 
                               std::to_string(MAX_AUDIO_BITRATE) + " (got " +
                               std::to_string(audioBitrate) + ")");
+            }
+
+            if (audioInputVolumePercentage > 100)
+            {
+                result.AddError("audioInputVolumePercentage must be between 0 and 100 (got " +
+                    std::to_string(audioInputVolumePercentage) + ")");
             }
         }
         
