@@ -49,6 +49,8 @@ public:
     void Pause() override;
     void Resume() override;
     void ToggleAudioCapture(bool enabled) override;
+    bool SetAudioInputSource(const wchar_t* sourceId) override;
+    void SetAudioInputVolume(uint32_t volumePercentage) override;
     bool IsActive() const override { return m_stateMachine.IsActive(); }
 
     // Initialize sources and sink writer (called by factory after construction)

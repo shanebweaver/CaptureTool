@@ -10,7 +10,39 @@
 #include <strsafe.h>
 #include <Audioclient.h>
 #include <Windows.h>
+#include <ksmedia.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <thread>
+
+namespace
+{
+    bool IsExtensibleSubFormat(const WAVEFORMATEX* format, const GUID& subFormat)
+    {
+        if (!format ||
+            format->wFormatTag != WAVE_FORMAT_EXTENSIBLE ||
+            format->cbSize < sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX))
+        {
+            return false;
+        }
+
+        auto extensible = reinterpret_cast<const WAVEFORMATEXTENSIBLE*>(format);
+        return IsEqualGUID(extensible->SubFormat, subFormat);
+    }
+
+    bool IsPcmFormat(const WAVEFORMATEX* format)
+    {
+        return format &&
+            (format->wFormatTag == WAVE_FORMAT_PCM || IsExtensibleSubFormat(format, KSDATAFORMAT_SUBTYPE_PCM));
+    }
+
+    bool IsFloatFormat(const WAVEFORMATEX* format)
+    {
+        return format &&
+            (format->wFormatTag == WAVE_FORMAT_IEEE_FLOAT || IsExtensibleSubFormat(format, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT));
+    }
+}
 
 AudioCaptureHandler::AudioCaptureHandler(IMediaClockReader* clockReader)
     : m_clockReader(clockReader)
@@ -33,9 +65,9 @@ AudioCaptureHandler::~AudioCaptureHandler()
 // Initialization and Lifecycle
 // ============================================================================
 
-bool AudioCaptureHandler::Initialize(bool loopback, HRESULT* outHr)
+bool AudioCaptureHandler::Initialize(bool loopback, const wchar_t* deviceId, HRESULT* outHr)
 {
-    if (!m_device.Initialize(loopback, outHr))
+    if (!m_device.Initialize(loopback, deviceId, outHr))
     {
         return false;
     }
@@ -51,6 +83,30 @@ bool AudioCaptureHandler::Initialize(bool loopback, HRESULT* outHr)
         m_silentBuffer.resize(maxBufferSize, 0);
     }
     
+    return true;
+}
+
+bool AudioCaptureHandler::SetInputDevice(bool loopback, const wchar_t* deviceId, HRESULT* outHr)
+{
+    bool wasRunning = m_isRunning.load();
+    bool wasEnabled = m_isEnabled.load();
+
+    Stop();
+    m_sampleRate = 0;
+    m_silentBuffer.clear();
+
+    if (!Initialize(loopback, deviceId, outHr))
+    {
+        return false;
+    }
+
+    m_isEnabled = wasEnabled;
+    if (wasRunning && !Start(outHr))
+    {
+        return false;
+    }
+
+    if (outHr) *outHr = S_OK;
     return true;
 }
 
@@ -120,6 +176,60 @@ BYTE* AudioCaptureHandler::GetSilentBuffer(UINT32 requiredSize)
     }
     
     return m_silentBuffer.data();
+}
+
+void AudioCaptureHandler::SetVolume(uint32_t volumePercentage)
+{
+    m_volumePercentage = std::min<uint32_t>(volumePercentage, 100);
+}
+
+BYTE* AudioCaptureHandler::GetVolumeAdjustedBuffer(const BYTE* sourceData, UINT32 bufferSize, WAVEFORMATEX* format)
+{
+    uint32_t volumePercentage = m_volumePercentage.load();
+    if (!sourceData || !format || volumePercentage >= 100)
+    {
+        return const_cast<BYTE*>(sourceData);
+    }
+
+    if (volumePercentage == 0)
+    {
+        return GetSilentBuffer(bufferSize);
+    }
+
+    std::lock_guard<std::mutex> lock(m_volumeBufferMutex);
+    m_volumeBuffer.resize(bufferSize);
+    memcpy(m_volumeBuffer.data(), sourceData, bufferSize);
+
+    double gain = static_cast<double>(volumePercentage) / 100.0;
+    if (IsFloatFormat(format) && format->wBitsPerSample == 32)
+    {
+        auto* samples = reinterpret_cast<float*>(m_volumeBuffer.data());
+        size_t sampleCount = bufferSize / sizeof(float);
+        for (size_t i = 0; i < sampleCount; i++)
+        {
+            samples[i] = static_cast<float>(samples[i] * gain);
+        }
+
+        return m_volumeBuffer.data();
+    }
+
+    if (IsPcmFormat(format) && format->wBitsPerSample == 16)
+    {
+        auto* samples = reinterpret_cast<int16_t*>(m_volumeBuffer.data());
+        size_t sampleCount = bufferSize / sizeof(int16_t);
+        for (size_t i = 0; i < sampleCount; i++)
+        {
+            double scaled = static_cast<double>(samples[i]) * gain;
+            samples[i] = static_cast<int16_t>(std::clamp(
+                std::lround(scaled),
+                static_cast<long>(INT16_MIN),
+                static_cast<long>(INT16_MAX)));
+        }
+
+        return m_volumeBuffer.data();
+    }
+
+    return const_cast<BYTE*>(sourceData);
 }
 
 // ============================================================================
@@ -207,6 +317,10 @@ void AudioCaptureHandler::CaptureThreadProc()
                 if (!m_isEnabled || (flags & AUDCLNT_BUFFERFLAGS_SILENT))
                 {
                     pAudioData = GetSilentBuffer(bufferSize);
+                }
+                else
+                {
+                    pAudioData = GetVolumeAdjustedBuffer(pAudioData, bufferSize, format);
                 }
                 
                 AudioSampleReadyEventArgs args{};

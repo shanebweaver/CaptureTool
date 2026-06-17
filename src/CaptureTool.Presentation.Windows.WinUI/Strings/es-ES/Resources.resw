@@ -879,4 +879,79 @@ SOFTWARE.
     <value>Exportar registros</value>
     <comment>The label for the button that exports diagnostic logs.</comment>
   </data>
+  <data name="AudioInputSelector_ChangeDefaultSettingsButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Cambiar micrófono predeterminado en Configuración</value>
+  </data>
+  <data name="AudioInputSelector_ChangeDefaultSettingsButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Abrir configuración de sonido para cambiar el micrófono predeterminado</value>
+  </data>
+  <data name="AudioInputSelector_ChangeDefaultSettingsButtonLabel.Text" xml:space="preserve">
+    <value>Cambiar predeterminado en Configuración</value>
+  </data>
+  <data name="AudioInputSelector_InputFlyoutButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Elegir entrada de micrófono</value>
+  </data>
+  <data name="AudioInputSelector_InputFlyoutButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Elegir entrada de micrófono</value>
+  </data>
+  <data name="AudioInputSelector_InputList.AutomationProperties.Name" xml:space="preserve">
+    <value>Dispositivos de entrada de micrófono</value>
+  </data>
+  <data name="AudioInputSelector_MuteButton" xml:space="preserve">
+    <value>Silenciar micrófono</value>
+  </data>
+  <data name="AudioInputSelector_NoInputDevice" xml:space="preserve">
+    <value>No hay dispositivo de entrada</value>
+  </data>
+  <data name="AudioInputSelector_UnmuteButton" xml:space="preserve">
+    <value>Reactivar micrófono</value>
+  </data>
+  <data name="CaptureOverlay_BackButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Atrás</value>
+  </data>
+  <data name="CaptureOverlay_BackButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Volver</value>
+  </data>
+  <data name="CaptureOverlay_LocalAudioToggleButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Audio del sistema</value>
+  </data>
+  <data name="CaptureOverlay_LocalAudioToggleButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Activar o desactivar captura de audio del sistema</value>
+  </data>
+  <data name="CaptureOverlay_PauseResumeButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Pausar o reanudar la grabación</value>
+  </data>
+  <data name="CaptureOverlay_PauseResumeButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pausar o reanudar la grabación</value>
+  </data>
+  <data name="CaptureOverlay_StartVideoCaptureButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Iniciar grabación</value>
+  </data>
+  <data name="CaptureOverlay_StartVideoCaptureButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Iniciar grabación</value>
+  </data>
+  <data name="CaptureOverlay_StopVideoCaptureButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Detener grabación</value>
+  </data>
+  <data name="CaptureOverlay_StopVideoCaptureButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Detener grabación</value>
+  </data>
+  <data name="CaptureOverlay_Timer.AutomationProperties.Name" xml:space="preserve">
+    <value>Duración de la grabación</value>
+  </data>
+  <data name="CaptureOverlay_Timer.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Duración de la grabación</value>
+  </data>
+  <data name="SelectionOverlay_CaptureModeSegmentedControl.AutomationProperties.Name" xml:space="preserve">
+    <value>Modo de captura</value>
+  </data>
+  <data name="SelectionOverlay_CaptureModeSegmentedControl.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Elegir modo de captura</value>
+  </data>
+  <data name="SelectionOverlay_CaptureTypeComboBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Área de captura</value>
+  </data>
+  <data name="SelectionOverlay_CaptureTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Elegir área de captura</value>
+  </data>
 </root>

@@ -1,6 +1,33 @@
 #include "pch.h"
 #include "AudioCaptureDevice.h"
 
+#include <string>
+#include <string_view>
+
+namespace
+{
+    std::wstring GetWasapiEndpointId(const wchar_t* deviceId)
+    {
+        if (!deviceId || deviceId[0] == L'\0')
+        {
+            return L"";
+        }
+
+        std::wstring id(deviceId);
+
+        constexpr std::wstring_view mmDeviceApiMarker = L"MMDEVAPI#";
+        size_t endpointStart = id.find(mmDeviceApiMarker);
+        if (endpointStart == std::wstring::npos)
+        {
+            return id;
+        }
+
+        endpointStart += mmDeviceApiMarker.length();
+        size_t endpointEnd = id.find(L'#', endpointStart);
+        return id.substr(endpointStart, endpointEnd == std::wstring::npos ? std::wstring::npos : endpointEnd - endpointStart);
+    }
+}
+
 // ============================================================================
 // Constructor / Destructor
 // ============================================================================
@@ -21,8 +48,10 @@ AudioCaptureDevice::~AudioCaptureDevice()
 // Device Initialization
 // ============================================================================
 
-bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr)
+bool AudioCaptureDevice::Initialize(bool loopback, const wchar_t* deviceId, HRESULT* outHr)
 {
+    ReleaseResources();
+
     // Initialize COM for this thread
     HRESULT hr = S_OK;
     if (!m_comInitialized)
@@ -53,13 +82,21 @@ bool AudioCaptureDevice::Initialize(bool loopback, HRESULT* outHr)
         return false;
     }
 
-    // Get default audio endpoint
-    EDataFlow dataFlow = loopback ? eRender : eCapture;
-    hr = m_deviceEnumerator->GetDefaultAudioEndpoint(
-        dataFlow,
-        eConsole,
-        m_device.put()
-    );
+    // Get selected audio endpoint or fall back to the default endpoint.
+    std::wstring endpointId = GetWasapiEndpointId(deviceId);
+    if (!endpointId.empty())
+    {
+        hr = m_deviceEnumerator->GetDevice(endpointId.c_str(), m_device.put());
+    }
+    else
+    {
+        EDataFlow dataFlow = loopback ? eRender : eCapture;
+        hr = m_deviceEnumerator->GetDefaultAudioEndpoint(
+            dataFlow,
+            eConsole,
+            m_device.put()
+        );
+    }
     if (FAILED(hr))
     {
         if (outHr) *outHr = hr;

@@ -361,6 +361,7 @@ bool WindowsGraphicsCaptureSession::StartAudioCapture(HRESULT* outHr)
     
     // Apply audio enabled setting
     m_audioCaptureSource->SetEnabled(m_config.audioEnabled);
+    m_audioCaptureSource->SetVolume(m_config.audioInputVolumePercentage);
     
     // Start audio
     HRESULT hr = S_OK;
@@ -492,6 +493,40 @@ void WindowsGraphicsCaptureSession::ToggleAudioCapture(bool enabled)
     if (m_audioCaptureSource && m_audioCaptureSource->IsRunning())
     {
         m_audioCaptureSource->SetEnabled(enabled);
+    }
+}
+
+bool WindowsGraphicsCaptureSession::SetAudioInputSource(const wchar_t* sourceId)
+{
+    if (!m_audioCaptureSource)
+    {
+        return false;
+    }
+
+    HRESULT hr = S_OK;
+    bool wasEnabled = m_audioCaptureSource->IsEnabled();
+    if (!m_audioCaptureSource->SetInputDeviceId(sourceId, &hr))
+    {
+        wchar_t message[256]{};
+        StringCchPrintfW(
+            message,
+            ARRAYSIZE(message),
+            L"[CaptureInterop V1] Audio input source switch failed. HRESULT=0x%08X\r\n",
+            static_cast<unsigned int>(hr));
+        OutputDebugStringW(message);
+        return false;
+    }
+
+    m_audioAvailable = m_audioCaptureSource->GetFormat() != nullptr;
+    m_audioCaptureSource->SetEnabled(wasEnabled);
+    return true;
+}
+
+void WindowsGraphicsCaptureSession::SetAudioInputVolume(uint32_t volumePercentage)
+{
+    if (m_audioCaptureSource)
+    {
+        m_audioCaptureSource->SetVolume(volumePercentage);
     }
 }
 

@@ -80,8 +80,19 @@ public:
     virtual bool IsEnabled() const = 0;
 
     /// <summary>
+    /// Set the volume percentage applied to captured samples before writing.
+    /// </summary>
+    virtual void SetVolume(uint32_t volumePercentage) = 0;
+
+    /// <summary>
     /// Check if the audio input source is currently running.
     /// </summary>
     /// <returns>True if capture is active, false otherwise.</returns>
     virtual bool IsRunning() const = 0;
+
+    /// <summary>
+    /// Switch to another audio input source. Empty source ids restore the default source.
+    /// </summary>
+    /// <returns>True if the source was switched successfully, false otherwise.</returns>
+    virtual bool SetInputDeviceId(const wchar_t* sourceId, HRESULT* outHr = nullptr) = 0;
 };

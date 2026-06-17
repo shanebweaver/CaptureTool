@@ -3,11 +3,15 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections;
 using System.Windows.Input;
+using Windows.ApplicationModel.Resources;
+using Windows.System;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 
 public sealed partial class AudioInputSelector : UserControlBase
 {
+    private readonly ResourceLoader _resourceLoader = new();
+
     public static readonly DependencyProperty AudioInputSourcesProperty = DependencyProperty.Register(
         nameof(AudioInputSources),
         typeof(IEnumerable),
@@ -53,6 +57,7 @@ public sealed partial class AudioInputSelector : UserControlBase
     public AudioInputSelector()
     {
         InitializeComponent();
+        AudioInputListView.ItemClick += AudioInputListView_ItemClick;
     }
 
     private bool _isApplyingSelection;
@@ -112,7 +117,7 @@ public sealed partial class AudioInputSelector : UserControlBase
         }
     }
 
-    private void AudioInputComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void AudioInputListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isApplyingSelection)
         {
@@ -122,9 +127,37 @@ public sealed partial class AudioInputSelector : UserControlBase
         if (e.AddedItems.FirstOrDefault() is AudioInputSource source &&
             SelectionChangedCommand?.CanExecute(source) == true)
         {
-            SelectedAudioInputSourceIndex = AudioInputComboBox.SelectedIndex;
+            SelectedAudioInputSourceIndex = AudioInputListView.SelectedIndex;
             SelectionChangedCommand.Execute(source);
+            AudioInputSplitButton.Flyout.Hide();
+            return;
         }
+
+        if (e.AddedItems.Count == 0 && e.RemovedItems.Count > 0)
+        {
+            RestoreSelectedAudioInputSourceIfStillAvailable();
+        }
+    }
+
+    private void AudioInputListView_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is AudioInputSource source && source == SelectedAudioInputSource)
+        {
+            AudioInputSplitButton.Flyout.Hide();
+        }
+    }
+
+    private void AudioInputSplitButton_Click(SplitButton sender, SplitButtonClickEventArgs args)
+    {
+        if (ToggleMuteCommand?.CanExecute(null) == true)
+        {
+            ToggleMuteCommand.Execute(null);
+        }
+    }
+
+    private async void ChangeDefaultSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await Launcher.LaunchUriAsync(new Uri("ms-settings:sound"));
     }
 
     private void ApplySelectedAudioInputSourceIndex()
@@ -139,7 +172,7 @@ public sealed partial class AudioInputSelector : UserControlBase
         try
         {
             int selectedIndex = SelectedAudioInputSourceIndex;
-            AudioInputComboBox.SelectedIndex = selectedIndex >= 0 && selectedIndex < AudioInputComboBox.Items.Count
+            AudioInputListView.SelectedIndex = selectedIndex >= 0 && selectedIndex < AudioInputListView.Items.Count
                 ? selectedIndex
                 : -1;
         }
@@ -147,6 +180,57 @@ public sealed partial class AudioInputSelector : UserControlBase
         {
             _isApplyingSelection = false;
         }
+    }
+
+    private void RestoreSelectedAudioInputSourceIfStillAvailable()
+    {
+        _ = DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_isApplyingSelection || AudioInputListView.SelectedIndex != -1)
+            {
+                return;
+            }
+
+            AudioInputSource? selectedAudioInputSource = SelectedAudioInputSource;
+
+            if (selectedAudioInputSource is null)
+            {
+                return;
+            }
+
+            foreach (object item in AudioInputListView.Items)
+            {
+                if (item is AudioInputSource source && source == selectedAudioInputSource)
+                {
+                    _isApplyingSelection = true;
+
+                    try
+                    {
+                        AudioInputListView.SelectedItem = source;
+                    }
+                    finally
+                    {
+                        _isApplyingSelection = false;
+                    }
+
+                    return;
+                }
+            }
+        });
+    }
+
+    private string GetToolTipText(bool isAvailable, AudioInputSource? selectedAudioInputSource)
+    {
+        return isAvailable
+            ? selectedAudioInputSource?.DisplayName ?? string.Empty
+            : _resourceLoader.GetString("AudioInputSelector_NoInputDevice");
+    }
+
+    private string GetMuteButtonText(bool isMuted)
+    {
+        return _resourceLoader.GetString(isMuted
+            ? "AudioInputSelector_UnmuteButton"
+            : "AudioInputSelector_MuteButton");
     }
 
     private static string GetPropertyName(DependencyProperty property)

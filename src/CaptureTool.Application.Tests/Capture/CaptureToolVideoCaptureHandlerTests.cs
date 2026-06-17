@@ -219,4 +219,94 @@ public class CaptureToolVideoCaptureHandlerTests
         handler.IsRecording.Should().BeFalse();
         handler.IsFinalizing.Should().BeFalse();
     }
+
+    [TestMethod]
+    public void StartVideoCapture_ShouldPassSelectedAudioInputSourceToRecorder()
+    {
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        var storageService = Fixture.Freeze<Mock<IStorageService>>();
+        storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
+
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+        handler.SelectAudioInputSource("microphone-id");
+        handler.SetAudioInputVolume(42);
+
+        handler.StartVideoCapture(CreateCaptureArgs());
+
+        screenRecorder.Verify(s => s.StartRecording(It.Is<CaptureRecordingOptions>(options =>
+            options.AudioInputSourceId == "microphone-id" &&
+            options.AudioInputVolumePercentage == 42 &&
+            options.CaptureAudio)), Times.Once);
+    }
+
+    [TestMethod]
+    public void SelectAudioInputSource_ShouldSwitchRecorder_WhenRecording()
+    {
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+        handler.UpdateCaptureState(CaptureToolVideoCaptureHandler.CaptureState.Recording);
+
+        handler.SelectAudioInputSource("microphone-id");
+
+        handler.SelectedAudioInputSourceId.Should().Be("microphone-id");
+        screenRecorder.Verify(s => s.SetAudioInputSource("microphone-id"), Times.Once);
+        screenRecorder.Verify(s => s.SetAudioCaptureEnabled(true), Times.Once);
+    }
+
+    [TestMethod]
+    public void SetIsAudioInputMuted_ShouldUpdateRecorder_WhenRecording()
+    {
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+        handler.SelectAudioInputSource("microphone-id");
+        handler.UpdateCaptureState(CaptureToolVideoCaptureHandler.CaptureState.Recording);
+
+        handler.SetIsAudioInputMuted(true);
+
+        handler.IsAudioInputMuted.Should().BeTrue();
+        screenRecorder.Verify(s => s.SetAudioCaptureEnabled(false), Times.Once);
+    }
+
+    [TestMethod]
+    public void SetAudioInputVolume_ShouldUpdateRecorder_WhenRecording()
+    {
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+        handler.UpdateCaptureState(CaptureToolVideoCaptureHandler.CaptureState.Recording);
+
+        handler.SetAudioInputVolume(37);
+
+        handler.AudioInputVolumePercentage.Should().Be(37);
+        screenRecorder.Verify(s => s.SetAudioInputVolume(37), Times.Once);
+    }
+
+    [TestMethod]
+    public void SelectAudioInputSource_ShouldClearRecorderSource_WhenSourceIdIsNull()
+    {
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+        handler.SelectAudioInputSource("microphone-id");
+        handler.UpdateCaptureState(CaptureToolVideoCaptureHandler.CaptureState.Recording);
+
+        handler.SelectAudioInputSource(null);
+
+        handler.SelectedAudioInputSourceId.Should().BeNull();
+        screenRecorder.Verify(s => s.SetAudioInputSource(null), Times.Once);
+        screenRecorder.Verify(s => s.SetAudioCaptureEnabled(false), Times.Once);
+    }
+
+    private static NewCaptureArgs CreateCaptureArgs()
+    {
+        return new NewCaptureArgs(
+            new MonitorCaptureResult(
+                IntPtr.Zero,
+                [],
+                96,
+                new System.Drawing.Rectangle(0, 0, 1920, 1080),
+                new System.Drawing.Rectangle(0, 0, 1920, 1080),
+                true
+            ),
+            new System.Drawing.Rectangle(0, 0, 1920, 1080)
+        );
+    }
 }

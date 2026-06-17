@@ -4,6 +4,7 @@
 #include "AudioCaptureHandler.h"
 #include <memory>
 #include <mmreg.h>
+#include <string>
 #include <Windows.h>
 
 // Forward declaration
@@ -26,7 +27,7 @@ class IMediaClockReader;
 class WindowsLocalAudioCaptureSource : public IAudioCaptureSource
 {
 public:
-    explicit WindowsLocalAudioCaptureSource(IMediaClockReader* clockReader);
+    explicit WindowsLocalAudioCaptureSource(IMediaClockReader* clockReader, std::wstring inputDeviceId = L"");
     ~WindowsLocalAudioCaptureSource() override;
 
     // IAudioCaptureSource implementation
@@ -37,11 +38,14 @@ public:
     void SetAudioSampleReadyCallback(AudioSampleReadyCallback callback) override;
     void SetEnabled(bool enabled) override;
     bool IsEnabled() const override;
+    void SetVolume(uint32_t volumePercentage) override;
     bool IsRunning() const override;
+    bool SetInputDeviceId(const wchar_t* sourceId, HRESULT* outHr = nullptr) override;
 
     // IMediaClockAdvancer implementation
     void SetClockWriter(IMediaClockWriter* clockWriter) override;
 
 private:
     std::unique_ptr<AudioCaptureHandler> m_handler;
+    std::wstring m_inputDeviceId;
 };

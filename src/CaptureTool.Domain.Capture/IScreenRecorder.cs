@@ -9,6 +9,8 @@ public partial interface IScreenRecorder
     CaptureRecorderResult PauseRecording();
     CaptureRecorderResult ResumeRecording();
     CaptureRecorderResult SetAudioCaptureEnabled(bool enabled);
+    CaptureRecorderResult SetAudioInputSource(string? sourceId);
+    CaptureRecorderResult SetAudioInputVolume(int volumePercentage);
     CaptureRecorderResult RegisterVideoFrameCallback(VideoFrameCallback? callback);
     CaptureRecorderResult RegisterAudioSampleCallback(AudioSampleCallback? callback);
 }
@@ -19,7 +21,9 @@ public readonly record struct CaptureRecordingOptions(
     bool CaptureAudio = false,
     uint FrameRate = 30,
     uint VideoBitrate = 5_000_000,
-    uint AudioBitrate = 128_000);
+    uint AudioBitrate = 128_000,
+    string? AudioInputSourceId = null,
+    int AudioInputVolumePercentage = 100);
 
 public readonly record struct CaptureRecordingTarget(
     CaptureRecordingTargetKind Kind,

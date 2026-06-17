@@ -51,14 +51,20 @@ namespace CaptureInteropTests
             void SetAudioSampleReadyCallback(AudioSampleReadyCallback) override {}
             void SetEnabled(bool) override {}
             bool IsEnabled() const override { return false; }
+            void SetVolume(uint32_t) override {}
             bool IsRunning() const override { return false; }
+            bool SetInputDeviceId(const wchar_t*, HRESULT* outHr = nullptr) override
+            {
+                if (outHr) *outHr = AUDCLNT_E_DEVICE_INVALIDATED;
+                return false;
+            }
             void SetClockWriter(IMediaClockWriter*) override {}
         };
 
         class FailingAudioCaptureSourceFactory final : public IAudioCaptureSourceFactory
         {
         public:
-            std::unique_ptr<IAudioCaptureSource> CreateAudioCaptureSource(IMediaClockReader*) override
+            std::unique_ptr<IAudioCaptureSource> CreateAudioCaptureSource(IMediaClockReader*, const std::wstring&) override
             {
                 return std::make_unique<FailingAudioCaptureSource>();
             }
@@ -84,7 +90,13 @@ namespace CaptureInteropTests
             void SetAudioSampleReadyCallback(AudioSampleReadyCallback callback) override { m_callback = std::move(callback); }
             void SetEnabled(bool enabled) override { m_isEnabled.store(enabled); }
             bool IsEnabled() const override { return m_isEnabled.load(); }
+            void SetVolume(uint32_t) override {}
             bool IsRunning() const override { return false; }
+            bool SetInputDeviceId(const wchar_t*, HRESULT* outHr = nullptr) override
+            {
+                if (outHr) *outHr = AUDCLNT_E_DEVICE_INVALIDATED;
+                return false;
+            }
             void SetClockWriter(IMediaClockWriter*) override {}
             bool HasCallback() const { return static_cast<bool>(m_callback); }
 
@@ -158,7 +170,13 @@ namespace CaptureInteropTests
             void SetAudioSampleReadyCallback(AudioSampleReadyCallback callback) override { m_callback = std::move(callback); }
             void SetEnabled(bool enabled) override { m_isEnabled.store(enabled); }
             bool IsEnabled() const override { return m_isEnabled.load(); }
+            void SetVolume(uint32_t) override {}
             bool IsRunning() const override { return m_isRunning.load(); }
+            bool SetInputDeviceId(const wchar_t*, HRESULT* outHr = nullptr) override
+            {
+                if (outHr) *outHr = S_OK;
+                return true;
+            }
             void SetClockWriter(IMediaClockWriter* clockWriter) override { m_clockWriter = clockWriter; }
 
         private:

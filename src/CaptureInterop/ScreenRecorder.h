@@ -39,6 +39,8 @@ struct CaptureRecordingOptions
     uint32_t frameRate;
     uint32_t videoBitrate;
     uint32_t audioBitrate;
+    const wchar_t* audioInputSourceId;
+    uint32_t audioInputVolumePercentage;
 };
 
 extern "C"
@@ -48,6 +50,8 @@ extern "C"
     __declspec(dllexport) CaptureRecorderResult ResumeScreenRecording();
     __declspec(dllexport) CaptureRecorderResult StopScreenRecording();
     __declspec(dllexport) CaptureRecorderResult SetScreenRecordingAudioEnabled(uint32_t enabled);
+    __declspec(dllexport) CaptureRecorderResult SetScreenRecordingAudioInputSource(const wchar_t* sourceId);
+    __declspec(dllexport) CaptureRecorderResult SetScreenRecordingAudioInputVolume(uint32_t volumePercentage);
 
     __declspec(dllexport) CaptureRecorderResult RegisterVideoFrameCallback(VideoFrameCallback callback);
     __declspec(dllexport) CaptureRecorderResult RegisterAudioSampleCallback(AudioSampleCallback callback);

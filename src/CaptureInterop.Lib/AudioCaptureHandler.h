@@ -51,7 +51,12 @@ public:
     /// <param name="loopback">True for system audio loopback, false for microphone.</param>
     /// <param name="outHr">Optional pointer to receive the HRESULT error code.</param>
     /// <returns>True if initialization succeeded, false otherwise.</returns>
-    bool Initialize(bool loopback, HRESULT* outHr = nullptr);
+    bool Initialize(bool loopback, const wchar_t* deviceId = nullptr, HRESULT* outHr = nullptr);
+
+    /// <summary>
+    /// Switch to another input device, preserving running and enabled state when possible.
+    /// </summary>
+    bool SetInputDevice(bool loopback, const wchar_t* deviceId = nullptr, HRESULT* outHr = nullptr);
     
     /// <summary>
     /// Start the audio capture thread.
@@ -96,6 +101,11 @@ public:
     void SetEnabled(bool enabled) { m_isEnabled = enabled; }
 
     /// <summary>
+    /// Set the volume applied to captured samples before invoking callbacks.
+    /// </summary>
+    void SetVolume(uint32_t volumePercentage);
+
+    /// <summary>
     /// Check if audio capture writing is enabled.
     /// </summary>
     /// <returns>True if enabled, false if muted.</returns>
@@ -120,6 +130,7 @@ private:
     /// Returns pointer to zeroed buffer that's valid until next call.
     /// </summary>
     BYTE* GetSilentBuffer(UINT32 requiredSize);
+    BYTE* GetVolumeAdjustedBuffer(const BYTE* sourceData, UINT32 bufferSize, WAVEFORMATEX* format);
     
     AudioCaptureDevice m_device;
     AudioSampleReadyCallback m_audioSampleReadyCallback;
@@ -134,7 +145,10 @@ private:
     
     std::vector<BYTE> m_silentBuffer;           // Reusable buffer for silent audio samples
     std::mutex m_silentBufferMutex;             // Protects m_silentBuffer access
+    std::vector<BYTE> m_volumeBuffer;           // Reusable buffer for volume-adjusted samples
+    std::mutex m_volumeBufferMutex;             // Protects m_volumeBuffer access
     
     UINT32 m_sampleRate = 0;                    // Cached sample rate from audio format
+    std::atomic<uint32_t> m_volumePercentage{100};
     LARGE_INTEGER m_qpcFrequency{};             // QPC frequency for time calculations
 };

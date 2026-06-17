@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Audio;
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GetAudioInputSources;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.SelectAudioInputSource;
 using CaptureTool.Application.Features.CaptureOverlay.GetAudioInputSources;
@@ -50,7 +51,8 @@ public sealed class AudioInputSourceUseCaseTests
             .Setup(x => x.GetAudioInputSourcesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(sources);
 
-        SelectAudioInputSourceUseCase useCase = new(service.Object, TestUseCaseExecutor.Instance);
+        Mock<IVideoCaptureHandler> videoCaptureHandler = new();
+        SelectAudioInputSourceUseCase useCase = new(service.Object, videoCaptureHandler.Object, TestUseCaseExecutor.Instance);
 
         // Act
         SelectAudioInputSourceResponse? response = (await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("default"), TestContext.CancellationToken)).Value;
@@ -59,6 +61,7 @@ public sealed class AudioInputSourceUseCaseTests
         response.Should().NotBeNull();
         response!.IsAvailable.Should().BeTrue();
         response.WasRemoved.Should().BeFalse();
+        videoCaptureHandler.Verify(handler => handler.SelectAudioInputSource("default"), Times.Once);
     }
 
     [TestMethod]
@@ -70,7 +73,8 @@ public sealed class AudioInputSourceUseCaseTests
             .Setup(x => x.GetAudioInputSourcesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        SelectAudioInputSourceUseCase useCase = new(service.Object, TestUseCaseExecutor.Instance);
+        Mock<IVideoCaptureHandler> videoCaptureHandler = new();
+        SelectAudioInputSourceUseCase useCase = new(service.Object, videoCaptureHandler.Object, TestUseCaseExecutor.Instance);
 
         // Act
         SelectAudioInputSourceResponse? response = (await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("missing"), TestContext.CancellationToken)).Value;
@@ -79,6 +83,7 @@ public sealed class AudioInputSourceUseCaseTests
         response.Should().NotBeNull();
         response!.IsAvailable.Should().BeFalse();
         response.WasRemoved.Should().BeTrue();
+        videoCaptureHandler.Verify(handler => handler.SelectAudioInputSource(It.IsAny<string>()), Times.Never);
     }
 
     public TestContext TestContext { get; set; } = null!;

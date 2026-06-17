@@ -14,13 +14,6 @@ public sealed class FeatureAvailabilityTests
     }
 
     [TestMethod]
-    public void AudioInputSelectionFeatureAvailability_ReturnsFeatureManagerValue()
-    {
-        Assert.IsTrue(new AudioInputSelectionFeatureAvailability(new ConstantFeatureManager(true)).IsAudioInputSelectionEnabled);
-        Assert.IsFalse(new AudioInputSelectionFeatureAvailability(new ConstantFeatureManager(false)).IsAudioInputSelectionEnabled);
-    }
-
-    [TestMethod]
     public void ChromaKeyFeatureAvailability_ReturnsFeatureManagerValue()
     {
         Assert.IsTrue(new ChromaKeyFeatureAvailability(new ConstantFeatureManager(true)).IsChromaKeyEnabled);

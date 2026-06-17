@@ -20,6 +20,12 @@ internal static partial class CaptureInterop
     [DllImport("CaptureInterop.dll")]
     internal static extern CaptureRecorderResult SetScreenRecordingAudioEnabled(uint enabled);
 
+    [DllImport("CaptureInterop.dll", CharSet = CharSet.Unicode)]
+    internal static extern CaptureRecorderResult SetScreenRecordingAudioInputSource(string? sourceId);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern CaptureRecorderResult SetScreenRecordingAudioInputVolume(uint volumePercentage);
+
     [DllImport("CaptureInterop.dll")]
     internal static extern CaptureRecorderResult RegisterVideoFrameCallback(VideoFrameCallback? callback);
 
@@ -91,6 +97,8 @@ internal readonly struct NativeCaptureRecordingOptions
         FrameRate = options.FrameRate;
         VideoBitrate = options.VideoBitrate;
         AudioBitrate = options.AudioBitrate;
+        AudioInputSourceId = options.AudioInputSourceId;
+        AudioInputVolumePercentage = (uint)Math.Clamp(options.AudioInputVolumePercentage, 0, 100);
     }
 
     public readonly CaptureRecordingTargetKind TargetKind;
@@ -108,4 +116,9 @@ internal readonly struct NativeCaptureRecordingOptions
     public readonly uint FrameRate;
     public readonly uint VideoBitrate;
     public readonly uint AudioBitrate;
+
+    [MarshalAs(UnmanagedType.LPWStr)]
+    public readonly string? AudioInputSourceId;
+
+    public readonly uint AudioInputVolumePercentage;
 }

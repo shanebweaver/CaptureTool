@@ -10,46 +10,79 @@
     xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     d:DataContext="{d:DesignInstance Type=local:AudioInputSelector}"
     mc:Ignorable="d">
-    <Grid ColumnSpacing="8">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-
-        <Button
-            Command="{x:Bind ToggleMuteCommand, Mode=OneWay}"
+    <Grid ToolTipService.ToolTip="{x:Bind GetToolTipText(IsAvailable, SelectedAudioInputSource), Mode=OneWay}">
+        <SplitButton
+            x:Name="AudioInputSplitButton"
+            Height="32"
+            AutomationProperties.Name="{x:Bind GetMuteButtonText(IsMuted), Mode=OneWay}"
+            Background="Transparent"
+            BorderBrush="Transparent"
+            Click="AudioInputSplitButton_Click"
             IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
-            Style="{StaticResource IconButtonStyle}">
-            <Grid>
-                <FontIcon
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="{StaticResource Microphone}"
-                    Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsMuted), Mode=OneWay}" />
-                <FontIcon
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="{StaticResource Cancel}"
-                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsMuted), Mode=OneWay}" />
-            </Grid>
-        </Button>
+            ToolTipService.ToolTip="{x:Bind GetMuteButtonText(IsMuted), Mode=OneWay}">
+            <SplitButton.Content>
+                <Grid>
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        Glyph="{StaticResource Mic20Regular}"
+                        Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsMuted), Mode=OneWay}" />
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        Glyph="{StaticResource MicOff20Regular}"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsMuted), Mode=OneWay}" />
+                </Grid>
+            </SplitButton.Content>
 
-        <ComboBox
-            x:Name="AudioInputComboBox"
-            Grid.Column="1"
-            HorizontalAlignment="Stretch"
-            IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
-            ItemsSource="{x:Bind AudioInputSources, Mode=OneWay}"
-            PlaceholderText="No microphone"
-            SelectedIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
-            SelectionChanged="AudioInputComboBox_SelectionChanged"
-            ToolTipService.ToolTip="{x:Bind SelectedAudioInputSource.DisplayName, Mode=OneWay}">
-            <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="audio:AudioInputSource">
-                    <TextBlock
-                        MaxLines="1"
-                        Text="{x:Bind DisplayName}"
-                        TextTrimming="CharacterEllipsis" />
-                </DataTemplate>
-            </ComboBox.ItemTemplate>
-        </ComboBox>
+            <SplitButton.Flyout>
+                <Flyout Placement="Bottom" ShouldConstrainToRootBounds="False">
+                    <Grid Width="300" RowSpacing="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <ListView
+                            x:Name="AudioInputListView"
+                            x:Uid="AudioInputSelector_InputList"
+                            Padding="0"
+                            Background="Transparent"
+                            IsItemClickEnabled="True"
+                            ItemsSource="{x:Bind AudioInputSources, Mode=OneWay}"
+                            ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollMode="Disabled"
+                            SelectedIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
+                            SelectionChanged="AudioInputListView_SelectionChanged"
+                            SelectionMode="Single"
+                            SingleSelectionFollowsFocus="False">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="audio:AudioInputSource">
+                                    <TextBlock
+                                        MaxLines="1"
+                                        Text="{x:Bind DisplayName}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                        <Button
+                            x:Uid="AudioInputSelector_ChangeDefaultSettingsButton"
+                            Grid.Row="1"
+                            HorizontalAlignment="Stretch"
+                            Click="ChangeDefaultSettingsButton_Click">
+                            <StackPanel
+                                HorizontalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    FontSize="14"
+                                    Glyph="{StaticResource Settings}" />
+                                <TextBlock x:Uid="AudioInputSelector_ChangeDefaultSettingsButtonLabel" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Flyout>
+            </SplitButton.Flyout>
+        </SplitButton>
     </Grid>
 </local:UserControlBase>

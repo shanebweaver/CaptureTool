@@ -22,7 +22,6 @@
                 GoBackCommand="{x:Bind ViewModel.GoBackCommand}"
                 IsAudioInputMuted="{x:Bind ViewModel.IsAudioInputMuted, Mode=OneWay}"
                 IsAudioInputSelectionAvailable="{x:Bind ViewModel.IsAudioInputSelectionAvailable, Mode=OneWay}"
-                IsAudioInputSelectionFeatureEnabled="{x:Bind ViewModel.IsAudioInputSelectionFeatureEnabled, Mode=OneWay}"
                 IsLocalAudioEnabled="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=OneWay}"
                 IsPaused="{x:Bind ViewModel.IsPaused, Mode=OneWay}"
                 IsRecording="{x:Bind ViewModel.IsRecording, Mode=OneWay}"

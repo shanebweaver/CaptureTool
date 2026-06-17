@@ -1,6 +1,7 @@
 #pragma once
 #include "IAudioCaptureSource.h"
 #include <memory>
+#include <string>
 
 // Forward declaration
 class IMediaClockReader;
@@ -18,6 +19,7 @@ public:
     /// Create a new audio capture source instance.
     /// </summary>
     /// <param name="clockReader">The media clock reader for timestamp synchronization.</param>
+    /// <param name="sourceId">Optional audio endpoint id.</param>
     /// <returns>A unique pointer to a new IAudioCaptureSource implementation.</returns>
-    virtual std::unique_ptr<IAudioCaptureSource> CreateAudioCaptureSource(IMediaClockReader* clockReader) = 0;
+    virtual std::unique_ptr<IAudioCaptureSource> CreateAudioCaptureSource(IMediaClockReader* clockReader, const std::wstring& sourceId) = 0;
 };

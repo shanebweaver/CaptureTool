@@ -128,6 +128,27 @@ bool ScreenRecorderImpl::SetAudioCaptureEnabled(bool enabled)
     return true;
 }
 
+bool ScreenRecorderImpl::SetAudioInputSource(const wchar_t* sourceId)
+{
+    if (!HasActiveSession() || !m_captureSession->IsActive())
+    {
+        return false;
+    }
+
+    return m_captureSession->SetAudioInputSource(sourceId ? sourceId : L"");
+}
+
+bool ScreenRecorderImpl::SetAudioInputVolume(uint32_t volumePercentage)
+{
+    if (!HasActiveSession() || !m_captureSession->IsActive())
+    {
+        return false;
+    }
+
+    m_captureSession->SetAudioInputVolume(volumePercentage);
+    return true;
+}
+
 void ScreenRecorderImpl::SetVideoFrameCallback(VideoFrameCallback callback)
 {
     // Store callback so it persists across session recreation
