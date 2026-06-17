@@ -1,6 +1,33 @@
 #include "pch.h"
 #include "AudioCaptureDevice.h"
 
+#include <string>
+#include <string_view>
+
+namespace
+{
+    std::wstring GetWasapiEndpointId(const wchar_t* deviceId)
+    {
+        if (!deviceId || deviceId[0] == L'\0')
+        {
+            return L"";
+        }
+
+        std::wstring id(deviceId);
+
+        constexpr std::wstring_view mmDeviceApiMarker = L"MMDEVAPI#";
+        size_t endpointStart = id.find(mmDeviceApiMarker);
+        if (endpointStart == std::wstring::npos)
+        {
+            return id;
+        }
+
+        endpointStart += mmDeviceApiMarker.length();
+        size_t endpointEnd = id.find(L'#', endpointStart);
+        return id.substr(endpointStart, endpointEnd == std::wstring::npos ? std::wstring::npos : endpointEnd - endpointStart);
+    }
+}
+
 // ============================================================================
 // Constructor / Destructor
 // ============================================================================
@@ -56,9 +83,10 @@ bool AudioCaptureDevice::Initialize(bool loopback, const wchar_t* deviceId, HRES
     }
 
     // Get selected audio endpoint or fall back to the default endpoint.
-    if (deviceId && deviceId[0] != L'\0')
+    std::wstring endpointId = GetWasapiEndpointId(deviceId);
+    if (!endpointId.empty())
     {
-        hr = m_deviceEnumerator->GetDevice(deviceId, m_device.put());
+        hr = m_deviceEnumerator->GetDevice(endpointId.c_str(), m_device.put());
     }
     else
     {
