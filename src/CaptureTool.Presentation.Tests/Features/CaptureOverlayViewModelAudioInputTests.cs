@@ -1,6 +1,5 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.CloseCaptureOverlay;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GetAudioInputSources;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GoBackFromCaptureOverlay;
@@ -69,9 +68,6 @@ public sealed class CaptureOverlayViewModelAudioInputTests
 
         Mock<IAudioInputDetectionService> audioInputDetection = new();
 
-        Mock<IAudioInputSelectionFeatureAvailability> featureAvailability = new();
-        featureAvailability.Setup(service => service.IsAudioInputSelectionEnabled).Returns(true);
-
         Mock<ITaskEnvironment> taskEnvironment = new();
         taskEnvironment
             .Setup(environment => environment.TryExecute(It.IsAny<Action>()))
@@ -94,7 +90,6 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             getAudioInputSources.Object,
             Mock.Of<ISelectAudioInputSourceUseCase>(),
             audioInputDetection.Object,
-            featureAvailability.Object,
             themeService.Object,
             videoCaptureHandler.Object,
             taskEnvironment.Object);
