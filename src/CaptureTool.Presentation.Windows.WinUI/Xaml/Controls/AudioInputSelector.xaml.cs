@@ -125,6 +125,12 @@ public sealed partial class AudioInputSelector : UserControlBase
         {
             SelectedAudioInputSourceIndex = AudioInputListView.SelectedIndex;
             SelectionChangedCommand.Execute(source);
+            return;
+        }
+
+        if (e.AddedItems.Count == 0 && e.RemovedItems.Count > 0)
+        {
+            RestoreSelectedAudioInputSourceIfStillAvailable();
         }
     }
 
@@ -153,6 +159,43 @@ public sealed partial class AudioInputSelector : UserControlBase
         {
             _isApplyingSelection = false;
         }
+    }
+
+    private void RestoreSelectedAudioInputSourceIfStillAvailable()
+    {
+        _ = DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_isApplyingSelection || AudioInputListView.SelectedIndex != -1)
+            {
+                return;
+            }
+
+            AudioInputSource? selectedAudioInputSource = SelectedAudioInputSource;
+
+            if (selectedAudioInputSource is null)
+            {
+                return;
+            }
+
+            foreach (object item in AudioInputListView.Items)
+            {
+                if (item is AudioInputSource source && source == selectedAudioInputSource)
+                {
+                    _isApplyingSelection = true;
+
+                    try
+                    {
+                        AudioInputListView.SelectedItem = source;
+                    }
+                    finally
+                    {
+                        _isApplyingSelection = false;
+                    }
+
+                    return;
+                }
+            }
+        });
     }
 
     private string GetToolTipText(bool isAvailable, AudioInputSource? selectedAudioInputSource)

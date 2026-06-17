@@ -86,15 +86,6 @@
                             SelectionChanged="AudioInputListView_SelectionChanged"
                             SelectionMode="Single"
                             SingleSelectionFollowsFocus="False">
-                            <ListView.Resources>
-                                <StaticResource x:Key="ListViewItemBackgroundSelected" ResourceKey="AccentFillColorTertiaryBrush" />
-                                <StaticResource x:Key="ListViewItemBackgroundSelectedPointerOver" ResourceKey="AccentFillColorSecondaryBrush" />
-                                <StaticResource x:Key="ListViewItemBackgroundSelectedPressed" ResourceKey="AccentFillColorTertiaryBrush" />
-                                <StaticResource x:Key="ListViewItemSelectionIndicatorBrush" ResourceKey="AccentFillColorDefaultBrush" />
-                                <StaticResource x:Key="ListViewItemSelectionIndicatorPointerOverBrush" ResourceKey="AccentFillColorDefaultBrush" />
-                                <StaticResource x:Key="ListViewItemSelectionIndicatorPressedBrush" ResourceKey="AccentFillColorDefaultBrush" />
-                                <x:Boolean x:Key="ListViewItemSelectionIndicatorVisualEnabled">True</x:Boolean>
-                            </ListView.Resources>
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="audio:AudioInputSource">
                                     <TextBlock
