@@ -49,14 +49,14 @@ jobs:
 
     - name: Run .NET tests with coverage
       run: |
-        dotnet-coverage collect "powershell -NoProfile -ExecutionPolicy Bypass -File .github\scripts\run-managed-tests.ps1" -f cobertura -o coverage.cobertura.xml
+        dotnet-coverage collect "powershell -NoProfile -ExecutionPolicy Bypass -File .github\scripts\run-managed-tests.ps1" -s .github\coverage.runsettings -f cobertura -o coverage.cobertura.xml
 
     - name: Enforce coverage threshold
       run: |
         [xml]$coverage = Get-Content coverage.cobertura.xml
         $lineRate = [double]$coverage.coverage.'line-rate'
         $coveragePercent = [math]::Round($lineRate * 100, 2)
-        $minimumCoveragePercent = 25
+        $minimumCoveragePercent = 80
         "Line coverage: $coveragePercent%" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
         "Minimum line coverage: $minimumCoveragePercent%" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
         if ($coveragePercent -lt $minimumCoveragePercent) {

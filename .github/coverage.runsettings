@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+  <CodeCoverage>
+    <ModulePaths>
+      <Include>
+        <ModulePath>.*CaptureTool\.Application\.dll$</ModulePath>
+        <ModulePath>.*CaptureTool\.Application\.Abstractions\.dll$</ModulePath>
+        <ModulePath>.*CaptureTool\.Domain\.Capture\.dll$</ModulePath>
+        <ModulePath>.*CaptureTool\.Domain\.Edit\.dll$</ModulePath>
+        <ModulePath>.*CaptureTool\.FeatureManagement\.dll$</ModulePath>
+        <ModulePath>.*CaptureTool\.Infrastructure\.dll$</ModulePath>
+      </Include>
+    </ModulePaths>
+    <Sources>
+      <Exclude>
+        <Source>.*\\bin\\.*</Source>
+        <Source>.*\\obj\\.*</Source>
+      </Exclude>
+    </Sources>
+  </CodeCoverage>
+</Configuration>
