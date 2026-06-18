@@ -65,10 +65,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IShareService _shareService;
 
     private ImageDrawable? _imageDrawable;
-    private readonly Stack<CanvasOperation> _operationsUndoStack;
-    private readonly Stack<CanvasOperation> _operationsRedoStack;
+    private readonly ImageEditHistory _editHistory;
+    private ImageEditSession _editSession;
     private ImageEditMode _activeEditMode;
-    private ChromaKeyOperation.ChromaKeyState? _pendingChromaKeyInteractionState;
+    private ChromaKeySettings? _pendingChromaKeyInteractionState;
 
     public event EventHandler? InvalidateCanvasRequested;
     public event EventHandler? ForceZoomAndCenterRequested;
@@ -120,16 +120,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
-    private ObservableCollection<IDrawable> _drawables = [];
-
     public IReadOnlyList<IDrawable> Drawables
     {
-        get => _drawables;
-        private set
-        {
-            _drawables = value as ObservableCollection<IDrawable> ?? new ObservableCollection<IDrawable>(value);
-            RaisePropertyChanged(nameof(Drawables));
-        }
+        get;
+        private set => Set(ref field, value);
     }
 
     public ImageFile? ImageFile
@@ -348,11 +342,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _imageCanvasExporter = imageCanvasExporter;
 
         Drawables = [];
-        ImageSize = new();
-        Orientation = ImageOrientation.RotateNoneFlipNone;
-        MirroredDisplayName = GetMirroredDisplayName(Orientation);
-        RotationDisplayName = GetRotationDisplayName(Orientation);
-        CropRect = Rectangle.Empty;
+        _editSession = new ImageEditSession(Size.Empty, ImageOrientation.RotateNoneFlipNone, Rectangle.Empty);
+        MirroredDisplayName = string.Empty;
+        RotationDisplayName = string.Empty;
+        SyncImageGeometryFromSession();
         SelectedChromaKeyColorOption = 0;
         ChromaKeyTolerance = 30;
         ChromaKeyColor = Color.Empty;
@@ -375,8 +368,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextFontSize = (int)TextDrawable.DefaultFontSize;
         ZoomPercentage = 100;
         IsAutoZoomLocked = false;
-        _operationsUndoStack = [];
-        _operationsRedoStack = [];
+        _editHistory = new ImageEditHistory();
+        UpdateUndoRedoStackProperties();
 
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
@@ -424,12 +417,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             Vector2 topLeft = Vector2.Zero;
             ImageFile = imageFile;
-            ImageSize = _filePickerService.GetImageFileSize(imageFile);
-            CropRect = new(Point.Empty, ImageSize);
+            _editSession = new ImageEditSession(_filePickerService.GetImageFileSize(imageFile));
+            SyncImageGeometryFromSession();
             ApplyImageSizeBasedDefaults(ImageSize);
 
             _imageDrawable = new(topLeft, imageFile, ImageSize);
-            _drawables.Add(_imageDrawable);
+            _editSession.AddDrawable(_imageDrawable);
+            SyncDrawablesFromSession();
 
             if (_chromaKeyFeatureAvailability.IsChromaKeyEnabled)
             {
@@ -464,12 +458,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         _imageDrawable = null;
         _pendingChromaKeyInteractionState = null;
+        _editHistory.Clear();
         SetActiveEditMode(ImageEditMode.None);
-        CropRect = Rectangle.Empty;
-        ImageSize = Size.Empty;
-        Orientation = ImageOrientation.RotateNoneFlipNone;
-        MirroredDisplayName = string.Empty;
-        _drawables.Clear();
+        _editSession = new ImageEditSession(Size.Empty, ImageOrientation.RotateNoneFlipNone, Rectangle.Empty);
+        SyncImageGeometryFromSession();
+        SyncDrawablesFromSession();
+        UpdateUndoRedoStackProperties();
         base.Dispose();
     }
 
@@ -493,7 +487,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void BeginChromaKeyInteraction()
     {
-        _pendingChromaKeyInteractionState ??= CaptureChromaKeyState();
+        _pendingChromaKeyInteractionState ??= CaptureChromaKeySettings();
     }
 
     public void CompleteChromaKeyInteraction()
@@ -504,19 +498,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
 
         _pendingChromaKeyInteractionState = null;
-        ChromaKeyOperation.ChromaKeyState newState = CaptureChromaKeyState();
+        ChromaKeySettings newState = CaptureChromaKeySettings();
 
         if (oldState.Equals(newState))
         {
             return;
         }
 
-        _operationsUndoStack.Push(new ChromaKeyOperation(
-            ApplyChromaKeyState,
-            oldState,
-            newState));
-        _operationsRedoStack.Clear();
-        UpdateUndoRedoStackProperties();
+        ExecuteEditCommand(new SetChromaKeyCommand(oldState, newState));
     }
 
     private void UpdateShowChromaKeyOptions(bool value)
@@ -690,92 +679,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
-        IDrawable? newShape = null;
-
-        switch (SelectedShapeType)
-        {
-            case ShapeType.Rectangle:
-                {
-                    float x = Math.Min(startPoint.X, endPoint.X);
-                    float y = Math.Min(startPoint.Y, endPoint.Y);
-                    float width = Math.Abs(endPoint.X - startPoint.X);
-                    float height = Math.Abs(endPoint.Y - startPoint.Y);
-
-                    // Only create shape if it has a minimum size (at least 2 pixels)
-                    if (width >= 2 && height >= 2)
-                    {
-                        newShape = new RectangleDrawable(
-                            new Vector2(x, y),
-                            new Size((int)Math.Ceiling(width), (int)Math.Ceiling(height)),
-                            ShapeStrokeColor,
-                            ShapeFillColor,
-                            ShapeStrokeWidth);
-                    }
-                    break;
-                }
-            case ShapeType.Ellipse:
-                {
-                    float x = Math.Min(startPoint.X, endPoint.X);
-                    float y = Math.Min(startPoint.Y, endPoint.Y);
-                    float width = Math.Abs(endPoint.X - startPoint.X);
-                    float height = Math.Abs(endPoint.Y - startPoint.Y);
-
-                    // Only create shape if it has a minimum size (at least 2 pixels)
-                    if (width >= 2 && height >= 2)
-                    {
-                        newShape = new EllipseDrawable(
-                            new Vector2(x, y),
-                            new Size((int)Math.Ceiling(width), (int)Math.Ceiling(height)),
-                            ShapeStrokeColor,
-                            ShapeFillColor,
-                            ShapeStrokeWidth);
-                    }
-                    break;
-                }
-            case ShapeType.Line:
-                {
-                    // Only create line if it has a minimum length (at least 2 pixels)
-                    float distance = Vector2.Distance(startPoint, endPoint);
-                    if (distance >= 2)
-                    {
-                        newShape = new LineDrawable(
-                            startPoint,
-                            endPoint,
-                            ShapeStrokeColor,
-                            ShapeStrokeWidth);
-                    }
-                    break;
-                }
-            case ShapeType.Arrow:
-                {
-                    // Only create arrow if it has a minimum length (at least 2 pixels)
-                    float distance = Vector2.Distance(startPoint, endPoint);
-                    if (distance >= 2)
-                    {
-                        newShape = new ArrowDrawable(
-                            startPoint,
-                            endPoint,
-                            ShapeStrokeColor,
-                            ShapeStrokeWidth);
-                    }
-                    break;
-                }
-        }
+        ShapeStyle style = new(ShapeStrokeColor, ShapeFillColor, ShapeStrokeWidth);
+        IDrawable? newShape = DrawableFactory.CreateShape(SelectedShapeType, startPoint, endPoint, style);
 
         if (newShape != null)
         {
-            // Add to undo stack
-            var operation = new AddShapeOperation(
-                _drawables,
-                newShape,
-                () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
-
-            _operationsUndoStack.Push(operation);
-            _operationsRedoStack.Clear(); // Clear redo stack on new action
-            UpdateUndoRedoStackProperties();
-
-            // Execute the operation
-            operation.Redo();
+            ExecuteEditCommand(new AddDrawableCommand(newShape));
         }
     }
 
@@ -786,34 +695,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
-        float x = Math.Min(startPoint.X, endPoint.X);
-        float y = Math.Min(startPoint.Y, endPoint.Y);
-        float width = Math.Abs(endPoint.X - startPoint.X);
-        float height = Math.Abs(endPoint.Y - startPoint.Y);
+        TextStyle style = new(TextFontColor, TextBackgroundColor, TextFontFamily, TextFontSize);
+        TextDrawable? newText = DrawableFactory.CreateTextBox(startPoint, endPoint, style);
 
-        if (width < 2 || height < 2)
+        if (newText != null)
         {
-            return;
+            ExecuteEditCommand(new AddDrawableCommand(newText));
         }
-
-        var newText = new TextDrawable(
-            new Vector2(x, y),
-            new Size((int)Math.Ceiling(width), (int)Math.Ceiling(height)),
-            string.Empty,
-            TextFontColor,
-            TextBackgroundColor,
-            TextFontFamily,
-            TextFontSize);
-
-        var operation = new AddShapeOperation(
-            _drawables,
-            newText,
-            () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
-
-        _operationsUndoStack.Push(operation);
-        _operationsRedoStack.Clear();
-        UpdateUndoRedoStackProperties();
-        operation.Redo();
     }
 
     public void OnTextDrawableSelected(TextDrawable text)
@@ -868,23 +756,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
-        if (shapeIndex >= 0 && shapeIndex < _drawables.Count)
+        if (shapeIndex >= 0 && shapeIndex < _editSession.Drawables.Count)
         {
-            var shape = _drawables[shapeIndex];
-
-            // Add to undo stack
-            var operation = new DeleteShapeOperation(
-                _drawables,
-                shape,
-                shapeIndex,
-                () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
-
-            _operationsUndoStack.Push(operation);
-            _operationsRedoStack.Clear(); // Clear redo stack on new action
-            UpdateUndoRedoStackProperties();
-
-            // Execute the operation
-            operation.Redo();
+            ExecuteEditCommand(new DeleteDrawableCommand(shapeIndex));
         }
     }
 
@@ -895,20 +769,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
-        if (shapeIndex >= 0 && shapeIndex < _drawables.Count)
+        if (shapeIndex >= 0 && shapeIndex < _editSession.Drawables.Count)
         {
-            var currentShape = _drawables[shapeIndex];
-
-            // Add to undo stack
-            var operation = new ModifyShapeOperation(
-                currentShape,
-                oldState,
-                newState,
-                () => InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty));
-
-            _operationsUndoStack.Push(operation);
-            _operationsRedoStack.Clear(); // Clear redo stack on new action
-            UpdateUndoRedoStackProperties();
+            ExecuteEditCommand(new ModifyDrawableCommand(shapeIndex, oldState, newState));
         }
     }
 
@@ -922,26 +785,15 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
-        _drawables.Add(drawable);
+        _editSession.AddDrawable(drawable);
+        SyncDrawablesFromSession();
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void UpdateChromaKeyEffectValues()
     {
-        if (_imageDrawable != null && _imageDrawable.ImageEffect == null)
-        {
-            _imageDrawable.ImageEffect = new ImageChromaKeyEffect(ChromaKeyColor, ChromaKeyTolerance / 100f, ChromaKeyDesaturation / 100f)
-            {
-                IsEnabled = !ChromaKeyColor.IsEmpty
-            };
-        }
-        else if (_imageDrawable?.ImageEffect is ImageChromaKeyEffect chromaKeyEffect)
-        {
-            chromaKeyEffect.Tolerance = ChromaKeyTolerance / 100f;
-            chromaKeyEffect.Desaturation = ChromaKeyDesaturation / 100f;
-            chromaKeyEffect.Color = ChromaKeyColor;
-            chromaKeyEffect.IsEnabled = !ChromaKeyColor.IsEmpty;
-        }
+        _editSession.SetChromaKeySettings(CaptureChromaKeySettings());
+        SyncDrawablesFromSession();
 
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
@@ -967,22 +819,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateChromaKeyEffectValues();
     }
 
-    private ChromaKeyOperation.ChromaKeyState CaptureChromaKeyState()
+    private ChromaKeySettings CaptureChromaKeySettings()
     {
         return new(
             SelectedChromaKeyColorOption,
             ChromaKeyColor,
             ChromaKeyTolerance,
             ChromaKeyDesaturation);
-    }
-
-    private void ApplyChromaKeyState(ChromaKeyOperation.ChromaKeyState state)
-    {
-        SelectedChromaKeyColorOption = state.SelectedColorOptionIndex;
-        ChromaKeyColor = state.Color;
-        ChromaKeyTolerance = state.Tolerance;
-        ChromaKeyDesaturation = state.Desaturation;
-        UpdateChromaKeyEffectValues();
     }
 
     private async Task SaveAsync()
@@ -1000,74 +843,52 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private ImageCanvasRenderOptions GetImageCanvasRenderOptions()
     {
-        return new(Orientation, ImageSize, CropRect);
+        ImageEditRenderSnapshot snapshot = _editSession.CreateRenderSnapshot();
+        return new(snapshot.Orientation, snapshot.ImageSize, snapshot.CropRect);
     }
 
     private void Undo()
     {
-        if (_operationsUndoStack.Count == 0)
+        if (!_editHistory.Undo(_editSession))
         {
             return;
         }
 
-        var operation = _operationsUndoStack.Pop();
-        _operationsRedoStack.Push(operation);
+        SyncImageGeometryFromSession();
+        SyncDrawablesFromSession();
+        SyncChromaKeySettingsFromSession();
         UpdateUndoRedoStackProperties();
-
-        operation.Undo();
+        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void Redo()
     {
-        if (_operationsRedoStack.Count == 0)
+        if (!_editHistory.Redo(_editSession))
         {
             return;
         }
 
-        var operation = _operationsRedoStack.Pop();
-        _operationsUndoStack.Push(operation);
+        SyncImageGeometryFromSession();
+        SyncDrawablesFromSession();
+        SyncChromaKeySettingsFromSession();
         UpdateUndoRedoStackProperties();
-
-        operation.Redo();
+        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void Rotate()
     {
-        ImageOrientation oldOrientation = Orientation;
-        ImageOrientation newOrientation = ImageOrientationGeometry.GetRotatedOrientation(oldOrientation, RotationDirection.Clockwise);
-        Rectangle newCropRect = ImageOrientationGeometry.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
-
-        CropRect = newCropRect;
-        Orientation = newOrientation;
-        MirroredDisplayName = GetMirroredDisplayName(Orientation);
-        RotationDisplayName = GetRotationDisplayName(Orientation);
-
-        _operationsRedoStack.Clear();
-        _operationsUndoStack.Push(new OrientationOperation(UpdateOrientation, oldOrientation, newOrientation));
-        UpdateUndoRedoStackProperties();
+        ExecuteEditCommand(new RotateImageCommand(RotationDirection.Clockwise));
     }
 
     private void Flip(FlipDirection flipDirection)
     {
-        ImageOrientation oldOrientation = Orientation;
-        ImageOrientation newOrientation = ImageOrientationGeometry.GetFlippedOrientation(Orientation, flipDirection);
-        Size imageSize = ImageOrientationGeometry.GetOrientedImageSize(ImageSize, Orientation);
-        Rectangle newCropRect = ImageOrientationGeometry.GetFlippedCropRect(CropRect, imageSize, flipDirection);
-
-        CropRect = newCropRect;
-        Orientation = newOrientation;
-        MirroredDisplayName = GetMirroredDisplayName(newOrientation);
-        RotationDisplayName = GetRotationDisplayName(Orientation);
-
-        _operationsRedoStack.Clear();
-        _operationsUndoStack.Push(new OrientationOperation(UpdateOrientation, oldOrientation, newOrientation));
-        UpdateUndoRedoStackProperties();
+        ExecuteEditCommand(new FlipImageCommand(flipDirection));
     }
 
     private void UpdateUndoRedoStackProperties()
     {
-        HasUndoStack = _operationsUndoStack.Count > 0;
-        HasRedoStack = _operationsRedoStack.Count > 0;
+        HasUndoStack = _editHistory.CanUndo;
+        HasRedoStack = _editHistory.CanRedo;
     }
 
     private async Task PrintAsync()
@@ -1092,27 +913,56 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         Rectangle newCropRect = CropRect;
         if (newCropRect != oldCropRect)
         {
-            _operationsRedoStack.Clear();
-            _operationsUndoStack.Push(new CropOperation(UpdateCropRect, oldCropRect, newCropRect));
-            UpdateUndoRedoStackProperties();
+            ExecuteEditCommand(new SetCropCommand(oldCropRect, newCropRect));
         }
     }
 
     private void UpdateOrientation(ImageOrientation newOrientation)
     {
-        ImageOrientation oldOrientation = Orientation;
-        Rectangle newCropRect = ImageOrientationGeometry.GetOrientedCropRect(CropRect, ImageSize, oldOrientation, newOrientation);
-        CropRect = newCropRect;
-        Orientation = newOrientation;
-        MirroredDisplayName = GetMirroredDisplayName(newOrientation);
-        RotationDisplayName = GetRotationDisplayName(Orientation);
+        _editSession.SetOrientation(newOrientation);
+        SyncImageGeometryFromSession();
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void UpdateCropRect(Rectangle newCropRect)
     {
-        CropRect = newCropRect;
+        _editSession.SetCropRect(newCropRect);
+        SyncImageGeometryFromSession();
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ExecuteEditCommand(IImageEditCommand command)
+    {
+        _editHistory.Execute(_editSession, command);
+        SyncImageGeometryFromSession();
+        SyncDrawablesFromSession();
+        SyncChromaKeySettingsFromSession();
+        UpdateUndoRedoStackProperties();
+        InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void SyncImageGeometryFromSession()
+    {
+        ImageSize = _editSession.ImageSize;
+        CropRect = _editSession.CropRect;
+        Orientation = _editSession.Orientation;
+        MirroredDisplayName = GetMirroredDisplayName(Orientation);
+        RotationDisplayName = GetRotationDisplayName(Orientation);
+    }
+
+    private void SyncDrawablesFromSession()
+    {
+        Drawables = _editSession.Drawables.ToArray();
+        _imageDrawable = Drawables.OfType<ImageDrawable>().FirstOrDefault();
+    }
+
+    private void SyncChromaKeySettingsFromSession()
+    {
+        ChromaKeySettings settings = _editSession.ChromaKeySettings;
+        SelectedChromaKeyColorOption = settings.SelectedColorOptionIndex;
+        ChromaKeyColor = settings.Color;
+        ChromaKeyTolerance = settings.Tolerance;
+        ChromaKeyDesaturation = settings.Desaturation;
     }
 
     private string GetMirroredDisplayName(ImageOrientation orientation)
