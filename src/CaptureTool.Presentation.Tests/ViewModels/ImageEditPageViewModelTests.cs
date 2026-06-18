@@ -113,7 +113,7 @@ public sealed class ImageEditPageViewModelTests
         vm.ToggleCropModeCommand.Execute();
 
         // Assert
-        vm.IsInCropMode.Should().BeTrue("Crop mode should be enabled after first toggle");
+        vm.IsCropModeActive.Should().BeTrue("Crop mode should be enabled after first toggle");
 
         telemetry.Verify(t => t.ActivityInitiated(ImageEditPageViewModel.ActivityIds.ToggleCropMode, It.IsAny<string>()), Times.Once);
         telemetry.Verify(t => t.ActivityCompleted(ImageEditPageViewModel.ActivityIds.ToggleCropMode, It.IsAny<string>()), Times.Once);

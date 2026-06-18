@@ -99,23 +99,23 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void InitializeToolbarHosts()
     {
-        SetToolbarHostState(ChromaKeyToolbarHost, ViewModel.ShowChromaKeyOptions);
-        SetToolbarHostState(ShapeToolbarHost, ViewModel.IsInShapesMode);
-        SetToolbarHostState(TextToolbarHost, ViewModel.IsInTextMode);
+        SetToolbarHostState(ChromaKeyToolbarHost, ViewModel.IsChromaKeyModeActive);
+        SetToolbarHostState(ShapeToolbarHost, ViewModel.IsShapesModeActive);
+        SetToolbarHostState(TextToolbarHost, ViewModel.IsTextModeActive);
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
         {
-            case nameof(ViewModel.ShowChromaKeyOptions):
-                AnimateToolbarHost(ChromaKeyToolbarHost, ViewModel.ShowChromaKeyOptions);
+            case nameof(ViewModel.IsChromaKeyModeActive):
+                AnimateToolbarHost(ChromaKeyToolbarHost, ViewModel.IsChromaKeyModeActive);
                 break;
-            case nameof(ViewModel.IsInShapesMode):
-                AnimateToolbarHost(ShapeToolbarHost, ViewModel.IsInShapesMode);
+            case nameof(ViewModel.IsShapesModeActive):
+                AnimateToolbarHost(ShapeToolbarHost, ViewModel.IsShapesModeActive);
                 break;
-            case nameof(ViewModel.IsInTextMode):
-                AnimateToolbarHost(TextToolbarHost, ViewModel.IsInTextMode);
+            case nameof(ViewModel.IsTextModeActive):
+                AnimateToolbarHost(TextToolbarHost, ViewModel.IsTextModeActive);
                 break;
         }
     }
@@ -372,7 +372,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void ImageCanvas_ShapeDrawableSelected(object? _, IDrawable e)
     {
-        ViewModel.OnShapeDrawableSelected(e);
+        ViewModel.ShapeTool.ApplyDrawable(e);
     }
 
     private void ImageCanvas_ShapeModified(object? _, (int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState) e)
@@ -387,7 +387,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void ImageCanvas_TextDrawableSelected(object? _, TextDrawable e)
     {
-        ViewModel.OnTextDrawableSelected(e);
+        ViewModel.TextTool.ApplyDrawable(e);
     }
 
     private void ImageCanvas_ImageContextMenuRequested(object? _, Point position)
@@ -405,33 +405,33 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         if (sender is AppBarToggleButton toggleButton)
         {
-            ViewModel.UpdateShowChromaKeyOptionsCommand.Execute(toggleButton.IsChecked ?? false);
+            ViewModel.SetChromaKeyModeActiveCommand.Execute(toggleButton.IsChecked ?? false);
         }
     }
 
     private void ChromaKeyToolbar_DesaturationChanged(object _, int e)
     {
-        ViewModel.UpdateDesaturationCommand.Execute(e);
+        ViewModel.ChromaKeyTool.UpdateDesaturationCommand.Execute(e);
     }
 
     private void ChromaKeyToolbar_ToleranceChanged(object _, int e)
     {
-        ViewModel.UpdateToleranceCommand.Execute(e);
+        ViewModel.ChromaKeyTool.UpdateToleranceCommand.Execute(e);
     }
 
     private void ChromaKeyToolbar_SelectedColorOptionIndexChanged(object _, int e)
     {
-        ViewModel.UpdateSelectedColorOptionIndexCommand.Execute(e);
+        ViewModel.ChromaKeyTool.UpdateSelectedColorOptionIndexCommand.Execute(e);
     }
 
     private void ChromaKeyToolbar_ChromaKeyInteractionStarted(object? sender, EventArgs e)
     {
-        ViewModel.BeginChromaKeyInteraction();
+        ViewModel.ChromaKeyTool.BeginInteraction();
     }
 
     private void ChromaKeyToolbar_ChromaKeyInteractionCompleted(object? sender, EventArgs e)
     {
-        ViewModel.CompleteChromaKeyInteraction();
+        ViewModel.ChromaKeyTool.CompleteInteraction();
     }
 
     private void ShapeToolbar_SelectedShapeTypeIndexChanged(object _, int e)
@@ -439,33 +439,33 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         if (Enum.IsDefined(typeof(CaptureTool.Domain.Edit.ShapeType), e))
         {
             var shapeType = (CaptureTool.Domain.Edit.ShapeType)e;
-            ViewModel.UpdateSelectedShapeTypeCommand.Execute(shapeType);
+            ViewModel.ShapeTool.UpdateSelectedShapeTypeCommand.Execute(shapeType);
         }
     }
 
     private void ShapeToolbar_StrokeColorChanged(object _, Color e)
     {
-        ViewModel.UpdateShapeStrokeColorCommand.Execute(e);
+        ViewModel.ShapeTool.UpdateShapeStrokeColorCommand.Execute(e);
     }
 
     private void ShapeToolbar_FillColorChanged(object _, Color e)
     {
-        ViewModel.UpdateShapeFillColorCommand.Execute(e);
+        ViewModel.ShapeTool.UpdateShapeFillColorCommand.Execute(e);
     }
 
     private void ShapeToolbar_StrokeWidthChanged(object _, int e)
     {
-        ViewModel.UpdateShapeStrokeWidthCommand.Execute(e);
+        ViewModel.ShapeTool.UpdateShapeStrokeWidthCommand.Execute(e);
     }
 
     private void ShapeToolbar_StrokeOpacityChanged(object _, int e)
     {
-        ViewModel.UpdateShapeStrokeOpacityCommand.Execute(e);
+        ViewModel.ShapeTool.UpdateShapeStrokeOpacityCommand.Execute(e);
     }
 
     private void ShapeToolbar_FillOpacityChanged(object _, int e)
     {
-        ViewModel.UpdateShapeFillOpacityCommand.Execute(e);
+        ViewModel.ShapeTool.UpdateShapeFillOpacityCommand.Execute(e);
     }
 
     private void Toolbar_StyleInteractionStarted(object? sender, EventArgs e)
@@ -480,32 +480,32 @@ public sealed partial class ImageEditPage : ImageEditPageBase
 
     private void TextToolbar_FontColorChanged(object _, Color e)
     {
-        ViewModel.UpdateTextFontColorCommand.Execute(e);
+        ViewModel.TextTool.UpdateTextFontColorCommand.Execute(e);
     }
 
     private void TextToolbar_FontColorOpacityChanged(object _, int e)
     {
-        ViewModel.UpdateTextFontColorOpacityCommand.Execute(e);
+        ViewModel.TextTool.UpdateTextFontColorOpacityCommand.Execute(e);
     }
 
     private void TextToolbar_BackgroundColorChanged(object _, Color e)
     {
-        ViewModel.UpdateTextBackgroundColorCommand.Execute(e);
+        ViewModel.TextTool.UpdateTextBackgroundColorCommand.Execute(e);
     }
 
     private void TextToolbar_BackgroundColorOpacityChanged(object _, int e)
     {
-        ViewModel.UpdateTextBackgroundColorOpacityCommand.Execute(e);
+        ViewModel.TextTool.UpdateTextBackgroundColorOpacityCommand.Execute(e);
     }
 
     private void TextToolbar_FontFamilyChanged(object _, string e)
     {
-        ViewModel.UpdateTextFontFamilyCommand.Execute(e);
+        ViewModel.TextTool.UpdateTextFontFamilyCommand.Execute(e);
     }
 
     private void TextToolbar_FontSizeChanged(object _, int e)
     {
-        ViewModel.UpdateTextFontSizeCommand.Execute(e);
+        ViewModel.TextTool.UpdateTextFontSizeCommand.Execute(e);
     }
 
     private async void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)

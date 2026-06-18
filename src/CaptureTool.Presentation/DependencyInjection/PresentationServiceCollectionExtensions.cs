@@ -35,6 +35,9 @@ public static class PresentationServiceCollectionExtensions
         services.AddTransient<HomePageViewModel>();
         services.AddTransient<SettingsPageViewModel>();
         services.AddTransient<LoadingPageViewModel>();
+        services.AddTransient<ChromaKeyToolViewModel>();
+        services.AddTransient<ShapeToolViewModel>();
+        services.AddTransient<TextToolViewModel>();
         services.AddTransient<ImageEditPageViewModel>();
         services.AddTransient<VideoEditPageViewModel>();
         services.AddTransient<AudioCapturePageViewModel>();

@@ -1,11 +1,8 @@
 using CaptureTool.Application.Abstractions.Cancellation;
-using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
-using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Domain.Edit;
@@ -20,54 +17,17 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 
 public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
 {
-    private const int MinimumShapeStrokeWidth = 1;
-    private const int MaximumShapeStrokeWidth = 100;
-    private const int MinimumTextFontSize = 1;
-    private const int MaximumTextFontSize = 400;
-
-    private enum ImageEditMode
-    {
-        None,
-        Crop,
-        Shapes,
-        Text,
-        ChromaKey
-    }
-
-    private static readonly Color[] DrawablesColorPalette = [
-        Color.Transparent,
-        Color.FromArgb(31, 41, 55), // White
-        Color.FromArgb(249, 250, 251), // Black
-        Color.FromArgb(239, 68, 68), // Red
-        Color.FromArgb(249, 115, 22),
-        Color.FromArgb(245, 158, 11),
-        Color.FromArgb(234, 179, 8),
-        Color.FromArgb(132, 204, 22),
-        Color.FromArgb(34, 197, 94),
-        Color.FromArgb(20, 184, 166),
-        Color.FromArgb(6, 182, 212),
-        Color.FromArgb(59, 130, 246),
-        Color.FromArgb(99, 102, 241),
-        Color.FromArgb(139, 92, 246),
-        Color.FromArgb(236, 72, 153),
-        Color.FromArgb(244, 63, 94),
-    ];
-
     private readonly ILocalizationService _localizationService;
-    private readonly IStoreService _storeService;
     private readonly ICancellationService _cancellationService;
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
     private readonly IImageCanvasExporter _imageCanvasExporter;
-    private readonly IChromaKeyService _chromaKeyService;
     private readonly IFilePickerService _filePickerService;
-    private readonly IChromaKeyFeatureAvailability _chromaKeyFeatureAvailability;
     private readonly IShareService _shareService;
 
     private readonly ImageEditHistory _editHistory;
+    private readonly ImageEditModeStateMachine _modeStateMachine;
     private ImageDrawable? _imageDrawable;
     private ImageEditSession _editSession;
-    private ImageEditMode _activeEditMode;
-    private ChromaKeySettings? _pendingChromaKeyInteractionState;
 
     public event EventHandler? InvalidateCanvasRequested;
     public event EventHandler? ForceZoomAndCenterRequested;
@@ -83,29 +43,19 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IRelayCommand FlipVerticalCommand { get; }
     public IAsyncRelayCommand PrintCommand { get; }
     public IAsyncRelayCommand ShareCommand { get; }
-    public IRelayCommand<Color> UpdateChromaKeyColorCommand { get; }
     public IRelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
     public IRelayCommand<Rectangle> UpdateCropRectCommand { get; }
-    public IRelayCommand<bool> UpdateShowChromaKeyOptionsCommand { get; }
-    public IRelayCommand<int> UpdateDesaturationCommand { get; }
-    public IRelayCommand<int> UpdateToleranceCommand { get; }
-    public IRelayCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
-    public IRelayCommand<ShapeType> UpdateSelectedShapeTypeCommand { get; }
-    public IRelayCommand<Color> UpdateShapeStrokeColorCommand { get; }
-    public IRelayCommand<Color> UpdateShapeFillColorCommand { get; }
-    public IRelayCommand<int> UpdateShapeStrokeWidthCommand { get; }
-    public IRelayCommand<int> UpdateShapeStrokeOpacityCommand { get; }
-    public IRelayCommand<int> UpdateShapeFillOpacityCommand { get; }
+    public IRelayCommand<bool> SetChromaKeyModeActiveCommand { get; }
     public IRelayCommand ToggleTextModeCommand { get; }
-    public IRelayCommand<Color> UpdateTextFontColorCommand { get; }
-    public IRelayCommand<Color> UpdateTextBackgroundColorCommand { get; }
-    public IRelayCommand<int> UpdateTextFontColorOpacityCommand { get; }
-    public IRelayCommand<int> UpdateTextBackgroundColorOpacityCommand { get; }
-    public IRelayCommand<string?> UpdateTextFontFamilyCommand { get; }
-    public IRelayCommand<int> UpdateTextFontSizeCommand { get; }
     public IRelayCommand<int> UpdateZoomPercentageCommand { get; }
     public IRelayCommand<bool> UpdateAutoZoomLockCommand { get; }
     public IRelayCommand ZoomAndCenterCommand { get; }
+
+    public ChromaKeyToolViewModel ChromaKeyTool { get; }
+
+    public ShapeToolViewModel ShapeTool { get; }
+
+    public TextToolViewModel TextTool { get; }
 
     public bool HasUndoStack
     {
@@ -155,99 +105,19 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
-    public bool IsInCropMode
+    public bool IsCropModeActive
     {
         get;
         private set => Set(ref field, value);
     }
 
-    public bool IsInShapesMode
+    public bool IsShapesModeActive
     {
         get;
         private set => Set(ref field, value);
     }
 
-    public bool IsInTextMode
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public ShapeType SelectedShapeType
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public Color ShapeStrokeColor
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public Color ShapeFillColor
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public IReadOnlyList<Color> ShapeStrokeColorOptions { get; }
-
-    public IReadOnlyList<Color> ShapeFillColorOptions { get; }
-
-    public int ShapeStrokeWidth
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public int ShapeStrokeOpacity
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public int ShapeFillOpacity
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public Color TextFontColor
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public Color TextBackgroundColor
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public IReadOnlyList<Color> TextFontColorOptions { get; }
-
-    public IReadOnlyList<Color> TextBackgroundColorOptions { get; }
-
-    public int TextFontColorOpacity
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public int TextBackgroundColorOpacity
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public string TextFontFamily
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public int TextFontSize
+    public bool IsTextModeActive
     {
         get;
         private set => Set(ref field, value);
@@ -259,43 +129,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
-    public bool ShowChromaKeyOptions
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public int ChromaKeyTolerance
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public int ChromaKeyDesaturation
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public Color ChromaKeyColor
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public IReadOnlyList<ChromaKeyColorOption> ChromaKeyColorOptions
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public int SelectedChromaKeyColorOption
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public bool IsChromaKeyAddOnOwned
+    public bool IsChromaKeyModeActive
     {
         get;
         private set => Set(ref field, value);
@@ -315,53 +149,37 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public ImageEditPageViewModel(
         ILocalizationService localizationService,
-        IStoreService storeService,
         ICancellationService cancellationService,
         IImageCanvasPrinter imageCanvasPrinter,
         IImageCanvasExporter imageCanvasExporter,
         IFilePickerService filePickerService,
-        IChromaKeyService chromaKeyService,
-        IChromaKeyFeatureAvailability chromaKeyFeatureAvailability,
-        IShareService shareService)
+        IShareService shareService,
+        ChromaKeyToolViewModel chromaKeyTool,
+        ShapeToolViewModel shapeTool,
+        TextToolViewModel textTool)
     {
         _localizationService = localizationService;
-        _storeService = storeService;
         _cancellationService = cancellationService;
         _imageCanvasPrinter = imageCanvasPrinter;
-        _chromaKeyService = chromaKeyService;
         _filePickerService = filePickerService;
-        _chromaKeyFeatureAvailability = chromaKeyFeatureAvailability;
         _shareService = shareService;
         _imageCanvasExporter = imageCanvasExporter;
 
+        ChromaKeyTool = chromaKeyTool;
+        ShapeTool = shapeTool;
+        TextTool = textTool;
+        ChromaKeyTool.SettingsChanged += ChromaKeyTool_SettingsChanged;
+        ChromaKeyTool.InteractionCommitted += ChromaKeyTool_InteractionCommitted;
+
         _editHistory = new ImageEditHistory();
+        _modeStateMachine = new ImageEditModeStateMachine();
         _editSession = new ImageEditSession(Size.Empty, ImageOrientation.RotateNoneFlipNone, Rectangle.Empty);
         Drawables = _editSession.Drawables;
         ImageSize = _editSession.ImageSize;
         CropRect = _editSession.CropRect;
         Orientation = _editSession.Orientation;
-        MirroredDisplayName = GetMirroredDisplayName(Orientation);
-        RotationDisplayName = GetRotationDisplayName(Orientation);
-        SelectedChromaKeyColorOption = 0;
-        ChromaKeyTolerance = 30;
-        ChromaKeyColor = Color.Empty;
-        ChromaKeyColorOptions = [];
-        SelectedShapeType = ShapeType.Rectangle;
-        ShapeStrokeColor = DrawablesColorPalette[3]; // Red
-        ShapeFillColor = DrawablesColorPalette[0]; // Transparent
-        ShapeStrokeColorOptions = DrawablesColorPalette;
-        ShapeFillColorOptions = DrawablesColorPalette;
-        TextFontColorOptions = DrawablesColorPalette;
-        TextBackgroundColorOptions = DrawablesColorPalette;
-        ShapeStrokeWidth = 3;
-        ShapeStrokeOpacity = 100;
-        ShapeFillOpacity = 100;
-        TextFontColor = DrawablesColorPalette[2]; // Black
-        TextBackgroundColor = DrawablesColorPalette[1]; // White
-        TextFontColorOpacity = 100;
-        TextBackgroundColorOpacity = 100;
-        TextFontFamily = TextDrawable.DefaultFontFamily;
-        TextFontSize = (int)TextDrawable.DefaultFontSize;
+        MirroredDisplayName = string.Empty;
+        RotationDisplayName = string.Empty;
         ZoomPercentage = 100;
 
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -375,29 +193,25 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         FlipVerticalCommand = new RelayCommand(() => Flip(FlipDirection.Vertical));
         PrintCommand = new AsyncRelayCommand(PrintAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ShareCommand = new AsyncRelayCommand(ShareAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, (c) => _chromaKeyFeatureAvailability.IsChromaKeyEnabled);
         UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
         UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
-        UpdateShowChromaKeyOptionsCommand = new RelayCommand<bool>(UpdateShowChromaKeyOptions);
-        UpdateDesaturationCommand = new RelayCommand<int>(UpdateDesaturation);
-        UpdateToleranceCommand = new RelayCommand<int>(UpdateTolerance);
-        UpdateSelectedColorOptionIndexCommand = new RelayCommand<int>(UpdateSelectedColorOptionIndex);
-        UpdateSelectedShapeTypeCommand = new RelayCommand<ShapeType>(UpdateSelectedShapeType);
-        UpdateShapeStrokeColorCommand = new RelayCommand<Color>(UpdateShapeStrokeColor);
-        UpdateShapeFillColorCommand = new RelayCommand<Color>(UpdateShapeFillColor);
-        UpdateShapeStrokeWidthCommand = new RelayCommand<int>(UpdateShapeStrokeWidth);
-        UpdateShapeStrokeOpacityCommand = new RelayCommand<int>(UpdateShapeStrokeOpacity);
-        UpdateShapeFillOpacityCommand = new RelayCommand<int>(UpdateShapeFillOpacity);
+        SetChromaKeyModeActiveCommand = new RelayCommand<bool>(SetChromaKeyModeActive);
         ToggleTextModeCommand = new RelayCommand(ToggleTextMode);
-        UpdateTextFontColorCommand = new RelayCommand<Color>(UpdateTextFontColor);
-        UpdateTextBackgroundColorCommand = new RelayCommand<Color>(UpdateTextBackgroundColor);
-        UpdateTextFontColorOpacityCommand = new RelayCommand<int>(UpdateTextFontColorOpacity);
-        UpdateTextBackgroundColorOpacityCommand = new RelayCommand<int>(UpdateTextBackgroundColorOpacity);
-        UpdateTextFontFamilyCommand = new RelayCommand<string?>(UpdateTextFontFamily);
-        UpdateTextFontSizeCommand = new RelayCommand<int>(UpdateTextFontSize);
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
+    }
+
+    private void ChromaKeyTool_SettingsChanged(object? sender, EventArgs e)
+    {
+        UpdateChromaKeyEffectValues();
+    }
+
+    private void ChromaKeyTool_InteractionCommitted(
+        object? sender,
+        (ChromaKeySettings OldSettings, ChromaKeySettings NewSettings) settings)
+    {
+        ExecuteEditCommand(new SetChromaKeyCommand(settings.OldSettings, settings.NewSettings));
     }
 
     public override async Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
@@ -419,26 +233,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             SyncDrawablesFromSession();
 
             UpdateUndoRedoStackProperties();
-            
-            var colorOptions = new List<ChromaKeyColorOption>();
-            if (_chromaKeyFeatureAvailability.IsChromaKeyEnabled)
-            {
-                bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(
-                    CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval,
-                    cancellationToken);
-
-                IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
-
-                if (isChromaKeyAddOnOwned)
-                {
-                    colorOptions.Add(ChromaKeyColorOption.Empty);
-
-                    var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 15, 16);
-                    colorOptions.AddRange(topColors.Select(color => new ChromaKeyColorOption(color)));
-                }
-            }
-
-            ChromaKeyColorOptions = colorOptions;
+            await ChromaKeyTool.LoadAsync(imageFile, cancellationToken);
 
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
@@ -452,73 +247,17 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public override void Dispose()
     {
+        ChromaKeyTool.SettingsChanged -= ChromaKeyTool_SettingsChanged;
+        ChromaKeyTool.InteractionCommitted -= ChromaKeyTool_InteractionCommitted;
         _imageDrawable = null;
-        _pendingChromaKeyInteractionState = null;
         _editHistory.Clear();
-        SetActiveEditMode(ImageEditMode.None);
+        ApplyActiveMode(_modeStateMachine.Reset());
         _editSession = new ImageEditSession(Size.Empty, ImageOrientation.RotateNoneFlipNone, Rectangle.Empty);
         SyncImageGeometryFromSession();
         SyncDrawablesFromSession();
+        ChromaKeyTool.Reset();
         UpdateUndoRedoStackProperties();
         base.Dispose();
-    }
-
-    private void UpdateDesaturation(int value)
-    {
-        ChromaKeyDesaturation = Math.Clamp(value, 0, 100);
-        UpdateChromaKeyEffectValues();
-    }
-
-    private void UpdateTolerance(int value)
-    {
-        ChromaKeyTolerance = Math.Clamp(value, 0, 100);
-        UpdateChromaKeyEffectValues();
-    }
-
-    private void UpdateSelectedColorOptionIndex(int value)
-    {
-        SelectedChromaKeyColorOption = value;
-        UpdateChromaKeyColor(value);
-    }
-
-    public void BeginChromaKeyInteraction()
-    {
-        _pendingChromaKeyInteractionState ??= CaptureChromaKeySettings();
-    }
-
-    public void CompleteChromaKeyInteraction()
-    {
-        if (_pendingChromaKeyInteractionState is not { } oldState)
-        {
-            return;
-        }
-
-        _pendingChromaKeyInteractionState = null;
-        ChromaKeySettings newState = CaptureChromaKeySettings();
-
-        if (oldState.Equals(newState))
-        {
-            return;
-        }
-
-        ExecuteEditCommand(new SetChromaKeyCommand(oldState, newState));
-    }
-
-    private void UpdateShowChromaKeyOptions(bool value)
-    {
-        if (value)
-        {
-            SetActiveEditMode(ImageEditMode.ChromaKey);
-        }
-        else if (_activeEditMode == ImageEditMode.ChromaKey)
-        {
-            SetActiveEditMode(ImageEditMode.None);
-        }
-    }
-
-    private void UpdateIsInCropMode(bool value)
-    {
-        SetActiveEditMode(value ? ImageEditMode.Crop : ImageEditMode.None);
     }
 
     private async Task CopyAsync()
@@ -527,156 +266,50 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         await _imageCanvasExporter.CopyImageToClipboardAsync([.. Drawables], options);
     }
 
+    private void SetChromaKeyModeActive(bool value)
+    {
+        ApplyActiveMode(value
+            ? _modeStateMachine.Activate(ImageEditMode.ChromaKey)
+            : _modeStateMachine.Deactivate(ImageEditMode.ChromaKey));
+    }
+
     private void ToggleCropMode()
     {
-        UpdateIsInCropMode(!IsInCropMode);
+        ApplyActiveMode(_modeStateMachine.Toggle(ImageEditMode.Crop));
     }
 
     private void ToggleShapesMode()
     {
-        UpdateIsInShapesMode(!IsInShapesMode);
+        ApplyActiveMode(_modeStateMachine.Toggle(ImageEditMode.Shapes));
     }
 
     private void ToggleTextMode()
     {
-        UpdateIsInTextMode(!IsInTextMode);
+        ApplyActiveMode(_modeStateMachine.Toggle(ImageEditMode.Text));
     }
 
-    private void UpdateIsInShapesMode(bool value)
+    private void ApplyActiveMode(ImageEditMode mode)
     {
-        SetActiveEditMode(value ? ImageEditMode.Shapes : ImageEditMode.None);
-    }
-
-    private void UpdateIsInTextMode(bool value)
-    {
-        SetActiveEditMode(value ? ImageEditMode.Text : ImageEditMode.None);
-    }
-
-    private void SetActiveEditMode(ImageEditMode mode)
-    {
-        if (_activeEditMode == mode)
-        {
-            return;
-        }
-
-        _activeEditMode = mode;
-        IsInCropMode = mode == ImageEditMode.Crop;
-        IsInShapesMode = mode == ImageEditMode.Shapes;
-        IsInTextMode = mode == ImageEditMode.Text;
-        ShowChromaKeyOptions = mode == ImageEditMode.ChromaKey;
-    }
-
-    private void UpdateSelectedShapeType(ShapeType value)
-    {
-        SelectedShapeType = value;
-    }
-
-    private void UpdateShapeStrokeColor(Color value)
-    {
-        ShapeStrokeColor = ApplyOpacity(value, ShapeStrokeOpacity);
-    }
-
-    private void UpdateShapeFillColor(Color value)
-    {
-        ShapeFillColor = ApplyOpacity(value, ShapeFillOpacity);
-    }
-
-    private void UpdateShapeStrokeWidth(int value)
-    {
-        ShapeStrokeWidth = Math.Clamp(value, MinimumShapeStrokeWidth, MaximumShapeStrokeWidth);
-    }
-
-    private void UpdateShapeStrokeOpacity(int value)
-    {
-        ShapeStrokeOpacity = Math.Clamp(value, 0, 100);
-        ShapeStrokeColor = ApplyOpacity(ShapeStrokeColor, ShapeStrokeOpacity);
-    }
-
-    private void UpdateShapeFillOpacity(int value)
-    {
-        ShapeFillOpacity = Math.Clamp(value, 0, 100);
-        ShapeFillColor = ApplyOpacity(ShapeFillColor, ShapeFillOpacity);
-    }
-
-    private void UpdateTextFontColor(Color value)
-    {
-        TextFontColor = ApplyOpacity(value, TextFontColorOpacity);
-    }
-
-    private void UpdateTextBackgroundColor(Color value)
-    {
-        TextBackgroundColor = ApplyOpacity(value, TextBackgroundColorOpacity);
-    }
-
-    private void UpdateTextFontColorOpacity(int value)
-    {
-        TextFontColorOpacity = Math.Clamp(value, 0, 100);
-        TextFontColor = ApplyOpacity(TextFontColor, TextFontColorOpacity);
-    }
-
-    private void UpdateTextBackgroundColorOpacity(int value)
-    {
-        TextBackgroundColorOpacity = Math.Clamp(value, 0, 100);
-        TextBackgroundColor = ApplyOpacity(TextBackgroundColor, TextBackgroundColorOpacity);
-    }
-
-    private void UpdateTextFontFamily(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return;
-        }
-
-        TextFontFamily = value;
-    }
-
-    private void UpdateTextFontSize(int value)
-    {
-        TextFontSize = Math.Clamp(value, MinimumTextFontSize, MaximumTextFontSize);
+        IsCropModeActive = mode == ImageEditMode.Crop;
+        IsShapesModeActive = mode == ImageEditMode.Shapes;
+        IsTextModeActive = mode == ImageEditMode.Text;
+        IsChromaKeyModeActive = mode == ImageEditMode.ChromaKey;
     }
 
     private void ApplyImageSizeBasedDefaults(Size imageSize)
     {
-        int largestEdge = Math.Max(imageSize.Width, imageSize.Height);
-        int smallestEdge = Math.Min(imageSize.Width, imageSize.Height);
-
-        if (largestEdge > 0)
-        {
-            ShapeStrokeWidth = Math.Clamp(
-                (int)Math.Round(largestEdge / 900d),
-                3,
-                MaximumShapeStrokeWidth);
-        }
-
-        if (smallestEdge > 0)
-        {
-            TextFontSize = Math.Clamp(
-                (int)Math.Round(smallestEdge / 40d),
-                (int)TextDrawable.DefaultFontSize,
-                MaximumTextFontSize);
-        }
-    }
-
-    private static Color ApplyOpacity(Color color, int opacityPercentage)
-    {
-        if (color.Equals(Color.Transparent))
-        {
-            return Color.Transparent;
-        }
-
-        int alpha = (int)Math.Round(Math.Clamp(opacityPercentage, 0, 100) / 100d * byte.MaxValue);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        ShapeTool.ApplyImageSizeDefaults(imageSize);
+        TextTool.ApplyImageSizeDefaults(imageSize);
     }
 
     public void OnShapeDrawn(Vector2 startPoint, Vector2 endPoint)
     {
-        if (!IsInShapesMode)
+        if (!IsShapesModeActive)
         {
             return;
         }
 
-        ShapeStyle style = new(ShapeStrokeColor, ShapeFillColor, ShapeStrokeWidth);
-        IDrawable? newShape = DrawableFactory.CreateShape(SelectedShapeType, startPoint, endPoint, style);
+        IDrawable? newShape = ShapeTool.CreateDrawable(startPoint, endPoint);
 
         if (newShape != null)
         {
@@ -686,13 +319,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnTextBoxDrawn(Vector2 startPoint, Vector2 endPoint)
     {
-        if (!IsInTextMode)
+        if (!IsTextModeActive)
         {
             return;
         }
 
-        TextStyle style = new(TextFontColor, TextBackgroundColor, TextFontFamily, TextFontSize);
-        TextDrawable? newText = DrawableFactory.CreateTextBox(startPoint, endPoint, style);
+        TextDrawable? newText = TextTool.CreateDrawable(startPoint, endPoint);
 
         if (newText != null)
         {
@@ -700,54 +332,9 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
-    public void OnTextDrawableSelected(TextDrawable text)
-    {
-        TextFontColor = text.Color;
-        TextBackgroundColor = text.BackgroundColor;
-        TextFontColorOpacity = AlphaToOpacityPercentage(text.Color);
-        TextBackgroundColorOpacity = AlphaToOpacityPercentage(text.BackgroundColor);
-        TextFontFamily = text.FontFamily;
-        TextFontSize = Math.Clamp((int)Math.Round(text.FontSize), MinimumTextFontSize, MaximumTextFontSize);
-    }
-
-    public void OnShapeDrawableSelected(IDrawable drawable)
-    {
-        switch (drawable)
-        {
-            case RectangleDrawable rectangle:
-                SelectedShapeType = ShapeType.Rectangle;
-                ShapeStrokeColor = rectangle.StrokeColor;
-                ShapeFillColor = rectangle.FillColor;
-                ShapeStrokeWidth = Math.Clamp(rectangle.StrokeWidth, MinimumShapeStrokeWidth, MaximumShapeStrokeWidth);
-                ShapeStrokeOpacity = AlphaToOpacityPercentage(rectangle.StrokeColor);
-                ShapeFillOpacity = AlphaToOpacityPercentage(rectangle.FillColor);
-                break;
-            case EllipseDrawable ellipse:
-                SelectedShapeType = ShapeType.Ellipse;
-                ShapeStrokeColor = ellipse.StrokeColor;
-                ShapeFillColor = ellipse.FillColor;
-                ShapeStrokeWidth = Math.Clamp(ellipse.StrokeWidth, MinimumShapeStrokeWidth, MaximumShapeStrokeWidth);
-                ShapeStrokeOpacity = AlphaToOpacityPercentage(ellipse.StrokeColor);
-                ShapeFillOpacity = AlphaToOpacityPercentage(ellipse.FillColor);
-                break;
-            case LineDrawable line:
-                SelectedShapeType = ShapeType.Line;
-                ShapeStrokeColor = line.StrokeColor;
-                ShapeStrokeWidth = Math.Clamp(line.StrokeWidth, MinimumShapeStrokeWidth, MaximumShapeStrokeWidth);
-                ShapeStrokeOpacity = AlphaToOpacityPercentage(line.StrokeColor);
-                break;
-            case ArrowDrawable arrow:
-                SelectedShapeType = ShapeType.Arrow;
-                ShapeStrokeColor = arrow.StrokeColor;
-                ShapeStrokeWidth = Math.Clamp(arrow.StrokeWidth, MinimumShapeStrokeWidth, MaximumShapeStrokeWidth);
-                ShapeStrokeOpacity = AlphaToOpacityPercentage(arrow.StrokeColor);
-                break;
-        }
-    }
-
     public void OnShapeDeleted(int shapeIndex)
     {
-        if (!IsInShapesMode && !IsInTextMode)
+        if (!IsShapesModeActive && !IsTextModeActive)
         {
             return;
         }
@@ -760,7 +347,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public void OnShapeModified(int shapeIndex, ModifyShapeOperation.ShapeState oldState, ModifyShapeOperation.ShapeState newState)
     {
-        if (!IsInShapesMode && !IsInTextMode)
+        if (!IsShapesModeActive && !IsTextModeActive)
         {
             return;
         }
@@ -788,40 +375,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateChromaKeyEffectValues()
     {
-        _editSession.SetChromaKeySettings(CaptureChromaKeySettings());
+        _editSession.SetChromaKeySettings(ChromaKeyTool.CaptureSettings());
         SyncDrawablesFromSession();
 
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void UpdateChromaKeyColor(int colorIndex)
-    {
-        if (colorIndex < 0 || colorIndex >= ChromaKeyColorOptions.Count)
-        {
-            return;
-        }
-
-        UpdateChromaKeyColor(ChromaKeyColorOptions[colorIndex].Color);
-    }
-
-    private void UpdateChromaKeyColor(Color color)
-    {
-        if (!_chromaKeyFeatureAvailability.IsChromaKeyEnabled)
-        {
-            return;
-        }
-
-        ChromaKeyColor = color;
-        UpdateChromaKeyEffectValues();
-    }
-
-    private ChromaKeySettings CaptureChromaKeySettings()
-    {
-        return new(
-            SelectedChromaKeyColorOption,
-            ChromaKeyColor,
-            ChromaKeyTolerance,
-            ChromaKeyDesaturation);
     }
 
     private async Task SaveAsync()
@@ -954,11 +511,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void SyncChromaKeySettingsFromSession()
     {
-        ChromaKeySettings settings = _editSession.ChromaKeySettings;
-        SelectedChromaKeyColorOption = settings.SelectedColorOptionIndex;
-        ChromaKeyColor = settings.Color;
-        ChromaKeyTolerance = settings.Tolerance;
-        ChromaKeyDesaturation = settings.Desaturation;
+        ChromaKeyTool.ApplySettings(_editSession.ChromaKeySettings);
     }
 
     private string GetMirroredDisplayName(ImageOrientation orientation)
@@ -1015,12 +568,5 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void RequestZoomAndCenter()
     {
         ForceZoomAndCenterRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    private static int AlphaToOpacityPercentage(Color color)
-    {
-        return color.Equals(Color.Transparent)
-            ? 100
-            : (int)Math.Round(color.A / (double)byte.MaxValue * 100);
     }
 }

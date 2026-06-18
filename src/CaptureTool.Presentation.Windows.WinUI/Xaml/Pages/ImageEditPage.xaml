@@ -33,26 +33,26 @@
             <AppBarToggleButton
                 x:Uid="ImageEdit_ChromaKeyButton"
                 Checked="ChromaKeyAppBarToggleButton_IsCheckedChanged"
-                IsChecked="{x:Bind ViewModel.ShowChromaKeyOptions, Mode=OneWay}"
+                IsChecked="{x:Bind ViewModel.IsChromaKeyModeActive, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}"
                 Unchecked="ChromaKeyAppBarToggleButton_IsCheckedChanged"
-                Visibility="{x:Bind ViewModel.IsChromaKeyAddOnOwned, Mode=OneWay}">
+                Visibility="{x:Bind ViewModel.ChromaKeyTool.IsChromaKeyAddOnOwned, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="{StaticResource Color}" />
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
-            <AppBarSeparator Visibility="{x:Bind ViewModel.IsChromaKeyAddOnOwned, Mode=OneWay}" />
+            <AppBarSeparator Visibility="{x:Bind ViewModel.ChromaKeyTool.IsChromaKeyAddOnOwned, Mode=OneWay}" />
             <!--  Crop and orientation  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_CropButton"
                 Command="{x:Bind ViewModel.ToggleCropModeCommand}"
                 Icon="Crop"
-                IsChecked="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
+                IsChecked="{x:Bind ViewModel.IsCropModeActive, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
             <AppBarToggleButton
                 x:Uid="ImageEdit_ShapesButton"
                 Command="{x:Bind ViewModel.ToggleShapesModeCommand}"
-                IsChecked="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
+                IsChecked="{x:Bind ViewModel.IsShapesModeActive, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="&#xE91B;" />
@@ -61,7 +61,7 @@
             <AppBarToggleButton
                 x:Uid="ImageEdit_TextButton"
                 Command="{x:Bind ViewModel.ToggleTextModeCommand}"
-                IsChecked="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}"
+                IsChecked="{x:Bind ViewModel.IsTextModeActive, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="&#xE8D2;" />
@@ -161,24 +161,24 @@
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"
                 InteractionComplete="ImageCanvas_InteractionComplete"
                 IsAutoZoomLocked="{x:Bind ViewModel.IsAutoZoomLocked, Mode=OneWay}"
-                IsCropModeEnabled="{x:Bind ViewModel.IsInCropMode, Mode=OneWay}"
-                IsShapesModeEnabled="{x:Bind ViewModel.IsInShapesMode, Mode=OneWay}"
-                IsTextModeEnabled="{x:Bind ViewModel.IsInTextMode, Mode=OneWay}"
+                IsCropModeEnabled="{x:Bind ViewModel.IsCropModeActive, Mode=OneWay}"
+                IsShapesModeEnabled="{x:Bind ViewModel.IsShapesModeActive, Mode=OneWay}"
+                IsTextModeEnabled="{x:Bind ViewModel.IsTextModeActive, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}"
-                SelectedShapeType="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay}"
+                SelectedShapeType="{x:Bind ViewModel.ShapeTool.SelectedShapeType, Mode=OneWay}"
                 ShapeDeleted="ImageCanvas_ShapeDeleted"
                 ShapeDrawn="ImageCanvas_ShapeDrawn"
                 ShapeDrawableSelected="ImageCanvas_ShapeDrawableSelected"
-                ShapeFillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
+                ShapeFillColor="{x:Bind ViewModel.ShapeTool.ShapeFillColor, Mode=OneWay}"
                 ShapeModified="ImageCanvas_ShapeModified"
-                ShapeStrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
-                ShapeStrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
-                TextBackgroundColor="{x:Bind ViewModel.TextBackgroundColor, Mode=OneWay}"
+                ShapeStrokeColor="{x:Bind ViewModel.ShapeTool.ShapeStrokeColor, Mode=OneWay}"
+                ShapeStrokeWidth="{x:Bind ViewModel.ShapeTool.ShapeStrokeWidth, Mode=OneWay}"
+                TextBackgroundColor="{x:Bind ViewModel.TextTool.TextBackgroundColor, Mode=OneWay}"
                 TextBoxDrawn="ImageCanvas_TextBoxDrawn"
                 TextDrawableSelected="ImageCanvas_TextDrawableSelected"
-                TextFontFamily="{x:Bind ViewModel.TextFontFamily, Mode=OneWay}"
-                TextFontSize="{x:Bind ViewModel.TextFontSize, Mode=OneWay}"
-                TextForegroundColor="{x:Bind ViewModel.TextFontColor, Mode=OneWay}" />
+                TextFontFamily="{x:Bind ViewModel.TextTool.TextFontFamily, Mode=OneWay}"
+                TextFontSize="{x:Bind ViewModel.TextTool.TextFontSize, Mode=OneWay}"
+                TextForegroundColor="{x:Bind ViewModel.TextTool.TextFontColor, Mode=OneWay}" />
 
             <Grid
                 x:Name="FloatingToolbarLayer"
@@ -191,13 +191,13 @@
                     HorizontalAlignment="Center"
                     ChromaKeyInteractionCompleted="ChromaKeyToolbar_ChromaKeyInteractionCompleted"
                     ChromaKeyInteractionStarted="ChromaKeyToolbar_ChromaKeyInteractionStarted"
-                    ColorOptions="{x:Bind ViewModel.ChromaKeyColorOptions, Mode=OneWay}"
-                    Desaturation="{x:Bind ViewModel.ChromaKeyDesaturation, Mode=OneWay}"
+                    ColorOptions="{x:Bind ViewModel.ChromaKeyTool.ChromaKeyColorOptions, Mode=OneWay}"
+                    Desaturation="{x:Bind ViewModel.ChromaKeyTool.ChromaKeyDesaturation, Mode=OneWay}"
                     DesaturationChanged="ChromaKeyToolbar_DesaturationChanged"
                     Opacity="0"
-                    SelectedColorOptionIndex="{x:Bind ViewModel.SelectedChromaKeyColorOption, Mode=OneWay}"
+                    SelectedColorOptionIndex="{x:Bind ViewModel.ChromaKeyTool.SelectedChromaKeyColorOption, Mode=OneWay}"
                     SelectedColorOptionIndexChanged="ChromaKeyToolbar_SelectedColorOptionIndexChanged"
-                    Tolerance="{x:Bind ViewModel.ChromaKeyTolerance, Mode=OneWay}"
+                    Tolerance="{x:Bind ViewModel.ChromaKeyTool.ChromaKeyTolerance, Mode=OneWay}"
                     ToleranceChanged="ChromaKeyToolbar_ToleranceChanged"
                     Visibility="Collapsed">
                     <controls:ChromaKeyToolbar.RenderTransform>
@@ -209,20 +209,20 @@
                 <controls:ShapeToolbar
                     x:Name="ShapeToolbarHost"
                     HorizontalAlignment="Center"
-                    FillColor="{x:Bind ViewModel.ShapeFillColor, Mode=OneWay}"
+                    FillColor="{x:Bind ViewModel.ShapeTool.ShapeFillColor, Mode=OneWay}"
                     FillColorChanged="ShapeToolbar_FillColorChanged"
-                    FillColorOptions="{x:Bind ViewModel.ShapeFillColorOptions, Mode=OneWay}"
-                    FillOpacity="{x:Bind ViewModel.ShapeFillOpacity, Mode=OneWay}"
+                    FillColorOptions="{x:Bind ViewModel.ShapeTool.ShapeFillColorOptions, Mode=OneWay}"
+                    FillOpacity="{x:Bind ViewModel.ShapeTool.ShapeFillOpacity, Mode=OneWay}"
                     FillOpacityChanged="ShapeToolbar_FillOpacityChanged"
                     Opacity="0"
-                    SelectedShapeTypeIndex="{x:Bind ViewModel.SelectedShapeType, Mode=OneWay, Converter={StaticResource ShapeTypeToIntConverter}}"
+                    SelectedShapeTypeIndex="{x:Bind ViewModel.ShapeTool.SelectedShapeType, Mode=OneWay, Converter={StaticResource ShapeTypeToIntConverter}}"
                     SelectedShapeTypeIndexChanged="ShapeToolbar_SelectedShapeTypeIndexChanged"
-                    StrokeColor="{x:Bind ViewModel.ShapeStrokeColor, Mode=OneWay}"
+                    StrokeColor="{x:Bind ViewModel.ShapeTool.ShapeStrokeColor, Mode=OneWay}"
                     StrokeColorChanged="ShapeToolbar_StrokeColorChanged"
-                    StrokeColorOptions="{x:Bind ViewModel.ShapeStrokeColorOptions, Mode=OneWay}"
-                    StrokeOpacity="{x:Bind ViewModel.ShapeStrokeOpacity, Mode=OneWay}"
+                    StrokeColorOptions="{x:Bind ViewModel.ShapeTool.ShapeStrokeColorOptions, Mode=OneWay}"
+                    StrokeOpacity="{x:Bind ViewModel.ShapeTool.ShapeStrokeOpacity, Mode=OneWay}"
                     StrokeOpacityChanged="ShapeToolbar_StrokeOpacityChanged"
-                    StrokeWidth="{x:Bind ViewModel.ShapeStrokeWidth, Mode=OneWay}"
+                    StrokeWidth="{x:Bind ViewModel.ShapeTool.ShapeStrokeWidth, Mode=OneWay}"
                     StrokeWidthChanged="ShapeToolbar_StrokeWidthChanged"
                     StyleInteractionCompleted="Toolbar_StyleInteractionCompleted"
                     StyleInteractionStarted="Toolbar_StyleInteractionStarted"
@@ -239,19 +239,19 @@
                     Opacity="0"
                     StyleInteractionCompleted="Toolbar_StyleInteractionCompleted"
                     StyleInteractionStarted="Toolbar_StyleInteractionStarted"
-                    TextBackgroundColor="{x:Bind ViewModel.TextBackgroundColor, Mode=OneWay}"
+                    TextBackgroundColor="{x:Bind ViewModel.TextTool.TextBackgroundColor, Mode=OneWay}"
                     TextBackgroundColorChanged="TextToolbar_BackgroundColorChanged"
-                    TextBackgroundColorOpacity="{x:Bind ViewModel.TextBackgroundColorOpacity, Mode=OneWay}"
+                    TextBackgroundColorOpacity="{x:Bind ViewModel.TextTool.TextBackgroundColorOpacity, Mode=OneWay}"
                     TextBackgroundColorOpacityChanged="TextToolbar_BackgroundColorOpacityChanged"
-                    TextBackgroundColorOptions="{x:Bind ViewModel.TextBackgroundColorOptions, Mode=OneWay}"
-                    TextFontColor="{x:Bind ViewModel.TextFontColor, Mode=OneWay}"
+                    TextBackgroundColorOptions="{x:Bind ViewModel.TextTool.TextBackgroundColorOptions, Mode=OneWay}"
+                    TextFontColor="{x:Bind ViewModel.TextTool.TextFontColor, Mode=OneWay}"
                     TextFontColorChanged="TextToolbar_FontColorChanged"
-                    TextFontColorOpacity="{x:Bind ViewModel.TextFontColorOpacity, Mode=OneWay}"
+                    TextFontColorOpacity="{x:Bind ViewModel.TextTool.TextFontColorOpacity, Mode=OneWay}"
                     TextFontColorOpacityChanged="TextToolbar_FontColorOpacityChanged"
-                    TextFontColorOptions="{x:Bind ViewModel.TextFontColorOptions, Mode=OneWay}"
-                    TextFontFamily="{x:Bind ViewModel.TextFontFamily, Mode=OneWay}"
+                    TextFontColorOptions="{x:Bind ViewModel.TextTool.TextFontColorOptions, Mode=OneWay}"
+                    TextFontFamily="{x:Bind ViewModel.TextTool.TextFontFamily, Mode=OneWay}"
                     TextFontFamilyChanged="TextToolbar_FontFamilyChanged"
-                    TextFontSize="{x:Bind ViewModel.TextFontSize, Mode=OneWay}"
+                    TextFontSize="{x:Bind ViewModel.TextTool.TextFontSize, Mode=OneWay}"
                     TextFontSizeChanged="TextToolbar_FontSizeChanged"
                     Visibility="Collapsed">
                     <controls:TextToolbar.RenderTransform>
