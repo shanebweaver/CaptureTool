@@ -13,7 +13,6 @@ using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Numerics;
 
@@ -64,8 +63,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IChromaKeyFeatureAvailability _chromaKeyFeatureAvailability;
     private readonly IShareService _shareService;
 
-    private ImageDrawable? _imageDrawable;
     private readonly ImageEditHistory _editHistory;
+    private ImageDrawable? _imageDrawable;
     private ImageEditSession _editSession;
     private ImageEditMode _activeEditMode;
     private ChromaKeySettings? _pendingChromaKeyInteractionState;
@@ -284,16 +283,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
-    private ObservableCollection<ChromaKeyColorOption> _chromaKeyColorOptions = [];
-
     public IReadOnlyList<ChromaKeyColorOption> ChromaKeyColorOptions
     {
-        get => _chromaKeyColorOptions;
-        private set
-        {
-            _chromaKeyColorOptions = value as ObservableCollection<ChromaKeyColorOption> ?? new ObservableCollection<ChromaKeyColorOption>(value);
-            RaisePropertyChanged(nameof(ChromaKeyColorOptions));
-        }
+        get;
+        private set => Set(ref field, value);
     }
 
     public int SelectedChromaKeyColorOption
@@ -341,11 +334,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _shareService = shareService;
         _imageCanvasExporter = imageCanvasExporter;
 
-        Drawables = [];
+        _editHistory = new ImageEditHistory();
         _editSession = new ImageEditSession(Size.Empty, ImageOrientation.RotateNoneFlipNone, Rectangle.Empty);
-        MirroredDisplayName = string.Empty;
-        RotationDisplayName = string.Empty;
-        SyncImageGeometryFromSession();
+        Drawables = _editSession.Drawables;
+        ImageSize = _editSession.ImageSize;
+        CropRect = _editSession.CropRect;
+        Orientation = _editSession.Orientation;
+        MirroredDisplayName = GetMirroredDisplayName(Orientation);
+        RotationDisplayName = GetRotationDisplayName(Orientation);
         SelectedChromaKeyColorOption = 0;
         ChromaKeyTolerance = 30;
         ChromaKeyColor = Color.Empty;
@@ -367,9 +363,6 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         TextFontFamily = TextDrawable.DefaultFontFamily;
         TextFontSize = (int)TextDrawable.DefaultFontSize;
         ZoomPercentage = 100;
-        IsAutoZoomLocked = false;
-        _editHistory = new ImageEditHistory();
-        UpdateUndoRedoStackProperties();
 
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
@@ -425,24 +418,27 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             _editSession.AddDrawable(_imageDrawable);
             SyncDrawablesFromSession();
 
+            UpdateUndoRedoStackProperties();
+            
+            var colorOptions = new List<ChromaKeyColorOption>();
             if (_chromaKeyFeatureAvailability.IsChromaKeyEnabled)
             {
-                bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, cancellationToken);
+                bool isChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(
+                    CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval,
+                    cancellationToken);
+
                 IsChromaKeyAddOnOwned = isChromaKeyAddOnOwned;
+
                 if (isChromaKeyAddOnOwned)
                 {
-                    // Empty option disables the effect.
-                    _chromaKeyColorOptions.Add(ChromaKeyColorOption.Empty);
+                    colorOptions.Add(ChromaKeyColorOption.Empty);
 
-                    // Add top detected colors
                     var topColors = await _chromaKeyService.GetTopColorsAsync(imageFile, 15, 16);
-                    foreach (var topColor in topColors)
-                    {
-                        ChromaKeyColorOption colorOption = new(topColor);
-                        _chromaKeyColorOptions.Add(colorOption);
-                    }
+                    colorOptions.AddRange(topColors.Select(color => new ChromaKeyColorOption(color)));
                 }
             }
+
+            ChromaKeyColorOptions = colorOptions;
 
             InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
         }
@@ -952,7 +948,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void SyncDrawablesFromSession()
     {
-        Drawables = _editSession.Drawables.ToArray();
+        Drawables = _editSession.Drawables;
         _imageDrawable = Drawables.OfType<ImageDrawable>().FirstOrDefault();
     }
 
