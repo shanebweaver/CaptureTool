@@ -60,14 +60,14 @@ public sealed class ImageEditPageViewModelShareTests
 
         var viewModel = new ImageEditPageViewModel(
             localization,
-            storeService,
             cancellationService.Object,
             printer,
             exporter.Object,
             filePicker.Object,
-            chromaKeyService,
-            featureAvailability.Object,
-            shareService.Object);
+            shareService.Object,
+            new ChromaKeyToolViewModel(storeService, chromaKeyService, featureAvailability.Object),
+            new ShapeToolViewModel(),
+            new TextToolViewModel());
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);
         viewModel.AddDrawable(shape);

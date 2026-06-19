@@ -43,8 +43,8 @@ public sealed class ImageEditPageViewModelDefaultsTests
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);
 
-        viewModel.ShapeStrokeWidth.Should().Be(9);
-        viewModel.TextFontSize.Should().Be(100);
+        viewModel.ShapeTool.ShapeStrokeWidth.Should().Be(9);
+        viewModel.TextTool.TextFontSize.Should().Be(100);
     }
 
     [TestMethod]
@@ -53,28 +53,41 @@ public sealed class ImageEditPageViewModelDefaultsTests
         var viewModel = CreateViewModel();
 
         viewModel.ToggleTextModeCommand.Execute(null);
-        viewModel.IsInTextMode.Should().BeTrue();
-        viewModel.IsInCropMode.Should().BeFalse();
-        viewModel.IsInShapesMode.Should().BeFalse();
-        viewModel.ShowChromaKeyOptions.Should().BeFalse();
+        viewModel.IsTextModeActive.Should().BeTrue();
+        viewModel.IsCropModeActive.Should().BeFalse();
+        viewModel.IsShapesModeActive.Should().BeFalse();
+        viewModel.IsChromaKeyModeActive.Should().BeFalse();
 
         viewModel.ToggleCropModeCommand.Execute(null);
-        viewModel.IsInCropMode.Should().BeTrue();
-        viewModel.IsInTextMode.Should().BeFalse();
-        viewModel.IsInShapesMode.Should().BeFalse();
-        viewModel.ShowChromaKeyOptions.Should().BeFalse();
+        viewModel.IsCropModeActive.Should().BeTrue();
+        viewModel.IsTextModeActive.Should().BeFalse();
+        viewModel.IsShapesModeActive.Should().BeFalse();
+        viewModel.IsChromaKeyModeActive.Should().BeFalse();
 
         viewModel.ToggleShapesModeCommand.Execute(null);
-        viewModel.IsInShapesMode.Should().BeTrue();
-        viewModel.IsInCropMode.Should().BeFalse();
-        viewModel.IsInTextMode.Should().BeFalse();
-        viewModel.ShowChromaKeyOptions.Should().BeFalse();
+        viewModel.IsShapesModeActive.Should().BeTrue();
+        viewModel.IsCropModeActive.Should().BeFalse();
+        viewModel.IsTextModeActive.Should().BeFalse();
+        viewModel.IsChromaKeyModeActive.Should().BeFalse();
 
-        viewModel.UpdateShowChromaKeyOptionsCommand.Execute(true);
-        viewModel.ShowChromaKeyOptions.Should().BeTrue();
-        viewModel.IsInCropMode.Should().BeFalse();
-        viewModel.IsInShapesMode.Should().BeFalse();
-        viewModel.IsInTextMode.Should().BeFalse();
+        viewModel.SetChromaKeyModeActiveCommand.Execute(true);
+        viewModel.IsChromaKeyModeActive.Should().BeTrue();
+        viewModel.IsCropModeActive.Should().BeFalse();
+        viewModel.IsShapesModeActive.Should().BeFalse();
+        viewModel.IsTextModeActive.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void EditModeCommands_ShouldIgnoreInactiveModeDeactivation()
+    {
+        var viewModel = CreateViewModel();
+
+        viewModel.SetChromaKeyModeActiveCommand.Execute(true);
+        viewModel.ToggleShapesModeCommand.Execute(null);
+        viewModel.SetChromaKeyModeActiveCommand.Execute(false);
+
+        viewModel.IsShapesModeActive.Should().BeTrue();
+        viewModel.IsChromaKeyModeActive.Should().BeFalse();
     }
 
     [TestMethod]
@@ -116,35 +129,35 @@ public sealed class ImageEditPageViewModelDefaultsTests
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);
 
-        viewModel.BeginChromaKeyInteraction();
-        viewModel.UpdateSelectedColorOptionIndexCommand.Execute(1);
-        viewModel.UpdateToleranceCommand.Execute(45);
-        viewModel.UpdateToleranceCommand.Execute(65);
-        viewModel.UpdateDesaturationCommand.Execute(20);
-        viewModel.CompleteChromaKeyInteraction();
+        viewModel.ChromaKeyTool.BeginInteraction();
+        viewModel.ChromaKeyTool.UpdateSelectedColorOptionIndexCommand.Execute(1);
+        viewModel.ChromaKeyTool.UpdateToleranceCommand.Execute(45);
+        viewModel.ChromaKeyTool.UpdateToleranceCommand.Execute(65);
+        viewModel.ChromaKeyTool.UpdateDesaturationCommand.Execute(20);
+        viewModel.ChromaKeyTool.CompleteInteraction();
 
         viewModel.HasUndoStack.Should().BeTrue();
         viewModel.HasRedoStack.Should().BeFalse();
-        viewModel.SelectedChromaKeyColorOption.Should().Be(1);
-        viewModel.ChromaKeyColor.Should().Be(Color.Green);
-        viewModel.ChromaKeyTolerance.Should().Be(65);
-        viewModel.ChromaKeyDesaturation.Should().Be(20);
+        viewModel.ChromaKeyTool.SelectedChromaKeyColorOption.Should().Be(1);
+        viewModel.ChromaKeyTool.ChromaKeyColor.Should().Be(Color.Green);
+        viewModel.ChromaKeyTool.ChromaKeyTolerance.Should().Be(65);
+        viewModel.ChromaKeyTool.ChromaKeyDesaturation.Should().Be(20);
         GetChromaKeyEffect(viewModel).IsEnabled.Should().BeTrue();
 
         viewModel.UndoCommand.Execute(null);
 
-        viewModel.SelectedChromaKeyColorOption.Should().Be(0);
-        viewModel.ChromaKeyColor.Should().Be(Color.Empty);
-        viewModel.ChromaKeyTolerance.Should().Be(30);
-        viewModel.ChromaKeyDesaturation.Should().Be(0);
+        viewModel.ChromaKeyTool.SelectedChromaKeyColorOption.Should().Be(0);
+        viewModel.ChromaKeyTool.ChromaKeyColor.Should().Be(Color.Empty);
+        viewModel.ChromaKeyTool.ChromaKeyTolerance.Should().Be(30);
+        viewModel.ChromaKeyTool.ChromaKeyDesaturation.Should().Be(0);
         GetChromaKeyEffect(viewModel).IsEnabled.Should().BeFalse();
 
         viewModel.RedoCommand.Execute(null);
 
-        viewModel.SelectedChromaKeyColorOption.Should().Be(1);
-        viewModel.ChromaKeyColor.Should().Be(Color.Green);
-        viewModel.ChromaKeyTolerance.Should().Be(65);
-        viewModel.ChromaKeyDesaturation.Should().Be(20);
+        viewModel.ChromaKeyTool.SelectedChromaKeyColorOption.Should().Be(1);
+        viewModel.ChromaKeyTool.ChromaKeyColor.Should().Be(Color.Green);
+        viewModel.ChromaKeyTool.ChromaKeyTolerance.Should().Be(65);
+        viewModel.ChromaKeyTool.ChromaKeyDesaturation.Should().Be(20);
         GetChromaKeyEffect(viewModel).IsEnabled.Should().BeTrue();
     }
 
@@ -157,14 +170,17 @@ public sealed class ImageEditPageViewModelDefaultsTests
     {
         return new ImageEditPageViewModel(
             Mock.Of<ILocalizationService>(),
-            storeService ?? Mock.Of<IStoreService>(),
             cancellationService ?? Mock.Of<ICancellationService>(),
             Mock.Of<IImageCanvasPrinter>(),
             Mock.Of<IImageCanvasExporter>(),
             filePicker ?? Mock.Of<IFilePickerService>(),
-            chromaKeyService ?? Mock.Of<IChromaKeyService>(),
-            featureAvailability ?? Mock.Of<IChromaKeyFeatureAvailability>(),
-            Mock.Of<IShareService>());
+            Mock.Of<IShareService>(),
+            new ChromaKeyToolViewModel(
+                storeService ?? Mock.Of<IStoreService>(),
+                chromaKeyService ?? Mock.Of<IChromaKeyService>(),
+                featureAvailability ?? Mock.Of<IChromaKeyFeatureAvailability>()),
+            new ShapeToolViewModel(),
+            new TextToolViewModel());
     }
 
     private static ImageChromaKeyEffect GetChromaKeyEffect(ImageEditPageViewModel viewModel)
