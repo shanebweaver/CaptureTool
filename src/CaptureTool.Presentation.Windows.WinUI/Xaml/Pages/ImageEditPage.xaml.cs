@@ -60,7 +60,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     {
         _imageContextMenu = new MenuFlyout();
         _saveMenuItem = CreateMenuItem(
-            "Save",
+            "Save as",
             new SymbolIcon(Symbol.Save),
             ViewModel.SaveCommand);
         _copyMenuItem = CreateMenuItem(

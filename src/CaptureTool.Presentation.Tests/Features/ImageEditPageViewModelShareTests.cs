@@ -2,6 +2,8 @@ using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
@@ -65,6 +67,8 @@ public sealed class ImageEditPageViewModelShareTests
             exporter.Object,
             filePicker.Object,
             shareService.Object,
+            Mock.Of<ISettingsService>(),
+            Mock.Of<ILogService>(),
             new ChromaKeyToolViewModel(storeService, chromaKeyService, featureAvailability.Object),
             new ShapeToolViewModel(),
             new TextToolViewModel());

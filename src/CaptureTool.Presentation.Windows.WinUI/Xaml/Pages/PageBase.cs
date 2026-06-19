@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Presentation.Loading;
 using CaptureTool.Presentation.ViewModels;
 using Microsoft.UI.Xaml.Controls;
@@ -23,6 +24,11 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
 
         try
         {
+            if (ViewModel is IEditableSession editableSession)
+            {
+                App.Current.ServiceProvider.GetService<IActiveEditSessionService>().SetCurrentSession(editableSession);
+            }
+
             if (ViewModel.IsReadyToLoad)
             {
                 switch (ViewModel)
@@ -68,6 +74,10 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
         }
 
         ViewModel.Dispose();
+        if (ViewModel is IEditableSession editableSession)
+        {
+            App.Current.ServiceProvider.GetService<IActiveEditSessionService>().ClearCurrentSession(editableSession);
+        }
 
         base.OnNavigatedFrom(e);
     }

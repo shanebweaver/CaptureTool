@@ -3,6 +3,8 @@ using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
@@ -175,6 +177,8 @@ public sealed class ImageEditPageViewModelDefaultsTests
             Mock.Of<IImageCanvasExporter>(),
             filePicker ?? Mock.Of<IFilePickerService>(),
             Mock.Of<IShareService>(),
+            Mock.Of<ISettingsService>(),
+            Mock.Of<ILogService>(),
             new ChromaKeyToolViewModel(
                 storeService ?? Mock.Of<IStoreService>(),
                 chromaKeyService ?? Mock.Of<IChromaKeyService>(),

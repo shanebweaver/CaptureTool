@@ -47,6 +47,7 @@
                 Command="{x:Bind ViewModel.SaveCommand}"
                 Icon="Save"
                 IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
+                <AppBarButton.Label>Save as</AppBarButton.Label>
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>

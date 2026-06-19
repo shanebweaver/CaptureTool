@@ -250,7 +250,7 @@ By using this application, you acknowledge that you are responsible for managing
     <comment>The label for the title of the about page.</comment>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value>Save</value>
+    <value>Save as</value>
     <comment>The label for the save button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
@@ -725,6 +725,42 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Automatically save videos to a folder after capture.</value>
     <comment>The subtitle for the video auto save section on the settings page.</comment>
   </data>
+  <data name="Settings_EditHeaderLabel.Text" xml:space="preserve">
+    <value>Edit protection</value>
+    <comment>The header for edit protection settings on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_HeaderLabel.Text" xml:space="preserve">
+    <value>Warn before discarding edits</value>
+    <comment>The header for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
+    <value>Ask before leaving or closing an image or video edit session with unsaved changes.</value>
+    <comment>The subtitle for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+    <comment>The label for the on state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+    <comment>The label for the off state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>Auto-save edits</value>
+    <comment>The header for the edit autosave setting on the settings page.</comment>
+  </data>
+  <data name="Settings_EditAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>Persist working edit state automatically as image or video edits change.</value>
+    <comment>The subtitle for the edit autosave setting on the settings page.</comment>
+  </data>
+  <data name="Settings_EditAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+    <comment>The label for the on state of the edit autosave toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+    <comment>The label for the off state of the edit autosave toggle switch on the settings page.</comment>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Isolate a target in front of a green or blue screen.</value>
     <comment>The subtitle for the chroma key feature on the add-ons page</comment>
@@ -831,8 +867,16 @@ SOFTWARE.
     <comment>The access key for the save button on the video edit page.</comment>
   </data>
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
-    <value>Save</value>
+    <value>Save as</value>
     <comment>The label for the save button on the video edit page.</comment>
+  </data>
+  <data name="AudioEdit_SaveButton.Label" xml:space="preserve">
+    <value>Save as</value>
+    <comment>The label for the save button on the audio edit page.</comment>
+  </data>
+  <data name="AudioEdit_SaveButton.AccessKey" xml:space="preserve">
+    <value>S</value>
+    <comment>The access key for the save button on the audio edit page.</comment>
   </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>Copy</value>

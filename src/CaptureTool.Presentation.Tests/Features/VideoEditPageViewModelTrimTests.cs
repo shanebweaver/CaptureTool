@@ -1,6 +1,9 @@
+using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Media;
+using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture;
@@ -137,13 +140,59 @@ public class VideoEditPageViewModelTrimTests
         File.Delete(destinationPath);
     }
 
+    [TestMethod]
+    public void UpdateTrimRange_ShouldMarkSessionDirty()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.Load(new VideoFile("test.mp4"));
+        viewModel.SetVideoDuration(TimeSpan.FromSeconds(10));
+
+        viewModel.UpdateTrimStart(2);
+
+        Assert.IsTrue(viewModel.HasUnsavedChanges);
+    }
+
+    [TestMethod]
+    public void UpdateTrimRange_ShouldAutoSaveTrimState_WhenEnabled()
+    {
+        var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.Get(CaptureTool.Application.Features.Settings.CaptureToolSettings.Settings_Edit_AutoSave))
+            .Returns(true);
+        var stateStore = new Mock<IEditSessionStateStore>();
+        stateStore
+            .Setup(service => service.SaveVideoTrimStateAsync(It.IsAny<string>(), It.IsAny<VideoTrimState>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        stateStore
+            .Setup(service => service.TryReadVideoTrimStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((VideoTrimState?)null);
+        var viewModel = CreateViewModel(settingsService: settings.Object, editSessionStateStore: stateStore.Object);
+        viewModel.Load(new VideoFile("test.mp4"));
+        viewModel.SetVideoDuration(TimeSpan.FromSeconds(10));
+
+        viewModel.UpdateTrimStart(2);
+
+        stateStore.Verify(
+            service => service.SaveVideoTrimStateAsync(
+                "test.mp4",
+                It.Is<VideoTrimState>(state => state.DurationSeconds == 10 && state.TrimStartSeconds == 2 && state.TrimEndSeconds == 10),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
     private static VideoEditPageViewModel CreateViewModel(
         ISaveVideoFileUseCase? saveAction = null,
-        ICopyVideoFileUseCase? copyAction = null)
+        ICopyVideoFileUseCase? copyAction = null,
+        ISettingsService? settingsService = null,
+        IEditSessionStateStore? editSessionStateStore = null,
+        ILogService? logService = null)
     {
         return new(
             saveAction ?? CreateSaveUseCase(),
-            copyAction ?? CreateCopyUseCase());
+            copyAction ?? CreateCopyUseCase(),
+            settingsService ?? Mock.Of<ISettingsService>(),
+            editSessionStateStore ?? Mock.Of<IEditSessionStateStore>(),
+            logService ?? Mock.Of<ILogService>());
     }
 
     private static ISaveVideoFileUseCase CreateSaveUseCase(

@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Presentation.Shell;
+using CaptureTool.Presentation.Windows.WinUI.EditSessions;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 using Microsoft.UI;
@@ -21,6 +22,7 @@ public sealed partial class MainWindow : Window
     private static readonly SizeInt32 MinWindowSize = new(500, 374);
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
+    private bool _closeConfirmed;
 
     public MainWindow()
     {
@@ -31,6 +33,7 @@ public sealed partial class MainWindow : Window
         }
 
         InitializeComponent();
+        RootGrid.Loaded += RootGrid_Loaded;
 
         AppTitleBar.Loaded += AppTitleBar_Loaded;
         AppTitleBar.SizeChanged += AppTitleBar_SizeChanged;
@@ -44,6 +47,11 @@ public sealed partial class MainWindow : Window
 
         UpdateRequestedAppTheme();
         UpdateTitleBarColors();
+    }
+
+    private void RootGrid_Loaded(object sender, RoutedEventArgs e)
+    {
+        App.Current.ServiceProvider.GetService<WinUIEditSessionConfirmationService>().XamlRoot = RootGrid.XamlRoot;
     }
 
     private void UpdateAppTitle()
@@ -130,10 +138,24 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void OnClosed(object sender, WindowEventArgs args)
+    private async void OnClosed(object sender, WindowEventArgs args)
     {
+        if (!_closeConfirmed)
+        {
+            args.Handled = true;
+            bool canClose = await AppServiceLocator.EditSessionGuard.CanLeaveCurrentSessionAsync();
+            if (canClose)
+            {
+                _closeConfirmed = true;
+                Close();
+            }
+
+            return;
+        }
+
         Activated -= OnActivated;
         Closed -= OnClosed;
+        RootGrid.Loaded -= RootGrid_Loaded;
         AppTitleBar.Loaded -= AppTitleBar_Loaded;
         AppTitleBar.SizeChanged -= AppTitleBar_SizeChanged;
 
