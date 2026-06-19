@@ -69,7 +69,7 @@ internal sealed partial class CaptureOverlayHost : IDisposable
                 WINDOW_STYLE.WS_VISIBLE | WINDOW_STYLE.WS_POPUP,
                 monitor.MonitorBounds.X, // x
                 monitor.MonitorBounds.Y + 14, // y + padding
-                (int)(408 * monitor.Scale), // w
+                (int)(468 * monitor.Scale), // w
                 (int)(76 * monitor.Scale), //h
                 new(IntPtr.Zero),
                 null,
@@ -165,10 +165,10 @@ internal sealed partial class CaptureOverlayHost : IDisposable
         _xamlSource = overlayResult.xamlSource;
         _overlayView = overlayResult.view;
 
-        var borderResult = CreateCaptureOverlayBorderWindow(monitor, area);
-        _borderHwnd = borderResult.hwnd;
-        _borderXamlSource = borderResult.xamlSource;
-        _borderControl = borderResult.border;
+        var (hwnd, xamlSource, border) = CreateCaptureOverlayBorderWindow(monitor, area);
+        _borderHwnd = hwnd;
+        _borderXamlSource = xamlSource;
+        _borderControl = border;
     }
 
     public void Activate()
