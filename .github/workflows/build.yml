@@ -43,26 +43,20 @@ jobs:
           --x-install-root="${{ github.workspace }}\vcpkg_installed"
       shell: pwsh
 
-    - name: Restore ARM64 dependencies
-      run: |
-        $project = "src\CaptureTool.Presentation.Windows.WinUI\CaptureTool.Presentation.Windows.WinUI.csproj"
-        $solutionDir = "${{ github.workspace }}\"
-        msbuild $project /t:Restore /p:Configuration=Release /p:Platform=ARM64 /p:SolutionDir="$solutionDir"
-      shell: pwsh
-
     - name: Build combined Store package
       run: |
         $project = "src\CaptureTool.Presentation.Windows.WinUI\CaptureTool.Presentation.Windows.WinUI.csproj"
         $solutionDir = "${{ github.workspace }}\"
         msbuild $project `
+          /t:restore `
           /p:Configuration=Release `
-          /p:Platform=ARM64 `
+          /p:Platform=x64 `
           /p:SolutionDir="$solutionDir" `
           /p:GenerateAppxPackageOnBuild=true `
           /p:UapAppxPackageBuildMode=StoreUpload `
           /p:AppxBundle=Always `
-          /p:AppxBundlePlatforms="arm64|x64" `
-          /p:AppxPackageDir="${solutionDir}output\x64\" `
+          /p:AppxBundlePlatforms="x64|arm64" `
+          /p:AppxPackageDir="${solutionDir}output\" `
           /p:GenerateTemporaryStoreCertificate=false
       shell: pwsh
 
@@ -213,7 +207,7 @@ jobs:
         name: StorePackage
         if-no-files-found: error
         path: |
-          output/**/*.msix
-          output/**/*.msixbundle
-          output/**/*.msixupload
-          output/**/*.appxsym
+          output/*.msix
+          output/*.msixbundle
+          output/*.msixupload
+          output/*.appxsym
