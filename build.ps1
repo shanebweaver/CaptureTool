@@ -7,7 +7,8 @@ param(
     [switch]$NoRestore,
     [ValidateSet('quiet', 'minimal', 'normal', 'detailed', 'diagnostic')]
     [string]$Verbosity = 'minimal',
-    [string]$MSBuildPath
+    [string]$MSBuildPath,
+    [string[]]$AdditionalMSBuildArguments = @()
 )
 
 Set-StrictMode -Version Latest
@@ -86,6 +87,10 @@ $msbuildArgs = @(
 
 if (-not $NoRestore) {
     $msbuildArgs += '/restore'
+}
+
+if ($AdditionalMSBuildArguments.Count -gt 0) {
+    $msbuildArgs += $AdditionalMSBuildArguments
 }
 
 & $resolvedMSBuildPath @msbuildArgs

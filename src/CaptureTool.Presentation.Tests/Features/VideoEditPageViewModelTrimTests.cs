@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -137,13 +138,27 @@ public class VideoEditPageViewModelTrimTests
         File.Delete(destinationPath);
     }
 
+    [TestMethod]
+    public void UpdateTrimRange_ShouldMarkSessionDirty()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.Load(new VideoFile("test.mp4"));
+        viewModel.SetVideoDuration(TimeSpan.FromSeconds(10));
+
+        viewModel.UpdateTrimStart(2);
+
+        Assert.IsTrue(viewModel.HasUnsavedChanges);
+    }
+
     private static VideoEditPageViewModel CreateViewModel(
         ISaveVideoFileUseCase? saveAction = null,
-        ICopyVideoFileUseCase? copyAction = null)
+        ICopyVideoFileUseCase? copyAction = null,
+        ILogService? logService = null)
     {
         return new(
             saveAction ?? CreateSaveUseCase(),
-            copyAction ?? CreateCopyUseCase());
+            copyAction ?? CreateCopyUseCase(),
+            logService ?? Mock.Of<ILogService>());
     }
 
     private static ISaveVideoFileUseCase CreateSaveUseCase(

@@ -1,8 +1,12 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Localization;
+using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Domain.Edit;
@@ -15,7 +19,7 @@ using System.Numerics;
 
 namespace CaptureTool.Presentation.Features.ImageEdit;
 
-public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>
+public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<ImageFile>, IEditableSession
 {
     private readonly ILocalizationService _localizationService;
     private readonly ICancellationService _cancellationService;
@@ -23,6 +27,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageCanvasExporter _imageCanvasExporter;
     private readonly IFilePickerService _filePickerService;
     private readonly IShareService _shareService;
+    private readonly ISettingsService _settingsService;
+    private readonly ILogService _logService;
 
     private readonly ImageEditHistory _editHistory;
     private readonly ImageEditModeStateMachine _modeStateMachine;
@@ -147,6 +153,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public string EditSessionName => "image edit session";
+
+    public bool HasUnsavedChanges
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public ImageEditPageViewModel(
         ILocalizationService localizationService,
         ICancellationService cancellationService,
@@ -154,6 +168,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageCanvasExporter imageCanvasExporter,
         IFilePickerService filePickerService,
         IShareService shareService,
+        ISettingsService settingsService,
+        ILogService logService,
         ChromaKeyToolViewModel chromaKeyTool,
         ShapeToolViewModel shapeTool,
         TextToolViewModel textTool)
@@ -164,6 +180,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _filePickerService = filePickerService;
         _shareService = shareService;
         _imageCanvasExporter = imageCanvasExporter;
+        _settingsService = settingsService;
+        _logService = logService;
 
         ChromaKeyTool = chromaKeyTool;
         ShapeTool = shapeTool;
@@ -185,7 +203,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
         ToggleShapesModeCommand = new RelayCommand(ToggleShapesMode);
-        SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UndoCommand = new RelayCommand(Undo);
         RedoCommand = new RelayCommand(Redo);
         RotateCommand = new RelayCommand(Rotate);
@@ -251,6 +269,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ChromaKeyTool.InteractionCommitted -= ChromaKeyTool_InteractionCommitted;
         _imageDrawable = null;
         _editHistory.Clear();
+        HasUnsavedChanges = false;
         ApplyActiveMode(_modeStateMachine.Reset());
         _editSession = new ImageEditSession(Size.Empty, ImageOrientation.RotateNoneFlipNone, Rectangle.Empty);
         SyncImageGeometryFromSession();
@@ -381,17 +400,32 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    private async Task SaveAsync()
+    public async Task<bool> SaveAsync(CancellationToken cancellationToken = default)
     {
-        IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures);
-
-        if (file is null)
+        try
         {
-            return;
-        }
+            IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures);
 
-        ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
-        await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
+            if (file is null)
+            {
+                return false;
+            }
+
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+            await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
+            HasUnsavedChanges = false;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to save image edits.");
+            return false;
+        }
+    }
+
+    private async Task SaveCommandAsync()
+    {
+        await SaveAsync(CancellationToken.None);
     }
 
     private ImageCanvasRenderOptions GetImageCanvasRenderOptions()
@@ -411,6 +445,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         SyncDrawablesFromSession();
         SyncChromaKeySettingsFromSession();
         UpdateUndoRedoStackProperties();
+        HasUnsavedChanges = true;
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
@@ -425,6 +460,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         SyncDrawablesFromSession();
         SyncChromaKeySettingsFromSession();
         UpdateUndoRedoStackProperties();
+        HasUnsavedChanges = true;
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
@@ -491,6 +527,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         SyncDrawablesFromSession();
         SyncChromaKeySettingsFromSession();
         UpdateUndoRedoStackProperties();
+        HasUnsavedChanges = true;
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 

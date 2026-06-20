@@ -217,7 +217,7 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
     <value>À propos de cette application</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value>Enregistrer</value>
+    <value>Enregistrer sous</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>Copier</value>
@@ -564,6 +564,50 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Enregistrer automatiquement les vidéos dans le dossier des vidéos après la capture.</value>
   </data>
+  <data name="Settings_EditHeaderLabel.Text" xml:space="preserve">
+    <value>Protection des modifications</value>
+    <comment>The header for edit protection settings on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_HeaderLabel.Text" xml:space="preserve">
+    <value>Avertir avant d’abandonner les modifications</value>
+    <comment>The header for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
+    <value>Demander confirmation avant de quitter ou de fermer une session de modification d’image ou de vidéo avec des changements non enregistrés.</value>
+    <comment>The subtitle for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
+    <value>Activé</value>
+    <comment>The label for the on state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OffContent" xml:space="preserve">
+    <value>Désactivé</value>
+    <comment>The label for the off state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Afficher une confirmation avant d’abandonner des modifications non enregistrées.</value>
+    <comment>The tooltip for the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Title" xml:space="preserve">
+    <value>Enregistrer les modifications ?</value>
+    <comment>The title for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Content" xml:space="preserve">
+    <value>Vous avez des modifications non enregistrées. Voulez-vous les enregistrer avant de quitter ?</value>
+    <comment>The body text for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_SaveAsButton" xml:space="preserve">
+    <value>Enregistrer sous</value>
+    <comment>The primary button text for saving before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_DiscardButton" xml:space="preserve">
+    <value>Abandonner</value>
+    <comment>The secondary button text for discarding unsaved edit changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_CancelButton" xml:space="preserve">
+    <value>Annuler</value>
+    <comment>The close button text for cancelling navigation away from an edit session.</comment>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Isolez un objet devant un fond vert ou bleu.</value>
   </data>
@@ -658,7 +702,7 @@ SOFTWARE.
     <value>S</value>
   </data>
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
-    <value>Enregistrer</value>
+    <value>Enregistrer sous</value>
   </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>Copier</value>

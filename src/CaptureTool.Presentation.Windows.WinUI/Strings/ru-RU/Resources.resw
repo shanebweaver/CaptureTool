@@ -217,7 +217,7 @@
     <value>О приложении</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value>Сохранить</value>
+    <value>Сохранить как</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>Копировать</value>
@@ -564,6 +564,50 @@
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Автоматически сохранять видео в папку видео после захвата.</value>
   </data>
+  <data name="Settings_EditHeaderLabel.Text" xml:space="preserve">
+    <value>Защита правок</value>
+    <comment>The header for edit protection settings on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_HeaderLabel.Text" xml:space="preserve">
+    <value>Предупреждать перед отменой правок</value>
+    <comment>The header for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
+    <value>Запрашивать подтверждение перед выходом или закрытием сеанса редактирования изображения или видео с несохранёнными изменениями.</value>
+    <comment>The subtitle for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
+    <value>Вкл.</value>
+    <comment>The label for the on state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OffContent" xml:space="preserve">
+    <value>Откл.</value>
+    <comment>The label for the off state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Показывать подтверждение перед отменой несохранённых правок.</value>
+    <comment>The tooltip for the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Title" xml:space="preserve">
+    <value>Сохранить изменения?</value>
+    <comment>The title for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Content" xml:space="preserve">
+    <value>У вас есть несохранённые правки. Сохранить их перед выходом?</value>
+    <comment>The body text for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_SaveAsButton" xml:space="preserve">
+    <value>Сохранить как</value>
+    <comment>The primary button text for saving before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_DiscardButton" xml:space="preserve">
+    <value>Отменить</value>
+    <comment>The secondary button text for discarding unsaved edit changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_CancelButton" xml:space="preserve">
+    <value>Отмена</value>
+    <comment>The close button text for cancelling navigation away from an edit session.</comment>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Изолируйте объект на фоне зелёного или синего экрана.</value>
   </data>
@@ -658,7 +702,7 @@ SOFTWARE.
     <value>S</value>
   </data>
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
-    <value>Сохранить</value>
+    <value>Сохранить как</value>
   </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>Копировать</value>

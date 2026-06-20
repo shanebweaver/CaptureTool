@@ -6,6 +6,7 @@ using Microsoft.Graphics.Canvas.Text;
 using Microsoft.UI;
 using System.Numerics;
 using Windows.Foundation;
+using Windows.Storage.Streams;
 using Color = Windows.UI.Color;
 
 namespace CaptureTool.Infrastructure.Edit.Windows;
@@ -228,7 +229,16 @@ public static partial class Win2DImageCanvasRenderer
 
     public static async Task PrepareAsync(ImageDrawable imageDrawable, ICanvasResourceCreator resourceCreator)
     {
-        ICanvasImage prepared = await CanvasBitmap.LoadAsync(resourceCreator, imageDrawable.File.FilePath);
+        byte[] imageBytes = await File.ReadAllBytesAsync(imageDrawable.File.FilePath);
+        using InMemoryRandomAccessStream stream = new();
+        using DataWriter writer = new(stream);
+        writer.WriteBytes(imageBytes);
+        await writer.StoreAsync();
+        await writer.FlushAsync();
+        writer.DetachStream();
+        stream.Seek(0);
+
+        ICanvasImage prepared = await CanvasBitmap.LoadAsync(resourceCreator, stream);
         imageDrawable.SetPreparedImage(prepared);
     }
 }

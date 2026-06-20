@@ -45,6 +45,7 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
 
         using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
         {
+            fileStream.Size = 0;
             stream.Seek(0);
             await RandomAccessStream.CopyAsync(stream, fileStream);
         }

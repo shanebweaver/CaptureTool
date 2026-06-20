@@ -217,7 +217,7 @@
     <value>关于此应用</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value>保存</value>
+    <value>另存为</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>复制</value>
@@ -564,6 +564,50 @@
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>捕获后自动将视频保存到视频文件夹中。</value>
   </data>
+  <data name="Settings_EditHeaderLabel.Text" xml:space="preserve">
+    <value>编辑保护</value>
+    <comment>The header for edit protection settings on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_HeaderLabel.Text" xml:space="preserve">
+    <value>放弃编辑前警告</value>
+    <comment>The header for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
+    <value>在有未保存更改的图像或视频编辑会话中离开或关闭前询问。</value>
+    <comment>The subtitle for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
+    <value>开</value>
+    <comment>The label for the on state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OffContent" xml:space="preserve">
+    <value>关</value>
+    <comment>The label for the off state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>放弃未保存的编辑更改前显示确认。</value>
+    <comment>The tooltip for the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Title" xml:space="preserve">
+    <value>保存更改？</value>
+    <comment>The title for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Content" xml:space="preserve">
+    <value>你有未保存的编辑。离开前要保存吗？</value>
+    <comment>The body text for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_SaveAsButton" xml:space="preserve">
+    <value>另存为</value>
+    <comment>The primary button text for saving before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_DiscardButton" xml:space="preserve">
+    <value>放弃</value>
+    <comment>The secondary button text for discarding unsaved edit changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_CancelButton" xml:space="preserve">
+    <value>取消</value>
+    <comment>The close button text for cancelling navigation away from an edit session.</comment>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>将对象置于绿色或蓝色背景前。</value>
   </data>
@@ -658,7 +702,7 @@ SOFTWARE.
     <value>S</value>
   </data>
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
-    <value>保存</value>
+    <value>另存为</value>
   </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>复制</value>

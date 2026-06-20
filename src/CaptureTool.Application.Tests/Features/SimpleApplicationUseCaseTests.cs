@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Features.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.Features.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
@@ -54,15 +55,19 @@ public sealed class SimpleApplicationUseCaseTests
     public async Task NavigationUseCases_NavigateToExpectedRoutes()
     {
         var navigation = new Mock<INavigationService>();
+        var editGuard = new Mock<IEditSessionGuard>();
+        editGuard
+            .Setup(service => service.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         var imageFile = new ImageFile("capture.png");
 
-        await new OpenAboutPageUseCase(navigation.Object, TestUseCaseExecutor.Instance)
+        await new OpenAboutPageUseCase(navigation.Object, editGuard.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new OpenAboutPageRequest(), TestContext.CancellationToken);
         await new ShowHomePageUseCase(navigation.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new ShowHomePageRequest(), TestContext.CancellationToken);
         await new OpenStorePageUseCase(navigation.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new OpenStorePageRequest(), TestContext.CancellationToken);
-        await new OpenSettingsPageUseCase(navigation.Object, TestUseCaseExecutor.Instance)
+        await new OpenSettingsPageUseCase(navigation.Object, editGuard.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new OpenSettingsPageRequest(), TestContext.CancellationToken);
         await new OpenAudioCapturePageUseCase(navigation.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new OpenAudioCapturePageRequest(), TestContext.CancellationToken);

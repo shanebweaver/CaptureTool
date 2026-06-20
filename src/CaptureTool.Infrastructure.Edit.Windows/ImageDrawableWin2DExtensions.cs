@@ -13,6 +13,11 @@ public static class ImageDrawableWin2DExtensions
 
     public static void SetPreparedImage(this ImageDrawable drawable, ICanvasImage image)
     {
+        if (_resources.TryGetValue(drawable, out ICanvasImage? existing) && existing is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+
         _resources.Remove(drawable);
         _resources.Add(drawable, image);
     }
@@ -29,6 +34,11 @@ public static class ImageDrawableWin2DExtensions
 
     public static void RemovePreparedImage(this ImageDrawable drawable)
     {
+        if (_resources.TryGetValue(drawable, out ICanvasImage? existing) && existing is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+
         _resources.Remove(drawable);
     }
 }

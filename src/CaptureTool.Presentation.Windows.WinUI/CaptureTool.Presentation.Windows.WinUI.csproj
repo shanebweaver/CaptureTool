@@ -125,4 +125,39 @@
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
+
+  <!-- Use the Native AOT PDB that matches the packaged app executable for Store symbol packages. -->
+  <Target Name="UseNativeAotPdbForAppxSymbolPackage"
+          AfterTargets="_CalculateInputsForGenerateAppxPackageRecipe"
+          BeforeTargets="_GenerateAppxSymbolPackage"
+          Condition="'$(PublishAot)' == 'true' and '$(AppxSymbolPackageEnabled)' == 'true'">
+    <PropertyGroup>
+      <_NativeAotAppPdbPath>$(OutDir)native\$(AssemblyName).pdb</_NativeAotAppPdbPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PDBPayload Remove="@(PDBPayload)"
+                  Condition="'%(Filename)%(Extension)' == '$(AssemblyName).pdb'" />
+      <PDBPayload Include="$(_NativeAotAppPdbPath)">
+        <TargetPath>$(AssemblyName).pdb</TargetPath>
+      </PDBPayload>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="UseNativeAotPdbForAppxUploadSymbolPackage"
+          AfterTargets="_CalculateInputsForGenerateAppxUploadPackageRecipe"
+          BeforeTargets="_GenerateAppxUploadSymbolPackage"
+          Condition="'$(PublishAot)' == 'true' and '$(AppxSymbolPackageEnabled)' == 'true'">
+    <PropertyGroup>
+      <_NativeAotAppPdbPath>$(OutDir)native\$(AssemblyName).pdb</_NativeAotAppPdbPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PDBUploadPayload Remove="@(PDBUploadPayload)"
+                        Condition="'%(Filename)%(Extension)' == '$(AssemblyName).pdb'" />
+      <PDBUploadPayload Include="$(_NativeAotAppPdbPath)">
+        <TargetPath>$(AssemblyName).pdb</TargetPath>
+      </PDBUploadPayload>
+    </ItemGroup>
+  </Target>
 </Project>

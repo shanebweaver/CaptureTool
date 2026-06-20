@@ -217,7 +217,7 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
     <value>Acerca de esta aplicación</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value>Guardar</value>
+    <value>Guardar como</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>Copiar</value>
@@ -564,6 +564,50 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Guardar automáticamente los vídeos en la carpeta de vídeos después de capturarlos.</value>
   </data>
+  <data name="Settings_EditHeaderLabel.Text" xml:space="preserve">
+    <value>Protección de edición</value>
+    <comment>The header for edit protection settings on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_HeaderLabel.Text" xml:space="preserve">
+    <value>Avisar antes de descartar ediciones</value>
+    <comment>The header for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
+    <value>Preguntar antes de salir o cerrar una sesión de edición de imagen o vídeo con cambios sin guardar.</value>
+    <comment>The subtitle for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
+    <value>Activado</value>
+    <comment>The label for the on state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OffContent" xml:space="preserve">
+    <value>Desactivado</value>
+    <comment>The label for the off state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Mostrar una confirmación antes de descartar cambios de edición sin guardar.</value>
+    <comment>The tooltip for the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Title" xml:space="preserve">
+    <value>¿Guardar cambios?</value>
+    <comment>The title for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Content" xml:space="preserve">
+    <value>Tienes ediciones sin guardar. ¿Quieres guardarlas antes de salir?</value>
+    <comment>The body text for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_SaveAsButton" xml:space="preserve">
+    <value>Guardar como</value>
+    <comment>The primary button text for saving before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_DiscardButton" xml:space="preserve">
+    <value>Descartar</value>
+    <comment>The secondary button text for discarding unsaved edit changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_CancelButton" xml:space="preserve">
+    <value>Cancelar</value>
+    <comment>The close button text for cancelling navigation away from an edit session.</comment>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Aísle un objeto frente a un fondo verde o azul.</value>
   </data>
@@ -658,7 +702,7 @@ SOFTWARE.
     <value>S</value>
   </data>
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
-    <value>Guardar</value>
+    <value>Guardar como</value>
   </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>Copiar</value>

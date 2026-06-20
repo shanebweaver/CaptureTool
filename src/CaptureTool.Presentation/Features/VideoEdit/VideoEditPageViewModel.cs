@@ -1,5 +1,7 @@
+using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Presentation.ViewModels;
@@ -7,7 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.VideoEdit;
 
-public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVideoFile>
+public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVideoFile>, IEditableSession
 {
     private const double TrimComparisonToleranceSeconds = 0.01;
 
@@ -77,15 +79,26 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     private readonly ISaveVideoFileUseCase _saveAction;
     private readonly ICopyVideoFileUseCase _copyAction;
+    private readonly ILogService _logService;
+
+    public string EditSessionName => "video edit session";
+
+    public bool HasUnsavedChanges
+    {
+        get;
+        private set => Set(ref field, value);
+    }
 
     public VideoEditPageViewModel(
         ISaveVideoFileUseCase saveAction,
-        ICopyVideoFileUseCase copyAction)
+        ICopyVideoFileUseCase copyAction,
+        ILogService logService)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
+        _logService = logService;
 
-        SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleTrimModeCommand = new RelayCommand(ToggleTrimMode);
 
@@ -96,6 +109,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         TrimStartSeconds = 0;
         TrimEndSeconds = 0;
         PlayheadSeconds = 0;
+        HasUnsavedChanges = false;
     }
 
     public override void Load(IVideoFile video)
@@ -105,6 +119,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
         VideoPath = video.FilePath;
         ResetTrimRange(0);
+        HasUnsavedChanges = false;
 
         if (video is PendingVideoFile pendingVideo)
         {
@@ -146,6 +161,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         TrimStartSeconds = Math.Clamp(seconds, 0, TrimEndSeconds);
         KeepPlayheadInTrimRange();
         RaisePropertyChanged(nameof(IsTrimmed));
+        OnTrimChanged();
     }
 
     public void UpdateTrimEnd(double seconds)
@@ -153,6 +169,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         TrimEndSeconds = Math.Clamp(seconds, TrimStartSeconds, VideoDurationSeconds);
         KeepPlayheadInTrimRange();
         RaisePropertyChanged(nameof(IsTrimmed));
+        OnTrimChanged();
     }
 
     public void UpdatePlayhead(double seconds)
@@ -185,16 +202,28 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         return Math.Clamp(seconds, TrimStartSeconds, TrimEndSeconds);
     }
 
-    private async Task SaveAsync()
+    public async Task<bool> SaveAsync(CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(VideoPath))
         {
-            return;
+            return false;
         }
 
-        await _saveAction.ExecuteAsync(
+        var response = await _saveAction.ExecuteAsync(
             new SaveVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
-            CancellationToken.None);
+            cancellationToken);
+        if (response.Value?.Saved == true)
+        {
+            HasUnsavedChanges = false;
+            return true;
+        }
+
+        return false;
+    }
+
+    private async Task SaveCommandAsync()
+    {
+        await SaveAsync(CancellationToken.None);
     }
 
     private async Task CopyAsync()
@@ -217,5 +246,10 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
     private TimeSpan? GetTrimEndForRequest()
     {
         return IsTrimmed ? TimeSpan.FromSeconds(TrimEndSeconds) : null;
+    }
+
+    private void OnTrimChanged()
+    {
+        HasUnsavedChanges = IsTrimmed;
     }
 }
