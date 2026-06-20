@@ -109,12 +109,12 @@ jobs:
       run: |
         Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-        $packageFile = Get-ChildItem -Path output\x64 -Recurse -File -Filter "*_bundle.msixupload" -ErrorAction SilentlyContinue |
+        $packageFile = Get-ChildItem -Path output -Recurse -File -Filter "*_bundle.msixupload" -ErrorAction SilentlyContinue |
           Sort-Object Length -Descending |
           Select-Object -First 1
 
         if (-not $packageFile) {
-          throw "No final .msixupload package was found under output\x64."
+          throw "No final .msixupload package was found under output."
         }
 
         $appPdbName = "CaptureTool.Presentation.Windows.WinUI.pdb"
