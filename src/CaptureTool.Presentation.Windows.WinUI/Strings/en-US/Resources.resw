@@ -745,6 +745,10 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Off</value>
     <comment>The label for the off state of the edit warning toggle switch on the settings page.</comment>
   </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show a confirmation before unsaved edit changes are discarded.</value>
+    <comment>The tooltip for the edit warning toggle switch on the settings page.</comment>
+  </data>
   <data name="Settings_EditAutoSave_HeaderLabel.Text" xml:space="preserve">
     <value>Auto-save image edits</value>
     <comment>The header for the image edit autosave setting on the settings page.</comment>
@@ -760,6 +764,30 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="Settings_EditAutoSave_Toggle.OffContent" xml:space="preserve">
     <value>Off</value>
     <comment>The label for the off state of the edit autosave toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditAutoSave_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Automatically save image edits to the working image file while editing.</value>
+    <comment>The tooltip for the image edit autosave toggle switch on the settings page.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Title" xml:space="preserve">
+    <value>Save changes?</value>
+    <comment>The title for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Content" xml:space="preserve">
+    <value>You have unsaved edits. Save them before leaving?</value>
+    <comment>The body text for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_SaveAsButton" xml:space="preserve">
+    <value>Save as</value>
+    <comment>The primary button text for saving before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_DiscardButton" xml:space="preserve">
+    <value>Discard</value>
+    <comment>The secondary button text for discarding unsaved edit changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_CancelButton" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>The close button text for cancelling navigation away from an edit session.</comment>
   </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Isolate a target in front of a green or blue screen.</value>

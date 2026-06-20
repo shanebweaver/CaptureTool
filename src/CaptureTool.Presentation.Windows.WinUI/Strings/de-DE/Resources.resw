@@ -564,6 +564,70 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Videos nach der Aufnahme automatisch im Videoordner speichern.</value>
   </data>
+  <data name="Settings_EditHeaderLabel.Text" xml:space="preserve">
+    <value>Bearbeitungsschutz</value>
+    <comment>The header for edit protection settings on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_HeaderLabel.Text" xml:space="preserve">
+    <value>Vor dem Verwerfen von Bearbeitungen warnen</value>
+    <comment>The header for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
+    <value>Vor dem Verlassen oder Schließen einer Bild- oder Videobearbeitung mit ungespeicherten Änderungen nachfragen.</value>
+    <comment>The subtitle for the warning setting before leaving dirty edit sessions.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
+    <value>Ein</value>
+    <comment>The label for the on state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.OffContent" xml:space="preserve">
+    <value>Aus</value>
+    <comment>The label for the off state of the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditWarnBeforeDiscard_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Vor dem Verwerfen ungespeicherter Bearbeitungen eine Bestätigung anzeigen.</value>
+    <comment>The tooltip for the edit warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>Bildbearbeitungen automatisch speichern</value>
+    <comment>The header for the image edit autosave setting on the settings page.</comment>
+  </data>
+  <data name="Settings_EditAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>Bildbearbeitungen bei Änderungen automatisch in der temporären Arbeitsdatei speichern.</value>
+    <comment>The subtitle for the image edit autosave setting on the settings page.</comment>
+  </data>
+  <data name="Settings_EditAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>Ein</value>
+    <comment>The label for the on state of the edit autosave toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>Aus</value>
+    <comment>The label for the off state of the edit autosave toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_EditAutoSave_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Bildbearbeitungen während der Bearbeitung automatisch in der Arbeitsdatei speichern.</value>
+    <comment>The tooltip for the image edit autosave toggle switch on the settings page.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Title" xml:space="preserve">
+    <value>Änderungen speichern?</value>
+    <comment>The title for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_Content" xml:space="preserve">
+    <value>Sie haben ungespeicherte Bearbeitungen. Möchten Sie sie vor dem Verlassen speichern?</value>
+    <comment>The body text for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_SaveAsButton" xml:space="preserve">
+    <value>Speichern unter</value>
+    <comment>The primary button text for saving before leaving an edit session with unsaved changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_DiscardButton" xml:space="preserve">
+    <value>Verwerfen</value>
+    <comment>The secondary button text for discarding unsaved edit changes.</comment>
+  </data>
+  <data name="EditSessionConfirmation_CancelButton" xml:space="preserve">
+    <value>Abbrechen</value>
+    <comment>The close button text for cancelling navigation away from an edit session.</comment>
+  </data>
   <data name="AddOns_ChromaKeySubtitleLabel.Text" xml:space="preserve">
     <value>Isolieren Sie ein Objekt vor einem grünen oder blauen Hintergrund.</value>
   </data>
