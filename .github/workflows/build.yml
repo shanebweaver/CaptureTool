@@ -141,45 +141,6 @@ jobs:
           }
         }
 
-        $repackRoot = Join-Path $env:RUNNER_TEMP "store-upload-repack"
-        $repackSymbolsRoot = Join-Path $env:RUNNER_TEMP "store-symbols-repack"
-        Remove-Item -LiteralPath $repackRoot, $repackSymbolsRoot -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item -ItemType Directory -Path $repackRoot, $repackSymbolsRoot -Force | Out-Null
-
-        [System.IO.Compression.ZipFile]::ExtractToDirectory($packageFile.FullName, $repackRoot)
-        $symbolPackages = Get-ChildItem -Path $repackRoot -Recurse -File -Filter "*.appxsym"
-
-        if (-not $symbolPackages) {
-          throw "The upload package does not contain any .appxsym symbol packages."
-        }
-
-        foreach ($symbolPackage in $symbolPackages) {
-          if ($symbolPackage.Name -match "_(?<arch>arm64|x64)\.appxsym$") {
-            $architecture = $Matches.arch
-          }
-          else {
-            throw "Could not infer architecture from symbol package $($symbolPackage.Name)."
-          }
-
-          $symbolRoot = Join-Path $repackSymbolsRoot $symbolPackage.BaseName
-          Remove-Item -LiteralPath $symbolRoot -Recurse -Force -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Path $symbolRoot -Force | Out-Null
-
-          [System.IO.Compression.ZipFile]::ExtractToDirectory($symbolPackage.FullName, $symbolRoot)
-          Copy-Item -LiteralPath $nativePdbsByArchitecture[$architecture].FullName -Destination (Join-Path $symbolRoot $appPdbName) -Force
-
-          Remove-Item -LiteralPath $symbolPackage.FullName -Force
-          [System.IO.Compression.ZipFile]::CreateFromDirectory($symbolRoot, $symbolPackage.FullName)
-
-          Write-Host "Updated $($symbolPackage.Name) with $architecture Native AOT symbols from $($nativePdbsByArchitecture[$architecture].FullName)"
-        }
-
-        $originalPackagePath = $packageFile.FullName
-        $replacementPackagePath = Join-Path $packageFile.DirectoryName "$($packageFile.BaseName).patched$($packageFile.Extension)"
-        Remove-Item -LiteralPath $replacementPackagePath -Force -ErrorAction SilentlyContinue
-        [System.IO.Compression.ZipFile]::CreateFromDirectory($repackRoot, $replacementPackagePath)
-        Move-Item -LiteralPath $replacementPackagePath -Destination $originalPackagePath -Force
-
         $uploadRoot = Join-Path $env:RUNNER_TEMP "store-upload-inspect"
         $bundleRoot = Join-Path $env:RUNNER_TEMP "store-bundle-inspect"
         $symbolsRoot = Join-Path $env:RUNNER_TEMP "store-symbols-inspect"
@@ -212,6 +173,10 @@ jobs:
         }
 
         $symbolPackages = Get-ChildItem -Path $uploadRoot -Recurse -File -Filter "*.appxsym"
+
+        if (-not $symbolPackages) {
+          throw "The upload package does not contain any .appxsym symbol packages."
+        }
 
         foreach ($symbolPackage in $symbolPackages) {
           $symbolRoot = Join-Path $symbolsRoot $symbolPackage.BaseName
