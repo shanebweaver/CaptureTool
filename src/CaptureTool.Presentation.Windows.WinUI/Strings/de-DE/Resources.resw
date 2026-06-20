@@ -217,7 +217,7 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
     <value>Über diese App</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value>Speichern</value>
+    <value>Speichern unter</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>Kopieren</value>
@@ -658,7 +658,7 @@ SOFTWARE.
     <value>S</value>
   </data>
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
-    <value>Speichern</value>
+    <value>Speichern unter</value>
   </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>Kopieren</value>

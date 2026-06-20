@@ -244,6 +244,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
                 VideoPath,
                 new VideoTrimState(VideoDurationSeconds, TrimStartSeconds, TrimEndSeconds),
                 cancellationToken);
+            HasUnsavedChanges = false;
         }
         catch (Exception ex)
         {

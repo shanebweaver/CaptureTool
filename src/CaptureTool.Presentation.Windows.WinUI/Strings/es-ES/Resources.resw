@@ -217,7 +217,7 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
     <value>Acerca de esta aplicación</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value>Guardar</value>
+    <value>Guardar como</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>Copiar</value>
@@ -658,7 +658,7 @@ SOFTWARE.
     <value>S</value>
   </data>
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
-    <value>Guardar</value>
+    <value>Guardar como</value>
   </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>Copiar</value>

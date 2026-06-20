@@ -217,7 +217,7 @@
     <value>О приложении</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value>Сохранить</value>
+    <value>Сохранить как</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>Копировать</value>
@@ -658,7 +658,7 @@ SOFTWARE.
     <value>S</value>
   </data>
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
-    <value>Сохранить</value>
+    <value>Сохранить как</value>
   </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>Копировать</value>

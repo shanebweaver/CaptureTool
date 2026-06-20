@@ -402,17 +402,25 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     public async Task<bool> SaveAsync(CancellationToken cancellationToken = default)
     {
-        IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures);
-
-        if (file is null)
+        try
         {
+            IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures);
+
+            if (file is null)
+            {
+                return false;
+            }
+
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+            await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
+            HasUnsavedChanges = false;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to save image edits.");
             return false;
         }
-
-        ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
-        await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
-        HasUnsavedChanges = false;
-        return true;
     }
 
     public async Task AutoSaveAsync(CancellationToken cancellationToken = default)
@@ -426,6 +434,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             await _imageCanvasExporter.SaveImageAsync(ImageFile.FilePath, [.. Drawables], options);
+            HasUnsavedChanges = false;
         }
         catch (Exception ex)
         {

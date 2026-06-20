@@ -217,7 +217,7 @@
     <value>关于此应用</value>
   </data>
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
-    <value>保存</value>
+    <value>另存为</value>
   </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>复制</value>
@@ -658,7 +658,7 @@ SOFTWARE.
     <value>S</value>
   </data>
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
-    <value>保存</value>
+    <value>另存为</value>
   </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>复制</value>
