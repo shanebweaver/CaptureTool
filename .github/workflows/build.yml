@@ -123,10 +123,68 @@ jobs:
           throw "No final .msixupload package was found under output\x64."
         }
 
+        $appPdbName = "CaptureTool.Presentation.Windows.WinUI.pdb"
+        $nativePdbsByArchitecture = @{
+          "arm64" = Get-ChildItem -Path src\CaptureTool.Presentation.Windows.WinUI\bin\ARM64\Release -Recurse -File -Filter $appPdbName |
+            Where-Object { $_.FullName -like "*\native\$appPdbName" } |
+            Sort-Object Length -Descending |
+            Select-Object -First 1
+          "x64" = Get-ChildItem -Path src\CaptureTool.Presentation.Windows.WinUI\bin\x64\Release -Recurse -File -Filter $appPdbName |
+            Where-Object { $_.FullName -like "*\native\$appPdbName" } |
+            Sort-Object Length -Descending |
+            Select-Object -First 1
+        }
+
+        foreach ($architecture in $nativePdbsByArchitecture.Keys) {
+          if (-not $nativePdbsByArchitecture[$architecture]) {
+            throw "No Native AOT PDB was found for $architecture."
+          }
+        }
+
+        $repackRoot = Join-Path $env:RUNNER_TEMP "store-upload-repack"
+        $repackSymbolsRoot = Join-Path $env:RUNNER_TEMP "store-symbols-repack"
+        Remove-Item -LiteralPath $repackRoot, $repackSymbolsRoot -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -ItemType Directory -Path $repackRoot, $repackSymbolsRoot -Force | Out-Null
+
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($packageFile.FullName, $repackRoot)
+        $symbolPackages = Get-ChildItem -Path $repackRoot -Recurse -File -Filter "*.appxsym"
+
+        if (-not $symbolPackages) {
+          throw "The upload package does not contain any .appxsym symbol packages."
+        }
+
+        foreach ($symbolPackage in $symbolPackages) {
+          if ($symbolPackage.Name -match "_(?<arch>arm64|x64)\.appxsym$") {
+            $architecture = $Matches.arch
+          }
+          else {
+            throw "Could not infer architecture from symbol package $($symbolPackage.Name)."
+          }
+
+          $symbolRoot = Join-Path $repackSymbolsRoot $symbolPackage.BaseName
+          Remove-Item -LiteralPath $symbolRoot -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path $symbolRoot -Force | Out-Null
+
+          [System.IO.Compression.ZipFile]::ExtractToDirectory($symbolPackage.FullName, $symbolRoot)
+          Copy-Item -LiteralPath $nativePdbsByArchitecture[$architecture].FullName -Destination (Join-Path $symbolRoot $appPdbName) -Force
+
+          Remove-Item -LiteralPath $symbolPackage.FullName -Force
+          [System.IO.Compression.ZipFile]::CreateFromDirectory($symbolRoot, $symbolPackage.FullName)
+
+          Write-Host "Updated $($symbolPackage.Name) with $architecture Native AOT symbols from $($nativePdbsByArchitecture[$architecture].FullName)"
+        }
+
+        $originalPackagePath = $packageFile.FullName
+        $replacementPackagePath = Join-Path $packageFile.DirectoryName "$($packageFile.BaseName).patched$($packageFile.Extension)"
+        Remove-Item -LiteralPath $replacementPackagePath -Force -ErrorAction SilentlyContinue
+        [System.IO.Compression.ZipFile]::CreateFromDirectory($repackRoot, $replacementPackagePath)
+        Move-Item -LiteralPath $replacementPackagePath -Destination $originalPackagePath -Force
+
         $uploadRoot = Join-Path $env:RUNNER_TEMP "store-upload-inspect"
         $bundleRoot = Join-Path $env:RUNNER_TEMP "store-bundle-inspect"
+        $symbolsRoot = Join-Path $env:RUNNER_TEMP "store-symbols-inspect"
 
-        foreach ($path in @($uploadRoot, $bundleRoot)) {
+        foreach ($path in @($uploadRoot, $bundleRoot, $symbolsRoot)) {
           Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path $path -Force | Out-Null
         }
@@ -153,6 +211,35 @@ jobs:
           throw "The final Store bundle does not contain an ARM64 app package."
         }
 
+        $symbolPackages = Get-ChildItem -Path $uploadRoot -Recurse -File -Filter "*.appxsym"
+
+        foreach ($symbolPackage in $symbolPackages) {
+          $symbolRoot = Join-Path $symbolsRoot $symbolPackage.BaseName
+          New-Item -ItemType Directory -Path $symbolRoot -Force | Out-Null
+          [System.IO.Compression.ZipFile]::ExtractToDirectory($symbolPackage.FullName, $symbolRoot)
+
+          $packagedAppPdb = Get-ChildItem -Path $symbolRoot -Recurse -File -Filter $appPdbName |
+            Select-Object -First 1
+
+          if (-not $packagedAppPdb) {
+            throw "The symbol package $($symbolPackage.Name) does not contain $appPdbName."
+          }
+
+          if ($symbolPackage.Name -match "_(?<arch>arm64|x64)\.appxsym$") {
+            $architecture = $Matches.arch
+          }
+          else {
+            throw "Could not infer architecture from symbol package $($symbolPackage.Name)."
+          }
+
+          $expectedHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $nativePdbsByArchitecture[$architecture].FullName).Hash
+          $actualHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $packagedAppPdb.FullName).Hash
+
+          if ($actualHash -ne $expectedHash) {
+            throw "$($symbolPackage.Name) does not contain the Native AOT PDB for $architecture."
+          }
+        }
+
         Write-Host "Verified combined Store package: $($packageFile.FullName)"
 
     - name: Upload Package Artifacts
@@ -165,4 +252,3 @@ jobs:
           output/**/*.msixbundle
           output/**/*.msixupload
           output/**/*.appxsym
-          src/CaptureTool.Presentation.Windows.WinUI/bin/Release/**/*.pdb
