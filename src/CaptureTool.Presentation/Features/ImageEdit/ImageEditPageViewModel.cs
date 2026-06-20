@@ -413,6 +413,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             await _imageCanvasExporter.SaveImageAsync(file.FilePath, [.. Drawables], options);
+            await SaveAutoSavedImageCopyAsync(options, file.FilePath);
             HasUnsavedChanges = false;
             return true;
         }
@@ -434,11 +435,42 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
             await _imageCanvasExporter.SaveImageAsync(ImageFile.FilePath, [.. Drawables], options);
+            await SaveAutoSavedImageCopyAsync(options, ImageFile.FilePath);
             HasUnsavedChanges = false;
         }
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to auto-save image edits.");
+        }
+    }
+
+    private async Task SaveAutoSavedImageCopyAsync(ImageCanvasRenderOptions options, string primaryFilePath)
+    {
+        string? autoSavedFilePath = ImageFile?.AutoSavedFilePath;
+        if (string.IsNullOrWhiteSpace(autoSavedFilePath) || PathsMatch(autoSavedFilePath, primaryFilePath))
+        {
+            return;
+        }
+
+        try
+        {
+            await _imageCanvasExporter.SaveImageAsync(autoSavedFilePath, [.. Drawables], options);
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to update auto-saved image copy.");
+        }
+    }
+
+    private static bool PathsMatch(string left, string right)
+    {
+        try
+        {
+            return string.Equals(Path.GetFullPath(left), Path.GetFullPath(right), StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception)
+        {
+            return string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
         }
     }
 

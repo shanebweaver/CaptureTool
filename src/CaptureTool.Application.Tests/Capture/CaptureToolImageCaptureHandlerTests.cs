@@ -80,7 +80,9 @@ public sealed class CaptureToolImageCaptureHandlerTests
         ImageFile result = handler.PerformMultiMonitorImageCapture([CreateMonitor()]);
 
         clipboard.Verify(service => service.CopyBitmapAsync(It.Is<ClipboardFile>(file => file.FilePath == result.FilePath)), Times.Once);
-        Assert.HasCount(1, Directory.GetFiles(screenshotsFolder, "Capture_*.png"));
+        string[] savedFiles = Directory.GetFiles(screenshotsFolder, "Capture_*.png");
+        Assert.HasCount(1, savedFiles);
+        Assert.AreEqual(savedFiles[0], result.AutoSavedFilePath);
     }
 
     private static CaptureToolImageCaptureHandler CreateHandler(
