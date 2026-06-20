@@ -164,3 +164,4 @@ jobs:
           output/**/*.msix
           output/**/*.msixbundle
           output/**/*.msixupload
+          output/**/*.appxsym

@@ -68,6 +68,10 @@
       <Link>CaptureInterop.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(SolutionDir)bin\$(Configuration)\$(Platform)\CaptureInterop.pdb">
+      <Link>CaptureInterop.pdb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
     
   <!-- 
