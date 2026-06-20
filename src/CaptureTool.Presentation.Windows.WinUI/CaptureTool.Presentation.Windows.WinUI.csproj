@@ -135,12 +135,6 @@
       <_NativeAotAppPdbPath>$(OutDir)native\$(AssemblyName).pdb</_NativeAotAppPdbPath>
     </PropertyGroup>
 
-    <Error Condition="!Exists('$(_NativeAotAppPdbPath)')"
-           Text="Native AOT app PDB was not found at $(_NativeAotAppPdbPath)." />
-
-    <Message Importance="High"
-             Text="Using Native AOT app PDB for Store symbols: $(_NativeAotAppPdbPath)" />
-
     <ItemGroup>
       <PDBPayload Remove="@(PDBPayload)"
                   Condition="'%(Filename)%(Extension)' == '$(AssemblyName).pdb'" />
@@ -157,12 +151,6 @@
     <PropertyGroup>
       <_NativeAotAppPdbPath>$(OutDir)native\$(AssemblyName).pdb</_NativeAotAppPdbPath>
     </PropertyGroup>
-
-    <Error Condition="!Exists('$(_NativeAotAppPdbPath)')"
-           Text="Native AOT app PDB was not found at $(_NativeAotAppPdbPath)." />
-
-    <Message Importance="High"
-             Text="Using Native AOT app PDB for Store upload symbols: $(_NativeAotAppPdbPath)" />
 
     <ItemGroup>
       <PDBUploadPayload Remove="@(PDBUploadPayload)"
