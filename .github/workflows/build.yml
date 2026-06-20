@@ -165,3 +165,6 @@ jobs:
           output/**/*.msixbundle
           output/**/*.msixupload
           output/**/*.appxsym
+          output/**/*.pdb
+          src/CaptureTool.Presentation.Windows.WinUI/bin/Release/**/*.pdb
+          bin/Release/**/*.pdb
