@@ -4,7 +4,7 @@
 [![C++20](https://img.shields.io/badge/C++-20-blue)](https://en.cppreference.com/w/cpp/20.html)
 [![C# 14](https://img.shields.io/badge/C%23-14-blue)](https://dotnet.microsoft.com/en-us/languages/csharp)
 [![.NET 10](https://img.shields.io/badge/.NET-10-blue)](https://dotnet.microsoft.com/)
-[![Windows App SDK](https://img.shields.io/badge/Windows%20App%20SDK-1.8-blue)](https://github.com/microsoft/WindowsAppSDK)
+[![Windows App SDK](https://img.shields.io/badge/Windows%20App%20SDK-2.2-blue)](https://github.com/microsoft/WindowsAppSDK)
 [![WinUI 3](https://img.shields.io/badge/WinUI-3-blue)](https://github.com/microsoft/microsoft-ui-xaml)
 
 [![Tests](https://github.com/shanebweaver/CaptureTool/actions/workflows/test.yml/badge.svg)](https://github.com/shanebweaver/CaptureTool/actions/workflows/test.yml)
