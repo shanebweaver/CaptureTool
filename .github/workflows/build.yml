@@ -48,7 +48,7 @@ jobs:
         $project = "src\CaptureTool.Presentation.Windows.WinUI\CaptureTool.Presentation.Windows.WinUI.csproj"
         $solutionDir = "${{ github.workspace }}\"
         msbuild $project `
-          /t:restore `
+          /restore `
           /p:Configuration=Release `
           /p:Platform=x64 `
           /p:SolutionDir="$solutionDir" `
