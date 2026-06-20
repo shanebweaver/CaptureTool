@@ -2,10 +2,8 @@ using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Logging;
-using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
-using CaptureTool.Application.Features.Settings;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
@@ -81,10 +79,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     private readonly ISaveVideoFileUseCase _saveAction;
     private readonly ICopyVideoFileUseCase _copyAction;
-    private readonly ISettingsService _settingsService;
-    private readonly IEditSessionStateStore _editSessionStateStore;
     private readonly ILogService _logService;
-    private bool _isRestoringAutosavedTrim;
 
     public string EditSessionName => "video edit session";
 
@@ -97,14 +92,10 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
     public VideoEditPageViewModel(
         ISaveVideoFileUseCase saveAction,
         ICopyVideoFileUseCase copyAction,
-        ISettingsService settingsService,
-        IEditSessionStateStore editSessionStateStore,
         ILogService logService)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
-        _settingsService = settingsService;
-        _editSessionStateStore = editSessionStateStore;
         _logService = logService;
 
         SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -163,7 +154,6 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
     {
         double durationSeconds = Math.Max(0, duration.TotalSeconds);
         ResetTrimRange(durationSeconds);
-        _ = RestoreAutosavedTrimAsync();
     }
 
     public void UpdateTrimStart(double seconds)
@@ -231,25 +221,9 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         return false;
     }
 
-    public async Task AutoSaveAsync(CancellationToken cancellationToken = default)
+    public Task AutoSaveAsync(CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(VideoPath) || !_settingsService.Get(CaptureToolSettings.Settings_Edit_AutoSave))
-        {
-            return;
-        }
-
-        try
-        {
-            await _editSessionStateStore.SaveVideoTrimStateAsync(
-                VideoPath,
-                new VideoTrimState(VideoDurationSeconds, TrimStartSeconds, TrimEndSeconds),
-                cancellationToken);
-            HasUnsavedChanges = false;
-        }
-        catch (Exception ex)
-        {
-            _logService.LogException(ex, "Failed to auto-save video edit state.");
-        }
+        return Task.CompletedTask;
     }
 
     private async Task SaveCommandAsync()
@@ -281,44 +255,6 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
 
     private void OnTrimChanged()
     {
-        if (_isRestoringAutosavedTrim)
-        {
-            return;
-        }
-
         HasUnsavedChanges = IsTrimmed;
-        _ = AutoSaveAsync();
-    }
-
-    private async Task RestoreAutosavedTrimAsync()
-    {
-        if (string.IsNullOrEmpty(VideoPath) || VideoDurationSeconds <= 0)
-        {
-            return;
-        }
-
-        try
-        {
-            VideoTrimState? state = await _editSessionStateStore.TryReadVideoTrimStateAsync(VideoPath);
-            if (state is null || Math.Abs(state.DurationSeconds - VideoDurationSeconds) > TrimComparisonToleranceSeconds)
-            {
-                return;
-            }
-
-            _isRestoringAutosavedTrim = true;
-            TrimStartSeconds = Math.Clamp(state.TrimStartSeconds, 0, VideoDurationSeconds);
-            TrimEndSeconds = Math.Clamp(state.TrimEndSeconds, TrimStartSeconds, VideoDurationSeconds);
-            PlayheadSeconds = TrimStartSeconds;
-            HasUnsavedChanges = IsTrimmed;
-            RaisePropertyChanged(nameof(IsTrimmed));
-        }
-        catch (Exception ex)
-        {
-            _logService.LogException(ex, "Failed to restore video edit state.");
-        }
-        finally
-        {
-            _isRestoringAutosavedTrim = false;
-        }
     }
 }

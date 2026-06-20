@@ -7,9 +7,7 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Infrastructure.Cancellation;
-using CaptureTool.Infrastructure.EditSessions;
 using CaptureTool.Infrastructure.Features;
 using CaptureTool.Infrastructure.Globalization;
 using CaptureTool.Infrastructure.Logging;
@@ -30,7 +28,6 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>();
         services.AddSingleton<IGlobalizationService, GlobalizationService>();
         services.AddSingleton<INavigationService, NavigationService>();
-        services.AddSingleton<IEditSessionStateStore, FileEditSessionStateStore>();
         services.AddSingleton<ISettingsService, LocalSettingsService>();
         services.AddSingleton<ITelemetryService, TelemetryService>();
 #if DEBUG

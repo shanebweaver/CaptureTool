@@ -746,12 +746,12 @@ By using this application, you acknowledge that you are responsible for managing
     <comment>The label for the off state of the edit warning toggle switch on the settings page.</comment>
   </data>
   <data name="Settings_EditAutoSave_HeaderLabel.Text" xml:space="preserve">
-    <value>Auto-save edits</value>
-    <comment>The header for the edit autosave setting on the settings page.</comment>
+    <value>Auto-save image edits</value>
+    <comment>The header for the image edit autosave setting on the settings page.</comment>
   </data>
   <data name="Settings_EditAutoSave_SubtitleLabel.Text" xml:space="preserve">
-    <value>Persist working edit state automatically as image or video edits change.</value>
-    <comment>The subtitle for the edit autosave setting on the settings page.</comment>
+    <value>Automatically save image edits to the temporary working file as they change.</value>
+    <comment>The subtitle for the image edit autosave setting on the settings page.</comment>
   </data>
   <data name="Settings_EditAutoSave_Toggle.OnContent" xml:space="preserve">
     <value>On</value>
