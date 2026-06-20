@@ -10,7 +10,6 @@ using CaptureTool.Application.Abstractions.Features.Settings.RestartSettingsAppl
 using CaptureTool.Application.Abstractions.Features.Settings.RestoreDefaults;
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppLanguage;
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppTheme;
-using CaptureTool.Application.Abstractions.Features.Settings.UpdateEditAutoSave;
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateEditWarnBeforeDiscard;
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateImageAutoCopy;
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateImageAutoSave;
@@ -29,7 +28,6 @@ using CaptureTool.Application.Features.SettingsPage.RestartSettingsApplication;
 using CaptureTool.Application.Features.SettingsPage.RestoreDefaults;
 using CaptureTool.Application.Features.SettingsPage.UpdateAppLanguage;
 using CaptureTool.Application.Features.SettingsPage.UpdateAppTheme;
-using CaptureTool.Application.Features.SettingsPage.UpdateEditAutoSave;
 using CaptureTool.Application.Features.SettingsPage.UpdateEditWarnBeforeDiscard;
 using CaptureTool.Application.Features.SettingsPage.UpdateImageAutoCopy;
 using CaptureTool.Application.Features.SettingsPage.UpdateImageAutoSave;
@@ -53,7 +51,6 @@ internal static class SettingsServiceCollectionExtensions
         services.AddTransient<IUpdateVideoCaptureDefaultLocalAudioUseCase, UpdateVideoCaptureDefaultLocalAudioUseCase>();
         services.AddTransient<IUpdateAppLanguageUseCase, UpdateAppLanguageUseCase>();
         services.AddTransient<IUpdateAppThemeUseCase, UpdateAppThemeUseCase>();
-        services.AddTransient<IUpdateEditAutoSaveUseCase, UpdateEditAutoSaveUseCase>();
         services.AddTransient<IUpdateEditWarnBeforeDiscardUseCase, UpdateEditWarnBeforeDiscardUseCase>();
         services.AddTransient<IChangeScreenshotsFolderUseCase, ChangeScreenshotsFolderUseCase>();
         services.AddTransient<IChangeVideosFolderUseCase, ChangeVideosFolderUseCase>();

@@ -749,26 +749,6 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Show a confirmation before unsaved edit changes are discarded.</value>
     <comment>The tooltip for the edit warning toggle switch on the settings page.</comment>
   </data>
-  <data name="Settings_EditAutoSave_HeaderLabel.Text" xml:space="preserve">
-    <value>Auto-save image edits</value>
-    <comment>The header for the image edit autosave setting on the settings page.</comment>
-  </data>
-  <data name="Settings_EditAutoSave_SubtitleLabel.Text" xml:space="preserve">
-    <value>Automatically save image edits to the temporary working file as they change.</value>
-    <comment>The subtitle for the image edit autosave setting on the settings page.</comment>
-  </data>
-  <data name="Settings_EditAutoSave_Toggle.OnContent" xml:space="preserve">
-    <value>On</value>
-    <comment>The label for the on state of the edit autosave toggle switch on the settings page.</comment>
-  </data>
-  <data name="Settings_EditAutoSave_Toggle.OffContent" xml:space="preserve">
-    <value>Off</value>
-    <comment>The label for the off state of the edit autosave toggle switch on the settings page.</comment>
-  </data>
-  <data name="Settings_EditAutoSave_Toggle.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Automatically save image edits to the working image file while editing.</value>
-    <comment>The tooltip for the image edit autosave toggle switch on the settings page.</comment>
-  </data>
   <data name="EditSessionConfirmation_Title" xml:space="preserve">
     <value>Save changes?</value>
     <comment>The title for the confirmation dialog shown before leaving an edit session with unsaved changes.</comment>

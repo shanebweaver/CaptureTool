@@ -127,7 +127,6 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
                 string newFilePath = Path.Combine(screenshotsFolder, GetNewCaptureFileName());
 
                 File.Copy(tempFilePath, newFilePath, true);
-                imageFile.MarkAutoSavedAs(newFilePath);
             }
             catch (Exception e)
             {

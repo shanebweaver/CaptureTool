@@ -221,11 +221,6 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         return false;
     }
 
-    public Task AutoSaveAsync(CancellationToken cancellationToken = default)
-    {
-        return Task.CompletedTask;
-    }
-
     private async Task SaveCommandAsync()
     {
         await SaveAsync(CancellationToken.None);

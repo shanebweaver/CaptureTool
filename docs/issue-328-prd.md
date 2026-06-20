@@ -13,8 +13,7 @@ Users can lose in-progress image or video edits when they navigate away from an 
 
 - Warn users before leaving a dirty edit session when that action would discard unsaved work.
 - Let users save or discard before navigating away or closing.
-- Add settings that allow users to enable or disable destructive-navigation warnings and edit autosave.
-- Automatically persist edit working state as edits happen when edit autosave is enabled.
+- Add a setting that allows users to enable or disable destructive-navigation warnings.
 - Rename export-only `Save` actions to `Save as`.
 
 ## Non-Goals
@@ -46,18 +45,11 @@ Users can lose in-progress image or video edits when they navigate away from an 
 ### Settings
 
 - Add a setting to enable or disable warnings before discarding edit sessions.
-- Add a setting to enable or disable edit autosave.
-- Both settings must be visible in Settings and persisted through the existing settings service.
+- The setting must be visible in Settings and persisted through the existing settings service.
 - Defaults:
   - destructive-navigation warning: enabled
-  - edit autosave: enabled
-
-### Edit Autosave
-
-- When edit autosave is enabled, image edit operations must persist the current rendered result back to the working temp file after changes.
-- When edit autosave is enabled, video trim changes must persist a recoverable working edit state for the current temp file.
-- Autosave failures must not crash the editor; they should be logged.
-- Autosave must not replace the explicit `Save as` export workflow.
+- The app must not automatically persist edit changes to the original, temp, or captured output media while the user is actively editing.
+- Edit changes are durable only when the user explicitly chooses `Save as`, or chooses save from the destructive-navigation confirmation flow.
 
 ### Save as Labeling
 
@@ -77,16 +69,14 @@ Users can lose in-progress image or video edits when they navigate away from an 
 
 1. Add PRD and task contract.
 2. Add edit-session dirty-state abstractions and implementations for image/video editors.
-3. Add confirmation and autosave settings definitions, update settings use cases, and expose them in Settings.
+3. Add confirmation setting definitions, update settings use cases, and expose the warning setting in Settings.
 4. Add a presentation confirmation service that can ask save/discard/cancel.
 5. Add guarded navigation APIs/use cases so navigation is canceled before the stack changes.
 6. Wire app menu/settings/about/store/home/recent/open-file navigation through guarded navigation.
 7. Add main-window close protection using the same edit-session guard.
-8. Add image autosave to overwrite the temp working image after edit operations when enabled.
-9. Add video working-edit autosave for trim state when enabled.
-10. Rename edit export labels from `Save` to `Save as`.
-11. Add unit tests for dirty-state, guarded navigation, settings, autosave triggering, and view-model labels/commands.
-12. Run build/tests.
+8. Rename edit export labels from `Save` to `Save as`.
+9. Add unit tests for dirty-state, guarded navigation, settings, and view-model labels/commands.
+10. Run build/tests.
 
 ## Acceptance Criteria
 
@@ -96,7 +86,6 @@ Users can lose in-progress image or video edits when they navigate away from an 
 - Choosing discard navigates/closes without exporting.
 - Choosing save invokes the existing export flow before navigating/closing.
 - Disabling warnings allows navigation/close without a prompt.
-- Enabling edit autosave persists working edit state as changes occur.
-- Disabling edit autosave prevents automatic edit persistence.
+- Edit operations do not automatically overwrite the working file, original media, or captured output copy.
 - All edit export controls read `Save as`.
 - Automated tests cover the new application and presentation behavior.
