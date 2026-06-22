@@ -91,6 +91,8 @@
   <ItemGroup>
     <ClInclude Include="AudioCaptureDevice.h" />
     <ClInclude Include="AudioCaptureHandler.h" />
+    <ClInclude Include="AudioRecorderImpl.h" />
+    <ClInclude Include="AudioRecordingConfig.h" />
     <ClInclude Include="CallbackHandle.h" />
     <ClInclude Include="CallbackRegistry.h" />
     <ClInclude Include="CallbackTypes.h" />
@@ -114,6 +116,8 @@
     <ClInclude Include="IMediaFoundationLifecycleManagerFactory.h" />
     <ClInclude Include="IMP4SinkWriter.h" />
     <ClInclude Include="IMP4SinkWriterFactory.h" />
+    <ClInclude Include="IWavSinkWriter.h" />
+    <ClInclude Include="IWavSinkWriterFactory.h" />
     <ClInclude Include="ISampleBuilder.h" />
     <ClInclude Include="ISampleBuilderFactory.h" />
     <ClInclude Include="IScreenshotCapture.h" />
@@ -139,6 +143,8 @@
     <ClInclude Include="TextureProcessorFactory.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSource.h" />
     <ClInclude Include="WindowsDesktopVideoCaptureSourceFactory.h" />
+    <ClInclude Include="WindowsAudioCaptureSession.h" />
+    <ClInclude Include="WindowsAudioCaptureSessionFactory.h" />
     <ClInclude Include="WindowsLocalAudioCaptureSource.h" />
     <ClInclude Include="WindowsGraphicsCaptureSessionFactory.h" />
     <ClInclude Include="WindowsGraphicsCaptureHelpers.h" />
@@ -147,10 +153,13 @@
     <ClInclude Include="WindowsMFMP4SinkWriter.h" />
     <ClInclude Include="WindowsMFMP4SinkWriterFactory.h" />
     <ClInclude Include="WindowsScreenshotCapture.h" />
+    <ClInclude Include="WindowsWaveSinkWriter.h" />
+    <ClInclude Include="WindowsWaveSinkWriterFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AudioCaptureDevice.cpp" />
     <ClCompile Include="AudioCaptureHandler.cpp" />
+    <ClCompile Include="AudioRecorderImpl.cpp" />
     <ClCompile Include="FrameArrivedHandler.cpp" />
     <ClCompile Include="IStreamConfigurationBuilder.cpp" />
     <ClCompile Include="MediaFoundationLifecycleManager.cpp" />
@@ -172,6 +181,8 @@
     <ClCompile Include="TextureProcessorFactory.cpp" />
     <ClCompile Include="WindowsDesktopVideoCaptureSource.cpp" />
     <ClCompile Include="WindowsDesktopVideoCaptureSourceFactory.cpp" />
+    <ClCompile Include="WindowsAudioCaptureSession.cpp" />
+    <ClCompile Include="WindowsAudioCaptureSessionFactory.cpp" />
     <ClCompile Include="WindowsLocalAudioCaptureSource.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSessionFactory.cpp" />
     <ClCompile Include="WindowsGraphicsCaptureSession.cpp" />
@@ -179,6 +190,8 @@
     <ClCompile Include="WindowsMFMP4SinkWriter.cpp" />
     <ClCompile Include="WindowsMFMP4SinkWriterFactory.cpp" />
     <ClCompile Include="WindowsScreenshotCapture.cpp" />
+    <ClCompile Include="WindowsWaveSinkWriter.cpp" />
+    <ClCompile Include="WindowsWaveSinkWriterFactory.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

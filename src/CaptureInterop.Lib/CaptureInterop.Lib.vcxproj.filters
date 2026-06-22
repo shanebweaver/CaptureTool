@@ -228,6 +228,30 @@
     <ClInclude Include="WindowsScreenshotCapture.h">
       <Filter>Header Files\Screenshot</Filter>
     </ClInclude>
+    <ClInclude Include="AudioRecorderImpl.h">
+      <Filter>Header Files\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioRecordingConfig.h">
+      <Filter>Header Files\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsAudioCaptureSession.h">
+      <Filter>Header Files\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsAudioCaptureSessionFactory.h">
+      <Filter>Header Files\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="IWavSinkWriter.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IWavSinkWriterFactory.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsWaveSinkWriter.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsWaveSinkWriterFactory.h">
+      <Filter>Header Files\SinkWriter</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -304,6 +328,21 @@
     </ClCompile>
     <ClCompile Include="WindowsScreenshotCapture.cpp">
       <Filter>Source Files\Screenshot</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioRecorderImpl.cpp">
+      <Filter>Source Files\AudioCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsAudioCaptureSession.cpp">
+      <Filter>Source Files\AudioCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsAudioCaptureSessionFactory.cpp">
+      <Filter>Source Files\AudioCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsWaveSinkWriter.cpp">
+      <Filter>Source Files\SinkWriter</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsWaveSinkWriterFactory.cpp">
+      <Filter>Source Files\SinkWriter</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

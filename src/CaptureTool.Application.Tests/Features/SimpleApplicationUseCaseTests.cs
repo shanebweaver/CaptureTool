@@ -44,6 +44,7 @@ using CaptureTool.Application.Features.Store.LeaveStorePage;
 using CaptureTool.Application.Features.Store.OpenStorePage;
 using CaptureTool.Application.Features.Store.PurchaseChromaKeyAddOn;
 using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.Capture.Files;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;
@@ -123,12 +124,15 @@ public sealed class SimpleApplicationUseCaseTests
     public async Task AudioCaptureUseCases_InvokeAudioCaptureHandler()
     {
         var audioCapture = new Mock<IAudioCaptureHandler>();
+        var navigation = new Mock<INavigationService>();
+        var audioFile = Mock.Of<IAudioFile>();
+        audioCapture.Setup(handler => handler.StopCapture()).Returns(audioFile);
 
         await new StartAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new StartAudioCaptureRequest(), TestContext.CancellationToken);
         await new PauseAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new PauseAudioCaptureRequest(), TestContext.CancellationToken);
-        await new StopAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)
+        await new StopAudioCaptureUseCase(audioCapture.Object, navigation.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new StopAudioCaptureRequest(), TestContext.CancellationToken);
         await new ToggleLocalAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new ToggleLocalAudioCaptureRequest(), TestContext.CancellationToken);
@@ -137,6 +141,7 @@ public sealed class SimpleApplicationUseCaseTests
         audioCapture.Verify(handler => handler.PauseCapture(), Times.Once);
         audioCapture.Verify(handler => handler.StopCapture(), Times.Once);
         audioCapture.Verify(handler => handler.ToggleLocalAudio(), Times.Once);
+        navigation.Verify(service => service.Navigate(NavigationRoute.AudioEdit, audioFile, false), Times.Once);
     }
 
     [TestMethod]

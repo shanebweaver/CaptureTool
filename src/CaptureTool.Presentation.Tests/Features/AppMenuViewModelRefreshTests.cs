@@ -56,6 +56,7 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IStoreFeatureAvailability>(),
             Mock.Of<IImageCaptureHandler>(),
             Mock.Of<IVideoCaptureHandler>(),
+            Mock.Of<IAudioCaptureHandler>(),
             recentCaptureFactory.Object);
 
         viewModel.OpenFileCommand.Execute(null);

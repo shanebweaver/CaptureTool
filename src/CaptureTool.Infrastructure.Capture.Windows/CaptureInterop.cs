@@ -32,6 +32,30 @@ internal static partial class CaptureInterop
     [DllImport("CaptureInterop.dll")]
     internal static extern CaptureRecorderResult RegisterAudioSampleCallback(AudioSampleCallback? callback);
 
+    [DllImport("CaptureInterop.dll")]
+    internal static extern CaptureRecorderResult StartAudioRecording(in NativeAudioRecordingOptions options);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern CaptureRecorderResult PauseAudioRecording();
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern CaptureRecorderResult ResumeAudioRecording();
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern CaptureRecorderResult StopAudioRecording();
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern CaptureRecorderResult SetAudioRecordingEnabled(uint enabled);
+
+    [DllImport("CaptureInterop.dll", CharSet = CharSet.Unicode)]
+    internal static extern CaptureRecorderResult SetAudioRecordingInputSource(string? sourceId);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern CaptureRecorderResult SetAudioRecordingInputVolume(uint volumePercentage);
+
+    [DllImport("CaptureInterop.dll")]
+    internal static extern CaptureRecorderResult RegisterAudioRecordingSampleCallback(AudioSampleCallback? callback);
+
     // Screenshot capture functions
     [DllImport("CaptureInterop.dll")]
     internal static extern IntPtr CaptureMonitorScreenshot(IntPtr hMonitor);
@@ -116,6 +140,32 @@ internal readonly struct NativeCaptureRecordingOptions
     public readonly uint FrameRate;
     public readonly uint VideoBitrate;
     public readonly uint AudioBitrate;
+
+    [MarshalAs(UnmanagedType.LPWStr)]
+    public readonly string? AudioInputSourceId;
+
+    public readonly uint AudioInputVolumePercentage;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal readonly struct NativeAudioRecordingOptions
+{
+    public NativeAudioRecordingOptions(
+        string outputPath,
+        bool captureAudio,
+        string? audioInputSourceId,
+        int audioInputVolumePercentage)
+    {
+        OutputPath = outputPath;
+        CaptureAudio = captureAudio ? 1u : 0u;
+        AudioInputSourceId = audioInputSourceId;
+        AudioInputVolumePercentage = (uint)Math.Clamp(audioInputVolumePercentage, 0, 100);
+    }
+
+    [MarshalAs(UnmanagedType.LPWStr)]
+    public readonly string OutputPath;
+
+    public readonly uint CaptureAudio;
 
     [MarshalAs(UnmanagedType.LPWStr)]
     public readonly string? AudioInputSourceId;

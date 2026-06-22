@@ -5,7 +5,8 @@ namespace CaptureTool.Domain.Capture;
 public interface IAudioRecorder
 {
     void Pause();
-    void StartCapture();
+    void Resume();
+    void StartCapture(string outputPath);
     IAudioFile StopCapture();
     void ToggleDesktopAudio();
     void ToggleMute();

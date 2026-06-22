@@ -5,28 +5,82 @@ namespace CaptureTool.Infrastructure.Capture.Windows;
 
 public class WindowsAudioRecorder : IAudioRecorder
 {
+    private string? _outputPath;
+    private bool _isMuted;
+    private bool _isDesktopAudioEnabled = true;
+
     public void Pause()
     {
-        throw new NotImplementedException();
+        CaptureInterop.PauseAudioRecording().EnsureSuccess();
     }
 
-    public void StartCapture()
+    public void Resume()
     {
-        throw new NotImplementedException();
+        CaptureInterop.ResumeAudioRecording().EnsureSuccess();
+    }
+
+    public void StartCapture(string outputPath)
+    {
+        if (string.IsNullOrWhiteSpace(outputPath))
+        {
+            throw new ArgumentException("Audio output path is required.", nameof(outputPath));
+        }
+
+        _outputPath = outputPath;
+
+        var options = new NativeAudioRecordingOptions(
+            outputPath,
+            ShouldCaptureAudio(),
+            null,
+            100);
+
+        try
+        {
+            CaptureInterop.StartAudioRecording(in options).EnsureSuccess();
+        }
+        catch
+        {
+            _outputPath = null;
+            throw;
+        }
     }
 
     public IAudioFile StopCapture()
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(_outputPath))
+        {
+            throw new InvalidOperationException("Cannot stop, no audio is recording.");
+        }
+
+        try
+        {
+            CaptureInterop.StopAudioRecording().EnsureSuccess();
+            return new AudioFile(_outputPath);
+        }
+        finally
+        {
+            _outputPath = null;
+        }
     }
 
     public void ToggleDesktopAudio()
     {
-        throw new NotImplementedException();
+        _isDesktopAudioEnabled = !_isDesktopAudioEnabled;
+        if (!string.IsNullOrWhiteSpace(_outputPath))
+        {
+            CaptureInterop.SetAudioRecordingEnabled(ShouldCaptureAudio() ? 1u : 0u).EnsureSuccess();
+        }
     }
 
     public void ToggleMute()
     {
-        throw new NotImplementedException();
+        _isMuted = !_isMuted;
+        if (!string.IsNullOrWhiteSpace(_outputPath))
+        {
+            CaptureInterop.SetAudioRecordingEnabled(ShouldCaptureAudio() ? 1u : 0u).EnsureSuccess();
+        }
     }
+
+    private bool ShouldCaptureAudio()
+        => !_isMuted && _isDesktopAudioEnabled;
 }

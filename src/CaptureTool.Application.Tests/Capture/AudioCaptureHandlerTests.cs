@@ -1,4 +1,5 @@
 using CaptureTool.Application.Features.AudioCapture;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
 using Moq;
@@ -12,7 +13,7 @@ public sealed class AudioCaptureHandlerTests
     public void StartCapture_WhenStopped_StartsRecorderAndRaisesStateChanged()
     {
         var recorder = new Mock<IAudioRecorder>();
-        var handler = new AudioCaptureHandler(recorder.Object);
+        var handler = CreateHandler(recorder);
         AudioCaptureState? raisedState = null;
         handler.CaptureStateChanged += (_, state) => raisedState = state;
 
@@ -20,13 +21,13 @@ public sealed class AudioCaptureHandlerTests
 
         Assert.IsTrue(handler.IsRecording);
         Assert.AreEqual(AudioCaptureState.Recording, raisedState);
-        recorder.Verify(service => service.StartCapture(), Times.Once);
+        recorder.Verify(service => service.StartCapture(It.Is<string>(path => path.EndsWith(".wav"))), Times.Once);
     }
 
     [TestMethod]
     public void StartCapture_WhenAlreadyRecording_Throws()
     {
-        var handler = new AudioCaptureHandler(Mock.Of<IAudioRecorder>());
+        var handler = CreateHandler(new Mock<IAudioRecorder>());
 
         handler.StartCapture();
 
@@ -37,7 +38,7 @@ public sealed class AudioCaptureHandlerTests
     public void PauseCapture_WhenRecording_PausesRecorderAndRaisesStateChanged()
     {
         var recorder = new Mock<IAudioRecorder>();
-        var handler = new AudioCaptureHandler(recorder.Object);
+        var handler = CreateHandler(recorder);
         handler.StartCapture();
         AudioCaptureState? raisedState = null;
         handler.CaptureStateChanged += (_, state) => raisedState = state;
@@ -52,7 +53,7 @@ public sealed class AudioCaptureHandlerTests
     [TestMethod]
     public void PauseCapture_WhenNotRecording_Throws()
     {
-        var handler = new AudioCaptureHandler(Mock.Of<IAudioRecorder>());
+        var handler = CreateHandler(new Mock<IAudioRecorder>());
 
         Assert.ThrowsExactly<InvalidOperationException>(handler.PauseCapture);
     }
@@ -60,22 +61,27 @@ public sealed class AudioCaptureHandlerTests
     [TestMethod]
     public void StopCapture_WhenNotRecording_Throws()
     {
-        var handler = new AudioCaptureHandler(Mock.Of<IAudioRecorder>());
+        var handler = CreateHandler(new Mock<IAudioRecorder>());
 
         Assert.ThrowsExactly<InvalidOperationException>(() => handler.StopCapture());
     }
 
     [TestMethod]
-    public void StopCapture_WhenRecording_StopsRecorderAndUpdatesStateBeforeNotImplementedException()
+    public void StopCapture_WhenRecording_StopsRecorderReturnsFileAndRaisesCapturedEvent()
     {
         var recorder = new Mock<IAudioRecorder>();
-        recorder.Setup(service => service.StopCapture()).Returns(Mock.Of<IAudioFile>());
-        var handler = new AudioCaptureHandler(recorder.Object);
+        var audioFile = new AudioFile(@"C:\Temp\capture.wav");
+        recorder.Setup(service => service.StopCapture()).Returns(audioFile);
+        var handler = CreateHandler(recorder);
+        IAudioFile? raisedFile = null;
+        handler.NewAudioCaptured += (_, file) => raisedFile = file;
         handler.StartCapture();
 
-        Assert.ThrowsExactly<NotImplementedException>(() => handler.StopCapture());
+        IAudioFile stoppedFile = handler.StopCapture();
 
         Assert.AreEqual(AudioCaptureState.Stopped, handler.CaptureState);
+        Assert.AreSame(audioFile, stoppedFile);
+        Assert.AreSame(audioFile, raisedFile);
         recorder.Verify(service => service.StopCapture(), Times.Once);
     }
 
@@ -83,7 +89,7 @@ public sealed class AudioCaptureHandlerTests
     public void ToggleMute_TogglesMutedStateAndRaisesEvent()
     {
         var recorder = new Mock<IAudioRecorder>();
-        var handler = new AudioCaptureHandler(recorder.Object);
+        var handler = CreateHandler(recorder);
         bool? raisedValue = null;
         handler.MutedStateChanged += (_, value) => raisedValue = value;
 
@@ -98,14 +104,23 @@ public sealed class AudioCaptureHandlerTests
     public void ToggleLocalAudio_TogglesDesktopAudioStateAndRaisesEvent()
     {
         var recorder = new Mock<IAudioRecorder>();
-        var handler = new AudioCaptureHandler(recorder.Object);
+        var handler = CreateHandler(recorder);
         bool? raisedValue = null;
         handler.DesktopAudioStateChanged += (_, value) => raisedValue = value;
 
+        Assert.IsTrue(handler.IsDesktopAudioEnabled);
+
         handler.ToggleLocalAudio();
 
-        Assert.IsTrue(handler.IsDesktopAudioEnabled);
-        Assert.IsTrue(raisedValue);
+        Assert.IsFalse(handler.IsDesktopAudioEnabled);
+        Assert.IsFalse(raisedValue);
         recorder.Verify(service => service.ToggleDesktopAudio(), Times.Once);
+    }
+
+    private static AudioCaptureHandler CreateHandler(Mock<IAudioRecorder> recorder)
+    {
+        var storage = new Mock<IStorageService>();
+        storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(@"C:\Temp");
+        return new AudioCaptureHandler(recorder.Object, storage.Object);
     }
 }

@@ -23,6 +23,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 {
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly IAudioCaptureHandler _audioCaptureHandler;
     private readonly IOpenFileUseCase _openFileCommand;
     private readonly IOpenRecentCaptureUseCase _openRecentCaptureCommand;
     private readonly IGetRecentCapturesUseCase _getRecentCapturesQuery;
@@ -66,10 +67,12 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IStoreFeatureAvailability storeFeatureAvailability,
         IImageCaptureHandler imageCaptureHandler,
         IVideoCaptureHandler videoCaptureHandler,
+        IAudioCaptureHandler audioCaptureHandler,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory)
     {
         _imageCaptureHandler = imageCaptureHandler;
         _videoCaptureHandler = videoCaptureHandler;
+        _audioCaptureHandler = audioCaptureHandler;
         _openFileCommand = openFileCommand;
         _openRecentCaptureCommand = openRecentCaptureCommand;
         _getRecentCapturesQuery = getRecentCapturesQuery;
@@ -97,6 +100,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _ = RefreshRecentCapturesAsync();
         _imageCaptureHandler.NewImageCaptured += OnNewImageCaptured;
         _videoCaptureHandler.NewVideoCaptured += OnNewVideoCaptured;
+        _audioCaptureHandler.NewAudioCaptured += OnNewAudioCaptured;
 
         base.Load();
     }
@@ -105,6 +109,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         _imageCaptureHandler.NewImageCaptured -= OnNewImageCaptured;
         _videoCaptureHandler.NewVideoCaptured -= OnNewVideoCaptured;
+        _audioCaptureHandler.NewAudioCaptured -= OnNewAudioCaptured;
         base.Dispose();
     }
 
@@ -114,6 +119,11 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     }
 
     private void OnNewVideoCaptured(object? sender, IVideoFile e)
+    {
+        _ = RefreshRecentCapturesAsync();
+    }
+
+    private void OnNewAudioCaptured(object? sender, IAudioFile e)
     {
         _ = RefreshRecentCapturesAsync();
     }
