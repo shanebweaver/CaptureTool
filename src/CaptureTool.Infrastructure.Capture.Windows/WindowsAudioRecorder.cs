@@ -8,6 +8,7 @@ public class WindowsAudioRecorder : IAudioRecorder
     private string? _outputPath;
     private bool _isMuted;
     private bool _isDesktopAudioEnabled = true;
+    private string? _audioInputSourceId;
 
     public void Pause()
     {
@@ -31,7 +32,7 @@ public class WindowsAudioRecorder : IAudioRecorder
         var options = new NativeAudioRecordingOptions(
             outputPath,
             ShouldCaptureAudio(),
-            null,
+            GetActiveAudioInputSourceId(),
             100);
 
         try
@@ -72,15 +73,32 @@ public class WindowsAudioRecorder : IAudioRecorder
         }
     }
 
+    public void SetAudioInputSource(string? sourceId)
+    {
+        _audioInputSourceId = string.IsNullOrWhiteSpace(sourceId)
+            ? null
+            : sourceId;
+
+        if (!string.IsNullOrWhiteSpace(_outputPath))
+        {
+            CaptureInterop.SetAudioRecordingInputSource(GetActiveAudioInputSourceId()).EnsureSuccess();
+            CaptureInterop.SetAudioRecordingEnabled(ShouldCaptureAudio() ? 1u : 0u).EnsureSuccess();
+        }
+    }
+
     public void ToggleMute()
     {
         _isMuted = !_isMuted;
         if (!string.IsNullOrWhiteSpace(_outputPath))
         {
+            CaptureInterop.SetAudioRecordingInputSource(GetActiveAudioInputSourceId()).EnsureSuccess();
             CaptureInterop.SetAudioRecordingEnabled(ShouldCaptureAudio() ? 1u : 0u).EnsureSuccess();
         }
     }
 
+    private string? GetActiveAudioInputSourceId()
+        => _isMuted ? null : _audioInputSourceId;
+
     private bool ShouldCaptureAudio()
-        => !_isMuted && _isDesktopAudioEnabled;
+        => _isDesktopAudioEnabled || !string.IsNullOrWhiteSpace(GetActiveAudioInputSourceId());
 }

@@ -18,6 +18,14 @@
 
         <!--  Toolbar  -->
         <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+            <!--  New audio capture  -->
+            <AppBarButton
+                x:Uid="AudioEdit_NewAudioCaptureButton"
+                Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
+                Icon="Audio" />
+
+            <AppBarSeparator />
+
             <!--  Copy  -->
             <AppBarButton
                 x:Uid="AudioEdit_CopyButton"

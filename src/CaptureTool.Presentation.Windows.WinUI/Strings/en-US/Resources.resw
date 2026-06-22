@@ -421,6 +421,22 @@ By using this application, you acknowledge that you are responsible for managing
     <value>New video capture</value>
     <comment>The label for the new video capture item in the file menu.</comment>
   </data>
+  <data name="AppMenu_NewAudioCaptureItem.AccessKey" xml:space="preserve">
+    <value>A</value>
+    <comment>The access key for the new audio capture item in the file menu.</comment>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value>N</value>
+    <comment>The keyboard accelerator key for the new audio capture item in the file menu.</comment>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value>Control,Menu</value>
+    <comment>The keyboard accelerator modifiers for the new audio capture item in the file menu.</comment>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem.Text" xml:space="preserve">
+    <value>New audio capture</value>
+    <comment>The label for the new audio capture item in the file menu.</comment>
+  </data>
   <data name="ImageEdit_CropButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Crop</value>
     <comment>The tooltip for the crop button on the image edit page.</comment>
@@ -882,6 +898,14 @@ SOFTWARE.
     <value>Save as</value>
     <comment>The label for the save button on the audio edit page.</comment>
   </data>
+  <data name="AudioEdit_CopyButton.Label" xml:space="preserve">
+    <value>Copy</value>
+    <comment>The label for the copy button on the audio edit page.</comment>
+  </data>
+  <data name="AudioEdit_NewAudioCaptureButton.Label" xml:space="preserve">
+    <value>New audio capture</value>
+    <comment>The label for the button that starts another audio capture from the audio edit page.</comment>
+  </data>
   <data name="AudioEdit_SaveButton.AccessKey" xml:space="preserve">
     <value>S</value>
     <comment>The access key for the save button on the audio edit page.</comment>
@@ -1213,6 +1237,39 @@ SOFTWARE.
     <value>Recording duration</value>
   </data>
   <data name="CaptureOverlay_Timer.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Recording duration</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.Label" xml:space="preserve">
+    <value>Record</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Start recording</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Start recording</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.AutomationProperties.Name" xml:space="preserve">
+    <value>System audio</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.Label" xml:space="preserve">
+    <value>System audio</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Turn off system audio capture</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.AutomationProperties.Name" xml:space="preserve">
+    <value>System audio off</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.Label" xml:space="preserve">
+    <value>System audio</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Turn on system audio capture</value>
+  </data>
+  <data name="AudioCapture_Timer.AutomationProperties.Name" xml:space="preserve">
+    <value>Recording duration</value>
+  </data>
+  <data name="AudioCapture_Timer.ToolTipService.ToolTip" xml:space="preserve">
     <value>Recording duration</value>
   </data>
   <data name="SelectionOverlay_CaptureModeSegmentedControl.AutomationProperties.Name" xml:space="preserve">

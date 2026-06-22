@@ -19,6 +19,7 @@ public interface IAudioCaptureHandler
     void StartCapture();
     void PauseCapture();
     IAudioFile StopCapture();
+    void SelectAudioInputSource(string? sourceId);
     void ToggleLocalAudio();
     void ToggleMute();
 }

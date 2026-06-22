@@ -34,6 +34,18 @@
                 </MenuFlyoutItem.KeyboardAccelerators>
             </MenuFlyoutItem>
 
+            <!--  New audio capture  -->
+            <MenuFlyoutItem
+                x:Uid="AppMenu_NewAudioCaptureItem"
+                Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
+                Icon="Audio"
+                IsEnabled="{x:Bind ViewModel.IsAudioCaptureEnabled}"
+                Visibility="{x:Bind ViewModel.IsAudioCaptureEnabled}">
+                <MenuFlyoutItem.KeyboardAccelerators>
+                    <KeyboardAccelerator x:Uid="AppMenu_NewAudioCaptureItem_KeyboardAccelerator" />
+                </MenuFlyoutItem.KeyboardAccelerators>
+            </MenuFlyoutItem>
+
             <!--  Open  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_OpenFileItem"

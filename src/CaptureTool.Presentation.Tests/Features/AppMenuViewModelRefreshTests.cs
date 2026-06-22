@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
 using CaptureTool.Application.Abstractions.Features.AppMenu.OpenFile;
@@ -46,6 +48,7 @@ public sealed class AppMenuViewModelRefreshTests
 
         var viewModel = new AppMenuViewModel(
             Mock.Of<IOpenSelectionOverlayUseCase>(),
+            Mock.Of<IOpenAudioCapturePageUseCase>(),
             Mock.Of<IOpenSettingsPageUseCase>(),
             Mock.Of<IOpenAboutPageUseCase>(),
             Mock.Of<IOpenStorePageUseCase>(),
@@ -53,6 +56,7 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IExitApplicationUseCase>(),
             Mock.Of<IOpenRecentCaptureUseCase>(),
             getRecentCapturesUseCase.Object,
+            Mock.Of<IAudioCaptureFeatureAvailability>(),
             Mock.Of<IStoreFeatureAvailability>(),
             Mock.Of<IImageCaptureHandler>(),
             Mock.Of<IVideoCaptureHandler>(),

@@ -21,16 +21,24 @@
             IsEnabled="{x:Bind IsAvailable, Mode=OneWay}"
             ToolTipService.ToolTip="{x:Bind GetMuteButtonText(IsMuted), Mode=OneWay}">
             <SplitButton.Content>
-                <Grid>
-                    <FontIcon
-                        FontFamily="{StaticResource FluentSystemIcons}"
-                        Glyph="{StaticResource Mic20Regular}"
-                        Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsMuted), Mode=OneWay}" />
-                    <FontIcon
-                        FontFamily="{StaticResource FluentSystemIcons}"
-                        Glyph="{StaticResource MicOff20Regular}"
-                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsMuted), Mode=OneWay}" />
-                </Grid>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Grid VerticalAlignment="Center">
+                        <FontIcon
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            Glyph="{StaticResource Mic20Regular}"
+                            Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(IsMuted), Mode=OneWay}" />
+                        <FontIcon
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            Glyph="{StaticResource MicOff20Regular}"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(IsMuted), Mode=OneWay}" />
+                    </Grid>
+                    <TextBlock
+                        MaxWidth="260"
+                        VerticalAlignment="Center"
+                        Text="{x:Bind GetSelectedAudioInputSourceDisplayName(IsAvailable, SelectedAudioInputSource), Mode=OneWay}"
+                        TextTrimming="CharacterEllipsis"
+                        Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ShowSelectedAudioInputName), Mode=OneWay}" />
+                </StackPanel>
             </SplitButton.Content>
 
             <SplitButton.Flyout>

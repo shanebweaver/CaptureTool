@@ -1,4 +1,6 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
 using CaptureTool.Application.Abstractions.Features.AppMenu.OpenFile;
@@ -33,6 +35,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     public IRelayCommand NewImageCaptureCommand { get; }
     public IRelayCommand NewVideoCaptureCommand { get; }
+    public IRelayCommand NewAudioCaptureCommand { get; }
     public IAsyncRelayCommand OpenFileCommand { get; }
     public IRelayCommand NavigateToSettingsCommand { get; }
     public IRelayCommand ShowAboutAppCommand { get; }
@@ -42,6 +45,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     public IAsyncRelayCommand<RecentCaptureViewModel> OpenRecentCaptureCommand { get; }
 
     public bool ShowAddOnsOption { get; }
+    public bool IsAudioCaptureEnabled { get; }
 
     private ObservableCollection<RecentCaptureViewModel> _recentCaptures = [];
 
@@ -57,6 +61,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     public AppMenuViewModel(
         IOpenSelectionOverlayUseCase openSelectionOverlayCommand,
+        IOpenAudioCapturePageUseCase openAudioCapturePageCommand,
         IOpenSettingsPageUseCase openSettingsPageCommand,
         IOpenAboutPageUseCase openAboutPageCommand,
         IOpenStorePageUseCase openStorePageCommand,
@@ -64,6 +69,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IExitApplicationUseCase exitApplicationCommand,
         IOpenRecentCaptureUseCase openRecentCaptureCommand,
         IGetRecentCapturesUseCase getRecentCapturesQuery,
+        IAudioCaptureFeatureAvailability audioCaptureFeatureAvailability,
         IStoreFeatureAvailability storeFeatureAvailability,
         IImageCaptureHandler imageCaptureHandler,
         IVideoCaptureHandler videoCaptureHandler,
@@ -80,6 +86,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
         NewImageCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault));
         NewVideoCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault));
+        NewAudioCaptureCommand = openAudioCapturePageCommand.ToRelayCommand(() => new OpenAudioCapturePageRequest());
         OpenFileCommand = new AsyncRelayCommand(OpenFileAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         NavigateToSettingsCommand = openSettingsPageCommand.ToRelayCommand(() => new OpenSettingsPageRequest());
         ShowAboutAppCommand = openAboutPageCommand.ToRelayCommand(() => new OpenAboutPageRequest());
@@ -89,6 +96,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         OpenRecentCaptureCommand = new AsyncRelayCommand<RecentCaptureViewModel>(OpenRecentCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
 
         ShowAddOnsOption = storeFeatureAvailability.IsStoreEnabled;
+        IsAudioCaptureEnabled = audioCaptureFeatureAvailability.IsAudioCaptureEnabled;
         RecentCaptures = [];
     }
 

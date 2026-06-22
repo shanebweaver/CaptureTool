@@ -45,7 +45,7 @@ public sealed class ImageEditSessionTests
 
         history.Execute(session, new AddDrawableCommand(drawable));
 
-        Assert.IsTrue(session.Drawables.Count == 1);
+        Assert.HasCount(1, session.Drawables);
         Assert.AreSame(drawable, session.Drawables[0]);
 
         history.Execute(session, new DeleteDrawableCommand(0));
@@ -53,7 +53,7 @@ public sealed class ImageEditSessionTests
         Assert.IsFalse(session.Drawables.Any());
 
         Assert.IsTrue(history.Undo(session));
-        Assert.IsTrue(session.Drawables.Count == 1);
+        Assert.HasCount(1, session.Drawables);
         Assert.AreSame(drawable, session.Drawables[0]);
 
         Assert.IsTrue(history.Redo(session));
@@ -117,7 +117,7 @@ public sealed class ImageEditSessionTests
 
         history.Execute(session, new SetChromaKeyCommand(ChromaKeySettings.Default, settings));
 
-        Assert.IsInstanceOfType(image.ImageEffect, typeof(ImageChromaKeyEffect));
+        Assert.IsInstanceOfType<ImageChromaKeyEffect>(image.ImageEffect);
         var effect = (ImageChromaKeyEffect)image.ImageEffect!;
         Assert.IsTrue(effect.IsEnabled);
         Assert.AreEqual(Color.Green, effect.Color);
@@ -126,7 +126,7 @@ public sealed class ImageEditSessionTests
 
         Assert.IsTrue(history.Undo(session));
 
-        Assert.IsInstanceOfType(image.ImageEffect, typeof(ImageChromaKeyEffect));
+        Assert.IsInstanceOfType<ImageChromaKeyEffect>(image.ImageEffect);
         effect = (ImageChromaKeyEffect)image.ImageEffect!;
         Assert.IsFalse(effect.IsEnabled);
         Assert.AreEqual(Color.Empty, effect.Color);

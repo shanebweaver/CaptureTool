@@ -19,6 +19,7 @@ public sealed class AudioCaptureHandler : IAudioCaptureHandler
     public bool IsPaused => CaptureState == AudioCaptureState.Paused;
     public bool IsMuted { get; private set; }
     public bool IsDesktopAudioEnabled { get; private set; } = true;
+    public string? SelectedAudioInputSourceId { get; private set; }
 
     public AudioCaptureState CaptureState { get; private set; }
 
@@ -85,6 +86,15 @@ public sealed class AudioCaptureHandler : IAudioCaptureHandler
 
         IsDesktopAudioEnabled = !IsDesktopAudioEnabled;
         DesktopAudioStateChanged?.Invoke(this, IsDesktopAudioEnabled);
+    }
+
+    public void SelectAudioInputSource(string? sourceId)
+    {
+        SelectedAudioInputSourceId = string.IsNullOrWhiteSpace(sourceId)
+            ? null
+            : sourceId;
+
+        _audioRecorder.SetAudioInputSource(SelectedAudioInputSourceId);
     }
 
     public void ToggleMute()

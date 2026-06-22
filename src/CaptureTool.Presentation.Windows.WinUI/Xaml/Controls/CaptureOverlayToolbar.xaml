@@ -105,6 +105,7 @@
                 SelectedAudioInputSource="{x:Bind SelectedAudioInputSource, Mode=OneWay}"
                 SelectedAudioInputSourceIndex="{x:Bind SelectedAudioInputSourceIndex, Mode=OneWay}"
                 SelectionChangedCommand="{x:Bind SelectAudioInputSourceCommand, Mode=OneWay}"
+                ShowSelectedAudioInputName="False"
                 ToggleMuteCommand="{x:Bind ToggleAudioInputMuteCommand, Mode=OneWay}" />
 
             <Button
