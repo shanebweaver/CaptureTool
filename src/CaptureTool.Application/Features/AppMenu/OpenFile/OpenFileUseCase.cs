@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Features.AppMenu.OpenFile;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Navigation;
@@ -6,6 +7,7 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Features.AudioCapture;
 
 namespace CaptureTool.Application.Features.AppMenu.OpenFile;
 
@@ -18,18 +20,21 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
     private readonly IFilePickerService _filePickerService;
     private readonly INavigationService _navigationService;
     private readonly IStorageService _storageService;
+    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
 
     public OpenFileUseCase(IFileTypeDetector fileTypeDetector,
         IFilePickerService filePickerService,
         INavigationService navigationService,
         IStorageService storageService,
-        IUseCaseExecutor useCaseExecutor)
+        IUseCaseExecutor useCaseExecutor,
+        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
     {
         _useCaseExecutor = useCaseExecutor;
         _fileTypeDetector = fileTypeDetector;
         _filePickerService = filePickerService;
         _navigationService = navigationService;
         _storageService = storageService;
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
     }
 
     public Task<UseCaseResponse<OpenFileResponse>> ExecuteAsync(OpenFileRequest request, CancellationToken cancellationToken = default)
@@ -38,6 +43,11 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
+                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
+                {
+                    return new OpenFileResponse(false);
+                }
+
                 IFile? file = await _filePickerService.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures);
                 if (file is null)
                 {

@@ -1,7 +1,9 @@
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Features.AudioCapture;
 
 namespace CaptureTool.Application.Features.VideoEdit.OpenVideoEditPage;
 
@@ -11,12 +13,15 @@ public sealed class OpenVideoEditPageUseCase : IOpenVideoEditPageUseCase
 
     private readonly INavigationService _navigationService;
     private readonly IUseCaseExecutor _useCaseExecutor;
+    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
 
     public OpenVideoEditPageUseCase(
         INavigationService navigationService,
-        IUseCaseExecutor useCaseExecutor)
+        IUseCaseExecutor useCaseExecutor,
+        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
     {
         _navigationService = navigationService;
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
         _useCaseExecutor = useCaseExecutor;
     }
 
@@ -24,8 +29,13 @@ public sealed class OpenVideoEditPageUseCase : IOpenVideoEditPageUseCase
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: () =>
+            useCase: async _ =>
             {
+                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
+                {
+                    return new OpenVideoEditPageResponse(false);
+                }
+
                 _navigationService.Navigate(NavigationRoute.VideoEdit, request.VideoFile);
                 return new OpenVideoEditPageResponse();
             },

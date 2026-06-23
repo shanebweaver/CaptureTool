@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Features.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.Features.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.PauseAudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.StartAudioCapture;
@@ -229,6 +230,33 @@ public sealed class SimpleApplicationUseCaseTests
 
         Assert.IsFalse(missingResponse.Opened);
         Assert.IsFalse(unknownResponse.Opened);
+    }
+
+    [TestMethod]
+    public async Task OpenRecentCaptureUseCase_WhenAudioCaptureIsDisabled_ReturnsNotOpenedForAudioFiles()
+    {
+        string audioPath = await CreateTempFileAsync("capture.wav");
+        var detector = new Mock<IFileTypeDetector>();
+        var audioEdit = new Mock<IOpenAudioEditPageUseCase>();
+        var audioCaptureFeatureAvailability = new Mock<IAudioCaptureFeatureAvailability>();
+        detector.Setup(service => service.DetectFileType(audioPath)).Returns(CaptureFileType.Audio);
+        audioCaptureFeatureAvailability
+            .Setup(availability => availability.IsAudioCaptureEnabled)
+            .Returns(false);
+        var useCase = new OpenRecentCaptureUseCase(
+            detector.Object,
+            audioEdit.Object,
+            Mock.Of<IOpenImageEditPageUseCase>(),
+            Mock.Of<IOpenVideoEditPageUseCase>(),
+            TestUseCaseExecutor.Instance,
+            audioCaptureFeatureAvailability.Object);
+
+        OpenRecentCaptureResponse response = (await useCase.ExecuteAsync(new OpenRecentCaptureRequest(audioPath), TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Opened);
+        audioEdit.Verify(
+            useCase => useCase.ExecuteAsync(It.IsAny<OpenAudioEditPageRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     private static async Task<string> CreateTempFileAsync(string fileName)

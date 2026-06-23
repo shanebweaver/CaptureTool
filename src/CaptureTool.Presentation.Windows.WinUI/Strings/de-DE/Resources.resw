@@ -1037,6 +1037,18 @@ SOFTWARE.
   <data name="AudioCapture_Timer.ToolTipService.ToolTip" xml:space="preserve">
     <value>Aufnahmedauer</value>
   </data>
+  <data name="AudioCaptureNavigationConfirmation_Title" xml:space="preserve">
+    <value>Audioaufnahme stoppen?</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_Content" xml:space="preserve">
+    <value>Eine Audioaufnahme laeuft noch. Stoppen Sie sie, bevor Sie diese Seite verlassen, damit die bisherige Aufnahme gespeichert wird.</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_StopButton" xml:space="preserve">
+    <value>Aufnahme stoppen</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_CancelButton" xml:space="preserve">
+    <value>Weiter aufnehmen</value>
+  </data>
   <data name="SelectionOverlay_CaptureModeSegmentedControl.AutomationProperties.Name" xml:space="preserve">
     <value>Aufnahmemodus</value>
   </data>
