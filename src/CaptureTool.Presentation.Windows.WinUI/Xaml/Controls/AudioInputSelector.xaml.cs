@@ -42,6 +42,12 @@ public sealed partial class AudioInputSelector : UserControlBase
         typeof(AudioInputSelector),
         new PropertyMetadata(false, OnBindablePropertyChanged));
 
+    public static readonly DependencyProperty ShowSelectedAudioInputNameProperty = DependencyProperty.Register(
+        nameof(ShowSelectedAudioInputName),
+        typeof(bool),
+        typeof(AudioInputSelector),
+        new PropertyMetadata(false, OnBindablePropertyChanged));
+
     public static readonly DependencyProperty SelectionChangedCommandProperty = DependencyProperty.Register(
         nameof(SelectionChangedCommand),
         typeof(ICommand),
@@ -90,6 +96,12 @@ public sealed partial class AudioInputSelector : UserControlBase
     {
         get => Get<bool>(IsMutedProperty);
         set => Set(IsMutedProperty, value);
+    }
+
+    public bool ShowSelectedAudioInputName
+    {
+        get => Get<bool>(ShowSelectedAudioInputNameProperty);
+        set => Set(ShowSelectedAudioInputNameProperty, value);
     }
 
     public ICommand SelectionChangedCommand
@@ -226,6 +238,13 @@ public sealed partial class AudioInputSelector : UserControlBase
             : _resourceLoader.GetString("AudioInputSelector_NoInputDevice");
     }
 
+    private string GetSelectedAudioInputSourceDisplayName(bool isAvailable, AudioInputSource? selectedAudioInputSource)
+    {
+        return isAvailable
+            ? selectedAudioInputSource?.DisplayName ?? string.Empty
+            : _resourceLoader.GetString("AudioInputSelector_NoInputDevice");
+    }
+
     private string GetMuteButtonText(bool isMuted)
     {
         return _resourceLoader.GetString(isMuted
@@ -258,6 +277,11 @@ public sealed partial class AudioInputSelector : UserControlBase
         if (property == IsMutedProperty)
         {
             return nameof(IsMuted);
+        }
+
+        if (property == ShowSelectedAudioInputNameProperty)
+        {
+            return nameof(ShowSelectedAudioInputName);
         }
 
         if (property == ToggleMuteCommandProperty)

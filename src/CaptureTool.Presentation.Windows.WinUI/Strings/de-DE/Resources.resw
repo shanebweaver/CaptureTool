@@ -345,6 +345,18 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="AppMenu_NewVideoCaptureItem.Text" xml:space="preserve">
     <value>Neue Videoaufnahme</value>
   </data>
+  <data name="AppMenu_NewAudioCaptureItem.AccessKey" xml:space="preserve">
+    <value>A</value>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value>Control,Menu</value>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem.Text" xml:space="preserve">
+    <value>Neue Audioaufnahme</value>
+  </data>
   <data name="ShapeToolbar_ShapeType.Header" xml:space="preserve">
     <value>Formtyp</value>
     <comment>The header for the shape type selector in the shape toolbar.</comment>
@@ -985,6 +997,57 @@ SOFTWARE.
   </data>
   <data name="CaptureOverlay_Timer.ToolTipService.ToolTip" xml:space="preserve">
     <value>Aufnahmedauer</value>
+  </data>
+  <data name="AudioEdit_CopyButton.Label" xml:space="preserve">
+    <value>Kopieren</value>
+  </data>
+  <data name="AudioEdit_NewAudioCaptureButton.Label" xml:space="preserve">
+    <value>Neue Audioaufnahme</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.Label" xml:space="preserve">
+    <value>Aufnehmen</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Aufnahme starten</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Aufnahme starten</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Systemaudio</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.Label" xml:space="preserve">
+    <value>Systemaudio</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Systemaudioaufnahme ausschalten</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Systemaudio aus</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.Label" xml:space="preserve">
+    <value>Systemaudio</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Systemaudioaufnahme einschalten</value>
+  </data>
+  <data name="AudioCapture_Timer.AutomationProperties.Name" xml:space="preserve">
+    <value>Aufnahmedauer</value>
+  </data>
+  <data name="AudioCapture_Timer.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Aufnahmedauer</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_Title" xml:space="preserve">
+    <value>Audioaufnahme stoppen?</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_Content" xml:space="preserve">
+    <value>Eine Audioaufnahme laeuft noch. Stoppen Sie sie, bevor Sie diese Seite verlassen, damit die bisherige Aufnahme gespeichert wird.</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_StopButton" xml:space="preserve">
+    <value>Aufnahme stoppen</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_CancelButton" xml:space="preserve">
+    <value>Weiter aufnehmen</value>
   </data>
   <data name="SelectionOverlay_CaptureModeSegmentedControl.AutomationProperties.Name" xml:space="preserve">
     <value>Aufnahmemodus</value>

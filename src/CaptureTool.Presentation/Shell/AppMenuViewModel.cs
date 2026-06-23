@@ -1,4 +1,7 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.EditSessions;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
 using CaptureTool.Application.Abstractions.Features.AppMenu.OpenFile;
@@ -23,24 +26,32 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 {
     private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly IAudioCaptureHandler _audioCaptureHandler;
     private readonly IOpenFileUseCase _openFileCommand;
     private readonly IOpenRecentCaptureUseCase _openRecentCaptureCommand;
     private readonly IGetRecentCapturesUseCase _getRecentCapturesQuery;
+    private readonly IOpenSelectionOverlayUseCase _openSelectionOverlayCommand;
+    private readonly IOpenAudioCapturePageUseCase _openAudioCapturePageCommand;
+    private readonly IOpenStorePageUseCase _openStorePageCommand;
+    private readonly IExitApplicationUseCase _exitApplicationCommand;
+    private readonly IEditSessionGuard _editSessionGuard;
     private readonly IFactoryServiceWithArgs<RecentCaptureViewModel, string> _recentCaptureViewModelFactory;
 
     public event EventHandler? RecentCapturesUpdated;
 
-    public IRelayCommand NewImageCaptureCommand { get; }
-    public IRelayCommand NewVideoCaptureCommand { get; }
+    public IAsyncRelayCommand NewImageCaptureCommand { get; }
+    public IAsyncRelayCommand NewVideoCaptureCommand { get; }
+    public IAsyncRelayCommand NewAudioCaptureCommand { get; }
     public IAsyncRelayCommand OpenFileCommand { get; }
     public IRelayCommand NavigateToSettingsCommand { get; }
     public IRelayCommand ShowAboutAppCommand { get; }
-    public IRelayCommand ShowAddOnsCommand { get; }
-    public IRelayCommand ExitApplicationCommand { get; }
+    public IAsyncRelayCommand ShowAddOnsCommand { get; }
+    public IAsyncRelayCommand ExitApplicationCommand { get; }
     public IAsyncRelayCommand RefreshRecentCapturesCommand { get; }
     public IAsyncRelayCommand<RecentCaptureViewModel> OpenRecentCaptureCommand { get; }
 
     public bool ShowAddOnsOption { get; }
+    public bool IsAudioCaptureEnabled { get; }
 
     private ObservableCollection<RecentCaptureViewModel> _recentCaptures = [];
 
@@ -56,6 +67,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     public AppMenuViewModel(
         IOpenSelectionOverlayUseCase openSelectionOverlayCommand,
+        IOpenAudioCapturePageUseCase openAudioCapturePageCommand,
         IOpenSettingsPageUseCase openSettingsPageCommand,
         IOpenAboutPageUseCase openAboutPageCommand,
         IOpenStorePageUseCase openStorePageCommand,
@@ -63,29 +75,40 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IExitApplicationUseCase exitApplicationCommand,
         IOpenRecentCaptureUseCase openRecentCaptureCommand,
         IGetRecentCapturesUseCase getRecentCapturesQuery,
+        IAudioCaptureFeatureAvailability audioCaptureFeatureAvailability,
         IStoreFeatureAvailability storeFeatureAvailability,
         IImageCaptureHandler imageCaptureHandler,
         IVideoCaptureHandler videoCaptureHandler,
-        IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory)
+        IAudioCaptureHandler audioCaptureHandler,
+        IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory,
+        IEditSessionGuard? editSessionGuard = null)
     {
         _imageCaptureHandler = imageCaptureHandler;
         _videoCaptureHandler = videoCaptureHandler;
+        _audioCaptureHandler = audioCaptureHandler;
         _openFileCommand = openFileCommand;
         _openRecentCaptureCommand = openRecentCaptureCommand;
         _getRecentCapturesQuery = getRecentCapturesQuery;
+        _openSelectionOverlayCommand = openSelectionOverlayCommand;
+        _openAudioCapturePageCommand = openAudioCapturePageCommand;
+        _openStorePageCommand = openStorePageCommand;
+        _exitApplicationCommand = exitApplicationCommand;
+        _editSessionGuard = editSessionGuard ?? new AllowEditSessionGuard();
         _recentCaptureViewModelFactory = recentCaptureViewModelFactory;
 
-        NewImageCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.ImageDefault));
-        NewVideoCaptureCommand = openSelectionOverlayCommand.ToRelayCommand(() => new OpenSelectionOverlayRequest(CaptureOptions.VideoDefault));
+        NewImageCaptureCommand = new AsyncRelayCommand(() => OpenSelectionOverlayAsync(CaptureOptions.ImageDefault), AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        NewVideoCaptureCommand = new AsyncRelayCommand(() => OpenSelectionOverlayAsync(CaptureOptions.VideoDefault), AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        NewAudioCaptureCommand = new AsyncRelayCommand(OpenAudioCapturePageAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         OpenFileCommand = new AsyncRelayCommand(OpenFileAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         NavigateToSettingsCommand = openSettingsPageCommand.ToRelayCommand(() => new OpenSettingsPageRequest());
         ShowAboutAppCommand = openAboutPageCommand.ToRelayCommand(() => new OpenAboutPageRequest());
-        ShowAddOnsCommand = openStorePageCommand.ToRelayCommand(() => new OpenStorePageRequest());
-        ExitApplicationCommand = exitApplicationCommand.ToRelayCommand(() => new ExitApplicationRequest());
+        ShowAddOnsCommand = new AsyncRelayCommand(OpenStorePageAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        ExitApplicationCommand = new AsyncRelayCommand(ExitApplicationAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         RefreshRecentCapturesCommand = new AsyncRelayCommand(RefreshRecentCapturesAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         OpenRecentCaptureCommand = new AsyncRelayCommand<RecentCaptureViewModel>(OpenRecentCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
 
         ShowAddOnsOption = storeFeatureAvailability.IsStoreEnabled;
+        IsAudioCaptureEnabled = audioCaptureFeatureAvailability.IsAudioCaptureEnabled;
         RecentCaptures = [];
     }
 
@@ -97,6 +120,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _ = RefreshRecentCapturesAsync();
         _imageCaptureHandler.NewImageCaptured += OnNewImageCaptured;
         _videoCaptureHandler.NewVideoCaptured += OnNewVideoCaptured;
+        _audioCaptureHandler.NewAudioCaptured += OnNewAudioCaptured;
 
         base.Load();
     }
@@ -105,6 +129,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     {
         _imageCaptureHandler.NewImageCaptured -= OnNewImageCaptured;
         _videoCaptureHandler.NewVideoCaptured -= OnNewVideoCaptured;
+        _audioCaptureHandler.NewAudioCaptured -= OnNewAudioCaptured;
         base.Dispose();
     }
 
@@ -118,8 +143,18 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         _ = RefreshRecentCapturesAsync();
     }
 
+    private void OnNewAudioCaptured(object? sender, IAudioFile e)
+    {
+        _ = RefreshRecentCapturesAsync();
+    }
+
     private async Task OpenFileAsync()
     {
+        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
+        {
+            return;
+        }
+
         var response = await _openFileCommand.ExecuteAsync(new OpenFileRequest(), CancellationToken.None);
         if (response.Value?.Opened == true)
         {
@@ -137,6 +172,11 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         if (!File.Exists(model.FilePath))
         {
             await RefreshRecentCapturesAsync();
+            return;
+        }
+
+        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
+        {
             return;
         }
 
@@ -159,5 +199,53 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         }
 
         RecentCapturesUpdated?.Invoke(this, EventArgs.Empty);
+    }
+
+    private async Task OpenSelectionOverlayAsync(CaptureOptions captureOptions)
+    {
+        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
+        {
+            return;
+        }
+
+        await _openSelectionOverlayCommand.ExecuteAsync(new OpenSelectionOverlayRequest(captureOptions), CancellationToken.None);
+    }
+
+    private async Task OpenAudioCapturePageAsync()
+    {
+        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
+        {
+            return;
+        }
+
+        await _openAudioCapturePageCommand.ExecuteAsync(new OpenAudioCapturePageRequest(), CancellationToken.None);
+    }
+
+    private async Task OpenStorePageAsync()
+    {
+        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
+        {
+            return;
+        }
+
+        await _openStorePageCommand.ExecuteAsync(new OpenStorePageRequest(), CancellationToken.None);
+    }
+
+    private async Task ExitApplicationAsync()
+    {
+        if (!await _editSessionGuard.CanLeaveCurrentSessionAsync(CancellationToken.None))
+        {
+            return;
+        }
+
+        await _exitApplicationCommand.ExecuteAsync(new ExitApplicationRequest(), CancellationToken.None);
+    }
+
+    private sealed class AllowEditSessionGuard : IEditSessionGuard
+    {
+        public Task<bool> CanLeaveCurrentSessionAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(true);
+        }
     }
 }

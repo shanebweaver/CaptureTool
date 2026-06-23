@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Presentation.Shell;
+using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
@@ -52,6 +53,7 @@ public sealed partial class MainWindow : Window
     private void RootGrid_Loaded(object sender, RoutedEventArgs e)
     {
         App.Current.ServiceProvider.GetService<WinUIEditSessionConfirmationService>().XamlRoot = RootGrid.XamlRoot;
+        App.Current.ServiceProvider.GetService<WinUIAudioCaptureNavigationConfirmationService>().XamlRoot = RootGrid.XamlRoot;
     }
 
     private void UpdateAppTitle()
@@ -146,8 +148,13 @@ public sealed partial class MainWindow : Window
             bool canClose = await AppServiceLocator.EditSessionGuard.CanLeaveCurrentSessionAsync();
             if (canClose)
             {
+                canClose = await AppServiceLocator.AudioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync();
+            }
+
+            if (canClose)
+            {
                 _closeConfirmed = true;
-                Close();
+                DispatcherQueue.TryEnqueue(Close);
             }
 
             return;

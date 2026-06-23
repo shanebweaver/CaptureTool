@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Features.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.Features.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.PauseAudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.StartAudioCapture;
@@ -44,6 +45,7 @@ using CaptureTool.Application.Features.Store.LeaveStorePage;
 using CaptureTool.Application.Features.Store.OpenStorePage;
 using CaptureTool.Application.Features.Store.PurchaseChromaKeyAddOn;
 using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.Capture.Files;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;
@@ -123,12 +125,15 @@ public sealed class SimpleApplicationUseCaseTests
     public async Task AudioCaptureUseCases_InvokeAudioCaptureHandler()
     {
         var audioCapture = new Mock<IAudioCaptureHandler>();
+        var navigation = new Mock<INavigationService>();
+        var audioFile = Mock.Of<IAudioFile>();
+        audioCapture.Setup(handler => handler.StopCapture()).Returns(audioFile);
 
         await new StartAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new StartAudioCaptureRequest(), TestContext.CancellationToken);
         await new PauseAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new PauseAudioCaptureRequest(), TestContext.CancellationToken);
-        await new StopAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)
+        await new StopAudioCaptureUseCase(audioCapture.Object, navigation.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new StopAudioCaptureRequest(), TestContext.CancellationToken);
         await new ToggleLocalAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new ToggleLocalAudioCaptureRequest(), TestContext.CancellationToken);
@@ -137,6 +142,7 @@ public sealed class SimpleApplicationUseCaseTests
         audioCapture.Verify(handler => handler.PauseCapture(), Times.Once);
         audioCapture.Verify(handler => handler.StopCapture(), Times.Once);
         audioCapture.Verify(handler => handler.ToggleLocalAudio(), Times.Once);
+        navigation.Verify(service => service.Navigate(NavigationRoute.AudioEdit, audioFile, false), Times.Once);
     }
 
     [TestMethod]
@@ -224,6 +230,33 @@ public sealed class SimpleApplicationUseCaseTests
 
         Assert.IsFalse(missingResponse.Opened);
         Assert.IsFalse(unknownResponse.Opened);
+    }
+
+    [TestMethod]
+    public async Task OpenRecentCaptureUseCase_WhenAudioCaptureIsDisabled_ReturnsNotOpenedForAudioFiles()
+    {
+        string audioPath = await CreateTempFileAsync("capture.wav");
+        var detector = new Mock<IFileTypeDetector>();
+        var audioEdit = new Mock<IOpenAudioEditPageUseCase>();
+        var audioCaptureFeatureAvailability = new Mock<IAudioCaptureFeatureAvailability>();
+        detector.Setup(service => service.DetectFileType(audioPath)).Returns(CaptureFileType.Audio);
+        audioCaptureFeatureAvailability
+            .Setup(availability => availability.IsAudioCaptureEnabled)
+            .Returns(false);
+        var useCase = new OpenRecentCaptureUseCase(
+            detector.Object,
+            audioEdit.Object,
+            Mock.Of<IOpenImageEditPageUseCase>(),
+            Mock.Of<IOpenVideoEditPageUseCase>(),
+            TestUseCaseExecutor.Instance,
+            audioCaptureFeatureAvailability.Object);
+
+        OpenRecentCaptureResponse response = (await useCase.ExecuteAsync(new OpenRecentCaptureRequest(audioPath), TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Opened);
+        audioEdit.Verify(
+            useCase => useCase.ExecuteAsync(It.IsAny<OpenAudioEditPageRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     private static async Task<string> CreateTempFileAsync(string fileName)

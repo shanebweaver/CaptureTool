@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.MuteAudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.PauseAudioCapture;
@@ -32,6 +33,7 @@ internal static class AudioServiceCollectionExtensions
         services.AddTransient<IMuteAudioCaptureUseCase, MuteAudioCaptureUseCase>();
         services.AddTransient<IToggleLocalAudioCaptureUseCase, ToggleLocalAudioCaptureUseCase>();
         services.AddTransient<IOpenAudioCapturePageUseCase, OpenAudioCapturePageUseCase>();
+        services.AddTransient<IAudioCaptureNavigationGuard, AudioCaptureNavigationGuard>();
         services.AddSingleton<IAudioCaptureHandler, AudioCaptureHandler>();
 
         return services;

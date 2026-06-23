@@ -1,7 +1,9 @@
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Features.AudioCapture;
 
 namespace CaptureTool.Application.Features.ImageEdit.OpenImageEditPage;
 
@@ -11,12 +13,15 @@ public sealed class OpenImageEditPageUseCase : IOpenImageEditPageUseCase
 
     private readonly INavigationService _navigationService;
     private readonly IUseCaseExecutor _useCaseExecutor;
+    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
 
     public OpenImageEditPageUseCase(
         INavigationService navigationService,
-        IUseCaseExecutor useCaseExecutor)
+        IUseCaseExecutor useCaseExecutor,
+        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
     {
         _navigationService = navigationService;
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
         _useCaseExecutor = useCaseExecutor;
     }
 
@@ -29,8 +34,13 @@ public sealed class OpenImageEditPageUseCase : IOpenImageEditPageUseCase
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: () =>
+            useCase: async _ =>
             {
+                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
+                {
+                    return new OpenImageEditPageResponse(false);
+                }
+
                 _navigationService.Navigate(NavigationRoute.ImageEdit, request.ImageFile);
                 return new OpenImageEditPageResponse();
             },

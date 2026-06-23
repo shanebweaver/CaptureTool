@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCapture;
@@ -17,18 +18,21 @@ public sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
     private readonly IOpenAudioEditPageUseCase _goToAudioEdit;
     private readonly IOpenImageEditPageUseCase _goToImageEdit;
     private readonly IOpenVideoEditPageUseCase _goToVideoEdit;
+    private readonly IAudioCaptureFeatureAvailability? _audioCaptureFeatureAvailability;
 
     public OpenRecentCaptureUseCase(IFileTypeDetector fileTypeDetector,
         IOpenAudioEditPageUseCase goToAudioEdit,
         IOpenImageEditPageUseCase goToImageEdit,
         IOpenVideoEditPageUseCase goToVideoEdit,
-        IUseCaseExecutor useCaseExecutor)
+        IUseCaseExecutor useCaseExecutor,
+        IAudioCaptureFeatureAvailability? audioCaptureFeatureAvailability = null)
     {
         _useCaseExecutor = useCaseExecutor;
         _fileTypeDetector = fileTypeDetector;
         _goToAudioEdit = goToAudioEdit;
         _goToImageEdit = goToImageEdit;
         _goToVideoEdit = goToVideoEdit;
+        _audioCaptureFeatureAvailability = audioCaptureFeatureAvailability;
     }
 
     public bool CanExecute(OpenRecentCaptureRequest request)
@@ -51,6 +55,11 @@ public sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
                 switch (fileType)
                 {
                     case CaptureFileType.Audio:
+                        if (_audioCaptureFeatureAvailability?.IsAudioCaptureEnabled == false)
+                        {
+                            return new OpenRecentCaptureResponse(false);
+                        }
+
                         await _goToAudioEdit.ExecuteAsync(new OpenAudioEditPageRequest(new AudioFile(request.FilePath)), cancellationToken);
                         break;
 

@@ -4,9 +4,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:audiocapture="using:CaptureTool.Presentation.Features.AudioCapture"
+    xmlns:controls="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     d:DataContext="{d:DesignInstance Type=audiocapture:AudioCapturePageViewModel}"
     mc:Ignorable="d">
 
@@ -18,21 +20,40 @@
 
         <!--  Toolbar  -->
         <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+            <CommandBar.Content>
+                <Grid
+                    x:Uid="AudioCapture_Timer"
+                    Margin="8,0"
+                    VerticalAlignment="Center"
+                    Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsRecording), Mode=OneWay}">
+                    <controls:ClockTimer Time="{x:Bind ViewModel.CaptureTime, Mode=OneWay}" />
+                </Grid>
+            </CommandBar.Content>
+
             <!--  Start Recording  -->
             <AppBarButton
-                x:Uid="AudioCapture_PlayButton"
+                x:Uid="AudioCapture_StartRecordingButton"
                 Command="{x:Bind ViewModel.StartCommand}"
-                Icon="Play"
                 IsEnabled="{x:Bind ViewModel.CanStartRecording, Mode=OneWay}"
-                Label="Play" />
+                Label="Record">
+                <AppBarButton.Icon>
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        FontSize="22"
+                        Glyph="{StaticResource Record24Regular}" />
+                </AppBarButton.Icon>
+            </AppBarButton>
 
             <!--  Pause  -->
             <AppBarButton
                 x:Uid="AudioCapture_PauseButton"
                 Command="{x:Bind ViewModel.PauseCommand}"
-                Icon="Pause"
                 IsEnabled="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
-                Label="Pause" />
+                Label="Pause">
+                <AppBarButton.Icon>
+                    <SymbolIcon Symbol="{x:Bind GetPauseResumeSymbol(ViewModel.IsPaused), Mode=OneWay}" />
+                </AppBarButton.Icon>
+            </AppBarButton>
 
             <!--  Stop  -->
             <AppBarButton
@@ -44,21 +65,44 @@
 
             <AppBarSeparator />
 
-            <!--  Mute  -->
-            <AppBarToggleButton
-                x:Uid="AudioCapture_MuteButton"
-                Command="{x:Bind ViewModel.MuteCommand}"
-                Icon="Volume"
-                IsChecked="{x:Bind ViewModel.IsMuted, Mode=OneWay}"
-                Label="Mute" />
+            <AppBarElementContainer>
+                <controls:AudioInputSelector
+                    AudioInputSources="{x:Bind ViewModel.AudioInputSources, Mode=OneWay}"
+                    IsAvailable="{x:Bind ViewModel.IsAudioInputSelectionAvailable, Mode=OneWay}"
+                    IsMuted="{x:Bind ViewModel.IsMuted, Mode=OneWay}"
+                    SelectedAudioInputSource="{x:Bind ViewModel.SelectedAudioInputSource, Mode=OneWay}"
+                    SelectedAudioInputSourceIndex="{x:Bind ViewModel.SelectedAudioInputSourceIndex, Mode=OneWay}"
+                    SelectionChangedCommand="{x:Bind ViewModel.SelectAudioInputSourceCommand, Mode=OneWay}"
+                    ShowSelectedAudioInputName="True"
+                    ToggleMuteCommand="{x:Bind ViewModel.MuteCommand, Mode=OneWay}" />
+            </AppBarElementContainer>
 
             <!--  Desktop Audio  -->
-            <AppBarToggleButton
+            <AppBarButton
                 x:Uid="AudioCapture_DesktopAudioButton"
                 Command="{x:Bind ViewModel.ToggleDesktopAudioCommand}"
-                Icon="Audio"
-                IsChecked="{x:Bind ViewModel.IsDesktopAudioEnabled, Mode=OneWay}"
-                Label="Desktop Audio" />
+                Label="System audio"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsDesktopAudioEnabled), Mode=OneWay}">
+                <AppBarButton.Icon>
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        FontSize="22"
+                        Glyph="{StaticResource DesktopSpeaker24Regular}" />
+                </AppBarButton.Icon>
+            </AppBarButton>
+
+            <AppBarButton
+                x:Uid="AudioCapture_DesktopAudioOffButton"
+                Command="{x:Bind ViewModel.ToggleDesktopAudioCommand}"
+                Label="System audio"
+                Visibility="{x:Bind utils:VisibilityUtility.InverseBoolToVisibility(ViewModel.IsDesktopAudioEnabled), Mode=OneWay}">
+                <AppBarButton.Icon>
+                    <FontIcon
+                        FontFamily="{StaticResource FluentSystemIcons}"
+                        FontSize="22"
+                        Glyph="{StaticResource DesktopSpeakerOff24Regular}" />
+                </AppBarButton.Icon>
+            </AppBarButton>
         </CommandBar>
 
         <!--  Content  -->

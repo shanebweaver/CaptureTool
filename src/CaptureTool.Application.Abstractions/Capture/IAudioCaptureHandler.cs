@@ -8,6 +8,7 @@ public interface IAudioCaptureHandler
     event EventHandler<AudioCaptureState>? CaptureStateChanged;
     event EventHandler<bool>? MutedStateChanged;
     event EventHandler<bool>? DesktopAudioStateChanged;
+    event EventHandler<IAudioFile>? NewAudioCaptured;
 
     bool IsRecording { get; }
     bool IsPaused { get; }
@@ -18,6 +19,7 @@ public interface IAudioCaptureHandler
     void StartCapture();
     void PauseCapture();
     IAudioFile StopCapture();
+    void SelectAudioInputSource(string? sourceId);
     void ToggleLocalAudio();
     void ToggleMute();
 }

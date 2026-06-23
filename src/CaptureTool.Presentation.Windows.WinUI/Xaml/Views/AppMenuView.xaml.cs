@@ -64,7 +64,11 @@ public sealed partial class AppMenuView : AppMenuViewBase
                     ToolTipService.SetToolTip(recentCaptureItem, recentCapture.FileName);
 
                     RecentCapturesSubMenu.Items.Add(recentCaptureItem);
-                    _ = LoadRecentCaptureThumbnailAsync(recentCapture.FilePath, recentCapture.CaptureFileType, recentCaptureItem);
+
+                    if (CanLoadRecentCaptureThumbnail(recentCapture.CaptureFileType))
+                    {
+                        _ = LoadRecentCaptureThumbnailAsync(recentCapture.FilePath, recentCapture.CaptureFileType, recentCaptureItem);
+                    }
                 }
             }
         });
@@ -75,6 +79,12 @@ public sealed partial class AppMenuView : AppMenuViewBase
         CaptureFileType fileType,
         MenuFlyoutItem recentCaptureItem)
     {
+        if (!CanLoadRecentCaptureThumbnail(fileType))
+        {
+            recentCaptureItem.Icon = CreateFallbackIcon(fileType);
+            return;
+        }
+
         try
         {
             StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
@@ -99,10 +109,16 @@ public sealed partial class AppMenuView : AppMenuViewBase
                 Source = thumbnailImage
             };
         }
-        catch
+        catch (Exception ex)
         {
+            AppServiceLocator.Logging.LogException(ex, $"Failed to load recent capture thumbnail for '{filePath}'.");
             recentCaptureItem.Icon = CreateFallbackIcon(fileType);
         }
+    }
+
+    private static bool CanLoadRecentCaptureThumbnail(CaptureFileType fileType)
+    {
+        return fileType is CaptureFileType.Image or CaptureFileType.Video;
     }
 
     private static FontIcon CreateFallbackIcon(CaptureFileType fileType)
@@ -111,6 +127,7 @@ public sealed partial class AppMenuView : AppMenuViewBase
         {
             CaptureFileType.Image => "\uE722", // Image icon
             CaptureFileType.Video => "\uE714", // Video icon
+            CaptureFileType.Audio => "\uE720", // Microphone icon
             _ => "\uE7C3" // Generic file icon
         };
 

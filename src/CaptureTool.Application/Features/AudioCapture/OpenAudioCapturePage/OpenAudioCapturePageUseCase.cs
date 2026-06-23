@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
@@ -11,20 +12,28 @@ public sealed class OpenAudioCapturePageUseCase : IOpenAudioCapturePageUseCase
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly INavigationService _navigationService;
+    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
 
     public OpenAudioCapturePageUseCase(INavigationService navigationService,
-        IUseCaseExecutor useCaseExecutor)
+        IUseCaseExecutor useCaseExecutor,
+        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
     {
         _useCaseExecutor = useCaseExecutor;
         _navigationService = navigationService;
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
     }
 
     public Task<UseCaseResponse<OpenAudioCapturePageResponse>> ExecuteAsync(OpenAudioCapturePageRequest request, CancellationToken cancellationToken = default)
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: () =>
+            useCase: async _ =>
             {
+                if (!await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync(cancellationToken))
+                {
+                    return new OpenAudioCapturePageResponse(false);
+                }
+
                 _navigationService.Navigate(NavigationRoute.AudioCapture);
                 return new OpenAudioCapturePageResponse();
             },
