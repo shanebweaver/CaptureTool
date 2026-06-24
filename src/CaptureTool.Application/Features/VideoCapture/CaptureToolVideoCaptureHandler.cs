@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
+
 namespace CaptureTool.Application.Features.VideoCapture;
 
 public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
@@ -26,6 +27,9 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private readonly ITelemetryService _telemetryService;
 
     private string? _tempVideoPath;
+    private int _hasObservedRecordingStart;
+    private VideoFrameCallback? _videoFrameCallback;
+    private AudioSampleCallback? _audioSampleCallback;
 
     private CaptureState _captureState = CaptureState.Idle;
 
@@ -38,6 +42,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     public string? SelectedAudioInputSourceId { get; private set; }
 
     public event EventHandler<IVideoFile>? NewVideoCaptured;
+    public event EventHandler? RecordingStarted;
     public event EventHandler<bool>? DesktopAudioStateChanged;
     public event EventHandler<bool>? PausedStateChanged;
 
@@ -78,6 +83,8 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
         try
         {
+            RegisterRecordingStartedCallbacks();
+
             CaptureRecordingTarget target = CreateRecordingTarget(args);
             var startResult = _screenRecorder.StartRecording(new CaptureRecordingOptions(
                 target,
@@ -91,6 +98,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         }
         catch
         {
+            ClearRecordingStartedCallbacks();
             _tempVideoPath = null;
             UpdateCaptureState(CaptureState.Idle);
             throw;
@@ -148,6 +156,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         }
         finally
         {
+            ClearRecordingStartedCallbacks();
             _tempVideoPath = null;
             IsPaused = false;
 
@@ -164,8 +173,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
                 return;
             }
 
-            _screenRecorder.RegisterAudioSampleCallback(null);
-            _screenRecorder.RegisterVideoFrameCallback(null);
+            ClearRecordingStartedCallbacks();
             _screenRecorder.StopRecording();
         }
         finally
@@ -235,6 +243,41 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
     private bool ShouldCaptureAudio()
         => !IsAudioInputMuted && (IsDesktopAudioEnabled || !string.IsNullOrWhiteSpace(SelectedAudioInputSourceId));
+
+    private void RegisterRecordingStartedCallbacks()
+    {
+        _hasObservedRecordingStart = 0;
+        _videoFrameCallback = OnVideoFrameCaptured;
+        _audioSampleCallback = OnAudioSampleCaptured;
+        _screenRecorder.RegisterVideoFrameCallback(_videoFrameCallback).EnsureSuccess();
+        _screenRecorder.RegisterAudioSampleCallback(_audioSampleCallback).EnsureSuccess();
+    }
+
+    private void ClearRecordingStartedCallbacks()
+    {
+        _screenRecorder.RegisterAudioSampleCallback(null);
+        _screenRecorder.RegisterVideoFrameCallback(null);
+        _audioSampleCallback = null;
+        _videoFrameCallback = null;
+    }
+
+    private void OnVideoFrameCaptured(ref VideoFrameData frameData)
+    {
+        NotifyRecordingStarted();
+    }
+
+    private void OnAudioSampleCaptured(ref AudioSampleData sampleData)
+    {
+        NotifyRecordingStarted();
+    }
+
+    private void NotifyRecordingStarted()
+    {
+        if (_tempVideoPath != null && Interlocked.Exchange(ref _hasObservedRecordingStart, 1) == 0)
+        {
+            RecordingStarted?.Invoke(this, EventArgs.Empty);
+        }
+    }
 
     public void ToggleIsPaused(bool isPaused)
     {

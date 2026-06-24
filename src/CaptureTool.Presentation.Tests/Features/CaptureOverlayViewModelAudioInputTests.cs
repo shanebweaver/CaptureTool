@@ -22,6 +22,29 @@ namespace CaptureTool.Presentation.Tests.Features;
 public sealed class CaptureOverlayViewModelAudioInputTests
 {
     [TestMethod]
+    public async Task StartVideoCaptureCommand_ShouldWaitForRecordingStartedBeforeAdvancingTimer()
+    {
+        TestContext context = CreateViewModel([]);
+        context.ViewModel.Load(CreateOptions());
+
+        await context.ViewModel.StartVideoCaptureCommand.ExecuteAsync(null);
+        await Task.Delay(250);
+
+        Assert.IsTrue(context.ViewModel.IsRecording);
+        Assert.AreEqual(TimeSpan.Zero, context.ViewModel.CaptureTime);
+
+        context.VideoCaptureHandler.Raise(handler => handler.RecordingStarted += null!, EventArgs.Empty);
+        for (int i = 0; i < 20 && context.ViewModel.CaptureTime == TimeSpan.Zero; i++)
+        {
+            await Task.Delay(50);
+        }
+
+        Assert.IsTrue(context.ViewModel.CaptureTime > TimeSpan.Zero);
+
+        context.ViewModel.Dispose();
+    }
+
+    [TestMethod]
     public void AudioInputSourcesChanged_ShouldSelectDefaultInputAndAppendDefaultSuffix()
     {
         AudioInputSource[] sources =
@@ -131,12 +154,17 @@ public sealed class CaptureOverlayViewModelAudioInputTests
         themeService.Setup(service => service.DefaultTheme).Returns(AppTheme.Light);
         themeService.Setup(service => service.CurrentTheme).Returns(AppTheme.Light);
 
+        Mock<IStartVideoCaptureUseCase> startVideoCapture = new();
+        startVideoCapture
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<StartVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<StartVideoCaptureResponse>.Success(new StartVideoCaptureResponse()));
+
         Mock<IVideoCaptureHandler> videoCaptureHandler = new();
 
         CaptureOverlayViewModel viewModel = new(
             Mock.Of<ICloseCaptureOverlayUseCase>(),
             Mock.Of<IGoBackFromCaptureOverlayUseCase>(),
-            Mock.Of<IStartVideoCaptureUseCase>(),
+            startVideoCapture.Object,
             Mock.Of<IStopVideoCaptureUseCase>(),
             Mock.Of<IToggleVideoCaptureDesktopAudioUseCase>(),
             Mock.Of<IToggleVideoCapturePauseResumeUseCase>(),
