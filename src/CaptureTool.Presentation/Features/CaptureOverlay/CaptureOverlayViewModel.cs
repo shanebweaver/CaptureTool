@@ -159,6 +159,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _videoCaptureHandler.PrepareForVideoCapture();
 
         IsDesktopAudioEnabled = _videoCaptureHandler.IsDesktopAudioEnabled;
+        _videoCaptureHandler.RecordingStarted += OnRecordingStarted;
         _videoCaptureHandler.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
 
         IsPaused = _videoCaptureHandler.IsPaused;
@@ -178,6 +179,23 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         _taskEnvironment.TryExecute(() =>
         {
             IsDesktopAudioEnabled = value;
+        });
+    }
+
+    private void OnRecordingStarted(object? sender, EventArgs e)
+    {
+        _taskEnvironment.TryExecute(() =>
+        {
+            if (!IsRecording)
+            {
+                return;
+            }
+
+            _captureStartTime = DateTime.UtcNow;
+            _pausedDuration = TimeSpan.Zero;
+            _pauseStartTime = IsPaused ? _captureStartTime : null;
+            CaptureTime = TimeSpan.Zero;
+            StartTimer();
         });
     }
 
@@ -216,6 +234,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     public override void Dispose()
     {
+        _videoCaptureHandler.RecordingStarted -= OnRecordingStarted;
         _videoCaptureHandler.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
         _videoCaptureHandler.PausedStateChanged -= OnPausedStateChanged;
         _audioInputDetectionService.AudioInputSourcesChanged -= OnAudioInputSourcesChanged;
@@ -254,10 +273,8 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
         IsRecording = true;
         CaptureTime = TimeSpan.Zero;
-        _captureStartTime = DateTime.UtcNow;
         _pausedDuration = TimeSpan.Zero;
         _pauseStartTime = null;
-        StartTimer();
         NewCaptureArgs args = new(_monitorCaptureResult.Value, _captureArea.Value);
 
         await _startVideoCaptureCommand.ExecuteAsync(new StartVideoCaptureRequest(args), CancellationToken.None);
