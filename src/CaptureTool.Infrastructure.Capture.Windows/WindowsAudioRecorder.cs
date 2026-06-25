@@ -64,6 +64,11 @@ public class WindowsAudioRecorder : IAudioRecorder
         }
     }
 
+    public void RegisterAudioSampleCallback(AudioSampleCallback? callback)
+    {
+        CaptureInterop.RegisterAudioRecordingSampleCallback(callback).EnsureSuccess();
+    }
+
     public void ToggleDesktopAudio()
     {
         _isDesktopAudioEnabled = !_isDesktopAudioEnabled;

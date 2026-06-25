@@ -25,6 +25,54 @@ public sealed class AudioCaptureHandlerTests
     }
 
     [TestMethod]
+    public void StartCapture_RaisesRecordingStarted_WhenFirstAudioSampleArrives()
+    {
+        var recorder = new Mock<IAudioRecorder>();
+        AudioSampleCallback? audioSampleCallback = null;
+        recorder
+            .Setup(service => service.RegisterAudioSampleCallback(It.IsAny<AudioSampleCallback?>()))
+            .Callback<AudioSampleCallback?>(callback => audioSampleCallback = callback);
+        var handler = CreateHandler(recorder);
+        int recordingStartedCount = 0;
+        handler.RecordingStarted += (_, _) => recordingStartedCount++;
+
+        handler.StartCapture();
+
+        Assert.AreEqual(0, recordingStartedCount);
+        Assert.IsNotNull(audioSampleCallback);
+
+        AudioSampleData sample = new();
+        audioSampleCallback!(ref sample);
+        audioSampleCallback(ref sample);
+
+        Assert.AreEqual(1, recordingStartedCount);
+    }
+
+    [TestMethod]
+    public void StartCapture_RaisesPendingRecordingStarted_WhenFirstAudioSampleArrivesBeforeStateChanges()
+    {
+        var recorder = new Mock<IAudioRecorder>();
+        AudioSampleCallback? audioSampleCallback = null;
+        recorder
+            .Setup(service => service.RegisterAudioSampleCallback(It.IsAny<AudioSampleCallback?>()))
+            .Callback<AudioSampleCallback?>(callback => audioSampleCallback = callback);
+        recorder
+            .Setup(service => service.StartCapture(It.IsAny<string>()))
+            .Callback(() =>
+            {
+                AudioSampleData sample = new();
+                audioSampleCallback!(ref sample);
+            });
+        var handler = CreateHandler(recorder);
+        int recordingStartedCount = 0;
+        handler.RecordingStarted += (_, _) => recordingStartedCount++;
+
+        handler.StartCapture();
+
+        Assert.AreEqual(1, recordingStartedCount);
+    }
+
+    [TestMethod]
     public void StartCapture_WhenAlreadyRecording_Throws()
     {
         var handler = CreateHandler(new Mock<IAudioRecorder>());

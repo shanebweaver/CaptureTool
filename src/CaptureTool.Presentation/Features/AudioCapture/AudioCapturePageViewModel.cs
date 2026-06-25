@@ -114,6 +114,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
 
         // Subscribe to service events for state synchronization
         _audioCaptureHandler.CaptureStateChanged += OnCaptureStateChanged;
+        _audioCaptureHandler.RecordingStarted += OnRecordingStarted;
         _audioCaptureHandler.MutedStateChanged += OnMutedStateChanged;
         _audioCaptureHandler.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
         _audioInputDetectionService.AudioInputSourcesChanged += OnAudioInputSourcesChanged;
@@ -137,6 +138,19 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         _taskEnvironment.TryExecute(() =>
         {
             ApplyCaptureState(value);
+        });
+    }
+
+    private void OnRecordingStarted(object? sender, EventArgs e)
+    {
+        _taskEnvironment.TryExecute(() =>
+        {
+            if (!IsRecording)
+            {
+                return;
+            }
+
+            StartTimer();
         });
     }
 
@@ -283,11 +297,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         switch (value)
         {
             case AudioCaptureState.Recording:
-                if (!wasRecording)
-                {
-                    StartTimer();
-                }
-                else if (wasPaused && _pauseStartTime.HasValue)
+                if (wasRecording && wasPaused && _pauseStartTime.HasValue)
                 {
                     _pausedDuration += DateTime.UtcNow - _pauseStartTime.Value;
                     _pauseStartTime = null;
@@ -346,6 +356,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
     public override void Dispose()
     {
         _audioCaptureHandler.CaptureStateChanged -= OnCaptureStateChanged;
+        _audioCaptureHandler.RecordingStarted -= OnRecordingStarted;
         _audioCaptureHandler.MutedStateChanged -= OnMutedStateChanged;
         _audioCaptureHandler.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
         _audioInputDetectionService.AudioInputSourcesChanged -= OnAudioInputSourcesChanged;

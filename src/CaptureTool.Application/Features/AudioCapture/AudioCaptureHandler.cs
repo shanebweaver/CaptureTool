@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Capture.Files;
+using System.Threading;
 
 namespace CaptureTool.Application.Features.AudioCapture;
 
@@ -9,8 +10,12 @@ public sealed class AudioCaptureHandler : IAudioCaptureHandler
 {
     private readonly IAudioRecorder _audioRecorder;
     private readonly IStorageService _storageService;
+    private int _hasObservedRecordingStart;
+    private int _hasPendingRecordingStart;
+    private AudioSampleCallback? _audioSampleCallback;
 
     public event EventHandler<AudioCaptureState>? CaptureStateChanged;
+    public event EventHandler? RecordingStarted;
     public event EventHandler<bool>? MutedStateChanged;
     public event EventHandler<bool>? DesktopAudioStateChanged;
     public event EventHandler<IAudioFile>? NewAudioCaptured;
@@ -60,9 +65,19 @@ public sealed class AudioCaptureHandler : IAudioCaptureHandler
             _storageService.GetApplicationTemporaryFolderPath(),
             GetNewCaptureFileName());
 
-        _audioRecorder.StartCapture(tempAudioPath);
+        try
+        {
+            RegisterRecordingStartedCallback();
+            _audioRecorder.StartCapture(tempAudioPath);
+        }
+        catch
+        {
+            ClearRecordingStartedCallback();
+            throw;
+        }
 
         UpdateCaptureState(AudioCaptureState.Recording);
+        RaisePendingRecordingStarted();
     }
 
     public IAudioFile StopCapture()
@@ -72,6 +87,7 @@ public sealed class AudioCaptureHandler : IAudioCaptureHandler
             throw new InvalidOperationException("Audio capture is not in progress.");
         }
 
+        ClearRecordingStartedCallback();
         IAudioFile audioFile = _audioRecorder.StopCapture();
 
         UpdateCaptureState(AudioCaptureState.Stopped);
@@ -103,6 +119,45 @@ public sealed class AudioCaptureHandler : IAudioCaptureHandler
 
         IsMuted = !IsMuted;
         MutedStateChanged?.Invoke(this, IsMuted);
+    }
+
+    private void RegisterRecordingStartedCallback()
+    {
+        _hasObservedRecordingStart = 0;
+        _hasPendingRecordingStart = 0;
+        _audioSampleCallback = OnAudioSampleCaptured;
+        _audioRecorder.RegisterAudioSampleCallback(_audioSampleCallback);
+    }
+
+    private void ClearRecordingStartedCallback()
+    {
+        _audioRecorder.RegisterAudioSampleCallback(null);
+        _audioSampleCallback = null;
+        _hasPendingRecordingStart = 0;
+    }
+
+    private void OnAudioSampleCaptured(ref AudioSampleData sampleData)
+    {
+        if (Interlocked.Exchange(ref _hasObservedRecordingStart, 1) != 0)
+        {
+            return;
+        }
+
+        if (CaptureState == AudioCaptureState.Recording)
+        {
+            RecordingStarted?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
+        Interlocked.Exchange(ref _hasPendingRecordingStart, 1);
+    }
+
+    private void RaisePendingRecordingStarted()
+    {
+        if (Interlocked.Exchange(ref _hasPendingRecordingStart, 0) == 1)
+        {
+            RecordingStarted?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     private void UpdateCaptureState(AudioCaptureState newState)
