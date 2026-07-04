@@ -4,12 +4,12 @@ namespace CaptureTool.Infrastructure.Capture.Windows;
 
 public partial class WindowsScreenRecorder : IScreenRecorder
 {
-    private readonly CaptureKit.IVideoCaptureService _videoCaptureService;
-    private CaptureKit.IVideoCaptureSession? _session;
+    private readonly CaptureKit.Abstractions.IVideoCaptureService _videoCaptureService;
+    private CaptureKit.Abstractions.IVideoCaptureSession? _session;
     private VideoFrameCallback? _videoFrameCallback;
     private AudioSampleCallback? _audioSampleCallback;
 
-    public WindowsScreenRecorder(CaptureKit.IVideoCaptureService videoCaptureService)
+    public WindowsScreenRecorder(CaptureKit.Abstractions.IVideoCaptureService videoCaptureService)
     {
         _videoCaptureService = videoCaptureService;
     }
@@ -23,7 +23,7 @@ public partial class WindowsScreenRecorder : IScreenRecorder
 
         try
         {
-            var captureOptions = new CaptureKit.VideoCaptureOptions(
+            var captureOptions = new CaptureKit.Abstractions.VideoCaptureOptions(
                 MapTarget(options.Target),
                 options.OutputPath,
                 options.CaptureAudio,
@@ -96,13 +96,13 @@ public partial class WindowsScreenRecorder : IScreenRecorder
         return Success();
     }
 
-    private static CaptureKit.CaptureTarget MapTarget(CaptureRecordingTarget target)
+    private static CaptureKit.Abstractions.CaptureTarget MapTarget(CaptureRecordingTarget target)
     {
         return target.Kind switch
         {
-            CaptureRecordingTargetKind.Monitor => CaptureKit.CaptureTarget.Monitor(target.MonitorHandle),
-            CaptureRecordingTargetKind.Window => CaptureKit.CaptureTarget.Window(target.WindowHandle),
-            CaptureRecordingTargetKind.Rectangle => CaptureKit.CaptureTarget.Rectangle(
+            CaptureRecordingTargetKind.Monitor => CaptureKit.Abstractions.CaptureTarget.Monitor(target.MonitorHandle),
+            CaptureRecordingTargetKind.Window => CaptureKit.Abstractions.CaptureTarget.Window(target.WindowHandle),
+            CaptureRecordingTargetKind.Rectangle => CaptureKit.Abstractions.CaptureTarget.Rectangle(
                 target.MonitorHandle,
                 target.Left,
                 target.Top,
@@ -112,7 +112,7 @@ public partial class WindowsScreenRecorder : IScreenRecorder
         };
     }
 
-    private CaptureRecorderResult ExecuteOnSession(Action<CaptureKit.IVideoCaptureSession> action)
+    private CaptureRecorderResult ExecuteOnSession(Action<CaptureKit.Abstractions.IVideoCaptureSession> action)
     {
         if (_session is null)
         {
@@ -130,7 +130,7 @@ public partial class WindowsScreenRecorder : IScreenRecorder
         }
     }
 
-    private void OnFrameCaptured(object? sender, CaptureKit.VideoFrameCapturedEventArgs e)
+    private void OnFrameCaptured(object? sender, CaptureKit.Abstractions.VideoFrameCapturedEventArgs e)
     {
         VideoFrameCallback? callback = _videoFrameCallback;
         if (callback is null)
@@ -138,7 +138,7 @@ public partial class WindowsScreenRecorder : IScreenRecorder
             return;
         }
 
-        CaptureKit.VideoFrameData frame = e.FrameData;
+        CaptureKit.Abstractions.VideoFrameData frame = e.FrameData;
         var data = new VideoFrameData
         {
             pTexture = frame.TexturePointer,
@@ -150,7 +150,7 @@ public partial class WindowsScreenRecorder : IScreenRecorder
         callback(ref data);
     }
 
-    private void OnAudioSampleCaptured(object? sender, CaptureKit.AudioSampleCapturedEventArgs e)
+    private void OnAudioSampleCaptured(object? sender, CaptureKit.Abstractions.AudioSampleCapturedEventArgs e)
     {
         AudioSampleCallback? callback = _audioSampleCallback;
         if (callback is null)
@@ -158,7 +158,7 @@ public partial class WindowsScreenRecorder : IScreenRecorder
             return;
         }
 
-        CaptureKit.AudioSampleData sample = e.SampleData;
+        CaptureKit.Abstractions.AudioSampleData sample = e.SampleData;
         var data = new AudioSampleData
         {
             pData = sample.DataPointer,

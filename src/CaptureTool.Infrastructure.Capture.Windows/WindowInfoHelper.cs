@@ -1,4 +1,4 @@
-using CaptureKit;
+using CaptureKit.Abstractions;
 using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Infrastructure.Capture.Windows;
