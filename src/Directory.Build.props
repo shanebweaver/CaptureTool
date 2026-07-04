@@ -10,4 +10,11 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <CaptureKitSiblingPackageSource>$(MSBuildThisFileDirectory)..\..\CaptureKit\artifacts\packages</CaptureKitSiblingPackageSource>
+    <CaptureKitWorkflowPackageSource>$(MSBuildThisFileDirectory)..\CaptureKit\artifacts\packages</CaptureKitWorkflowPackageSource>
+    <RestoreAdditionalProjectSources Condition="Exists('$(CaptureKitSiblingPackageSource)')">$(RestoreAdditionalProjectSources);$(CaptureKitSiblingPackageSource)</RestoreAdditionalProjectSources>
+    <RestoreAdditionalProjectSources Condition="Exists('$(CaptureKitWorkflowPackageSource)')">$(RestoreAdditionalProjectSources);$(CaptureKitWorkflowPackageSource)</RestoreAdditionalProjectSources>
+  </PropertyGroup>
 </Project>
