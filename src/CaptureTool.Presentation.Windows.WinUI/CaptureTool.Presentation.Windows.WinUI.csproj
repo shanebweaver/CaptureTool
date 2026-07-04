@@ -25,6 +25,7 @@
 
   <!-- Package references -->
   <ItemGroup>
+    <PackageReference Include="CaptureKit.Windows" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.Segmented" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Graphics.Win2D" />
@@ -38,7 +39,6 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureInterop\CaptureInterop.vcxproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
     <ProjectReference Include="..\CaptureTool.Application\CaptureTool.Application.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Edit.Windows\CaptureTool.Infrastructure.Edit.Windows.csproj" />
@@ -54,24 +54,6 @@
   <!-- Content files -->
   <ItemGroup>
     <Content Include="Fonts\FluentSystemIcons-Regular.ttf" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Remove="D:\Git\CaptureTool\bin\Debug\x64\CaptureInterop.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Remove="D:\Git\CaptureTool\bin\Debug\x64\CaptureInterop.dll" />
-  </ItemGroup>
-
-  <!-- Native DLL references for MSIX packaging -->
-  <ItemGroup>
-    <Content Include="$(SolutionDir)bin\$(Configuration)\$(Platform)\CaptureInterop.dll">
-      <Link>CaptureInterop.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(SolutionDir)bin\$(Configuration)\$(Platform)\CaptureInterop.pdb">
-      <Link>CaptureInterop.pdb</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
     
   <!-- 
