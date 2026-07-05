@@ -67,7 +67,7 @@ jobs:
         [xml]$coverage = Get-Content coverage.cobertura.xml
         $lineRate = [double]$coverage.coverage.'line-rate'
         $coveragePercent = [math]::Round($lineRate * 100, 2)
-        $minimumCoveragePercent = 80
+        $minimumCoveragePercent = 90
         "Line coverage: $coveragePercent%" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
         "Minimum line coverage: $minimumCoveragePercent%" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
         if ($coveragePercent -lt $minimumCoveragePercent) {
