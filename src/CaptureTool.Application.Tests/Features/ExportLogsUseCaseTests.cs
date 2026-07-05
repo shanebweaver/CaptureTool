@@ -19,7 +19,7 @@ public sealed class ExportLogsUseCaseTests
 
         filePicker
             .Setup(service => service.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents))
-            .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == destinationPath));
+            .ReturnsAsync(new FileReference(destinationPath));
         logService
             .Setup(service => service.GetLogs())
             .Returns([
@@ -63,7 +63,7 @@ public sealed class ExportLogsUseCaseTests
 
         filePicker
             .Setup(service => service.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents))
-            .ReturnsAsync((IFile?)null);
+            .ReturnsAsync((FileReference?)null);
 
         ExportLogsResponse? response = (await useCase.ExecuteAsync(new ExportLogsRequest(), TestContext.CancellationToken)).Value;
 

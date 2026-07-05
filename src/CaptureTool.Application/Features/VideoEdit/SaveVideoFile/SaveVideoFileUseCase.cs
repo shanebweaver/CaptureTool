@@ -39,7 +39,7 @@ public sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
                     return new SaveVideoFileResponse(false);
                 }
 
-                IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos);
+                FileReference? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos);
                 if (file is null)
                 {
                     return new SaveVideoFileResponse(false);

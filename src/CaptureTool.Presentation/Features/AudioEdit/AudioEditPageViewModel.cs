@@ -8,7 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.AudioEdit;
 
-public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<IAudioFile>
+public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<AudioFile>
 {
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand CopyCommand { get; }
@@ -44,7 +44,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<IAudi
         IsAudioReady = false;
     }
 
-    public override void Load(IAudioFile audio)
+    public override void Load(AudioFile audio)
     {
         ThrowIfNotReadyToLoad();
         StartLoading();

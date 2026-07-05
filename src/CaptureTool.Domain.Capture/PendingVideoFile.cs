@@ -11,7 +11,6 @@ public sealed class PendingVideoFile : VideoFile
     private readonly TaskCompletionSource _finalizationTask = new();
 
     public string FileName => Path.GetFileName(FilePath);
-    public static FilePickerType FilePickerType => FilePickerType.Video;
 
     public PendingVideoFile(string path) : base(path)
     {

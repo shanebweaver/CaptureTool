@@ -41,7 +41,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     public bool IsPaused { get; private set; }
     public string? SelectedAudioInputSourceId { get; private set; }
 
-    public event EventHandler<IVideoFile>? NewVideoCaptured;
+    public event EventHandler<VideoFile>? NewVideoCaptured;
     public event EventHandler? RecordingStarted;
     public event EventHandler<bool>? DesktopAudioStateChanged;
     public event EventHandler<bool>? PausedStateChanged;

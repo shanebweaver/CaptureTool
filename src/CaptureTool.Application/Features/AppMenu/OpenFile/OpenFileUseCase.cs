@@ -48,7 +48,7 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
                     return new OpenFileResponse(false);
                 }
 
-                IFile? file = await _filePickerService.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures);
+                FileReference? file = await _filePickerService.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures);
                 if (file is null)
                 {
                     return new OpenFileResponse(false);

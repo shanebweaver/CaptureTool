@@ -404,7 +404,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         try
         {
-            IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures);
+            FileReference? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures);
 
             if (file is null)
             {

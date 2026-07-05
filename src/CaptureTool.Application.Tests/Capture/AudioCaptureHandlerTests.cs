@@ -73,11 +73,11 @@ public sealed class AudioCaptureHandlerTests
         var audioFile = new AudioFile(@"C:\Temp\capture.wav");
         recorder.Setup(service => service.StopCapture()).Returns(audioFile);
         var handler = CreateHandler(recorder);
-        IAudioFile? raisedFile = null;
+        AudioFile? raisedFile = null;
         handler.NewAudioCaptured += (_, file) => raisedFile = file;
         handler.StartCapture();
 
-        IAudioFile stoppedFile = handler.StopCapture();
+        AudioFile stoppedFile = handler.StopCapture();
 
         Assert.AreEqual(AudioCaptureState.Stopped, handler.CaptureState);
         Assert.AreSame(audioFile, stoppedFile);

@@ -133,17 +133,17 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         base.Dispose();
     }
 
-    private void OnNewImageCaptured(object? sender, IImageFile e)
+    private void OnNewImageCaptured(object? sender, ImageFile e)
     {
         _ = RefreshRecentCapturesAsync();
     }
 
-    private void OnNewVideoCaptured(object? sender, IVideoFile e)
+    private void OnNewVideoCaptured(object? sender, VideoFile e)
     {
         _ = RefreshRecentCapturesAsync();
     }
 
-    private void OnNewAudioCaptured(object? sender, IAudioFile e)
+    private void OnNewAudioCaptured(object? sender, AudioFile e)
     {
         _ = RefreshRecentCapturesAsync();
     }

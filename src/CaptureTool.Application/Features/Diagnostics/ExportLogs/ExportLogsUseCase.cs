@@ -29,7 +29,7 @@ public sealed class ExportLogsUseCase : IExportLogsUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents);
+                FileReference? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents);
                 if (file is null || cancellationToken.IsCancellationRequested)
                 {
                     return new ExportLogsResponse(false);

@@ -9,7 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.VideoEdit;
 
-public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVideoFile>, IEditableSession
+public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<VideoFile>, IEditableSession
 {
     private const double TrimComparisonToleranceSeconds = 0.01;
 
@@ -112,7 +112,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<IVide
         HasUnsavedChanges = false;
     }
 
-    public override void Load(IVideoFile video)
+    public override void Load(VideoFile video)
     {
         ThrowIfNotReadyToLoad();
         StartLoading();

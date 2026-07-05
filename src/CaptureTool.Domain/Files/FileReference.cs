@@ -1,10 +1,10 @@
 namespace CaptureTool.Domain.Files;
 
-public abstract partial class FileBase : IFile
+public partial class FileReference
 {
     public string FilePath { get; set; }
 
-    public FileBase(string path)
+    public FileReference(string path)
     {
         FilePath = path;
     }

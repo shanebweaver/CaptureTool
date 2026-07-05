@@ -20,7 +20,7 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ITelemetryService _telemetryService;
 
-    public event EventHandler<IImageFile>? NewImageCaptured;
+    public event EventHandler<ImageFile>? NewImageCaptured;
 
     public CaptureToolImageCaptureHandler(
         IClipboardService clipboardService,

@@ -2,4 +2,4 @@ using CaptureTool.Domain.Files;
 
 namespace CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
 
-public sealed record OpenVideoEditPageRequest(IVideoFile VideoFile);
+public sealed record OpenVideoEditPageRequest(VideoFile VideoFile);

@@ -38,7 +38,7 @@ public sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
                     return new SaveAudioFileResponse(false);
                 }
 
-                IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music);
+                FileReference? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music);
                 if (file is null)
                 {
                     return new SaveAudioFileResponse(false);

@@ -13,7 +13,7 @@ public sealed class AudioCaptureHandler : IAudioCaptureHandler
     public event EventHandler<AudioCaptureState>? CaptureStateChanged;
     public event EventHandler<bool>? MutedStateChanged;
     public event EventHandler<bool>? DesktopAudioStateChanged;
-    public event EventHandler<IAudioFile>? NewAudioCaptured;
+    public event EventHandler<AudioFile>? NewAudioCaptured;
 
     public bool IsRecording => CaptureState is AudioCaptureState.Recording or AudioCaptureState.Paused;
     public bool IsPaused => CaptureState == AudioCaptureState.Paused;
@@ -65,14 +65,14 @@ public sealed class AudioCaptureHandler : IAudioCaptureHandler
         UpdateCaptureState(AudioCaptureState.Recording);
     }
 
-    public IAudioFile StopCapture()
+    public AudioFile StopCapture()
     {
         if (!IsRecording)
         {
             throw new InvalidOperationException("Audio capture is not in progress.");
         }
 
-        IAudioFile audioFile = _audioRecorder.StopCapture();
+        AudioFile audioFile = _audioRecorder.StopCapture();
 
         UpdateCaptureState(AudioCaptureState.Stopped);
         NewAudioCaptured?.Invoke(this, audioFile);

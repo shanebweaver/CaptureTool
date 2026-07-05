@@ -24,6 +24,7 @@
 	
   <!-- Project references -->
   <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Domain\CaptureTool.Domain.csproj" />
     <ProjectReference Include="..\CaptureTool.Presentation\CaptureTool.Presentation.csproj" />
   </ItemGroup>
 

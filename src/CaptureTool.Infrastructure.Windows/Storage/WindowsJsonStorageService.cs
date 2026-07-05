@@ -8,7 +8,7 @@ namespace CaptureTool.Infrastructure.Windows.Storage;
 
 public sealed partial class WindowsJsonStorageService : IJsonStorageService
 {
-    public async Task<T?> ReadAsync<T>(IFile file, JsonTypeInfo<T> jsonTypeInfo)
+    public async Task<T?> ReadAsync<T>(FileReference file, JsonTypeInfo<T> jsonTypeInfo)
     {
         if (!File.Exists(file.FilePath))
         {
@@ -20,7 +20,7 @@ public sealed partial class WindowsJsonStorageService : IJsonStorageService
         return JsonSerializer.Deserialize(text, jsonTypeInfo);
     }
 
-    public async Task WriteAsync<T>(IFile file, T value, JsonTypeInfo<T> jsonTypeInfo)
+    public async Task WriteAsync<T>(FileReference file, T value, JsonTypeInfo<T> jsonTypeInfo)
     {
         // Ensure the directory exists
         string? directoryName = Path.GetDirectoryName(file.FilePath);

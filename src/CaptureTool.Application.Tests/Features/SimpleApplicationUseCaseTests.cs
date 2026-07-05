@@ -126,7 +126,7 @@ public sealed class SimpleApplicationUseCaseTests
     {
         var audioCapture = new Mock<IAudioCaptureHandler>();
         var navigation = new Mock<INavigationService>();
-        var audioFile = Mock.Of<IAudioFile>();
+        var audioFile = new AudioFile("capture.wav");
         audioCapture.Setup(handler => handler.StopCapture()).Returns(audioFile);
 
         await new StartAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)

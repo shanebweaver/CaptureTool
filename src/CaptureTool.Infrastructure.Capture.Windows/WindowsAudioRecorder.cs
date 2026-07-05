@@ -57,7 +57,7 @@ public class WindowsAudioRecorder : IAudioRecorder
         }
     }
 
-    public IAudioFile StopCapture()
+    public AudioFile StopCapture()
     {
         if (string.IsNullOrWhiteSpace(_outputPath))
         {

@@ -169,7 +169,7 @@ public class VideoEditPageViewModelTrimTests
         var filePicker = new Mock<IFilePickerService>();
         filePicker
             .Setup(service => service.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos))
-            .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == destinationPath));
+            .ReturnsAsync(new FileReference(destinationPath));
 
         var videoTrimmer = trimmer ?? new Mock<IVideoFileTrimmer>();
         var useCase = new Mock<ISaveVideoFileUseCase>();
