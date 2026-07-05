@@ -11,6 +11,166 @@ namespace CaptureTool.Application.Tests.Edit;
 public sealed class ImageEditSessionTests
 {
     [TestMethod]
+    public void Constructor_ShouldUseFullImageCropAndCopyInitialDrawables()
+    {
+        var drawable = new RectangleDrawable(new Vector2(1, 2), new Size(10, 20), Color.Red, Color.Blue, 3);
+        var initialDrawables = new List<IDrawable> { drawable };
+
+        var session = new ImageEditSession(
+            new Size(100, 200),
+            ImageOrientation.Rotate90FlipNone,
+            new Rectangle(10, 20, 30, 40),
+            initialDrawables);
+        initialDrawables.Clear();
+
+        Assert.AreEqual(new Size(100, 200), session.ImageSize);
+        Assert.AreEqual(ImageOrientation.Rotate90FlipNone, session.Orientation);
+        Assert.AreEqual(new Rectangle(10, 20, 30, 40), session.CropRect);
+        Assert.HasCount(1, session.Drawables);
+        Assert.AreSame(drawable, session.Drawables[0]);
+
+        var defaultSession = new ImageEditSession(new Size(320, 240));
+        Assert.AreEqual(new Rectangle(0, 0, 320, 240), defaultSession.CropRect);
+    }
+
+    [TestMethod]
+    public void CreateRenderSnapshot_ShouldReturnCurrentRenderState()
+    {
+        var session = new ImageEditSession(
+            new Size(100, 200),
+            ImageOrientation.Rotate180FlipX,
+            new Rectangle(5, 6, 70, 80));
+
+        ImageEditRenderSnapshot snapshot = session.CreateRenderSnapshot();
+
+        Assert.AreEqual(ImageOrientation.Rotate180FlipX, snapshot.Orientation);
+        Assert.AreEqual(new Size(100, 200), snapshot.ImageSize);
+        Assert.AreEqual(new Rectangle(5, 6, 70, 80), snapshot.CropRect);
+    }
+
+    [TestMethod]
+    public void DrawableCollectionMethods_ShouldValidateInputsAndIndexes()
+    {
+        var session = new ImageEditSession(new Size(100, 100));
+        var first = new RectangleDrawable(Vector2.Zero, new Size(10, 10), Color.Red, Color.Blue, 1);
+        var second = new EllipseDrawable(Vector2.One, new Size(20, 20), Color.Green, Color.Yellow, 2);
+
+        Assert.ThrowsExactly<ArgumentNullException>(() => session.AddDrawable(null!));
+        Assert.ThrowsExactly<ArgumentNullException>(() => session.InsertDrawable(0, null!));
+        Assert.ThrowsExactly<ArgumentNullException>(() => session.RemoveDrawable(null!));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => session.InsertDrawable(-1, first));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => session.InsertDrawable(1, first));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => session.GetDrawableAt(0));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => session.RemoveDrawableAt(0));
+
+        session.AddDrawable(first);
+        session.InsertDrawable(1, second);
+
+        Assert.AreSame(first, session.GetDrawableAt(0));
+        Assert.AreSame(second, session.GetDrawableAt(1));
+        Assert.IsTrue(session.RemoveDrawable(first));
+        Assert.IsFalse(session.RemoveDrawable(first));
+        Assert.AreSame(second, session.RemoveDrawableAt(0));
+        Assert.IsEmpty(session.Drawables);
+    }
+
+    [TestMethod]
+    public void ApplyShapeState_ShouldUpdateEllipseLineArrowAndTextDrawables()
+    {
+        var ellipse = new EllipseDrawable(Vector2.Zero, new Size(1, 2), Color.Red, Color.Blue, 1);
+        var line = new LineDrawable(Vector2.Zero, Vector2.One, Color.Red, 1);
+        var arrow = new ArrowDrawable(Vector2.One, new Vector2(2), Color.Blue, 2);
+        var text = new TextDrawable(Vector2.Zero, "old", Color.Black);
+        var session = new ImageEditSession(
+            new Size(100, 100),
+            ImageOrientation.RotateNoneFlipNone,
+            new Rectangle(0, 0, 100, 100),
+            [ellipse, line, arrow, text]);
+        var state = new ModifyShapeOperation.ShapeState
+        {
+            Offset = new Vector2(10, 20),
+            Size = new Size(30, 40),
+            EndPoint = new Vector2(50, 60),
+            StrokeColor = Color.Green,
+            FillColor = Color.Yellow,
+            StrokeWidth = 7,
+            Text = "updated",
+            TextColor = Color.White,
+            TextBackgroundColor = Color.DarkGray,
+            FontFamily = "Consolas",
+            FontSize = 19,
+        };
+
+        session.ApplyShapeState(0, state);
+        session.ApplyShapeState(1, state);
+        session.ApplyShapeState(2, state);
+        session.ApplyShapeState(3, state);
+
+        Assert.AreEqual(state.Offset, ellipse.Offset);
+        Assert.AreEqual(state.Size, ellipse.Size);
+        Assert.AreEqual(state.StrokeColor, ellipse.StrokeColor);
+        Assert.AreEqual(state.FillColor, ellipse.FillColor);
+        Assert.AreEqual(state.StrokeWidth, ellipse.StrokeWidth);
+
+        Assert.AreEqual(state.Offset, line.Offset);
+        Assert.AreEqual(state.EndPoint, line.EndPoint);
+        Assert.AreEqual(state.StrokeColor, line.StrokeColor);
+        Assert.AreEqual(state.StrokeWidth, line.StrokeWidth);
+
+        Assert.AreEqual(state.Offset, arrow.Offset);
+        Assert.AreEqual(state.EndPoint, arrow.EndPoint);
+        Assert.AreEqual(state.StrokeColor, arrow.StrokeColor);
+        Assert.AreEqual(state.StrokeWidth, arrow.StrokeWidth);
+
+        Assert.AreEqual(state.Offset, text.Offset);
+        Assert.AreEqual(state.Size, text.Size);
+        Assert.AreEqual(state.Text, text.Text);
+        Assert.AreEqual(state.TextColor, text.Color);
+        Assert.AreEqual(state.TextBackgroundColor, text.BackgroundColor);
+        Assert.AreEqual(state.FontFamily, text.FontFamily);
+        Assert.AreEqual(state.FontSize, text.FontSize);
+    }
+
+    [TestMethod]
+    public void SetChromaKeySettings_ShouldHandleSessionsWithoutImageDrawable()
+    {
+        var session = new ImageEditSession(
+            new Size(100, 100),
+            ImageOrientation.RotateNoneFlipNone,
+            new Rectangle(0, 0, 100, 100),
+            [new RectangleDrawable(Vector2.Zero, new Size(10, 10), Color.Red, Color.Blue, 1)]);
+        var settings = new ChromaKeySettings(1, Color.Green, 40, 20);
+
+        session.SetChromaKeySettings(settings);
+
+        Assert.AreEqual(settings, session.ChromaKeySettings);
+    }
+
+    [TestMethod]
+    public void SetChromaKeySettings_ShouldUpdateExistingImageEffect()
+    {
+        var effect = new ImageChromaKeyEffect(Color.Red, 0.1f, 0.2f);
+        var image = new ImageDrawable(Vector2.Zero, new ImageFile("image.png"), new Size(100, 100))
+        {
+            ImageEffect = effect,
+        };
+        var session = new ImageEditSession(
+            new Size(100, 100),
+            ImageOrientation.RotateNoneFlipNone,
+            new Rectangle(0, 0, 100, 100),
+            [image]);
+        var settings = new ChromaKeySettings(1, Color.Empty, 90, 30);
+
+        session.SetChromaKeySettings(settings);
+
+        Assert.AreSame(effect, image.ImageEffect);
+        Assert.AreEqual(Color.Empty, effect.Color);
+        Assert.AreEqual(0.9f, effect.Tolerance);
+        Assert.AreEqual(0.3f, effect.Desaturation);
+        Assert.IsFalse(effect.IsEnabled);
+    }
+
+    [TestMethod]
     public void History_ShouldUndoAndRedoRotation()
     {
         var session = new ImageEditSession(new Size(100, 200));

@@ -1,0 +1,55 @@
+using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
+using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
+using CaptureTool.Application.Abstractions.Features.Store;
+using CaptureTool.Application.Abstractions.Globalization;
+using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Infrastructure.Cancellation;
+using CaptureTool.Infrastructure.DependencyInjection;
+using CaptureTool.Infrastructure.Features;
+using CaptureTool.Infrastructure.Globalization;
+using CaptureTool.Infrastructure.Logging;
+using CaptureTool.Infrastructure.Navigation;
+using CaptureTool.Infrastructure.Settings;
+using CaptureTool.Infrastructure.Telemetry;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace CaptureTool.Infrastructure.Tests.DependencyInjection;
+
+[TestClass]
+public sealed class InfrastructureServiceCollectionExtensionsTests
+{
+    [TestMethod]
+    public void AddGenericServices_ShouldRegisterInfrastructureServices()
+    {
+        var services = new ServiceCollection();
+
+        IServiceCollection result = services.AddGenericServices();
+
+        Assert.AreSame(services, result);
+        AssertHasRegistration<ICancellationService, CancellationService>(services);
+        AssertHasRegistration<IStoreFeatureAvailability, StoreFeatureAvailability>(services);
+        AssertHasRegistration<IAudioCaptureFeatureAvailability, AudioCaptureFeatureAvailability>(services);
+        AssertHasRegistration<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>(services);
+        AssertHasRegistration<IGlobalizationService, GlobalizationService>(services);
+        AssertHasRegistration<INavigationService, NavigationService>(services);
+        AssertHasRegistration<ISettingsService, LocalSettingsService>(services);
+        AssertHasRegistration<ITelemetryService, TelemetryService>(services);
+#if DEBUG
+        AssertHasRegistration<ILogService, DebugLogService>(services);
+#else
+        AssertHasRegistration<ILogService, ShortTermMemoryLogService>(services);
+#endif
+    }
+
+    private static void AssertHasRegistration<TService, TImplementation>(IServiceCollection services)
+    {
+        Assert.IsTrue(services.Any(descriptor =>
+            descriptor.ServiceType == typeof(TService) &&
+            descriptor.ImplementationType == typeof(TImplementation) &&
+            descriptor.Lifetime == ServiceLifetime.Singleton));
+    }
+}
