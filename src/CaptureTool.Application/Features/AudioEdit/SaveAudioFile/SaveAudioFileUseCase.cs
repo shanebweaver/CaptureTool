@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Features.AudioEdit.SaveAudioFile;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.AudioEdit.SaveAudioFile;

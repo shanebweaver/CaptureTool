@@ -5,7 +5,7 @@ using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.AudioCapture;
 

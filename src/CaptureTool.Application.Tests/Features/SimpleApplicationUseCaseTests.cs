@@ -45,7 +45,7 @@ using CaptureTool.Application.Features.Store.LeaveStorePage;
 using CaptureTool.Application.Features.Store.OpenStorePage;
 using CaptureTool.Application.Features.Store.PurchaseChromaKeyAddOn;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;

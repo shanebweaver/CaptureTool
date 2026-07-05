@@ -1,4 +1,4 @@
-namespace CaptureTool.Domain.Files;
+namespace CaptureTool.Domain.FileSystem;
 
 public partial class FileReference
 {

@@ -6,7 +6,7 @@ using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Features.ImageCapture;
 using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 using Moq;
 using System.Drawing;
 using System.Runtime.Versioning;

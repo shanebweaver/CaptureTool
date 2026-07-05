@@ -6,7 +6,7 @@ using CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Features.RecentCaptures.OpenRecentCapture;
 

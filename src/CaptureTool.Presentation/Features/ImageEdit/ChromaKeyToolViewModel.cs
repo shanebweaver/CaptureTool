@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Domain.Edit;
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Drawing;

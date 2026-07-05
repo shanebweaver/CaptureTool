@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 using System.Text.Json.Serialization.Metadata;
 
 namespace CaptureTool.Application.Abstractions.Storage;

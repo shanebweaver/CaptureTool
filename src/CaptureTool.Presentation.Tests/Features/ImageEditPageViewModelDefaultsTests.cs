@@ -9,7 +9,7 @@ using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Domain.Edit.Drawable;
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.ImageEdit;
 using FluentAssertions;
 using Moq;

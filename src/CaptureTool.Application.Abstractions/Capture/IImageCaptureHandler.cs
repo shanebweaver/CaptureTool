@@ -1,5 +1,5 @@
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Abstractions.Capture;
 

@@ -1,5 +1,5 @@
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 using System.Drawing;
 
 namespace CaptureTool.Infrastructure.Edit.Windows.ChromaKey;

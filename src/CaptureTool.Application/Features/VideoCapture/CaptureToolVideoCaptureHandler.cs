@@ -6,7 +6,7 @@ using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Features.VideoCapture;
 

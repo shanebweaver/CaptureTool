@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Files;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
 
