@@ -11,7 +11,12 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
+
+    - name: Checkout CaptureKit
+      uses: actions/checkout@v7
       with:
+        repository: shanebweaver/CaptureKit
+        path: CaptureKit
         submodules: recursive
         
     - name: Setup .NET
@@ -22,25 +27,9 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v3
 
-    - name: Setup vcpkg
+    - name: Build CaptureKit packages
       run: |
-        cd vcpkg
-        .\bootstrap-vcpkg.bat
-        .\vcpkg.exe integrate install
-      shell: pwsh
-
-    - name: Set VCPKG_ROOT environment variable
-      run: |
-        echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" >> $env:GITHUB_ENV
-      shell: pwsh
-
-    - name: Install Store vcpkg dependencies
-      run: |
-        .\vcpkg\vcpkg.exe install `
-          wil:x64-windows `
-          wil:arm64-windows `
-          --classic `
-          --x-install-root="${{ github.workspace }}\vcpkg_installed"
+        .\CaptureKit\build.ps1 -Configuration Release -SkipNativeTests -SkipManagedTests
       shell: pwsh
 
     - name: Build combined Store package
@@ -129,17 +118,45 @@ jobs:
             Select-Object -First 1
         }
 
+        $captureKitNativeAssetsByArchitecture = @{
+          "arm64" = @{
+            Dll = Get-ChildItem -Path src\CaptureTool.Presentation.Windows.WinUI\bin\ARM64\Release -Recurse -File -Filter "CaptureKit.Windows.Native.dll" |
+              Sort-Object Length -Descending |
+              Select-Object -First 1
+            Pdb = Get-ChildItem -Path src\CaptureTool.Presentation.Windows.WinUI\bin\ARM64\Release -Recurse -File -Filter "CaptureKit.Windows.Native.pdb" |
+              Sort-Object Length -Descending |
+              Select-Object -First 1
+          }
+          "x64" = @{
+            Dll = Get-ChildItem -Path src\CaptureTool.Presentation.Windows.WinUI\bin\x64\Release -Recurse -File -Filter "CaptureKit.Windows.Native.dll" |
+              Sort-Object Length -Descending |
+              Select-Object -First 1
+            Pdb = Get-ChildItem -Path src\CaptureTool.Presentation.Windows.WinUI\bin\x64\Release -Recurse -File -Filter "CaptureKit.Windows.Native.pdb" |
+              Sort-Object Length -Descending |
+              Select-Object -First 1
+          }
+        }
+
         foreach ($architecture in $nativePdbsByArchitecture.Keys) {
           if (-not $nativePdbsByArchitecture[$architecture]) {
             throw "No Native AOT PDB was found for $architecture."
+          }
+
+          if (-not $captureKitNativeAssetsByArchitecture[$architecture].Dll) {
+            throw "No CaptureKit native DLL was found for $architecture."
+          }
+
+          if (-not $captureKitNativeAssetsByArchitecture[$architecture].Pdb) {
+            throw "No CaptureKit native PDB was found for $architecture."
           }
         }
 
         $uploadRoot = Join-Path $env:RUNNER_TEMP "store-upload-inspect"
         $bundleRoot = Join-Path $env:RUNNER_TEMP "store-bundle-inspect"
         $symbolsRoot = Join-Path $env:RUNNER_TEMP "store-symbols-inspect"
+        $appsRoot = Join-Path $env:RUNNER_TEMP "store-apps-inspect"
 
-        foreach ($path in @($uploadRoot, $bundleRoot, $symbolsRoot)) {
+        foreach ($path in @($uploadRoot, $bundleRoot, $symbolsRoot, $appsRoot)) {
           Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path $path -Force | Out-Null
         }
@@ -164,6 +181,47 @@ jobs:
 
         if (-not ($bundleEntries -match "_arm64\.msix$")) {
           throw "The final Store bundle does not contain an ARM64 app package."
+        }
+
+        $appPackages = Get-ChildItem -Path $bundleRoot -Recurse -File -Filter "*.msix"
+        foreach ($appPackage in $appPackages) {
+          if ($appPackage.Name -match "_(?<arch>arm64|x64)\.msix$") {
+            $architecture = $Matches.arch
+          }
+          else {
+            throw "Could not infer architecture from app package $($appPackage.Name)."
+          }
+
+          $appRoot = Join-Path $appsRoot $appPackage.BaseName
+          New-Item -ItemType Directory -Path $appRoot -Force | Out-Null
+          [System.IO.Compression.ZipFile]::ExtractToDirectory($appPackage.FullName, $appRoot)
+
+          $packagedNativeDll = Get-ChildItem -Path $appRoot -Recurse -File -Filter "CaptureKit.Windows.Native.dll" |
+            Select-Object -First 1
+          $packagedNativePdb = Get-ChildItem -Path $appRoot -Recurse -File -Filter "CaptureKit.Windows.Native.pdb" |
+            Select-Object -First 1
+
+          if (-not $packagedNativeDll) {
+            throw "$($appPackage.Name) does not contain CaptureKit.Windows.Native.dll."
+          }
+
+          if (-not $packagedNativePdb) {
+            throw "$($appPackage.Name) does not contain CaptureKit.Windows.Native.pdb."
+          }
+
+          $expectedDllHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $captureKitNativeAssetsByArchitecture[$architecture].Dll.FullName).Hash
+          $actualDllHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $packagedNativeDll.FullName).Hash
+
+          if ($actualDllHash -ne $expectedDllHash) {
+            throw "$($appPackage.Name) does not contain the CaptureKit native DLL for $architecture."
+          }
+
+          $expectedPdbHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $captureKitNativeAssetsByArchitecture[$architecture].Pdb.FullName).Hash
+          $actualPdbHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $packagedNativePdb.FullName).Hash
+
+          if ($actualPdbHash -ne $expectedPdbHash) {
+            throw "$($appPackage.Name) does not contain the CaptureKit native PDB for $architecture."
+          }
         }
 
         $symbolPackages = Get-ChildItem -Path $uploadRoot -Recurse -File -Filter "*.appxsym"

@@ -10,7 +10,12 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
+
+    - name: Checkout CaptureKit
+      uses: actions/checkout@v7
       with:
+        repository: shanebweaver/CaptureKit
+        path: CaptureKit
         submodules: recursive
 
     - name: Setup .NET
@@ -21,15 +26,9 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v3
 
-    - name: Setup vcpkg
+    - name: Build CaptureKit packages
       run: |
-        cd vcpkg
-        .\bootstrap-vcpkg.bat
-        .\vcpkg.exe integrate install
-
-    - name: Set VCPKG_ROOT environment variable
-      run: |
-        echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" >> $env:GITHUB_ENV
+        .\CaptureKit\build.ps1 -Configuration Release -SkipNativeTests -SkipManagedTests
 
     - name: Restore and build solution
       run: |
@@ -38,12 +37,6 @@ jobs:
     - name: Install coverage tools
       run: |
         dotnet tool install --global dotnet-coverage
-
-    - name: Run C++ native tests
-      run: |
-        $vsTestPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Workload.NativeDesktop -property installationPath
-        $vsTestExe = Join-Path $vsTestPath "Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
-        & $vsTestExe "${{ github.workspace }}\x64\Release\CaptureInterop.Tests.dll" /Platform:x64
 
     - name: Run .NET tests with coverage
       run: |

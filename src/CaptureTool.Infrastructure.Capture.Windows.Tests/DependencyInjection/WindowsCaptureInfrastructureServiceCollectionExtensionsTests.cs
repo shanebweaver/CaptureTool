@@ -18,6 +18,9 @@ public sealed class WindowsCaptureInfrastructureServiceCollectionExtensionsTests
         services.ShouldContainSingleton<IScreenCapture, WindowsScreenCapture>();
         services.ShouldContainSingleton<IScreenRecorder, WindowsScreenRecorder>();
         services.ShouldContainSingleton<IAudioRecorder, WindowsAudioRecorder>();
+        services.ShouldContainSingleton<CaptureKit.Abstractions.IDisplayCaptureService, CaptureKit.Windows.DisplayCaptureService>();
+        services.ShouldContainSingleton<CaptureKit.Abstractions.IVideoCaptureService, CaptureKit.Windows.VideoCaptureService>();
+        services.ShouldContainSingleton<CaptureKit.Abstractions.IAudioCaptureService, CaptureKit.Windows.AudioCaptureService>();
     }
 }
 
