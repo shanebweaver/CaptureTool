@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Features.Diagnostics.ExportLogs;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Features.Diagnostics.ExportLogs;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;
@@ -19,7 +19,7 @@ public sealed class ExportLogsUseCaseTests
 
         filePicker
             .Setup(service => service.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents))
-            .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == destinationPath));
+            .ReturnsAsync(new FileReference(destinationPath));
         logService
             .Setup(service => service.GetLogs())
             .Returns([
@@ -63,7 +63,7 @@ public sealed class ExportLogsUseCaseTests
 
         filePicker
             .Setup(service => service.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents))
-            .ReturnsAsync((IFile?)null);
+            .ReturnsAsync((FileReference?)null);
 
         ExportLogsResponse? response = (await useCase.ExecuteAsync(new ExportLogsRequest(), TestContext.CancellationToken)).Value;
 

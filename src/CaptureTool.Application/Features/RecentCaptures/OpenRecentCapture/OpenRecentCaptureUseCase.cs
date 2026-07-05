@@ -4,8 +4,9 @@ using CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCapture;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Files;
-using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Features.RecentCaptures.OpenRecentCapture;
 

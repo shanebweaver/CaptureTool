@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Features.Diagnostics.ExportLogs;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Features.Diagnostics.ExportLogs;
 
@@ -29,7 +29,7 @@ public sealed class ExportLogsUseCase : IExportLogsUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents);
+                FileReference? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Text, UserFolder.Documents);
                 if (file is null || cancellationToken.IsCancellationRequested)
                 {
                     return new ExportLogsResponse(false);

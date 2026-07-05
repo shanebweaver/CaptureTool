@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
@@ -39,7 +39,7 @@ public sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
                     return new SaveVideoFileResponse(false);
                 }
 
-                IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos);
+                FileReference? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos);
                 if (file is null)
                 {
                     return new SaveVideoFileResponse(false);

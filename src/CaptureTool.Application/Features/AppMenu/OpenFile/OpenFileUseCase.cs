@@ -5,7 +5,7 @@ using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.AudioCapture;
 
@@ -48,7 +48,7 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
                     return new OpenFileResponse(false);
                 }
 
-                IFile? file = await _filePickerService.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures);
+                FileReference? file = await _filePickerService.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures);
                 if (file is null)
                 {
                     return new OpenFileResponse(false);

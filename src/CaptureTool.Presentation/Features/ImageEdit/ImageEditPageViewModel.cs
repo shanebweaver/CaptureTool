@@ -8,7 +8,7 @@ using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
@@ -404,7 +404,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     {
         try
         {
-            IFile? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures);
+            FileReference? file = await _filePickerService.PickSaveFileAsync(FilePickerType.Image, UserFolder.Pictures);
 
             if (file is null)
             {

@@ -1,5 +1,5 @@
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
 
-public sealed record OpenImageEditPageRequest(IImageFile ImageFile);
+public sealed record OpenImageEditPageRequest(ImageFile ImageFile);

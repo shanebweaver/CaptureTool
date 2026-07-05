@@ -45,7 +45,7 @@ using CaptureTool.Application.Features.Store.LeaveStorePage;
 using CaptureTool.Application.Features.Store.OpenStorePage;
 using CaptureTool.Application.Features.Store.PurchaseChromaKeyAddOn;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;
@@ -126,7 +126,7 @@ public sealed class SimpleApplicationUseCaseTests
     {
         var audioCapture = new Mock<IAudioCaptureHandler>();
         var navigation = new Mock<INavigationService>();
-        var audioFile = Mock.Of<IAudioFile>();
+        var audioFile = new AudioFile("capture.wav");
         audioCapture.Setup(handler => handler.StopCapture()).Returns(audioFile);
 
         await new StartAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)

@@ -1,7 +1,7 @@
-using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
+using CaptureTool.Domain.FileSystem;
 using System.Drawing;
 using System.Numerics;
 

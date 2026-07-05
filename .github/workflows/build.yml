@@ -183,7 +183,8 @@ jobs:
           throw "The final Store bundle does not contain an ARM64 app package."
         }
 
-        $appPackages = Get-ChildItem -Path $bundleRoot -Recurse -File -Filter "*.msix"
+        $appPackages = Get-ChildItem -Path $bundleRoot -Recurse -File -Filter "*.msix" |
+          Where-Object { $_.Name -match "_(arm64|x64)\.msix$" }
         foreach ($appPackage in $appPackages) {
           if ($appPackage.Name -match "_(?<arch>arm64|x64)\.msix$") {
             $architecture = $Matches.arch
@@ -198,15 +199,9 @@ jobs:
 
           $packagedNativeDll = Get-ChildItem -Path $appRoot -Recurse -File -Filter "CaptureKit.Windows.Native.dll" |
             Select-Object -First 1
-          $packagedNativePdb = Get-ChildItem -Path $appRoot -Recurse -File -Filter "CaptureKit.Windows.Native.pdb" |
-            Select-Object -First 1
 
           if (-not $packagedNativeDll) {
             throw "$($appPackage.Name) does not contain CaptureKit.Windows.Native.dll."
-          }
-
-          if (-not $packagedNativePdb) {
-            throw "$($appPackage.Name) does not contain CaptureKit.Windows.Native.pdb."
           }
 
           $expectedDllHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $captureKitNativeAssetsByArchitecture[$architecture].Dll.FullName).Hash
@@ -216,12 +211,6 @@ jobs:
             throw "$($appPackage.Name) does not contain the CaptureKit native DLL for $architecture."
           }
 
-          $expectedPdbHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $captureKitNativeAssetsByArchitecture[$architecture].Pdb.FullName).Hash
-          $actualPdbHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $packagedNativePdb.FullName).Hash
-
-          if ($actualPdbHash -ne $expectedPdbHash) {
-            throw "$($appPackage.Name) does not contain the CaptureKit native PDB for $architecture."
-          }
         }
 
         $symbolPackages = Get-ChildItem -Path $uploadRoot -Recurse -File -Filter "*.appxsym"
@@ -236,6 +225,8 @@ jobs:
           [System.IO.Compression.ZipFile]::ExtractToDirectory($symbolPackage.FullName, $symbolRoot)
 
           $packagedAppPdb = Get-ChildItem -Path $symbolRoot -Recurse -File -Filter $appPdbName |
+            Select-Object -First 1
+          $packagedCaptureKitNativePdb = Get-ChildItem -Path $symbolRoot -Recurse -File -Filter "CaptureKit.Windows.Native.pdb" |
             Select-Object -First 1
 
           if (-not $packagedAppPdb) {
@@ -254,6 +245,17 @@ jobs:
 
           if ($actualHash -ne $expectedHash) {
             throw "$($symbolPackage.Name) does not contain the Native AOT PDB for $architecture."
+          }
+
+          if (-not $packagedCaptureKitNativePdb) {
+            throw "The symbol package $($symbolPackage.Name) does not contain CaptureKit.Windows.Native.pdb."
+          }
+
+          $expectedCaptureKitPdbHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $captureKitNativeAssetsByArchitecture[$architecture].Pdb.FullName).Hash
+          $actualCaptureKitPdbHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $packagedCaptureKitNativePdb.FullName).Hash
+
+          if ($actualCaptureKitPdbHash -ne $expectedCaptureKitPdbHash) {
+            throw "$($symbolPackage.Name) does not contain the CaptureKit native PDB for $architecture."
           }
         }
 

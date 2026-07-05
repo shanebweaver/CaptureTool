@@ -1,6 +1,6 @@
 using CaptureKit.Abstractions;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Infrastructure.Capture.Windows;
 
@@ -57,7 +57,7 @@ public class WindowsAudioRecorder : IAudioRecorder
         }
     }
 
-    public IAudioFile StopCapture()
+    public AudioFile StopCapture()
     {
         if (string.IsNullOrWhiteSpace(_outputPath))
         {

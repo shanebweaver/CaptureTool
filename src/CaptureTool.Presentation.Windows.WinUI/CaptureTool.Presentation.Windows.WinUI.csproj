@@ -42,6 +42,7 @@
     <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
     <ProjectReference Include="..\CaptureTool.Application\CaptureTool.Application.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Edit.Windows\CaptureTool.Infrastructure.Edit.Windows.csproj" />
+    <ProjectReference Include="..\CaptureTool.Domain\CaptureTool.Domain.csproj" />
     <ProjectReference Include="..\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" />
     <ProjectReference Include="..\CaptureTool.Infrastructure.Capture.Windows\CaptureTool.Infrastructure.Capture.Windows.csproj" />
     <ProjectReference Include="..\CaptureTool.Domain.Capture\CaptureTool.Domain.Capture.csproj" />
@@ -115,13 +116,20 @@
           Condition="'$(PublishAot)' == 'true' and '$(AppxSymbolPackageEnabled)' == 'true'">
     <PropertyGroup>
       <_NativeAotAppPdbPath>$(OutDir)native\$(AssemblyName).pdb</_NativeAotAppPdbPath>
+      <_CaptureKitNativePdbPath>$(OutDir)CaptureKit.Windows.Native.pdb</_CaptureKitNativePdbPath>
     </PropertyGroup>
 
     <ItemGroup>
       <PDBPayload Remove="@(PDBPayload)"
                   Condition="'%(Filename)%(Extension)' == '$(AssemblyName).pdb'" />
+      <PDBPayload Remove="@(PDBPayload)"
+                  Condition="'%(Filename)%(Extension)' == 'CaptureKit.Windows.Native.pdb'" />
       <PDBPayload Include="$(_NativeAotAppPdbPath)">
         <TargetPath>$(AssemblyName).pdb</TargetPath>
+      </PDBPayload>
+      <PDBPayload Include="$(_CaptureKitNativePdbPath)"
+                  Condition="Exists('$(_CaptureKitNativePdbPath)')">
+        <TargetPath>CaptureKit.Windows.Native.pdb</TargetPath>
       </PDBPayload>
     </ItemGroup>
   </Target>
@@ -132,13 +140,20 @@
           Condition="'$(PublishAot)' == 'true' and '$(AppxSymbolPackageEnabled)' == 'true'">
     <PropertyGroup>
       <_NativeAotAppPdbPath>$(OutDir)native\$(AssemblyName).pdb</_NativeAotAppPdbPath>
+      <_CaptureKitNativePdbPath>$(OutDir)CaptureKit.Windows.Native.pdb</_CaptureKitNativePdbPath>
     </PropertyGroup>
 
     <ItemGroup>
       <PDBUploadPayload Remove="@(PDBUploadPayload)"
                         Condition="'%(Filename)%(Extension)' == '$(AssemblyName).pdb'" />
+      <PDBUploadPayload Remove="@(PDBUploadPayload)"
+                        Condition="'%(Filename)%(Extension)' == 'CaptureKit.Windows.Native.pdb'" />
       <PDBUploadPayload Include="$(_NativeAotAppPdbPath)">
         <TargetPath>$(AssemblyName).pdb</TargetPath>
+      </PDBUploadPayload>
+      <PDBUploadPayload Include="$(_CaptureKitNativePdbPath)"
+                        Condition="Exists('$(_CaptureKitNativePdbPath)')">
+        <TargetPath>CaptureKit.Windows.Native.pdb</TargetPath>
       </PDBUploadPayload>
     </ItemGroup>
   </Target>

@@ -15,7 +15,7 @@ using CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
 using CaptureTool.Application.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;
@@ -58,7 +58,7 @@ public sealed class MediaEditUseCaseTests
         var picker = new Mock<IFilePickerService>();
         picker
             .Setup(service => service.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music))
-            .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == destinationPath));
+            .ReturnsAsync(new FileReference(destinationPath));
         var useCase = new SaveAudioFileUseCase(picker.Object, TestUseCaseExecutor.Instance);
 
         SaveAudioFileResponse response = (await useCase.ExecuteAsync(new SaveAudioFileRequest(sourcePath), TestContext.CancellationToken)).Value!;
@@ -71,8 +71,8 @@ public sealed class MediaEditUseCaseTests
     public async Task OpenAudioAndVideoEditPageUseCases_NavigateToEditRoutes()
     {
         string audioPath = await CreateTempFileAsync("source.wav", "audio");
-        var audioFile = Mock.Of<IAudioFile>(file => file.FilePath == audioPath);
-        var videoFile = Mock.Of<IVideoFile>(file => file.FilePath == @"C:\capture.mp4");
+        var audioFile = new AudioFile(audioPath);
+        var videoFile = new VideoFile(@"C:\capture.mp4");
         var navigation = new Mock<INavigationService>();
 
         var audioUseCase = new OpenAudioEditPageUseCase(navigation.Object, TestUseCaseExecutor.Instance);
@@ -133,7 +133,7 @@ public sealed class MediaEditUseCaseTests
         var trimmer = new Mock<IVideoFileTrimmer>();
         picker
             .Setup(service => service.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos))
-            .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == destinationPath));
+            .ReturnsAsync(new FileReference(destinationPath));
         var useCase = new SaveVideoFileUseCase(picker.Object, trimmer.Object, TestUseCaseExecutor.Instance);
         var request = new SaveVideoFileRequest(videoPath, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4));
 
@@ -152,7 +152,7 @@ public sealed class MediaEditUseCaseTests
         var trimmer = new Mock<IVideoFileTrimmer>();
         picker
             .Setup(service => service.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos))
-            .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == destinationPath));
+            .ReturnsAsync(new FileReference(destinationPath));
         var useCase = new SaveVideoFileUseCase(picker.Object, trimmer.Object, TestUseCaseExecutor.Instance);
 
         SaveVideoFileResponse response = (await useCase.ExecuteAsync(new SaveVideoFileRequest(videoPath), TestContext.CancellationToken)).Value!;

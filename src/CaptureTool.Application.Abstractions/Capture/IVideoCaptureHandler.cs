@@ -1,11 +1,11 @@
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Abstractions.Capture;
 
 public interface IVideoCaptureHandler
 {
-    event EventHandler<IVideoFile>? NewVideoCaptured;
+    event EventHandler<VideoFile>? NewVideoCaptured;
     event EventHandler? RecordingStarted;
     event EventHandler<bool>? DesktopAudioStateChanged;
     event EventHandler<bool>? PausedStateChanged;

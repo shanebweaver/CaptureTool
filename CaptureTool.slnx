@@ -33,6 +33,7 @@
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
+  <Project Path="src/CaptureTool.Domain/CaptureTool.Domain.csproj" />
   <Project Path="src/CaptureTool.Domain.Capture/CaptureTool.Domain.Capture.csproj" />
   <Project Path="src/CaptureTool.Domain.Edit/CaptureTool.Domain.Edit.csproj" />
   <Project Path="src/CaptureTool.FeatureManagement.Generators/CaptureTool.FeatureManagement.Generators.csproj" />

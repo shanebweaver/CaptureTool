@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Windowing;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using System.Drawing;
 using Windows.Storage;
 using Windows.Storage.Pickers;
@@ -39,7 +39,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         return new WindowsFolder(folder.Path);
     }
 
-    public async Task<IFile?> PickFileAsync(FilePickerType fileType, UserFolder userFolder)
+    public async Task<FileReference?> PickFileAsync(FilePickerType fileType, UserFolder userFolder)
     {
         PickerLocationId locationId = GetPickerLocationIdForUserFolder(userFolder);
 
@@ -95,10 +95,10 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
             return null;
         }
 
-        return new WindowsFile(file.Path);
+        return new FileReference(file.Path);
     }
 
-    public async Task<IFile?> PickSaveFileAsync(FilePickerType fileType, UserFolder userFolder)
+    public async Task<FileReference?> PickSaveFileAsync(FilePickerType fileType, UserFolder userFolder)
     {
         var filePicker = new FileSavePicker
         {
@@ -163,7 +163,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
             return null;
         }
 
-        return new WindowsFile(file.Path);
+        return new FileReference(file.Path);
     }
 
     private static PickerLocationId GetPickerLocationIdForUserFolder(UserFolder userFolder)
@@ -180,7 +180,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         return locationId;
     }
 
-    public Size GetImageFileSize(IImageFile imageFile)
+    public Size GetImageFileSize(ImageFile imageFile)
     {
         using FileStream file = new(imageFile.FilePath, FileMode.Open, FileAccess.Read);
         var image = Image.FromStream(

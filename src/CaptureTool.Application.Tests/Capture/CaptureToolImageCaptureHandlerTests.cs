@@ -6,7 +6,7 @@ using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Features.ImageCapture;
 using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using Moq;
 using System.Drawing;
 using System.Runtime.Versioning;
@@ -26,7 +26,7 @@ public sealed class CaptureToolImageCaptureHandlerTests
         screenCapture.Setup(service => service.CaptureAllMonitors()).Returns([monitor]);
         screenCapture.Setup(service => service.CombineMonitors(It.IsAny<IList<MonitorCaptureResult>>())).Returns(new Bitmap(2, 2));
         var handler = CreateHandler(tempFolder, screenCapture: screenCapture.Object);
-        IImageFile? captured = null;
+        ImageFile? captured = null;
         handler.NewImageCaptured += (_, file) => captured = file;
 
         ImageFile result = handler.PerformAllScreensCapture();

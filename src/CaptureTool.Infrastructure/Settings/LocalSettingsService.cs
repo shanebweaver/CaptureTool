@@ -2,16 +2,13 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Features.Settings.Definitions;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Infrastructure.Settings;
 
 public partial class LocalSettingsService : ISettingsService, IDisposable
 {
-    private class SettingsFile(string filePath) : IFile
-    {
-        public string FilePath { get; } = filePath;
-    }
+    private sealed class SettingsFile(string filePath) : FileReference(filePath);
 
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly Lock _accessLock = new();

@@ -1,5 +1,5 @@
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
 
-public sealed record OpenVideoEditPageRequest(IVideoFile VideoFile);
+public sealed record OpenVideoEditPageRequest(VideoFile VideoFile);

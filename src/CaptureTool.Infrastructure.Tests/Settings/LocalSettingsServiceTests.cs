@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Features.Settings.Definitions;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Infrastructure.Settings;
 using System.Text.Json.Serialization.Metadata;
 
@@ -142,13 +142,13 @@ public sealed class LocalSettingsServiceTests
         public int ReadCount { get; private set; }
         public int WriteCount { get; private set; }
 
-        public Task<T?> ReadAsync<T>(IFile file, JsonTypeInfo<T> jsonTypeInfo)
+        public Task<T?> ReadAsync<T>(FileReference file, JsonTypeInfo<T> jsonTypeInfo)
         {
             ReadCount++;
             return Task.FromResult((T?)(object?)ReadResult);
         }
 
-        public Task WriteAsync<T>(IFile file, T value, JsonTypeInfo<T> jsonTypeInfo)
+        public Task WriteAsync<T>(FileReference file, T value, JsonTypeInfo<T> jsonTypeInfo)
         {
             WriteCount++;
             if (WriteException is not null)

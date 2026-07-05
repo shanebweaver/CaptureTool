@@ -5,7 +5,7 @@ using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Features.AppMenu.OpenFile;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;
@@ -30,7 +30,7 @@ public class OpenFileUseCaseTests
 
         filePickerService
             .Setup(service => service.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures))
-            .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == sourcePath));
+            .ReturnsAsync(new FileReference(sourcePath));
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
             .Returns(tempFolder);
@@ -74,7 +74,7 @@ public class OpenFileUseCaseTests
 
         filePickerService
             .Setup(service => service.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures))
-            .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == sourcePath));
+            .ReturnsAsync(new FileReference(sourcePath));
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
             .Returns(tempFolder);
@@ -116,7 +116,7 @@ public class OpenFileUseCaseTests
 
         filePickerService
             .Setup(service => service.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures))
-            .ReturnsAsync(Mock.Of<IFile>(file => file.FilePath == sourcePath));
+            .ReturnsAsync(new FileReference(sourcePath));
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
             .Returns(tempFolder);

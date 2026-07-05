@@ -1,14 +1,14 @@
 using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.SaveAudioFile;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CaptureTool.Presentation.Features.AudioEdit;
 
-public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<IAudioFile>
+public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<AudioFile>
 {
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand CopyCommand { get; }
@@ -44,7 +44,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<IAudi
         IsAudioReady = false;
     }
 
-    public override void Load(IAudioFile audio)
+    public override void Load(AudioFile audio)
     {
         ThrowIfNotReadyToLoad();
         StartLoading();

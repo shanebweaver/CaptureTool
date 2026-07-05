@@ -6,7 +6,7 @@ using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using System.Drawing;
 
 namespace CaptureTool.Application.Features.ImageCapture;
@@ -20,7 +20,7 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ITelemetryService _telemetryService;
 
-    public event EventHandler<IImageFile>? NewImageCaptured;
+    public event EventHandler<ImageFile>? NewImageCaptured;
 
     public CaptureToolImageCaptureHandler(
         IClipboardService clipboardService,

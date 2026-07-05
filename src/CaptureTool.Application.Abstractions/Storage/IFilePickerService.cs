@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.FileSystem;
 using System.Drawing;
 
 namespace CaptureTool.Application.Abstractions.Storage;
@@ -6,8 +6,8 @@ namespace CaptureTool.Application.Abstractions.Storage;
 public partial interface IFilePickerService
 {
     Task<IFolder?> PickFolderAsync(UserFolder defaultFolder);
-    Task<IFile?> PickFileAsync(FilePickerType fileType, UserFolder defaultFolder);
-    Task<IFile?> PickSaveFileAsync(FilePickerType fileType, UserFolder defaultFolder);
+    Task<FileReference?> PickFileAsync(FilePickerType fileType, UserFolder defaultFolder);
+    Task<FileReference?> PickSaveFileAsync(FilePickerType fileType, UserFolder defaultFolder);
 
-    Size GetImageFileSize(IImageFile imageFile);
+    Size GetImageFileSize(ImageFile imageFile);
 }
