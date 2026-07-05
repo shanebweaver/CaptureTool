@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 
 namespace CaptureTool.Application.Features.AudioCapture;
 

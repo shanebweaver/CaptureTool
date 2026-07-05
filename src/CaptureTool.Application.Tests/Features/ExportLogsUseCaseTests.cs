@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Features.Diagnostics.ExportLogs;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Features.Diagnostics.ExportLogs;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;

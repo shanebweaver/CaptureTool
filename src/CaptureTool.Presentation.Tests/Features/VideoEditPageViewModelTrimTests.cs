@@ -5,7 +5,7 @@ using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 using CaptureTool.Presentation.Features.VideoEdit;
 using Moq;
 

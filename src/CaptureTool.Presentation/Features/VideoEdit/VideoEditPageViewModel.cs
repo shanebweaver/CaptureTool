@@ -3,7 +3,7 @@ using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 

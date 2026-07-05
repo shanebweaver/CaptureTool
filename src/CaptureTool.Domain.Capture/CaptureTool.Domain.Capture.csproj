@@ -5,4 +5,9 @@
     <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
 
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\CaptureTool.Domain\CaptureTool.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

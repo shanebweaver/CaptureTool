@@ -1,7 +1,7 @@
 using CaptureTool.Application.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Capture;

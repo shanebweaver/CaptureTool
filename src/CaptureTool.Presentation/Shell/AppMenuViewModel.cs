@@ -12,7 +12,7 @@ using CaptureTool.Application.Abstractions.Features.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.Features.RecentCaptures;
 using CaptureTool.Presentation.Shared.Commands;

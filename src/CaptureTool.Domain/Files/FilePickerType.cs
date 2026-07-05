@@ -1,4 +1,4 @@
-namespace CaptureTool.Domain.Capture.Files;
+namespace CaptureTool.Domain.Files;
 
 public enum FilePickerType
 {

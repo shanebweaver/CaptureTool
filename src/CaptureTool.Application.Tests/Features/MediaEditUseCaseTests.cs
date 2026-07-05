@@ -15,7 +15,7 @@ using CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
 using CaptureTool.Application.Features.VideoEdit.CopyVideoFile;
 using CaptureTool.Application.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;

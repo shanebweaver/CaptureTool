@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Features.Settings.Definitions;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 
 namespace CaptureTool.Infrastructure.Settings;
 

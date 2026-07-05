@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Features.Settings.Definitions;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 using CaptureTool.Infrastructure.Settings;
 using System.Text.Json.Serialization.Metadata;
 

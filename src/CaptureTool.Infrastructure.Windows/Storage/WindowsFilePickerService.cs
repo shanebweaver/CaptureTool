@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Windowing;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 using System.Drawing;
 using Windows.Storage;
 using Windows.Storage.Pickers;

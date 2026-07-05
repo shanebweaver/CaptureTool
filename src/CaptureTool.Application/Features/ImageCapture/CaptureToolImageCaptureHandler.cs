@@ -6,7 +6,7 @@ using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 using System.Drawing;
 
 namespace CaptureTool.Application.Features.ImageCapture;

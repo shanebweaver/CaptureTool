@@ -1,6 +1,4 @@
-using CaptureTool.Domain.Capture.Files;
-
-namespace CaptureTool.Domain.Capture;
+namespace CaptureTool.Domain.Files;
 
 public abstract partial class FileBase : IFile
 {

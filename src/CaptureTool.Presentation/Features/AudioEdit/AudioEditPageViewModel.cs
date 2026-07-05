@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.SaveAudioFile;
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;

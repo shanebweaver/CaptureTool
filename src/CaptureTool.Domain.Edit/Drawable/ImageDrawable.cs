@@ -1,4 +1,4 @@
-using CaptureTool.Domain.Capture.Files;
+using CaptureTool.Domain.Files;
 using System.Drawing;
 using System.Numerics;
 
