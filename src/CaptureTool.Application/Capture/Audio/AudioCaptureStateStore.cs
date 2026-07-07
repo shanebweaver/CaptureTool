@@ -18,6 +18,14 @@ internal sealed class AudioCaptureStateStore
         }
     }
 
+    public void PrepareForAudioCapture(bool defaultDesktopAudioEnabled)
+    {
+        lock (_lock)
+        {
+            _idleSettings = _idleSettings.PrepareForCapture(defaultDesktopAudioEnabled);
+        }
+    }
+
     public AudioCaptureSession StartSession(string tempAudioPath)
     {
         lock (_lock)

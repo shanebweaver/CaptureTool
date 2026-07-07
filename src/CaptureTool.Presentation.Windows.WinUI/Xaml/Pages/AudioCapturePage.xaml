@@ -105,12 +105,37 @@
             </AppBarButton>
         </CommandBar>
 
-        <!--  Content  -->
-        <Grid Grid.Row="1" Padding="8">
-            <TextBlock
-                HorizontalAlignment="Center"
+        <Grid
+            Grid.Row="1"
+            MinHeight="220"
+            Padding="32">
+            <Border
+                HorizontalAlignment="Stretch"
                 VerticalAlignment="Center"
-                Text="Audio capture controls are ready. Use the buttons above to control audio capture." />
+                Padding="20,32"
+                Background="{ThemeResource CardBackgroundFillColorDefault}"
+                BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                BorderThickness="1"
+                CornerRadius="4">
+                <ItemsRepeater
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    ItemsSource="{x:Bind ViewModel.WaveformBars, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Orientation="Horizontal" Spacing="4" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="audiocapture:AudioWaveformBarViewModel">
+                            <Border
+                                Width="5"
+                                Height="{x:Bind Height, Mode=OneWay}"
+                                VerticalAlignment="Center"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                CornerRadius="2" />
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </Border>
         </Grid>
     </Grid>
 

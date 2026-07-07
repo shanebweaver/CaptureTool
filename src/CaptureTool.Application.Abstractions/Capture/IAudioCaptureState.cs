@@ -9,6 +9,7 @@ public interface IAudioCaptureState
     event EventHandler<bool>? MutedStateChanged;
     event EventHandler<bool>? DesktopAudioStateChanged;
     event EventHandler<AudioFile>? NewAudioCaptured;
+    event EventHandler<AudioCaptureLevel>? AudioLevelCaptured;
 
     bool IsRecording { get; }
     bool IsPaused { get; }

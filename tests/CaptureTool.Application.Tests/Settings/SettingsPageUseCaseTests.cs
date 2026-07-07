@@ -1,14 +1,19 @@
 using CaptureTool.Application.Tests;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Settings.ChangeAudioFolder;
 using CaptureTool.Application.Abstractions.Settings.ChangeScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Settings.ChangeVideosFolder;
 using CaptureTool.Application.Abstractions.Settings.ClearTempFiles;
 using CaptureTool.Application.Abstractions.Settings.LeaveSettingsPage;
+using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
 using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Settings.OpenTempFolder;
 using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
 using CaptureTool.Application.Abstractions.Settings.RestartSettingsApplication;
 using CaptureTool.Application.Abstractions.Settings.RestoreDefaults;
+using CaptureTool.Application.Abstractions.Settings.UpdateAudioCaptureAutoCopy;
+using CaptureTool.Application.Abstractions.Settings.UpdateAudioCaptureAutoSave;
+using CaptureTool.Application.Abstractions.Settings.UpdateAudioCaptureDefaultLocalAudio;
 using CaptureTool.Application.Abstractions.Settings.UpdateAppLanguage;
 using CaptureTool.Application.Abstractions.Settings.UpdateImageAutoCopy;
 using CaptureTool.Application.Abstractions.Settings.UpdateImageAutoSave;
@@ -20,15 +25,20 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Settings.ChangeAudioFolder;
 using CaptureTool.Application.Settings.ChangeScreenshotsFolder;
 using CaptureTool.Application.Settings.ChangeVideosFolder;
 using CaptureTool.Application.Settings.ClearTempFiles;
 using CaptureTool.Application.Settings.LeaveSettingsPage;
+using CaptureTool.Application.Settings.OpenAudioFolder;
 using CaptureTool.Application.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Settings.OpenTempFolder;
 using CaptureTool.Application.Settings.OpenVideosFolder;
 using CaptureTool.Application.Settings.RestartSettingsApplication;
 using CaptureTool.Application.Settings.RestoreDefaults;
+using CaptureTool.Application.Settings.UpdateAudioCaptureAutoCopy;
+using CaptureTool.Application.Settings.UpdateAudioCaptureAutoSave;
+using CaptureTool.Application.Settings.UpdateAudioCaptureDefaultLocalAudio;
 using CaptureTool.Application.Settings.UpdateAppLanguage;
 using CaptureTool.Application.Settings.UpdateImageAutoCopy;
 using CaptureTool.Application.Settings.UpdateImageAutoSave;
@@ -77,6 +87,23 @@ public sealed class SettingsPageUseCaseTests
     }
 
     [TestMethod]
+    public async Task ChangeAudioFolderUseCase_WhenFolderSelected_SavesFolderSetting()
+    {
+        var picker = new Mock<IFilePickerService>();
+        var settings = new Mock<ISettingsService>();
+        picker
+            .Setup(service => service.PickFolderAsync(UserFolder.Music))
+            .ReturnsAsync(Mock.Of<IFolder>(folder => folder.FolderPath == @"C:\Audio"));
+        var useCase = new ChangeAudioFolderUseCase(picker.Object, settings.Object, TestUseCaseExecutor.Instance);
+
+        ChangeAudioFolderResponse response = (await useCase.ExecuteAsync(new ChangeAudioFolderRequest(), TestContext.CancellationToken)).Value!;
+
+        Assert.IsTrue(response.Changed);
+        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AudioCapture_AutoSaveFolder, @"C:\Audio"), Times.Once);
+        settings.Verify(service => service.TrySaveAsync(TestContext.CancellationToken), Times.Once);
+    }
+
+    [TestMethod]
     public async Task ClearTempFilesUseCase_DeletesFilesAndFoldersInTemporaryFolder()
     {
         string tempFolder = CreateTestFolder();
@@ -117,21 +144,26 @@ public sealed class SettingsPageUseCaseTests
         var folderLauncher = new Mock<IFolderLauncher>();
         settings.Setup(service => service.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder)).Returns("");
         settings.Setup(service => service.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder)).Returns("");
+        settings.Setup(service => service.Get(CaptureToolSettings.Settings_AudioCapture_AutoSaveFolder)).Returns("");
         storage.Setup(service => service.GetSystemDefaultScreenshotsFolderPath()).Returns(missingFolder);
         storage.Setup(service => service.GetSystemDefaultVideosFolderPath()).Returns(missingFolder);
+        storage.Setup(service => service.GetSystemDefaultMusicFolderPath()).Returns(missingFolder);
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(missingFolder);
         folderLauncher.Setup(service => service.TryOpenFolder(missingFolder)).Returns(false);
 
         var screenshots = new OpenScreenshotsFolderUseCase(settings.Object, storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
         var videos = new OpenVideosFolderUseCase(settings.Object, storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
+        var audio = new OpenAudioFolderUseCase(settings.Object, storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
         var temp = new OpenTempFolderUseCase(storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
 
         OpenScreenshotsFolderResponse screenshotsResponse = (await screenshots.ExecuteAsync(new OpenScreenshotsFolderRequest(), TestContext.CancellationToken)).Value!;
         OpenVideosFolderResponse videosResponse = (await videos.ExecuteAsync(new OpenVideosFolderRequest(), TestContext.CancellationToken)).Value!;
+        OpenAudioFolderResponse audioResponse = (await audio.ExecuteAsync(new OpenAudioFolderRequest(), TestContext.CancellationToken)).Value!;
         OpenTempFolderResponse tempResponse = (await temp.ExecuteAsync(new OpenTempFolderRequest(), TestContext.CancellationToken)).Value!;
 
         Assert.IsFalse(screenshotsResponse.Opened);
         Assert.IsFalse(videosResponse.Opened);
+        Assert.IsFalse(audioResponse.Opened);
         Assert.IsFalse(tempResponse.Opened);
     }
 
@@ -229,13 +261,22 @@ public sealed class SettingsPageUseCaseTests
             .ExecuteAsync(new UpdateVideoCaptureAutoSaveRequest(true), TestContext.CancellationToken);
         await new UpdateVideoCaptureDefaultLocalAudioUseCase(settings.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new UpdateVideoCaptureDefaultLocalAudioRequest(false), TestContext.CancellationToken);
+        await new UpdateAudioCaptureAutoCopyUseCase(settings.Object, TestUseCaseExecutor.Instance)
+            .ExecuteAsync(new UpdateAudioCaptureAutoCopyRequest(false), TestContext.CancellationToken);
+        await new UpdateAudioCaptureAutoSaveUseCase(settings.Object, TestUseCaseExecutor.Instance)
+            .ExecuteAsync(new UpdateAudioCaptureAutoSaveRequest(true), TestContext.CancellationToken);
+        await new UpdateAudioCaptureDefaultLocalAudioUseCase(settings.Object, TestUseCaseExecutor.Instance)
+            .ExecuteAsync(new UpdateAudioCaptureDefaultLocalAudioRequest(false), TestContext.CancellationToken);
 
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, false), Times.Once);
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, true), Times.Once);
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_VideoCapture_AutoCopy, false), Times.Once);
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_VideoCapture_AutoSave, true), Times.Once);
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled, false), Times.Once);
-        settings.Verify(service => service.TrySaveAsync(TestContext.CancellationToken), Times.Exactly(5));
+        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AudioCapture_AutoCopy, false), Times.Once);
+        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AudioCapture_AutoSave, true), Times.Once);
+        settings.Verify(service => service.Set(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled, false), Times.Once);
+        settings.Verify(service => service.TrySaveAsync(TestContext.CancellationToken), Times.Exactly(8));
     }
 
     private static string CreateTestFolder()

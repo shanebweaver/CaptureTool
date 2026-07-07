@@ -7,4 +7,5 @@ public partial interface IStorageService
     string GetApplicationTemporaryFolderPath();
     string GetTemporaryFileName();
     string GetSystemDefaultVideosFolderPath();
+    string GetSystemDefaultMusicFolderPath();
 }

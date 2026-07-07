@@ -19,6 +19,10 @@ namespace CaptureTool.Presentation.Features.AudioCapture;
 
 public sealed partial class AudioCapturePageViewModel : ViewModelBase
 {
+    private const int WaveformBarCount = 64;
+    private const double WaveformMinBarHeight = 6;
+    private const double WaveformMaxBarHeight = 132;
+    private static readonly TimeSpan WaveformUpdateInterval = TimeSpan.FromMilliseconds(50);
     public IRelayCommand StartCommand { get; }
     public IRelayCommand StopCommand { get; }
     public IRelayCommand PauseCommand { get; }
@@ -72,8 +76,10 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
     private DateTime _captureStartTime;
     private TimeSpan _pausedDuration;
     private DateTime? _pauseStartTime;
+    private DateTime _lastWaveformUpdateUtc = DateTime.MinValue;
 
     public ObservableCollection<AudioInputSource> AudioInputSources { get; }
+    public ObservableCollection<AudioWaveformBarViewModel> WaveformBars { get; }
 
     public AudioInputSource? SelectedAudioInputSource
     {
@@ -111,6 +117,8 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         _taskEnvironment = taskEnvironment;
         SelectedAudioInputSourceIndex = -1;
         AudioInputSources = [];
+        WaveformBars = [];
+        ResetWaveform();
 
         StartCommand = startAction.ToRelayCommand(() => new StartAudioCaptureRequest());
         StopCommand = stopAction.ToRelayCommand(() => new StopAudioCaptureRequest());
@@ -122,6 +130,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         _audioCaptureState.CaptureStateChanged += OnCaptureStateChanged;
         _audioCaptureState.MutedStateChanged += OnMutedStateChanged;
         _audioCaptureState.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
+        _audioCaptureState.AudioLevelCaptured += OnAudioLevelCaptured;
         _audioInputDetectionService.AudioInputSourcesChanged += OnAudioInputSourcesChanged;
 
         // Initialize state from service
@@ -159,6 +168,21 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         _taskEnvironment.TryExecute(() =>
         {
             IsDesktopAudioEnabled = value;
+        });
+    }
+
+    private void OnAudioLevelCaptured(object? sender, AudioCaptureLevel value)
+    {
+        DateTime now = DateTime.UtcNow;
+        if (now - _lastWaveformUpdateUtc < WaveformUpdateInterval)
+        {
+            return;
+        }
+
+        _lastWaveformUpdateUtc = now;
+        _taskEnvironment.TryExecute(() =>
+        {
+            AddWaveformLevel(value.PeakLevel);
         });
     }
 
@@ -298,6 +322,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
             case AudioCaptureState.Recording:
                 if (!wasRecording)
                 {
+                    ResetWaveform();
                     StartTimer();
                 }
                 else if (wasPaused && _pauseStartTime.HasValue)
@@ -319,7 +344,30 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
                 CaptureTime = TimeSpan.Zero;
                 _pausedDuration = TimeSpan.Zero;
                 _pauseStartTime = null;
+                ResetWaveform();
                 break;
+        }
+    }
+
+    private void AddWaveformLevel(double peakLevel)
+    {
+        double clampedLevel = Math.Clamp(peakLevel, 0, 1);
+        double height = WaveformMinBarHeight + (clampedLevel * (WaveformMaxBarHeight - WaveformMinBarHeight));
+
+        if (WaveformBars.Count >= WaveformBarCount)
+        {
+            WaveformBars.RemoveAt(0);
+        }
+
+        WaveformBars.Add(new AudioWaveformBarViewModel(height));
+    }
+
+    private void ResetWaveform()
+    {
+        WaveformBars.Clear();
+        for (int i = 0; i < WaveformBarCount; i++)
+        {
+            WaveformBars.Add(new AudioWaveformBarViewModel(WaveformMinBarHeight));
         }
     }
 
@@ -361,6 +409,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         _audioCaptureState.CaptureStateChanged -= OnCaptureStateChanged;
         _audioCaptureState.MutedStateChanged -= OnMutedStateChanged;
         _audioCaptureState.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
+        _audioCaptureState.AudioLevelCaptured -= OnAudioLevelCaptured;
         _audioInputDetectionService.AudioInputSourcesChanged -= OnAudioInputSourcesChanged;
 
         try

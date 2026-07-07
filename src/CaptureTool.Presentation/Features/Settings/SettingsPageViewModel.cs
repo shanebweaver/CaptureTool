@@ -1,8 +1,10 @@
 using CaptureTool.Application.Abstractions.Settings.ChangeScreenshotsFolder;
+using CaptureTool.Application.Abstractions.Settings.ChangeAudioFolder;
 using CaptureTool.Application.Abstractions.Settings.ChangeVideosFolder;
 using CaptureTool.Application.Abstractions.Settings.ClearTempFiles;
 using CaptureTool.Application.Abstractions.Settings.LeaveSettingsPage;
 using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
+using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
 using CaptureTool.Application.Abstractions.Settings.OpenTempFolder;
 using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
 using CaptureTool.Application.Abstractions.Settings.RestartSettingsApplication;
@@ -12,6 +14,9 @@ using CaptureTool.Application.Abstractions.Settings.UpdateAppTheme;
 using CaptureTool.Application.Abstractions.Settings.UpdateEditWarnBeforeDiscard;
 using CaptureTool.Application.Abstractions.Settings.UpdateImageAutoCopy;
 using CaptureTool.Application.Abstractions.Settings.UpdateImageAutoSave;
+using CaptureTool.Application.Abstractions.Settings.UpdateAudioCaptureAutoCopy;
+using CaptureTool.Application.Abstractions.Settings.UpdateAudioCaptureAutoSave;
+using CaptureTool.Application.Abstractions.Settings.UpdateAudioCaptureDefaultLocalAudio;
 using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureAutoCopy;
 using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureAutoSave;
 using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureDefaultLocalAudio;
@@ -32,6 +37,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IRestartSettingsApplicationUseCase _restartAppAction;
     private readonly IUpdateImageAutoCopyUseCase _updateImageAutoCopyAction;
     private readonly IUpdateImageAutoSaveUseCase _updateImageAutoSaveAction;
+    private readonly IUpdateAudioCaptureAutoCopyUseCase _updateAudioCaptureAutoCopyAction;
+    private readonly IUpdateAudioCaptureAutoSaveUseCase _updateAudioCaptureAutoSaveAction;
+    private readonly IUpdateAudioCaptureDefaultLocalAudioUseCase _updateAudioCaptureDefaultLocalAudioAction;
     private readonly IUpdateVideoCaptureAutoCopyUseCase _updateVideoCaptureAutoCopyAction;
     private readonly IUpdateVideoCaptureAutoSaveUseCase _updateVideoCaptureAutoSaveAction;
     private readonly IUpdateVideoCaptureDefaultLocalAudioUseCase _updateVideoCaptureDefaultLocalAudioAction;
@@ -40,6 +48,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IUpdateAppThemeUseCase _updateAppThemeAction;
     private readonly IChangeScreenshotsFolderUseCase _changeScreenshotsFolderAction;
     private readonly IOpenScreenshotsFolderUseCase _openScreenshotsFolderAction;
+    private readonly IChangeAudioFolderUseCase _changeAudioFolderAction;
+    private readonly IOpenAudioFolderUseCase _openAudioFolderAction;
     private readonly IChangeVideosFolderUseCase _changeVideosFolderAction;
     private readonly IOpenVideosFolderUseCase _openVideosFolderAction;
     private readonly IOpenTempFolderUseCase _openTempFolderAction;
@@ -60,12 +70,17 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
     public IAsyncRelayCommand ChangeScreenshotsFolderCommand { get; }
     public IAsyncRelayCommand OpenScreenshotsFolderCommand { get; }
+    public IAsyncRelayCommand ChangeAudioFolderCommand { get; }
+    public IAsyncRelayCommand OpenAudioFolderCommand { get; }
     public IAsyncRelayCommand ChangeVideosFolderCommand { get; }
     public IAsyncRelayCommand OpenVideosFolderCommand { get; }
     public IAsyncRelayCommand RestartAppCommand { get; }
     public IAsyncRelayCommand GoBackCommand { get; }
     public IAsyncRelayCommand<bool> UpdateImageCaptureAutoCopyCommand { get; }
     public IAsyncRelayCommand<bool> UpdateImageCaptureAutoSaveCommand { get; }
+    public IAsyncRelayCommand<bool> UpdateAudioCaptureAutoCopyCommand { get; }
+    public IAsyncRelayCommand<bool> UpdateAudioCaptureAutoSaveCommand { get; }
+    public IAsyncRelayCommand<bool> UpdateAudioCaptureDefaultLocalAudioCommand { get; }
     public IAsyncRelayCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
     public IAsyncRelayCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
     public IAsyncRelayCommand<bool> UpdateVideoCaptureDefaultLocalAudioCommand { get; }
@@ -136,6 +151,24 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
+    public bool AudioCaptureAutoCopy
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool AudioCaptureAutoSave
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool AudioCaptureDefaultLocalAudio
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public bool VideoCaptureDefaultLocalAudio
     {
         get;
@@ -160,6 +193,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
+    public string AudioFolderPath
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public string TemporaryFilesFolderPath
     {
         get;
@@ -171,6 +210,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IRestartSettingsApplicationUseCase restartAppAction,
         IUpdateImageAutoCopyUseCase updateImageAutoCopyAction,
         IUpdateImageAutoSaveUseCase updateImageAutoSaveAction,
+        IUpdateAudioCaptureAutoCopyUseCase updateAudioCaptureAutoCopyAction,
+        IUpdateAudioCaptureAutoSaveUseCase updateAudioCaptureAutoSaveAction,
+        IUpdateAudioCaptureDefaultLocalAudioUseCase updateAudioCaptureDefaultLocalAudioAction,
         IUpdateVideoCaptureAutoCopyUseCase updateVideoCaptureAutoCopyAction,
         IUpdateVideoCaptureAutoSaveUseCase updateVideoCaptureAutoSaveAction,
         IUpdateVideoCaptureDefaultLocalAudioUseCase updateVideoCaptureDefaultLocalAudioAction,
@@ -179,6 +221,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IUpdateAppThemeUseCase updateAppThemeAction,
         IChangeScreenshotsFolderUseCase changeScreenshotsFolderAction,
         IOpenScreenshotsFolderUseCase openScreenshotsFolderAction,
+        IChangeAudioFolderUseCase changeAudioFolderAction,
+        IOpenAudioFolderUseCase openAudioFolderAction,
         IChangeVideosFolderUseCase changeVideosFolderAction,
         IOpenVideosFolderUseCase openVideosFolderAction,
         IOpenTempFolderUseCase openTempFolderAction,
@@ -195,6 +239,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _restartAppAction = restartAppAction;
         _updateImageAutoCopyAction = updateImageAutoCopyAction;
         _updateImageAutoSaveAction = updateImageAutoSaveAction;
+        _updateAudioCaptureAutoCopyAction = updateAudioCaptureAutoCopyAction;
+        _updateAudioCaptureAutoSaveAction = updateAudioCaptureAutoSaveAction;
+        _updateAudioCaptureDefaultLocalAudioAction = updateAudioCaptureDefaultLocalAudioAction;
         _updateVideoCaptureAutoCopyAction = updateVideoCaptureAutoCopyAction;
         _updateVideoCaptureAutoSaveAction = updateVideoCaptureAutoSaveAction;
         _updateVideoCaptureDefaultLocalAudioAction = updateVideoCaptureDefaultLocalAudioAction;
@@ -203,6 +250,8 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _updateAppThemeAction = updateAppThemeAction;
         _changeScreenshotsFolderAction = changeScreenshotsFolderAction;
         _openScreenshotsFolderAction = openScreenshotsFolderAction;
+        _changeAudioFolderAction = changeAudioFolderAction;
+        _openAudioFolderAction = openAudioFolderAction;
         _changeVideosFolderAction = changeVideosFolderAction;
         _openVideosFolderAction = openVideosFolderAction;
         _openTempFolderAction = openTempFolderAction;
@@ -218,17 +267,23 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         AppThemes = [];
         AppLanguages = [];
         ScreenshotsFolderPath = string.Empty;
+        AudioFolderPath = string.Empty;
         VideosFolderPath = string.Empty;
         TemporaryFilesFolderPath = string.Empty;
 
         ChangeScreenshotsFolderCommand = new AsyncRelayCommand(ChangeScreenshotsFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         OpenScreenshotsFolderCommand = new AsyncRelayCommand(OpenScreenshotsFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        ChangeAudioFolderCommand = new AsyncRelayCommand(ChangeAudioFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        OpenAudioFolderCommand = new AsyncRelayCommand(OpenAudioFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ChangeVideosFolderCommand = new AsyncRelayCommand(ChangeVideosFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         OpenVideosFolderCommand = new AsyncRelayCommand(OpenVideosFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         RestartAppCommand = new AsyncRelayCommand(RestartAppAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         GoBackCommand = new AsyncRelayCommand(GoBackAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateImageCaptureAutoCopyCommand = new AsyncRelayCommand<bool>(UpdateImageCaptureAutoCopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateImageCaptureAutoSaveCommand = new AsyncRelayCommand<bool>(UpdateImageCaptureAutoSaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        UpdateAudioCaptureAutoCopyCommand = new AsyncRelayCommand<bool>(UpdateAudioCaptureAutoCopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        UpdateAudioCaptureAutoSaveCommand = new AsyncRelayCommand<bool>(UpdateAudioCaptureAutoSaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        UpdateAudioCaptureDefaultLocalAudioCommand = new AsyncRelayCommand<bool>(UpdateAudioCaptureDefaultLocalAudioAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateVideoCaptureAutoCopyCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureAutoCopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateVideoCaptureAutoSaveCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureAutoSaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateVideoCaptureDefaultLocalAudioCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureDefaultLocalAudioAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -301,6 +356,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         VideoCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
         VideoCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
         VideoCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
+        AudioCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoCopy);
+        AudioCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoSave);
+        AudioCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
@@ -318,6 +376,14 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         }
 
         VideosFolderPath = videosFolder;
+
+        string audioFolder = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoSaveFolder);
+        if (string.IsNullOrWhiteSpace(audioFolder))
+        {
+            audioFolder = _storageService.GetSystemDefaultMusicFolderPath();
+        }
+
+        AudioFolderPath = audioFolder;
         TemporaryFilesFolderPath = _storageService.GetApplicationTemporaryFolderPath();
 
         await base.LoadAsync(cancellationToken);
@@ -405,10 +471,28 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         await _updateVideoCaptureAutoCopyAction.ExecuteAsync(new UpdateVideoCaptureAutoCopyRequest(value), CancellationToken.None);
     }
 
+    private async Task UpdateAudioCaptureAutoSaveAsync(bool value)
+    {
+        AudioCaptureAutoSave = value;
+        await _updateAudioCaptureAutoSaveAction.ExecuteAsync(new UpdateAudioCaptureAutoSaveRequest(value), CancellationToken.None);
+    }
+
+    private async Task UpdateAudioCaptureAutoCopyAsync(bool value)
+    {
+        AudioCaptureAutoCopy = value;
+        await _updateAudioCaptureAutoCopyAction.ExecuteAsync(new UpdateAudioCaptureAutoCopyRequest(value), CancellationToken.None);
+    }
+
     private async Task UpdateVideoCaptureDefaultLocalAudioAsync(bool value)
     {
         VideoCaptureDefaultLocalAudio = value;
         await _updateVideoCaptureDefaultLocalAudioAction.ExecuteAsync(new UpdateVideoCaptureDefaultLocalAudioRequest(value), CancellationToken.None);
+    }
+
+    private async Task UpdateAudioCaptureDefaultLocalAudioAsync(bool value)
+    {
+        AudioCaptureDefaultLocalAudio = value;
+        await _updateAudioCaptureDefaultLocalAudioAction.ExecuteAsync(new UpdateAudioCaptureDefaultLocalAudioRequest(value), CancellationToken.None);
     }
 
     private async Task UpdateEditWarnBeforeDiscardAsync(bool value)
@@ -449,6 +533,22 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         VideosFolderPath = videosFolder;
     }
 
+    private async Task ChangeAudioFolderAsync()
+    {
+        var response = await _changeAudioFolderAction.ExecuteAsync(new ChangeAudioFolderRequest(), CancellationToken.None);
+        if (response.Value?.Changed != true)
+        {
+            return;
+        }
+
+        string audioFolder = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoSaveFolder);
+        if (string.IsNullOrWhiteSpace(audioFolder))
+        {
+            audioFolder = _storageService.GetSystemDefaultMusicFolderPath();
+        }
+        AudioFolderPath = audioFolder;
+    }
+
     private async Task OpenScreenshotsFolderAsync()
     {
         await _openScreenshotsFolderAction.ExecuteAsync(new OpenScreenshotsFolderRequest(), CancellationToken.None);
@@ -457,6 +557,11 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private async Task OpenVideosFolderAsync()
     {
         await _openVideosFolderAction.ExecuteAsync(new OpenVideosFolderRequest(), CancellationToken.None);
+    }
+
+    private async Task OpenAudioFolderAsync()
+    {
+        await _openAudioFolderAction.ExecuteAsync(new OpenAudioFolderRequest(), CancellationToken.None);
     }
 
     private async Task RestartAppAsync()
@@ -489,6 +594,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         VideoCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoCopy);
         VideoCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSave);
         VideoCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_DefaultLocalAudioEnabled);
+        AudioCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoCopy);
+        AudioCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoSave);
+        AudioCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
@@ -496,6 +604,9 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
 
         var videosFolder = _settingsService.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder);
         VideosFolderPath = !string.IsNullOrEmpty(videosFolder) ? videosFolder : _storageService.GetSystemDefaultVideosFolderPath();
+
+        string audioFolder = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoSaveFolder);
+        AudioFolderPath = !string.IsNullOrEmpty(audioFolder) ? audioFolder : _storageService.GetSystemDefaultMusicFolderPath();
 
         SelectedAppLanguageIndex = AppLanguages.Count - 1;
         SelectedAppThemeIndex = AppThemes.Count - 1;

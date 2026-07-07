@@ -25,6 +25,11 @@ public sealed partial class WindowsStorageService : IStorageService
         return Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
     }
 
+    public string GetSystemDefaultMusicFolderPath()
+    {
+        return Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
+    }
+
     public string GetTemporaryFileName()
     {
         return $"{Guid.NewGuid()}.tmp";
