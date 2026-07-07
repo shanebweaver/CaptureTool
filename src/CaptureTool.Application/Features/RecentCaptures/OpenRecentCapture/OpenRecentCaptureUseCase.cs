@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCap
 using CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 
@@ -15,13 +16,14 @@ public sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
     private const string ActivityId = "OpenRecentCapture";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly IFileTypeDetector _fileTypeDetector;
+    private readonly IFileSystem _fileSystem;
     private readonly IOpenAudioEditPageUseCase _goToAudioEdit;
     private readonly IOpenImageEditPageUseCase _goToImageEdit;
     private readonly IOpenVideoEditPageUseCase _goToVideoEdit;
     private readonly IAudioCaptureFeatureAvailability? _audioCaptureFeatureAvailability;
 
-    public OpenRecentCaptureUseCase(IFileTypeDetector fileTypeDetector,
+    public OpenRecentCaptureUseCase(
+        IFileSystem fileSystem,
         IOpenAudioEditPageUseCase goToAudioEdit,
         IOpenImageEditPageUseCase goToImageEdit,
         IOpenVideoEditPageUseCase goToVideoEdit,
@@ -29,7 +31,7 @@ public sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
         IAudioCaptureFeatureAvailability? audioCaptureFeatureAvailability = null)
     {
         _useCaseExecutor = useCaseExecutor;
-        _fileTypeDetector = fileTypeDetector;
+        _fileSystem = fileSystem;
         _goToAudioEdit = goToAudioEdit;
         _goToImageEdit = goToImageEdit;
         _goToVideoEdit = goToVideoEdit;
@@ -47,12 +49,12 @@ public sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                if (!File.Exists(request.FilePath))
+                if (!_fileSystem.FileExists(request.FilePath))
                 {
                     return new OpenRecentCaptureResponse(false);
                 }
 
-                var fileType = _fileTypeDetector.DetectFileType(request.FilePath);
+                var fileType = CaptureFileTypeDetector.DetectFileType(request.FilePath);
                 switch (fileType)
                 {
                     case CaptureFileType.Audio:

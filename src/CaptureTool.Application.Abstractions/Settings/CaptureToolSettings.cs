@@ -1,7 +1,6 @@
-using CaptureTool.Application.Abstractions.Settings;
-using CaptureTool.Application.Features.Settings.Definitions;
+using CaptureTool.Application.Abstractions.Settings.Definitions;
 
-namespace CaptureTool.Application.Features.Settings;
+namespace CaptureTool.Application.Abstractions.Settings;
 
 public static partial class CaptureToolSettings
 {

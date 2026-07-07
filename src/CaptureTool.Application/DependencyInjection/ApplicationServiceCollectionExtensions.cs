@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.EditSessions;
 using CaptureTool.Application.UseCases;

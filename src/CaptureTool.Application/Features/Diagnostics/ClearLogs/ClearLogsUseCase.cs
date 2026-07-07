@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Features.Diagnostics.ClearLogs;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Diagnostics.ClearLogs;
 

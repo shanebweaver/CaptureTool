@@ -1,9 +1,8 @@
 using CaptureTool.Application.Abstractions.Features.Settings.OpenVideosFolder;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Features.Settings;
-using System.Diagnostics;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.SettingsPage.OpenVideosFolder;
 
@@ -14,13 +13,16 @@ public sealed class OpenVideosFolderUseCase : IOpenVideosFolderUseCase
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
+    private readonly IFolderLauncher _folderLauncher;
 
     public OpenVideosFolderUseCase(ISettingsService settingsService, IStorageService storageService,
+        IFolderLauncher folderLauncher,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _settingsService = settingsService;
         _storageService = storageService;
+        _folderLauncher = folderLauncher;
     }
 
     public bool CanExecute(OpenVideosFolderRequest request) => true;
@@ -37,11 +39,7 @@ public sealed class OpenVideosFolderUseCase : IOpenVideosFolderUseCase
                     path = _storageService.GetSystemDefaultVideosFolderPath();
                 }
 
-                if (Directory.Exists(path))
-                {
-                    Process.Start("explorer.exe", $"/open, {path}");
-                }
-                else
+                if (!_folderLauncher.TryOpenFolder(path))
                 {
                     return new OpenVideosFolderResponse(false);
                 }

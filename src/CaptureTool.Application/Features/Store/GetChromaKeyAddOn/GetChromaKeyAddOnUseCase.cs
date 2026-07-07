@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Features.Store.GetChromaKeyAddOn;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Store.GetChromaKeyAddOn;
 

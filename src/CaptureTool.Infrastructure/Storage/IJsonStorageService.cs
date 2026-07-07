@@ -1,7 +1,7 @@
 using CaptureTool.Domain.FileSystem;
 using System.Text.Json.Serialization.Metadata;
 
-namespace CaptureTool.Application.Abstractions.Storage;
+namespace CaptureTool.Infrastructure.Storage;
 
 public interface IJsonStorageService
 {

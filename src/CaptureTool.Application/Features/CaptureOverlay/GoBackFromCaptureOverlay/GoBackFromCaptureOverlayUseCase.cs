@@ -4,6 +4,7 @@ using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.GoBackFromCaptureOverlay;
 

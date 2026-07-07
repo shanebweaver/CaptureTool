@@ -1,7 +1,9 @@
 using CaptureTool.Application.Abstractions.Features.AudioEdit.SaveAudioFile;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
 
@@ -11,18 +13,21 @@ public sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IFilePickerService _filePickerService;
+    private readonly IFileSystem _fileSystem;
 
     public SaveAudioFileUseCase(IFilePickerService filePickerService,
+        IFileSystem fileSystem,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _filePickerService = filePickerService;
+        _fileSystem = fileSystem;
     }
 
     public bool CanExecute(SaveAudioFileRequest request)
     {
         string filePath = request.AudioFilePath;
-        bool canExecute = !string.IsNullOrEmpty(filePath) && File.Exists(filePath);
+        bool canExecute = !string.IsNullOrEmpty(filePath) && _fileSystem.FileExists(filePath);
         return canExecute;
     }
 
@@ -33,7 +38,7 @@ public sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
             useCase: async _ =>
             {
                 string filePath = request.AudioFilePath;
-                if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                if (string.IsNullOrEmpty(filePath) || !_fileSystem.FileExists(filePath))
                 {
                     return new SaveAudioFileResponse(false);
                 }
@@ -44,7 +49,7 @@ public sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
                     return new SaveAudioFileResponse(false);
                 }
 
-                File.Copy(filePath, file.FilePath, true);
+                _fileSystem.CopyFile(filePath, file.FilePath, true);
                 return new SaveAudioFileResponse();
             },
             cancellationToken: cancellationToken);

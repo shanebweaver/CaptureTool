@@ -1,7 +1,9 @@
 using CaptureTool.Application.Abstractions.Features.Settings.ClearTempFiles;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.SettingsPage.ClearTempFiles;
 
@@ -12,13 +14,16 @@ public sealed class ClearTempFilesUseCase : IClearTempFilesUseCase
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly ILogService _logService;
     private readonly IStorageService _storageService;
+    private readonly IFileSystem _fileSystem;
 
     public ClearTempFilesUseCase(ILogService logService, IStorageService storageService,
+        IFileSystem fileSystem,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _logService = logService;
         _storageService = storageService;
+        _fileSystem = fileSystem;
     }
 
     public bool CanExecute(ClearTempFilesRequest request) => true;
@@ -30,17 +35,17 @@ public sealed class ClearTempFilesUseCase : IClearTempFilesUseCase
             useCase: () =>
             {
                 string tempFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-                foreach (var entry in Directory.EnumerateFileSystemEntries(tempFolderPath))
+                foreach (var entry in _fileSystem.EnumerateFileSystemEntries(tempFolderPath))
                 {
                     try
                     {
-                        if (Directory.Exists(entry))
+                        if (_fileSystem.DirectoryExists(entry))
                         {
-                            Directory.Delete(entry, true);
+                            _fileSystem.DeleteDirectory(entry, true);
                         }
                         else
                         {
-                            File.Delete(entry);
+                            _fileSystem.DeleteFile(entry);
                         }
                     }
                     catch (Exception ex)

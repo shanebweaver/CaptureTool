@@ -1,5 +1,6 @@
 using CaptureTool.Application.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Tests.Features;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using Moq;
@@ -121,6 +122,6 @@ public sealed class AudioCaptureHandlerTests
     {
         var storage = new Mock<IStorageService>();
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(@"C:\Temp");
-        return new AudioCaptureHandler(recorder.Object, storage.Object);
+        return new AudioCaptureHandler(recorder.Object, storage.Object, TestClock.Instance);
     }
 }

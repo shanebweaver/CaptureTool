@@ -1,9 +1,10 @@
-using CaptureTool.Application.Features.Settings.Definitions;
+using CaptureTool.Application.Abstractions.Settings.Definitions;
+using CaptureTool.Infrastructure.Settings.Serialization;
 using System.Buffers;
 using System.Drawing;
 using System.Text.Json;
 
-namespace CaptureTool.Application.Tests.Features;
+namespace CaptureTool.Infrastructure.Tests.Settings;
 
 [TestClass]
 public sealed class SettingDefinitionConverterTests
@@ -58,7 +59,7 @@ public sealed class SettingDefinitionConverterTests
         var converter = new SettingDefinitionConverter();
 
         Assert.IsTrue(converter.CanConvert(typeof(SettingDefinition)));
-        Assert.IsTrue(converter.CanConvert(typeof(BoolSettingDefinition)));
+        Assert.IsFalse(converter.CanConvert(typeof(BoolSettingDefinition)));
     }
 
     private static string Write(SettingDefinition setting)

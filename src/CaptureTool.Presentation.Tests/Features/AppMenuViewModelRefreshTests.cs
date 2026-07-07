@@ -12,7 +12,6 @@ using CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCap
 using CaptureTool.Application.Abstractions.Features.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
-using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Factories;
@@ -31,7 +30,6 @@ public sealed class AppMenuViewModelRefreshTests
         var openFileUseCase = new Mock<IOpenFileUseCase>();
         var getRecentCapturesUseCase = new Mock<IGetRecentCapturesUseCase>();
         var recentCaptureFactory = new Mock<IFactoryServiceWithArgs<RecentCaptureViewModel, string>>();
-        var fileTypeDetector = new Mock<IFileTypeDetector>();
         var recentCapture = new RecentCapture(@"C:\Temp\source.png", "source.png", CaptureFileType.Image);
 
         openFileUseCase
@@ -40,12 +38,9 @@ public sealed class AppMenuViewModelRefreshTests
         getRecentCapturesUseCase
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<GetRecentCapturesRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<GetRecentCapturesResponse>.Success(new GetRecentCapturesResponse([recentCapture])));
-        fileTypeDetector
-            .Setup(detector => detector.DetectFileType(recentCapture.FilePath))
-            .Returns(CaptureFileType.Image);
         recentCaptureFactory
             .Setup(factory => factory.Create(recentCapture.FilePath))
-            .Returns(new RecentCaptureViewModel(recentCapture.FilePath, fileTypeDetector.Object));
+            .Returns(new RecentCaptureViewModel(recentCapture.FilePath));
 
         var viewModel = new AppMenuViewModel(
             Mock.Of<IOpenSelectionOverlayUseCase>(),
@@ -123,19 +118,15 @@ public sealed class AppMenuViewModelRefreshTests
         string filePath = Path.Combine(Path.GetTempPath(), "CaptureToolTests", Guid.NewGuid().ToString(), "capture.png");
         Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
         await File.WriteAllTextAsync(filePath, "capture", TestContext.CancellationToken);
-        var fileTypeDetector = new Mock<IFileTypeDetector>();
         var openRecentCaptureUseCase = new Mock<IOpenRecentCaptureUseCase>();
         var editSessionGuard = new Mock<IEditSessionGuard>();
-        fileTypeDetector
-            .Setup(detector => detector.DetectFileType(filePath))
-            .Returns(CaptureFileType.Image);
         editSessionGuard
             .Setup(guard => guard.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         var viewModel = CreateViewModel(
             openRecentCaptureUseCase: openRecentCaptureUseCase.Object,
             editSessionGuard: editSessionGuard.Object);
-        var recentCapture = new RecentCaptureViewModel(filePath, fileTypeDetector.Object);
+        var recentCapture = new RecentCaptureViewModel(filePath);
 
         viewModel.OpenRecentCaptureCommand.Execute(recentCapture);
         await viewModel.OpenRecentCaptureCommand.ExecutionTask!;

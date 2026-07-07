@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Settings;
 
-namespace CaptureTool.Application.Features.Settings.Definitions;
+namespace CaptureTool.Application.Abstractions.Settings.Definitions;
 
 public abstract partial class SettingDefinition<T>(string key, T value)
     : SettingDefinition(key), ISettingDefinitionWithValue<T>

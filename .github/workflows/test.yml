@@ -32,7 +32,7 @@ jobs:
 
     - name: Restore and build solution
       run: |
-        msbuild CaptureTool.slnx /restore /p:Configuration=Release /p:Platform=x64
+        dotnet build CaptureTool.slnx --configuration Release -p:Platform=x64
 
     - name: Install coverage tools
       run: |

@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Features.Settings.OpenTempFolder;
 using CaptureTool.Application.Abstractions.Storage;
-using System.Diagnostics;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.SettingsPage.OpenTempFolder;
 
@@ -11,12 +11,15 @@ public sealed class OpenTempFolderUseCase : IOpenTempFolderUseCase
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IStorageService _storageService;
+    private readonly IFolderLauncher _folderLauncher;
 
     public OpenTempFolderUseCase(IStorageService storageService,
+        IFolderLauncher folderLauncher,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _storageService = storageService;
+        _folderLauncher = folderLauncher;
     }
 
     public bool CanExecute(OpenTempFolderRequest request) => true;
@@ -28,11 +31,7 @@ public sealed class OpenTempFolderUseCase : IOpenTempFolderUseCase
             useCase: () =>
             {
                 var tempFolderPath = _storageService.GetApplicationTemporaryFolderPath();
-                if (Directory.Exists(tempFolderPath))
-                {
-                    Process.Start("explorer.exe", $"/open, {tempFolderPath}");
-                }
-                else
+                if (!_folderLauncher.TryOpenFolder(tempFolderPath))
                 {
                     return new OpenTempFolderResponse(false);
                 }

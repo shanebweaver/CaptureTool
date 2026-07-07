@@ -6,7 +6,6 @@ using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Edit;
@@ -40,7 +39,6 @@ public sealed class ImageEditPageViewModelTests
 
         Fixture.Customize<ImageEditPageViewModel>(c => c.OmitAutoProperties());
 
-        Fixture.Freeze<Mock<IStoreService>>();
         Fixture.Freeze<Mock<IShutdownHandler>>();
         Fixture.Freeze<Mock<ICancellationService>>();
         Fixture.Freeze<Mock<ITelemetryService>>();
@@ -48,7 +46,7 @@ public sealed class ImageEditPageViewModelTests
         Fixture.Freeze<Mock<IImageCanvasExporter>>();
         Fixture.Freeze<Mock<IFilePickerService>>();
         Fixture.Freeze<Mock<IChromaKeyService>>();
-        Fixture.Freeze<Mock<IChromaKeyFeatureAvailability>>();
+        Fixture.Freeze<Mock<IChromaKeyAccessService>>();
         Fixture.Freeze<Mock<IShareService>>();
     }
 
@@ -62,14 +60,10 @@ public sealed class ImageEditPageViewModelTests
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
         var filePicker = Fixture.Freeze<Mock<IFilePickerService>>();
         var cancel = Fixture.Freeze<Mock<ICancellationService>>();
-        var featureAvailability = Fixture.Freeze<Mock<IChromaKeyFeatureAvailability>>();
-        var storeService = Fixture.Freeze<Mock<IStoreService>>();
+        var chromaKeyAccess = Fixture.Freeze<Mock<IChromaKeyAccessService>>();
         var chromaService = Fixture.Freeze<Mock<IChromaKeyService>>();
 
-        featureAvailability.Setup(f => f.IsChromaKeyEnabled).Returns(false);
-
-        storeService.Setup(s => s.IsAddonPurchasedAsync(It.IsAny<string>()))
-                    .ReturnsAsync(false);
+        chromaKeyAccess.Setup(f => f.IsChromaKeyEnabled).Returns(false);
 
         chromaService.Setup(s => s.GetTopColorsAsync(It.IsAny<ImageFile>(), It.IsAny<uint>(), It.IsAny<byte>()))
                      .ReturnsAsync([]);

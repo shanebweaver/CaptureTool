@@ -1,4 +1,6 @@
-namespace CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Abstractions.UseCases;
+
+namespace CaptureTool.Application.UseCases;
 
 public interface IUseCaseExecutor
 {

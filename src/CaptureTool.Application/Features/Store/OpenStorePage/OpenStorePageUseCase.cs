@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 using CaptureTool.Application.Features.AudioCapture;
 
 namespace CaptureTool.Application.Features.Store.OpenStorePage;

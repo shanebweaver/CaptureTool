@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 
@@ -9,6 +10,7 @@ public sealed class AudioCaptureHandler : IAudioCaptureHandler
 {
     private readonly IAudioRecorder _audioRecorder;
     private readonly IStorageService _storageService;
+    private readonly IClock _clock;
 
     public event EventHandler<AudioCaptureState>? CaptureStateChanged;
     public event EventHandler<bool>? MutedStateChanged;
@@ -25,10 +27,12 @@ public sealed class AudioCaptureHandler : IAudioCaptureHandler
 
     public AudioCaptureHandler(
         IAudioRecorder audioRecorder,
-        IStorageService storageService)
+        IStorageService storageService,
+        IClock clock)
     {
         _audioRecorder = audioRecorder;
         _storageService = storageService;
+        _clock = clock;
     }
 
     public void PauseCapture()
@@ -114,9 +118,9 @@ public sealed class AudioCaptureHandler : IAudioCaptureHandler
         }
     }
 
-    private static string GetNewCaptureFileName()
+    private string GetNewCaptureFileName()
     {
-        DateTime timestamp = DateTime.Now;
+        DateTime timestamp = _clock.Now;
         return $"Capture_{timestamp:yyyy-MM-dd}_{timestamp:FFFFF}.wav";
     }
 }

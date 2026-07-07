@@ -32,6 +32,7 @@ public sealed class ExportLogsUseCaseTests
             var useCase = new ExportLogsUseCase(
                 filePicker.Object,
                 logService.Object,
+                TestFileSystem.Instance,
                 TestUseCaseExecutor.Instance);
 
             ExportLogsResponse? response = (await useCase.ExecuteAsync(new ExportLogsRequest(), TestContext.CancellationToken)).Value;
@@ -59,6 +60,7 @@ public sealed class ExportLogsUseCaseTests
         var useCase = new ExportLogsUseCase(
             filePicker.Object,
             logService.Object,
+            TestFileSystem.Instance,
             TestUseCaseExecutor.Instance);
 
         filePicker

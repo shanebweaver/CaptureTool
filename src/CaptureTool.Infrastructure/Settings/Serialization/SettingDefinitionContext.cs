@@ -1,7 +1,9 @@
+using CaptureTool.Application.Abstractions.Settings.Definitions;
 using System.Text.Json.Serialization;
 
-namespace CaptureTool.Application.Features.Settings.Definitions;
+namespace CaptureTool.Infrastructure.Settings.Serialization;
 
+[JsonSourceGenerationOptions(Converters = [typeof(SettingDefinitionConverter)])]
 [JsonSerializable(typeof(SettingDefinition))]
 [JsonSerializable(typeof(List<SettingDefinition>))]
 [JsonSerializable(typeof(BoolSettingDefinition))]
@@ -10,4 +12,4 @@ namespace CaptureTool.Application.Features.Settings.Definitions;
 [JsonSerializable(typeof(StringSettingDefinition))]
 [JsonSerializable(typeof(PointSettingDefinition))]
 [JsonSerializable(typeof(SizeSettingDefinition))]
-public sealed partial class SettingDefinitionContext : JsonSerializerContext { }
+internal sealed partial class SettingDefinitionContext : JsonSerializerContext { }

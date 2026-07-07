@@ -8,7 +8,6 @@ using CaptureTool.Application.Features.Diagnostics.ClearLogs;
 using CaptureTool.Application.Features.Diagnostics.GetCurrentLogs;
 using CaptureTool.Application.Features.Diagnostics.GetIsLoggingEnabled;
 using CaptureTool.Application.Features.Diagnostics.UpdateLoggingState;
-using CaptureTool.Application.Features.Settings;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;

@@ -6,7 +6,6 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.ImageEdit;
@@ -23,13 +22,12 @@ public sealed class ImageEditPageViewModelShareTests
     public async Task ShareCommand_ShouldRenderDrawables_AndInvokeShareService()
     {
         var localization = Mock.Of<ILocalizationService>();
-        var storeService = Mock.Of<IStoreService>();
         var cancellationService = new Mock<ICancellationService>();
         var printer = Mock.Of<IImageCanvasPrinter>();
         var exporter = new Mock<IImageCanvasExporter>();
         var filePicker = new Mock<IFilePickerService>();
         var chromaKeyService = Mock.Of<IChromaKeyService>();
-        var featureAvailability = new Mock<IChromaKeyFeatureAvailability>();
+        var chromaKeyAccess = new Mock<IChromaKeyAccessService>();
         var shareService = new Mock<IShareService>();
 
         using var renderedStream = new MemoryStream([1, 2, 3]);
@@ -46,7 +44,7 @@ public sealed class ImageEditPageViewModelShareTests
             .Setup(service => service.GetLinkedCancellationTokenSource(It.IsAny<CancellationToken>()))
             .Returns(linkedCts);
 
-        featureAvailability
+        chromaKeyAccess
             .Setup(service => service.IsChromaKeyEnabled)
             .Returns(false);
 
@@ -69,7 +67,7 @@ public sealed class ImageEditPageViewModelShareTests
             shareService.Object,
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),
-            new ChromaKeyToolViewModel(storeService, chromaKeyService, featureAvailability.Object),
+            new ChromaKeyToolViewModel(chromaKeyAccess.Object, chromaKeyService),
             new ShapeToolViewModel(),
             new TextToolViewModel());
 

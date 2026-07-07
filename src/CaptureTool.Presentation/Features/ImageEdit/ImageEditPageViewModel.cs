@@ -6,7 +6,6 @@ using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Domain.Edit;

@@ -22,7 +22,6 @@ using CaptureTool.Application.Abstractions.Features.Store.LeaveStorePage;
 using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
 using CaptureTool.Application.Abstractions.Features.Store.PurchaseChromaKeyAddOn;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
-using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Store;
@@ -175,13 +174,9 @@ public sealed class SimpleApplicationUseCaseTests
         string audioPath = await CreateTempFileAsync("capture.wav");
         string imagePath = await CreateTempFileAsync("capture.png");
         string videoPath = await CreateTempFileAsync("capture.mp4");
-        var detector = new Mock<IFileTypeDetector>();
         var audioEdit = new Mock<IOpenAudioEditPageUseCase>();
         var imageEdit = new Mock<IOpenImageEditPageUseCase>();
         var videoEdit = new Mock<IOpenVideoEditPageUseCase>();
-        detector.Setup(service => service.DetectFileType(audioPath)).Returns(CaptureFileType.Audio);
-        detector.Setup(service => service.DetectFileType(imagePath)).Returns(CaptureFileType.Image);
-        detector.Setup(service => service.DetectFileType(videoPath)).Returns(CaptureFileType.Video);
         audioEdit
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenAudioEditPageRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<OpenAudioEditPageResponse>.Success(new OpenAudioEditPageResponse()));
@@ -192,7 +187,7 @@ public sealed class SimpleApplicationUseCaseTests
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenVideoEditPageRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<OpenVideoEditPageResponse>.Success(new OpenVideoEditPageResponse()));
         var useCase = new OpenRecentCaptureUseCase(
-            detector.Object,
+            TestFileSystem.Instance,
             audioEdit.Object,
             imageEdit.Object,
             videoEdit.Object,
@@ -215,10 +210,8 @@ public sealed class SimpleApplicationUseCaseTests
     public async Task OpenRecentCaptureUseCase_ReturnsNotOpenedForMissingOrUnknownFiles()
     {
         string unknownPath = await CreateTempFileAsync("capture.bin");
-        var detector = new Mock<IFileTypeDetector>();
-        detector.Setup(service => service.DetectFileType(unknownPath)).Returns(CaptureFileType.Unknown);
         var useCase = new OpenRecentCaptureUseCase(
-            detector.Object,
+            TestFileSystem.Instance,
             Mock.Of<IOpenAudioEditPageUseCase>(),
             Mock.Of<IOpenImageEditPageUseCase>(),
             Mock.Of<IOpenVideoEditPageUseCase>(),
@@ -236,15 +229,13 @@ public sealed class SimpleApplicationUseCaseTests
     public async Task OpenRecentCaptureUseCase_WhenAudioCaptureIsDisabled_ReturnsNotOpenedForAudioFiles()
     {
         string audioPath = await CreateTempFileAsync("capture.wav");
-        var detector = new Mock<IFileTypeDetector>();
         var audioEdit = new Mock<IOpenAudioEditPageUseCase>();
         var audioCaptureFeatureAvailability = new Mock<IAudioCaptureFeatureAvailability>();
-        detector.Setup(service => service.DetectFileType(audioPath)).Returns(CaptureFileType.Audio);
         audioCaptureFeatureAvailability
             .Setup(availability => availability.IsAudioCaptureEnabled)
             .Returns(false);
         var useCase = new OpenRecentCaptureUseCase(
-            detector.Object,
+            TestFileSystem.Instance,
             audioEdit.Object,
             Mock.Of<IOpenImageEditPageUseCase>(),
             Mock.Of<IOpenVideoEditPageUseCase>(),

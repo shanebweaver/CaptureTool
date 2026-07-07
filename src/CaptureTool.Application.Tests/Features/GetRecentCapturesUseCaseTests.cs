@@ -1,6 +1,5 @@
 using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.RecentCaptures.GetRecentCaptures;
-using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Features.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Domain.Capture;
@@ -15,7 +14,6 @@ public sealed class GetRecentCapturesUseCaseTests
     public async Task ExecuteAsync_ShouldReturnFiveMostRecentlyWrittenFiles()
     {
         Mock<IStorageService> storageService = new();
-        Mock<IFileTypeDetector> fileTypeDetector = new();
         string tempFolder = CreateTestFolder();
         string oldFilePath = Path.Combine(tempFolder, "old.png");
         string recentFilePath = Path.Combine(tempFolder, "recent.png");
@@ -33,11 +31,7 @@ public sealed class GetRecentCapturesUseCaseTests
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
             .Returns(tempFolder);
-        fileTypeDetector
-            .Setup(detector => detector.DetectFileType(It.IsAny<string>()))
-            .Returns(CaptureFileType.Image);
-
-        GetRecentCapturesUseCase useCase = new(storageService.Object, fileTypeDetector.Object, TestUseCaseExecutor.Instance);
+        GetRecentCapturesUseCase useCase = new(storageService.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
 
         GetRecentCapturesResponse? response = (await useCase.ExecuteAsync(new GetRecentCapturesRequest(), TestContext.CancellationToken)).Value;
 
@@ -51,7 +45,6 @@ public sealed class GetRecentCapturesUseCaseTests
     public async Task ExecuteAsync_WhenAudioCaptureIsDisabled_FiltersAudioFilesBeforeTakingRecentLimit()
     {
         Mock<IStorageService> storageService = new();
-        Mock<IFileTypeDetector> fileTypeDetector = new();
         Mock<IAudioCaptureFeatureAvailability> audioCaptureFeatureAvailability = new();
         string tempFolder = CreateTestFolder();
         string audioFilePath = Path.Combine(tempFolder, "recent.wav");
@@ -66,19 +59,13 @@ public sealed class GetRecentCapturesUseCaseTests
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
             .Returns(tempFolder);
-        fileTypeDetector
-            .Setup(detector => detector.DetectFileType(audioFilePath))
-            .Returns(CaptureFileType.Audio);
-        fileTypeDetector
-            .Setup(detector => detector.DetectFileType(imageFilePath))
-            .Returns(CaptureFileType.Image);
         audioCaptureFeatureAvailability
             .Setup(availability => availability.IsAudioCaptureEnabled)
             .Returns(false);
 
         GetRecentCapturesUseCase useCase = new(
             storageService.Object,
-            fileTypeDetector.Object,
+            TestFileSystem.Instance,
             TestUseCaseExecutor.Instance,
             audioCaptureFeatureAvailability.Object);
 

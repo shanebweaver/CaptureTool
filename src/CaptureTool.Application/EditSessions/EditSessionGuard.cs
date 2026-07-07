@@ -1,6 +1,5 @@
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Settings;
-using CaptureTool.Application.Features.Settings;
 
 namespace CaptureTool.Application.EditSessions;
 

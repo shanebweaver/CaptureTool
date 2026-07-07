@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.PauseAudioCapture;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioCapture.PauseAudioCapture;
 

@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Settings;
 
-namespace CaptureTool.Application.Features.Settings.Definitions;
+namespace CaptureTool.Application.Abstractions.Settings.Definitions;
 
 public sealed partial class DoubleSettingDefinition(string key, double value)
     : SettingDefinition<double>(key, value), IDoubleSettingDefinition

@@ -18,6 +18,7 @@ using CaptureTool.Infrastructure.Windows.Storage;
 using CaptureTool.Infrastructure.Windows.Store;
 using CaptureTool.Infrastructure.Windows.TaskEnvironment;
 using CaptureTool.Infrastructure.Windows.Themes;
+using CaptureTool.Infrastructure.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
 
@@ -31,6 +32,7 @@ public static class WindowsInfrastructureServiceCollectionExtensions
         services.AddSingleton<IStoreService, WindowsStoreService>();
         services.AddSingleton<IThemeService, WindowsThemeService>();
         services.AddSingleton<IStorageService, WindowsStorageService>();
+        services.AddSingleton<IFolderLauncher, WindowsFolderLauncher>();
         services.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
         services.AddSingleton<ILocalizationService, WindowsLocalizationService>();
         services.AddSingleton<IShareService, WindowsShareService>();

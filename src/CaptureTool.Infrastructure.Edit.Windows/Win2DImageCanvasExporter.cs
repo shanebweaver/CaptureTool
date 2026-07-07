@@ -20,7 +20,7 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
     public async Task CopyImageToClipboardAsync(IDrawable[] drawables, ImageCanvasRenderOptions options)
     {
         using MemoryStream stream = await RenderToStreamAsync(drawables, options);
-        SimpleClipboardStreamSource clipboardImage = new(stream);
+        ClipboardStreamSource clipboardImage = new(stream);
         await _clipboardService.CopyStreamAsync(clipboardImage);
     }
 
@@ -73,5 +73,17 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
         await renderTarget.SaveAsync(stream, CanvasBitmapFileFormat.Png);
 
         return stream;
+    }
+
+    private sealed class ClipboardStreamSource : IClipboardStreamSource
+    {
+        private readonly Stream _stream;
+
+        public ClipboardStreamSource(Stream stream)
+        {
+            _stream = stream;
+        }
+
+        public Stream GetStream() => _stream;
     }
 }

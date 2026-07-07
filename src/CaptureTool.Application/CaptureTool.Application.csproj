@@ -10,7 +10,6 @@
 
   <!-- Package references -->
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>

@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Features.Settings.RestoreDefaults;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.SettingsPage.RestoreDefaults;
 

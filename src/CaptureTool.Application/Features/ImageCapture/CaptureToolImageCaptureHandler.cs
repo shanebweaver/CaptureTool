@@ -1,10 +1,11 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Application.Features.Settings;
+using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using System.Drawing;
@@ -14,28 +15,34 @@ namespace CaptureTool.Application.Features.ImageCapture;
 public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
 {
     private readonly IClipboardService _clipboardService;
+    private readonly IFileSystem _fileSystem;
     private readonly IStorageService _storageService;
     private readonly ISettingsService _settingsService;
     private readonly IScreenCapture _screenCapture;
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ITelemetryService _telemetryService;
+    private readonly IClock _clock;
 
     public event EventHandler<ImageFile>? NewImageCaptured;
 
     public CaptureToolImageCaptureHandler(
         IClipboardService clipboardService,
+        IFileSystem fileSystem,
         IStorageService storageService,
         ISettingsService settingsService,
         IScreenCapture screenCapture,
         ITaskEnvironment taskEnvironment,
-        ITelemetryService telemetryService)
+        ITelemetryService telemetryService,
+        IClock clock)
     {
         _clipboardService = clipboardService;
+        _fileSystem = fileSystem;
         _storageService = storageService;
         _settingsService = settingsService;
         _screenCapture = screenCapture;
         _taskEnvironment = taskEnvironment;
         _telemetryService = telemetryService;
+        _clock = clock;
     }
 
     public ImageFile PerformAllScreensCapture()
@@ -126,7 +133,7 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
                 string tempFilePath = imageFile.FilePath;
                 string newFilePath = Path.Combine(screenshotsFolder, GetNewCaptureFileName());
 
-                File.Copy(tempFilePath, newFilePath, true);
+                _fileSystem.CopyFile(tempFilePath, newFilePath, true);
             }
             catch (Exception e)
             {
@@ -135,9 +142,9 @@ public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
         });
     }
 
-    private static string GetNewCaptureFileName()
+    private string GetNewCaptureFileName()
     {
-        DateTime timestamp = DateTime.Now;
+        DateTime timestamp = _clock.Now;
         return $"Capture_{timestamp:yyyy-MM-dd}_{timestamp:FFFFF}.png";
     }
 }

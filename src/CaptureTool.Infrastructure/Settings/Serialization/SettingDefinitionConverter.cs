@@ -1,10 +1,11 @@
+using CaptureTool.Application.Abstractions.Settings.Definitions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-namespace CaptureTool.Application.Features.Settings.Definitions;
+namespace CaptureTool.Infrastructure.Settings.Serialization;
 
-public sealed partial class SettingDefinitionConverter : JsonConverter<SettingDefinition>
+internal sealed partial class SettingDefinitionConverter : JsonConverter<SettingDefinition>
 {
     private enum TypeDiscriminator
     {
@@ -16,7 +17,7 @@ public sealed partial class SettingDefinitionConverter : JsonConverter<SettingDe
         Size
     }
 
-    public override bool CanConvert(Type typeToConvert) => typeof(SettingDefinition).IsAssignableFrom(typeToConvert);
+    public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(SettingDefinition);
 
     public override SettingDefinition? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -25,10 +26,7 @@ public sealed partial class SettingDefinitionConverter : JsonConverter<SettingDe
             throw new JsonException();
         }
 
-        // Get the TypeDescriminator to determine which value type to use.
         TypeDiscriminator typeDiscriminator = ReadTypeDiscriminator(ref reader);
-
-        // Use the TypeDiscriminator to read as the appropriate type.
         SettingDefinition? settingDefinition = ReadTypeValue(ref reader, typeDiscriminator);
 
         return !reader.Read() || reader.TokenType != JsonTokenType.EndObject

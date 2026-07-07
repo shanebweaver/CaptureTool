@@ -1,6 +1,8 @@
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.CopyAudioFile;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioEdit.CopyAudioFile;
 
@@ -10,18 +12,21 @@ public sealed class CopyAudioFileUseCase : ICopyAudioFileUseCase
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IClipboardService _clipboardService;
+    private readonly IFileSystem _fileSystem;
 
     public CopyAudioFileUseCase(IClipboardService clipboardService,
+        IFileSystem fileSystem,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _clipboardService = clipboardService;
+        _fileSystem = fileSystem;
     }
 
     public bool CanExecute(CopyAudioFileRequest request)
     {
         string audioPath = request.AudioPath;
-        bool canExecute = !string.IsNullOrEmpty(audioPath) && File.Exists(audioPath);
+        bool canExecute = !string.IsNullOrEmpty(audioPath) && _fileSystem.FileExists(audioPath);
         return canExecute;
     }
 
@@ -31,7 +36,7 @@ public sealed class CopyAudioFileUseCase : ICopyAudioFileUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                if (string.IsNullOrEmpty(request.AudioPath) || !File.Exists(request.AudioPath))
+                if (string.IsNullOrEmpty(request.AudioPath) || !_fileSystem.FileExists(request.AudioPath))
                 {
                     return new CopyAudioFileResponse(false);
                 }

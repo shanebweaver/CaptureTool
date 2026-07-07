@@ -20,7 +20,6 @@ using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Features.Settings;
 using CaptureTool.Application.Features.SettingsPage.ChangeScreenshotsFolder;
 using CaptureTool.Application.Features.SettingsPage.ChangeVideosFolder;
 using CaptureTool.Application.Features.SettingsPage.ClearTempFiles;
@@ -88,7 +87,7 @@ public sealed class SettingsPageUseCaseTests
         await File.WriteAllTextAsync(Path.Combine(directoryPath, "child.tmp"), "child", TestContext.CancellationToken);
         var storage = new Mock<IStorageService>();
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(tempFolder);
-        var useCase = new ClearTempFilesUseCase(Mock.Of<ILogService>(), storage.Object, TestUseCaseExecutor.Instance);
+        var useCase = new ClearTempFilesUseCase(Mock.Of<ILogService>(), storage.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
 
         ClearTempFilesResponse response = (await useCase.ExecuteAsync(new ClearTempFilesRequest(), TestContext.CancellationToken)).Value!;
 
@@ -115,15 +114,17 @@ public sealed class SettingsPageUseCaseTests
         string missingFolder = Path.Combine(Path.GetTempPath(), "CaptureToolTests", Guid.NewGuid().ToString());
         var settings = new Mock<ISettingsService>();
         var storage = new Mock<IStorageService>();
+        var folderLauncher = new Mock<IFolderLauncher>();
         settings.Setup(service => service.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder)).Returns("");
         settings.Setup(service => service.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder)).Returns("");
         storage.Setup(service => service.GetSystemDefaultScreenshotsFolderPath()).Returns(missingFolder);
         storage.Setup(service => service.GetSystemDefaultVideosFolderPath()).Returns(missingFolder);
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(missingFolder);
+        folderLauncher.Setup(service => service.TryOpenFolder(missingFolder)).Returns(false);
 
-        var screenshots = new OpenScreenshotsFolderUseCase(settings.Object, storage.Object, TestUseCaseExecutor.Instance);
-        var videos = new OpenVideosFolderUseCase(settings.Object, storage.Object, TestUseCaseExecutor.Instance);
-        var temp = new OpenTempFolderUseCase(storage.Object, TestUseCaseExecutor.Instance);
+        var screenshots = new OpenScreenshotsFolderUseCase(settings.Object, storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
+        var videos = new OpenVideosFolderUseCase(settings.Object, storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
+        var temp = new OpenTempFolderUseCase(storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
 
         OpenScreenshotsFolderResponse screenshotsResponse = (await screenshots.ExecuteAsync(new OpenScreenshotsFolderRequest(), TestContext.CancellationToken)).Value!;
         OpenVideosFolderResponse videosResponse = (await videos.ExecuteAsync(new OpenVideosFolderRequest(), TestContext.CancellationToken)).Value!;
