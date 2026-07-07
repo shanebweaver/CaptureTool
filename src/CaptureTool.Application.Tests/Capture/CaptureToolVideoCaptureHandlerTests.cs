@@ -1,5 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Features.VideoCapture;
 using CaptureTool.Domain.Capture;
@@ -194,10 +195,9 @@ public class CaptureToolVideoCaptureHandlerTests
     public void StartVideoCapture_ShouldReturnToIdle_WhenRecorderStartFails()
     {
         var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
-        ConfigureSuccessfulCallbackRegistration(screenRecorder);
         screenRecorder
             .Setup(s => s.StartRecording(It.IsAny<CaptureRecordingOptions>()))
-            .Returns(new CaptureRecorderResult(CaptureRecorderStatus.StartFailed, unchecked((int)0x80004005)));
+            .Throws(new InvalidOperationException("Recorder failed."));
 
         var storageService = Fixture.Freeze<Mock<IStorageService>>();
         storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
@@ -244,15 +244,10 @@ public class CaptureToolVideoCaptureHandlerTests
     }
 
     [TestMethod]
-    public void StartVideoCapture_ShouldRaiseRecordingStarted_WhenFirstVideoFrameArrives()
+    public void StartVideoCapture_ShouldRaiseRecordingStarted_WhenRecorderSignalsStarted()
     {
         var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
         ConfigureSuccessfulRecordingStart(screenRecorder);
-        VideoFrameCallback? videoFrameCallback = null;
-        screenRecorder
-            .Setup(s => s.RegisterVideoFrameCallback(It.IsAny<VideoFrameCallback?>()))
-            .Callback<VideoFrameCallback?>(callback => videoFrameCallback = callback)
-            .Returns(new CaptureRecorderResult(CaptureRecorderStatus.Success, 0));
 
         var storageService = Fixture.Freeze<Mock<IStorageService>>();
         storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
@@ -264,11 +259,9 @@ public class CaptureToolVideoCaptureHandlerTests
         handler.StartVideoCapture(CreateCaptureArgs());
 
         recordingStartedCount.Should().Be(0);
-        videoFrameCallback.Should().NotBeNull();
 
-        VideoFrameData frame = new();
-        videoFrameCallback!(ref frame);
-        videoFrameCallback(ref frame);
+        screenRecorder.Raise(s => s.RecordingStarted += null, EventArgs.Empty);
+        screenRecorder.Raise(s => s.RecordingStarted += null, EventArgs.Empty);
 
         recordingStartedCount.Should().Be(1);
     }
@@ -346,19 +339,7 @@ public class CaptureToolVideoCaptureHandlerTests
 
     private static void ConfigureSuccessfulRecordingStart(Mock<IScreenRecorder> screenRecorder)
     {
-        ConfigureSuccessfulCallbackRegistration(screenRecorder);
         screenRecorder
-            .Setup(s => s.StartRecording(It.IsAny<CaptureRecordingOptions>()))
-            .Returns(new CaptureRecorderResult(CaptureRecorderStatus.Success, 0));
-    }
-
-    private static void ConfigureSuccessfulCallbackRegistration(Mock<IScreenRecorder> screenRecorder)
-    {
-        screenRecorder
-            .Setup(s => s.RegisterVideoFrameCallback(It.IsAny<VideoFrameCallback?>()))
-            .Returns(new CaptureRecorderResult(CaptureRecorderStatus.Success, 0));
-        screenRecorder
-            .Setup(s => s.RegisterAudioSampleCallback(It.IsAny<AudioSampleCallback?>()))
-            .Returns(new CaptureRecorderResult(CaptureRecorderStatus.Success, 0));
+            .Setup(s => s.StartRecording(It.IsAny<CaptureRecordingOptions>()));
     }
 }
