@@ -4,10 +4,10 @@
     <Platform Name="x64" />
   </Configurations>
   <Folder Name="/Build/">
-    <File Path="src/Directory.Build.props" />
-    <File Path="src/Directory.Build.targets" />
-    <File Path="src/Directory.Packages.props" />
-    <File Path="src/Directory.Version.props" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="Directory.Version.props" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="LICENSE.md" />
@@ -16,8 +16,8 @@
   </Folder>
   <Project Path="src/CaptureTool.Application.Abstractions/CaptureTool.Application.Abstractions.csproj" />
   <Project Path="src/CaptureTool.Application/CaptureTool.Application.csproj" />
-  <Project Path="src/CaptureTool.Application.Tests/CaptureTool.Application.Tests.csproj" />
-  <Project Path="src/CaptureTool.Infrastructure.Capture.Windows.Tests/CaptureTool.Infrastructure.Capture.Windows.Tests.csproj">
+  <Project Path="tests/CaptureTool.Application.Tests/CaptureTool.Application.Tests.csproj" />
+  <Project Path="tests/CaptureTool.Infrastructure.Capture.Windows.Tests/CaptureTool.Infrastructure.Capture.Windows.Tests.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
@@ -25,7 +25,7 @@
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="src/CaptureTool.Infrastructure.Edit.Windows.Tests/CaptureTool.Infrastructure.Edit.Windows.Tests.csproj">
+  <Project Path="tests/CaptureTool.Infrastructure.Edit.Windows.Tests/CaptureTool.Infrastructure.Edit.Windows.Tests.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
@@ -43,13 +43,13 @@
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="src/CaptureTool.Infrastructure/CaptureTool.Infrastructure.csproj" />
-  <Project Path="src/CaptureTool.Infrastructure.Tests/CaptureTool.Infrastructure.Tests.csproj" />
+  <Project Path="tests/CaptureTool.Infrastructure.Tests/CaptureTool.Infrastructure.Tests.csproj" />
   <Project Path="src/CaptureTool.MetadataScanner.Windows.WinUI/CaptureTool.MetadataScanner.Windows.WinUI.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
     <Deploy />
   </Project>
-  <Project Path="src/CaptureTool.Presentation.Tests/CaptureTool.Presentation.Tests.csproj" Id="b99a732e-0834-4598-a1c5-7030a36a486d" />
+  <Project Path="tests/CaptureTool.Presentation.Tests/CaptureTool.Presentation.Tests.csproj" Id="b99a732e-0834-4598-a1c5-7030a36a486d" />
   <Project Path="src/CaptureTool.Presentation.Windows.WinUI/CaptureTool.Presentation.Windows.WinUI.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
