@@ -1,4 +1,4 @@
-using CaptureTool.Application.Features.VideoCapture;
+using CaptureTool.Application.Capture.Video;
 using FluentAssertions;
 
 namespace CaptureTool.Application.Tests.Capture;

@@ -1,7 +1,0 @@
-using CaptureTool.Application.Abstractions.UseCases;
-
-namespace CaptureTool.Application.Abstractions.Features.CaptureOverlay.SetVideoCaptureAudioInputMuted;
-
-public interface ISetVideoCaptureAudioInputMutedUseCase : IUseCase<SetVideoCaptureAudioInputMutedRequest, SetVideoCaptureAudioInputMutedResponse>
-{
-}

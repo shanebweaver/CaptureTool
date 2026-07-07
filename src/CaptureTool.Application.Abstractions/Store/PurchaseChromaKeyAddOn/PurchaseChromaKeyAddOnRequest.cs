@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Abstractions.Store.PurchaseChromaKeyAddOn;
+
+public sealed record PurchaseChromaKeyAddOnRequest;

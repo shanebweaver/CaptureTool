@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Abstractions.Diagnostics.GetIsLoggingEnabled;
+
+public sealed record GetIsLoggingEnabledRequest;

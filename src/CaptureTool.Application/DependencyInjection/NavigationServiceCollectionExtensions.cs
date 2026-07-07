@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Features.Home.ShowHomePage;
-using CaptureTool.Application.Features.Home.ShowHomePage;
+using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
+using CaptureTool.Application.Shell.Home.ShowHomePage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.DependencyInjection;

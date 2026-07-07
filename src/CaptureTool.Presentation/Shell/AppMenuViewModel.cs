@@ -1,16 +1,16 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.EditSessions;
-using CaptureTool.Application.Abstractions.Features.AudioCapture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
-using CaptureTool.Application.Abstractions.Features.About.OpenAboutPage;
-using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
-using CaptureTool.Application.Abstractions.Features.AppMenu.OpenFile;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
-using CaptureTool.Application.Abstractions.Features.RecentCaptures.GetRecentCaptures;
-using CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCapture;
-using CaptureTool.Application.Abstractions.Features.Settings.OpenSettingsPage;
-using CaptureTool.Application.Abstractions.Features.Store;
-using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
+using CaptureTool.Application.Abstractions.Capture.Audio;
+using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
+using CaptureTool.Application.Abstractions.Shell.About.OpenAboutPage;
+using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
+using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
+using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
+using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Store.OpenStorePage;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Factories;
@@ -24,7 +24,7 @@ namespace CaptureTool.Presentation.Shell;
 
 public sealed partial class AppMenuViewModel : LoadableViewModelBase
 {
-    private readonly IImageCaptureHandler _imageCaptureHandler;
+    private readonly IImageCaptureState _imageCaptureState;
     private readonly IVideoCaptureState _videoCaptureState;
     private readonly IAudioCaptureState _audioCaptureState;
     private readonly IOpenFileUseCase _openFileCommand;
@@ -77,13 +77,13 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IGetRecentCapturesUseCase getRecentCapturesQuery,
         IAudioCaptureFeatureAvailability audioCaptureFeatureAvailability,
         IStoreFeatureAvailability storeFeatureAvailability,
-        IImageCaptureHandler imageCaptureHandler,
+        IImageCaptureState imageCaptureState,
         IVideoCaptureState videoCaptureState,
         IAudioCaptureState audioCaptureState,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory,
         IEditSessionGuard? editSessionGuard = null)
     {
-        _imageCaptureHandler = imageCaptureHandler;
+        _imageCaptureState = imageCaptureState;
         _videoCaptureState = videoCaptureState;
         _audioCaptureState = audioCaptureState;
         _openFileCommand = openFileCommand;
@@ -118,7 +118,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         StartLoading();
 
         _ = RefreshRecentCapturesAsync();
-        _imageCaptureHandler.NewImageCaptured += OnNewImageCaptured;
+        _imageCaptureState.NewImageCaptured += OnNewImageCaptured;
         _videoCaptureState.NewVideoCaptured += OnNewVideoCaptured;
         _audioCaptureState.NewAudioCaptured += OnNewAudioCaptured;
 
@@ -127,7 +127,7 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
     public override void Dispose()
     {
-        _imageCaptureHandler.NewImageCaptured -= OnNewImageCaptured;
+        _imageCaptureState.NewImageCaptured -= OnNewImageCaptured;
         _videoCaptureState.NewVideoCaptured -= OnNewVideoCaptured;
         _audioCaptureState.NewAudioCaptured -= OnNewAudioCaptured;
         base.Dispose();

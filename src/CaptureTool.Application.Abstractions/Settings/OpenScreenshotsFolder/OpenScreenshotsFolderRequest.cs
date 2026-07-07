@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
+
+public sealed record OpenScreenshotsFolderRequest;

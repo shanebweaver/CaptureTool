@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.EditSessions;
-using CaptureTool.Application.Abstractions.Features.ImageEdit;
-using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
+using CaptureTool.Application.Abstractions.Edit.Image;
+using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;

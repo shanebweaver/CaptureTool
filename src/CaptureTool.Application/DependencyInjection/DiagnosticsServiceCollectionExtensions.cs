@@ -1,13 +1,13 @@
-using CaptureTool.Application.Abstractions.Features.Diagnostics.ClearLogs;
-using CaptureTool.Application.Abstractions.Features.Diagnostics.ExportLogs;
-using CaptureTool.Application.Abstractions.Features.Diagnostics.GetCurrentLogs;
-using CaptureTool.Application.Abstractions.Features.Diagnostics.GetIsLoggingEnabled;
-using CaptureTool.Application.Abstractions.Features.Diagnostics.UpdateLoggingState;
-using CaptureTool.Application.Features.Diagnostics.ClearLogs;
-using CaptureTool.Application.Features.Diagnostics.ExportLogs;
-using CaptureTool.Application.Features.Diagnostics.GetCurrentLogs;
-using CaptureTool.Application.Features.Diagnostics.GetIsLoggingEnabled;
-using CaptureTool.Application.Features.Diagnostics.UpdateLoggingState;
+using CaptureTool.Application.Abstractions.Diagnostics.ClearLogs;
+using CaptureTool.Application.Abstractions.Diagnostics.ExportLogs;
+using CaptureTool.Application.Abstractions.Diagnostics.GetCurrentLogs;
+using CaptureTool.Application.Abstractions.Diagnostics.GetIsLoggingEnabled;
+using CaptureTool.Application.Abstractions.Diagnostics.UpdateLoggingState;
+using CaptureTool.Application.Diagnostics.ClearLogs;
+using CaptureTool.Application.Diagnostics.ExportLogs;
+using CaptureTool.Application.Diagnostics.GetCurrentLogs;
+using CaptureTool.Application.Diagnostics.GetIsLoggingEnabled;
+using CaptureTool.Application.Diagnostics.UpdateLoggingState;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.DependencyInjection;

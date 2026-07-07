@@ -1,3 +1,0 @@
-namespace CaptureTool.Application.Abstractions.Features.CaptureOverlay.CancelVideoCapture;
-
-public sealed record CancelVideoCaptureRequest;

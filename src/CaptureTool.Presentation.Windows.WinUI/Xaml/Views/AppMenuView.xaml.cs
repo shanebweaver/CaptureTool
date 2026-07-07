@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Domain.Capture;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -10,6 +11,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 public sealed partial class AppMenuView : AppMenuViewBase
 {
     private const uint RecentCaptureThumbnailSize = 32;
+    private readonly ILogService _logService = App.Current.ServiceProvider.GetService<ILogService>();
 
     public AppMenuView()
     {
@@ -74,7 +76,7 @@ public sealed partial class AppMenuView : AppMenuViewBase
         });
     }
 
-    private static async Task LoadRecentCaptureThumbnailAsync(
+    private async Task LoadRecentCaptureThumbnailAsync(
         string filePath,
         CaptureFileType fileType,
         MenuFlyoutItem recentCaptureItem)
@@ -111,7 +113,7 @@ public sealed partial class AppMenuView : AppMenuViewBase
         }
         catch (Exception ex)
         {
-            AppServiceLocator.Logging.LogException(ex, $"Failed to load recent capture thumbnail for '{filePath}'.");
+            _logService.LogException(ex, $"Failed to load recent capture thumbnail for '{filePath}'.");
             recentCaptureItem.Icon = CreateFallbackIcon(fileType);
         }
     }

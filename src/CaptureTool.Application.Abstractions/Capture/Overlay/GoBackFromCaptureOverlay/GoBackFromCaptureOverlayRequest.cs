@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Abstractions.Capture.Overlay.GoBackFromCaptureOverlay;
+
+public sealed record GoBackFromCaptureOverlayRequest;

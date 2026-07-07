@@ -1,0 +1,7 @@
+using CaptureTool.Application.Abstractions.UseCases;
+
+namespace CaptureTool.Application.Abstractions.Settings.RestartSettingsApplication;
+
+public interface IRestartSettingsApplicationUseCase : IUseCase<RestartSettingsApplicationRequest, RestartSettingsApplicationResponse>, IConditional<RestartSettingsApplicationRequest>
+{
+}

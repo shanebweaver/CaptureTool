@@ -1,7 +1,0 @@
-using CaptureTool.Application.Abstractions.UseCases;
-
-namespace CaptureTool.Application.Abstractions.Features.Settings.UpdateVideoCaptureAutoCopy;
-
-public interface IUpdateVideoCaptureAutoCopyUseCase : IUseCase<UpdateVideoCaptureAutoCopyRequest, UpdateVideoCaptureAutoCopyResponse>, IConditional<UpdateVideoCaptureAutoCopyRequest>
-{
-}

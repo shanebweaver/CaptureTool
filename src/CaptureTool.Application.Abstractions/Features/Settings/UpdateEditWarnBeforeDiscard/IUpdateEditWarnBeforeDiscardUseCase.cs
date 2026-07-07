@@ -1,7 +1,0 @@
-using CaptureTool.Application.Abstractions.UseCases;
-
-namespace CaptureTool.Application.Abstractions.Features.Settings.UpdateEditWarnBeforeDiscard;
-
-public interface IUpdateEditWarnBeforeDiscardUseCase : IUseCase<UpdateEditWarnBeforeDiscardRequest, UpdateEditWarnBeforeDiscardResponse>, IConditional<UpdateEditWarnBeforeDiscardRequest>
-{
-}

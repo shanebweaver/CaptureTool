@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDesktopAudio;
+
+public sealed record ToggleVideoCaptureDesktopAudioRequest;

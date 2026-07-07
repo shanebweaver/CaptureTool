@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Presentation.Features.VideoEdit;
@@ -12,6 +13,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 public sealed partial class VideoEditPage : VideoEditPageBase
 {
     private readonly DispatcherTimer _boundedPlaybackTimer;
+    private readonly ILogService _logService;
     private readonly IStorageService _storageService;
     private readonly IVideoFileTrimmer _videoFileTrimmer;
     private MediaPlayer? _originalMediaPlayer;
@@ -29,6 +31,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     public VideoEditPage()
     {
         InitializeComponent();
+        _logService = App.Current.ServiceProvider.GetService<ILogService>();
         _storageService = App.Current.ServiceProvider.GetService<IStorageService>();
         _videoFileTrimmer = App.Current.ServiceProvider.GetService<IVideoFileTrimmer>();
 
@@ -427,7 +430,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         }
         catch (Exception ex)
         {
-            AppServiceLocator.Logging.LogException(ex, "Failed to render trimmed video preview.");
+            _logService.LogException(ex, "Failed to render trimmed video preview.");
             ShowOriginalPlayer();
         }
         finally
@@ -504,7 +507,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         }
         catch (Exception ex)
         {
-            AppServiceLocator.Logging.LogException(ex, "Failed to delete rendered trim preview.");
+            _logService.LogException(ex, "Failed to delete rendered trim preview.");
         }
         finally
         {

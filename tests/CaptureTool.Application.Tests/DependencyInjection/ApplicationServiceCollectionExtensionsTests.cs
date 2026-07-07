@@ -1,14 +1,22 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Capture.Image.CaptureAllScreensImage;
+using CaptureTool.Application.Abstractions.Capture.Image.CaptureImage;
+using CaptureTool.Application.Abstractions.Capture.Video.StartVideoCapture;
 using CaptureTool.Application.Abstractions.EditSessions;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
-using CaptureTool.Application.Abstractions.Features.Settings.OpenSettingsPage;
+using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Activation;
 using CaptureTool.Application.DependencyInjection;
 using CaptureTool.Application.EditSessions;
-using CaptureTool.Application.Features.AudioCapture;
-using CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
-using CaptureTool.Application.Features.Settings.OpenSettingsPage;
-using CaptureTool.Application.Features.VideoCapture;
+using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Application.Capture.Image;
+using CaptureTool.Application.Capture.Image.CaptureAllScreensImage;
+using CaptureTool.Application.Capture.Image.CaptureImage;
+using CaptureTool.Application.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.Settings.OpenSettingsPage;
+using CaptureTool.Application.Capture.Video;
+using CaptureTool.Application.Capture.Video.StartVideoCapture;
 using CaptureTool.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,6 +34,7 @@ public sealed class ApplicationServiceCollectionExtensionsTests
 
         Assert.AreSame(services, result);
         AssertHasRegistration<IUseCaseExecutor, UseCaseExecutor>(services, ServiceLifetime.Transient);
+        AssertHasRegistration<IApplicationStartupInitializer, ApplicationStartupInitializer>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IActiveEditSessionService, ActiveEditSessionService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IEditSessionGuard, EditSessionGuard>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<AudioCaptureWorkflow, AudioCaptureWorkflow>(services, ServiceLifetime.Singleton);
@@ -34,6 +43,12 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         AssertHasRegistration<VideoCaptureWorkflow, VideoCaptureWorkflow>(services, ServiceLifetime.Singleton);
         AssertHasFactoryRegistration<IVideoCaptureWorkflow>(services, ServiceLifetime.Singleton);
         AssertHasFactoryRegistration<IVideoCaptureState>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<IStartVideoCaptureUseCase, StartVideoCaptureUseCase>(services, ServiceLifetime.Transient);
+        AssertHasRegistration<ImageCaptureWorkflow, ImageCaptureWorkflow>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<IImageCaptureWorkflow>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<IImageCaptureState>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<ICaptureAllScreensImageUseCase, CaptureAllScreensImageUseCase>(services, ServiceLifetime.Transient);
+        AssertHasRegistration<ICaptureImageUseCase, CaptureImageUseCase>(services, ServiceLifetime.Transient);
         AssertHasRegistration<IOpenSelectionOverlayUseCase, OpenSelectionOverlayUseCase>(services, ServiceLifetime.Transient);
         AssertHasRegistration<IOpenSettingsPageUseCase, OpenSettingsPageUseCase>(services, ServiceLifetime.Transient);
     }

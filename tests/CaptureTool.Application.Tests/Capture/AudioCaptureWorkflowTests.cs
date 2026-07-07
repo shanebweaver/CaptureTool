@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Features.AudioCapture;
-using CaptureTool.Application.Tests.Features;
+using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Application.Tests;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using FluentAssertions;

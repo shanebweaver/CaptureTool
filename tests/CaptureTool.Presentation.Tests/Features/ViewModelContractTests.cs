@@ -1,7 +1,7 @@
-using CaptureTool.Application.Abstractions.Features.About.LeaveAboutPage;
-using CaptureTool.Application.Abstractions.Features.AudioCapture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.Shell.About.LeaveAboutPage;
+using CaptureTool.Application.Abstractions.Capture.Audio;
+using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
+using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Features.About;

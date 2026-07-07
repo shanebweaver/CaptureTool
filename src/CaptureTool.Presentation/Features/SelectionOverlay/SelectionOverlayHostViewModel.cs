@@ -1,4 +1,7 @@
+using CaptureTool.Application.Abstractions.Capture.Image.CaptureAllScreensImage;
+using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.ViewModels;
 using System.ComponentModel;
 using System.Drawing;
@@ -7,9 +10,19 @@ namespace CaptureTool.Presentation.Features.SelectionOverlay;
 
 public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
 {
+    private readonly ICaptureAllScreensImageUseCase _captureAllScreensImageCommand;
+    private readonly IOpenImageEditPageUseCase _openImageEditCommand;
     private readonly List<SelectionOverlayWindowViewModel> _windowViewModels = [];
 
     public event EventHandler? AllScreensCaptureRequested;
+
+    public SelectionOverlayHostViewModel(
+        ICaptureAllScreensImageUseCase captureAllScreensImageCommand,
+        IOpenImageEditPageUseCase openImageEditCommand)
+    {
+        _captureAllScreensImageCommand = captureAllScreensImageCommand;
+        _openImageEditCommand = openImageEditCommand;
+    }
 
     public void UpdateOptions(CaptureOptions options)
     {
@@ -34,6 +47,20 @@ public sealed partial class SelectionOverlayHostViewModel : ViewModelBase
             newVM.PropertyChanged += OnSecondaryWindowViewModelPropertyChanged;
         }
         _windowViewModels.Add(newVM);
+    }
+
+    public async Task CaptureAllScreensAsync(
+        IReadOnlyList<MonitorCaptureResult> monitors,
+        CancellationToken cancellationToken = default)
+    {
+        ImageFile? image = (await _captureAllScreensImageCommand.ExecuteAsync(
+            new CaptureAllScreensImageRequest(monitors),
+            cancellationToken)).Value?.Image;
+
+        if (image != null)
+        {
+            await _openImageEditCommand.ExecuteAsync(new OpenImageEditPageRequest(image), cancellationToken);
+        }
     }
 
     public override void Dispose()

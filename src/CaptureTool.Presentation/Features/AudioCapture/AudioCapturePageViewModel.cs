@@ -1,11 +1,11 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.MuteAudioCapture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.PauseAudioCapture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.SelectAudioCaptureInputSource;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.StartAudioCapture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.StopAudioCapture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.ToggleLocalAudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio.MuteAudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio.PauseAudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio.SelectAudioCaptureInputSource;
+using CaptureTool.Application.Abstractions.Capture.Audio.StartAudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio.StopAudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio.ToggleLocalAudioCapture;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Shared.Commands;

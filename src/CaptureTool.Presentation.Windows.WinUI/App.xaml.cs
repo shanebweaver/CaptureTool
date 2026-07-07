@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Activation;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Themes;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -24,7 +25,7 @@ public partial class App : Microsoft.UI.Xaml.Application
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        AppServiceLocator.Logging.LogException(e.Exception, "Unhandled exception occurred.");
+        ServiceProvider.GetService<ILogService>().LogException(e.Exception, "Unhandled exception occurred.");
     }
 
     private void RestoreAppTheme()
@@ -61,18 +62,18 @@ public partial class App : Microsoft.UI.Xaml.Application
                         }
                         else
                         {
-                            AppServiceLocator.Logging.LogWarning("Protocol activation data is not of expected type.");
+                            ServiceProvider.GetService<ILogService>().LogWarning("Protocol activation data is not of expected type.");
                         }
                         break;
 
                     default:
-                        AppServiceLocator.Logging.LogWarning("Unexpected activation kind.");
+                        ServiceProvider.GetService<ILogService>().LogWarning("Unexpected activation kind.");
                         break;
                 }
             }
             catch (Exception e)
             {
-                AppServiceLocator.Logging.LogException(e, "Activation failed.");
+                ServiceProvider.GetService<ILogService>().LogException(e, "Activation failed.");
             }
         });
     }

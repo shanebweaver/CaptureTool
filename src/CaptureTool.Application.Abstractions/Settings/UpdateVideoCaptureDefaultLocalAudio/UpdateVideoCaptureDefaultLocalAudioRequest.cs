@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureDefaultLocalAudio;
+
+public sealed record UpdateVideoCaptureDefaultLocalAudioRequest(bool IsEnabled);

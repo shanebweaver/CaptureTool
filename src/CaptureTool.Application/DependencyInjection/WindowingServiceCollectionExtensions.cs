@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
-using CaptureTool.Application.Features.Windowing.ShowMainWindow;
+using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
+using CaptureTool.Application.Windowing.ShowMainWindow;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.DependencyInjection;

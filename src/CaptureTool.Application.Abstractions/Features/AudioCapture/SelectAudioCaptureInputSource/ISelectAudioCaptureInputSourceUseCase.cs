@@ -1,7 +1,0 @@
-using CaptureTool.Application.Abstractions.UseCases;
-
-namespace CaptureTool.Application.Abstractions.Features.AudioCapture.SelectAudioCaptureInputSource;
-
-public interface ISelectAudioCaptureInputSourceUseCase : IUseCase<SelectAudioCaptureInputSourceRequest, SelectAudioCaptureInputSourceResponse>
-{
-}

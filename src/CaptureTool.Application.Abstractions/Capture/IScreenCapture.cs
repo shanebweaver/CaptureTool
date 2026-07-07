@@ -9,5 +9,5 @@ public interface IScreenCapture
     Bitmap CombineMonitors(IList<MonitorCaptureResult> monitors);
     Bitmap CreateBitmapFromMonitorCaptureResult(MonitorCaptureResult monitor);
     Bitmap CreateCroppedBitmap(Bitmap image, Rectangle area, float scale);
-    void SaveImageToFile(Image image, string filePath);
+    void SaveImageToFile(System.Drawing.Image image, string filePath);
 }
