@@ -1,10 +1,11 @@
 using CaptureTool.Application.Abstractions.Features.Diagnostics.ClearLogs;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Diagnostics.ClearLogs;
 
-public sealed class ClearLogsUseCase : IClearLogsUseCase
+internal sealed class ClearLogsUseCase : IClearLogsUseCase
 {
     private const string ActivityId = "ClearLogs";
 

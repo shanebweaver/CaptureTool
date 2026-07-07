@@ -1,10 +1,11 @@
 using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AppMenu.ExitApplication;
 
-public sealed class ExitApplicationUseCase : IExitApplicationUseCase
+internal sealed class ExitApplicationUseCase : IExitApplicationUseCase
 {
     private const string ActivityId = "ExitApplication";
 

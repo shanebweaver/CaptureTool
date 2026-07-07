@@ -1,10 +1,11 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.PauseAudioCapture;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioCapture.PauseAudioCapture;
 
-public sealed class PauseAudioCaptureUseCase : IPauseAudioCaptureUseCase
+internal sealed class PauseAudioCaptureUseCase : IPauseAudioCaptureUseCase
 {
     private const string ActivityId = "PauseAudioCapture";
 

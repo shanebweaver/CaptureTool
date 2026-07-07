@@ -1,8 +1,9 @@
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
-using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Features.Settings.Definitions;
+using CaptureTool.Application.Abstractions.Settings.Definitions;
 using CaptureTool.Domain.FileSystem;
+using CaptureTool.Infrastructure.Settings.Serialization;
+using CaptureTool.Infrastructure.Storage;
 
 namespace CaptureTool.Infrastructure.Settings;
 

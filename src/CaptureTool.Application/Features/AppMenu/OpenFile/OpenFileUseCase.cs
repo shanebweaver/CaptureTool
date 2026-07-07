@@ -4,37 +4,42 @@ using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.AudioCapture;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AppMenu.OpenFile;
 
-public sealed class OpenFileUseCase : IOpenFileUseCase
+internal sealed class OpenFileUseCase : IOpenFileUseCase
 {
     private const string ActivityId = "OpenFile";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly IFileTypeDetector _fileTypeDetector;
     private readonly IFilePickerService _filePickerService;
     private readonly INavigationService _navigationService;
     private readonly IStorageService _storageService;
+    private readonly IFileSystem _fileSystem;
+    private readonly IClock _clock;
     private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
 
-    public OpenFileUseCase(IFileTypeDetector fileTypeDetector,
+    public OpenFileUseCase(
         IFilePickerService filePickerService,
         INavigationService navigationService,
         IStorageService storageService,
+        IFileSystem fileSystem,
+        IClock clock,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
+        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
     {
         _useCaseExecutor = useCaseExecutor;
-        _fileTypeDetector = fileTypeDetector;
         _filePickerService = filePickerService;
         _navigationService = navigationService;
         _storageService = storageService;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
+        _fileSystem = fileSystem;
+        _clock = clock;
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
     }
 
     public Task<UseCaseResponse<OpenFileResponse>> ExecuteAsync(OpenFileRequest request, CancellationToken cancellationToken = default)
@@ -65,7 +70,7 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
                 : CopyFileToFolder(file.FilePath, temporaryFolderPath);
                 MarkFileAsRecentlyOpened(filePath);
 
-                CaptureFileType fileType = _fileTypeDetector.DetectFileType(filePath);
+                CaptureFileType fileType = CaptureFileTypeDetector.DetectFileType(filePath);
                 switch (fileType)
                 {
                     case CaptureFileType.Image:
@@ -94,20 +99,20 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
         return fullSourcePath.StartsWith(fullFolderPath, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string CopyFileToFolder(string sourcePath, string folderPath)
+    private string CopyFileToFolder(string sourcePath, string folderPath)
     {
-        Directory.CreateDirectory(folderPath);
+        _fileSystem.CreateDirectory(folderPath);
 
         string destinationPath = Path.Combine(
             folderPath,
             Path.GetFileName(sourcePath));
 
-        File.Copy(sourcePath, destinationPath, true);
+        _fileSystem.CopyFile(sourcePath, destinationPath, true);
         return destinationPath;
     }
 
-    private static void MarkFileAsRecentlyOpened(string filePath)
+    private void MarkFileAsRecentlyOpened(string filePath)
     {
-        File.SetLastWriteTimeUtc(filePath, DateTime.UtcNow);
+        _fileSystem.SetLastWriteTimeUtc(filePath, _clock.UtcNow);
     }
 }

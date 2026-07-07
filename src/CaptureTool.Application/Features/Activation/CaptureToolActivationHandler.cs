@@ -6,14 +6,14 @@ using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
-using CaptureTool.Application.Features.Settings;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Capture;
 using System.Collections.Specialized;
 using System.Web;
 
 namespace CaptureTool.Application.Features.Activation;
 
-public sealed class CaptureToolActivationHandler : IActivationHandler
+internal sealed class CaptureToolActivationHandler : IActivationHandler
 {
     private readonly IOpenSelectionOverlayUseCase _openSelectionOverlay;
     private readonly IShowHomePageUseCase _showHomePage;
@@ -23,6 +23,7 @@ public sealed class CaptureToolActivationHandler : IActivationHandler
     private readonly ILocalizationService _localizationService;
     private readonly INavigationHandler _navigationHandler;
     private readonly INavigationService _navigationService;
+    private readonly IStorageService _storageService;
 
     private readonly SemaphoreSlim _semaphoreActivation = new(1, 1);
     private readonly SemaphoreSlim _semaphoreInit = new(1, 1);
@@ -37,7 +38,8 @@ public sealed class CaptureToolActivationHandler : IActivationHandler
         ILogService logService,
         ILocalizationService localizationService,
         INavigationHandler navigationHandler,
-        INavigationService navigationService)
+        INavigationService navigationService,
+        IStorageService storageService)
     {
         _openSelectionOverlay = openSelectionOverlay;
         _showHomePage = showHomePage;
@@ -47,6 +49,7 @@ public sealed class CaptureToolActivationHandler : IActivationHandler
         _localizationService = localizationService;
         _navigationHandler = navigationHandler;
         _navigationService = navigationService;
+        _storageService = storageService;
     }
 
     private async Task InitializeAsync()
@@ -148,7 +151,7 @@ public sealed class CaptureToolActivationHandler : IActivationHandler
 
     private async Task InitializeSettingsServiceAsync(CancellationToken cancellationToken)
     {
-        string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string appDataPath = _storageService.GetApplicationDataFolderPath();
         string settingsFilePath = Path.Combine(appDataPath, "Settings.json");
         await _settingsService.InitializeAsync(settingsFilePath, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();

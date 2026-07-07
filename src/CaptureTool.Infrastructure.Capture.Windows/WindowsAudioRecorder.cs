@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureKit.Abstractions;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;

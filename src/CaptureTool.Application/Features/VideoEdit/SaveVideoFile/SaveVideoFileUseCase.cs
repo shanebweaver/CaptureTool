@@ -1,26 +1,31 @@
 using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
 
-public sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
+internal sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
 {
     private const string ActivityId = "SaveVideoFile";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IFilePickerService _filePickerService;
     private readonly IVideoFileTrimmer _videoFileTrimmer;
+    private readonly IFileSystem _fileSystem;
 
     public SaveVideoFileUseCase(IFilePickerService filePickerService,
         IVideoFileTrimmer videoFileTrimmer,
+        IFileSystem fileSystem,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _filePickerService = filePickerService;
         _videoFileTrimmer = videoFileTrimmer;
+        _fileSystem = fileSystem;
     }
 
     public bool CanExecute(SaveVideoFileRequest request)
@@ -34,7 +39,7 @@ public sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
             activityId: ActivityId,
             useCase: async _ =>
             {
-                if (string.IsNullOrEmpty(request.VideoPath) || !File.Exists(request.VideoPath))
+                if (string.IsNullOrEmpty(request.VideoPath) || !_fileSystem.FileExists(request.VideoPath))
                 {
                     return new SaveVideoFileResponse(false);
                 }
@@ -61,7 +66,7 @@ public sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
                 }
                 else
                 {
-                    File.Copy(request.VideoPath, file.FilePath, true);
+                    _fileSystem.CopyFile(request.VideoPath, file.FilePath, true);
                 }
 
                 return new SaveVideoFileResponse();

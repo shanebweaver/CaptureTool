@@ -4,11 +4,11 @@ using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.AudioCapture;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.About.OpenAboutPage;
 
-public sealed class OpenAboutPageUseCase : IOpenAboutPageUseCase
+internal sealed class OpenAboutPageUseCase : IOpenAboutPageUseCase
 {
     private const string ActivityId = "OpenAboutPage";
 
@@ -21,11 +21,11 @@ public sealed class OpenAboutPageUseCase : IOpenAboutPageUseCase
         INavigationService navigationService,
         IEditSessionGuard editSessionGuard,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
+        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
     {
         _navigationService = navigationService;
         _editSessionGuard = editSessionGuard;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
         _useCaseExecutor = useCaseExecutor;
     }
 

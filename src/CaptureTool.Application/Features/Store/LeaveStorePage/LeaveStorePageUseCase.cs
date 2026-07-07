@@ -2,10 +2,11 @@ using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Features.Store.LeaveStorePage;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Store.LeaveStorePage;
 
-public sealed class LeaveStorePageUseCase : ILeaveStorePageUseCase
+internal sealed class LeaveStorePageUseCase : ILeaveStorePageUseCase
 {
     private const string ActivityId = "LeaveStorePage";
 

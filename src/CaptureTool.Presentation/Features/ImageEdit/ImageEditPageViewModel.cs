@@ -1,13 +1,12 @@
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.EditSessions;
+using CaptureTool.Application.Abstractions.Features.ImageEdit;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Features.Settings;
-using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
@@ -26,6 +25,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageCanvasPrinter _imageCanvasPrinter;
     private readonly IImageCanvasExporter _imageCanvasExporter;
     private readonly IFilePickerService _filePickerService;
+    private readonly IImageMetadataService _imageMetadataService;
     private readonly IShareService _shareService;
     private readonly ISettingsService _settingsService;
     private readonly ILogService _logService;
@@ -167,6 +167,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageCanvasPrinter imageCanvasPrinter,
         IImageCanvasExporter imageCanvasExporter,
         IFilePickerService filePickerService,
+        IImageMetadataService imageMetadataService,
         IShareService shareService,
         ISettingsService settingsService,
         ILogService logService,
@@ -178,6 +179,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _cancellationService = cancellationService;
         _imageCanvasPrinter = imageCanvasPrinter;
         _filePickerService = filePickerService;
+        _imageMetadataService = imageMetadataService;
         _shareService = shareService;
         _imageCanvasExporter = imageCanvasExporter;
         _settingsService = settingsService;
@@ -242,7 +244,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             Vector2 topLeft = Vector2.Zero;
             ImageFile = imageFile;
-            _editSession = new ImageEditSession(_filePickerService.GetImageFileSize(imageFile));
+            _editSession = new ImageEditSession(_imageMetadataService.GetImageFileSize(imageFile));
             SyncImageGeometryFromSession();
             ApplyImageSizeBasedDefaults(ImageSize);
 

@@ -19,7 +19,6 @@ using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Themes;
-using CaptureTool.Application.Features.Settings;
 using CaptureTool.Presentation.Factories;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;

@@ -1,6 +1,8 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
 using CaptureTool.Application.Features.ImageCapture;
+using CaptureTool.Application.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Features.ImageEdit.OpenImageEditPage;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +19,7 @@ internal static class ImageServiceCollectionExtensions
 
     public static IServiceCollection AddImageEditUseCases(this IServiceCollection services)
     {
+        services.AddTransient<IChromaKeyAccessService, ChromaKeyAccessService>();
         services.AddTransient<IOpenImageEditPageUseCase, OpenImageEditPageUseCase>();
 
         return services;

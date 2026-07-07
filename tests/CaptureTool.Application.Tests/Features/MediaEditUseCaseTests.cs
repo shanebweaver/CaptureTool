@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.SaveAudioFile;
@@ -9,6 +10,7 @@ using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Features.AudioCapture;
 using CaptureTool.Application.Features.AudioEdit.CopyAudioFile;
 using CaptureTool.Application.Features.AudioEdit.OpenAudioEditPage;
 using CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
@@ -28,7 +30,7 @@ public sealed class MediaEditUseCaseTests
     {
         string audioPath = await CreateTempFileAsync("audio.wav", "audio");
         var clipboard = new Mock<IClipboardService>();
-        var useCase = new CopyAudioFileUseCase(clipboard.Object, TestUseCaseExecutor.Instance);
+        var useCase = new CopyAudioFileUseCase(clipboard.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
 
         Assert.IsTrue(useCase.CanExecute(new CopyAudioFileRequest(audioPath)));
         CopyAudioFileResponse response = (await useCase.ExecuteAsync(new CopyAudioFileRequest(audioPath), TestContext.CancellationToken)).Value!;
@@ -41,7 +43,7 @@ public sealed class MediaEditUseCaseTests
     public async Task CopyAudioFileUseCase_WithMissingFile_ReturnsNotCopied()
     {
         var clipboard = new Mock<IClipboardService>();
-        var useCase = new CopyAudioFileUseCase(clipboard.Object, TestUseCaseExecutor.Instance);
+        var useCase = new CopyAudioFileUseCase(clipboard.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
 
         Assert.IsFalse(useCase.CanExecute(new CopyAudioFileRequest(@"C:\missing.wav")));
         CopyAudioFileResponse response = (await useCase.ExecuteAsync(new CopyAudioFileRequest(@"C:\missing.wav"), TestContext.CancellationToken)).Value!;
@@ -59,7 +61,7 @@ public sealed class MediaEditUseCaseTests
         picker
             .Setup(service => service.PickSaveFileAsync(FilePickerType.Audio, UserFolder.Music))
             .ReturnsAsync(new FileReference(destinationPath));
-        var useCase = new SaveAudioFileUseCase(picker.Object, TestUseCaseExecutor.Instance);
+        var useCase = new SaveAudioFileUseCase(picker.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
 
         SaveAudioFileResponse response = (await useCase.ExecuteAsync(new SaveAudioFileRequest(sourcePath), TestContext.CancellationToken)).Value!;
 
@@ -74,9 +76,17 @@ public sealed class MediaEditUseCaseTests
         var audioFile = new AudioFile(audioPath);
         var videoFile = new VideoFile(@"C:\capture.mp4");
         var navigation = new Mock<INavigationService>();
+        var audioCaptureNavigationGuard = new AllowAudioCaptureNavigationGuard();
 
-        var audioUseCase = new OpenAudioEditPageUseCase(navigation.Object, TestUseCaseExecutor.Instance);
-        var videoUseCase = new OpenVideoEditPageUseCase(navigation.Object, TestUseCaseExecutor.Instance);
+        var audioUseCase = new OpenAudioEditPageUseCase(
+            navigation.Object,
+            TestFileSystem.Instance,
+            TestUseCaseExecutor.Instance,
+            audioCaptureNavigationGuard);
+        var videoUseCase = new OpenVideoEditPageUseCase(
+            navigation.Object,
+            TestUseCaseExecutor.Instance,
+            audioCaptureNavigationGuard);
 
         Assert.IsTrue(audioUseCase.CanExecute(new OpenAudioEditPageRequest(audioFile)));
         await audioUseCase.ExecuteAsync(new OpenAudioEditPageRequest(audioFile), TestContext.CancellationToken);
@@ -95,6 +105,7 @@ public sealed class MediaEditUseCaseTests
             clipboard.Object,
             Mock.Of<IStorageService>(),
             Mock.Of<IVideoFileTrimmer>(),
+            TestFileSystem.Instance,
             TestUseCaseExecutor.Instance);
 
         CopyVideoFileResponse response = (await useCase.ExecuteAsync(new CopyVideoFileRequest(videoPath), TestContext.CancellationToken)).Value!;
@@ -113,7 +124,7 @@ public sealed class MediaEditUseCaseTests
         var trimmer = new Mock<IVideoFileTrimmer>();
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(tempFolder);
         storage.Setup(service => service.GetTemporaryFileName()).Returns("trim.tmp");
-        var useCase = new CopyVideoFileUseCase(clipboard.Object, storage.Object, trimmer.Object, TestUseCaseExecutor.Instance);
+        var useCase = new CopyVideoFileUseCase(clipboard.Object, storage.Object, trimmer.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
         var request = new CopyVideoFileRequest(videoPath, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(3));
 
         CopyVideoFileResponse response = (await useCase.ExecuteAsync(request, TestContext.CancellationToken)).Value!;
@@ -134,7 +145,7 @@ public sealed class MediaEditUseCaseTests
         picker
             .Setup(service => service.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos))
             .ReturnsAsync(new FileReference(destinationPath));
-        var useCase = new SaveVideoFileUseCase(picker.Object, trimmer.Object, TestUseCaseExecutor.Instance);
+        var useCase = new SaveVideoFileUseCase(picker.Object, trimmer.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
         var request = new SaveVideoFileRequest(videoPath, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4));
 
         SaveVideoFileResponse response = (await useCase.ExecuteAsync(request, TestContext.CancellationToken)).Value!;
@@ -153,7 +164,7 @@ public sealed class MediaEditUseCaseTests
         picker
             .Setup(service => service.PickSaveFileAsync(FilePickerType.Video, UserFolder.Videos))
             .ReturnsAsync(new FileReference(destinationPath));
-        var useCase = new SaveVideoFileUseCase(picker.Object, trimmer.Object, TestUseCaseExecutor.Instance);
+        var useCase = new SaveVideoFileUseCase(picker.Object, trimmer.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
 
         SaveVideoFileResponse response = (await useCase.ExecuteAsync(new SaveVideoFileRequest(videoPath), TestContext.CancellationToken)).Value!;
 

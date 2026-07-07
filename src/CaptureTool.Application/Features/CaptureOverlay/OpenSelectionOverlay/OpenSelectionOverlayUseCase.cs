@@ -3,11 +3,11 @@ using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelection
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.AudioCapture;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
 
-public sealed class OpenSelectionOverlayUseCase : IOpenSelectionOverlayUseCase
+internal sealed class OpenSelectionOverlayUseCase : IOpenSelectionOverlayUseCase
 {
     private const string ActivityId = "OpenSelectionOverlay";
 
@@ -17,11 +17,11 @@ public sealed class OpenSelectionOverlayUseCase : IOpenSelectionOverlayUseCase
 
     public OpenSelectionOverlayUseCase(INavigationService navigationService,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
+        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
     {
         _useCaseExecutor = useCaseExecutor;
         _navigationService = navigationService;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
     }
 
     public Task<UseCaseResponse<OpenSelectionOverlayResponse>> ExecuteAsync(OpenSelectionOverlayRequest request, CancellationToken cancellationToken = default)

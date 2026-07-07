@@ -1,10 +1,11 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GetAudioInputSources;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.GetAudioInputSources;
 
-public sealed class GetAudioInputSourcesUseCase : IGetAudioInputSourcesUseCase
+internal sealed class GetAudioInputSourcesUseCase : IGetAudioInputSourcesUseCase
 {
     private const string ActivityId = "GetAudioInputSources";
 

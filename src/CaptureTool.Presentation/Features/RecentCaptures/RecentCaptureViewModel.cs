@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.ViewModels;
 
@@ -24,10 +23,10 @@ public sealed partial class RecentCaptureViewModel : ViewModelBase
         private set => Set(ref field, value);
     }
 
-    public RecentCaptureViewModel(string temporaryFilePath, IFileTypeDetector fileTypeDetector)
+    public RecentCaptureViewModel(string temporaryFilePath)
     {
         FilePath = temporaryFilePath;
         FileName = Path.GetFileName(temporaryFilePath);
-        CaptureFileType = fileTypeDetector.DetectFileType(temporaryFilePath);
+        CaptureFileType = CaptureFileTypeDetector.DetectFileType(temporaryFilePath);
     }
 }
