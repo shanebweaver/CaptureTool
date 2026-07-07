@@ -1,18 +1,16 @@
-using System.Runtime.InteropServices;
-
 namespace CaptureTool.Application.Abstractions.Capture;
 
 public interface IScreenRecorder
 {
-    CaptureRecorderResult StartRecording(CaptureRecordingOptions options);
-    CaptureRecorderResult StopRecording();
-    CaptureRecorderResult PauseRecording();
-    CaptureRecorderResult ResumeRecording();
-    CaptureRecorderResult SetAudioCaptureEnabled(bool enabled);
-    CaptureRecorderResult SetAudioInputSource(string? sourceId);
-    CaptureRecorderResult SetAudioInputVolume(int volumePercentage);
-    CaptureRecorderResult RegisterVideoFrameCallback(VideoFrameCallback? callback);
-    CaptureRecorderResult RegisterAudioSampleCallback(AudioSampleCallback? callback);
+    event EventHandler? RecordingStarted;
+
+    void StartRecording(CaptureRecordingOptions options);
+    void StopRecording();
+    void PauseRecording();
+    void ResumeRecording();
+    void SetAudioCaptureEnabled(bool enabled);
+    void SetAudioInputSource(string? sourceId);
+    void SetAudioInputVolume(int volumePercentage);
 }
 
 public readonly record struct CaptureRecordingOptions(
@@ -50,42 +48,3 @@ public enum CaptureRecordingTargetKind
     Window = 1,
     Rectangle = 2
 }
-
-public enum CaptureRecorderStatus
-{
-    Success = 0,
-    InvalidArgument = 1,
-    InvalidState = 2,
-    StartFailed = 3,
-    NoActiveSession = 4
-}
-
-[StructLayout(LayoutKind.Sequential)]
-public readonly struct CaptureRecorderResult
-{
-    public readonly CaptureRecorderStatus Status;
-    public readonly int HResult;
-
-    public CaptureRecorderResult(CaptureRecorderStatus status, int hResult)
-    {
-        Status = status;
-        HResult = hResult;
-    }
-
-    public bool IsSuccess => Status == CaptureRecorderStatus.Success;
-
-    public void EnsureSuccess()
-    {
-        if (!IsSuccess)
-        {
-            Marshal.ThrowExceptionForHR(HResult);
-            throw new InvalidOperationException($"Capture recorder operation failed with status {Status}.");
-        }
-    }
-}
-
-[UnmanagedFunctionPointer(CallingConvention.StdCall)]
-public delegate void VideoFrameCallback(ref VideoFrameData frameData);
-
-[UnmanagedFunctionPointer(CallingConvention.StdCall)]
-public delegate void AudioSampleCallback(ref AudioSampleData sampleData);

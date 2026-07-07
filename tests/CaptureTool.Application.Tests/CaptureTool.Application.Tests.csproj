@@ -6,10 +6,6 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="ViewModels\**\*.cs" />
-  </ItemGroup>
-	
   <!-- Project references -->
   <ItemGroup>
 	<PackageReference Include="AutoFixture.AutoMoq" />
@@ -21,11 +17,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
   </ItemGroup>
-	
-  <!-- Project references -->
+
+  <!-- Package references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Domain\CaptureTool.Domain.csproj" />
-    <ProjectReference Include="..\CaptureTool.Presentation\CaptureTool.Presentation.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Domain\CaptureTool.Domain.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Domain.Capture\CaptureTool.Domain.Capture.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Application\CaptureTool.Application.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

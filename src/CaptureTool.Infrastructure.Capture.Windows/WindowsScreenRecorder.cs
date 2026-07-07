@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Infrastructure.Capture.Windows;
 
@@ -7,19 +6,19 @@ public partial class WindowsScreenRecorder : IScreenRecorder
 {
     private readonly CaptureKit.Abstractions.IVideoCaptureService _videoCaptureService;
     private CaptureKit.Abstractions.IVideoCaptureSession? _session;
-    private VideoFrameCallback? _videoFrameCallback;
-    private AudioSampleCallback? _audioSampleCallback;
 
     public WindowsScreenRecorder(CaptureKit.Abstractions.IVideoCaptureService videoCaptureService)
     {
         _videoCaptureService = videoCaptureService;
     }
 
-    public CaptureRecorderResult StartRecording(CaptureRecordingOptions options)
+    public event EventHandler? RecordingStarted;
+
+    public void StartRecording(CaptureRecordingOptions options)
     {
         if (_session is not null)
         {
-            return new CaptureRecorderResult(CaptureRecorderStatus.InvalidState, 0);
+            throw new InvalidOperationException("A video capture session is already active.");
         }
 
         try
@@ -38,31 +37,28 @@ public partial class WindowsScreenRecorder : IScreenRecorder
             _session.FrameCaptured += OnFrameCaptured;
             _session.AudioSampleCaptured += OnAudioSampleCaptured;
             _session.Start();
-
-            return Success();
         }
         catch (Exception ex)
         {
             DisposeSession();
-            return Failure(CaptureRecorderStatus.StartFailed, ex);
+            throw new InvalidOperationException("Failed to start video recording.", ex);
         }
     }
 
-    public CaptureRecorderResult StopRecording()
+    public void StopRecording()
     {
         if (_session is null)
         {
-            return new CaptureRecorderResult(CaptureRecorderStatus.NoActiveSession, 0);
+            throw new InvalidOperationException("No video capture session is active.");
         }
 
         try
         {
             _session.Stop();
-            return Success();
         }
         catch (Exception ex)
         {
-            return Failure(CaptureRecorderStatus.InvalidState, ex);
+            throw new InvalidOperationException("Failed to stop video recording.", ex);
         }
         finally
         {
@@ -70,32 +66,20 @@ public partial class WindowsScreenRecorder : IScreenRecorder
         }
     }
 
-    public CaptureRecorderResult PauseRecording()
-        => ExecuteOnSession(session => session.Pause());
+    public void PauseRecording()
+        => ExecuteOnSession(session => session.Pause(), "pause video recording");
 
-    public CaptureRecorderResult ResumeRecording()
-        => ExecuteOnSession(session => session.Resume());
+    public void ResumeRecording()
+        => ExecuteOnSession(session => session.Resume(), "resume video recording");
 
-    public CaptureRecorderResult SetAudioCaptureEnabled(bool enabled)
-        => ExecuteOnSession(session => session.SetAudioCaptureEnabled(enabled));
+    public void SetAudioCaptureEnabled(bool enabled)
+        => ExecuteOnSession(session => session.SetAudioCaptureEnabled(enabled), "update audio capture state");
 
-    public CaptureRecorderResult SetAudioInputSource(string? sourceId)
-        => ExecuteOnSession(session => session.SetAudioInputSource(sourceId));
+    public void SetAudioInputSource(string? sourceId)
+        => ExecuteOnSession(session => session.SetAudioInputSource(sourceId), "update audio input source");
 
-    public CaptureRecorderResult SetAudioInputVolume(int volumePercentage)
-        => ExecuteOnSession(session => session.SetAudioInputVolume(volumePercentage));
-
-    public CaptureRecorderResult RegisterVideoFrameCallback(VideoFrameCallback? callback)
-    {
-        _videoFrameCallback = callback;
-        return Success();
-    }
-
-    public CaptureRecorderResult RegisterAudioSampleCallback(AudioSampleCallback? callback)
-    {
-        _audioSampleCallback = callback;
-        return Success();
-    }
+    public void SetAudioInputVolume(int volumePercentage)
+        => ExecuteOnSession(session => session.SetAudioInputVolume(volumePercentage), "update audio input volume");
 
     private static CaptureKit.Abstractions.CaptureTarget MapTarget(CaptureRecordingTarget target)
     {
@@ -113,64 +97,31 @@ public partial class WindowsScreenRecorder : IScreenRecorder
         };
     }
 
-    private CaptureRecorderResult ExecuteOnSession(Action<CaptureKit.Abstractions.IVideoCaptureSession> action)
+    private void ExecuteOnSession(Action<CaptureKit.Abstractions.IVideoCaptureSession> action, string operation)
     {
         if (_session is null)
         {
-            return new CaptureRecorderResult(CaptureRecorderStatus.NoActiveSession, 0);
+            throw new InvalidOperationException("No video capture session is active.");
         }
 
         try
         {
             action(_session);
-            return Success();
         }
         catch (Exception ex)
         {
-            return Failure(CaptureRecorderStatus.InvalidState, ex);
+            throw new InvalidOperationException($"Failed to {operation}.", ex);
         }
     }
 
     private void OnFrameCaptured(object? sender, CaptureKit.Abstractions.VideoFrameCapturedEventArgs e)
     {
-        VideoFrameCallback? callback = _videoFrameCallback;
-        if (callback is null)
-        {
-            return;
-        }
-
-        CaptureKit.Abstractions.VideoFrameData frame = e.FrameData;
-        var data = new VideoFrameData
-        {
-            pTexture = frame.TexturePointer,
-            Timestamp = frame.Timestamp,
-            Width = frame.Width,
-            Height = frame.Height
-        };
-
-        callback(ref data);
+        RecordingStarted?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnAudioSampleCaptured(object? sender, CaptureKit.Abstractions.AudioSampleCapturedEventArgs e)
     {
-        AudioSampleCallback? callback = _audioSampleCallback;
-        if (callback is null)
-        {
-            return;
-        }
-
-        CaptureKit.Abstractions.AudioSampleData sample = e.SampleData;
-        var data = new AudioSampleData
-        {
-            pData = sample.DataPointer,
-            NumFrames = sample.NumFrames,
-            Timestamp = sample.Timestamp,
-            SampleRate = sample.SampleRate,
-            Channels = sample.Channels,
-            BitsPerSample = sample.BitsPerSample
-        };
-
-        callback(ref data);
+        RecordingStarted?.Invoke(this, EventArgs.Empty);
     }
 
     private void DisposeSession()
@@ -185,10 +136,4 @@ public partial class WindowsScreenRecorder : IScreenRecorder
         _session.Dispose();
         _session = null;
     }
-
-    private static CaptureRecorderResult Success()
-        => new(CaptureRecorderStatus.Success, 0);
-
-    private static CaptureRecorderResult Failure(CaptureRecorderStatus status, Exception exception)
-        => new(status, exception.HResult);
 }
