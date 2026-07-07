@@ -8,7 +8,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.VideoEdit.SaveVideoFile;
 
-public sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
+internal sealed class SaveVideoFileUseCase : ISaveVideoFileUseCase
 {
     private const string ActivityId = "SaveVideoFile";
 

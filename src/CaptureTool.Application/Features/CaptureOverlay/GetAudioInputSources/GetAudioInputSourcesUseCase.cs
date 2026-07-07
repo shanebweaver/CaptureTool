@@ -5,7 +5,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.GetAudioInputSources;
 
-public sealed class GetAudioInputSourcesUseCase : IGetAudioInputSourcesUseCase
+internal sealed class GetAudioInputSourcesUseCase : IGetAudioInputSourcesUseCase
 {
     private const string ActivityId = "GetAudioInputSources";
 

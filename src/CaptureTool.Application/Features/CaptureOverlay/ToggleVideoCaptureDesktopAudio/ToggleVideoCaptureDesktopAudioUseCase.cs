@@ -5,7 +5,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.ToggleVideoCaptureDesktopAudio;
 
-public sealed class ToggleVideoCaptureDesktopAudioUseCase : IToggleVideoCaptureDesktopAudioUseCase
+internal sealed class ToggleVideoCaptureDesktopAudioUseCase : IToggleVideoCaptureDesktopAudioUseCase
 {
     private const string ActivityId = "ToggleVideoCaptureDesktopAudio";
 

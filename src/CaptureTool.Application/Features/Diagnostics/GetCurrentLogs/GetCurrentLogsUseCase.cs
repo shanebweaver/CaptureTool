@@ -5,7 +5,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Diagnostics.GetCurrentLogs;
 
-public sealed class GetCurrentLogsUseCase : IGetCurrentLogsUseCase
+internal sealed class GetCurrentLogsUseCase : IGetCurrentLogsUseCase
 {
     private const string ActivityId = "GetCurrentLogs";
 

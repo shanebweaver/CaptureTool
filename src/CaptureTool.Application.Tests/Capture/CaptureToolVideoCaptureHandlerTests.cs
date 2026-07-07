@@ -1,6 +1,8 @@
+using CaptureTool.Application.Abstractions.Capture;
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Features.VideoCapture;
 using CaptureTool.Domain.Capture;
 using FluentAssertions;
@@ -151,6 +153,26 @@ public class CaptureToolVideoCaptureHandlerTests
         // Assert
         handler.IsFinalizing.Should().BeTrue();
         handler.IsRecording.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void StopVideoCapture_ShouldQueueFinalization()
+    {
+        var screenRecorder = Fixture.Freeze<Mock<IScreenRecorder>>();
+        ConfigureSuccessfulRecordingStart(screenRecorder);
+        var storageService = Fixture.Freeze<Mock<IStorageService>>();
+        storageService.Setup(s => s.GetApplicationTemporaryFolderPath()).Returns(Path.GetTempPath());
+        var backgroundTaskRunner = Fixture.Freeze<Mock<IBackgroundTaskRunner>>();
+        var handler = Fixture.Create<CaptureToolVideoCaptureHandler>();
+
+        handler.StartVideoCapture(CreateCaptureArgs());
+
+        handler.StopVideoCapture();
+
+        backgroundTaskRunner.Verify(runner => runner.Run(
+                It.IsAny<Action>(),
+                "Failed to finalize video capture."),
+            Times.Once);
     }
 
     [TestMethod]

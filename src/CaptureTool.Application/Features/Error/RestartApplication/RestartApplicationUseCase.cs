@@ -5,7 +5,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Error.RestartApplication;
 
-public sealed class RestartApplicationUseCase : IRestartApplicationUseCase
+internal sealed class RestartApplicationUseCase : IRestartApplicationUseCase
 {
     private const string ActivityId = "RestartApplication";
 

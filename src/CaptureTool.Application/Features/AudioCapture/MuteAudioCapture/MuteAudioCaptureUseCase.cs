@@ -5,7 +5,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioCapture.MuteAudioCapture;
 
-public sealed class MuteAudioCaptureUseCase : IMuteAudioCaptureUseCase
+internal sealed class MuteAudioCaptureUseCase : IMuteAudioCaptureUseCase
 {
     private const string ActivityId = "MuteAudioCapture";
 

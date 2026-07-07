@@ -5,7 +5,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioCapture.PauseAudioCapture;
 
-public sealed class PauseAudioCaptureUseCase : IPauseAudioCaptureUseCase
+internal sealed class PauseAudioCaptureUseCase : IPauseAudioCaptureUseCase
 {
     private const string ActivityId = "PauseAudioCapture";
 

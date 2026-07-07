@@ -8,7 +8,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.VideoEdit.CopyVideoFile;
 
-public sealed class CopyVideoFileUseCase : ICopyVideoFileUseCase
+internal sealed class CopyVideoFileUseCase : ICopyVideoFileUseCase
 {
     private const string ActivityId = "CopyVideoFile";
 

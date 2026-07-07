@@ -1,13 +1,13 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Features.ImageEdit;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Telemetry;
-using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Presentation.Features.ImageEdit;
@@ -45,6 +45,7 @@ public sealed class ImageEditPageViewModelTests
         Fixture.Freeze<Mock<IImageCanvasPrinter>>();
         Fixture.Freeze<Mock<IImageCanvasExporter>>();
         Fixture.Freeze<Mock<IFilePickerService>>();
+        Fixture.Freeze<Mock<IImageMetadataService>>();
         Fixture.Freeze<Mock<IChromaKeyService>>();
         Fixture.Freeze<Mock<IChromaKeyAccessService>>();
         Fixture.Freeze<Mock<IShareService>>();
@@ -58,7 +59,7 @@ public sealed class ImageEditPageViewModelTests
     {
         // Arrange
         var telemetry = Fixture.Freeze<Mock<ITelemetryService>>();
-        var filePicker = Fixture.Freeze<Mock<IFilePickerService>>();
+        var imageMetadata = Fixture.Freeze<Mock<IImageMetadataService>>();
         var cancel = Fixture.Freeze<Mock<ICancellationService>>();
         var chromaKeyAccess = Fixture.Freeze<Mock<IChromaKeyAccessService>>();
         var chromaService = Fixture.Freeze<Mock<IChromaKeyService>>();
@@ -73,8 +74,8 @@ public sealed class ImageEditPageViewModelTests
               .Returns(cts);
 
         var testFile = new ImageFile("test.png");
-        filePicker.Setup(f => f.GetImageFileSize(testFile))
-                  .Returns(new Size(100, 200));
+        imageMetadata.Setup(service => service.GetImageFileSize(testFile))
+                     .Returns(new Size(100, 200));
 
         var vm = Create();
 

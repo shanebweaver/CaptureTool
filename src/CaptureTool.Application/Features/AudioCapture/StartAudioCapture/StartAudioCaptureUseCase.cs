@@ -5,7 +5,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioCapture.StartAudioCapture;
 
-public sealed class StartAudioCaptureUseCase : IStartAudioCaptureUseCase
+internal sealed class StartAudioCaptureUseCase : IStartAudioCaptureUseCase
 {
     private const string ActivityId = "StartAudioCapture";
 

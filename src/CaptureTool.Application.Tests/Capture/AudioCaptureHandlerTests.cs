@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Tests.Features;

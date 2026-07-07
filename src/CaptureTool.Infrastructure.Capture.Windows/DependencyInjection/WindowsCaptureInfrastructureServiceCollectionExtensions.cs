@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Domain.Capture;
 using CaptureKit.Windows.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;

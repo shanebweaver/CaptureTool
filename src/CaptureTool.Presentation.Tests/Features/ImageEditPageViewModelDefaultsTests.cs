@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Features.ImageEdit;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Localization;
@@ -21,7 +22,7 @@ public sealed class ImageEditPageViewModelDefaultsTests
     [TestMethod]
     public async Task LoadAsync_ShouldScaleInitialShapeAndTextDefaults_ForLargeImages()
     {
-        var filePicker = new Mock<IFilePickerService>();
+        var imageMetadata = new Mock<IImageMetadataService>();
         var cancellationService = new Mock<ICancellationService>();
         var chromaKeyAccess = new Mock<IChromaKeyAccessService>();
         using var linkedCts = new CancellationTokenSource();
@@ -31,15 +32,18 @@ public sealed class ImageEditPageViewModelDefaultsTests
             .Setup(service => service.IsChromaKeyEnabled)
             .Returns(false);
 
-        filePicker
-            .Setup(picker => picker.GetImageFileSize(imageFile))
+        imageMetadata
+            .Setup(service => service.GetImageFileSize(imageFile))
             .Returns(new Size(8000, 4000));
 
         cancellationService
             .Setup(service => service.GetLinkedCancellationTokenSource(It.IsAny<CancellationToken>()))
             .Returns(linkedCts);
 
-        var viewModel = CreateViewModel(filePicker.Object, cancellationService.Object, chromaKeyAccess.Object);
+        var viewModel = CreateViewModel(
+            imageMetadata: imageMetadata.Object,
+            cancellationService: cancellationService.Object,
+            chromaKeyAccess: chromaKeyAccess.Object);
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);
 
@@ -93,7 +97,7 @@ public sealed class ImageEditPageViewModelDefaultsTests
     [TestMethod]
     public async Task ChromaKeyInteraction_ShouldUndoAndRedoAsSingleInteraction()
     {
-        var filePicker = new Mock<IFilePickerService>();
+        var imageMetadata = new Mock<IImageMetadataService>();
         var cancellationService = new Mock<ICancellationService>();
         var chromaKeyAccess = new Mock<IChromaKeyAccessService>();
         var chromaKeyService = new Mock<IChromaKeyService>();
@@ -107,8 +111,8 @@ public sealed class ImageEditPageViewModelDefaultsTests
             .Setup(service => service.IsChromaKeyAddOnOwnedAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        filePicker
-            .Setup(picker => picker.GetImageFileSize(imageFile))
+        imageMetadata
+            .Setup(service => service.GetImageFileSize(imageFile))
             .Returns(new Size(100, 100));
 
         cancellationService
@@ -120,10 +124,10 @@ public sealed class ImageEditPageViewModelDefaultsTests
             .ReturnsAsync([Color.Green]);
 
         var viewModel = CreateViewModel(
-            filePicker.Object,
-            cancellationService.Object,
-            chromaKeyAccess.Object,
-            chromaKeyService.Object);
+            imageMetadata: imageMetadata.Object,
+            cancellationService: cancellationService.Object,
+            chromaKeyAccess: chromaKeyAccess.Object,
+            chromaKeyService: chromaKeyService.Object);
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);
 
@@ -161,6 +165,7 @@ public sealed class ImageEditPageViewModelDefaultsTests
 
     private static ImageEditPageViewModel CreateViewModel(
         IFilePickerService? filePicker = null,
+        IImageMetadataService? imageMetadata = null,
         ICancellationService? cancellationService = null,
         IChromaKeyAccessService? chromaKeyAccess = null,
         IChromaKeyService? chromaKeyService = null)
@@ -171,6 +176,7 @@ public sealed class ImageEditPageViewModelDefaultsTests
             Mock.Of<IImageCanvasPrinter>(),
             Mock.Of<IImageCanvasExporter>(),
             filePicker ?? Mock.Of<IFilePickerService>(),
+            imageMetadata ?? Mock.Of<IImageMetadataService>(),
             Mock.Of<IShareService>(),
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),

@@ -8,7 +8,7 @@ using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Features.Diagnostics.ExportLogs;
 
-public sealed class ExportLogsUseCase : IExportLogsUseCase
+internal sealed class ExportLogsUseCase : IExportLogsUseCase
 {
     private const string ActivityId = "ExportLogs";
 

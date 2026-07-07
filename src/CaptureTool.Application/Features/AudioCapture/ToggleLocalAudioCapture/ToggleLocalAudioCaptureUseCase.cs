@@ -5,7 +5,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioCapture.ToggleLocalAudioCapture;
 
-public sealed class ToggleLocalAudioCaptureUseCase : IToggleLocalAudioCaptureUseCase
+internal sealed class ToggleLocalAudioCaptureUseCase : IToggleLocalAudioCaptureUseCase
 {
     private const string ActivityId = "ToggleLocalAudioCapture";
 

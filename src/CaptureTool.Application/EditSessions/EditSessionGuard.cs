@@ -3,7 +3,7 @@ using CaptureTool.Application.Abstractions.Settings;
 
 namespace CaptureTool.Application.EditSessions;
 
-public sealed class EditSessionGuard : IEditSessionGuard
+internal sealed class EditSessionGuard : IEditSessionGuard
 {
     private readonly IActiveEditSessionService _activeEditSessionService;
     private readonly IEditSessionConfirmationService _confirmationService;

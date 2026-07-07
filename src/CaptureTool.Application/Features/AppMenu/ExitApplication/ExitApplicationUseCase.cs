@@ -5,7 +5,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AppMenu.ExitApplication;
 
-public sealed class ExitApplicationUseCase : IExitApplicationUseCase
+internal sealed class ExitApplicationUseCase : IExitApplicationUseCase
 {
     private const string ActivityId = "ExitApplication";
 

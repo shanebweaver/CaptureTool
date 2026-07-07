@@ -7,7 +7,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
 
-public sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
+internal sealed class SaveAudioFileUseCase : ISaveAudioFileUseCase
 {
     private const string ActivityId = "SaveAudioFile";
 

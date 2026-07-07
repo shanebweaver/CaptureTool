@@ -5,7 +5,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.ToggleVideoCapturePauseResume;
 
-public sealed class ToggleVideoCapturePauseResumeUseCase : IToggleVideoCapturePauseResumeUseCase
+internal sealed class ToggleVideoCapturePauseResumeUseCase : IToggleVideoCapturePauseResumeUseCase
 {
     private const string ActivityId = "ToggleVideoCapturePauseResume";
 

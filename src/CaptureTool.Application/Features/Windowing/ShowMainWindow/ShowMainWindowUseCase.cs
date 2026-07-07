@@ -6,7 +6,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Windowing.ShowMainWindow;
 
-public sealed class ShowMainWindowUseCase : IShowMainWindowUseCase
+internal sealed class ShowMainWindowUseCase : IShowMainWindowUseCase
 {
     private const string ActivityId = "ShowMainWindow";
 

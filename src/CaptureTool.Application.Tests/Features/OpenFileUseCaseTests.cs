@@ -1,7 +1,9 @@
 using CaptureTool.Application.Abstractions.Features.AppMenu.OpenFile;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Features.AudioCapture;
 using CaptureTool.Application.Features.AppMenu.OpenFile;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
@@ -38,7 +40,8 @@ public class OpenFileUseCaseTests
             storageService.Object,
             TestFileSystem.Instance,
             TestClock.Instance,
-            TestUseCaseExecutor.Instance);
+            TestUseCaseExecutor.Instance,
+            new AllowAudioCaptureNavigationGuard());
 
         await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
@@ -78,7 +81,8 @@ public class OpenFileUseCaseTests
             storageService.Object,
             TestFileSystem.Instance,
             TestClock.Instance,
-            TestUseCaseExecutor.Instance);
+            TestUseCaseExecutor.Instance,
+            new AllowAudioCaptureNavigationGuard());
 
         await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 
@@ -116,7 +120,8 @@ public class OpenFileUseCaseTests
             storageService.Object,
             TestFileSystem.Instance,
             TestClock.Instance,
-            TestUseCaseExecutor.Instance);
+            TestUseCaseExecutor.Instance,
+            new AllowAudioCaptureNavigationGuard());
 
         await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
 

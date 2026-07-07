@@ -9,11 +9,10 @@ using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
-using CaptureTool.Application.Features.AudioCapture;
 
 namespace CaptureTool.Application.Features.AppMenu.OpenFile;
 
-public sealed class OpenFileUseCase : IOpenFileUseCase
+internal sealed class OpenFileUseCase : IOpenFileUseCase
 {
     private const string ActivityId = "OpenFile";
 
@@ -32,7 +31,7 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
         IFileSystem fileSystem,
         IClock clock,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
+        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
     {
         _useCaseExecutor = useCaseExecutor;
         _filePickerService = filePickerService;
@@ -40,7 +39,7 @@ public sealed class OpenFileUseCase : IOpenFileUseCase
         _storageService = storageService;
         _fileSystem = fileSystem;
         _clock = clock;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
     }
 
     public Task<UseCaseResponse<OpenFileResponse>> ExecuteAsync(OpenFileRequest request, CancellationToken cancellationToken = default)

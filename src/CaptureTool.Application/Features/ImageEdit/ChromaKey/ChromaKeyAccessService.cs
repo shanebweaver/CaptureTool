@@ -4,7 +4,7 @@ using CaptureTool.Application.Abstractions.Store;
 
 namespace CaptureTool.Application.Features.ImageEdit.ChromaKey;
 
-public sealed class ChromaKeyAccessService : IChromaKeyAccessService
+internal sealed class ChromaKeyAccessService : IChromaKeyAccessService
 {
     private readonly IChromaKeyFeatureAvailability _featureAvailability;
     private readonly IStoreService _storeService;

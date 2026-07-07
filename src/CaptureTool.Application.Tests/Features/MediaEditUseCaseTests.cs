@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Features.AudioEdit.SaveAudioFile;
@@ -9,6 +10,7 @@ using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Features.AudioCapture;
 using CaptureTool.Application.Features.AudioEdit.CopyAudioFile;
 using CaptureTool.Application.Features.AudioEdit.OpenAudioEditPage;
 using CaptureTool.Application.Features.AudioEdit.SaveAudioFile;
@@ -74,9 +76,17 @@ public sealed class MediaEditUseCaseTests
         var audioFile = new AudioFile(audioPath);
         var videoFile = new VideoFile(@"C:\capture.mp4");
         var navigation = new Mock<INavigationService>();
+        var audioCaptureNavigationGuard = new AllowAudioCaptureNavigationGuard();
 
-        var audioUseCase = new OpenAudioEditPageUseCase(navigation.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
-        var videoUseCase = new OpenVideoEditPageUseCase(navigation.Object, TestUseCaseExecutor.Instance);
+        var audioUseCase = new OpenAudioEditPageUseCase(
+            navigation.Object,
+            TestFileSystem.Instance,
+            TestUseCaseExecutor.Instance,
+            audioCaptureNavigationGuard);
+        var videoUseCase = new OpenVideoEditPageUseCase(
+            navigation.Object,
+            TestUseCaseExecutor.Instance,
+            audioCaptureNavigationGuard);
 
         Assert.IsTrue(audioUseCase.CanExecute(new OpenAudioEditPageRequest(audioFile)));
         await audioUseCase.ExecuteAsync(new OpenAudioEditPageRequest(audioFile), TestContext.CancellationToken);

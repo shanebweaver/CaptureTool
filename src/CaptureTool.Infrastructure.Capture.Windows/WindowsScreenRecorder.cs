@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Infrastructure.Capture.Windows;

@@ -11,7 +11,7 @@ using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Features.VideoCapture;
 
-public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
+internal partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 {
     internal enum CaptureState
     {
@@ -25,6 +25,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
     private readonly IScreenRecorder _screenRecorder;
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
+    private readonly IBackgroundTaskRunner _backgroundTaskRunner;
     private readonly ITaskEnvironment _taskEnvironment;
     private readonly ITelemetryService _telemetryService;
     private readonly IClock _clock;
@@ -55,6 +56,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         IScreenRecorder screenRecorder,
         ISettingsService settingsService,
         IStorageService storageService,
+        IBackgroundTaskRunner backgroundTaskRunner,
         ITaskEnvironment taskEnvironment,
         ITelemetryService telemetryService,
         IClock clock)
@@ -64,6 +66,7 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
         _screenRecorder = screenRecorder;
         _settingsService = settingsService;
         _storageService = storageService;
+        _backgroundTaskRunner = backgroundTaskRunner;
         _taskEnvironment = taskEnvironment;
         _telemetryService = telemetryService;
         _clock = clock;
@@ -138,8 +141,9 @@ public partial class CaptureToolVideoCaptureHandler : IVideoCaptureHandler
 
         var pendingVideo = new PendingVideoFile(_tempVideoPath);
 
-        // Finalize video on a background thread to avoid blocking the UI
-        Task.Run(() => FinalizeVideo(pendingVideo));
+        _backgroundTaskRunner.Run(
+            () => FinalizeVideo(pendingVideo),
+            "Failed to finalize video capture.");
 
         NewVideoCaptured?.Invoke(this, pendingVideo);
         return pendingVideo;

@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.UseCases;
 
 namespace CaptureTool.Application.UseCases;
 
-public interface IUseCaseExecutor
+internal interface IUseCaseExecutor
 {
     Task<UseCaseResponse<TResponse>> ExecuteAsync<TResponse>(
         string activityId,

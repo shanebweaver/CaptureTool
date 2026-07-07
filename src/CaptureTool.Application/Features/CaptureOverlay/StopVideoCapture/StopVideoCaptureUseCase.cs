@@ -7,7 +7,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.StopVideoCapture;
 
-public sealed class StopVideoCaptureUseCase : IStopVideoCaptureUseCase
+internal sealed class StopVideoCaptureUseCase : IStopVideoCaptureUseCase
 {
     private const string ActivityId = "StopVideoCapture";
 

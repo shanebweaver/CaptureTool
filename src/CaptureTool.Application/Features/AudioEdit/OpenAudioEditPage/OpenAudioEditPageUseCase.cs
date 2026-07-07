@@ -5,11 +5,10 @@ using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
-using CaptureTool.Application.Features.AudioCapture;
 
 namespace CaptureTool.Application.Features.AudioEdit.OpenAudioEditPage;
 
-public sealed class OpenAudioEditPageUseCase : IOpenAudioEditPageUseCase
+internal sealed class OpenAudioEditPageUseCase : IOpenAudioEditPageUseCase
 {
     private const string ActivityId = "OpenAudioEditPage";
 
@@ -22,11 +21,11 @@ public sealed class OpenAudioEditPageUseCase : IOpenAudioEditPageUseCase
         INavigationService navigationService,
         IFileSystem fileSystem,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
+        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
     {
         _navigationService = navigationService;
         _fileSystem = fileSystem;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
         _useCaseExecutor = useCaseExecutor;
     }
 

@@ -11,7 +11,7 @@ using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Features.RecentCaptures.OpenRecentCapture;
 
-public sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
+internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
 {
     private const string ActivityId = "OpenRecentCapture";
 
@@ -20,7 +20,7 @@ public sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
     private readonly IOpenAudioEditPageUseCase _goToAudioEdit;
     private readonly IOpenImageEditPageUseCase _goToImageEdit;
     private readonly IOpenVideoEditPageUseCase _goToVideoEdit;
-    private readonly IAudioCaptureFeatureAvailability? _audioCaptureFeatureAvailability;
+    private readonly IAudioCaptureFeatureAvailability _audioCaptureFeatureAvailability;
 
     public OpenRecentCaptureUseCase(
         IFileSystem fileSystem,
@@ -28,7 +28,7 @@ public sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
         IOpenImageEditPageUseCase goToImageEdit,
         IOpenVideoEditPageUseCase goToVideoEdit,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureFeatureAvailability? audioCaptureFeatureAvailability = null)
+        IAudioCaptureFeatureAvailability audioCaptureFeatureAvailability)
     {
         _useCaseExecutor = useCaseExecutor;
         _fileSystem = fileSystem;
@@ -58,7 +58,7 @@ public sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
                 switch (fileType)
                 {
                     case CaptureFileType.Audio:
-                        if (_audioCaptureFeatureAvailability?.IsAudioCaptureEnabled == false)
+                        if (!_audioCaptureFeatureAvailability.IsAudioCaptureEnabled)
                         {
                             return new OpenRecentCaptureResponse(false);
                         }

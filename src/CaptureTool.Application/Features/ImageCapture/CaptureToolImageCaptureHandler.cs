@@ -12,7 +12,7 @@ using System.Drawing;
 
 namespace CaptureTool.Application.Features.ImageCapture;
 
-public partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
+internal partial class CaptureToolImageCaptureHandler : IImageCaptureHandler
 {
     private readonly IClipboardService _clipboardService;
     private readonly IFileSystem _fileSystem;

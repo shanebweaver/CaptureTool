@@ -9,19 +9,19 @@ using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Application.Features.RecentCaptures.GetRecentCaptures;
 
-public sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
+internal sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
 {
     private const string ActivityId = "GetRecentCaptures";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IStorageService _storageService;
     private readonly IFileSystem _fileSystem;
-    private readonly IAudioCaptureFeatureAvailability? _audioCaptureFeatureAvailability;
+    private readonly IAudioCaptureFeatureAvailability _audioCaptureFeatureAvailability;
 
     public GetRecentCapturesUseCase(IStorageService storageService,
         IFileSystem fileSystem,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureFeatureAvailability? audioCaptureFeatureAvailability = null)
+        IAudioCaptureFeatureAvailability audioCaptureFeatureAvailability)
     {
         _useCaseExecutor = useCaseExecutor;
         _storageService = storageService;
@@ -61,6 +61,6 @@ public sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
     private bool ShouldIncludeRecentCapture(CaptureFileType captureFileType)
     {
         return captureFileType != CaptureFileType.Audio ||
-            _audioCaptureFeatureAvailability?.IsAudioCaptureEnabled != false;
+            _audioCaptureFeatureAvailability.IsAudioCaptureEnabled;
     }
 }

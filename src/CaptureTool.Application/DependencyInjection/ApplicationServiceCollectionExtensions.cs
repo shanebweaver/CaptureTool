@@ -7,7 +7,7 @@ namespace CaptureTool.Application.DependencyInjection;
 
 public static class ApplicationServiceCollectionExtensions
 {
-    public static IServiceCollection AddApplicationServices(this ServiceCollection services)
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services
             .AddUseCaseServices()

@@ -2,7 +2,7 @@ using CaptureTool.Application.Abstractions.EditSessions;
 
 namespace CaptureTool.Application.EditSessions;
 
-public sealed class ActiveEditSessionService : IActiveEditSessionService
+internal sealed class ActiveEditSessionService : IActiveEditSessionService
 {
     private readonly Lock _lock = new();
     private IEditableSession? _currentSession;

@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Globalization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Abstractions.Time;
 using CaptureTool.Infrastructure.Cancellation;
@@ -17,6 +18,7 @@ using CaptureTool.Infrastructure.Globalization;
 using CaptureTool.Infrastructure.Logging;
 using CaptureTool.Infrastructure.Navigation;
 using CaptureTool.Infrastructure.Settings;
+using CaptureTool.Infrastructure.TaskEnvironment;
 using CaptureTool.Infrastructure.Telemetry;
 using CaptureTool.Infrastructure.Time;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +44,7 @@ public sealed class InfrastructureServiceCollectionExtensionsTests
         AssertHasRegistration<IGlobalizationService, GlobalizationService>(services);
         AssertHasRegistration<INavigationService, NavigationService>(services);
         AssertHasRegistration<ISettingsService, LocalSettingsService>(services);
+        AssertHasRegistration<IBackgroundTaskRunner, BackgroundTaskRunner>(services);
         AssertHasRegistration<ITelemetryService, TelemetryService>(services);
         AssertHasRegistration<IClock, SystemClock>(services);
 #if DEBUG

@@ -6,7 +6,7 @@ using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Features.AudioCapture;
 
-public sealed class AudioCaptureHandler : IAudioCaptureHandler
+internal sealed class AudioCaptureHandler : IAudioCaptureHandler
 {
     private readonly IAudioRecorder _audioRecorder;
     private readonly IStorageService _storageService;

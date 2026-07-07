@@ -8,7 +8,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.CloseCaptureOverlay;
 
-public sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
+internal sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
 {
     private const string ActivityId = "CloseCaptureOverlay";
 

@@ -4,11 +4,10 @@ using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
-using CaptureTool.Application.Features.AudioCapture;
 
 namespace CaptureTool.Application.Features.Store.OpenStorePage;
 
-public sealed class OpenStorePageUseCase : IOpenStorePageUseCase
+internal sealed class OpenStorePageUseCase : IOpenStorePageUseCase
 {
     private const string ActivityId = "OpenStorePage";
 
@@ -18,11 +17,11 @@ public sealed class OpenStorePageUseCase : IOpenStorePageUseCase
 
     public OpenStorePageUseCase(INavigationService navigationService,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
+        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
     {
         _useCaseExecutor = useCaseExecutor;
         _navigationService = navigationService;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
     }
 
     public Task<UseCaseResponse<OpenStorePageResponse>> ExecuteAsync(OpenStorePageRequest request, CancellationToken cancellationToken = default)

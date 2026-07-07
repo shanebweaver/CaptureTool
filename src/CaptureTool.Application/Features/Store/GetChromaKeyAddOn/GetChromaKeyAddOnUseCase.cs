@@ -6,7 +6,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Store.GetChromaKeyAddOn;
 
-public sealed class GetChromaKeyAddOnUseCase : IGetChromaKeyAddOnUseCase
+internal sealed class GetChromaKeyAddOnUseCase : IGetChromaKeyAddOnUseCase
 {
     private const string ActivityId = "GetChromaKeyAddOn";
 

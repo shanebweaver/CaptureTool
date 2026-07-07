@@ -7,7 +7,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.StartVideoCapture;
 
-public sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
+internal sealed class StartVideoCaptureUseCase : IStartVideoCaptureUseCase
 {
     private const string ActivityId = "StartVideoCapture";
 

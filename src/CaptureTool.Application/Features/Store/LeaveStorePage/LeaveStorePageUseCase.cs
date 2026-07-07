@@ -6,7 +6,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Store.LeaveStorePage;
 
-public sealed class LeaveStorePageUseCase : ILeaveStorePageUseCase
+internal sealed class LeaveStorePageUseCase : ILeaveStorePageUseCase
 {
     private const string ActivityId = "LeaveStorePage";
 

@@ -6,7 +6,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioEdit.CopyAudioFile;
 
-public sealed class CopyAudioFileUseCase : ICopyAudioFileUseCase
+internal sealed class CopyAudioFileUseCase : ICopyAudioFileUseCase
 {
     private const string ActivityId = "CopyAudioFile";
 

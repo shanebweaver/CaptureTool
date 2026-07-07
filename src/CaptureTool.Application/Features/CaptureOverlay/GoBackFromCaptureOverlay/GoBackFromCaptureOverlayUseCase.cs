@@ -8,7 +8,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.GoBackFromCaptureOverlay;
 
-public sealed class GoBackFromCaptureOverlayUseCase : IGoBackFromCaptureOverlayUseCase
+internal sealed class GoBackFromCaptureOverlayUseCase : IGoBackFromCaptureOverlayUseCase
 {
     private const string ActivityId = "GoBackFromCaptureOverlay";
 

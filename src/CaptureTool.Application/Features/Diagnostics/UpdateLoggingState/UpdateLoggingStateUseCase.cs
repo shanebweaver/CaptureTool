@@ -6,7 +6,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Diagnostics.UpdateLoggingState;
 
-public sealed class UpdateLoggingStateUseCase : IUpdateLoggingStateUseCase
+internal sealed class UpdateLoggingStateUseCase : IUpdateLoggingStateUseCase
 {
     private const string ActivityId = "UpdateLoggingState";
 

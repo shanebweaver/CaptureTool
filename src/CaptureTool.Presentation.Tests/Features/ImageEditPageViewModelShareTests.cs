@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Features.ImageEdit;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
 using CaptureTool.Application.Abstractions.Localization;
@@ -26,6 +27,7 @@ public sealed class ImageEditPageViewModelShareTests
         var printer = Mock.Of<IImageCanvasPrinter>();
         var exporter = new Mock<IImageCanvasExporter>();
         var filePicker = new Mock<IFilePickerService>();
+        var imageMetadata = new Mock<IImageMetadataService>();
         var chromaKeyService = Mock.Of<IChromaKeyService>();
         var chromaKeyAccess = new Mock<IChromaKeyAccessService>();
         var shareService = new Mock<IShareService>();
@@ -48,8 +50,8 @@ public sealed class ImageEditPageViewModelShareTests
             .Setup(service => service.IsChromaKeyEnabled)
             .Returns(false);
 
-        filePicker
-            .Setup(picker => picker.GetImageFileSize(imageFile))
+        imageMetadata
+            .Setup(service => service.GetImageFileSize(imageFile))
             .Returns(new Size(100, 200));
 
         exporter
@@ -64,6 +66,7 @@ public sealed class ImageEditPageViewModelShareTests
             printer,
             exporter.Object,
             filePicker.Object,
+            imageMetadata.Object,
             shareService.Object,
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),

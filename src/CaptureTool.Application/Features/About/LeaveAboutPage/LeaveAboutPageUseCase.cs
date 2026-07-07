@@ -6,7 +6,7 @@ using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.About.LeaveAboutPage;
 
-public sealed class LeaveAboutPageUseCase : ILeaveAboutPageUseCase
+internal sealed class LeaveAboutPageUseCase : ILeaveAboutPageUseCase
 {
     private const string ActivityId = "LeaveAboutPage";
 

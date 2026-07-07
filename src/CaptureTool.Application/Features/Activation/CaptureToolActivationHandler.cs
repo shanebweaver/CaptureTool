@@ -13,7 +13,7 @@ using System.Web;
 
 namespace CaptureTool.Application.Features.Activation;
 
-public sealed class CaptureToolActivationHandler : IActivationHandler
+internal sealed class CaptureToolActivationHandler : IActivationHandler
 {
     private readonly IOpenSelectionOverlayUseCase _openSelectionOverlay;
     private readonly IShowHomePageUseCase _showHomePage;

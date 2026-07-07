@@ -31,7 +31,11 @@ public sealed class GetRecentCapturesUseCaseTests
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
             .Returns(tempFolder);
-        GetRecentCapturesUseCase useCase = new(storageService.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
+        GetRecentCapturesUseCase useCase = new(
+            storageService.Object,
+            TestFileSystem.Instance,
+            TestUseCaseExecutor.Instance,
+            Mock.Of<IAudioCaptureFeatureAvailability>(availability => availability.IsAudioCaptureEnabled));
 
         GetRecentCapturesResponse? response = (await useCase.ExecuteAsync(new GetRecentCapturesRequest(), TestContext.CancellationToken)).Value;
 

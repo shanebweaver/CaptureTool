@@ -29,6 +29,7 @@ using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.About.LeaveAboutPage;
 using CaptureTool.Application.Features.About.OpenAboutPage;
 using CaptureTool.Application.Features.AppMenu.ExitApplication;
+using CaptureTool.Application.Features.AudioCapture;
 using CaptureTool.Application.Features.AudioCapture.OpenAudioCapturePage;
 using CaptureTool.Application.Features.AudioCapture.PauseAudioCapture;
 using CaptureTool.Application.Features.AudioCapture.StartAudioCapture;
@@ -38,7 +39,7 @@ using CaptureTool.Application.Features.Error.RestartApplication;
 using CaptureTool.Application.Features.Home.ShowHomePage;
 using CaptureTool.Application.Features.ImageEdit.OpenImageEditPage;
 using CaptureTool.Application.Features.RecentCaptures.OpenRecentCapture;
-using CaptureTool.Application.Features.SettingsPage.OpenSettingsPage;
+using CaptureTool.Application.Features.Settings.OpenSettingsPage;
 using CaptureTool.Application.Features.Store.GetChromaKeyAddOn;
 using CaptureTool.Application.Features.Store.LeaveStorePage;
 using CaptureTool.Application.Features.Store.OpenStorePage;
@@ -61,18 +62,19 @@ public sealed class SimpleApplicationUseCaseTests
             .Setup(service => service.CanLeaveCurrentSessionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         var imageFile = new ImageFile("capture.png");
+        var audioCaptureNavigationGuard = new AllowAudioCaptureNavigationGuard();
 
-        await new OpenAboutPageUseCase(navigation.Object, editGuard.Object, TestUseCaseExecutor.Instance)
+        await new OpenAboutPageUseCase(navigation.Object, editGuard.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
             .ExecuteAsync(new OpenAboutPageRequest(), TestContext.CancellationToken);
-        await new ShowHomePageUseCase(navigation.Object, TestUseCaseExecutor.Instance)
+        await new ShowHomePageUseCase(navigation.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
             .ExecuteAsync(new ShowHomePageRequest(), TestContext.CancellationToken);
-        await new OpenStorePageUseCase(navigation.Object, TestUseCaseExecutor.Instance)
+        await new OpenStorePageUseCase(navigation.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
             .ExecuteAsync(new OpenStorePageRequest(), TestContext.CancellationToken);
-        await new OpenSettingsPageUseCase(navigation.Object, editGuard.Object, TestUseCaseExecutor.Instance)
+        await new OpenSettingsPageUseCase(navigation.Object, editGuard.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
             .ExecuteAsync(new OpenSettingsPageRequest(), TestContext.CancellationToken);
-        await new OpenAudioCapturePageUseCase(navigation.Object, TestUseCaseExecutor.Instance)
+        await new OpenAudioCapturePageUseCase(navigation.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
             .ExecuteAsync(new OpenAudioCapturePageRequest(), TestContext.CancellationToken);
-        await new OpenImageEditPageUseCase(navigation.Object, TestUseCaseExecutor.Instance)
+        await new OpenImageEditPageUseCase(navigation.Object, TestUseCaseExecutor.Instance, audioCaptureNavigationGuard)
             .ExecuteAsync(new OpenImageEditPageRequest(imageFile), TestContext.CancellationToken);
 
         navigation.Verify(service => service.Navigate(NavigationRoute.About, null, false), Times.Once);
@@ -186,12 +188,15 @@ public sealed class SimpleApplicationUseCaseTests
         videoEdit
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenVideoEditPageRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<OpenVideoEditPageResponse>.Success(new OpenVideoEditPageResponse()));
+        var audioCaptureFeatureAvailability = Mock.Of<IAudioCaptureFeatureAvailability>(
+            availability => availability.IsAudioCaptureEnabled);
         var useCase = new OpenRecentCaptureUseCase(
             TestFileSystem.Instance,
             audioEdit.Object,
             imageEdit.Object,
             videoEdit.Object,
-            TestUseCaseExecutor.Instance);
+            TestUseCaseExecutor.Instance,
+            audioCaptureFeatureAvailability);
 
         Assert.IsTrue(useCase.CanExecute(new OpenRecentCaptureRequest(audioPath)));
         OpenRecentCaptureResponse audioResponse = (await useCase.ExecuteAsync(new OpenRecentCaptureRequest(audioPath), TestContext.CancellationToken)).Value!;
@@ -215,7 +220,9 @@ public sealed class SimpleApplicationUseCaseTests
             Mock.Of<IOpenAudioEditPageUseCase>(),
             Mock.Of<IOpenImageEditPageUseCase>(),
             Mock.Of<IOpenVideoEditPageUseCase>(),
-            TestUseCaseExecutor.Instance);
+            TestUseCaseExecutor.Instance,
+            Mock.Of<IAudioCaptureFeatureAvailability>(
+                availability => availability.IsAudioCaptureEnabled));
 
         Assert.IsFalse(useCase.CanExecute(new OpenRecentCaptureRequest("")));
         OpenRecentCaptureResponse missingResponse = (await useCase.ExecuteAsync(new OpenRecentCaptureRequest(@"C:\missing.png"), TestContext.CancellationToken)).Value!;

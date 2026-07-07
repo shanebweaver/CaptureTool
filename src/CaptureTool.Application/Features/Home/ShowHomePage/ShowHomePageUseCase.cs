@@ -4,11 +4,10 @@ using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
-using CaptureTool.Application.Features.AudioCapture;
 
 namespace CaptureTool.Application.Features.Home.ShowHomePage;
 
-public sealed class ShowHomePageUseCase : IShowHomePageUseCase
+internal sealed class ShowHomePageUseCase : IShowHomePageUseCase
 {
     private const string ActivityId = "ShowHomePage";
 
@@ -19,10 +18,10 @@ public sealed class ShowHomePageUseCase : IShowHomePageUseCase
     public ShowHomePageUseCase(
         INavigationService navigationService,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
+        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
     {
         _navigationService = navigationService;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
         _useCaseExecutor = useCaseExecutor;
     }
 
