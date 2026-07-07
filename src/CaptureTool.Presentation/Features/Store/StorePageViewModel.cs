@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Cancellation;
-using CaptureTool.Application.Abstractions.Features.Store.GetChromaKeyAddOn;
-using CaptureTool.Application.Abstractions.Features.Store.LeaveStorePage;
-using CaptureTool.Application.Abstractions.Features.Store.PurchaseChromaKeyAddOn;
+using CaptureTool.Application.Abstractions.Store.GetChromaKeyAddOn;
+using CaptureTool.Application.Abstractions.Store.LeaveStorePage;
+using CaptureTool.Application.Abstractions.Store.PurchaseChromaKeyAddOn;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Presentation.Shared.Commands;

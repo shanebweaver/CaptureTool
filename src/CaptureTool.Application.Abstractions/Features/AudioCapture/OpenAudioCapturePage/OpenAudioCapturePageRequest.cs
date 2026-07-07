@@ -1,3 +1,0 @@
-namespace CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
-
-public sealed record OpenAudioCapturePageRequest;

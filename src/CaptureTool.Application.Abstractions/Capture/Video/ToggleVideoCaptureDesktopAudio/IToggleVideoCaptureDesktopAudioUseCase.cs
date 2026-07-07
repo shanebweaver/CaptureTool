@@ -1,0 +1,7 @@
+using CaptureTool.Application.Abstractions.UseCases;
+
+namespace CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDesktopAudio;
+
+public interface IToggleVideoCaptureDesktopAudioUseCase : IUseCase<ToggleVideoCaptureDesktopAudioRequest, ToggleVideoCaptureDesktopAudioResponse>
+{
+}

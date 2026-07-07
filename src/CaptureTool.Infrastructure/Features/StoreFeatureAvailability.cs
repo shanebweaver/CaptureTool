@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Features.Store;
+using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.FeatureManagement;
 
 namespace CaptureTool.Infrastructure.Features;

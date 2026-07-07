@@ -1,6 +1,6 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Clipboard;
-using CaptureTool.Application.Abstractions.Features.ImageEdit;
+using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Share;

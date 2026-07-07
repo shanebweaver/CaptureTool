@@ -1,7 +1,8 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenCaptureOverlay;
-using CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
-using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
+using CaptureTool.Application.Abstractions.Capture.Image.CaptureImage;
+using CaptureTool.Application.Abstractions.Capture.Overlay.OpenCaptureOverlay;
+using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
+using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
@@ -19,8 +20,8 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
     private readonly IOpenCaptureOverlayUseCase _openVideoCaptureOverlayCommand;
     private readonly IOpenImageEditPageUseCase _openImageEditCommand;
     private readonly IShowMainWindowUseCase _showMainWindowCommand;
+    private readonly ICaptureImageUseCase _captureImageCommand;
     private readonly IShutdownHandler _shutdownHandler;
-    private readonly IImageCaptureHandler _imageCaptureHandler;
     private readonly IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> _captureTypeViewModelFactory;
 
     private static readonly CaptureType[] _imageCaptureTypes = [
@@ -157,17 +158,17 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         IOpenImageEditPageUseCase openImageEditPageCommand,
         IOpenCaptureOverlayUseCase openVideoCaptureOverlayCommand,
         IShowMainWindowUseCase showMainWindowCommand,
+        ICaptureImageUseCase captureImageCommand,
         IThemeService themeService,
         IShutdownHandler shutdownHandler,
-        IImageCaptureHandler imageCaptureHandler,
         IFactoryServiceWithArgs<CaptureModeViewModel, CaptureMode> captureModeViewModelFactory,
         IFactoryServiceWithArgs<CaptureTypeViewModel, CaptureType> captureTypeViewModelFactory)
     {
         _openImageEditCommand = openImageEditPageCommand;
         _openVideoCaptureOverlayCommand = openVideoCaptureOverlayCommand;
         _showMainWindowCommand = showMainWindowCommand;
+        _captureImageCommand = captureImageCommand;
         _shutdownHandler = shutdownHandler;
-        _imageCaptureHandler = imageCaptureHandler;
         _captureTypeViewModelFactory = captureTypeViewModelFactory;
 
         CaptureArea = Rectangle.Empty;
@@ -314,8 +315,11 @@ public sealed partial class SelectionOverlayWindowViewModel : LoadableViewModelB
         if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Image)
         {
             NewCaptureArgs args = new(Monitor.Value, CaptureArea);
-            ImageFile image = _imageCaptureHandler.PerformImageCapture(args);
-            await _openImageEditCommand.ExecuteAsync(new OpenImageEditPageRequest(image), CancellationToken.None);
+            ImageFile? image = (await _captureImageCommand.ExecuteAsync(new CaptureImageRequest(args), CancellationToken.None)).Value?.Image;
+            if (image != null)
+            {
+                await _openImageEditCommand.ExecuteAsync(new OpenImageEditPageRequest(image), CancellationToken.None);
+            }
         }
         else if (SupportedCaptureModes[SelectedCaptureModeIndex].CaptureMode == CaptureMode.Video)
         {

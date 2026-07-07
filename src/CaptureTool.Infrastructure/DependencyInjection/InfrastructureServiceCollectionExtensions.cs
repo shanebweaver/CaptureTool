@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Cancellation;
-using CaptureTool.Application.Abstractions.Features.AudioCapture;
-using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
-using CaptureTool.Application.Abstractions.Features.Store;
+using CaptureTool.Application.Abstractions.Capture.Audio;
+using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
+using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Globalization;
 using CaptureTool.Application.Abstractions.Logging;

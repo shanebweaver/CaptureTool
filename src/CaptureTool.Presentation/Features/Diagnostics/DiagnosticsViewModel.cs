@@ -1,8 +1,8 @@
-using CaptureTool.Application.Abstractions.Features.Diagnostics.ClearLogs;
-using CaptureTool.Application.Abstractions.Features.Diagnostics.ExportLogs;
-using CaptureTool.Application.Abstractions.Features.Diagnostics.GetCurrentLogs;
-using CaptureTool.Application.Abstractions.Features.Diagnostics.GetIsLoggingEnabled;
-using CaptureTool.Application.Abstractions.Features.Diagnostics.UpdateLoggingState;
+using CaptureTool.Application.Abstractions.Diagnostics.ClearLogs;
+using CaptureTool.Application.Abstractions.Diagnostics.ExportLogs;
+using CaptureTool.Application.Abstractions.Diagnostics.GetCurrentLogs;
+using CaptureTool.Application.Abstractions.Diagnostics.GetIsLoggingEnabled;
+using CaptureTool.Application.Abstractions.Diagnostics.UpdateLoggingState;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;

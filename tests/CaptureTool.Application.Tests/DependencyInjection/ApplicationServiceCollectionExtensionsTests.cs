@@ -1,13 +1,22 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Capture.Image.CaptureAllScreensImage;
+using CaptureTool.Application.Abstractions.Capture.Image.CaptureImage;
+using CaptureTool.Application.Abstractions.Capture.Video.StartVideoCapture;
 using CaptureTool.Application.Abstractions.EditSessions;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
-using CaptureTool.Application.Abstractions.Features.Settings.OpenSettingsPage;
+using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Activation;
 using CaptureTool.Application.DependencyInjection;
 using CaptureTool.Application.EditSessions;
-using CaptureTool.Application.Features.AudioCapture;
-using CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
-using CaptureTool.Application.Features.Settings.OpenSettingsPage;
+using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Application.Capture.Image;
+using CaptureTool.Application.Capture.Image.CaptureAllScreensImage;
+using CaptureTool.Application.Capture.Image.CaptureImage;
+using CaptureTool.Application.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.Settings.OpenSettingsPage;
+using CaptureTool.Application.Capture.Video;
+using CaptureTool.Application.Capture.Video.StartVideoCapture;
 using CaptureTool.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,9 +34,21 @@ public sealed class ApplicationServiceCollectionExtensionsTests
 
         Assert.AreSame(services, result);
         AssertHasRegistration<IUseCaseExecutor, UseCaseExecutor>(services, ServiceLifetime.Transient);
+        AssertHasRegistration<IApplicationStartupInitializer, ApplicationStartupInitializer>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IActiveEditSessionService, ActiveEditSessionService>(services, ServiceLifetime.Singleton);
         AssertHasRegistration<IEditSessionGuard, EditSessionGuard>(services, ServiceLifetime.Singleton);
-        AssertHasRegistration<IAudioCaptureHandler, AudioCaptureHandler>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<AudioCaptureWorkflow, AudioCaptureWorkflow>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<IAudioCaptureWorkflow>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<IAudioCaptureState>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<VideoCaptureWorkflow, VideoCaptureWorkflow>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<IVideoCaptureWorkflow>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<IVideoCaptureState>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<IStartVideoCaptureUseCase, StartVideoCaptureUseCase>(services, ServiceLifetime.Transient);
+        AssertHasRegistration<ImageCaptureWorkflow, ImageCaptureWorkflow>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<IImageCaptureWorkflow>(services, ServiceLifetime.Singleton);
+        AssertHasFactoryRegistration<IImageCaptureState>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<ICaptureAllScreensImageUseCase, CaptureAllScreensImageUseCase>(services, ServiceLifetime.Transient);
+        AssertHasRegistration<ICaptureImageUseCase, CaptureImageUseCase>(services, ServiceLifetime.Transient);
         AssertHasRegistration<IOpenSelectionOverlayUseCase, OpenSelectionOverlayUseCase>(services, ServiceLifetime.Transient);
         AssertHasRegistration<IOpenSettingsPageUseCase, OpenSettingsPageUseCase>(services, ServiceLifetime.Transient);
     }
@@ -39,6 +60,16 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         Assert.IsTrue(services.Any(descriptor =>
             descriptor.ServiceType == typeof(TService) &&
             descriptor.ImplementationType == typeof(TImplementation) &&
+            descriptor.Lifetime == lifetime));
+    }
+
+    private static void AssertHasFactoryRegistration<TService>(
+        IServiceCollection services,
+        ServiceLifetime lifetime)
+    {
+        Assert.IsTrue(services.Any(descriptor =>
+            descriptor.ServiceType == typeof(TService) &&
+            descriptor.ImplementationFactory is not null &&
             descriptor.Lifetime == lifetime));
     }
 }

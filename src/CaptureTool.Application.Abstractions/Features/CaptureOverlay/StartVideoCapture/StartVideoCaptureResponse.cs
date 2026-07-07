@@ -1,3 +1,0 @@
-namespace CaptureTool.Application.Abstractions.Features.CaptureOverlay.StartVideoCapture;
-
-public sealed record StartVideoCaptureResponse(bool Succeeded = true);

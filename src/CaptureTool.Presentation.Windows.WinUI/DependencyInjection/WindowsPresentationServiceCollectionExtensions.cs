@@ -1,5 +1,5 @@
 using CaptureTool.Application.Abstractions.EditSessions;
-using CaptureTool.Application.Abstractions.Features.AudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;

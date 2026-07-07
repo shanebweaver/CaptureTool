@@ -1,11 +1,11 @@
-using CaptureTool.Application.Abstractions.Features.About.LeaveAboutPage;
-using CaptureTool.Application.Abstractions.Features.About.OpenAboutPage;
-using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
-using CaptureTool.Application.Abstractions.Features.AppMenu.OpenFile;
-using CaptureTool.Application.Features.About.LeaveAboutPage;
-using CaptureTool.Application.Features.About.OpenAboutPage;
-using CaptureTool.Application.Features.AppMenu.ExitApplication;
-using CaptureTool.Application.Features.AppMenu.OpenFile;
+using CaptureTool.Application.Abstractions.Shell.About.LeaveAboutPage;
+using CaptureTool.Application.Abstractions.Shell.About.OpenAboutPage;
+using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
+using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
+using CaptureTool.Application.Shell.About.LeaveAboutPage;
+using CaptureTool.Application.Shell.About.OpenAboutPage;
+using CaptureTool.Application.Shell.AppMenu.ExitApplication;
+using CaptureTool.Application.Shell.AppMenu.OpenFile;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.DependencyInjection;

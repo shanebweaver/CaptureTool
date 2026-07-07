@@ -1,5 +1,6 @@
-using CaptureTool.Application.Abstractions.Features.Navigation;
+using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.EditSessions;
+using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Presentation.Loading;
 using CaptureTool.Presentation.ViewModels;
 using Microsoft.UI.Xaml.Controls;
@@ -9,6 +10,9 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public abstract class PageBase<VM> : Page where VM : IViewModel
 {
+    private readonly IActiveEditSessionService _activeEditSessionService = App.Current.ServiceProvider.GetService<IActiveEditSessionService>();
+    private readonly ILogService _logService = App.Current.ServiceProvider.GetService<ILogService>();
+    private readonly INavigationService _navigationService = App.Current.ServiceProvider.GetService<INavigationService>();
     private CancellationTokenSource? _loadCts;
 
     public VM ViewModel { get; } = App.Current.ServiceProvider.GetService<VM>();
@@ -26,7 +30,7 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
         {
             if (ViewModel is IEditableSession editableSession)
             {
-                App.Current.ServiceProvider.GetService<IActiveEditSessionService>().SetCurrentSession(editableSession);
+                _activeEditSessionService.SetCurrentSession(editableSession);
             }
 
             if (ViewModel.IsReadyToLoad)
@@ -53,12 +57,12 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
         }
         catch (OperationCanceledException ex)
         {
-            AppServiceLocator.Logging.LogException(ex, "Page load canceled.");
+            _logService.LogException(ex, "Page load canceled.");
         }
         catch (Exception ex)
         {
-            AppServiceLocator.Logging.LogException(ex, "Failed to load page.");
-            AppServiceLocator.Navigation.Navigate(NavigationRoute.Error, ex);
+            _logService.LogException(ex, "Failed to load page.");
+            _navigationService.Navigate(NavigationRoute.Error, ex);
         }
 
         base.OnNavigatedTo(e);
@@ -76,7 +80,7 @@ public abstract class PageBase<VM> : Page where VM : IViewModel
         ViewModel.Dispose();
         if (ViewModel is IEditableSession editableSession)
         {
-            App.Current.ServiceProvider.GetService<IActiveEditSessionService>().ClearCurrentSession(editableSession);
+            _activeEditSessionService.ClearCurrentSession(editableSession);
         }
 
         base.OnNavigatedFrom(e);

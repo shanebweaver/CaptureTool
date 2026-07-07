@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCapturePauseResume;
+
+public sealed record ToggleVideoCapturePauseResumeRequest;

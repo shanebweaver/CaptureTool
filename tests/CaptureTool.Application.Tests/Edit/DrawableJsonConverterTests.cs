@@ -1,3 +1,4 @@
+using CaptureTool.Application.Tests;
 using CaptureTool.Domain.Edit.Drawable;
 using System.Buffers;
 using System.Drawing;

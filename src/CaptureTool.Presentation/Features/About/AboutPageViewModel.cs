@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Features.About.LeaveAboutPage;
+using CaptureTool.Application.Abstractions.Shell.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;

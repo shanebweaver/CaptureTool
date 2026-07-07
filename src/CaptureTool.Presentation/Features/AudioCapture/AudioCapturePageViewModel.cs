@@ -1,10 +1,11 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.MuteAudioCapture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.PauseAudioCapture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.StartAudioCapture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.StopAudioCapture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.ToggleLocalAudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio.MuteAudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio.PauseAudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio.SelectAudioCaptureInputSource;
+using CaptureTool.Application.Abstractions.Capture.Audio.StartAudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio.StopAudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio.ToggleLocalAudioCapture;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Shared.Commands;
@@ -60,8 +61,10 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         private set => Set(ref field, value);
     }
 
-    private readonly IAudioCaptureHandler _audioCaptureHandler;
+    private readonly IAudioCaptureState _audioCaptureState;
     private readonly IAudioInputDetectionService _audioInputDetectionService;
+    private readonly IMuteAudioCaptureUseCase _muteCommand;
+    private readonly ISelectAudioCaptureInputSourceUseCase _selectAudioInputSourceCommand;
     private readonly ITaskEnvironment _taskEnvironment;
     private static readonly TimeSpan TimerInterval = TimeSpan.FromMilliseconds(100);
     private const string DefaultAudioInputSuffix = " (Default)";
@@ -91,17 +94,20 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
     }
 
     public AudioCapturePageViewModel(
-        IAudioCaptureHandler audioCaptureHandler,
+        IAudioCaptureState audioCaptureState,
         IAudioInputDetectionService audioInputDetectionService,
         IStartAudioCaptureUseCase startAction,
         IStopAudioCaptureUseCase stopAction,
         IPauseAudioCaptureUseCase pauseAction,
         IMuteAudioCaptureUseCase muteAction,
+        ISelectAudioCaptureInputSourceUseCase selectAudioInputSourceAction,
         IToggleLocalAudioCaptureUseCase toggleDesktopAudioAction,
         ITaskEnvironment taskEnvironment)
     {
-        _audioCaptureHandler = audioCaptureHandler;
+        _audioCaptureState = audioCaptureState;
         _audioInputDetectionService = audioInputDetectionService;
+        _muteCommand = muteAction;
+        _selectAudioInputSourceCommand = selectAudioInputSourceAction;
         _taskEnvironment = taskEnvironment;
         SelectedAudioInputSourceIndex = -1;
         AudioInputSources = [];
@@ -113,9 +119,9 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         ToggleDesktopAudioCommand = toggleDesktopAudioAction.ToRelayCommand(() => new ToggleLocalAudioCaptureRequest());
 
         // Subscribe to service events for state synchronization
-        _audioCaptureHandler.CaptureStateChanged += OnCaptureStateChanged;
-        _audioCaptureHandler.MutedStateChanged += OnMutedStateChanged;
-        _audioCaptureHandler.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
+        _audioCaptureState.CaptureStateChanged += OnCaptureStateChanged;
+        _audioCaptureState.MutedStateChanged += OnMutedStateChanged;
+        _audioCaptureState.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
         _audioInputDetectionService.AudioInputSourcesChanged += OnAudioInputSourcesChanged;
 
         // Initialize state from service
@@ -125,11 +131,11 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
 
     private void RefreshAudioCaptureStateProperties()
     {
-        CanStartRecording = !_audioCaptureHandler.IsRecording;
-        IsRecording = _audioCaptureHandler.IsRecording;
-        IsPaused = _audioCaptureHandler.IsPaused;
-        IsMuted = _audioCaptureHandler.IsMuted;
-        IsDesktopAudioEnabled = _audioCaptureHandler.IsDesktopAudioEnabled;
+        CanStartRecording = !_audioCaptureState.IsRecording;
+        IsRecording = _audioCaptureState.IsRecording;
+        IsPaused = _audioCaptureState.IsPaused;
+        IsMuted = _audioCaptureState.IsMuted;
+        IsDesktopAudioEnabled = _audioCaptureState.IsDesktopAudioEnabled;
     }
 
     private void OnCaptureStateChanged(object? sender, AudioCaptureState value)
@@ -206,7 +212,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         {
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
-            _audioCaptureHandler.SelectAudioInputSource(null);
+            SelectAudioInputSourceWithoutWaiting(null);
             SetAudioInputMuted(true);
             return;
         }
@@ -222,7 +228,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
 
         SelectedAudioInputSource = GetAudioInputSourceToSelect(selectedAudioInputSourceId);
         SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(SelectedAudioInputSource);
-        _audioCaptureHandler.SelectAudioInputSource(SelectedAudioInputSource.Id);
+        SelectAudioInputSourceWithoutWaiting(SelectedAudioInputSource.Id);
     }
 
     private AudioInputSource GetAudioInputSourceToSelect(string? selectedAudioInputSourceId)
@@ -250,7 +256,14 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
             return;
         }
 
-        _audioCaptureHandler.ToggleMute();
+        _ = _muteCommand.ExecuteAsync(new MuteAudioCaptureRequest(), CancellationToken.None);
+    }
+
+    private void SelectAudioInputSourceWithoutWaiting(string? sourceId)
+    {
+        _ = _selectAudioInputSourceCommand.ExecuteAsync(
+            new SelectAudioCaptureInputSourceRequest(sourceId),
+            CancellationToken.None);
     }
 
     [RelayCommand]
@@ -266,7 +279,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         {
             SelectedAudioInputSource = source;
             SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(source);
-            _audioCaptureHandler.SelectAudioInputSource(source.Id);
+            SelectAudioInputSourceWithoutWaiting(source.Id);
             return;
         }
 
@@ -345,9 +358,9 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
 
     public override void Dispose()
     {
-        _audioCaptureHandler.CaptureStateChanged -= OnCaptureStateChanged;
-        _audioCaptureHandler.MutedStateChanged -= OnMutedStateChanged;
-        _audioCaptureHandler.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
+        _audioCaptureState.CaptureStateChanged -= OnCaptureStateChanged;
+        _audioCaptureState.MutedStateChanged -= OnMutedStateChanged;
+        _audioCaptureState.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
         _audioInputDetectionService.AudioInputSourcesChanged -= OnAudioInputSourcesChanged;
 
         try

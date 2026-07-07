@@ -1,17 +1,17 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.EditSessions;
-using CaptureTool.Application.Abstractions.Features.AudioCapture;
-using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCapturePage;
-using CaptureTool.Application.Abstractions.Features.About.OpenAboutPage;
-using CaptureTool.Application.Abstractions.Features.AppMenu.ExitApplication;
-using CaptureTool.Application.Abstractions.Features.AppMenu.OpenFile;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenSelectionOverlay;
-using CaptureTool.Application.Abstractions.Features.RecentCaptures;
-using CaptureTool.Application.Abstractions.Features.RecentCaptures.GetRecentCaptures;
-using CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCapture;
-using CaptureTool.Application.Abstractions.Features.Settings.OpenSettingsPage;
-using CaptureTool.Application.Abstractions.Features.Store;
-using CaptureTool.Application.Abstractions.Features.Store.OpenStorePage;
+using CaptureTool.Application.Abstractions.Capture.Audio;
+using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
+using CaptureTool.Application.Abstractions.Shell.About.OpenAboutPage;
+using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
+using CaptureTool.Application.Abstractions.Shell.AppMenu.OpenFile;
+using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
+using CaptureTool.Application.Abstractions.Store;
+using CaptureTool.Application.Abstractions.Store.OpenStorePage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Factories;
@@ -54,9 +54,9 @@ public sealed class AppMenuViewModelRefreshTests
             getRecentCapturesUseCase.Object,
             Mock.Of<IAudioCaptureFeatureAvailability>(),
             Mock.Of<IStoreFeatureAvailability>(),
-            Mock.Of<IImageCaptureHandler>(),
-            Mock.Of<IVideoCaptureHandler>(),
-            Mock.Of<IAudioCaptureHandler>(),
+            Mock.Of<IImageCaptureState>(),
+            Mock.Of<IVideoCaptureState>(),
+            Mock.Of<IAudioCaptureState>(),
             recentCaptureFactory.Object);
 
         viewModel.OpenFileCommand.Execute(null);
@@ -154,9 +154,9 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IGetRecentCapturesUseCase>(),
             Mock.Of<IAudioCaptureFeatureAvailability>(),
             Mock.Of<IStoreFeatureAvailability>(),
-            Mock.Of<IImageCaptureHandler>(),
-            Mock.Of<IVideoCaptureHandler>(),
-            Mock.Of<IAudioCaptureHandler>(),
+            Mock.Of<IImageCaptureState>(),
+            Mock.Of<IVideoCaptureState>(),
+            Mock.Of<IAudioCaptureState>(),
             Mock.Of<IFactoryServiceWithArgs<RecentCaptureViewModel, string>>(),
             editSessionGuard);
     }

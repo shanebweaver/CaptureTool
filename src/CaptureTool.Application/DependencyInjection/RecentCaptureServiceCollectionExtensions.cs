@@ -1,7 +1,7 @@
-using CaptureTool.Application.Abstractions.Features.RecentCaptures.GetRecentCaptures;
-using CaptureTool.Application.Abstractions.Features.RecentCaptures.OpenRecentCapture;
-using CaptureTool.Application.Features.RecentCaptures.GetRecentCaptures;
-using CaptureTool.Application.Features.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
+using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Library.RecentCaptures.GetRecentCaptures;
+using CaptureTool.Application.Library.RecentCaptures.OpenRecentCapture;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CaptureTool.Application.DependencyInjection;

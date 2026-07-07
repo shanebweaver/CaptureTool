@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
-using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
+using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
+using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Infrastructure.Edit.Windows.ChromaKey;
 using CaptureTool.Infrastructure.Edit.Windows.DependencyInjection;
 using FluentAssertions;

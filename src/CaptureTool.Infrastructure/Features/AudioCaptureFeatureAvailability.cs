@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Features.AudioCapture;
+using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.FeatureManagement;
 
 namespace CaptureTool.Infrastructure.Features;

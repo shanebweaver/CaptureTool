@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
+using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;

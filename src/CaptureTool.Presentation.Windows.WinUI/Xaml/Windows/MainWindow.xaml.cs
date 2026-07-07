@@ -1,4 +1,7 @@
+using CaptureTool.Application.Abstractions.Capture.Audio;
+using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Presentation.Shell;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
@@ -22,11 +25,23 @@ public sealed partial class MainWindow : Window
     private static readonly SizeInt32 DefaultWindowSize = new(720, 540);
     private static readonly SizeInt32 MinWindowSize = new(500, 374);
 
+    private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
+    private readonly IEditSessionGuard _editSessionGuard;
+    private readonly IShutdownHandler _shutdownHandler;
+    private readonly WinUIAudioCaptureNavigationConfirmationService _audioCaptureNavigationConfirmationService;
+    private readonly WinUIEditSessionConfirmationService _editSessionConfirmationService;
+
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
     private bool _closeConfirmed;
 
     public MainWindow()
     {
+        _audioCaptureNavigationGuard = App.Current.ServiceProvider.GetService<IAudioCaptureNavigationGuard>();
+        _editSessionGuard = App.Current.ServiceProvider.GetService<IEditSessionGuard>();
+        _shutdownHandler = App.Current.ServiceProvider.GetService<IShutdownHandler>();
+        _audioCaptureNavigationConfirmationService = App.Current.ServiceProvider.GetService<WinUIAudioCaptureNavigationConfirmationService>();
+        _editSessionConfirmationService = App.Current.ServiceProvider.GetService<WinUIEditSessionConfirmationService>();
+
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
             presenter.PreferredMinimumWidth = MinWindowSize.Width;
@@ -52,8 +67,8 @@ public sealed partial class MainWindow : Window
 
     private void RootGrid_Loaded(object sender, RoutedEventArgs e)
     {
-        App.Current.ServiceProvider.GetService<WinUIEditSessionConfirmationService>().XamlRoot = RootGrid.XamlRoot;
-        App.Current.ServiceProvider.GetService<WinUIAudioCaptureNavigationConfirmationService>().XamlRoot = RootGrid.XamlRoot;
+        _editSessionConfirmationService.XamlRoot = RootGrid.XamlRoot;
+        _audioCaptureNavigationConfirmationService.XamlRoot = RootGrid.XamlRoot;
     }
 
     private void UpdateAppTitle()
@@ -145,10 +160,10 @@ public sealed partial class MainWindow : Window
         if (!_closeConfirmed)
         {
             args.Handled = true;
-            bool canClose = await AppServiceLocator.EditSessionGuard.CanLeaveCurrentSessionAsync();
+            bool canClose = await _editSessionGuard.CanLeaveCurrentSessionAsync();
             if (canClose)
             {
-                canClose = await AppServiceLocator.AudioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync();
+                canClose = await _audioCaptureNavigationGuard.CanNavigateAwayFromActiveCaptureAsync();
             }
 
             if (canClose)
@@ -171,7 +186,7 @@ public sealed partial class MainWindow : Window
 
         ViewModel.Dispose();
 
-        AppServiceLocator.ShutdownHandler.Shutdown();
+        _shutdownHandler.Shutdown();
     }
 
     private void OnViewModelNavigationRequested(object? sender, INavigationRequest navigationRequest)

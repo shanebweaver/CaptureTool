@@ -1,13 +1,15 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.CloseCaptureOverlay;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GetAudioInputSources;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GoBackFromCaptureOverlay;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.SelectAudioInputSource;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StartVideoCapture;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StopVideoCapture;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.ToggleVideoCaptureDesktopAudio;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.ToggleVideoCapturePauseResume;
+using CaptureTool.Application.Abstractions.Capture.Overlay.CloseCaptureOverlay;
+using CaptureTool.Application.Abstractions.Capture.Overlay.GetAudioInputSources;
+using CaptureTool.Application.Abstractions.Capture.Overlay.GoBackFromCaptureOverlay;
+using CaptureTool.Application.Abstractions.Capture.Video.PrepareVideoCapture;
+using CaptureTool.Application.Abstractions.Capture.Video.SelectAudioInputSource;
+using CaptureTool.Application.Abstractions.Capture.Video.SetVideoCaptureAudioInputMuted;
+using CaptureTool.Application.Abstractions.Capture.Video.StartVideoCapture;
+using CaptureTool.Application.Abstractions.Capture.Video.StopVideoCapture;
+using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDesktopAudio;
+using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCapturePauseResume;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
@@ -26,10 +28,12 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private readonly IStartVideoCaptureUseCase _startVideoCaptureCommand;
     private readonly IStopVideoCaptureUseCase _stopVideoCaptureCommand;
     private readonly IToggleVideoCapturePauseResumeUseCase _toggleVideoCapturePauseResumeCommand;
+    private readonly IPrepareVideoCaptureUseCase _prepareVideoCaptureCommand;
     private readonly IGetAudioInputSourcesUseCase _getAudioInputSourcesCommand;
     private readonly ISelectAudioInputSourceUseCase _selectAudioInputSourceCommand;
+    private readonly ISetVideoCaptureAudioInputMutedUseCase _setVideoCaptureAudioInputMutedCommand;
     private readonly IAudioInputDetectionService _audioInputDetectionService;
-    private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly IVideoCaptureState _videoCaptureState;
     private readonly ITaskEnvironment _taskEnvironment;
 
     private MonitorCaptureResult? _monitorCaptureResult;
@@ -120,20 +124,24 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         IStopVideoCaptureUseCase stopVideoCaptureCommand,
         IToggleVideoCaptureDesktopAudioUseCase toggleVideoCaptureDesktopAudioCommand,
         IToggleVideoCapturePauseResumeUseCase toggleVideoCapturePauseResumeCommand,
+        IPrepareVideoCaptureUseCase prepareVideoCaptureCommand,
         IGetAudioInputSourcesUseCase getAudioInputSourcesCommand,
         ISelectAudioInputSourceUseCase selectAudioInputSourceCommand,
+        ISetVideoCaptureAudioInputMutedUseCase setVideoCaptureAudioInputMutedCommand,
         IAudioInputDetectionService audioInputDetectionService,
         IThemeService themeService,
-        IVideoCaptureHandler videoCaptureHandler,
+        IVideoCaptureState videoCaptureState,
         ITaskEnvironment taskEnvironment)
     {
         _startVideoCaptureCommand = startVideoCaptureCommand;
         _stopVideoCaptureCommand = stopVideoCaptureCommand;
         _toggleVideoCapturePauseResumeCommand = toggleVideoCapturePauseResumeCommand;
+        _prepareVideoCaptureCommand = prepareVideoCaptureCommand;
         _getAudioInputSourcesCommand = getAudioInputSourcesCommand;
         _selectAudioInputSourceCommand = selectAudioInputSourceCommand;
+        _setVideoCaptureAudioInputMutedCommand = setVideoCaptureAudioInputMutedCommand;
         _audioInputDetectionService = audioInputDetectionService;
-        _videoCaptureHandler = videoCaptureHandler;
+        _videoCaptureState = videoCaptureState;
         _taskEnvironment = taskEnvironment;
 
         DefaultAppTheme = themeService.DefaultTheme;
@@ -156,14 +164,16 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         ThrowIfNotReadyToLoad();
         StartLoading();
 
-        _videoCaptureHandler.PrepareForVideoCapture();
+        _prepareVideoCaptureCommand.ExecuteAsync(new PrepareVideoCaptureRequest(), CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
 
-        IsDesktopAudioEnabled = _videoCaptureHandler.IsDesktopAudioEnabled;
-        _videoCaptureHandler.RecordingStarted += OnRecordingStarted;
-        _videoCaptureHandler.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
+        IsDesktopAudioEnabled = _videoCaptureState.IsDesktopAudioEnabled;
+        _videoCaptureState.RecordingStarted += OnRecordingStarted;
+        _videoCaptureState.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
 
-        IsPaused = _videoCaptureHandler.IsPaused;
-        _videoCaptureHandler.PausedStateChanged += OnPausedStateChanged;
+        IsPaused = _videoCaptureState.IsPaused;
+        _videoCaptureState.PausedStateChanged += OnPausedStateChanged;
 
         _audioInputDetectionService.AudioInputSourcesChanged += OnAudioInputSourcesChanged;
         StartAudioInputDetection();
@@ -234,9 +244,9 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
     public override void Dispose()
     {
-        _videoCaptureHandler.RecordingStarted -= OnRecordingStarted;
-        _videoCaptureHandler.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
-        _videoCaptureHandler.PausedStateChanged -= OnPausedStateChanged;
+        _videoCaptureState.RecordingStarted -= OnRecordingStarted;
+        _videoCaptureState.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
+        _videoCaptureState.PausedStateChanged -= OnPausedStateChanged;
         _audioInputDetectionService.AudioInputSourcesChanged -= OnAudioInputSourcesChanged;
         try
         {
@@ -334,7 +344,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
         {
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
-            _videoCaptureHandler.SelectAudioInputSource(null);
+            SelectAudioInputSourceWithoutWaiting(null);
             SetAudioInputMuted(true);
             return;
         }
@@ -350,7 +360,7 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
 
         SelectedAudioInputSource = GetAudioInputSourceToSelect();
         SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(SelectedAudioInputSource);
-        _videoCaptureHandler.SelectAudioInputSource(SelectedAudioInputSource.Id);
+        SelectAudioInputSourceWithoutWaiting(SelectedAudioInputSource.Id);
     }
 
     private AudioInputSource GetAudioInputSourceToSelect()
@@ -378,7 +388,16 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
     private void SetAudioInputMuted(bool isMuted)
     {
         IsAudioInputMuted = isMuted;
-        _videoCaptureHandler.SetIsAudioInputMuted(isMuted);
+        _ = _setVideoCaptureAudioInputMutedCommand.ExecuteAsync(
+            new SetVideoCaptureAudioInputMutedRequest(isMuted),
+            CancellationToken.None);
+    }
+
+    private void SelectAudioInputSourceWithoutWaiting(string? sourceId)
+    {
+        _ = _selectAudioInputSourceCommand.ExecuteAsync(
+            new SelectAudioInputSourceRequest(sourceId),
+            CancellationToken.None);
     }
 
     private async Task SelectAudioInputSourceAsync(AudioInputSource? source)

@@ -1,4 +1,4 @@
-using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
+using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 

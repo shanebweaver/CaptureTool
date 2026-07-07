@@ -1,0 +1,7 @@
+using CaptureTool.Application.Abstractions.UseCases;
+
+namespace CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureDefaultLocalAudio;
+
+public interface IUpdateVideoCaptureDefaultLocalAudioUseCase : IUseCase<UpdateVideoCaptureDefaultLocalAudioRequest, UpdateVideoCaptureDefaultLocalAudioResponse>, IConditional<UpdateVideoCaptureDefaultLocalAudioRequest>
+{
+}

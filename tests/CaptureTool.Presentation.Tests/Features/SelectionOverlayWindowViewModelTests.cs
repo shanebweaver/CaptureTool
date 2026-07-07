@@ -1,7 +1,8 @@
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Application.Abstractions.Features.CaptureOverlay.OpenCaptureOverlay;
-using CaptureTool.Application.Abstractions.Features.ImageEdit.OpenImageEditPage;
-using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
+using CaptureTool.Application.Abstractions.Capture.Image.CaptureImage;
+using CaptureTool.Application.Abstractions.Capture.Overlay.OpenCaptureOverlay;
+using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
+using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
@@ -74,9 +75,9 @@ public sealed class SelectionOverlayWindowViewModelTests
             Mock.Of<IOpenImageEditPageUseCase>(),
             Mock.Of<IOpenCaptureOverlayUseCase>(),
             Mock.Of<IShowMainWindowUseCase>(),
+            Mock.Of<ICaptureImageUseCase>(),
             themeService.Object,
             Mock.Of<IShutdownHandler>(),
-            Mock.Of<IImageCaptureHandler>(),
             new CaptureModeViewModelFactory(localizationService.Object),
             new CaptureTypeViewModelFactory(localizationService.Object));
     }

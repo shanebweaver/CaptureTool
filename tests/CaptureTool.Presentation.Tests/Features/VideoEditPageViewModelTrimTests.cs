@@ -1,5 +1,5 @@
-using CaptureTool.Application.Abstractions.Features.VideoEdit.CopyVideoFile;
-using CaptureTool.Application.Abstractions.Features.VideoEdit.SaveVideoFile;
+using CaptureTool.Application.Abstractions.Edit.Video.CopyVideoFile;
+using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;

@@ -1,6 +1,4 @@
-using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Domain.Capture;
-using CaptureTool.Domain.FileSystem;
 using CaptureTool.Infrastructure.Capture.Windows;
 using CaptureTool.Presentation.Features.SelectionOverlay;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
@@ -94,10 +92,14 @@ internal sealed partial class SelectionOverlayHost : IDisposable
         }
     }
 
-    private void OnAllScreensCaptureRequested(object? sender, EventArgs e)
+    private async void OnAllScreensCaptureRequested(object? sender, EventArgs e)
     {
-        ImageFile image = AppServiceLocator.ImageCapture.PerformMultiMonitorImageCapture([.. _monitors]);
-        AppServiceLocator.Navigation.Navigate(NavigationRoute.ImageEdit, image, true);
+        if (_viewModel == null)
+        {
+            return;
+        }
+
+        await _viewModel.CaptureAllScreensAsync([.. _monitors]);
     }
 
     public void Activate()
