@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.StopAudioCapture;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
@@ -12,15 +11,15 @@ internal sealed class StopAudioCaptureUseCase : IStopAudioCaptureUseCase
     private const string ActivityId = "StopAudioCapture";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly IAudioCaptureHandler _audioCaptureHandler;
+    private readonly IAudioCaptureWorkflow _audioCaptureWorkflow;
     private readonly INavigationService _navigationService;
 
-    public StopAudioCaptureUseCase(IAudioCaptureHandler audioCaptureHandler,
+    public StopAudioCaptureUseCase(IAudioCaptureWorkflow audioCaptureWorkflow,
         INavigationService navigationService,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
-        _audioCaptureHandler = audioCaptureHandler;
+        _audioCaptureWorkflow = audioCaptureWorkflow;
         _navigationService = navigationService;
     }
 
@@ -30,7 +29,7 @@ internal sealed class StopAudioCaptureUseCase : IStopAudioCaptureUseCase
             activityId: ActivityId,
             useCase: () =>
             {
-                var audioFile = _audioCaptureHandler.StopCapture();
+                var audioFile = _audioCaptureWorkflow.StopCapture();
                 _navigationService.Navigate(NavigationRoute.AudioEdit, audioFile);
                 return new StopAudioCaptureResponse();
             },

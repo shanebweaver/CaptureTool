@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Abstractions.Features.CaptureOverlay.SetVideoCaptureAudioInputMuted;
+
+public sealed record SetVideoCaptureAudioInputMutedRequest(bool IsMuted);

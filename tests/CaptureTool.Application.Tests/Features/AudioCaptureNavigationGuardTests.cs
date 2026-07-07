@@ -1,7 +1,5 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture;
 using CaptureTool.Application.Features.AudioCapture;
-using CaptureTool.Domain.FileSystem;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;
@@ -12,10 +10,9 @@ public sealed class AudioCaptureNavigationGuardTests
     [TestMethod]
     public async Task CanNavigateAwayFromActiveCaptureAsync_WhenNotRecording_DoesNotPrompt()
     {
-        var audioCaptureHandler = new Mock<IAudioCaptureHandler>();
+        var audioCapture = new FakeAudioCaptureWorkflow { IsRecording = false };
         var confirmationService = new Mock<IAudioCaptureNavigationConfirmationService>();
-        audioCaptureHandler.SetupGet(handler => handler.IsRecording).Returns(false);
-        var guard = new AudioCaptureNavigationGuard(audioCaptureHandler.Object, confirmationService.Object);
+        var guard = new AudioCaptureNavigationGuard(audioCapture, confirmationService.Object);
 
         bool canNavigate = await guard.CanNavigateAwayFromActiveCaptureAsync(TestContext.CancellationToken);
 
@@ -23,44 +20,39 @@ public sealed class AudioCaptureNavigationGuardTests
         confirmationService.Verify(
             service => service.ConfirmStopActiveRecordingAsync(It.IsAny<CancellationToken>()),
             Times.Never);
-        audioCaptureHandler.Verify(handler => handler.StopCapture(), Times.Never);
+        Assert.AreEqual(0, audioCapture.StopCallCount);
     }
 
     [TestMethod]
     public async Task CanNavigateAwayFromActiveCaptureAsync_WhenRecordingAndUserCancels_DoesNotStopCapture()
     {
-        var audioCaptureHandler = new Mock<IAudioCaptureHandler>();
+        var audioCapture = new FakeAudioCaptureWorkflow { IsRecording = true };
         var confirmationService = new Mock<IAudioCaptureNavigationConfirmationService>();
-        audioCaptureHandler.SetupGet(handler => handler.IsRecording).Returns(true);
         confirmationService
             .Setup(service => service.ConfirmStopActiveRecordingAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
-        var guard = new AudioCaptureNavigationGuard(audioCaptureHandler.Object, confirmationService.Object);
+        var guard = new AudioCaptureNavigationGuard(audioCapture, confirmationService.Object);
 
         bool canNavigate = await guard.CanNavigateAwayFromActiveCaptureAsync(TestContext.CancellationToken);
 
         Assert.IsFalse(canNavigate);
-        audioCaptureHandler.Verify(handler => handler.StopCapture(), Times.Never);
+        Assert.AreEqual(0, audioCapture.StopCallCount);
     }
 
     [TestMethod]
     public async Task CanNavigateAwayFromActiveCaptureAsync_WhenRecordingAndUserConfirms_StopsCapture()
     {
-        var audioCaptureHandler = new Mock<IAudioCaptureHandler>();
+        var audioCapture = new FakeAudioCaptureWorkflow { IsRecording = true };
         var confirmationService = new Mock<IAudioCaptureNavigationConfirmationService>();
-        audioCaptureHandler.SetupGet(handler => handler.IsRecording).Returns(true);
-        audioCaptureHandler
-            .Setup(handler => handler.StopCapture())
-            .Returns(new AudioFile("recording.wav"));
         confirmationService
             .Setup(service => service.ConfirmStopActiveRecordingAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        var guard = new AudioCaptureNavigationGuard(audioCaptureHandler.Object, confirmationService.Object);
+        var guard = new AudioCaptureNavigationGuard(audioCapture, confirmationService.Object);
 
         bool canNavigate = await guard.CanNavigateAwayFromActiveCaptureAsync(TestContext.CancellationToken);
 
         Assert.IsTrue(canNavigate);
-        audioCaptureHandler.Verify(handler => handler.StopCapture(), Times.Once);
+        Assert.AreEqual(1, audioCapture.StopCallCount);
     }
 
     public TestContext TestContext { get; set; } = null!;

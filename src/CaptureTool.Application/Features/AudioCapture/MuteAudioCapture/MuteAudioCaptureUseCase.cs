@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.MuteAudioCapture;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
@@ -10,13 +9,13 @@ internal sealed class MuteAudioCaptureUseCase : IMuteAudioCaptureUseCase
     private const string ActivityId = "MuteAudioCapture";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly IAudioCaptureHandler _audioCaptureHandler;
+    private readonly IAudioCaptureWorkflow _audioCaptureWorkflow;
 
-    public MuteAudioCaptureUseCase(IAudioCaptureHandler audioCaptureHandler,
+    public MuteAudioCaptureUseCase(IAudioCaptureWorkflow audioCaptureWorkflow,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
-        _audioCaptureHandler = audioCaptureHandler;
+        _audioCaptureWorkflow = audioCaptureWorkflow;
     }
 
     public Task<UseCaseResponse<MuteAudioCaptureResponse>> ExecuteAsync(MuteAudioCaptureRequest request, CancellationToken cancellationToken = default)
@@ -25,7 +24,7 @@ internal sealed class MuteAudioCaptureUseCase : IMuteAudioCaptureUseCase
             activityId: ActivityId,
             useCase: () =>
             {
-                _audioCaptureHandler.ToggleMute();
+                _audioCaptureWorkflow.ToggleMute();
                 return new MuteAudioCaptureResponse();
             },
             cancellationToken: cancellationToken);

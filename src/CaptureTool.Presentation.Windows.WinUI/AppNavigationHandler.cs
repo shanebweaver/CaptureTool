@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.Navigation;
@@ -20,7 +21,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
     }
 
     private readonly IShutdownHandler _shutdownHandler;
-    private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly ICancelVideoCaptureUseCase _cancelVideoCaptureCommand;
     private readonly INavigationService _navigationService;
     private readonly IShowMainWindowUseCase _showMainWindowCommand;
 
@@ -33,12 +34,12 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
 
     public AppNavigationHandler(
         IShutdownHandler shutdownHandler,
-        IVideoCaptureHandler videoCaptureHandler,
+        ICancelVideoCaptureUseCase cancelVideoCaptureCommand,
         INavigationService navigationService,
         IShowMainWindowUseCase showMainWindowCommand)
     {
         _shutdownHandler = shutdownHandler;
-        _videoCaptureHandler = videoCaptureHandler;
+        _cancelVideoCaptureCommand = cancelVideoCaptureCommand;
         _navigationService = navigationService;
         _showMainWindowCommand = showMainWindowCommand;
     }
@@ -64,7 +65,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                         break;
 
                     case UXHost.CaptureOverlay:
-                        _videoCaptureHandler.CancelVideoCapture();
+                        await CancelVideoCaptureAsync();
                         await DisposeCaptureOverlayHostAsync();
                         _mainWindowHost.ExcludeWindowFromCapture(false);
                         break;
@@ -94,7 +95,7 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                         return;
 
                     case UXHost.CaptureOverlay:
-                        _videoCaptureHandler.CancelVideoCapture();
+                        await CancelVideoCaptureAsync();
                         await DisposeCaptureOverlayHostAsync();
                         break;
                 }
@@ -139,6 +140,11 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
         {
             _semaphoreNavigation.Release();
         }
+    }
+
+    private async Task CancelVideoCaptureAsync()
+    {
+        await _cancelVideoCaptureCommand.ExecuteAsync(new CancelVideoCaptureRequest());
     }
 
     private async Task CreateSelectionOverlayHostAsync(CaptureOptions options)

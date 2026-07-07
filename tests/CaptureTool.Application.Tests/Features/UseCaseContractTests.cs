@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.MuteAudioCapture;
 using CaptureTool.Application.Abstractions.Features.Settings.UpdateAppTheme;
 using CaptureTool.Application.Abstractions.Themes;
@@ -15,12 +14,12 @@ public sealed class UseCaseContractTests
     [TestMethod]
     public async Task MuteAudioCaptureUseCase_ShouldToggleMute()
     {
-        var audioCaptureHandler = new Mock<IAudioCaptureHandler>();
-        var useCase = new MuteAudioCaptureUseCase(audioCaptureHandler.Object, TestUseCaseExecutor.Instance);
+        var audioCapture = new FakeAudioCaptureWorkflow();
+        var useCase = new MuteAudioCaptureUseCase(audioCapture, TestUseCaseExecutor.Instance);
 
         await useCase.ExecuteAsync(new MuteAudioCaptureRequest(), TestContext.CancellationToken);
 
-        audioCaptureHandler.Verify(handler => handler.ToggleMute(), Times.Once);
+        Assert.AreEqual(1, audioCapture.ToggleMuteCallCount);
     }
 
     [TestMethod]

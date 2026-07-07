@@ -3,7 +3,7 @@ using CaptureTool.Domain.FileSystem;
 
 namespace CaptureTool.Application.Abstractions.Capture;
 
-public interface IAudioCaptureHandler
+public interface IAudioCaptureState
 {
     event EventHandler<AudioCaptureState>? CaptureStateChanged;
     event EventHandler<bool>? MutedStateChanged;
@@ -14,12 +14,6 @@ public interface IAudioCaptureHandler
     bool IsPaused { get; }
     bool IsMuted { get; }
     bool IsDesktopAudioEnabled { get; }
+    string? SelectedAudioInputSourceId { get; }
     AudioCaptureState CaptureState { get; }
-
-    void StartCapture();
-    void PauseCapture();
-    AudioFile StopCapture();
-    void SelectAudioInputSource(string? sourceId);
-    void ToggleLocalAudio();
-    void ToggleMute();
 }

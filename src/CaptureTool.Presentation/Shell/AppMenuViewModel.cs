@@ -25,8 +25,8 @@ namespace CaptureTool.Presentation.Shell;
 public sealed partial class AppMenuViewModel : LoadableViewModelBase
 {
     private readonly IImageCaptureHandler _imageCaptureHandler;
-    private readonly IVideoCaptureHandler _videoCaptureHandler;
-    private readonly IAudioCaptureHandler _audioCaptureHandler;
+    private readonly IVideoCaptureState _videoCaptureState;
+    private readonly IAudioCaptureState _audioCaptureState;
     private readonly IOpenFileUseCase _openFileCommand;
     private readonly IOpenRecentCaptureUseCase _openRecentCaptureCommand;
     private readonly IGetRecentCapturesUseCase _getRecentCapturesQuery;
@@ -78,14 +78,14 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IAudioCaptureFeatureAvailability audioCaptureFeatureAvailability,
         IStoreFeatureAvailability storeFeatureAvailability,
         IImageCaptureHandler imageCaptureHandler,
-        IVideoCaptureHandler videoCaptureHandler,
-        IAudioCaptureHandler audioCaptureHandler,
+        IVideoCaptureState videoCaptureState,
+        IAudioCaptureState audioCaptureState,
         IFactoryServiceWithArgs<RecentCaptureViewModel, string> recentCaptureViewModelFactory,
         IEditSessionGuard? editSessionGuard = null)
     {
         _imageCaptureHandler = imageCaptureHandler;
-        _videoCaptureHandler = videoCaptureHandler;
-        _audioCaptureHandler = audioCaptureHandler;
+        _videoCaptureState = videoCaptureState;
+        _audioCaptureState = audioCaptureState;
         _openFileCommand = openFileCommand;
         _openRecentCaptureCommand = openRecentCaptureCommand;
         _getRecentCapturesQuery = getRecentCapturesQuery;
@@ -119,8 +119,8 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
 
         _ = RefreshRecentCapturesAsync();
         _imageCaptureHandler.NewImageCaptured += OnNewImageCaptured;
-        _videoCaptureHandler.NewVideoCaptured += OnNewVideoCaptured;
-        _audioCaptureHandler.NewAudioCaptured += OnNewAudioCaptured;
+        _videoCaptureState.NewVideoCaptured += OnNewVideoCaptured;
+        _audioCaptureState.NewAudioCaptured += OnNewAudioCaptured;
 
         base.Load();
     }
@@ -128,8 +128,8 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     public override void Dispose()
     {
         _imageCaptureHandler.NewImageCaptured -= OnNewImageCaptured;
-        _videoCaptureHandler.NewVideoCaptured -= OnNewVideoCaptured;
-        _audioCaptureHandler.NewAudioCaptured -= OnNewAudioCaptured;
+        _videoCaptureState.NewVideoCaptured -= OnNewVideoCaptured;
+        _audioCaptureState.NewAudioCaptured -= OnNewAudioCaptured;
         base.Dispose();
     }
 

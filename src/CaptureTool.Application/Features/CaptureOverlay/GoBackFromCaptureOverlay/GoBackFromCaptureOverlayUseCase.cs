@@ -1,9 +1,9 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GoBackFromCaptureOverlay;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Features.VideoCapture;
 using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.GoBackFromCaptureOverlay;
@@ -13,15 +13,15 @@ internal sealed class GoBackFromCaptureOverlayUseCase : IGoBackFromCaptureOverla
     private const string ActivityId = "GoBackFromCaptureOverlay";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly IVideoCaptureWorkflow _videoCaptureWorkflow;
     private readonly INavigationService _navigationService;
 
-    public GoBackFromCaptureOverlayUseCase(IVideoCaptureHandler videoCaptureHandler,
+    public GoBackFromCaptureOverlayUseCase(IVideoCaptureWorkflow videoCaptureWorkflow,
         INavigationService navigationService,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
-        _videoCaptureHandler = videoCaptureHandler;
+        _videoCaptureWorkflow = videoCaptureWorkflow;
         _navigationService = navigationService;
     }
 
@@ -55,7 +55,7 @@ internal sealed class GoBackFromCaptureOverlayUseCase : IGoBackFromCaptureOverla
     {
         try
         {
-            _videoCaptureHandler.CancelVideoCapture();
+            _videoCaptureWorkflow.CancelVideoCapture();
             return true;
         }
         catch (Exception)

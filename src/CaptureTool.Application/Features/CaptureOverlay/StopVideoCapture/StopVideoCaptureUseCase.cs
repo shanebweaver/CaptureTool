@@ -1,8 +1,8 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StopVideoCapture;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Features.VideoCapture;
 using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.StopVideoCapture;
@@ -13,15 +13,15 @@ internal sealed class StopVideoCaptureUseCase : IStopVideoCaptureUseCase
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly INavigationService _navigationService;
-    private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly IVideoCaptureWorkflow _videoCaptureWorkflow;
 
     public StopVideoCaptureUseCase(INavigationService navigationService,
-        IVideoCaptureHandler videoCaptureHandler,
+        IVideoCaptureWorkflow videoCaptureWorkflow,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _navigationService = navigationService;
-        _videoCaptureHandler = videoCaptureHandler;
+        _videoCaptureWorkflow = videoCaptureWorkflow;
     }
 
     public bool CanExecute(StopVideoCaptureRequest request)
@@ -36,7 +36,7 @@ internal sealed class StopVideoCaptureUseCase : IStopVideoCaptureUseCase
             activityId: ActivityId,
             useCase: () =>
             {
-                var pendingVideo = _videoCaptureHandler.StopVideoCapture();
+                var pendingVideo = _videoCaptureWorkflow.StopVideoCapture();
                 _navigationService.Navigate(NavigationRoute.VideoEdit, pendingVideo);
                 return new StopVideoCaptureResponse();
             },

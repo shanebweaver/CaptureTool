@@ -3,7 +3,9 @@ using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.CloseCaptureOverlay;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GetAudioInputSources;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GoBackFromCaptureOverlay;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.PrepareVideoCapture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.SelectAudioInputSource;
+using CaptureTool.Application.Abstractions.Features.CaptureOverlay.SetVideoCaptureAudioInputMuted;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StartVideoCapture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StopVideoCapture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.ToggleVideoCaptureDesktopAudio;
@@ -33,7 +35,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
         Assert.IsTrue(context.ViewModel.IsRecording);
         Assert.AreEqual(TimeSpan.Zero, context.ViewModel.CaptureTime);
 
-        context.VideoCaptureHandler.Raise(handler => handler.RecordingStarted += null!, EventArgs.Empty);
+        context.VideoCaptureState.Raise(state => state.RecordingStarted += null!, EventArgs.Empty);
         for (int i = 0; i < 20 && context.ViewModel.CaptureTime == TimeSpan.Zero; i++)
         {
             await Task.Delay(50);
@@ -63,7 +65,9 @@ public sealed class CaptureOverlayViewModelAudioInputTests
         Assert.AreEqual("default", context.ViewModel.SelectedAudioInputSource?.Id);
         Assert.AreEqual("Built-in microphone (Default)", context.ViewModel.SelectedAudioInputSource?.DisplayName);
         Assert.AreEqual(1, context.ViewModel.SelectedAudioInputSourceIndex);
-        context.VideoCaptureHandler.Verify(handler => handler.SelectAudioInputSource("default"), Times.AtLeastOnce);
+        context.SelectAudioInputSource.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<SelectAudioInputSourceRequest>(request => request.SourceId == "default"),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     [TestMethod]
@@ -80,8 +84,12 @@ public sealed class CaptureOverlayViewModelAudioInputTests
         Assert.IsTrue(context.ViewModel.IsAudioInputMuted);
         Assert.IsNull(context.ViewModel.SelectedAudioInputSource);
         Assert.AreEqual(-1, context.ViewModel.SelectedAudioInputSourceIndex);
-        context.VideoCaptureHandler.Verify(handler => handler.SelectAudioInputSource(null), Times.AtLeastOnce);
-        context.VideoCaptureHandler.Verify(handler => handler.SetIsAudioInputMuted(true), Times.AtLeastOnce);
+        context.SelectAudioInputSource.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<SelectAudioInputSourceRequest>(request => request.SourceId == null),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        context.SetAudioInputMuted.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<SetVideoCaptureAudioInputMutedRequest>(request => request.IsMuted),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     [TestMethod]
@@ -104,7 +112,9 @@ public sealed class CaptureOverlayViewModelAudioInputTests
         Assert.IsTrue(context.ViewModel.IsAudioInputSelectionAvailable);
         Assert.IsTrue(context.ViewModel.IsAudioInputMuted);
         Assert.AreEqual("default", context.ViewModel.SelectedAudioInputSource?.Id);
-        context.VideoCaptureHandler.Verify(handler => handler.SetIsAudioInputMuted(true), Times.AtLeastOnce);
+        context.SetAudioInputMuted.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<SetVideoCaptureAudioInputMutedRequest>(request => request.IsMuted),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     [TestMethod]
@@ -132,7 +142,9 @@ public sealed class CaptureOverlayViewModelAudioInputTests
         Assert.IsTrue(context.ViewModel.IsAudioInputSelectionAvailable);
         Assert.IsTrue(context.ViewModel.IsAudioInputMuted);
         Assert.AreEqual("external", context.ViewModel.SelectedAudioInputSource?.Id);
-        context.VideoCaptureHandler.Verify(handler => handler.SetIsAudioInputMuted(true), Times.AtLeastOnce);
+        context.SetAudioInputMuted.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<SetVideoCaptureAudioInputMutedRequest>(request => request.IsMuted),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     private static TestContext CreateViewModel(IReadOnlyList<AudioInputSource> sources)
@@ -159,7 +171,23 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<StartVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<StartVideoCaptureResponse>.Success(new StartVideoCaptureResponse()));
 
-        Mock<IVideoCaptureHandler> videoCaptureHandler = new();
+        Mock<IPrepareVideoCaptureUseCase> prepareVideoCapture = new();
+        prepareVideoCapture
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<PrepareVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<PrepareVideoCaptureResponse>.Success(new PrepareVideoCaptureResponse()));
+
+        Mock<ISelectAudioInputSourceUseCase> selectAudioInputSource = new();
+        selectAudioInputSource
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<SelectAudioInputSourceRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((SelectAudioInputSourceRequest request, CancellationToken _) =>
+                UseCaseResponse<SelectAudioInputSourceResponse>.Success(new SelectAudioInputSourceResponse(!string.IsNullOrWhiteSpace(request.SourceId), false)));
+
+        Mock<ISetVideoCaptureAudioInputMutedUseCase> setAudioInputMuted = new();
+        setAudioInputMuted
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<SetVideoCaptureAudioInputMutedRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<SetVideoCaptureAudioInputMutedResponse>.Success(new SetVideoCaptureAudioInputMutedResponse()));
+
+        Mock<IVideoCaptureState> videoCaptureState = new();
 
         CaptureOverlayViewModel viewModel = new(
             Mock.Of<ICloseCaptureOverlayUseCase>(),
@@ -168,14 +196,16 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             Mock.Of<IStopVideoCaptureUseCase>(),
             Mock.Of<IToggleVideoCaptureDesktopAudioUseCase>(),
             Mock.Of<IToggleVideoCapturePauseResumeUseCase>(),
+            prepareVideoCapture.Object,
             getAudioInputSources.Object,
-            Mock.Of<ISelectAudioInputSourceUseCase>(),
+            selectAudioInputSource.Object,
+            setAudioInputMuted.Object,
             audioInputDetection.Object,
             themeService.Object,
-            videoCaptureHandler.Object,
+            videoCaptureState.Object,
             taskEnvironment.Object);
 
-        return new TestContext(viewModel, audioInputDetection, videoCaptureHandler);
+        return new TestContext(viewModel, audioInputDetection, videoCaptureState, selectAudioInputSource, setAudioInputMuted);
     }
 
     private static CaptureOverlayViewModelOptions CreateOptions()
@@ -194,5 +224,7 @@ public sealed class CaptureOverlayViewModelAudioInputTests
     private sealed record TestContext(
         CaptureOverlayViewModel ViewModel,
         Mock<IAudioInputDetectionService> AudioInputDetection,
-        Mock<IVideoCaptureHandler> VideoCaptureHandler);
+        Mock<IVideoCaptureState> VideoCaptureState,
+        Mock<ISelectAudioInputSourceUseCase> SelectAudioInputSource,
+        Mock<ISetVideoCaptureAudioInputMutedUseCase> SetAudioInputMuted);
 }

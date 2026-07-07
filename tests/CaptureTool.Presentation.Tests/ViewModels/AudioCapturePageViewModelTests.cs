@@ -1,196 +1,195 @@
-using AutoFixture;
-using AutoFixture.AutoMoq;
-using CaptureTool.Presentation.ViewModels;
-using CaptureTool.Application.Abstractions.UseCases.AudioCapture;
-using CaptureTool.Domain.Capture.Abstractions;
-using CaptureTool.Application.Abstractions.Telemetry;
+using CaptureTool.Application.Abstractions.Audio;
+using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.MuteAudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.PauseAudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.SelectAudioCaptureInputSource;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.StartAudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.StopAudioCapture;
+using CaptureTool.Application.Abstractions.Features.AudioCapture.ToggleLocalAudioCapture;
+using CaptureTool.Application.Abstractions.TaskEnvironment;
+using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Domain.Capture;
+using CaptureTool.Presentation.Features.AudioCapture;
+using CommunityToolkit.Mvvm.Input;
 using Moq;
-using CaptureTool.Application.Abstractions.AudioCapture;
 
 namespace CaptureTool.Application.Tests.ViewModels;
 
 [TestClass]
-public class AudioCapturePageViewModelTests
+public sealed class AudioCapturePageViewModelTests
 {
-    public required IFixture Fixture { get; set; }
-
-    private AudioCapturePageViewModel Create() => Fixture.Create<AudioCapturePageViewModel>();
-
-    [TestInitialize]
-    public void Init()
+    [TestMethod]
+    public void Constructor_ShouldInitializeStateFromAudioCaptureState()
     {
-        Fixture = new Fixture()
-            .Customize(new AutoMoqCustomization { ConfigureMembers = true });
+        TestContext context = CreateViewModel([]);
 
-        var audioCaptureHandler = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
-        audioCaptureHandler.Setup(s => s.IsRecording).Returns(false);
-        audioCaptureHandler.Setup(s => s.IsPaused).Returns(false);
-        audioCaptureHandler.Setup(s => s.IsMuted).Returns(false);
-        audioCaptureHandler.Setup(s => s.IsDesktopAudioEnabled).Returns(false);
-
-        Fixture.Freeze<Mock<IAudioCaptureStartUseCase>>();
-        Fixture.Freeze<Mock<IAudioCaptureStopUseCase>>();
-        Fixture.Freeze<Mock<IAudioCapturePauseUseCase>>();
-        Fixture.Freeze<Mock<IAudioCaptureMuteUseCase>>();
-        Fixture.Freeze<Mock<IAudioCaptureToggleDesktopAudioUseCase>>();
-        Fixture.Freeze<Mock<ITelemetryService>>();
+        Assert.IsTrue(context.ViewModel.CanStartRecording);
+        Assert.IsFalse(context.ViewModel.IsRecording);
+        Assert.IsFalse(context.ViewModel.IsPaused);
+        Assert.IsFalse(context.ViewModel.IsMuted);
+        Assert.IsFalse(context.ViewModel.IsDesktopAudioEnabled);
     }
 
     [TestMethod]
-    public void PlayCommand_ShouldInvokeAction_AndTrackTelemetry()
+    public async Task StartCommand_ShouldInvokeStartUseCase()
     {
-        // Arrange
-        var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var playAction = Fixture.Freeze<Mock<IAudioCaptureStartUseCase>>();
-        var vm = Create();
+        TestContext context = CreateViewModel([]);
 
-        // Assert initial state
-        Assert.IsTrue(vm.CanStartRecording);
-        Assert.IsFalse(vm.IsRecording);
+        context.ViewModel.StartCommand.Execute(null);
+        await ((IAsyncRelayCommand)context.ViewModel.StartCommand).ExecutionTask!;
 
-        // Act
-        vm.StartCommand.Execute();
-
-        // Assert
-        playAction.Verify(a => a.Execute(), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Start, It.IsAny<string>()), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Start, It.IsAny<string>()), Times.Once);
+        context.StartAudioCapture.Verify(
+            useCase => useCase.ExecuteAsync(It.IsAny<StartAudioCaptureRequest>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [TestMethod]
-    public void StopCommand_ShouldInvokeAction_AndTrackTelemetry()
+    public void CaptureStateChanged_ShouldRefreshRecordingState()
     {
-        // Arrange
-        var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var stopAction = Fixture.Freeze<Mock<IAudioCaptureStopUseCase>>();
-        var vm = Create();
+        TestContext context = CreateViewModel([]);
 
-        // Act
-        vm.StopCommand.Execute();
+        context.AudioCaptureState.SetupGet(state => state.IsRecording).Returns(true);
+        context.AudioCaptureState.SetupGet(state => state.IsPaused).Returns(false);
+        context.AudioCaptureState.Raise(state => state.CaptureStateChanged += null, context.AudioCaptureState.Object, AudioCaptureState.Recording);
 
-        // Assert
-        stopAction.Verify(a => a.Execute(), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Stop, It.IsAny<string>()), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Stop, It.IsAny<string>()), Times.Once);
+        Assert.IsTrue(context.ViewModel.IsRecording);
+        Assert.IsFalse(context.ViewModel.CanStartRecording);
     }
 
     [TestMethod]
-    public void PauseCommand_ShouldInvokeAction_AndTrackTelemetry()
+    public void CaptureStateChanged_ShouldRefreshPausedState()
     {
-        // Arrange
-        var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var pauseAction = Fixture.Freeze<Mock<IAudioCapturePauseUseCase>>();
-        var vm = Create();
+        TestContext context = CreateViewModel([]);
 
-        // Act
-        vm.PauseCommand.Execute();
+        context.AudioCaptureState.SetupGet(state => state.IsRecording).Returns(true);
+        context.AudioCaptureState.SetupGet(state => state.IsPaused).Returns(true);
+        context.AudioCaptureState.Raise(state => state.CaptureStateChanged += null, context.AudioCaptureState.Object, AudioCaptureState.Paused);
 
-        // Assert
-        pauseAction.Verify(a => a.Execute(), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Pause, It.IsAny<string>()), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Pause, It.IsAny<string>()), Times.Once);
+        Assert.IsTrue(context.ViewModel.IsPaused);
     }
 
     [TestMethod]
-    public void MuteCommand_ShouldInvokeAction_AndTrackTelemetry()
+    public void MutedStateChanged_ShouldRefreshMutedState()
     {
-        // Arrange
-        var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var muteAction = Fixture.Freeze<Mock<IAudioCaptureMuteUseCase>>();
-        var vm = Create();
+        TestContext context = CreateViewModel([]);
 
-        // Act
-        vm.MuteCommand.Execute();
+        context.AudioCaptureState.Raise(state => state.MutedStateChanged += null, context.AudioCaptureState.Object, true);
 
-        // Assert
-        muteAction.Verify(a => a.Execute(), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.Mute, It.IsAny<string>()), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.Mute, It.IsAny<string>()), Times.Once);
+        Assert.IsTrue(context.ViewModel.IsMuted);
     }
 
     [TestMethod]
-    public void ToggleDesktopAudioCommand_ShouldInvokeAction_AndTrackTelemetry()
+    public void DesktopAudioStateChanged_ShouldRefreshDesktopAudioState()
     {
-        // Arrange
-        var telemetryService = Fixture.Freeze<Mock<ITelemetryService>>();
-        var toggleDesktopAudioAction = Fixture.Freeze<Mock<IAudioCaptureToggleDesktopAudioUseCase>>();
-        var vm = Create();
+        TestContext context = CreateViewModel([]);
 
-        // Act
-        vm.ToggleDesktopAudioCommand.Execute();
+        context.AudioCaptureState.Raise(state => state.DesktopAudioStateChanged += null, context.AudioCaptureState.Object, true);
 
-        // Assert
-        toggleDesktopAudioAction.Verify(a => a.Execute(), Times.Once);
-        telemetryService.Verify(t => t.ActivityInitiated(AudioCapturePageViewModel.ActivityIds.ToggleDesktopAudio, It.IsAny<string>()), Times.Once);
-        telemetryService.Verify(t => t.ActivityCompleted(AudioCapturePageViewModel.ActivityIds.ToggleDesktopAudio, It.IsAny<string>()), Times.Once);
+        Assert.IsTrue(context.ViewModel.IsDesktopAudioEnabled);
     }
 
     [TestMethod]
-    public void ViewModel_ShouldSyncStateFromService_WhenPlayingStateChanges()
+    public void AudioInputSourcesChanged_ShouldSelectDefaultInputAndAppendDefaultSuffix()
     {
-        // Arrange
-        var audioCaptureHandler = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
-        var vm = Create();
+        AudioInputSource[] sources =
+        [
+            new("external", "External microphone", false),
+            new("default", "Built-in microphone", true)
+        ];
+        TestContext context = CreateViewModel(sources);
 
-        Assert.IsFalse(vm.IsRecording);
-        Assert.IsTrue(vm.CanStartRecording);
+        context.AudioInputDetection.Raise(
+            service => service.AudioInputSourcesChanged += null!,
+            new AudioInputSourcesChangedEventArgs(AudioInputSourcesChangeReason.EnumerationCompleted, sources));
 
-        // Act
-        audioCaptureHandler.Setup(s => s.IsRecording).Returns(true);
-        audioCaptureHandler.Raise(s => s.CaptureStateChanged += null, audioCaptureHandler.Object, AudioCaptureState.Recording);
-
-        // Assert
-        Assert.IsTrue(vm.IsRecording);
-        Assert.IsFalse(vm.CanStartRecording);
+        Assert.IsTrue(context.ViewModel.IsAudioInputSelectionAvailable);
+        Assert.AreEqual("default", context.ViewModel.SelectedAudioInputSource?.Id);
+        Assert.AreEqual("Built-in microphone (Default)", context.ViewModel.SelectedAudioInputSource?.DisplayName);
+        Assert.AreEqual(1, context.ViewModel.SelectedAudioInputSourceIndex);
+        context.SelectAudioInputSource.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<SelectAudioCaptureInputSourceRequest>(request => request.SourceId == "default"),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     [TestMethod]
-    public void ViewModel_ShouldSyncStateFromService_WhenPausedStateChanges()
+    public void AudioInputSourcesChanged_WhenNoInputsFound_ShouldClearSelectionAndMute()
     {
-        // Arrange
-        var audioCaptureHandler = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
-        var vm = Create();
+        TestContext context = CreateViewModel([]);
 
-        Assert.IsFalse(vm.IsPaused);
+        context.AudioInputDetection.Raise(
+            service => service.AudioInputSourcesChanged += null!,
+            new AudioInputSourcesChangedEventArgs(AudioInputSourcesChangeReason.EnumerationCompleted, []));
 
-        // Act
-        audioCaptureHandler.Setup(s => s.IsPaused).Returns(true);
-        audioCaptureHandler.Raise(s => s.CaptureStateChanged += null, audioCaptureHandler.Object, AudioCaptureState.Paused);
-
-        // Assert
-        Assert.IsTrue(vm.IsPaused);
+        Assert.IsFalse(context.ViewModel.IsAudioInputSelectionAvailable);
+        Assert.IsNull(context.ViewModel.SelectedAudioInputSource);
+        Assert.AreEqual(-1, context.ViewModel.SelectedAudioInputSourceIndex);
+        context.SelectAudioInputSource.Verify(useCase => useCase.ExecuteAsync(
+            It.Is<SelectAudioCaptureInputSourceRequest>(request => request.SourceId == null),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        context.MuteAudioCapture.Verify(useCase => useCase.ExecuteAsync(
+            It.IsAny<MuteAudioCaptureRequest>(),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
-    [TestMethod]
-    public void ViewModel_ShouldSyncStateFromService_WhenMutedStateChanges()
+    private static TestContext CreateViewModel(IReadOnlyList<AudioInputSource> sources)
     {
-        // Arrange
-        var audioCaptureHandler = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
-        var vm = Create();
+        Mock<IAudioCaptureState> audioCaptureState = new();
+        audioCaptureState.SetupGet(state => state.IsRecording).Returns(false);
+        audioCaptureState.SetupGet(state => state.IsPaused).Returns(false);
+        audioCaptureState.SetupGet(state => state.IsMuted).Returns(false);
+        audioCaptureState.SetupGet(state => state.IsDesktopAudioEnabled).Returns(false);
 
-        Assert.IsFalse(vm.IsMuted);
+        Mock<IAudioInputDetectionService> audioInputDetection = new();
+        audioInputDetection
+            .Setup(service => service.GetAudioInputSourcesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sources);
 
-        // Act
-        audioCaptureHandler.Setup(s => s.IsMuted).Returns(true);
-        audioCaptureHandler.Raise(s => s.MutedStateChanged += null, audioCaptureHandler.Object, true);
+        Mock<ITaskEnvironment> taskEnvironment = new();
+        taskEnvironment
+            .Setup(environment => environment.TryExecute(It.IsAny<Action>()))
+            .Callback<Action>(action => action())
+            .Returns(true);
 
-        // Assert
-        Assert.IsTrue(vm.IsMuted);
+        Mock<IStartAudioCaptureUseCase> startAudioCapture = new();
+        startAudioCapture
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<StartAudioCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<StartAudioCaptureResponse>.Success(new StartAudioCaptureResponse()));
+
+        Mock<IMuteAudioCaptureUseCase> muteAudioCapture = new();
+        muteAudioCapture
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<MuteAudioCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<MuteAudioCaptureResponse>.Success(new MuteAudioCaptureResponse()));
+
+        Mock<ISelectAudioCaptureInputSourceUseCase> selectAudioInputSource = new();
+        selectAudioInputSource
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<SelectAudioCaptureInputSourceRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<SelectAudioCaptureInputSourceResponse>.Success(new SelectAudioCaptureInputSourceResponse()));
+
+        AudioCapturePageViewModel viewModel = new(
+            audioCaptureState.Object,
+            audioInputDetection.Object,
+            startAudioCapture.Object,
+            Mock.Of<IStopAudioCaptureUseCase>(),
+            Mock.Of<IPauseAudioCaptureUseCase>(),
+            muteAudioCapture.Object,
+            selectAudioInputSource.Object,
+            Mock.Of<IToggleLocalAudioCaptureUseCase>(),
+            taskEnvironment.Object);
+
+        return new TestContext(
+            viewModel,
+            audioCaptureState,
+            audioInputDetection,
+            startAudioCapture,
+            muteAudioCapture,
+            selectAudioInputSource);
     }
 
-    [TestMethod]
-    public void ViewModel_ShouldSyncStateFromService_WhenDesktopAudioStateChanges()
-    {
-        // Arrange
-        var audioCaptureHandler = Fixture.Freeze<Mock<IAudioCaptureHandler>>();
-        var vm = Create();
-
-        Assert.IsFalse(vm.IsDesktopAudioEnabled);
-
-        // Act
-        audioCaptureHandler.Raise(s => s.DesktopAudioStateChanged += null, audioCaptureHandler.Object, true);
-
-        // Assert
-        Assert.IsTrue(vm.IsDesktopAudioEnabled);
-    }
+    private sealed record TestContext(
+        AudioCapturePageViewModel ViewModel,
+        Mock<IAudioCaptureState> AudioCaptureState,
+        Mock<IAudioInputDetectionService> AudioInputDetection,
+        Mock<IStartAudioCaptureUseCase> StartAudioCapture,
+        Mock<IMuteAudioCaptureUseCase> MuteAudioCapture,
+        Mock<ISelectAudioCaptureInputSourceUseCase> SelectAudioInputSource);
 }

@@ -1,7 +1,7 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.SelectAudioInputSource;
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Features.VideoCapture;
 using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.SelectAudioInputSource;
@@ -12,15 +12,15 @@ internal sealed class SelectAudioInputSourceUseCase : ISelectAudioInputSourceUse
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IAudioInputDetectionService _audioInputDetectionService;
-    private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly IVideoCaptureWorkflow _videoCaptureWorkflow;
 
     public SelectAudioInputSourceUseCase(IAudioInputDetectionService audioInputDetectionService,
-        IVideoCaptureHandler videoCaptureHandler,
+        IVideoCaptureWorkflow videoCaptureWorkflow,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _audioInputDetectionService = audioInputDetectionService;
-        _videoCaptureHandler = videoCaptureHandler;
+        _videoCaptureWorkflow = videoCaptureWorkflow;
     }
 
     public Task<UseCaseResponse<SelectAudioInputSourceResponse>> ExecuteAsync(SelectAudioInputSourceRequest request, CancellationToken cancellationToken = default)
@@ -31,6 +31,7 @@ internal sealed class SelectAudioInputSourceUseCase : ISelectAudioInputSourceUse
             {
                 if (string.IsNullOrWhiteSpace(request.SourceId))
                 {
+                    _videoCaptureWorkflow.SelectAudioInputSource(null);
                     return new SelectAudioInputSourceResponse(false, false);
                 }
 
@@ -38,7 +39,7 @@ internal sealed class SelectAudioInputSourceUseCase : ISelectAudioInputSourceUse
                 bool isAvailable = sources.Any(source => string.Equals(source.Id, request.SourceId, StringComparison.OrdinalIgnoreCase));
                 if (isAvailable)
                 {
-                    _videoCaptureHandler.SelectAudioInputSource(request.SourceId);
+                    _videoCaptureWorkflow.SelectAudioInputSource(request.SourceId);
                 }
 
                 return new SelectAudioInputSourceResponse(isAvailable, !isAvailable);

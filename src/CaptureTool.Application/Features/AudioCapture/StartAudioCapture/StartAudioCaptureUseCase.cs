@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture.StartAudioCapture;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.UseCases;
@@ -10,13 +9,13 @@ internal sealed class StartAudioCaptureUseCase : IStartAudioCaptureUseCase
     private const string ActivityId = "StartAudioCapture";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly IAudioCaptureHandler _audioCaptureHandler;
+    private readonly IAudioCaptureWorkflow _audioCaptureWorkflow;
 
-    public StartAudioCaptureUseCase(IAudioCaptureHandler audioCaptureHandler,
+    public StartAudioCaptureUseCase(IAudioCaptureWorkflow audioCaptureWorkflow,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
-        _audioCaptureHandler = audioCaptureHandler;
+        _audioCaptureWorkflow = audioCaptureWorkflow;
     }
 
     public Task<UseCaseResponse<StartAudioCaptureResponse>> ExecuteAsync(StartAudioCaptureRequest request, CancellationToken cancellationToken = default)
@@ -25,7 +24,7 @@ internal sealed class StartAudioCaptureUseCase : IStartAudioCaptureUseCase
             activityId: ActivityId,
             useCase: () =>
             {
-                _audioCaptureHandler.StartCapture();
+                _audioCaptureWorkflow.StartCapture();
                 return new StartAudioCaptureResponse();
             },
             cancellationToken: cancellationToken);

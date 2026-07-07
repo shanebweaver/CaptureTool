@@ -33,7 +33,7 @@ public sealed class AppMenuViewModelTests
         Fixture.Freeze<Mock<ITelemetryService>>();
         Fixture.Freeze<Mock<IStoreFeatureAvailability>>();
         Fixture.Freeze<Mock<IImageCaptureHandler>>();
-        Fixture.Freeze<Mock<IVideoCaptureHandler>>();
+        Fixture.Freeze<Mock<IVideoCaptureState>>();
     }
 
     [TestMethod]

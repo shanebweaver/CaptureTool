@@ -55,8 +55,8 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IAudioCaptureFeatureAvailability>(),
             Mock.Of<IStoreFeatureAvailability>(),
             Mock.Of<IImageCaptureHandler>(),
-            Mock.Of<IVideoCaptureHandler>(),
-            Mock.Of<IAudioCaptureHandler>(),
+            Mock.Of<IVideoCaptureState>(),
+            Mock.Of<IAudioCaptureState>(),
             recentCaptureFactory.Object);
 
         viewModel.OpenFileCommand.Execute(null);
@@ -155,8 +155,8 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IAudioCaptureFeatureAvailability>(),
             Mock.Of<IStoreFeatureAvailability>(),
             Mock.Of<IImageCaptureHandler>(),
-            Mock.Of<IVideoCaptureHandler>(),
-            Mock.Of<IAudioCaptureHandler>(),
+            Mock.Of<IVideoCaptureState>(),
+            Mock.Of<IAudioCaptureState>(),
             Mock.Of<IFactoryServiceWithArgs<RecentCaptureViewModel, string>>(),
             editSessionGuard);
     }

@@ -14,7 +14,12 @@ internal static class VideoServiceCollectionExtensions
 {
     public static IServiceCollection AddVideoCaptureServices(this IServiceCollection services)
     {
-        services.AddSingleton<IVideoCaptureHandler, CaptureToolVideoCaptureHandler>();
+        services.AddSingleton<VideoCaptureStateStore>();
+        services.AddSingleton<VideoCaptureFileNameGenerator>();
+        services.AddSingleton<VideoCapturePostProcessor>();
+        services.AddSingleton<VideoCaptureWorkflow>();
+        services.AddSingleton<IVideoCaptureWorkflow>(provider => provider.GetRequiredService<VideoCaptureWorkflow>());
+        services.AddSingleton<IVideoCaptureState>(provider => provider.GetRequiredService<VideoCaptureWorkflow>());
 
         return services;
     }

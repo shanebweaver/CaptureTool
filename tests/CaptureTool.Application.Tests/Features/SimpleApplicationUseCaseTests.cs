@@ -123,26 +123,26 @@ public sealed class SimpleApplicationUseCaseTests
     }
 
     [TestMethod]
-    public async Task AudioCaptureUseCases_InvokeAudioCaptureHandler()
+    public async Task AudioCaptureUseCases_InvokeAudioCaptureWorkflow()
     {
-        var audioCapture = new Mock<IAudioCaptureHandler>();
+        var audioCapture = new FakeAudioCaptureWorkflow();
         var navigation = new Mock<INavigationService>();
         var audioFile = new AudioFile("capture.wav");
-        audioCapture.Setup(handler => handler.StopCapture()).Returns(audioFile);
+        audioCapture.AudioFile = audioFile;
 
-        await new StartAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)
+        await new StartAudioCaptureUseCase(audioCapture, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new StartAudioCaptureRequest(), TestContext.CancellationToken);
-        await new PauseAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)
+        await new PauseAudioCaptureUseCase(audioCapture, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new PauseAudioCaptureRequest(), TestContext.CancellationToken);
-        await new StopAudioCaptureUseCase(audioCapture.Object, navigation.Object, TestUseCaseExecutor.Instance)
+        await new StopAudioCaptureUseCase(audioCapture, navigation.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new StopAudioCaptureRequest(), TestContext.CancellationToken);
-        await new ToggleLocalAudioCaptureUseCase(audioCapture.Object, TestUseCaseExecutor.Instance)
+        await new ToggleLocalAudioCaptureUseCase(audioCapture, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new ToggleLocalAudioCaptureRequest(), TestContext.CancellationToken);
 
-        audioCapture.Verify(handler => handler.StartCapture(), Times.Once);
-        audioCapture.Verify(handler => handler.PauseCapture(), Times.Once);
-        audioCapture.Verify(handler => handler.StopCapture(), Times.Once);
-        audioCapture.Verify(handler => handler.ToggleLocalAudio(), Times.Once);
+        Assert.AreEqual(1, audioCapture.StartCallCount);
+        Assert.AreEqual(1, audioCapture.PauseCallCount);
+        Assert.AreEqual(1, audioCapture.StopCallCount);
+        Assert.AreEqual(1, audioCapture.ToggleLocalAudioCallCount);
         navigation.Verify(service => service.Navigate(NavigationRoute.AudioEdit, audioFile, false), Times.Once);
     }
 

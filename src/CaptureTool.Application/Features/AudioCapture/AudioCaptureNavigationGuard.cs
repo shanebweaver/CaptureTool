@@ -1,24 +1,23 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.AudioCapture;
 
 namespace CaptureTool.Application.Features.AudioCapture;
 
 internal sealed class AudioCaptureNavigationGuard : IAudioCaptureNavigationGuard
 {
-    private readonly IAudioCaptureHandler _audioCaptureHandler;
+    private readonly IAudioCaptureWorkflow _audioCaptureWorkflow;
     private readonly IAudioCaptureNavigationConfirmationService _confirmationService;
 
     public AudioCaptureNavigationGuard(
-        IAudioCaptureHandler audioCaptureHandler,
+        IAudioCaptureWorkflow audioCaptureWorkflow,
         IAudioCaptureNavigationConfirmationService confirmationService)
     {
-        _audioCaptureHandler = audioCaptureHandler;
+        _audioCaptureWorkflow = audioCaptureWorkflow;
         _confirmationService = confirmationService;
     }
 
     public async Task<bool> CanNavigateAwayFromActiveCaptureAsync(CancellationToken cancellationToken = default)
     {
-        if (!_audioCaptureHandler.IsRecording)
+        if (!_audioCaptureWorkflow.IsRecording)
         {
             return true;
         }
@@ -29,7 +28,7 @@ internal sealed class AudioCaptureNavigationGuard : IAudioCaptureNavigationGuard
             return false;
         }
 
-        _audioCaptureHandler.StopCapture();
+        _audioCaptureWorkflow.StopCapture();
         return true;
     }
 }

@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Audio;
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.GetAudioInputSources;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.SelectAudioInputSource;
 using CaptureTool.Application.Features.CaptureOverlay.GetAudioInputSources;
@@ -51,8 +50,8 @@ public sealed class AudioInputSourceUseCaseTests
             .Setup(x => x.GetAudioInputSourcesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(sources);
 
-        Mock<IVideoCaptureHandler> videoCaptureHandler = new();
-        SelectAudioInputSourceUseCase useCase = new(service.Object, videoCaptureHandler.Object, TestUseCaseExecutor.Instance);
+        var videoCaptureWorkflow = new FakeVideoCaptureWorkflow();
+        SelectAudioInputSourceUseCase useCase = new(service.Object, videoCaptureWorkflow, TestUseCaseExecutor.Instance);
 
         // Act
         SelectAudioInputSourceResponse? response = (await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("default"), TestContext.CancellationToken)).Value;
@@ -61,7 +60,7 @@ public sealed class AudioInputSourceUseCaseTests
         response.Should().NotBeNull();
         response!.IsAvailable.Should().BeTrue();
         response.WasRemoved.Should().BeFalse();
-        videoCaptureHandler.Verify(handler => handler.SelectAudioInputSource("default"), Times.Once);
+        videoCaptureWorkflow.LastSelectedAudioInputSourceId.Should().Be("default");
     }
 
     [TestMethod]
@@ -73,8 +72,8 @@ public sealed class AudioInputSourceUseCaseTests
             .Setup(x => x.GetAudioInputSourcesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        Mock<IVideoCaptureHandler> videoCaptureHandler = new();
-        SelectAudioInputSourceUseCase useCase = new(service.Object, videoCaptureHandler.Object, TestUseCaseExecutor.Instance);
+        var videoCaptureWorkflow = new FakeVideoCaptureWorkflow();
+        SelectAudioInputSourceUseCase useCase = new(service.Object, videoCaptureWorkflow, TestUseCaseExecutor.Instance);
 
         // Act
         SelectAudioInputSourceResponse? response = (await useCase.ExecuteAsync(new SelectAudioInputSourceRequest("missing"), TestContext.CancellationToken)).Value;
@@ -83,7 +82,24 @@ public sealed class AudioInputSourceUseCaseTests
         response.Should().NotBeNull();
         response!.IsAvailable.Should().BeFalse();
         response.WasRemoved.Should().BeTrue();
-        videoCaptureHandler.Verify(handler => handler.SelectAudioInputSource(It.IsAny<string>()), Times.Never);
+        videoCaptureWorkflow.SelectAudioInputSourceWasCalled.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task SelectAudioInputSource_ShouldClearSelectedSource_WhenSourceIdIsBlank()
+    {
+        Mock<IAudioInputDetectionService> service = new();
+        var videoCaptureWorkflow = new FakeVideoCaptureWorkflow();
+        SelectAudioInputSourceUseCase useCase = new(service.Object, videoCaptureWorkflow, TestUseCaseExecutor.Instance);
+
+        SelectAudioInputSourceResponse? response = (await useCase.ExecuteAsync(new SelectAudioInputSourceRequest(null), TestContext.CancellationToken)).Value;
+
+        response.Should().NotBeNull();
+        response!.IsAvailable.Should().BeFalse();
+        response.WasRemoved.Should().BeFalse();
+        videoCaptureWorkflow.SelectAudioInputSourceWasCalled.Should().BeTrue();
+        videoCaptureWorkflow.LastSelectedAudioInputSourceId.Should().BeNull();
+        service.Verify(x => x.GetAudioInputSourcesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     public TestContext TestContext { get; set; } = null!;

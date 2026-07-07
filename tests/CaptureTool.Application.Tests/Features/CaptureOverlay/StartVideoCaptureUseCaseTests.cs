@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.StartVideoCapture;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Features.CaptureOverlay.StartVideoCapture;
@@ -15,8 +14,8 @@ public class StartVideoCaptureUseCaseTests
     public async Task ExecuteAsync_ShouldStartRecording_WithoutNavigating()
     {
         var navigationService = new Mock<INavigationService>();
-        var videoCaptureHandler = new Mock<IVideoCaptureHandler>();
-        var useCase = new StartVideoCaptureUseCase(navigationService.Object, videoCaptureHandler.Object, TestUseCaseExecutor.Instance);
+        var videoCaptureWorkflow = new FakeVideoCaptureWorkflow();
+        var useCase = new StartVideoCaptureUseCase(navigationService.Object, videoCaptureWorkflow, TestUseCaseExecutor.Instance);
         var args = new NewCaptureArgs(
             new MonitorCaptureResult(
                 1,
@@ -29,7 +28,7 @@ public class StartVideoCaptureUseCaseTests
 
         await useCase.ExecuteAsync(new StartVideoCaptureRequest(args), TestContext.CancellationToken);
 
-        videoCaptureHandler.Verify(handler => handler.StartVideoCapture(args), Times.Once);
+        Assert.AreEqual(args, videoCaptureWorkflow.StartedCaptureArgs);
         navigationService.Verify(
             service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()),
             Times.Never);

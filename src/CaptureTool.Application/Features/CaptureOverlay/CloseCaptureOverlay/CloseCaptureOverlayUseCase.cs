@@ -1,9 +1,9 @@
-using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.CloseCaptureOverlay;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Features.VideoCapture;
 using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.CloseCaptureOverlay;
@@ -13,17 +13,17 @@ internal sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
     private const string ActivityId = "CloseCaptureOverlay";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
-    private readonly IVideoCaptureHandler _videoCaptureHandler;
+    private readonly IVideoCaptureWorkflow _videoCaptureWorkflow;
     private readonly IShowMainWindowUseCase _showMainWindow;
     private readonly INavigationService _navigationService;
 
-    public CloseCaptureOverlayUseCase(IVideoCaptureHandler videoCaptureHandler,
+    public CloseCaptureOverlayUseCase(IVideoCaptureWorkflow videoCaptureWorkflow,
         IShowMainWindowUseCase showMainWindow,
         INavigationService navigationService,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
-        _videoCaptureHandler = videoCaptureHandler;
+        _videoCaptureWorkflow = videoCaptureWorkflow;
         _showMainWindow = showMainWindow;
         _navigationService = navigationService;
     }
@@ -55,7 +55,7 @@ internal sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
     {
         try
         {
-            _videoCaptureHandler.CancelVideoCapture();
+            _videoCaptureWorkflow.CancelVideoCapture();
             return true;
         }
         catch (Exception)
