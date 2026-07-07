@@ -5,6 +5,11 @@ namespace CaptureTool.Infrastructure.Windows.Storage;
 
 public sealed partial class WindowsStorageService : IStorageService
 {
+    public string GetApplicationDataFolderPath()
+    {
+        return ApplicationData.GetDefault().LocalPath;
+    }
+
     public string GetApplicationTemporaryFolderPath()
     {
         return ApplicationData.GetDefault().TemporaryPath;

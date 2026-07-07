@@ -1,6 +1,4 @@
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
-using CaptureTool.Application.Abstractions.Features.Store;
-using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.ViewModels;
@@ -11,9 +9,8 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 
 public sealed partial class ChromaKeyToolViewModel : ViewModelBase
 {
-    private readonly IStoreService _storeService;
+    private readonly IChromaKeyAccessService _chromaKeyAccess;
     private readonly IChromaKeyService _chromaKeyService;
-    private readonly IChromaKeyFeatureAvailability _featureAvailability;
     private ChromaKeySettings? _pendingInteractionSettings;
 
     public event EventHandler? SettingsChanged;
@@ -24,7 +21,7 @@ public sealed partial class ChromaKeyToolViewModel : ViewModelBase
     public IRelayCommand<int> UpdateToleranceCommand { get; }
     public IRelayCommand<int> UpdateSelectedColorOptionIndexCommand { get; }
 
-    public bool IsFeatureEnabled => _featureAvailability.IsChromaKeyEnabled;
+    public bool IsFeatureEnabled => _chromaKeyAccess.IsChromaKeyEnabled;
 
     public IReadOnlyList<ChromaKeyColorOption> ChromaKeyColorOptions
     {
@@ -63,13 +60,11 @@ public sealed partial class ChromaKeyToolViewModel : ViewModelBase
     }
 
     public ChromaKeyToolViewModel(
-        IStoreService storeService,
-        IChromaKeyService chromaKeyService,
-        IChromaKeyFeatureAvailability featureAvailability)
+        IChromaKeyAccessService chromaKeyAccess,
+        IChromaKeyService chromaKeyService)
     {
-        _storeService = storeService;
+        _chromaKeyAccess = chromaKeyAccess;
         _chromaKeyService = chromaKeyService;
-        _featureAvailability = featureAvailability;
 
         UpdateChromaKeyColorCommand = new RelayCommand<Color>(UpdateChromaKeyColor, (c) => IsFeatureEnabled);
         UpdateDesaturationCommand = new RelayCommand<int>(UpdateDesaturation);
@@ -88,9 +83,7 @@ public sealed partial class ChromaKeyToolViewModel : ViewModelBase
             return;
         }
 
-        IsChromaKeyAddOnOwned = await _storeService.IsAddonPurchasedAsync(
-            CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval,
-            cancellationToken);
+        IsChromaKeyAddOnOwned = await _chromaKeyAccess.IsChromaKeyAddOnOwnedAsync(cancellationToken);
 
         if (!IsChromaKeyAddOnOwned)
         {

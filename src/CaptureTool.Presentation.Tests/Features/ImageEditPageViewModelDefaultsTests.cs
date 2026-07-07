@@ -1,13 +1,12 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Features.ImageEdit;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.ChromaKey;
 using CaptureTool.Application.Abstractions.Features.ImageEdit.Rendering;
-using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.ImageEdit;
@@ -23,25 +22,28 @@ public sealed class ImageEditPageViewModelDefaultsTests
     [TestMethod]
     public async Task LoadAsync_ShouldScaleInitialShapeAndTextDefaults_ForLargeImages()
     {
-        var filePicker = new Mock<IFilePickerService>();
+        var imageMetadata = new Mock<IImageMetadataService>();
         var cancellationService = new Mock<ICancellationService>();
-        var featureAvailability = new Mock<IChromaKeyFeatureAvailability>();
+        var chromaKeyAccess = new Mock<IChromaKeyAccessService>();
         using var linkedCts = new CancellationTokenSource();
         var imageFile = new ImageFile("large.png");
 
-        featureAvailability
+        chromaKeyAccess
             .Setup(service => service.IsChromaKeyEnabled)
             .Returns(false);
 
-        filePicker
-            .Setup(picker => picker.GetImageFileSize(imageFile))
+        imageMetadata
+            .Setup(service => service.GetImageFileSize(imageFile))
             .Returns(new Size(8000, 4000));
 
         cancellationService
             .Setup(service => service.GetLinkedCancellationTokenSource(It.IsAny<CancellationToken>()))
             .Returns(linkedCts);
 
-        var viewModel = CreateViewModel(filePicker.Object, cancellationService.Object, featureAvailability.Object);
+        var viewModel = CreateViewModel(
+            imageMetadata: imageMetadata.Object,
+            cancellationService: cancellationService.Object,
+            chromaKeyAccess: chromaKeyAccess.Object);
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);
 
@@ -95,20 +97,22 @@ public sealed class ImageEditPageViewModelDefaultsTests
     [TestMethod]
     public async Task ChromaKeyInteraction_ShouldUndoAndRedoAsSingleInteraction()
     {
-        var filePicker = new Mock<IFilePickerService>();
+        var imageMetadata = new Mock<IImageMetadataService>();
         var cancellationService = new Mock<ICancellationService>();
-        var featureAvailability = new Mock<IChromaKeyFeatureAvailability>();
+        var chromaKeyAccess = new Mock<IChromaKeyAccessService>();
         var chromaKeyService = new Mock<IChromaKeyService>();
-        var storeService = new Mock<IStoreService>();
         using var linkedCts = new CancellationTokenSource();
         var imageFile = new ImageFile("green-screen.png");
 
-        featureAvailability
+        chromaKeyAccess
             .Setup(service => service.IsChromaKeyEnabled)
             .Returns(true);
+        chromaKeyAccess
+            .Setup(service => service.IsChromaKeyAddOnOwnedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
-        filePicker
-            .Setup(picker => picker.GetImageFileSize(imageFile))
+        imageMetadata
+            .Setup(service => service.GetImageFileSize(imageFile))
             .Returns(new Size(100, 100));
 
         cancellationService
@@ -118,16 +122,12 @@ public sealed class ImageEditPageViewModelDefaultsTests
         chromaKeyService
             .Setup(service => service.GetTopColorsAsync(imageFile, It.IsAny<uint>(), It.IsAny<byte>()))
             .ReturnsAsync([Color.Green]);
-        storeService
-            .Setup(service => service.IsAddonPurchasedAsync(CaptureToolStoreProducts.AddOns.ChromaKeyBackgroundRemoval, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
 
         var viewModel = CreateViewModel(
-            filePicker.Object,
-            cancellationService.Object,
-            featureAvailability.Object,
-            chromaKeyService.Object,
-            storeService.Object);
+            imageMetadata: imageMetadata.Object,
+            cancellationService: cancellationService.Object,
+            chromaKeyAccess: chromaKeyAccess.Object,
+            chromaKeyService: chromaKeyService.Object);
 
         await viewModel.LoadAsync(imageFile, CancellationToken.None);
 
@@ -165,10 +165,10 @@ public sealed class ImageEditPageViewModelDefaultsTests
 
     private static ImageEditPageViewModel CreateViewModel(
         IFilePickerService? filePicker = null,
+        IImageMetadataService? imageMetadata = null,
         ICancellationService? cancellationService = null,
-        IChromaKeyFeatureAvailability? featureAvailability = null,
-        IChromaKeyService? chromaKeyService = null,
-        IStoreService? storeService = null)
+        IChromaKeyAccessService? chromaKeyAccess = null,
+        IChromaKeyService? chromaKeyService = null)
     {
         return new ImageEditPageViewModel(
             Mock.Of<ILocalizationService>(),
@@ -176,13 +176,13 @@ public sealed class ImageEditPageViewModelDefaultsTests
             Mock.Of<IImageCanvasPrinter>(),
             Mock.Of<IImageCanvasExporter>(),
             filePicker ?? Mock.Of<IFilePickerService>(),
+            imageMetadata ?? Mock.Of<IImageMetadataService>(),
             Mock.Of<IShareService>(),
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),
             new ChromaKeyToolViewModel(
-                storeService ?? Mock.Of<IStoreService>(),
-                chromaKeyService ?? Mock.Of<IChromaKeyService>(),
-                featureAvailability ?? Mock.Of<IChromaKeyFeatureAvailability>()),
+                chromaKeyAccess ?? Mock.Of<IChromaKeyAccessService>(),
+                chromaKeyService ?? Mock.Of<IChromaKeyService>()),
             new ShapeToolViewModel(),
             new TextToolViewModel());
     }

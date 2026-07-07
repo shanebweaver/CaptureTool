@@ -7,7 +7,7 @@ using CaptureTool.Application.DependencyInjection;
 using CaptureTool.Application.EditSessions;
 using CaptureTool.Application.Features.AudioCapture;
 using CaptureTool.Application.Features.CaptureOverlay.OpenSelectionOverlay;
-using CaptureTool.Application.Features.SettingsPage.OpenSettingsPage;
+using CaptureTool.Application.Features.Settings.OpenSettingsPage;
 using CaptureTool.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
 

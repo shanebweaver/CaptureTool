@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Features.ImageEdit;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Share;
@@ -18,6 +19,7 @@ using CaptureTool.Infrastructure.Windows.Storage;
 using CaptureTool.Infrastructure.Windows.Store;
 using CaptureTool.Infrastructure.Windows.TaskEnvironment;
 using CaptureTool.Infrastructure.Windows.Themes;
+using CaptureTool.Infrastructure.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
 
@@ -31,12 +33,14 @@ public static class WindowsInfrastructureServiceCollectionExtensions
         services.AddSingleton<IStoreService, WindowsStoreService>();
         services.AddSingleton<IThemeService, WindowsThemeService>();
         services.AddSingleton<IStorageService, WindowsStorageService>();
+        services.AddSingleton<IFolderLauncher, WindowsFolderLauncher>();
         services.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
         services.AddSingleton<ILocalizationService, WindowsLocalizationService>();
         services.AddSingleton<IShareService, WindowsShareService>();
         services.AddSingleton<ITaskEnvironment>(_ => new WinUITaskEnvironment(dispatcherQueue));
         services.AddSingleton<IShutdownHandler, WindowsShutdownHandler>();
         services.AddSingleton<IFilePickerService, WindowsFilePickerService>();
+        services.AddSingleton<IImageMetadataService, WindowsImageMetadataService>();
         services.AddSingleton<IVideoFileTrimmer, WindowsVideoFileTrimmer>();
         services.AddSingleton<IAudioInputDetectionService, WindowsAudioInputDetectionService>();
         return services;

@@ -10,6 +10,7 @@ using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Features.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.Features.AudioCapture;
 using CaptureTool.Application.Features.CaptureOverlay.CloseCaptureOverlay;
 using CaptureTool.Application.Features.CaptureOverlay.GoBackFromCaptureOverlay;
 using CaptureTool.Application.Features.CaptureOverlay.OpenCaptureOverlay;
@@ -33,9 +34,16 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         var navigation = new Mock<INavigationService>();
         var captureOptions = CaptureOptions.VideoDefault;
         NewCaptureArgs captureArgs = CreateCaptureArgs();
+        var audioCaptureNavigationGuard = new AllowAudioCaptureNavigationGuard();
 
-        var openSelection = new OpenSelectionOverlayUseCase(navigation.Object, TestUseCaseExecutor.Instance);
-        var openCapture = new OpenCaptureOverlayUseCase(navigation.Object, TestUseCaseExecutor.Instance);
+        var openSelection = new OpenSelectionOverlayUseCase(
+            navigation.Object,
+            TestUseCaseExecutor.Instance,
+            audioCaptureNavigationGuard);
+        var openCapture = new OpenCaptureOverlayUseCase(
+            navigation.Object,
+            TestUseCaseExecutor.Instance,
+            audioCaptureNavigationGuard);
 
         await openSelection.ExecuteAsync(new OpenSelectionOverlayRequest(captureOptions), TestContext.CancellationToken);
         await openCapture.ExecuteAsync(new OpenCaptureOverlayRequest(captureArgs), TestContext.CancellationToken);

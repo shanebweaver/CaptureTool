@@ -1,7 +1,6 @@
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.EditSessions;
-using CaptureTool.Application.Features.Settings;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;

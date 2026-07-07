@@ -20,22 +20,21 @@ using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Storage;
-using CaptureTool.Application.Features.Settings;
-using CaptureTool.Application.Features.SettingsPage.ChangeScreenshotsFolder;
-using CaptureTool.Application.Features.SettingsPage.ChangeVideosFolder;
-using CaptureTool.Application.Features.SettingsPage.ClearTempFiles;
-using CaptureTool.Application.Features.SettingsPage.LeaveSettingsPage;
-using CaptureTool.Application.Features.SettingsPage.OpenScreenshotsFolder;
-using CaptureTool.Application.Features.SettingsPage.OpenTempFolder;
-using CaptureTool.Application.Features.SettingsPage.OpenVideosFolder;
-using CaptureTool.Application.Features.SettingsPage.RestartSettingsApplication;
-using CaptureTool.Application.Features.SettingsPage.RestoreDefaults;
-using CaptureTool.Application.Features.SettingsPage.UpdateAppLanguage;
-using CaptureTool.Application.Features.SettingsPage.UpdateImageAutoCopy;
-using CaptureTool.Application.Features.SettingsPage.UpdateImageAutoSave;
-using CaptureTool.Application.Features.SettingsPage.UpdateVideoCaptureAutoCopy;
-using CaptureTool.Application.Features.SettingsPage.UpdateVideoCaptureAutoSave;
-using CaptureTool.Application.Features.SettingsPage.UpdateVideoCaptureDefaultLocalAudio;
+using CaptureTool.Application.Features.Settings.ChangeScreenshotsFolder;
+using CaptureTool.Application.Features.Settings.ChangeVideosFolder;
+using CaptureTool.Application.Features.Settings.ClearTempFiles;
+using CaptureTool.Application.Features.Settings.LeaveSettingsPage;
+using CaptureTool.Application.Features.Settings.OpenScreenshotsFolder;
+using CaptureTool.Application.Features.Settings.OpenTempFolder;
+using CaptureTool.Application.Features.Settings.OpenVideosFolder;
+using CaptureTool.Application.Features.Settings.RestartSettingsApplication;
+using CaptureTool.Application.Features.Settings.RestoreDefaults;
+using CaptureTool.Application.Features.Settings.UpdateAppLanguage;
+using CaptureTool.Application.Features.Settings.UpdateImageAutoCopy;
+using CaptureTool.Application.Features.Settings.UpdateImageAutoSave;
+using CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoCopy;
+using CaptureTool.Application.Features.Settings.UpdateVideoCaptureAutoSave;
+using CaptureTool.Application.Features.Settings.UpdateVideoCaptureDefaultLocalAudio;
 using Moq;
 
 namespace CaptureTool.Application.Tests.Features;
@@ -88,7 +87,7 @@ public sealed class SettingsPageUseCaseTests
         await File.WriteAllTextAsync(Path.Combine(directoryPath, "child.tmp"), "child", TestContext.CancellationToken);
         var storage = new Mock<IStorageService>();
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(tempFolder);
-        var useCase = new ClearTempFilesUseCase(Mock.Of<ILogService>(), storage.Object, TestUseCaseExecutor.Instance);
+        var useCase = new ClearTempFilesUseCase(Mock.Of<ILogService>(), storage.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
 
         ClearTempFilesResponse response = (await useCase.ExecuteAsync(new ClearTempFilesRequest(), TestContext.CancellationToken)).Value!;
 
@@ -115,15 +114,17 @@ public sealed class SettingsPageUseCaseTests
         string missingFolder = Path.Combine(Path.GetTempPath(), "CaptureToolTests", Guid.NewGuid().ToString());
         var settings = new Mock<ISettingsService>();
         var storage = new Mock<IStorageService>();
+        var folderLauncher = new Mock<IFolderLauncher>();
         settings.Setup(service => service.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder)).Returns("");
         settings.Setup(service => service.Get(CaptureToolSettings.Settings_VideoCapture_AutoSaveFolder)).Returns("");
         storage.Setup(service => service.GetSystemDefaultScreenshotsFolderPath()).Returns(missingFolder);
         storage.Setup(service => service.GetSystemDefaultVideosFolderPath()).Returns(missingFolder);
         storage.Setup(service => service.GetApplicationTemporaryFolderPath()).Returns(missingFolder);
+        folderLauncher.Setup(service => service.TryOpenFolder(missingFolder)).Returns(false);
 
-        var screenshots = new OpenScreenshotsFolderUseCase(settings.Object, storage.Object, TestUseCaseExecutor.Instance);
-        var videos = new OpenVideosFolderUseCase(settings.Object, storage.Object, TestUseCaseExecutor.Instance);
-        var temp = new OpenTempFolderUseCase(storage.Object, TestUseCaseExecutor.Instance);
+        var screenshots = new OpenScreenshotsFolderUseCase(settings.Object, storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
+        var videos = new OpenVideosFolderUseCase(settings.Object, storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
+        var temp = new OpenTempFolderUseCase(storage.Object, folderLauncher.Object, TestUseCaseExecutor.Instance);
 
         OpenScreenshotsFolderResponse screenshotsResponse = (await screenshots.ExecuteAsync(new OpenScreenshotsFolderRequest(), TestContext.CancellationToken)).Value!;
         OpenVideosFolderResponse videosResponse = (await videos.ExecuteAsync(new OpenVideosFolderRequest(), TestContext.CancellationToken)).Value!;

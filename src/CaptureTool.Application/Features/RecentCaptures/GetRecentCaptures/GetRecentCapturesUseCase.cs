@@ -4,27 +4,28 @@ using CaptureTool.Application.Abstractions.Features.RecentCaptures.GetRecentCapt
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 using CaptureTool.Domain.Capture;
 
 namespace CaptureTool.Application.Features.RecentCaptures.GetRecentCaptures;
 
-public sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
+internal sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
 {
     private const string ActivityId = "GetRecentCaptures";
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IStorageService _storageService;
-    private readonly IFileTypeDetector _fileTypeDetector;
-    private readonly IAudioCaptureFeatureAvailability? _audioCaptureFeatureAvailability;
+    private readonly IFileSystem _fileSystem;
+    private readonly IAudioCaptureFeatureAvailability _audioCaptureFeatureAvailability;
 
     public GetRecentCapturesUseCase(IStorageService storageService,
-        IFileTypeDetector fileTypeDetector,
+        IFileSystem fileSystem,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureFeatureAvailability? audioCaptureFeatureAvailability = null)
+        IAudioCaptureFeatureAvailability audioCaptureFeatureAvailability)
     {
         _useCaseExecutor = useCaseExecutor;
         _storageService = storageService;
-        _fileTypeDetector = fileTypeDetector;
+        _fileSystem = fileSystem;
         _audioCaptureFeatureAvailability = audioCaptureFeatureAvailability;
     }
 
@@ -41,13 +42,13 @@ public sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
             {
                 string recentCapturesFolder = _storageService.GetApplicationTemporaryFolderPath();
 
-                IReadOnlyList<RecentCapture> recentCaptures = Directory.GetFiles(recentCapturesFolder, "*.*")
-                .OrderByDescending(File.GetLastWriteTimeUtc)
-                .Where(filePath => !string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                IReadOnlyList<RecentCapture> recentCaptures = _fileSystem.EnumerateFiles(recentCapturesFolder, "*.*")
+                .OrderByDescending(_fileSystem.GetLastWriteTimeUtc)
+                .Where(filePath => !string.IsNullOrEmpty(filePath) && _fileSystem.FileExists(filePath))
                 .Select(filePath => new RecentCapture(
                 filePath,
                 Path.GetFileName(filePath),
-                _fileTypeDetector.DetectFileType(filePath)))
+                CaptureFileTypeDetector.DetectFileType(filePath)))
                 .Where(capture => ShouldIncludeRecentCapture(capture.CaptureFileType))
                 .Take(5)
                 .ToArray();
@@ -60,6 +61,6 @@ public sealed class GetRecentCapturesUseCase : IGetRecentCapturesUseCase
     private bool ShouldIncludeRecentCapture(CaptureFileType captureFileType)
     {
         return captureFileType != CaptureFileType.Audio ||
-            _audioCaptureFeatureAvailability?.IsAudioCaptureEnabled != false;
+            _audioCaptureFeatureAvailability.IsAudioCaptureEnabled;
     }
 }

@@ -1,10 +1,12 @@
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Application.Abstractions.Telemetry;
 using CaptureTool.Application.Features.ImageCapture;
-using CaptureTool.Application.Features.Settings;
+using CaptureTool.Application.Tests.Features;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using Moq;
@@ -106,11 +108,13 @@ public sealed class CaptureToolImageCaptureHandlerTests
 
         return new CaptureToolImageCaptureHandler(
             clipboard ?? Mock.Of<IClipboardService>(),
+            TestFileSystem.Instance,
             storage.Object,
             settings ?? defaultSettings.Object,
             screenCapture ?? Mock.Of<IScreenCapture>(),
             taskEnvironment.Object,
-            Mock.Of<ITelemetryService>());
+            Mock.Of<ITelemetryService>(),
+            TestClock.Instance);
     }
 
     private static MonitorCaptureResult CreateMonitor() =>

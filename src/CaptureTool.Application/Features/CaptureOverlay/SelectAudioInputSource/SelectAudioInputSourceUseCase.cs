@@ -2,10 +2,11 @@ using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Features.CaptureOverlay.SelectAudioInputSource;
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.CaptureOverlay.SelectAudioInputSource;
 
-public sealed class SelectAudioInputSourceUseCase : ISelectAudioInputSourceUseCase
+internal sealed class SelectAudioInputSourceUseCase : ISelectAudioInputSourceUseCase
 {
     private const string ActivityId = "SelectAudioInputSource";
 

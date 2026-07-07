@@ -3,10 +3,11 @@ using CaptureTool.Application.Abstractions.Features.AudioCapture.OpenAudioCaptur
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioCapture.OpenAudioCapturePage;
 
-public sealed class OpenAudioCapturePageUseCase : IOpenAudioCapturePageUseCase
+internal sealed class OpenAudioCapturePageUseCase : IOpenAudioCapturePageUseCase
 {
     private const string ActivityId = "OpenAudioCapturePage";
 
@@ -16,11 +17,11 @@ public sealed class OpenAudioCapturePageUseCase : IOpenAudioCapturePageUseCase
 
     public OpenAudioCapturePageUseCase(INavigationService navigationService,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
+        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
     {
         _useCaseExecutor = useCaseExecutor;
         _navigationService = navigationService;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
     }
 
     public Task<UseCaseResponse<OpenAudioCapturePageResponse>> ExecuteAsync(OpenAudioCapturePageRequest request, CancellationToken cancellationToken = default)

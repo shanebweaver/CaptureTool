@@ -2,10 +2,11 @@ using CaptureTool.Application.Abstractions.Features.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.About.LeaveAboutPage;
 
-public sealed class LeaveAboutPageUseCase : ILeaveAboutPageUseCase
+internal sealed class LeaveAboutPageUseCase : ILeaveAboutPageUseCase
 {
     private const string ActivityId = "LeaveAboutPage";
 

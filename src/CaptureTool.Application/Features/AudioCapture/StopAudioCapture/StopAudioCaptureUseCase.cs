@@ -3,10 +3,11 @@ using CaptureTool.Application.Abstractions.Features.AudioCapture.StopAudioCaptur
 using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.AudioCapture.StopAudioCapture;
 
-public sealed class StopAudioCaptureUseCase : IStopAudioCaptureUseCase
+internal sealed class StopAudioCaptureUseCase : IStopAudioCaptureUseCase
 {
     private const string ActivityId = "StopAudioCapture";
 

@@ -1,10 +1,11 @@
 using CaptureTool.Application.Abstractions.Features.Diagnostics.GetIsLoggingEnabled;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Diagnostics.GetIsLoggingEnabled;
 
-public sealed class GetIsLoggingEnabledUseCase : IGetIsLoggingEnabledUseCase
+internal sealed class GetIsLoggingEnabledUseCase : IGetIsLoggingEnabledUseCase
 {
     private const string ActivityId = "GetIsLoggingEnabled";
 

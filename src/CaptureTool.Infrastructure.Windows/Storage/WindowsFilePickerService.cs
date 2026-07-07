@@ -1,7 +1,6 @@
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.Windowing;
 using CaptureTool.Domain.FileSystem;
-using System.Drawing;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 
@@ -180,16 +179,4 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
         return locationId;
     }
 
-    public Size GetImageFileSize(ImageFile imageFile)
-    {
-        using FileStream file = new(imageFile.FilePath, FileMode.Open, FileAccess.Read);
-        var image = Image.FromStream(
-            stream: file,
-            useEmbeddedColorManagement: false,
-            validateImageData: false);
-
-        float width = image.PhysicalDimension.Width;
-        float height = image.PhysicalDimension.Height;
-        return new(Convert.ToInt32(width), Convert.ToInt32(height));
-    }
 }

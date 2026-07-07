@@ -3,11 +3,11 @@ using CaptureTool.Application.Abstractions.Features.Navigation;
 using CaptureTool.Application.Abstractions.Features.VideoEdit.OpenVideoEditPage;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.UseCases;
-using CaptureTool.Application.Features.AudioCapture;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.VideoEdit.OpenVideoEditPage;
 
-public sealed class OpenVideoEditPageUseCase : IOpenVideoEditPageUseCase
+internal sealed class OpenVideoEditPageUseCase : IOpenVideoEditPageUseCase
 {
     private const string ActivityId = "OpenVideoEditPage";
 
@@ -18,10 +18,10 @@ public sealed class OpenVideoEditPageUseCase : IOpenVideoEditPageUseCase
     public OpenVideoEditPageUseCase(
         INavigationService navigationService,
         IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureNavigationGuard? audioCaptureNavigationGuard = null)
+        IAudioCaptureNavigationGuard audioCaptureNavigationGuard)
     {
         _navigationService = navigationService;
-        _audioCaptureNavigationGuard = audioCaptureNavigationGuard ?? new AllowAudioCaptureNavigationGuard();
+        _audioCaptureNavigationGuard = audioCaptureNavigationGuard;
         _useCaseExecutor = useCaseExecutor;
     }
 

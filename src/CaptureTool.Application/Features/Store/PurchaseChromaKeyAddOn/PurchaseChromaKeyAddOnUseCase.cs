@@ -2,10 +2,11 @@ using CaptureTool.Application.Abstractions.Features.Store;
 using CaptureTool.Application.Abstractions.Features.Store.PurchaseChromaKeyAddOn;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.UseCases;
+using CaptureTool.Application.UseCases;
 
 namespace CaptureTool.Application.Features.Store.PurchaseChromaKeyAddOn;
 
-public sealed class PurchaseChromaKeyAddOnUseCase : IPurchaseChromaKeyAddOnUseCase
+internal sealed class PurchaseChromaKeyAddOnUseCase : IPurchaseChromaKeyAddOnUseCase
 {
     private const string ActivityId = "PurchaseChromaKeyAddOn";
 

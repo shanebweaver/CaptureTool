@@ -3,7 +3,7 @@ using CaptureTool.Application.Abstractions.Features.AudioCapture;
 
 namespace CaptureTool.Application.Features.AudioCapture;
 
-public sealed class AudioCaptureNavigationGuard : IAudioCaptureNavigationGuard
+internal sealed class AudioCaptureNavigationGuard : IAudioCaptureNavigationGuard
 {
     private readonly IAudioCaptureHandler _audioCaptureHandler;
     private readonly IAudioCaptureNavigationConfirmationService _confirmationService;

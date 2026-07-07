@@ -5,9 +5,9 @@ using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Features.Activation;
-using CaptureTool.Application.Features.Settings;
 using CaptureTool.Domain.Capture;
 using Moq;
 
@@ -26,7 +26,7 @@ public sealed class ActivationHandlerTests
 
         fixture.Settings.Verify(
             service => service.InitializeAsync(
-                It.Is<string>(path => path.EndsWith("Settings.json", StringComparison.Ordinal)),
+                Path.Combine(fixture.AppDataFolder, "Settings.json"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
         fixture.Settings.Verify(service => service.Get(CaptureToolSettings.VerboseLogging), Times.Once);
@@ -146,6 +146,9 @@ public sealed class ActivationHandlerTests
             ShowHomePage
                 .Setup(useCase => useCase.ExecuteAsync(It.IsAny<ShowHomePageRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(UseCaseResponse<ShowHomePageResponse>.Success(new ShowHomePageResponse()));
+            StorageService
+                .Setup(service => service.GetApplicationDataFolderPath())
+                .Returns(AppDataFolder);
 
             Handler = new CaptureToolActivationHandler(
                 OpenSelectionOverlay.Object,
@@ -155,10 +158,12 @@ public sealed class ActivationHandlerTests
                 LogService.Object,
                 Localization.Object,
                 NavigationHandler.Object,
-                NavigationService.Object);
+                NavigationService.Object,
+                StorageService.Object);
         }
 
         public CaptureToolActivationHandler Handler { get; }
+        public string AppDataFolder { get; } = @"C:\CaptureTool\AppData";
         public Mock<IOpenSelectionOverlayUseCase> OpenSelectionOverlay { get; } = new();
         public Mock<IShowHomePageUseCase> ShowHomePage { get; } = new();
         public Mock<ICancellationService> CancellationService { get; } = new();
@@ -167,5 +172,6 @@ public sealed class ActivationHandlerTests
         public Mock<ILocalizationService> Localization { get; } = new();
         public Mock<INavigationHandler> NavigationHandler { get; } = new();
         public Mock<INavigationService> NavigationService { get; } = new();
+        public Mock<IStorageService> StorageService { get; } = new();
     }
 }
