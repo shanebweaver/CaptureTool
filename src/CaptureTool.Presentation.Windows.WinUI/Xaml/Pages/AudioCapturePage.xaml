@@ -24,10 +24,11 @@
             <CommandBar.Content>
                 <Grid
                     x:Uid="AudioCapture_Timer"
-                    Margin="8,0"
-                    VerticalAlignment="Center"
+                    Margin="12,0"
+                    Height="48"
+                    VerticalAlignment="Stretch"
                     Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsRecording), Mode=OneWay}">
-                    <controls:ClockTimer Time="{x:Bind ViewModel.CaptureTime, Mode=OneWay}" />
+                    <controls:ClockTimer Time="{x:Bind ViewModel.CaptureTime, Mode=OneWay}" VerticalAlignment="Center"/>
                 </Grid>
             </CommandBar.Content>
 
