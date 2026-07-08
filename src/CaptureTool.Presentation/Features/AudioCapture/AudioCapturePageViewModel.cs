@@ -21,7 +21,7 @@ namespace CaptureTool.Presentation.Features.AudioCapture;
 
 public sealed partial class AudioCapturePageViewModel : ViewModelBase
 {
-    private const int WaveformBarCount = 32;
+    private const int WaveformBarCount = 128;
     private const double WaveformMinBarHeight = 0;
     private const double WaveformMaxBarHeight = 132;
     private static readonly TimeSpan WaveformUpdateInterval = TimeSpan.FromMilliseconds(50);

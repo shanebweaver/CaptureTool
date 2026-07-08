@@ -22,16 +22,16 @@ public sealed class AudioCapturePageViewModelWaveformTests
     {
         AudioCapturePageViewModel viewModel = CreateViewModel();
 
-        for (int levelIndex = 0; levelIndex < 40; levelIndex++)
+        for (int levelIndex = 0; levelIndex < 140; levelIndex++)
         {
-            viewModel.AddWaveformLevel(levelIndex / 100d);
+            viewModel.AddWaveformLevel(levelIndex / 200d);
         }
 
-        viewModel.WaveformBars.Should().HaveCount(32);
+        viewModel.WaveformBars.Should().HaveCount(128);
         viewModel.WaveformBars.Select(bar => bar.Level).Should().Equal(
-            Enumerable.Range(8, 32).Select(levelIndex => levelIndex / 100d));
-        viewModel.WaveformBars[0].Height.Should().BeApproximately(10.56, .001);
-        viewModel.WaveformBars[^1].Height.Should().BeApproximately(51.48, .001);
+            Enumerable.Range(12, 128).Select(levelIndex => levelIndex / 200d));
+        viewModel.WaveformBars[0].Height.Should().BeApproximately(7.92, .001);
+        viewModel.WaveformBars[^1].Height.Should().BeApproximately(91.74, .001);
     }
 
     private static AudioCapturePageViewModel CreateViewModel()
