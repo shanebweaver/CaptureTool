@@ -1,6 +1,6 @@
 using CaptureTool.Presentation.ViewModels;
 
-namespace CaptureTool.Presentation.Features.AudioCapture;
+namespace CaptureTool.Presentation.Features.Audio;
 
 public sealed partial class AudioWaveformBarViewModel : ViewModelBase
 {
