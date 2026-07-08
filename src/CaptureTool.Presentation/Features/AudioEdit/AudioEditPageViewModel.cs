@@ -10,7 +10,6 @@ namespace CaptureTool.Presentation.Features.AudioEdit;
 
 public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<AudioFile>
 {
-    private const int WaveformBarCount = 64;
     private const double WaveformMinBarHeight = 0;
     private const double WaveformMaxBarHeight = 132;
 
@@ -33,7 +32,11 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     private readonly ICopyAudioFileUseCase _copyAction;
     private readonly IAudioWaveformHistory _waveformHistory;
 
-    public ObservableCollection<AudioWaveformBarViewModel> WaveformBars { get; }
+    public ObservableCollection<AudioWaveformBarViewModel> WaveformBars
+    {
+        get;
+        private set => Set(ref field, value);
+    }
 
     public AudioEditPageViewModel(
         ISaveAudioFileUseCase saveAction,
@@ -69,27 +72,16 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
 
     public void SetWaveformLevels(IReadOnlyList<double> levels)
     {
-        for (int index = 0; index < WaveformBarCount; index++)
+        ObservableCollection<AudioWaveformBarViewModel> bars = [];
+
+        foreach (double level in levels)
         {
-            double level = index < levels.Count ? levels[index] : 0;
             double clampedLevel = Math.Clamp(level, 0, 1);
             double height = GetWaveformBarHeight(clampedLevel);
-
-            if (index < WaveformBars.Count)
-            {
-                WaveformBars[index].Level = clampedLevel;
-                WaveformBars[index].Height = height;
-            }
-            else
-            {
-                WaveformBars.Add(new AudioWaveformBarViewModel(height, level: clampedLevel));
-            }
+            bars.Add(new AudioWaveformBarViewModel(height, level: clampedLevel));
         }
 
-        while (WaveformBars.Count > WaveformBarCount)
-        {
-            WaveformBars.RemoveAt(WaveformBars.Count - 1);
-        }
+        WaveformBars = bars;
     }
 
     private static double GetWaveformBarHeight(double level)
@@ -100,11 +92,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
 
     private void ResetWaveform()
     {
-        WaveformBars.Clear();
-        for (int i = 0; i < WaveformBarCount; i++)
-        {
-            WaveformBars.Add(new AudioWaveformBarViewModel(WaveformMinBarHeight, level: 0));
-        }
+        WaveformBars = [];
     }
 
     private async Task SaveAsync()

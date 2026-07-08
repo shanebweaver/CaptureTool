@@ -369,17 +369,41 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         }
     }
 
-    private void AddWaveformLevel(double peakLevel)
+    internal void AddWaveformLevel(double peakLevel)
     {
         double clampedLevel = Math.Clamp(peakLevel, 0, 1);
-        double height = WaveformMinBarHeight + (clampedLevel * (WaveformMaxBarHeight - WaveformMinBarHeight));
 
         if (WaveformBars.Count >= WaveformBarCount)
         {
-            WaveformBars.RemoveAt(0);
+            for (int index = 1; index < WaveformBars.Count; index++)
+            {
+                SetWaveformBar(WaveformBars[index - 1], WaveformBars[index].Level);
+            }
+
+            SetWaveformBar(WaveformBars[^1], clampedLevel);
+            return;
         }
 
-        WaveformBars.Add(new AudioWaveformBarViewModel(height));
+        WaveformBars.Add(CreateWaveformBar(clampedLevel));
+    }
+
+    private static AudioWaveformBarViewModel CreateWaveformBar(double level)
+    {
+        double clampedLevel = Math.Clamp(level, 0, 1);
+        return new AudioWaveformBarViewModel(GetWaveformBarHeight(clampedLevel), level: clampedLevel);
+    }
+
+    private static void SetWaveformBar(AudioWaveformBarViewModel bar, double level)
+    {
+        double clampedLevel = Math.Clamp(level, 0, 1);
+        bar.Level = clampedLevel;
+        bar.Height = GetWaveformBarHeight(clampedLevel);
+    }
+
+    private static double GetWaveformBarHeight(double level)
+    {
+        double clampedLevel = Math.Clamp(level, 0, 1);
+        return WaveformMinBarHeight + (clampedLevel * (WaveformMaxBarHeight - WaveformMinBarHeight));
     }
 
     private void ClearWaveform()

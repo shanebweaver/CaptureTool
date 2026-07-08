@@ -15,7 +15,6 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 
 public sealed partial class AudioEditPage : AudioEditPageBase
 {
-    private const int WaveformBarCount = 64;
     private const double WaveformBarDefaultSpacing = 4;
     private const double WaveformDefaultSurfaceHeight = 140;
     private const double WaveformDefaultMaxBarHeight = 132;
@@ -184,7 +183,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             if (string.Equals(_currentAudioPath, filePath, StringComparison.OrdinalIgnoreCase))
             {
                 _waveformTimeline = timeline;
-                ViewModel.SetWaveformLevels(CreateWaveformOverviewLevels(timeline.Levels, WaveformBarCount));
+                ViewModel.SetWaveformLevels(timeline.Levels);
                 UpdateWaveformSizing();
 
                 if (_audioDuration <= TimeSpan.Zero)
@@ -444,35 +443,6 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     }
 
     private readonly record struct WaveformTrackBounds(double Left, double Width);
-
-    private static IReadOnlyList<double> CreateWaveformOverviewLevels(IReadOnlyList<double> levels, int barCount)
-    {
-        if (levels.Count == 0 || barCount <= 0)
-        {
-            return [];
-        }
-
-        double[] overviewLevels = new double[barCount];
-        for (int barIndex = 0; barIndex < barCount; barIndex++)
-        {
-            int startIndex = Math.Min(levels.Count - 1, (int)Math.Floor(barIndex * levels.Count / (double)barCount));
-            int endIndex = Math.Min(levels.Count, (int)Math.Floor((barIndex + 1) * levels.Count / (double)barCount));
-            if (endIndex <= startIndex)
-            {
-                endIndex = startIndex + 1;
-            }
-
-            double peak = 0;
-            for (int levelIndex = startIndex; levelIndex < endIndex; levelIndex++)
-            {
-                peak = Math.Max(peak, levels[levelIndex]);
-            }
-
-            overviewLevels[barIndex] = peak;
-        }
-
-        return overviewLevels;
-    }
 
     private readonly record struct WaveformTimeline(
         IReadOnlyList<double> Levels,

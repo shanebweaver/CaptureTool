@@ -116,7 +116,7 @@
                 Background="{ThemeResource CardBackgroundFillColorDefault}"
                 BorderBrush="{ThemeResource CardStrokeColorDefault}"
                 BorderThickness="0,1">
-                <Grid Height="140">
+                <Grid MaxHeight="300">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
                         <ColumnDefinition />
@@ -125,7 +125,7 @@
                     <ItemsRepeater
                         Grid.Column="0"
                         HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
+                        VerticalAlignment="Stretch"
                         ItemsSource="{x:Bind ViewModel.WaveformBars, Mode=OneWay}">
                         <ItemsRepeater.Layout>
                             <StackLayout Orientation="Horizontal" Spacing="4" />
