@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Presentation.Shell;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
+using CaptureTool.Presentation.Windows.WinUI.Edit;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
@@ -30,6 +31,7 @@ public sealed partial class MainWindow : Window
     private readonly IShutdownHandler _shutdownHandler;
     private readonly WinUIAudioCaptureNavigationConfirmationService _audioCaptureNavigationConfirmationService;
     private readonly WinUIEditSessionConfirmationService _editSessionConfirmationService;
+    private readonly ImageSuperResolutionPreparationConsentService _imageSuperResolutionPreparationConsentService;
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
     private bool _closeConfirmed;
@@ -41,6 +43,7 @@ public sealed partial class MainWindow : Window
         _shutdownHandler = App.Current.ServiceProvider.GetService<IShutdownHandler>();
         _audioCaptureNavigationConfirmationService = App.Current.ServiceProvider.GetService<WinUIAudioCaptureNavigationConfirmationService>();
         _editSessionConfirmationService = App.Current.ServiceProvider.GetService<WinUIEditSessionConfirmationService>();
+        _imageSuperResolutionPreparationConsentService = App.Current.ServiceProvider.GetService<ImageSuperResolutionPreparationConsentService>();
 
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
@@ -69,6 +72,7 @@ public sealed partial class MainWindow : Window
     {
         _editSessionConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _audioCaptureNavigationConfirmationService.XamlRoot = RootGrid.XamlRoot;
+        _imageSuperResolutionPreparationConsentService.XamlRoot = RootGrid.XamlRoot;
     }
 
     private void UpdateAppTitle()

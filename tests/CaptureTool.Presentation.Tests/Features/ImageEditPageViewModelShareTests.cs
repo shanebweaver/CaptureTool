@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
+using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
@@ -67,6 +68,8 @@ public sealed class ImageEditPageViewModelShareTests
             exporter.Object,
             filePicker.Object,
             imageMetadata.Object,
+            Mock.Of<IImageSuperResolutionService>(),
+            Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             shareService.Object,
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),

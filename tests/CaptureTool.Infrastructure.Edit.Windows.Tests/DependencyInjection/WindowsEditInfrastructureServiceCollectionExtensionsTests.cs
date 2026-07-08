@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
+using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Infrastructure.Edit.Windows.ChromaKey;
 using CaptureTool.Infrastructure.Edit.Windows.DependencyInjection;
 using FluentAssertions;
@@ -18,6 +19,7 @@ public sealed class WindowsEditInfrastructureServiceCollectionExtensionsTests
         services.AddWindowsEditDomains();
 
         services.ShouldContainSingleton<IChromaKeyService, Win2DChromaKeyService>();
+        services.ShouldContainSingleton<IImageSuperResolutionService, WindowsImageSuperResolutionService>();
         services.ShouldContainSingleton<IImageCanvasExporter, Win2DImageCanvasExporter>();
         services.ShouldContainSingleton<IImageCanvasPrinter, Win2DImageCanvasPrinter>();
     }
