@@ -25,7 +25,7 @@ Important API constraints from the docs:
 - `NotSupportedOnCurrentSystem` means the feature must not call `EnsureReadyAsync`.
 - `NotReady` or `EnsureNeeded` means the app should ask for user consent before calling `EnsureReadyAsync`.
 - Image Super Resolution is currently available on Copilot+ PCs with NPUs, not GPU or CPU.
-- Windows AI imaging APIs require MSIX packaging with the `systemAIModels` capability and a `MaxVersionTested` value of `10.0.26226.0` or later.
+- Windows AI imaging APIs require MSIX packaging with the `systemAIModels` capability and a `MaxVersionTested` value of `10.0.26226.0` or later. The implementation uses a `Windows.Universal` target device family at that version and opts out of WinAppSDK's generated default target-family item so the build output does not add a stale `Windows.Desktop` entry at the project target SDK version.
 
 ## Problem
 
@@ -142,6 +142,7 @@ The feature should feel like a natural part of the existing image edit workflow:
    - include `systemai` in `IgnorableNamespaces`
    - add `<systemai:Capability Name="systemAIModels" />`
    - update `MaxVersionTested` to at least `10.0.26226.0`
+   - prevent WinAppSDK single-project packaging from injecting a lower-version default target device family
 17. Add project settings so packaging does not overwrite the manifest versions:
    - `AppxOSMinVersionReplaceManifestVersion=false`
    - `AppxOSMaxVersionTestedReplaceManifestVersion=false`
@@ -246,6 +247,7 @@ Scope:
 - Update `Package.appxmanifest` with the `systemai` namespace.
 - Add the `systemAIModels` capability.
 - Update `MaxVersionTested` to `10.0.26226.0` or later.
+- Prevent WinAppSDK single-project packaging from injecting a lower-version default target device family.
 - Add project settings that prevent packaging from overwriting manifest min/max version values.
 - Confirm the pinned Windows App SDK package exposes the required imaging APIs.
 
