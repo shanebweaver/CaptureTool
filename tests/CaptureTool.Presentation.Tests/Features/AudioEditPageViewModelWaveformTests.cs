@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Presentation.Features.Audio;
@@ -30,7 +29,6 @@ public sealed class AudioEditPageViewModelWaveformTests
         return new AudioEditPageViewModel(
             Mock.Of<ISaveAudioFileUseCase>(),
             Mock.Of<ICopyAudioFileUseCase>(),
-            Mock.Of<IOpenAudioCapturePageUseCase>(),
             Mock.Of<IAudioWaveformHistory>());
     }
 }

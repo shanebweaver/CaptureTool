@@ -108,7 +108,7 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
 
         string destinationPath = Path.Combine(
             folderPath,
-            Path.GetFileName(sourcePath));
+            $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}{Path.GetExtension(sourcePath)}");
 
         _fileSystem.CopyFile(sourcePath, destinationPath, true);
         return destinationPath;

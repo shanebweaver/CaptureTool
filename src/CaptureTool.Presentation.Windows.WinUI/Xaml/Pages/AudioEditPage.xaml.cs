@@ -2,6 +2,7 @@ using CaptureTool.Presentation.Features.AudioEdit;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Navigation;
 using System.Buffers.Binary;
 using System.ComponentModel;
 using Windows.Media.Core;
@@ -20,6 +21,8 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     private TimeSpan _audioDuration;
     private WaveformTimeline? _waveformTimeline;
     private DispatcherQueueTimer? _waveformTimer;
+    private TimeSpan? _resumePosition;
+    private bool _isMediaPlaybackSuspended;
 
     public AudioEditPage()
     {
@@ -33,7 +36,6 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     private MediaPlayer CreateMediaPlayer()
     {
         var mediaPlayer = new MediaPlayer();
-        mediaPlayer.CommandManager.IsEnabled = false;
         mediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
         mediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
         mediaPlayer.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
@@ -41,12 +43,64 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         return mediaPlayer;
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        _isMediaPlaybackSuspended = false;
+        _resumePosition = null;
+        PauseMediaPlayer();
+        base.OnNavigatedFrom(e);
+    }
+
+    public void SuspendMediaPlayback()
+    {
+        if (_mediaPlayer is null)
+        {
+            return;
+        }
+
+        _resumePosition = _mediaPlayer.PlaybackSession.Position;
+        _isMediaPlaybackSuspended = true;
+        StopAndClearMediaPlayer();
+    }
+
+    public void ResumeMediaPlayback()
+    {
+        if (!_isMediaPlaybackSuspended)
+        {
+            return;
+        }
+
+        _isMediaPlaybackSuspended = false;
+        TryInitializeAudio();
+    }
+
     private void AudioPlayer_Unloaded(object sender, RoutedEventArgs e)
     {
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        AudioPlayer.SetMediaPlayer(null);
+        StopAndClearMediaPlayer();
         DisposeWaveformTimer();
         DisposeMediaPlayer();
         _mediaPlayer = null;
+    }
+
+    private void PauseMediaPlayer()
+    {
+        StopWaveformTimer();
+        _currentAudioPath = null;
+        _mediaPlayer?.Pause();
+    }
+
+    private void StopAndClearMediaPlayer()
+    {
+        PauseMediaPlayer();
+
+        if (_mediaPlayer is null)
+        {
+            return;
+        }
+
+        _mediaPlayer.Source = null;
     }
 
     private void DisposeMediaPlayer()
@@ -60,6 +114,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         _mediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
         _mediaPlayer.PlaybackSession.PositionChanged -= PlaybackSession_PositionChanged;
         _mediaPlayer.PlaybackSession.PlaybackStateChanged -= PlaybackSession_PlaybackStateChanged;
+        _mediaPlayer.Source = null;
         _mediaPlayer.Dispose();
     }
 
@@ -140,6 +195,14 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         DispatcherQueue.TryEnqueue(() =>
         {
             _audioDuration = sender.PlaybackSession.NaturalDuration;
+            if (_resumePosition is { } resumePosition)
+            {
+                sender.PlaybackSession.Position = _audioDuration > TimeSpan.Zero && resumePosition < _audioDuration
+                    ? resumePosition
+                    : TimeSpan.Zero;
+                _resumePosition = null;
+            }
+
             AlignCapturedWaveformTimelineToDuration(_audioDuration);
             UpdateWaveformPlayhead(sender.PlaybackSession.Position);
             UpdateWaveformTimer(sender.PlaybackSession);

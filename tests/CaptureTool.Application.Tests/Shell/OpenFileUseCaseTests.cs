@@ -23,7 +23,7 @@ public class OpenFileUseCaseTests
         string tempFolder = CreateTestFolder();
         string sourceFolder = CreateTestFolder();
         string sourcePath = Path.Combine(sourceFolder, "source.png");
-        string copiedPath = Path.Combine(tempFolder, "source.png");
+        string copiedPath = Path.Combine(tempFolder, "open-file.png");
         await File.WriteAllTextAsync(sourcePath, "image", TestContext.CancellationToken);
         DateTime oldLastWriteTimeUtc = new(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         File.SetLastWriteTimeUtc(sourcePath, oldLastWriteTimeUtc);
@@ -34,6 +34,9 @@ public class OpenFileUseCaseTests
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
             .Returns(tempFolder);
+        storageService
+            .Setup(service => service.GetTemporaryFileName())
+            .Returns("open-file.tmp");
         OpenFileUseCase useCase = new(
             filePickerService.Object,
             navigationService.Object,
@@ -52,7 +55,7 @@ public class OpenFileUseCaseTests
                 NavigationRoute.ImageEdit,
                 It.Is<ImageFile>(file => file.FilePath == copiedPath)),
             Times.Once);
-        storageService.Verify(service => service.GetTemporaryFileName(), Times.Never);
+        storageService.Verify(service => service.GetTemporaryFileName(), Times.Once);
     }
 
     [TestMethod]
@@ -64,7 +67,7 @@ public class OpenFileUseCaseTests
         string tempFolder = CreateTestFolder();
         string sourceFolder = CreateTestFolder();
         string sourcePath = Path.Combine(sourceFolder, "source.wav");
-        string copiedPath = Path.Combine(tempFolder, "source.wav");
+        string copiedPath = Path.Combine(tempFolder, "open-file.wav");
         await File.WriteAllTextAsync(sourcePath, "audio", TestContext.CancellationToken);
         DateTime oldLastWriteTimeUtc = new(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         File.SetLastWriteTimeUtc(sourcePath, oldLastWriteTimeUtc);
@@ -75,6 +78,9 @@ public class OpenFileUseCaseTests
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
             .Returns(tempFolder);
+        storageService
+            .Setup(service => service.GetTemporaryFileName())
+            .Returns("open-file.tmp");
         OpenFileUseCase useCase = new(
             filePickerService.Object,
             navigationService.Object,
@@ -93,7 +99,7 @@ public class OpenFileUseCaseTests
                 NavigationRoute.AudioEdit,
                 It.Is<AudioFile>(file => file.FilePath == copiedPath)),
             Times.Once);
-        storageService.Verify(service => service.GetTemporaryFileName(), Times.Never);
+        storageService.Verify(service => service.GetTemporaryFileName(), Times.Once);
     }
 
     [TestMethod]
@@ -105,7 +111,7 @@ public class OpenFileUseCaseTests
         string tempFolder = CreateTestFolder();
         string sourceFolder = CreateTestFolder();
         string sourcePath = Path.Combine(sourceFolder, "source.mp4");
-        string copiedPath = Path.Combine(tempFolder, "source.mp4");
+        string copiedPath = Path.Combine(tempFolder, "open-file.mp4");
         await File.WriteAllTextAsync(sourcePath, "video", TestContext.CancellationToken);
         DateTime oldLastWriteTimeUtc = new(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         File.SetLastWriteTimeUtc(sourcePath, oldLastWriteTimeUtc);
@@ -116,6 +122,9 @@ public class OpenFileUseCaseTests
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
             .Returns(tempFolder);
+        storageService
+            .Setup(service => service.GetTemporaryFileName())
+            .Returns("open-file.tmp");
         OpenFileUseCase useCase = new(
             filePickerService.Object,
             navigationService.Object,
@@ -134,7 +143,7 @@ public class OpenFileUseCaseTests
                 NavigationRoute.VideoEdit,
                 It.Is<VideoFile>(file => file.FilePath == copiedPath)),
             Times.Once);
-        storageService.Verify(service => service.GetTemporaryFileName(), Times.Never);
+        storageService.Verify(service => service.GetTemporaryFileName(), Times.Once);
     }
 
     [TestMethod]

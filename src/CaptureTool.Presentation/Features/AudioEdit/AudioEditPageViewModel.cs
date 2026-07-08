@@ -1,9 +1,7 @@
-using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.Audio;
-using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
@@ -18,7 +16,6 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
 
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand CopyCommand { get; }
-    public IRelayCommand NewAudioCaptureCommand { get; }
 
     public string? AudioPath
     {
@@ -41,7 +38,6 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     public AudioEditPageViewModel(
         ISaveAudioFileUseCase saveAction,
         ICopyAudioFileUseCase copyAction,
-        IOpenAudioCapturePageUseCase openAudioCapturePageAction,
         IAudioWaveformHistory waveformHistory)
     {
         _saveAction = saveAction;
@@ -50,7 +46,6 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
 
         SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
-        NewAudioCaptureCommand = openAudioCapturePageAction.ToRelayCommand(() => new OpenAudioCapturePageRequest());
 
         IsAudioReady = false;
         WaveformBars = [];

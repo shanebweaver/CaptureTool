@@ -902,10 +902,6 @@ SOFTWARE.
     <value>Copy</value>
     <comment>The label for the copy button on the audio edit page.</comment>
   </data>
-  <data name="AudioEdit_NewAudioCaptureButton.Label" xml:space="preserve">
-    <value>New audio capture</value>
-    <comment>The label for the button that starts another audio capture from the audio edit page.</comment>
-  </data>
   <data name="AudioEdit_SaveButton.AccessKey" xml:space="preserve">
     <value>S</value>
     <comment>The access key for the save button on the audio edit page.</comment>

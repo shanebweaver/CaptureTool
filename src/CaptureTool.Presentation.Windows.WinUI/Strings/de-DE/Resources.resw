@@ -1001,9 +1001,6 @@ SOFTWARE.
   <data name="AudioEdit_CopyButton.Label" xml:space="preserve">
     <value>Kopieren</value>
   </data>
-  <data name="AudioEdit_NewAudioCaptureButton.Label" xml:space="preserve">
-    <value>Neue Audioaufnahme</value>
-  </data>
   <data name="AudioCapture_StartRecordingButton.Label" xml:space="preserve">
     <value>Aufnehmen</value>
   </data>

@@ -37,8 +37,12 @@
             <!--  New audio capture  -->
             <MenuFlyoutItem
                 x:Uid="AppMenu_NewAudioCaptureItem"
-                Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
-                Icon="Audio">
+                Command="{x:Bind ViewModel.NewAudioCaptureCommand}">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="{StaticResource Microphone}" />
+                </MenuFlyoutItem.Icon>
                 <MenuFlyoutItem.KeyboardAccelerators>
                     <KeyboardAccelerator x:Uid="AppMenu_NewAudioCaptureItem_KeyboardAccelerator" />
                 </MenuFlyoutItem.KeyboardAccelerators>
