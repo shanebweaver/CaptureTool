@@ -16,8 +16,11 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 public sealed partial class AudioEditPage : AudioEditPageBase
 {
     private const double WaveformBarDefaultSpacing = 4;
+    private const double WaveformBarMinWidth = 2;
+    private const double WaveformBarMinSpacing = 1;
     private const double WaveformDefaultSurfaceHeight = 140;
     private const double WaveformDefaultMaxBarHeight = 132;
+    private const double WaveformPlayheadScrollMargin = 24;
     private static readonly TimeSpan WaveformUpdateInterval = TimeSpan.FromMilliseconds(50);
 
     private MediaPlayer? _mediaPlayer;
@@ -158,6 +161,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             StopWaveformTimer();
             ViewModel.SetWaveformLevels([]);
             UpdateWaveformSizing();
+            WaveformScrollViewer.ChangeView(0, null, null, true);
             UpdateWaveformPlayhead(TimeSpan.Zero);
 
             StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
@@ -201,6 +205,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         DispatcherQueue.TryEnqueue(() =>
         {
             _audioDuration = sender.PlaybackSession.NaturalDuration;
+            bool shouldScrollToResumePosition = _resumePosition is not null;
             if (_resumePosition is { } resumePosition)
             {
                 sender.PlaybackSession.Position = _audioDuration > TimeSpan.Zero && resumePosition < _audioDuration
@@ -210,7 +215,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             }
 
             AlignCapturedWaveformTimelineToDuration(_audioDuration);
-            UpdateWaveformPlayhead(sender.PlaybackSession.Position);
+            UpdateWaveformPlayhead(sender.PlaybackSession.Position, scrollIntoView: shouldScrollToResumePosition);
             UpdateWaveformTimer(sender.PlaybackSession);
         });
     }
@@ -220,13 +225,14 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         DispatcherQueue.TryEnqueue(() =>
         {
             StopWaveformTimer();
-            UpdateWaveformPlayhead(GetAudioDuration());
+            UpdateWaveformPlayhead(GetAudioDuration(), scrollIntoView: true);
         });
     }
 
     private void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
     {
-        DispatcherQueue.TryEnqueue(() => UpdateWaveformPlayhead(sender.Position));
+        DispatcherQueue.TryEnqueue(() =>
+            UpdateWaveformPlayhead(sender.Position, scrollIntoView: sender.PlaybackState == MediaPlaybackState.Playing));
     }
 
     private void PlaybackSession_PlaybackStateChanged(MediaPlaybackSession sender, object args)
@@ -242,7 +248,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             return;
         }
 
-        UpdateWaveformPlayhead(_mediaPlayer.PlaybackSession.Position);
+        UpdateWaveformPlayhead(_mediaPlayer.PlaybackSession.Position, scrollIntoView: true);
     }
 
     private void WaveformSurface_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -261,24 +267,38 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         int barCount = ViewModel.WaveformBars.Count;
         if (barCount == 0)
         {
+            SetWaveformTrackSize(GetWaveformSizing(barCount).TrackWidth);
             return;
         }
 
-        double scale = GetWaveformHorizontalScale(barCount);
-        double barWidth = AudioWaveformBarViewModel.DefaultWidth * scale;
-        double spacing = WaveformBarDefaultSpacing * scale;
+        WaveformSizing sizing = GetWaveformSizing(barCount);
         double maxBarHeight = GetWaveformMaxBarHeight();
+
+        SetWaveformTrackSize(sizing.TrackWidth);
 
         if (WaveformBarsRepeater.Layout is StackLayout layout)
         {
-            layout.Spacing = spacing;
+            layout.Spacing = sizing.Spacing;
         }
 
         foreach (var bar in ViewModel.WaveformBars)
         {
-            bar.Width = barWidth;
+            bar.Width = sizing.BarWidth;
             bar.Height = bar.Level * maxBarHeight;
         }
+    }
+
+    private void SetWaveformTrackSize(double trackWidth)
+    {
+        double surfaceWidth = Math.Max(0, WaveformSurface.ActualWidth);
+        double surfaceHeight = WaveformSurface.ActualHeight > 0
+            ? WaveformSurface.ActualHeight
+            : WaveformDefaultSurfaceHeight;
+
+        WaveformScrollContent.Width = Math.Max(surfaceWidth, trackWidth);
+        WaveformScrollContent.Height = surfaceHeight;
+        WaveformTrack.Width = trackWidth;
+        WaveformTrack.Height = surfaceHeight;
     }
 
     private double GetWaveformMaxBarHeight()
@@ -300,76 +320,106 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             return;
         }
 
-        WaveformTrackBounds trackBounds = GetWaveformTrackBounds();
-        if (trackBounds.Width <= 0)
+        double trackWidth = GetWaveformTrackWidth();
+        if (trackWidth <= 0)
         {
             return;
         }
 
-        double pointerX = e.GetCurrentPoint(WaveformSurface).Position.X;
-        double progress = Math.Clamp((pointerX - trackBounds.Left) / trackBounds.Width, 0, 1);
+        double pointerX = e.GetCurrentPoint(WaveformTrack).Position.X;
+        double progress = Math.Clamp(pointerX / trackWidth, 0, 1);
         TimeSpan position = TimeSpan.FromTicks((long)(duration.Ticks * progress));
         _mediaPlayer.PlaybackSession.Position = position;
-        UpdateWaveformPlayhead(position);
+        UpdateWaveformPlayhead(position, scrollIntoView: true);
     }
 
-    private void UpdateWaveformPlayhead(TimeSpan position)
+    private void UpdateWaveformPlayhead(TimeSpan position, bool scrollIntoView = false)
     {
         TimeSpan duration = GetAudioDuration();
         double progress = duration > TimeSpan.Zero
             ? Math.Clamp(position.TotalMilliseconds / duration.TotalMilliseconds, 0, 1)
             : 0;
 
-        WaveformTrackBounds trackBounds = GetWaveformTrackBounds();
-        double trackWidth = Math.Max(0, trackBounds.Width - WaveformPlayhead.ActualWidth);
-        WaveformPlayheadTransform.X = trackBounds.Left + (trackWidth * progress);
-    }
+        double trackWidth = Math.Max(0, GetWaveformTrackWidth() - WaveformPlayhead.ActualWidth);
+        double playheadX = trackWidth * progress;
+        WaveformPlayheadTransform.X = playheadX;
 
-    private WaveformTrackBounds GetWaveformTrackBounds()
-    {
-        double width = GetWaveformTrackWidth();
-
-        double left = Math.Max(0, (WaveformSurface.ActualWidth - width) / 2);
-        return new WaveformTrackBounds(left, width);
+        if (scrollIntoView)
+        {
+            ScrollWaveformPlayheadIntoView(playheadX);
+        }
     }
 
     private double GetWaveformTrackWidth()
     {
-        int barCount = ViewModel.WaveformBars.Count;
-        double naturalWidth = GetWaveformNaturalWidth(barCount);
-        double availableWidth = Math.Max(0, WaveformSurface.ActualWidth);
-
-        if (naturalWidth <= 0)
+        double width = WaveformTrack.Width;
+        if (!double.IsNaN(width) && width > 0)
         {
-            return availableWidth;
+            return width;
         }
 
-        return availableWidth > 0
-            ? Math.Min(naturalWidth, availableWidth)
-            : naturalWidth;
+        return GetWaveformSizing(ViewModel.WaveformBars.Count).TrackWidth;
     }
 
-    private double GetWaveformHorizontalScale(int barCount)
+    private void ScrollWaveformPlayheadIntoView(double playheadX)
     {
-        double naturalWidth = GetWaveformNaturalWidth(barCount);
-        double availableWidth = Math.Max(0, WaveformSurface.ActualWidth);
-        if (naturalWidth <= 0 || availableWidth <= 0)
+        double viewportWidth = WaveformScrollViewer.ViewportWidth;
+        if (viewportWidth <= 0 || WaveformScrollViewer.ScrollableWidth <= 0)
         {
-            return 1;
+            return;
         }
 
-        return Math.Min(1, availableWidth / naturalWidth);
+        double trackLeft = Math.Max(0, (WaveformScrollContent.Width - GetWaveformTrackWidth()) / 2);
+        double contentPlayheadX = trackLeft + playheadX;
+        double viewportLeft = WaveformScrollViewer.HorizontalOffset;
+        double viewportRight = viewportLeft + viewportWidth;
+
+        if (contentPlayheadX < viewportLeft + WaveformPlayheadScrollMargin)
+        {
+            double targetOffset = Math.Max(0, contentPlayheadX - WaveformPlayheadScrollMargin);
+            WaveformScrollViewer.ChangeView(targetOffset, null, null, true);
+        }
+        else if (contentPlayheadX > viewportRight - WaveformPlayheadScrollMargin)
+        {
+            double targetOffset = Math.Min(
+                WaveformScrollViewer.ScrollableWidth,
+                contentPlayheadX - viewportWidth + WaveformPlayheadScrollMargin);
+            WaveformScrollViewer.ChangeView(targetOffset, null, null, true);
+        }
     }
 
-    private static double GetWaveformNaturalWidth(int barCount)
+    private WaveformSizing GetWaveformSizing(int barCount)
+    {
+        if (barCount <= 0)
+        {
+            double width = Math.Max(0, WaveformSurface.ActualWidth);
+            return new WaveformSizing(AudioWaveformBarViewModel.DefaultWidth, WaveformBarDefaultSpacing, width);
+        }
+
+        double naturalWidth = GetWaveformWidth(
+            barCount,
+            AudioWaveformBarViewModel.DefaultWidth,
+            WaveformBarDefaultSpacing);
+        double availableWidth = Math.Max(0, WaveformSurface.ActualWidth);
+        double scale = naturalWidth > 0 && availableWidth > 0
+            ? Math.Min(1, availableWidth / naturalWidth)
+            : 1;
+
+        double barWidth = Math.Max(WaveformBarMinWidth, AudioWaveformBarViewModel.DefaultWidth * scale);
+        double spacing = Math.Max(WaveformBarMinSpacing, WaveformBarDefaultSpacing * scale);
+        double trackWidth = GetWaveformWidth(barCount, barWidth, spacing);
+
+        return new WaveformSizing(barWidth, spacing, trackWidth);
+    }
+
+    private static double GetWaveformWidth(int barCount, double barWidth, double spacing)
     {
         if (barCount <= 0)
         {
             return 0;
         }
 
-        return (barCount * AudioWaveformBarViewModel.DefaultWidth) +
-            ((barCount - 1) * WaveformBarDefaultSpacing);
+        return (barCount * barWidth) + ((barCount - 1) * spacing);
     }
 
     private void UpdateWaveformTimer(MediaPlaybackSession playbackSession)
@@ -442,7 +492,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         return _audioDuration > TimeSpan.Zero ? _audioDuration : waveformDuration;
     }
 
-    private readonly record struct WaveformTrackBounds(double Left, double Width);
+    private readonly record struct WaveformSizing(double BarWidth, double Spacing, double TrackWidth);
 
     private readonly record struct WaveformTimeline(
         IReadOnlyList<double> Levels,
