@@ -79,7 +79,7 @@
                                 PointerPressed="WaveformSurface_PointerPressed">
                                 <ItemsRepeater
                                     x:Name="WaveformBarsRepeater"
-                                    HorizontalAlignment="Center"
+                                    HorizontalAlignment="Stretch"
                                     VerticalAlignment="Center"
                                     ItemsSource="{x:Bind ViewModel.WaveformBars, Mode=OneWay}"
                                     SizeChanged="WaveformBarsRepeater_SizeChanged">

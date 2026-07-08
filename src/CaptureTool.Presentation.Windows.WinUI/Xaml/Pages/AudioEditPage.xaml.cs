@@ -254,7 +254,9 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     private void WaveformSurface_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         UpdateWaveformSizing();
-        UpdateWaveformPlayhead(_mediaPlayer?.PlaybackSession.Position ?? TimeSpan.Zero);
+        TimeSpan position = _mediaPlayer?.PlaybackSession.Position ?? TimeSpan.Zero;
+        UpdateWaveformPlayhead(position);
+        DispatcherQueue.TryEnqueue(() => UpdateWaveformPlayhead(_mediaPlayer?.PlaybackSession.Position ?? position));
     }
 
     private void WaveformBarsRepeater_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -299,6 +301,8 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         WaveformScrollContent.Height = surfaceHeight;
         WaveformTrack.Width = trackWidth;
         WaveformTrack.Height = surfaceHeight;
+        WaveformBarsRepeater.Width = trackWidth;
+        WaveformBarsRepeater.Height = surfaceHeight;
     }
 
     private double GetWaveformMaxBarHeight()
