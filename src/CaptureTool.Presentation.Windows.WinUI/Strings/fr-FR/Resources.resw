@@ -998,4 +998,175 @@ SOFTWARE.
   <data name="SelectionOverlay_CaptureTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
     <value>Choisir la zone de capture</value>
   </data>
+  <data name="AppMenu_NewAudioCaptureItem.AccessKey" xml:space="preserve">
+    <value>A</value>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem.Text" xml:space="preserve">
+    <value>Nouvelle capture audio</value>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value>Control,Menu</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Audio système</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.Label" xml:space="preserve">
+    <value>Audio système</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Désactiver la capture audio système</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Audio système désactivé</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.Label" xml:space="preserve">
+    <value>Audio système</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Activer la capture audio système</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Démarrer l’enregistrement</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.Label" xml:space="preserve">
+    <value>Enregistrer</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Démarrer l’enregistrement</value>
+  </data>
+  <data name="AudioCapture_Timer.AutomationProperties.Name" xml:space="preserve">
+    <value>Durée de l’enregistrement</value>
+  </data>
+  <data name="AudioCapture_Timer.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Durée de l’enregistrement</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_CancelButton" xml:space="preserve">
+    <value>Continuer l’enregistrement</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_Content" xml:space="preserve">
+    <value>Un enregistrement audio est encore en cours. Arrêtez-le avant de quitter cette page afin d’enregistrer l’enregistrement partiel.</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_StopButton" xml:space="preserve">
+    <value>Arrêter l’enregistrement</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_Title" xml:space="preserve">
+    <value>Arrêter l’enregistrement audio ?</value>
+  </data>
+  <data name="AudioEdit_CopyButton.Label" xml:space="preserve">
+    <value>Copier</value>
+  </data>
+  <data name="AudioEdit_SaveButton.AccessKey" xml:space="preserve">
+    <value>S</value>
+  </data>
+  <data name="AudioEdit_SaveButton.Label" xml:space="preserve">
+    <value>Enregistrer sous</value>
+  </data>
+  <data name="CaptureMode_Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="CaptureMode_Video" xml:space="preserve">
+    <value>Vidéo</value>
+  </data>
+  <data name="ImageEdit_AutoZoomLockButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Verrouiller le zoom automatique</value>
+  </data>
+  <data name="ImageEdit_ZoomAndCenterButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Zoomer et centrer</value>
+  </data>
+  <data name="ShapeTypeComboBox.Header" xml:space="preserve">
+    <value>Type de forme</value>
+  </data>
+  <data name="ShapeTypeComboBox_ArrowItem.Content" xml:space="preserve">
+    <value>Flèche</value>
+  </data>
+  <data name="ShapeTypeComboBox_EllipseItem.Content" xml:space="preserve">
+    <value>Ellipse</value>
+  </data>
+  <data name="ShapeTypeComboBox_LineItem.Content" xml:space="preserve">
+    <value>Ligne</value>
+  </data>
+  <data name="ShapeTypeComboBox_RectangleItem.Content" xml:space="preserve">
+    <value>Rectangle</value>
+  </data>
+  <data name="AudioCapture_PauseButton.Label" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="AudioCapture_PauseButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Suspendre ou reprendre l’enregistrement</value>
+  </data>
+  <data name="AudioCapture_PauseButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Suspendre ou reprendre l’enregistrement</value>
+  </data>
+  <data name="AudioCapture_StopButton.Label" xml:space="preserve">
+    <value>Arrêter</value>
+  </data>
+  <data name="AudioCapture_StopButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Arrêter l’enregistrement</value>
+  </data>
+  <data name="AudioCapture_StopButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Arrêter l’enregistrement</value>
+  </data>
+  <data name="Settings_AudioCaptureHeaderLabel.Text" xml:space="preserve">
+    <value>Capture audio</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_HeaderLabel.Text" xml:space="preserve">
+    <value>Capturer l’audio système par défaut</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_SubtitleLabel.Text" xml:space="preserve">
+    <value>Démarrer les nouveaux enregistrements audio avec l’audio système activé.</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_Toggle.OnContent" xml:space="preserve">
+    <value>Activé</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_Toggle.OffContent" xml:space="preserve">
+    <value>Désactivé</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_HeaderLabel.Text" xml:space="preserve">
+    <value>Copier l’audio après l’enregistrement</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_SubtitleLabel.Text" xml:space="preserve">
+    <value>Placer les enregistrements WAV terminés dans le presse-papiers.</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_Toggle.OnContent" xml:space="preserve">
+    <value>Activé</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_Toggle.OffContent" xml:space="preserve">
+    <value>Désactivé</value>
+  </data>
+  <data name="Settings_AudioAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>Enregistrer l’audio après l’enregistrement</value>
+  </data>
+  <data name="Settings_AudioAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>Enregistrer les enregistrements WAV terminés dans votre dossier audio.</value>
+  </data>
+  <data name="Settings_AudioAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>Activé</value>
+  </data>
+  <data name="Settings_AudioAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>Désactivé</value>
+  </data>
+  <data name="Settings_AudioAutoSave_AudioFolderLabel.Text" xml:space="preserve">
+    <value>Dossier audio</value>
+  </data>
+  <data name="Settings_AudioAutoSave_ChangeButton.Text" xml:space="preserve">
+    <value>Changer de dossier</value>
+  </data>
+  <data name="Settings_RestartAppButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Redémarrer l’application</value>
+  </data>
+  <data name="Settings_RestartAppButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Redémarrer l’application</value>
+  </data>
+  <data name="Settings_RestoreDefaults_ToolTip.Text" xml:space="preserve">
+    <value>Restaurer les paramètres par défaut</value>
+  </data>
+  <data name="TextToolbar_FontColorButtonLabel.Text" xml:space="preserve">
+    <value>Couleur</value>
+  </data>
+  <data name="TextToolbar_BackgroundColorButtonLabel.Text" xml:space="preserve">
+    <value>Arrière-plan</value>
+  </data>
 </root>

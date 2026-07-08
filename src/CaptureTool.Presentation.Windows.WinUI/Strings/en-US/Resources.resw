@@ -1292,4 +1292,82 @@ SOFTWARE.
   <data name="SelectionOverlay_CaptureTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
     <value>Choose capture area</value>
   </data>
+  <data name="AudioCapture_PauseButton.Label" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="AudioCapture_PauseButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Pause or resume recording</value>
+  </data>
+  <data name="AudioCapture_PauseButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pause or resume recording</value>
+  </data>
+  <data name="AudioCapture_StopButton.Label" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="AudioCapture_StopButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Stop recording</value>
+  </data>
+  <data name="AudioCapture_StopButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Stop recording</value>
+  </data>
+  <data name="Settings_AudioCaptureHeaderLabel.Text" xml:space="preserve">
+    <value>Audio capture</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_HeaderLabel.Text" xml:space="preserve">
+    <value>Capture system audio by default</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_SubtitleLabel.Text" xml:space="preserve">
+    <value>Start new audio recordings with system audio enabled.</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_HeaderLabel.Text" xml:space="preserve">
+    <value>Copy audio after recording</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_SubtitleLabel.Text" xml:space="preserve">
+    <value>Place completed WAV recordings on the clipboard.</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings_AudioAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>Save audio after recording</value>
+  </data>
+  <data name="Settings_AudioAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>Save completed WAV recordings to your audio folder.</value>
+  </data>
+  <data name="Settings_AudioAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Settings_AudioAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings_AudioAutoSave_AudioFolderLabel.Text" xml:space="preserve">
+    <value>Audio folder</value>
+  </data>
+  <data name="Settings_AudioAutoSave_ChangeButton.Text" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="Settings_RestartAppButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Restart app</value>
+  </data>
+  <data name="Settings_RestartAppButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restart app</value>
+  </data>
+  <data name="Settings_RestoreDefaults_ToolTip.Text" xml:space="preserve">
+    <value>Restore default settings</value>
+  </data>
+  <data name="TextToolbar_FontColorButtonLabel.Text" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="TextToolbar_BackgroundColorButtonLabel.Text" xml:space="preserve">
+    <value>Background</value>
+  </data>
 </root>

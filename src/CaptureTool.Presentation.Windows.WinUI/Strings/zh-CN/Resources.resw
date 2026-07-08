@@ -998,4 +998,175 @@ SOFTWARE.
   <data name="SelectionOverlay_CaptureTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
     <value>选择捕获区域</value>
   </data>
+  <data name="AppMenu_NewAudioCaptureItem.AccessKey" xml:space="preserve">
+    <value>A</value>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem.Text" xml:space="preserve">
+    <value>新建音频捕获</value>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem_KeyboardAccelerator.Key" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="AppMenu_NewAudioCaptureItem_KeyboardAccelerator.Modifiers" xml:space="preserve">
+    <value>Control,Menu</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.AutomationProperties.Name" xml:space="preserve">
+    <value>系统音频</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.Label" xml:space="preserve">
+    <value>系统音频</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>关闭系统音频捕获</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.AutomationProperties.Name" xml:space="preserve">
+    <value>系统音频关闭</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.Label" xml:space="preserve">
+    <value>系统音频</value>
+  </data>
+  <data name="AudioCapture_DesktopAudioOffButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>打开系统音频捕获</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.AutomationProperties.Name" xml:space="preserve">
+    <value>开始录制</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.Label" xml:space="preserve">
+    <value>录制</value>
+  </data>
+  <data name="AudioCapture_StartRecordingButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>开始录制</value>
+  </data>
+  <data name="AudioCapture_Timer.AutomationProperties.Name" xml:space="preserve">
+    <value>录制时长</value>
+  </data>
+  <data name="AudioCapture_Timer.ToolTipService.ToolTip" xml:space="preserve">
+    <value>录制时长</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_CancelButton" xml:space="preserve">
+    <value>继续录制</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_Content" xml:space="preserve">
+    <value>音频录制仍在进行中。离开此页面前请停止录制，以保存部分录制内容。</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_StopButton" xml:space="preserve">
+    <value>停止录制</value>
+  </data>
+  <data name="AudioCaptureNavigationConfirmation_Title" xml:space="preserve">
+    <value>停止音频录制？</value>
+  </data>
+  <data name="AudioEdit_CopyButton.Label" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="AudioEdit_SaveButton.AccessKey" xml:space="preserve">
+    <value>S</value>
+  </data>
+  <data name="AudioEdit_SaveButton.Label" xml:space="preserve">
+    <value>另存为</value>
+  </data>
+  <data name="CaptureMode_Image" xml:space="preserve">
+    <value>图像</value>
+  </data>
+  <data name="CaptureMode_Video" xml:space="preserve">
+    <value>视频</value>
+  </data>
+  <data name="ImageEdit_AutoZoomLockButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>锁定自动缩放</value>
+  </data>
+  <data name="ImageEdit_ZoomAndCenterButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>缩放并居中</value>
+  </data>
+  <data name="ShapeTypeComboBox.Header" xml:space="preserve">
+    <value>形状类型</value>
+  </data>
+  <data name="ShapeTypeComboBox_ArrowItem.Content" xml:space="preserve">
+    <value>箭头</value>
+  </data>
+  <data name="ShapeTypeComboBox_EllipseItem.Content" xml:space="preserve">
+    <value>椭圆</value>
+  </data>
+  <data name="ShapeTypeComboBox_LineItem.Content" xml:space="preserve">
+    <value>直线</value>
+  </data>
+  <data name="ShapeTypeComboBox_RectangleItem.Content" xml:space="preserve">
+    <value>矩形</value>
+  </data>
+  <data name="AudioCapture_PauseButton.Label" xml:space="preserve">
+    <value>暂停</value>
+  </data>
+  <data name="AudioCapture_PauseButton.AutomationProperties.Name" xml:space="preserve">
+    <value>暂停或继续录制</value>
+  </data>
+  <data name="AudioCapture_PauseButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>暂停或继续录制</value>
+  </data>
+  <data name="AudioCapture_StopButton.Label" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="AudioCapture_StopButton.AutomationProperties.Name" xml:space="preserve">
+    <value>停止录制</value>
+  </data>
+  <data name="AudioCapture_StopButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>停止录制</value>
+  </data>
+  <data name="Settings_AudioCaptureHeaderLabel.Text" xml:space="preserve">
+    <value>音频捕获</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_HeaderLabel.Text" xml:space="preserve">
+    <value>默认捕获系统音频</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_SubtitleLabel.Text" xml:space="preserve">
+    <value>开始新的音频录制时启用系统音频。</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_Toggle.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="Settings_AudioDefaultLocalAudio_Toggle.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_HeaderLabel.Text" xml:space="preserve">
+    <value>录制后复制音频</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_SubtitleLabel.Text" xml:space="preserve">
+    <value>将完成的 WAV 录制放入剪贴板。</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_Toggle.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="Settings_AudioAutoCopy_Toggle.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="Settings_AudioAutoSave_HeaderLabel.Text" xml:space="preserve">
+    <value>录制后保存音频</value>
+  </data>
+  <data name="Settings_AudioAutoSave_SubtitleLabel.Text" xml:space="preserve">
+    <value>将完成的 WAV 录制保存到音频文件夹。</value>
+  </data>
+  <data name="Settings_AudioAutoSave_Toggle.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="Settings_AudioAutoSave_Toggle.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="Settings_AudioAutoSave_AudioFolderLabel.Text" xml:space="preserve">
+    <value>音频文件夹</value>
+  </data>
+  <data name="Settings_AudioAutoSave_ChangeButton.Text" xml:space="preserve">
+    <value>更改文件夹</value>
+  </data>
+  <data name="Settings_RestartAppButton.AutomationProperties.Name" xml:space="preserve">
+    <value>重启应用</value>
+  </data>
+  <data name="Settings_RestartAppButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>重启应用</value>
+  </data>
+  <data name="Settings_RestoreDefaults_ToolTip.Text" xml:space="preserve">
+    <value>恢复默认设置</value>
+  </data>
+  <data name="TextToolbar_FontColorButtonLabel.Text" xml:space="preserve">
+    <value>颜色</value>
+  </data>
+  <data name="TextToolbar_BackgroundColorButtonLabel.Text" xml:space="preserve">
+    <value>背景</value>
+  </data>
 </root>
