@@ -18,9 +18,16 @@ public sealed partial class AudioWaveformBarViewModel : ViewModelBase
         set => Set(ref field, value);
     }
 
-    public AudioWaveformBarViewModel(double height, double width = DefaultWidth)
+    public double Level
+    {
+        get;
+        set => Set(ref field, value);
+    }
+
+    public AudioWaveformBarViewModel(double height, double width = DefaultWidth, double level = 0)
     {
         Height = height;
         Width = width;
+        Level = level;
     }
 }

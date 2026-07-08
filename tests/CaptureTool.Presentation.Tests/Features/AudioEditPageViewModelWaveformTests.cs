@@ -22,6 +22,8 @@ public sealed class AudioEditPageViewModelWaveformTests
         viewModel.WaveformBars[1].Height.Should().Be(66);
         viewModel.WaveformBars[2].Height.Should().Be(132);
         viewModel.WaveformBars[3].Height.Should().Be(0);
+        viewModel.WaveformBars[1].Level.Should().Be(.5);
+        viewModel.WaveformBars[2].Level.Should().Be(1);
     }
 
     private static AudioEditPageViewModel CreateViewModel()

@@ -59,9 +59,9 @@
                 PointerPressed="WaveformSurface_PointerPressed"
                 Visibility="{x:Bind ViewModel.IsAudioReady, Mode=OneWay}">
                 <Grid
+                    MaxHeight="300"
                     x:Name="WaveformSurface"
                     Grid.Row="1"
-                    Height="140"
                     SizeChanged="WaveformSurface_SizeChanged">
                     <ItemsRepeater
                         x:Name="WaveformBarsRepeater"

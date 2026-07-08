@@ -72,15 +72,17 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         for (int index = 0; index < WaveformBarCount; index++)
         {
             double level = index < levels.Count ? levels[index] : 0;
-            double height = GetWaveformBarHeight(level);
+            double clampedLevel = Math.Clamp(level, 0, 1);
+            double height = GetWaveformBarHeight(clampedLevel);
 
             if (index < WaveformBars.Count)
             {
+                WaveformBars[index].Level = clampedLevel;
                 WaveformBars[index].Height = height;
             }
             else
             {
-                WaveformBars.Add(new AudioWaveformBarViewModel(height));
+                WaveformBars.Add(new AudioWaveformBarViewModel(height, level: clampedLevel));
             }
         }
 
@@ -101,7 +103,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         WaveformBars.Clear();
         for (int i = 0; i < WaveformBarCount; i++)
         {
-            WaveformBars.Add(new AudioWaveformBarViewModel(WaveformMinBarHeight));
+            WaveformBars.Add(new AudioWaveformBarViewModel(WaveformMinBarHeight, level: 0));
         }
     }
 

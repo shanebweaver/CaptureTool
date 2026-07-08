@@ -17,6 +17,8 @@ public sealed partial class AudioEditPage : AudioEditPageBase
 {
     private const int WaveformBarCount = 64;
     private const double WaveformBarDefaultSpacing = 4;
+    private const double WaveformDefaultSurfaceHeight = 140;
+    private const double WaveformDefaultMaxBarHeight = 132;
     private static readonly TimeSpan WaveformUpdateInterval = TimeSpan.FromMilliseconds(50);
 
     private MediaPlayer? _mediaPlayer;
@@ -266,6 +268,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         double scale = GetWaveformHorizontalScale(barCount);
         double barWidth = AudioWaveformBarViewModel.DefaultWidth * scale;
         double spacing = WaveformBarDefaultSpacing * scale;
+        double maxBarHeight = GetWaveformMaxBarHeight();
 
         if (WaveformBarsRepeater.Layout is StackLayout layout)
         {
@@ -275,7 +278,19 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         foreach (var bar in ViewModel.WaveformBars)
         {
             bar.Width = barWidth;
+            bar.Height = bar.Level * maxBarHeight;
         }
+    }
+
+    private double GetWaveformMaxBarHeight()
+    {
+        double surfaceHeight = WaveformSurface.ActualHeight;
+        if (surfaceHeight <= 0)
+        {
+            return WaveformDefaultMaxBarHeight;
+        }
+
+        return surfaceHeight * (WaveformDefaultMaxBarHeight / WaveformDefaultSurfaceHeight);
     }
 
     private void WaveformSurface_PointerPressed(object sender, PointerRoutedEventArgs e)
