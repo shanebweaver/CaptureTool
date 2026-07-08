@@ -1,5 +1,7 @@
+using CaptureTool.Presentation.Features.Audio;
 using CaptureTool.Presentation.Features.AudioEdit;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Navigation;
@@ -14,6 +16,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 public sealed partial class AudioEditPage : AudioEditPageBase
 {
     private const int WaveformBarCount = 64;
+    private const double WaveformBarDefaultSpacing = 4;
     private static readonly TimeSpan WaveformUpdateInterval = TimeSpan.FromMilliseconds(50);
 
     private MediaPlayer? _mediaPlayer;
@@ -153,6 +156,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             _waveformTimeline = null;
             StopWaveformTimer();
             ViewModel.SetWaveformLevels([]);
+            UpdateWaveformSizing();
             UpdateWaveformPlayhead(TimeSpan.Zero);
 
             StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
@@ -179,6 +183,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             {
                 _waveformTimeline = timeline;
                 ViewModel.SetWaveformLevels(CreateWaveformOverviewLevels(timeline.Levels, WaveformBarCount));
+                UpdateWaveformSizing();
 
                 if (_audioDuration <= TimeSpan.Zero)
                 {
@@ -241,12 +246,36 @@ public sealed partial class AudioEditPage : AudioEditPageBase
 
     private void WaveformSurface_SizeChanged(object sender, SizeChangedEventArgs e)
     {
+        UpdateWaveformSizing();
         UpdateWaveformPlayhead(_mediaPlayer?.PlaybackSession.Position ?? TimeSpan.Zero);
     }
 
     private void WaveformBarsRepeater_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         UpdateWaveformPlayhead(_mediaPlayer?.PlaybackSession.Position ?? TimeSpan.Zero);
+    }
+
+    private void UpdateWaveformSizing()
+    {
+        int barCount = ViewModel.WaveformBars.Count;
+        if (barCount == 0)
+        {
+            return;
+        }
+
+        double scale = GetWaveformHorizontalScale(barCount);
+        double barWidth = AudioWaveformBarViewModel.DefaultWidth * scale;
+        double spacing = WaveformBarDefaultSpacing * scale;
+
+        if (WaveformBarsRepeater.Layout is StackLayout layout)
+        {
+            layout.Spacing = spacing;
+        }
+
+        foreach (var bar in ViewModel.WaveformBars)
+        {
+            bar.Width = barWidth;
+        }
     }
 
     private void WaveformSurface_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -284,12 +313,49 @@ public sealed partial class AudioEditPage : AudioEditPageBase
 
     private WaveformTrackBounds GetWaveformTrackBounds()
     {
-        double width = WaveformBarsRepeater.ActualWidth > 0
-            ? WaveformBarsRepeater.ActualWidth
-            : WaveformSurface.ActualWidth;
+        double width = GetWaveformTrackWidth();
 
         double left = Math.Max(0, (WaveformSurface.ActualWidth - width) / 2);
         return new WaveformTrackBounds(left, width);
+    }
+
+    private double GetWaveformTrackWidth()
+    {
+        int barCount = ViewModel.WaveformBars.Count;
+        double naturalWidth = GetWaveformNaturalWidth(barCount);
+        double availableWidth = Math.Max(0, WaveformSurface.ActualWidth);
+
+        if (naturalWidth <= 0)
+        {
+            return availableWidth;
+        }
+
+        return availableWidth > 0
+            ? Math.Min(naturalWidth, availableWidth)
+            : naturalWidth;
+    }
+
+    private double GetWaveformHorizontalScale(int barCount)
+    {
+        double naturalWidth = GetWaveformNaturalWidth(barCount);
+        double availableWidth = Math.Max(0, WaveformSurface.ActualWidth);
+        if (naturalWidth <= 0 || availableWidth <= 0)
+        {
+            return 1;
+        }
+
+        return Math.Min(1, availableWidth / naturalWidth);
+    }
+
+    private static double GetWaveformNaturalWidth(int barCount)
+    {
+        if (barCount <= 0)
+        {
+            return 0;
+        }
+
+        return (barCount * AudioWaveformBarViewModel.DefaultWidth) +
+            ((barCount - 1) * WaveformBarDefaultSpacing);
     }
 
     private void UpdateWaveformTimer(MediaPlaybackSession playbackSession)

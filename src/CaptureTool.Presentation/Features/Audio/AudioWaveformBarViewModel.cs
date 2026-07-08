@@ -4,14 +4,23 @@ namespace CaptureTool.Presentation.Features.Audio;
 
 public sealed partial class AudioWaveformBarViewModel : ViewModelBase
 {
+    public const double DefaultWidth = 5;
+
     public double Height
     {
         get;
         set => Set(ref field, value);
     }
 
-    public AudioWaveformBarViewModel(double height)
+    public double Width
+    {
+        get;
+        set => Set(ref field, value);
+    }
+
+    public AudioWaveformBarViewModel(double height, double width = DefaultWidth)
     {
         Height = height;
+        Width = width;
     }
 }
