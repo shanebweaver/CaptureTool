@@ -59,9 +59,7 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
                 break;
 
             case FilePickerType.Audio:
-                filePicker.FileTypeFilter.Add(".mp3");
                 filePicker.FileTypeFilter.Add(".wav");
-                filePicker.FileTypeFilter.Add(".flac");
                 break;
 
             case FilePickerType.Video:
@@ -70,11 +68,12 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
                 filePicker.FileTypeFilter.Add(".mov");
                 break;
 
-            case FilePickerType.ImageOrVideo:
+            case FilePickerType.CaptureMedia:
                 filePicker.FileTypeFilter.Add(".png");
                 filePicker.FileTypeFilter.Add(".jpg");
                 filePicker.FileTypeFilter.Add(".jpeg");
                 filePicker.FileTypeFilter.Add(".bmp");
+                filePicker.FileTypeFilter.Add(".wav");
                 filePicker.FileTypeFilter.Add(".mp4");
                 filePicker.FileTypeFilter.Add(".avi");
                 filePicker.FileTypeFilter.Add(".mov");
@@ -129,15 +128,13 @@ public sealed partial class WindowsFilePickerService : IFilePickerService
                 unsafe
                 {
 #pragma warning disable IDE0028 // Simplify collection initialization
-                    filePicker.FileTypeChoices.Add("MP3", new List<string>() { ".mp3" });
                     filePicker.FileTypeChoices.Add("WAV", new List<string>() { ".wav" });
-                    filePicker.FileTypeChoices.Add("FLAC", new List<string>() { ".flac" });
 #pragma warning restore IDE0028 // Simplify collection initialization
                 }
                 break;
 
-            case FilePickerType.ImageOrVideo:
-                throw new InvalidOperationException("Image/video picker type is only supported for opening files.");
+            case FilePickerType.CaptureMedia:
+                throw new InvalidOperationException("Capture media picker type is only supported for opening files.");
 
             case FilePickerType.Text:
                 unsafe

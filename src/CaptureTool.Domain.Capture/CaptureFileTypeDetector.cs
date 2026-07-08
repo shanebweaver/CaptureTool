@@ -14,7 +14,7 @@ public static class CaptureFileTypeDetector
 
     private static readonly HashSet<string> AudioExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".mp3", ".wav", ".flac"
+        ".wav"
     };
 
     public static CaptureFileType DetectFileType(string filePath)

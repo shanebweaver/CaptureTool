@@ -8,6 +8,8 @@ using CaptureTool.Application.Abstractions.Capture.Audio.StopAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.ToggleLocalAudioCapture;
 using CaptureTool.Application.Abstractions.TaskEnvironment;
 using CaptureTool.Domain.Capture;
+using CaptureTool.Domain.FileSystem;
+using CaptureTool.Presentation.Features.Audio;
 using CaptureTool.Presentation.Shared.Commands;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -19,6 +21,10 @@ namespace CaptureTool.Presentation.Features.AudioCapture;
 
 public sealed partial class AudioCapturePageViewModel : ViewModelBase
 {
+    private const int WaveformBarCount = 128;
+    private const double WaveformMinBarHeight = 0;
+    private const double WaveformMaxBarHeight = 132;
+    private static readonly TimeSpan WaveformUpdateInterval = TimeSpan.FromMilliseconds(50);
     public IRelayCommand StartCommand { get; }
     public IRelayCommand StopCommand { get; }
     public IRelayCommand PauseCommand { get; }
@@ -66,14 +72,19 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
     private readonly IMuteAudioCaptureUseCase _muteCommand;
     private readonly ISelectAudioCaptureInputSourceUseCase _selectAudioInputSourceCommand;
     private readonly ITaskEnvironment _taskEnvironment;
+    private readonly IAudioWaveformHistory _waveformHistory;
+    private readonly List<double> _capturedWaveformLevels = [];
+    private readonly object _capturedWaveformLevelsSyncRoot = new();
     private static readonly TimeSpan TimerInterval = TimeSpan.FromMilliseconds(100);
     private const string DefaultAudioInputSuffix = " (Default)";
     private Timer? _timer;
     private DateTime _captureStartTime;
     private TimeSpan _pausedDuration;
     private DateTime? _pauseStartTime;
+    private DateTime _lastWaveformUpdateUtc = DateTime.MinValue;
 
     public ObservableCollection<AudioInputSource> AudioInputSources { get; }
+    public ObservableCollection<AudioWaveformBarViewModel> WaveformBars { get; }
 
     public AudioInputSource? SelectedAudioInputSource
     {
@@ -102,15 +113,19 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         IMuteAudioCaptureUseCase muteAction,
         ISelectAudioCaptureInputSourceUseCase selectAudioInputSourceAction,
         IToggleLocalAudioCaptureUseCase toggleDesktopAudioAction,
-        ITaskEnvironment taskEnvironment)
+        ITaskEnvironment taskEnvironment,
+        IAudioWaveformHistory waveformHistory)
     {
         _audioCaptureState = audioCaptureState;
         _audioInputDetectionService = audioInputDetectionService;
         _muteCommand = muteAction;
         _selectAudioInputSourceCommand = selectAudioInputSourceAction;
         _taskEnvironment = taskEnvironment;
+        _waveformHistory = waveformHistory;
         SelectedAudioInputSourceIndex = -1;
         AudioInputSources = [];
+        WaveformBars = [];
+        ClearWaveform();
 
         StartCommand = startAction.ToRelayCommand(() => new StartAudioCaptureRequest());
         StopCommand = stopAction.ToRelayCommand(() => new StopAudioCaptureRequest());
@@ -122,6 +137,8 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         _audioCaptureState.CaptureStateChanged += OnCaptureStateChanged;
         _audioCaptureState.MutedStateChanged += OnMutedStateChanged;
         _audioCaptureState.DesktopAudioStateChanged += OnDesktopAudioStateChanged;
+        _audioCaptureState.NewAudioCaptured += OnNewAudioCaptured;
+        _audioCaptureState.AudioLevelCaptured += OnAudioLevelCaptured;
         _audioInputDetectionService.AudioInputSourcesChanged += OnAudioInputSourcesChanged;
 
         // Initialize state from service
@@ -162,6 +179,39 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         });
     }
 
+    private void OnAudioLevelCaptured(object? sender, AudioCaptureLevel value)
+    {
+        DateTime now = DateTime.UtcNow;
+        if (now - _lastWaveformUpdateUtc < WaveformUpdateInterval)
+        {
+            return;
+        }
+
+        _lastWaveformUpdateUtc = now;
+        double peakLevel = Math.Clamp(value.PeakLevel, 0, 1);
+        lock (_capturedWaveformLevelsSyncRoot)
+        {
+            _capturedWaveformLevels.Add(peakLevel);
+        }
+
+        _taskEnvironment.TryExecute(() =>
+        {
+            AddWaveformLevel(peakLevel);
+        });
+    }
+
+    private void OnNewAudioCaptured(object? sender, AudioFile audioFile)
+    {
+        double[] capturedLevels;
+        lock (_capturedWaveformLevelsSyncRoot)
+        {
+            capturedLevels = _capturedWaveformLevels.ToArray();
+            _capturedWaveformLevels.Clear();
+        }
+
+        _waveformHistory.Save(audioFile.FilePath, capturedLevels);
+    }
+
     private void OnAudioInputSourcesChanged(object? sender, AudioInputSourcesChangedEventArgs e)
     {
         _taskEnvironment.TryExecute(() =>
@@ -183,7 +233,6 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
             IsAudioInputSelectionAvailable = false;
-            SetAudioInputMuted(true);
         }
     }
 
@@ -213,17 +262,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
             SelectAudioInputSourceWithoutWaiting(null);
-            SetAudioInputMuted(true);
             return;
-        }
-
-        bool wasSelectedSourceRemoved =
-            !string.IsNullOrWhiteSpace(selectedAudioInputSourceId) &&
-            AudioInputSources.All(source => source.Id != selectedAudioInputSourceId);
-
-        if (wasSelectedSourceRemoved)
-        {
-            SetAudioInputMuted(true);
         }
 
         SelectedAudioInputSource = GetAudioInputSourceToSelect(selectedAudioInputSourceId);
@@ -298,6 +337,12 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
             case AudioCaptureState.Recording:
                 if (!wasRecording)
                 {
+                    lock (_capturedWaveformLevelsSyncRoot)
+                    {
+                        _capturedWaveformLevels.Clear();
+                    }
+
+                    ClearWaveform();
                     StartTimer();
                 }
                 else if (wasPaused && _pauseStartTime.HasValue)
@@ -319,8 +364,51 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
                 CaptureTime = TimeSpan.Zero;
                 _pausedDuration = TimeSpan.Zero;
                 _pauseStartTime = null;
+                ClearWaveform();
                 break;
         }
+    }
+
+    internal void AddWaveformLevel(double peakLevel)
+    {
+        double clampedLevel = Math.Clamp(peakLevel, 0, 1);
+
+        if (WaveformBars.Count >= WaveformBarCount)
+        {
+            for (int index = 1; index < WaveformBars.Count; index++)
+            {
+                SetWaveformBar(WaveformBars[index - 1], WaveformBars[index].Level);
+            }
+
+            SetWaveformBar(WaveformBars[^1], clampedLevel);
+            return;
+        }
+
+        WaveformBars.Add(CreateWaveformBar(clampedLevel));
+    }
+
+    private static AudioWaveformBarViewModel CreateWaveformBar(double level)
+    {
+        double clampedLevel = Math.Clamp(level, 0, 1);
+        return new AudioWaveformBarViewModel(GetWaveformBarHeight(clampedLevel), level: clampedLevel);
+    }
+
+    private static void SetWaveformBar(AudioWaveformBarViewModel bar, double level)
+    {
+        double clampedLevel = Math.Clamp(level, 0, 1);
+        bar.Level = clampedLevel;
+        bar.Height = GetWaveformBarHeight(clampedLevel);
+    }
+
+    private static double GetWaveformBarHeight(double level)
+    {
+        double clampedLevel = Math.Clamp(level, 0, 1);
+        return WaveformMinBarHeight + (clampedLevel * (WaveformMaxBarHeight - WaveformMinBarHeight));
+    }
+
+    private void ClearWaveform()
+    {
+        WaveformBars.Clear();
     }
 
     private void StartTimer()
@@ -361,6 +449,8 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         _audioCaptureState.CaptureStateChanged -= OnCaptureStateChanged;
         _audioCaptureState.MutedStateChanged -= OnMutedStateChanged;
         _audioCaptureState.DesktopAudioStateChanged -= OnDesktopAudioStateChanged;
+        _audioCaptureState.NewAudioCaptured -= OnNewAudioCaptured;
+        _audioCaptureState.AudioLevelCaptured -= OnAudioLevelCaptured;
         _audioInputDetectionService.AudioInputSourcesChanged -= OnAudioInputSourcesChanged;
 
         try

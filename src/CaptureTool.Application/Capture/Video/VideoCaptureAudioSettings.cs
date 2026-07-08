@@ -13,7 +13,13 @@ internal readonly record struct VideoCaptureAudioSettings(
         SelectedAudioInputSourceId: null);
 
     public bool ShouldCaptureAudio
-        => !IsAudioInputMuted && (IsDesktopAudioEnabled || !string.IsNullOrWhiteSpace(SelectedAudioInputSourceId));
+        => IsDesktopAudioEnabled || !string.IsNullOrWhiteSpace(ActiveAudioInputSourceId);
+
+    public bool ShouldCaptureDesktopAudio
+        => IsDesktopAudioEnabled;
+
+    public string? ActiveAudioInputSourceId
+        => IsAudioInputMuted ? null : SelectedAudioInputSourceId;
 
     public VideoCaptureAudioSettings PrepareForCapture(bool defaultDesktopAudioEnabled)
         => this with

@@ -7,7 +7,7 @@ namespace CaptureTool.Application.Tests.Capture;
 public sealed class VideoCaptureAudioSettingsTests
 {
     [TestMethod]
-    public void ShouldCaptureAudio_ShouldReflectMuteDesktopAudioAndSelectedInput()
+    public void ShouldCaptureAudio_ShouldReflectDesktopAudioAndActiveInput()
     {
         new VideoCaptureAudioSettings(false, false, 100, null)
             .ShouldCaptureAudio.Should().BeFalse();
@@ -19,7 +19,18 @@ public sealed class VideoCaptureAudioSettingsTests
             .ShouldCaptureAudio.Should().BeTrue();
 
         new VideoCaptureAudioSettings(true, true, 100, "microphone")
-            .ShouldCaptureAudio.Should().BeFalse();
+            .ShouldCaptureAudio.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public void ActiveAudioInputSourceId_ShouldRespectInputMuteWithoutChangingDesktopAudio()
+    {
+        var unmuted = new VideoCaptureAudioSettings(false, false, 100, "microphone");
+        var muted = new VideoCaptureAudioSettings(true, true, 100, "microphone");
+
+        unmuted.ActiveAudioInputSourceId.Should().Be("microphone");
+        muted.ActiveAudioInputSourceId.Should().BeNull();
+        muted.ShouldCaptureDesktopAudio.Should().BeTrue();
     }
 
     [TestMethod]

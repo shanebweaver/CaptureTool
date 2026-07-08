@@ -189,6 +189,43 @@ public sealed partial class MainWindow : Window
         _shutdownHandler.Shutdown();
     }
 
+    public void SuspendMediaPlayback()
+    {
+        switch (NavigationFrame.Content)
+        {
+            case AudioEditPage audioEditPage:
+                audioEditPage.SuspendMediaPlayback();
+                break;
+
+            case VideoEditPage videoEditPage:
+                videoEditPage.SuspendMediaPlayback();
+                break;
+        }
+    }
+
+    public void ResumeMediaPlayback()
+    {
+        switch (NavigationFrame.Content)
+        {
+            case AudioEditPage audioEditPage:
+                audioEditPage.ResumeMediaPlayback();
+                break;
+
+            case VideoEditPage videoEditPage:
+                videoEditPage.ResumeMediaPlayback();
+                break;
+        }
+    }
+
+    public void HandleNavigationRequest(INavigationRequest request)
+    {
+        bool navigationRequested = ViewModel.HandleNavigationRequest(request);
+        if (!navigationRequested)
+        {
+            DispatcherQueue.TryEnqueue(ResumeMediaPlayback);
+        }
+    }
+
     private void OnViewModelNavigationRequested(object? sender, INavigationRequest navigationRequest)
     {
         DispatcherQueue.TryEnqueue(() =>
@@ -211,6 +248,8 @@ public sealed partial class MainWindow : Window
                 NavigationFrame.BackStack.Clear();
                 GC.Collect();
             }
+
+            ResumeMediaPlayback();
         });
     }
 

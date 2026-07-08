@@ -28,8 +28,8 @@ internal sealed class VideoCaptureSession
         => new(
             Target,
             TempVideoPath,
-            AudioSettings.ShouldCaptureAudio,
-            AudioInputSourceId: AudioSettings.SelectedAudioInputSourceId,
+            AudioSettings.ShouldCaptureDesktopAudio,
+            AudioInputSourceId: AudioSettings.ActiveAudioInputSourceId,
             AudioInputVolumePercentage: AudioSettings.AudioInputVolumePercentage);
 
     public PendingVideoFile BeginFinalizing()

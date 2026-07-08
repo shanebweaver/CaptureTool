@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Factories;
+using CaptureTool.Presentation.Features.Audio;
 using CaptureTool.Presentation.Features.About;
 using CaptureTool.Presentation.Features.AudioCapture;
 using CaptureTool.Presentation.Features.AudioEdit;
@@ -26,6 +27,8 @@ public static class PresentationServiceCollectionExtensions
 {
     public static IServiceCollection AddViewModels(this IServiceCollection services)
     {
+        services.AddSingleton<IAudioWaveformHistory, AudioWaveformHistory>();
+
         // ViewModels
         services.AddTransient<MainWindowViewModel>();
         services.AddTransient<SelectionOverlayWindowViewModel>();

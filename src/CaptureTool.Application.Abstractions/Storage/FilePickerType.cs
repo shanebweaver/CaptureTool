@@ -5,6 +5,6 @@ public enum FilePickerType
     Image,
     Audio,
     Video,
-    ImageOrVideo,
+    CaptureMedia,
     Text
 }

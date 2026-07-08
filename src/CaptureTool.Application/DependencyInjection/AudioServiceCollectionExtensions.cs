@@ -31,6 +31,7 @@ internal static class AudioServiceCollectionExtensions
     {
         services.AddSingleton<AudioCaptureStateStore>();
         services.AddSingleton<AudioCaptureFileNameGenerator>();
+        services.AddSingleton<AudioCapturePostProcessor>();
         services.AddSingleton<AudioCaptureWorkflow>();
         services.AddSingleton<IAudioCaptureWorkflow>(provider => provider.GetRequiredService<AudioCaptureWorkflow>());
         services.AddSingleton<IAudioCaptureState>(provider => provider.GetRequiredService<AudioCaptureWorkflow>());

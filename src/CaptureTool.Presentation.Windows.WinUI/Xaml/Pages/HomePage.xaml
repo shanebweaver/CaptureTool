@@ -72,10 +72,11 @@
                     x:Name="NewAudioCaptureButton"
                     x:Uid="NewCaptureButton_Audio"
                     Command="{x:Bind ViewModel.NewAudioCaptureCommand}"
-                    Style="{StaticResource NewCaptureButtonStyle}"
-                    Visibility="{x:Bind ViewModel.IsAudioCaptureEnabled}">
+                    Style="{StaticResource NewCaptureButtonStyle}">
                     <StackPanel Spacing="4">
-                        <SymbolIcon Symbol="Audio" />
+                        <FontIcon
+                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            Glyph="{StaticResource Microphone}" />
                         <TextBlock
                             x:Uid="NewCaptureButton_Audio_Label"
                             TextAlignment="Center"

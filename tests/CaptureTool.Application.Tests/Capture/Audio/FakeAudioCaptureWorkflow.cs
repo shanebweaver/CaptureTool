@@ -1,4 +1,5 @@
 using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 
@@ -10,6 +11,11 @@ internal sealed class FakeAudioCaptureWorkflow : IAudioCaptureWorkflow
     public event EventHandler<bool>? MutedStateChanged;
     public event EventHandler<bool>? DesktopAudioStateChanged;
     public event EventHandler<AudioFile>? NewAudioCaptured;
+    public event EventHandler<AudioCaptureLevel>? AudioLevelCaptured
+    {
+        add { }
+        remove { }
+    }
 
     public bool IsRecording { get; set; }
     public bool IsPaused { get; set; }

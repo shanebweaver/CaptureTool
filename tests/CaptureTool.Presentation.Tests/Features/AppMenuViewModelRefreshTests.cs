@@ -1,6 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.EditSessions;
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Shell.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
@@ -52,7 +51,6 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IExitApplicationUseCase>(),
             Mock.Of<IOpenRecentCaptureUseCase>(),
             getRecentCapturesUseCase.Object,
-            Mock.Of<IAudioCaptureFeatureAvailability>(),
             Mock.Of<IStoreFeatureAvailability>(),
             Mock.Of<IImageCaptureState>(),
             Mock.Of<IVideoCaptureState>(),
@@ -152,7 +150,6 @@ public sealed class AppMenuViewModelRefreshTests
             Mock.Of<IExitApplicationUseCase>(),
             openRecentCaptureUseCase ?? Mock.Of<IOpenRecentCaptureUseCase>(),
             Mock.Of<IGetRecentCapturesUseCase>(),
-            Mock.Of<IAudioCaptureFeatureAvailability>(),
             Mock.Of<IStoreFeatureAvailability>(),
             Mock.Of<IImageCaptureState>(),
             Mock.Of<IVideoCaptureState>(),

@@ -39,15 +39,16 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         CurrentAppTheme = newTheme;
     }
 
-    public void HandleNavigationRequest(INavigationRequest request)
+    public bool HandleNavigationRequest(INavigationRequest request)
     {
         if (_currentRequest?.Route == request.Route && _currentRequest?.Parameter == request.Parameter)
         {
-            return;
+            return false;
         }
 
         _currentRequest = request;
         NavigationRequested?.Invoke(this, request);
+        return true;
     }
 
     public override void Dispose()

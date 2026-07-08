@@ -46,6 +46,30 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
+    private void AudioAutoCopyToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggleSwitch)
+        {
+            _ = ViewModel.UpdateAudioCaptureAutoCopyCommand.ExecuteAsync(toggleSwitch.IsOn);
+        }
+    }
+
+    private void AudioAutoSaveToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggleSwitch)
+        {
+            _ = ViewModel.UpdateAudioCaptureAutoSaveCommand.ExecuteAsync(toggleSwitch.IsOn);
+        }
+    }
+
+    private void AudioDefaultLocalAudioToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggleSwitch)
+        {
+            _ = ViewModel.UpdateAudioCaptureDefaultLocalAudioCommand.ExecuteAsync(toggleSwitch.IsOn);
+        }
+    }
+
     private void VideoDefaultLocalAudioToggleSwitch_Toggled(object sender, RoutedEventArgs e)
     {
         if (sender is ToggleSwitch toggleSwitch)

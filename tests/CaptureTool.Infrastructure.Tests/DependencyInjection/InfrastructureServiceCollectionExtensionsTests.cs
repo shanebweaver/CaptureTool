@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Cancellation;
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Files;
@@ -38,7 +37,6 @@ public sealed class InfrastructureServiceCollectionExtensionsTests
         Assert.AreSame(services, result);
         AssertHasRegistration<ICancellationService, CancellationService>(services);
         AssertHasRegistration<IStoreFeatureAvailability, StoreFeatureAvailability>(services);
-        AssertHasRegistration<IAudioCaptureFeatureAvailability, AudioCaptureFeatureAvailability>(services);
         AssertHasRegistration<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>(services);
         AssertHasRegistration<IFileSystem, LocalFileSystem>(services);
         AssertHasRegistration<IGlobalizationService, GlobalizationService>(services);

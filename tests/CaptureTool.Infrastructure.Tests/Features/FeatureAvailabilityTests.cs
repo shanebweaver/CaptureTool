@@ -7,13 +7,6 @@ namespace CaptureTool.Infrastructure.Tests.Features;
 public sealed class FeatureAvailabilityTests
 {
     [TestMethod]
-    public void AudioCaptureFeatureAvailability_ReturnsFeatureManagerValue()
-    {
-        Assert.IsTrue(new AudioCaptureFeatureAvailability(new ConstantFeatureManager(true)).IsAudioCaptureEnabled);
-        Assert.IsFalse(new AudioCaptureFeatureAvailability(new ConstantFeatureManager(false)).IsAudioCaptureEnabled);
-    }
-
-    [TestMethod]
     public void ChromaKeyFeatureAvailability_ReturnsFeatureManagerValue()
     {
         Assert.IsTrue(new ChromaKeyFeatureAvailability(new ConstantFeatureManager(true)).IsChromaKeyEnabled);

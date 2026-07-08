@@ -1,6 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.EditSessions;
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Shell.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
@@ -51,7 +50,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
     public IAsyncRelayCommand<RecentCaptureViewModel> OpenRecentCaptureCommand { get; }
 
     public bool ShowAddOnsOption { get; }
-    public bool IsAudioCaptureEnabled { get; }
 
     private ObservableCollection<RecentCaptureViewModel> _recentCaptures = [];
 
@@ -75,7 +73,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         IExitApplicationUseCase exitApplicationCommand,
         IOpenRecentCaptureUseCase openRecentCaptureCommand,
         IGetRecentCapturesUseCase getRecentCapturesQuery,
-        IAudioCaptureFeatureAvailability audioCaptureFeatureAvailability,
         IStoreFeatureAvailability storeFeatureAvailability,
         IImageCaptureState imageCaptureState,
         IVideoCaptureState videoCaptureState,
@@ -108,7 +105,6 @@ public sealed partial class AppMenuViewModel : LoadableViewModelBase
         OpenRecentCaptureCommand = new AsyncRelayCommand<RecentCaptureViewModel>(OpenRecentCaptureAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
 
         ShowAddOnsOption = storeFeatureAvailability.IsStoreEnabled;
-        IsAudioCaptureEnabled = audioCaptureFeatureAvailability.IsAudioCaptureEnabled;
         RecentCaptures = [];
     }
 

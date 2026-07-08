@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Shell.About.LeaveAboutPage;
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Localization;
@@ -38,9 +37,8 @@ public sealed class ViewModelContractTests
     {
         var openSelectionOverlay = new Mock<IOpenSelectionOverlayUseCase>();
         var openAudioCapturePage = Mock.Of<IOpenAudioCapturePageUseCase>();
-        var featureAvailability = new Mock<IAudioCaptureFeatureAvailability>();
 
-        var viewModel = new HomePageViewModel(openSelectionOverlay.Object, openAudioCapturePage, featureAvailability.Object);
+        var viewModel = new HomePageViewModel(openSelectionOverlay.Object, openAudioCapturePage);
 
         viewModel.NewImageCaptureCommand.Execute(null);
 

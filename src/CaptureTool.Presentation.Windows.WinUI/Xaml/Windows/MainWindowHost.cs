@@ -59,6 +59,7 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
                 return;
             }
 
+            _mainWindow.SuspendMediaPlayback();
             _mainWindow.AppWindow.Hide();
         });
     }
@@ -70,6 +71,6 @@ internal sealed partial class MainWindowHost : INavigationHandler, IDisposable
 
     public void HandleNavigationRequest(INavigationRequest request)
     {
-        _mainWindow?.ViewModel.HandleNavigationRequest(request);
+        _mainWindow?.HandleNavigationRequest(request);
     }
 }

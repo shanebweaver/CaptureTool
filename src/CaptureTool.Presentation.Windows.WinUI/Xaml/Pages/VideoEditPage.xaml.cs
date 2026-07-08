@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Presentation.Features.VideoEdit;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Navigation;
 using System.ComponentModel;
 using Windows.Media.Core;
 using Windows.Media.Playback;
@@ -26,6 +27,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     private bool _isRenderedTrimPlayerActive;
     private bool _isUpdatingPlayheadFromMedia;
     private bool _isSyncingMediaPosition;
+    private bool _isMediaPlaybackSuspended;
     private int _renderedTrimPreviewVersion;
 
     public VideoEditPage()
@@ -61,13 +63,64 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         return mediaPlayer;
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        _isMediaPlaybackSuspended = false;
+        PauseMediaPlayers();
+        base.OnNavigatedFrom(e);
+    }
+
+    public void SuspendMediaPlayback()
+    {
+        _isMediaPlaybackSuspended = true;
+        StopAndClearMediaPlayers();
+    }
+
+    public void ResumeMediaPlayback()
+    {
+        if (!_isMediaPlaybackSuspended)
+        {
+            return;
+        }
+
+        _isMediaPlaybackSuspended = false;
+        TryInitializeVideo();
+    }
+
     private void VideoPlayer_Unloaded(object sender, RoutedEventArgs e)
     {
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
-        _boundedPlaybackTimer.Stop();
+        OriginalVideoPlayer.SetMediaPlayer(null);
+        RenderedTrimVideoPlayer.SetMediaPlayer(null);
+        StopAndClearMediaPlayers();
         DisposeMediaPlayer(ref _originalMediaPlayer);
         DisposeMediaPlayer(ref _renderedTrimMediaPlayer);
         DeleteRenderedTrimPreview();
+    }
+
+    private void PauseMediaPlayers()
+    {
+        _boundedPlaybackTimer.Stop();
+        _originalMediaPlayer?.Pause();
+        _renderedTrimMediaPlayer?.Pause();
+        UpdateTrimPreviewPlayIcon(false);
+    }
+
+    private void StopAndClearMediaPlayers()
+    {
+        PauseMediaPlayers();
+        PauseAndClearMediaPlayer(_originalMediaPlayer);
+        PauseAndClearMediaPlayer(_renderedTrimMediaPlayer);
+    }
+
+    private static void PauseAndClearMediaPlayer(MediaPlayer? mediaPlayer)
+    {
+        if (mediaPlayer is null)
+        {
+            return;
+        }
+
+        mediaPlayer.Source = null;
     }
 
     private void DisposeMediaPlayer(ref MediaPlayer? mediaPlayer)
@@ -81,6 +134,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
         mediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
         mediaPlayer.PlaybackSession.PlaybackStateChanged -= PlaybackSession_PlaybackStateChanged;
         mediaPlayer.PlaybackSession.PositionChanged -= PlaybackSession_PositionChanged;
+        mediaPlayer.Source = null;
         mediaPlayer.Dispose();
         mediaPlayer = null;
     }
