@@ -13,7 +13,7 @@ namespace CaptureTool.Presentation.Features.AudioEdit;
 public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<AudioFile>
 {
     private const int WaveformBarCount = 64;
-    private const double WaveformMinBarHeight = 6;
+    private const double WaveformMinBarHeight = 0;
     private const double WaveformMaxBarHeight = 132;
 
     public IAsyncRelayCommand SaveCommand { get; }
@@ -93,18 +93,6 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         {
             WaveformBars.RemoveAt(WaveformBars.Count - 1);
         }
-    }
-
-    public void AppendWaveformLevel(double level)
-    {
-        while (WaveformBars.Count < WaveformBarCount)
-        {
-            WaveformBars.Add(new AudioWaveformBarViewModel(WaveformMinBarHeight));
-        }
-
-        AudioWaveformBarViewModel nextBar = WaveformBars[0];
-        WaveformBars.Move(0, WaveformBars.Count - 1);
-        nextBar.Height = GetWaveformBarHeight(level);
     }
 
     private static double GetWaveformBarHeight(double level)

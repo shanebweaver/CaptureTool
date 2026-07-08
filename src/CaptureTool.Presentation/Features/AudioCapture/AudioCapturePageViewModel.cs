@@ -21,8 +21,8 @@ namespace CaptureTool.Presentation.Features.AudioCapture;
 
 public sealed partial class AudioCapturePageViewModel : ViewModelBase
 {
-    private const int WaveformBarCount = 64;
-    private const double WaveformMinBarHeight = 6;
+    private const int WaveformBarCount = 32;
+    private const double WaveformMinBarHeight = 0;
     private const double WaveformMaxBarHeight = 132;
     private static readonly TimeSpan WaveformUpdateInterval = TimeSpan.FromMilliseconds(50);
     public IRelayCommand StartCommand { get; }
@@ -125,7 +125,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         SelectedAudioInputSourceIndex = -1;
         AudioInputSources = [];
         WaveformBars = [];
-        ResetWaveform();
+        ClearWaveform();
 
         StartCommand = startAction.ToRelayCommand(() => new StartAudioCaptureRequest());
         StopCommand = stopAction.ToRelayCommand(() => new StopAudioCaptureRequest());
@@ -353,7 +353,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
                         _capturedWaveformLevels.Clear();
                     }
 
-                    ResetWaveform();
+                    ClearWaveform();
                     StartTimer();
                 }
                 else if (wasPaused && _pauseStartTime.HasValue)
@@ -375,7 +375,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
                 CaptureTime = TimeSpan.Zero;
                 _pausedDuration = TimeSpan.Zero;
                 _pauseStartTime = null;
-                ResetWaveform();
+                ClearWaveform();
                 break;
         }
     }
@@ -393,13 +393,9 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         WaveformBars.Add(new AudioWaveformBarViewModel(height));
     }
 
-    private void ResetWaveform()
+    private void ClearWaveform()
     {
         WaveformBars.Clear();
-        for (int i = 0; i < WaveformBarCount; i++)
-        {
-            WaveformBars.Add(new AudioWaveformBarViewModel(WaveformMinBarHeight));
-        }
     }
 
     private void StartTimer()

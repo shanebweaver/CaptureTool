@@ -13,14 +13,12 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 public sealed partial class AudioEditPage : AudioEditPageBase
 {
     private const int WaveformBarCount = 64;
-    private const int MaxIncrementalWaveformSteps = 4;
     private static readonly TimeSpan WaveformUpdateInterval = TimeSpan.FromMilliseconds(50);
 
     private MediaPlayer? _mediaPlayer;
     private string? _currentAudioPath;
     private TimeSpan _audioDuration;
     private WaveformTimeline? _waveformTimeline;
-    private int _lastWaveformWindowIndex = int.MinValue;
     private DispatcherQueueTimer? _waveformTimer;
 
     public AudioEditPage()
@@ -97,10 +95,9 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             _currentAudioPath = filePath;
             _audioDuration = TimeSpan.Zero;
             _waveformTimeline = null;
-            _lastWaveformWindowIndex = int.MinValue;
             StopWaveformTimer();
             ViewModel.SetWaveformLevels([]);
-            UpdateWaveformForPosition(TimeSpan.Zero);
+            UpdateWaveformPlayhead(TimeSpan.Zero);
 
             StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
             var mediaSource = MediaSource.CreateFromStorageFile(file);
@@ -117,7 +114,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
     {
         IReadOnlyList<double>? capturedLevels = ViewModel.GetCapturedWaveformLevels(filePath);
         WaveformTimeline timeline = capturedLevels is { Count: > 0 }
-            ? WaveformTimeline.FromLevels(capturedLevels, WaveformUpdateInterval)
+            ? WaveformTimeline.FromCapturedLevels(capturedLevels, WaveformUpdateInterval, _audioDuration)
             : await Task.Run(() => AudioWaveformFileReader.ReadPeakTimeline(filePath, WaveformUpdateInterval));
 
         DispatcherQueue.TryEnqueue(() =>
@@ -125,14 +122,14 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             if (string.Equals(_currentAudioPath, filePath, StringComparison.OrdinalIgnoreCase))
             {
                 _waveformTimeline = timeline;
-                _lastWaveformWindowIndex = int.MinValue;
+                ViewModel.SetWaveformLevels(CreateWaveformOverviewLevels(timeline.Levels, WaveformBarCount));
 
                 if (_audioDuration <= TimeSpan.Zero)
                 {
                     _audioDuration = timeline.Duration;
                 }
 
-                UpdateWaveformForPosition(_mediaPlayer?.PlaybackSession.Position ?? TimeSpan.Zero);
+                UpdateWaveformPlayhead(_mediaPlayer?.PlaybackSession.Position ?? TimeSpan.Zero);
             }
         });
     }
@@ -142,7 +139,8 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         DispatcherQueue.TryEnqueue(() =>
         {
             _audioDuration = sender.PlaybackSession.NaturalDuration;
-            UpdateWaveformForPosition(sender.PlaybackSession.Position);
+            AlignCapturedWaveformTimelineToDuration(_audioDuration);
+            UpdateWaveformPlayhead(sender.PlaybackSession.Position);
             UpdateWaveformTimer(sender.PlaybackSession);
         });
     }
@@ -152,13 +150,13 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         DispatcherQueue.TryEnqueue(() =>
         {
             StopWaveformTimer();
-            UpdateWaveformForPosition(GetAudioDuration());
+            UpdateWaveformPlayhead(GetAudioDuration());
         });
     }
 
     private void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
     {
-        DispatcherQueue.TryEnqueue(() => UpdateWaveformForPosition(sender.Position));
+        DispatcherQueue.TryEnqueue(() => UpdateWaveformPlayhead(sender.Position));
     }
 
     private void PlaybackSession_PlaybackStateChanged(MediaPlaybackSession sender, object args)
@@ -174,17 +172,17 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             return;
         }
 
-        UpdateWaveformForPosition(_mediaPlayer.PlaybackSession.Position);
+        UpdateWaveformPlayhead(_mediaPlayer.PlaybackSession.Position);
     }
 
     private void WaveformSurface_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        UpdateWaveformPlayhead();
+        UpdateWaveformPlayhead(_mediaPlayer?.PlaybackSession.Position ?? TimeSpan.Zero);
     }
 
     private void WaveformBarsRepeater_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        UpdateWaveformPlayhead();
+        UpdateWaveformPlayhead(_mediaPlayer?.PlaybackSession.Position ?? TimeSpan.Zero);
     }
 
     private void WaveformSurface_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -201,106 +199,23 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             return;
         }
 
-        TimeSpan currentPosition = _mediaPlayer.PlaybackSession.Position;
-        TimeSpan windowStart = GetWaveformWindowStart(currentPosition);
-        TimeSpan windowDuration = currentPosition - windowStart;
-        if (windowDuration <= TimeSpan.Zero)
-        {
-            return;
-        }
-
         double pointerX = e.GetCurrentPoint(WaveformSurface).Position.X;
         double progress = Math.Clamp((pointerX - trackBounds.Left) / trackBounds.Width, 0, 1);
-        TimeSpan position = TimeSpan.FromTicks(windowStart.Ticks + (long)(windowDuration.Ticks * progress));
-        position = position > duration ? duration : position;
+        TimeSpan position = TimeSpan.FromTicks((long)(duration.Ticks * progress));
         _mediaPlayer.PlaybackSession.Position = position;
-        UpdateWaveformForPosition(position);
+        UpdateWaveformPlayhead(position);
     }
 
-    private void UpdateWaveformForPosition(TimeSpan position)
+    private void UpdateWaveformPlayhead(TimeSpan position)
     {
-        UpdateWaveformWindow(position);
-        UpdateWaveformPlayhead();
-    }
-
-    private void UpdateWaveformWindow(TimeSpan position)
-    {
-        if (_waveformTimeline is not { Levels.Count: > 0 } timeline)
-        {
-            return;
-        }
-
-        int currentIndex = GetTimelineIndex(position, timeline);
-        if (currentIndex == _lastWaveformWindowIndex)
-        {
-            return;
-        }
-
-        if (ShouldAppendWaveformLevels(currentIndex))
-        {
-            AppendWaveformLevels(timeline, _lastWaveformWindowIndex + 1, currentIndex);
-            _lastWaveformWindowIndex = currentIndex;
-            return;
-        }
-
-        SetWaveformWindow(timeline, currentIndex);
-        _lastWaveformWindowIndex = currentIndex;
-    }
-
-    private bool ShouldAppendWaveformLevels(int currentIndex)
-    {
-        int skippedIndexes = currentIndex - _lastWaveformWindowIndex;
-        return skippedIndexes > 0 &&
-            _lastWaveformWindowIndex >= 0 &&
-            skippedIndexes <= MaxIncrementalWaveformSteps;
-    }
-
-    private void AppendWaveformLevels(WaveformTimeline timeline, int firstIndex, int lastIndex)
-    {
-        for (int index = firstIndex; index <= lastIndex; index++)
-        {
-            ViewModel.AppendWaveformLevel(GetTimelineLevel(timeline, index));
-        }
-    }
-
-    private void SetWaveformWindow(WaveformTimeline timeline, int currentIndex)
-    {
-        _lastWaveformWindowIndex = currentIndex;
-        double[] levels = new double[WaveformBarCount];
-        int firstIndex = currentIndex - WaveformBarCount + 1;
-
-        for (int barIndex = 0; barIndex < WaveformBarCount; barIndex++)
-        {
-            int timelineIndex = firstIndex + barIndex;
-            levels[barIndex] = GetTimelineLevel(timeline, timelineIndex);
-        }
-
-        ViewModel.SetWaveformLevels(levels);
-    }
-
-    private static double GetTimelineLevel(WaveformTimeline timeline, int index)
-    {
-        return index >= 0 && index < timeline.Levels.Count
-            ? timeline.Levels[index]
+        TimeSpan duration = GetAudioDuration();
+        double progress = duration > TimeSpan.Zero
+            ? Math.Clamp(position.TotalMilliseconds / duration.TotalMilliseconds, 0, 1)
             : 0;
-    }
 
-    private void UpdateWaveformPlayhead()
-    {
         WaveformTrackBounds trackBounds = GetWaveformTrackBounds();
-        WaveformPlayheadTransform.X = trackBounds.Left + Math.Max(0, trackBounds.Width - WaveformPlayhead.ActualWidth);
-    }
-
-    private static int GetTimelineIndex(TimeSpan position, WaveformTimeline timeline)
-    {
-        int currentIndex = (int)Math.Floor(position.TotalMilliseconds / timeline.Interval.TotalMilliseconds);
-        return Math.Clamp(currentIndex, 0, timeline.Levels.Count - 1);
-    }
-
-    private static TimeSpan GetWaveformWindowStart(TimeSpan position)
-    {
-        TimeSpan windowDuration = TimeSpan.FromTicks(WaveformUpdateInterval.Ticks * (WaveformBarCount - 1));
-        return position > windowDuration ? position - windowDuration : TimeSpan.Zero;
+        double trackWidth = Math.Max(0, trackBounds.Width - WaveformPlayhead.ActualWidth);
+        WaveformPlayheadTransform.X = trackBounds.Left + (trackWidth * progress);
     }
 
     private WaveformTrackBounds GetWaveformTrackBounds()
@@ -361,6 +276,16 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         _waveformTimer = null;
     }
 
+    private void AlignCapturedWaveformTimelineToDuration(TimeSpan duration)
+    {
+        if (_waveformTimeline is not { ShouldStretchToDuration: true } timeline || duration <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        _waveformTimeline = timeline.WithDuration(duration);
+    }
+
     private TimeSpan GetAudioDuration()
     {
         TimeSpan naturalDuration = _mediaPlayer?.PlaybackSession.NaturalDuration ?? TimeSpan.Zero;
@@ -375,16 +300,50 @@ public sealed partial class AudioEditPage : AudioEditPageBase
 
     private readonly record struct WaveformTrackBounds(double Left, double Width);
 
+    private static IReadOnlyList<double> CreateWaveformOverviewLevels(IReadOnlyList<double> levels, int barCount)
+    {
+        if (levels.Count == 0 || barCount <= 0)
+        {
+            return [];
+        }
+
+        double[] overviewLevels = new double[barCount];
+        for (int barIndex = 0; barIndex < barCount; barIndex++)
+        {
+            int startIndex = Math.Min(levels.Count - 1, (int)Math.Floor(barIndex * levels.Count / (double)barCount));
+            int endIndex = Math.Min(levels.Count, (int)Math.Floor((barIndex + 1) * levels.Count / (double)barCount));
+            if (endIndex <= startIndex)
+            {
+                endIndex = startIndex + 1;
+            }
+
+            double peak = 0;
+            for (int levelIndex = startIndex; levelIndex < endIndex; levelIndex++)
+            {
+                peak = Math.Max(peak, levels[levelIndex]);
+            }
+
+            overviewLevels[barIndex] = peak;
+        }
+
+        return overviewLevels;
+    }
+
     private readonly record struct WaveformTimeline(
         IReadOnlyList<double> Levels,
         TimeSpan Interval,
-        TimeSpan Duration)
+        TimeSpan Duration,
+        bool ShouldStretchToDuration)
     {
-        public static WaveformTimeline FromLevels(IReadOnlyList<double> levels, TimeSpan interval)
+        public static WaveformTimeline FromCapturedLevels(IReadOnlyList<double> levels, TimeSpan interval, TimeSpan duration)
         {
-            TimeSpan duration = TimeSpan.FromTicks(interval.Ticks * levels.Count);
-            return new WaveformTimeline(levels, interval, duration);
+            TimeSpan fallbackDuration = TimeSpan.FromTicks(interval.Ticks * levels.Count);
+            TimeSpan alignedDuration = duration > TimeSpan.Zero ? duration : fallbackDuration;
+            return new WaveformTimeline(levels, interval, alignedDuration, true);
         }
+
+        public WaveformTimeline WithDuration(TimeSpan duration)
+            => this with { Duration = duration };
     }
 
     private static class AudioWaveformFileReader
@@ -494,7 +453,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
             }
 
             TimeSpan duration = TimeSpan.FromSeconds(totalFrames / (double)format.SampleRate);
-            return new WaveformTimeline(peaks, interval, duration);
+            return new WaveformTimeline(peaks, interval, duration, false);
         }
 
         private static WaveFormat ReadWaveFormat(BinaryReader reader, uint chunkSize)
@@ -591,7 +550,7 @@ public sealed partial class AudioEditPage : AudioEditPageBase
         }
 
         private static WaveformTimeline CreateEmptyTimeline(TimeSpan interval)
-            => new([], interval, TimeSpan.Zero);
+            => new([], interval, TimeSpan.Zero, false);
 
         private readonly record struct WaveFormat(
             ushort AudioFormat,
