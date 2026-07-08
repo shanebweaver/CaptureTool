@@ -116,13 +116,17 @@
                 Background="{ThemeResource CardBackgroundFillColorDefault}"
                 BorderBrush="{ThemeResource CardStrokeColorDefault}"
                 BorderThickness="0,1">
-                <Grid MaxHeight="300">
+                <Grid
+                    x:Name="WaveformSurface"
+                    MaxHeight="300"
+                    SizeChanged="WaveformSurface_SizeChanged">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
 
                     <ItemsRepeater
+                        x:Name="WaveformBarsRepeater"
                         Grid.Column="0"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Stretch"
@@ -133,7 +137,7 @@
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="audio:AudioWaveformBarViewModel">
                                 <Border
-                                    Width="5"
+                                    Width="{x:Bind Width, Mode=OneWay}"
                                     Height="{x:Bind Height, Mode=OneWay}"
                                     VerticalAlignment="Center"
                                     Background="{ThemeResource AccentFillColorDefaultBrush}"
