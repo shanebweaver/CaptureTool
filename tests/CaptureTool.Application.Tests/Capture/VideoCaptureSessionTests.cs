@@ -18,7 +18,7 @@ public sealed class VideoCaptureSessionTests
 
         options.Target.Should().Be(target);
         options.OutputPath.Should().Be(@"C:\Temp\capture.mp4");
-        options.CaptureAudio.Should().BeTrue();
+        options.CaptureAudio.Should().BeFalse();
         options.AudioInputSourceId.Should().Be("microphone");
         options.AudioInputVolumePercentage.Should().Be(42);
     }

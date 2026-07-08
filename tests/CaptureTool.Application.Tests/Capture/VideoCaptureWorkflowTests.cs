@@ -181,8 +181,8 @@ public sealed class VideoCaptureWorkflowTests
         context.Workflow.IsAudioInputMuted.Should().BeTrue();
         context.Workflow.AudioInputVolumePercentage.Should().Be(37);
         context.ScreenRecorder.Verify(recorder => recorder.SetAudioInputSource("microphone-id"), Times.Once);
-        context.ScreenRecorder.Verify(recorder => recorder.SetAudioCaptureEnabled(true), Times.Once);
-        context.ScreenRecorder.Verify(recorder => recorder.SetAudioCaptureEnabled(false), Times.Once);
+        context.ScreenRecorder.Verify(recorder => recorder.SetAudioInputSource(null), Times.Once);
+        context.ScreenRecorder.Verify(recorder => recorder.SetAudioCaptureEnabled(It.IsAny<bool>()), Times.Never);
         context.ScreenRecorder.Verify(recorder => recorder.SetAudioInputVolume(37), Times.Once);
     }
 

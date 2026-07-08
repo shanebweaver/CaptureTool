@@ -238,7 +238,6 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
             IsAudioInputSelectionAvailable = false;
-            SetAudioInputMuted(true);
         }
     }
 
@@ -345,27 +344,18 @@ public sealed partial class CaptureOverlayViewModel : LoadableViewModelBase<Capt
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
             SelectAudioInputSourceWithoutWaiting(null);
-            SetAudioInputMuted(true);
             return;
         }
 
-        bool wasSelectedSourceRemoved =
-            !string.IsNullOrWhiteSpace(selectedAudioInputSourceId) &&
-            AudioInputSources.All(source => source.Id != selectedAudioInputSourceId);
-
-        if (wasSelectedSourceRemoved)
-        {
-            SetAudioInputMuted(true);
-        }
-
-        SelectedAudioInputSource = GetAudioInputSourceToSelect();
+        SelectedAudioInputSource = GetAudioInputSourceToSelect(selectedAudioInputSourceId);
         SelectedAudioInputSourceIndex = AudioInputSources.IndexOf(SelectedAudioInputSource);
         SelectAudioInputSourceWithoutWaiting(SelectedAudioInputSource.Id);
     }
 
-    private AudioInputSource GetAudioInputSourceToSelect()
+    private AudioInputSource GetAudioInputSourceToSelect(string? selectedAudioInputSourceId)
     {
         return
+            AudioInputSources.FirstOrDefault(source => string.Equals(source.Id, selectedAudioInputSourceId, StringComparison.OrdinalIgnoreCase)) ??
             AudioInputSources.FirstOrDefault(source => source.IsDefault) ??
             AudioInputSources[0];
     }

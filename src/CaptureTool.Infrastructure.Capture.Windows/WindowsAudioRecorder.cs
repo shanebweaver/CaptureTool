@@ -42,7 +42,7 @@ public class WindowsAudioRecorder : IAudioRecorder
 
         var options = new AudioCaptureOptions(
             outputPath,
-            ShouldCaptureAudio(),
+            _isDesktopAudioEnabled,
             GetActiveAudioInputSourceId(),
             100);
 
@@ -84,7 +84,7 @@ public class WindowsAudioRecorder : IAudioRecorder
         _isDesktopAudioEnabled = !_isDesktopAudioEnabled;
         if (!string.IsNullOrWhiteSpace(_outputPath))
         {
-            GetActiveSession().SetAudioCaptureEnabled(ShouldCaptureAudio());
+            GetActiveSession().SetAudioCaptureEnabled(_isDesktopAudioEnabled);
         }
     }
 
@@ -96,9 +96,7 @@ public class WindowsAudioRecorder : IAudioRecorder
 
         if (!string.IsNullOrWhiteSpace(_outputPath))
         {
-            IAudioCaptureSession session = GetActiveSession();
-            session.SetAudioInputSource(GetActiveAudioInputSourceId());
-            session.SetAudioCaptureEnabled(ShouldCaptureAudio());
+            GetActiveSession().SetAudioInputSource(GetActiveAudioInputSourceId());
         }
     }
 
@@ -107,17 +105,12 @@ public class WindowsAudioRecorder : IAudioRecorder
         _isMuted = !_isMuted;
         if (!string.IsNullOrWhiteSpace(_outputPath))
         {
-            IAudioCaptureSession session = GetActiveSession();
-            session.SetAudioInputSource(GetActiveAudioInputSourceId());
-            session.SetAudioCaptureEnabled(ShouldCaptureAudio());
+            GetActiveSession().SetAudioInputSource(GetActiveAudioInputSourceId());
         }
     }
 
     private string? GetActiveAudioInputSourceId()
         => _isMuted ? null : _audioInputSourceId;
-
-    private bool ShouldCaptureAudio()
-        => _isDesktopAudioEnabled || !string.IsNullOrWhiteSpace(GetActiveAudioInputSourceId());
 
     private IAudioCaptureSession GetActiveSession()
         => _session ?? throw new InvalidOperationException("No audio capture session is active.");

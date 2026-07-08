@@ -81,19 +81,19 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             new AudioInputSourcesChangedEventArgs(AudioInputSourcesChangeReason.EnumerationCompleted, []));
 
         Assert.IsFalse(context.ViewModel.IsAudioInputSelectionAvailable);
-        Assert.IsTrue(context.ViewModel.IsAudioInputMuted);
+        Assert.IsFalse(context.ViewModel.IsAudioInputMuted);
         Assert.IsNull(context.ViewModel.SelectedAudioInputSource);
         Assert.AreEqual(-1, context.ViewModel.SelectedAudioInputSourceIndex);
         context.SelectAudioInputSource.Verify(useCase => useCase.ExecuteAsync(
             It.Is<SelectAudioInputSourceRequest>(request => request.SourceId == null),
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
         context.SetAudioInputMuted.Verify(useCase => useCase.ExecuteAsync(
-            It.Is<SetVideoCaptureAudioInputMutedRequest>(request => request.IsMuted),
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+            It.IsAny<SetVideoCaptureAudioInputMutedRequest>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
-    public void AudioInputSourcesChanged_WhenInputBecomesAvailable_ShouldStayMuted()
+    public void AudioInputSourcesChanged_WhenInputBecomesAvailable_ShouldSelectDefaultWithoutMuting()
     {
         AudioInputSource[] sources =
         [
@@ -110,15 +110,15 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             new AudioInputSourcesChangedEventArgs(AudioInputSourcesChangeReason.Added, sources));
 
         Assert.IsTrue(context.ViewModel.IsAudioInputSelectionAvailable);
-        Assert.IsTrue(context.ViewModel.IsAudioInputMuted);
+        Assert.IsFalse(context.ViewModel.IsAudioInputMuted);
         Assert.AreEqual("default", context.ViewModel.SelectedAudioInputSource?.Id);
         context.SetAudioInputMuted.Verify(useCase => useCase.ExecuteAsync(
-            It.Is<SetVideoCaptureAudioInputMutedRequest>(request => request.IsMuted),
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+            It.IsAny<SetVideoCaptureAudioInputMutedRequest>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
-    public void AudioInputSourcesChanged_WhenSelectedInputIsRemoved_ShouldMuteInputSelection()
+    public void AudioInputSourcesChanged_WhenSelectedInputIsRemoved_ShouldSelectReplacementWithoutMuting()
     {
         AudioInputSource[] sources =
         [
@@ -140,11 +140,11 @@ public sealed class CaptureOverlayViewModelAudioInputTests
             new AudioInputSourcesChangedEventArgs(AudioInputSourcesChangeReason.Removed, updatedSources));
 
         Assert.IsTrue(context.ViewModel.IsAudioInputSelectionAvailable);
-        Assert.IsTrue(context.ViewModel.IsAudioInputMuted);
+        Assert.IsFalse(context.ViewModel.IsAudioInputMuted);
         Assert.AreEqual("external", context.ViewModel.SelectedAudioInputSource?.Id);
         context.SetAudioInputMuted.Verify(useCase => useCase.ExecuteAsync(
-            It.Is<SetVideoCaptureAudioInputMutedRequest>(request => request.IsMuted),
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+            It.IsAny<SetVideoCaptureAudioInputMutedRequest>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static TestContext CreateViewModel(IReadOnlyList<AudioInputSource> sources)

@@ -233,7 +233,6 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
             IsAudioInputSelectionAvailable = false;
-            SetAudioInputMuted(true);
         }
     }
 
@@ -263,17 +262,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
             SelectedAudioInputSource = null;
             SelectedAudioInputSourceIndex = -1;
             SelectAudioInputSourceWithoutWaiting(null);
-            SetAudioInputMuted(true);
             return;
-        }
-
-        bool wasSelectedSourceRemoved =
-            !string.IsNullOrWhiteSpace(selectedAudioInputSourceId) &&
-            AudioInputSources.All(source => source.Id != selectedAudioInputSourceId);
-
-        if (wasSelectedSourceRemoved)
-        {
-            SetAudioInputMuted(true);
         }
 
         SelectedAudioInputSource = GetAudioInputSourceToSelect(selectedAudioInputSourceId);

@@ -131,7 +131,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
         VideoCaptureStateSnapshot snapshot = Snapshot;
         if (snapshot.IsRecording)
         {
-            _screenRecorder.SetAudioCaptureEnabled(snapshot.AudioSettings.ShouldCaptureAudio);
+            _screenRecorder.SetAudioCaptureEnabled(snapshot.AudioSettings.ShouldCaptureDesktopAudio);
         }
     }
 
@@ -141,7 +141,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
 
         if (snapshot.IsRecording)
         {
-            _screenRecorder.SetAudioCaptureEnabled(snapshot.AudioSettings.ShouldCaptureAudio);
+            _screenRecorder.SetAudioInputSource(snapshot.AudioSettings.ActiveAudioInputSourceId);
         }
     }
 
@@ -151,8 +151,7 @@ internal sealed class VideoCaptureWorkflow : IVideoCaptureWorkflow
 
         if (snapshot.IsRecording)
         {
-            _screenRecorder.SetAudioInputSource(snapshot.AudioSettings.SelectedAudioInputSourceId);
-            _screenRecorder.SetAudioCaptureEnabled(snapshot.AudioSettings.ShouldCaptureAudio);
+            _screenRecorder.SetAudioInputSource(snapshot.AudioSettings.ActiveAudioInputSourceId);
         }
     }
 
