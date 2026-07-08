@@ -54,6 +54,7 @@ public sealed partial class VideoEditPage : VideoEditPageBase
     private MediaPlayer CreateMediaPlayer()
     {
         var mediaPlayer = new MediaPlayer();
+        mediaPlayer.CommandManager.IsEnabled = false;
         mediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
         mediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
         mediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;

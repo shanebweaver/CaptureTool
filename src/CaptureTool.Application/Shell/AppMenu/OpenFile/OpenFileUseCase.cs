@@ -52,7 +52,7 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
                     return new OpenFileResponse(false);
                 }
 
-                FileReference? file = await _filePickerService.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures);
+                FileReference? file = await _filePickerService.PickFileAsync(FilePickerType.CaptureMedia, UserFolder.Pictures);
                 if (file is null)
                 {
                     return new OpenFileResponse(false);
@@ -72,6 +72,10 @@ internal sealed class OpenFileUseCase : IOpenFileUseCase
                 CaptureFileType fileType = CaptureFileTypeDetector.DetectFileType(filePath);
                 switch (fileType)
                 {
+                    case CaptureFileType.Audio:
+                        _navigationService.Navigate(NavigationRoute.AudioEdit, new AudioFile(filePath));
+                        break;
+
                     case CaptureFileType.Image:
                         _navigationService.Navigate(NavigationRoute.ImageEdit, new ImageFile(filePath));
                         break;

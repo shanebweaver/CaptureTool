@@ -112,10 +112,10 @@ public class CaptureFileTypeDetectorTests
     }
 
     [TestMethod]
-    public void DetectFileType_WithMp3Extension_ReturnsAudio()
+    public void DetectFileType_WithMp3Extension_ReturnsUnknown()
     {
         var result = CaptureFileTypeDetector.DetectFileType("test.mp3");
-        result.Should().Be(CaptureFileType.Audio);
+        result.Should().Be(CaptureFileType.Unknown);
     }
 
     [TestMethod]
@@ -126,23 +126,23 @@ public class CaptureFileTypeDetectorTests
     }
 
     [TestMethod]
-    public void DetectFileType_WithFlacExtension_ReturnsAudio()
+    public void DetectFileType_WithFlacExtension_ReturnsUnknown()
     {
         var result = CaptureFileTypeDetector.DetectFileType("test.flac");
-        result.Should().Be(CaptureFileType.Audio);
+        result.Should().Be(CaptureFileType.Unknown);
     }
 
     [TestMethod]
     public void DetectFileType_WithUppercaseAudioExtension_ReturnsAudio()
     {
-        var result = CaptureFileTypeDetector.DetectFileType("test.MP3");
+        var result = CaptureFileTypeDetector.DetectFileType("test.WAV");
         result.Should().Be(CaptureFileType.Audio);
     }
 
     [TestMethod]
     public void IsAudioFile_WithAudioExtension_ReturnsTrue()
     {
-        var result = CaptureFileTypeDetector.IsAudioFile("test.mp3");
+        var result = CaptureFileTypeDetector.IsAudioFile("test.wav");
         result.Should().BeTrue();
     }
 

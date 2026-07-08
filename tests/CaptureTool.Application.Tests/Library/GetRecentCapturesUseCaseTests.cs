@@ -1,5 +1,4 @@
 using CaptureTool.Application.Tests;
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.GetRecentCaptures;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Library.RecentCaptures.GetRecentCaptures;
@@ -35,8 +34,7 @@ public sealed class GetRecentCapturesUseCaseTests
         GetRecentCapturesUseCase useCase = new(
             storageService.Object,
             TestFileSystem.Instance,
-            TestUseCaseExecutor.Instance,
-            Mock.Of<IAudioCaptureFeatureAvailability>(availability => availability.IsAudioCaptureEnabled));
+            TestUseCaseExecutor.Instance);
 
         GetRecentCapturesResponse? response = (await useCase.ExecuteAsync(new GetRecentCapturesRequest(), TestContext.CancellationToken)).Value;
 
@@ -47,10 +45,9 @@ public sealed class GetRecentCapturesUseCaseTests
     }
 
     [TestMethod]
-    public async Task ExecuteAsync_WhenAudioCaptureIsDisabled_FiltersAudioFilesBeforeTakingRecentLimit()
+    public async Task ExecuteAsync_ShouldIncludeAudioFilesInRecentCaptures()
     {
         Mock<IStorageService> storageService = new();
-        Mock<IAudioCaptureFeatureAvailability> audioCaptureFeatureAvailability = new();
         string tempFolder = CreateTestFolder();
         string audioFilePath = Path.Combine(tempFolder, "recent.wav");
         string imageFilePath = Path.Combine(tempFolder, "older.png");
@@ -64,21 +61,18 @@ public sealed class GetRecentCapturesUseCaseTests
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
             .Returns(tempFolder);
-        audioCaptureFeatureAvailability
-            .Setup(availability => availability.IsAudioCaptureEnabled)
-            .Returns(false);
 
         GetRecentCapturesUseCase useCase = new(
             storageService.Object,
             TestFileSystem.Instance,
-            TestUseCaseExecutor.Instance,
-            audioCaptureFeatureAvailability.Object);
+            TestUseCaseExecutor.Instance);
 
         GetRecentCapturesResponse? response = (await useCase.ExecuteAsync(new GetRecentCapturesRequest(), TestContext.CancellationToken)).Value;
 
         Assert.IsNotNull(response);
-        Assert.HasCount(1, response.Captures);
-        Assert.AreEqual(imageFilePath, response.Captures[0].FilePath);
+        Assert.HasCount(2, response.Captures);
+        Assert.AreEqual(audioFilePath, response.Captures[0].FilePath);
+        Assert.AreEqual(imageFilePath, response.Captures[1].FilePath);
     }
 
     private static string CreateTestFolder()

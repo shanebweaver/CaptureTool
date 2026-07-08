@@ -1,4 +1,3 @@
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
@@ -20,22 +19,19 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
     private readonly IOpenAudioEditPageUseCase _goToAudioEdit;
     private readonly IOpenImageEditPageUseCase _goToImageEdit;
     private readonly IOpenVideoEditPageUseCase _goToVideoEdit;
-    private readonly IAudioCaptureFeatureAvailability _audioCaptureFeatureAvailability;
 
     public OpenRecentCaptureUseCase(
         IFileSystem fileSystem,
         IOpenAudioEditPageUseCase goToAudioEdit,
         IOpenImageEditPageUseCase goToImageEdit,
         IOpenVideoEditPageUseCase goToVideoEdit,
-        IUseCaseExecutor useCaseExecutor,
-        IAudioCaptureFeatureAvailability audioCaptureFeatureAvailability)
+        IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _fileSystem = fileSystem;
         _goToAudioEdit = goToAudioEdit;
         _goToImageEdit = goToImageEdit;
         _goToVideoEdit = goToVideoEdit;
-        _audioCaptureFeatureAvailability = audioCaptureFeatureAvailability;
     }
 
     public bool CanExecute(OpenRecentCaptureRequest request)
@@ -58,11 +54,6 @@ internal sealed class OpenRecentCaptureUseCase : IOpenRecentCaptureUseCase
                 switch (fileType)
                 {
                     case CaptureFileType.Audio:
-                        if (!_audioCaptureFeatureAvailability.IsAudioCaptureEnabled)
-                        {
-                            return new OpenRecentCaptureResponse(false);
-                        }
-
                         await _goToAudioEdit.ExecuteAsync(new OpenAudioEditPageRequest(new AudioFile(request.FilePath)), cancellationToken);
                         break;
 

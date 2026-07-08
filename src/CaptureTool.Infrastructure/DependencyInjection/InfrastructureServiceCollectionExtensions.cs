@@ -1,5 +1,4 @@
 using CaptureTool.Application.Abstractions.Cancellation;
-using CaptureTool.Application.Abstractions.Capture.Audio;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Files;
@@ -30,7 +29,6 @@ public static class InfrastructureServiceCollectionExtensions
     {
         services.AddSingleton<ICancellationService, CancellationService>();
         services.AddSingleton<IStoreFeatureAvailability, StoreFeatureAvailability>();
-        services.AddSingleton<IAudioCaptureFeatureAvailability, AudioCaptureFeatureAvailability>();
         services.AddSingleton<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>();
         services.AddSingleton<IFileSystem, LocalFileSystem>();
         services.AddSingleton<IGlobalizationService, GlobalizationService>();

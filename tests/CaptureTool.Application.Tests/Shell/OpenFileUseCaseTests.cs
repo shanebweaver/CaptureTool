@@ -29,7 +29,7 @@ public class OpenFileUseCaseTests
         File.SetLastWriteTimeUtc(sourcePath, oldLastWriteTimeUtc);
 
         filePickerService
-            .Setup(service => service.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures))
+            .Setup(service => service.PickFileAsync(FilePickerType.CaptureMedia, UserFolder.Pictures))
             .ReturnsAsync(new FileReference(sourcePath));
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
@@ -56,6 +56,47 @@ public class OpenFileUseCaseTests
     }
 
     [TestMethod]
+    public async Task ExecuteAsync_WithAudioFile_ShouldNavigateToAudioEdit()
+    {
+        Mock<IFilePickerService> filePickerService = new();
+        Mock<INavigationService> navigationService = new();
+        Mock<IStorageService> storageService = new();
+        string tempFolder = CreateTestFolder();
+        string sourceFolder = CreateTestFolder();
+        string sourcePath = Path.Combine(sourceFolder, "source.wav");
+        string copiedPath = Path.Combine(tempFolder, "source.wav");
+        await File.WriteAllTextAsync(sourcePath, "audio", TestContext.CancellationToken);
+        DateTime oldLastWriteTimeUtc = new(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        File.SetLastWriteTimeUtc(sourcePath, oldLastWriteTimeUtc);
+
+        filePickerService
+            .Setup(service => service.PickFileAsync(FilePickerType.CaptureMedia, UserFolder.Pictures))
+            .ReturnsAsync(new FileReference(sourcePath));
+        storageService
+            .Setup(service => service.GetApplicationTemporaryFolderPath())
+            .Returns(tempFolder);
+        OpenFileUseCase useCase = new(
+            filePickerService.Object,
+            navigationService.Object,
+            storageService.Object,
+            TestFileSystem.Instance,
+            TestClock.Instance,
+            TestUseCaseExecutor.Instance,
+            new AllowAudioCaptureNavigationGuard());
+
+        await useCase.ExecuteAsync(new OpenFileRequest(), TestContext.CancellationToken);
+
+        Assert.IsTrue(File.Exists(copiedPath));
+        Assert.IsTrue(File.GetLastWriteTimeUtc(copiedPath) > oldLastWriteTimeUtc);
+        navigationService.Verify(
+            service => service.Navigate(
+                NavigationRoute.AudioEdit,
+                It.Is<AudioFile>(file => file.FilePath == copiedPath)),
+            Times.Once);
+        storageService.Verify(service => service.GetTemporaryFileName(), Times.Never);
+    }
+
+    [TestMethod]
     public async Task ExecuteAsync_WithVideoFile_ShouldNavigateToVideoEdit()
     {
         Mock<IFilePickerService> filePickerService = new();
@@ -70,7 +111,7 @@ public class OpenFileUseCaseTests
         File.SetLastWriteTimeUtc(sourcePath, oldLastWriteTimeUtc);
 
         filePickerService
-            .Setup(service => service.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures))
+            .Setup(service => service.PickFileAsync(FilePickerType.CaptureMedia, UserFolder.Pictures))
             .ReturnsAsync(new FileReference(sourcePath));
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())
@@ -109,7 +150,7 @@ public class OpenFileUseCaseTests
         File.SetLastWriteTimeUtc(sourcePath, oldLastWriteTimeUtc);
 
         filePickerService
-            .Setup(service => service.PickFileAsync(FilePickerType.ImageOrVideo, UserFolder.Pictures))
+            .Setup(service => service.PickFileAsync(FilePickerType.CaptureMedia, UserFolder.Pictures))
             .ReturnsAsync(new FileReference(sourcePath));
         storageService
             .Setup(service => service.GetApplicationTemporaryFolderPath())

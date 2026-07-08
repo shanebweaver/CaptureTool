@@ -188,15 +188,12 @@ public sealed class SimpleApplicationUseCaseTests
         videoEdit
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<OpenVideoEditPageRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<OpenVideoEditPageResponse>.Success(new OpenVideoEditPageResponse()));
-        var audioCaptureFeatureAvailability = Mock.Of<IAudioCaptureFeatureAvailability>(
-            availability => availability.IsAudioCaptureEnabled);
         var useCase = new OpenRecentCaptureUseCase(
             TestFileSystem.Instance,
             audioEdit.Object,
             imageEdit.Object,
             videoEdit.Object,
-            TestUseCaseExecutor.Instance,
-            audioCaptureFeatureAvailability);
+            TestUseCaseExecutor.Instance);
 
         Assert.IsTrue(useCase.CanExecute(new OpenRecentCaptureRequest(audioPath)));
         OpenRecentCaptureResponse audioResponse = (await useCase.ExecuteAsync(new OpenRecentCaptureRequest(audioPath), TestContext.CancellationToken)).Value!;
@@ -220,9 +217,7 @@ public sealed class SimpleApplicationUseCaseTests
             Mock.Of<IOpenAudioEditPageUseCase>(),
             Mock.Of<IOpenImageEditPageUseCase>(),
             Mock.Of<IOpenVideoEditPageUseCase>(),
-            TestUseCaseExecutor.Instance,
-            Mock.Of<IAudioCaptureFeatureAvailability>(
-                availability => availability.IsAudioCaptureEnabled));
+            TestUseCaseExecutor.Instance);
 
         Assert.IsFalse(useCase.CanExecute(new OpenRecentCaptureRequest("")));
         OpenRecentCaptureResponse missingResponse = (await useCase.ExecuteAsync(new OpenRecentCaptureRequest(@"C:\missing.png"), TestContext.CancellationToken)).Value!;
@@ -230,31 +225,6 @@ public sealed class SimpleApplicationUseCaseTests
 
         Assert.IsFalse(missingResponse.Opened);
         Assert.IsFalse(unknownResponse.Opened);
-    }
-
-    [TestMethod]
-    public async Task OpenRecentCaptureUseCase_WhenAudioCaptureIsDisabled_ReturnsNotOpenedForAudioFiles()
-    {
-        string audioPath = await CreateTempFileAsync("capture.wav");
-        var audioEdit = new Mock<IOpenAudioEditPageUseCase>();
-        var audioCaptureFeatureAvailability = new Mock<IAudioCaptureFeatureAvailability>();
-        audioCaptureFeatureAvailability
-            .Setup(availability => availability.IsAudioCaptureEnabled)
-            .Returns(false);
-        var useCase = new OpenRecentCaptureUseCase(
-            TestFileSystem.Instance,
-            audioEdit.Object,
-            Mock.Of<IOpenImageEditPageUseCase>(),
-            Mock.Of<IOpenVideoEditPageUseCase>(),
-            TestUseCaseExecutor.Instance,
-            audioCaptureFeatureAvailability.Object);
-
-        OpenRecentCaptureResponse response = (await useCase.ExecuteAsync(new OpenRecentCaptureRequest(audioPath), TestContext.CancellationToken)).Value!;
-
-        Assert.IsFalse(response.Opened);
-        audioEdit.Verify(
-            useCase => useCase.ExecuteAsync(It.IsAny<OpenAudioEditPageRequest>(), It.IsAny<CancellationToken>()),
-            Times.Never);
     }
 
     private static async Task<string> CreateTempFileAsync(string fileName)
