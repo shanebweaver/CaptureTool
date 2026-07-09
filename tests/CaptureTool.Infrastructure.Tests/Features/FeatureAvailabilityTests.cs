@@ -20,6 +20,13 @@ public sealed class FeatureAvailabilityTests
         Assert.IsFalse(new StoreFeatureAvailability(new ConstantFeatureManager(false)).IsStoreEnabled);
     }
 
+    [TestMethod]
+    public void ImageSuperResolutionFeatureAvailability_ReturnsFeatureManagerValue()
+    {
+        Assert.IsTrue(new ImageSuperResolutionFeatureAvailability(new ConstantFeatureManager(true)).IsImageSuperResolutionEnabled);
+        Assert.IsFalse(new ImageSuperResolutionFeatureAvailability(new ConstantFeatureManager(false)).IsImageSuperResolutionEnabled);
+    }
+
     private sealed class ConstantFeatureManager : IFeatureManager
     {
         private readonly bool _isEnabled;

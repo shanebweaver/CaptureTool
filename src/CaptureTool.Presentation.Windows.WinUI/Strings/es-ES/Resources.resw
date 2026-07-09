@@ -1169,4 +1169,46 @@ SOFTWARE.
   <data name="TextToolbar_BackgroundColorButtonLabel.Text" xml:space="preserve">
     <value>Fondo</value>
   </data>
+  <data name="ImageEdit_SuperResolutionButton.Label" xml:space="preserve">
+    <value>Super Resolution</value>
+  </data>
+  <data name="ImageEdit_SuperResolutionButton.AccessKey" xml:space="preserve">
+    <value>U</value>
+  </data>
+  <data name="ImageEdit_SuperResolutionButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show or hide the AI super-resolution image</value>
+  </data>
+  <data name="ImageSuperResolutionPreparation_Title" xml:space="preserve">
+    <value>Prepare Super Resolution</value>
+  </data>
+  <data name="ImageSuperResolutionPreparation_Content" xml:space="preserve">
+    <value>Windows needs to prepare local AI components before Super Resolution can run. This may use Windows Update and can take some time.</value>
+  </data>
+  <data name="ImageSuperResolutionPreparation_ContinueButton" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="ImageSuperResolutionPreparation_CancelButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ImageSuperResolutionStatus_NotSupported" xml:space="preserve">
+    <value>Super Resolution is not supported on this PC.</value>
+  </data>
+  <data name="ImageSuperResolutionStatus_Disabled" xml:space="preserve">
+    <value>Super Resolution is disabled on this PC.</value>
+  </data>
+  <data name="ImageSuperResolutionStatus_NotAvailable" xml:space="preserve">
+    <value>Super Resolution is not available.</value>
+  </data>
+  <data name="ImageSuperResolutionStatus_PreparationFailed" xml:space="preserve">
+    <value>Super Resolution could not be prepared.</value>
+  </data>
+  <data name="ImageSuperResolutionStatus_NotReady" xml:space="preserve">
+    <value>Super Resolution is not ready.</value>
+  </data>
+  <data name="ImageSuperResolutionStatus_TooLarge" xml:space="preserve">
+    <value>This image is too large for Super Resolution.</value>
+  </data>
+  <data name="ImageSuperResolutionStatus_Failed" xml:space="preserve">
+    <value>Super Resolution failed.</value>
+  </data>
 </root>

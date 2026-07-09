@@ -18,6 +18,7 @@ using CaptureTool.Presentation.Features.Settings;
 using CaptureTool.Presentation.Features.Settings.Factories;
 using CaptureTool.Presentation.Features.Store;
 using CaptureTool.Presentation.Features.VideoEdit;
+using CaptureTool.Presentation.Notifications;
 using CaptureTool.Presentation.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,6 +29,7 @@ public static class PresentationServiceCollectionExtensions
     public static IServiceCollection AddViewModels(this IServiceCollection services)
     {
         services.AddSingleton<IAudioWaveformHistory, AudioWaveformHistory>();
+        services.AddSingleton<IAppNotificationService, AppNotificationService>();
 
         // ViewModels
         services.AddTransient<MainWindowViewModel>();

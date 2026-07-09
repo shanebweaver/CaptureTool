@@ -9,6 +9,7 @@
     xmlns:imageedit="using:CaptureTool.Presentation.Features.ImageEdit"
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     d:DataContext="{d:DesignInstance Type=imageedit:ImageEditPageViewModel}"
     mc:Ignorable="d">
 
@@ -42,6 +43,16 @@
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
             <AppBarSeparator Visibility="{x:Bind ViewModel.ChromaKeyTool.IsChromaKeyAddOnOwned, Mode=OneWay}" />
+            <AppBarToggleButton
+                x:Uid="ImageEdit_SuperResolutionButton"
+                Command="{x:Bind ViewModel.ToggleSuperResolutionCommand}"
+                IsChecked="{x:Bind ViewModel.IsSuperResolutionActive, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.CanToggleSuperResolution, Mode=OneWay}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsSuperResolutionFeatureEnabled), Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE945;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
             <!--  Crop and orientation  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_CropButton"
@@ -270,6 +281,15 @@
             VerticalAlignment="Center"
             IsActive="True"
             Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+
+        <ProgressRing
+            Grid.Row="2"
+            Width="48"
+            Height="48"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsActive="{x:Bind ViewModel.IsSuperResolutionGenerating, Mode=OneWay}"
+            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsSuperResolutionGenerating), Mode=OneWay}" />
 
         <Grid
             MinHeight="38"

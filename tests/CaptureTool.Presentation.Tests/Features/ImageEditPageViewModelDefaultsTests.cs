@@ -2,6 +2,7 @@ using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
+using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
@@ -10,6 +11,7 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.ImageEdit;
+using CaptureTool.Presentation.Notifications;
 using FluentAssertions;
 using Moq;
 using System.Drawing;
@@ -177,9 +179,13 @@ public sealed class ImageEditPageViewModelDefaultsTests
             Mock.Of<IImageCanvasExporter>(),
             filePicker ?? Mock.Of<IFilePickerService>(),
             imageMetadata ?? Mock.Of<IImageMetadataService>(),
+            Mock.Of<IImageSuperResolutionService>(),
+            Mock.Of<IImageSuperResolutionFeatureAvailability>(x => x.IsImageSuperResolutionEnabled == true),
+            Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             Mock.Of<IShareService>(),
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),
+            Mock.Of<IAppNotificationService>(),
             new ChromaKeyToolViewModel(
                 chromaKeyAccess ?? Mock.Of<IChromaKeyAccessService>(),
                 chromaKeyService ?? Mock.Of<IChromaKeyService>()),
