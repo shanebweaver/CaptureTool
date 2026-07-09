@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
+using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Globalization;
@@ -30,6 +31,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ICancellationService, CancellationService>();
         services.AddSingleton<IStoreFeatureAvailability, StoreFeatureAvailability>();
         services.AddSingleton<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>();
+        services.AddSingleton<IImageSuperResolutionFeatureAvailability, ImageSuperResolutionFeatureAvailability>();
         services.AddSingleton<IFileSystem, LocalFileSystem>();
         services.AddSingleton<IGlobalizationService, GlobalizationService>();
         services.AddSingleton<INavigationService, NavigationService>();

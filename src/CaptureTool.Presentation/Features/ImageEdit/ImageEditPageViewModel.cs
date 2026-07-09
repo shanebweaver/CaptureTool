@@ -12,6 +12,7 @@ using CaptureTool.Domain.FileSystem;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
+using CaptureTool.Presentation.Notifications;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using System.Drawing;
@@ -28,10 +29,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IFilePickerService _filePickerService;
     private readonly IImageMetadataService _imageMetadataService;
     private readonly IImageSuperResolutionService _imageSuperResolutionService;
+    private readonly IImageSuperResolutionFeatureAvailability _imageSuperResolutionFeatureAvailability;
     private readonly IImageSuperResolutionPreparationConsentService _imageSuperResolutionPreparationConsentService;
     private readonly IShareService _shareService;
     private readonly ISettingsService _settingsService;
     private readonly ILogService _logService;
+    private readonly IAppNotificationService _notificationService;
 
     private readonly ImageEditHistory _editHistory;
     private readonly ImageEditModeStateMachine _modeStateMachine;
@@ -164,6 +167,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
+    public bool IsSuperResolutionFeatureEnabled
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                UpdateCanToggleSuperResolution();
+            }
+        }
+    }
+
     public bool IsSuperResolutionActive
     {
         get;
@@ -228,10 +243,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IFilePickerService filePickerService,
         IImageMetadataService imageMetadataService,
         IImageSuperResolutionService imageSuperResolutionService,
+        IImageSuperResolutionFeatureAvailability imageSuperResolutionFeatureAvailability,
         IImageSuperResolutionPreparationConsentService imageSuperResolutionPreparationConsentService,
         IShareService shareService,
         ISettingsService settingsService,
         ILogService logService,
+        IAppNotificationService notificationService,
         ChromaKeyToolViewModel chromaKeyTool,
         ShapeToolViewModel shapeTool,
         TextToolViewModel textTool)
@@ -242,11 +259,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _filePickerService = filePickerService;
         _imageMetadataService = imageMetadataService;
         _imageSuperResolutionService = imageSuperResolutionService;
+        _imageSuperResolutionFeatureAvailability = imageSuperResolutionFeatureAvailability;
         _imageSuperResolutionPreparationConsentService = imageSuperResolutionPreparationConsentService;
         _shareService = shareService;
         _imageCanvasExporter = imageCanvasExporter;
         _settingsService = settingsService;
         _logService = logService;
+        _notificationService = notificationService;
 
         ChromaKeyTool = chromaKeyTool;
         ShapeTool = shapeTool;
@@ -264,6 +283,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         MirroredDisplayName = string.Empty;
         RotationDisplayName = string.Empty;
         ZoomPercentage = 100;
+        IsSuperResolutionFeatureEnabled = _imageSuperResolutionFeatureAvailability.IsImageSuperResolutionEnabled;
 
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
@@ -347,6 +367,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _superResolutionImageFile = null;
         _superResolutionImageSize = Size.Empty;
         IsSuperResolutionActive = false;
+        IsSuperResolutionFeatureEnabled = _imageSuperResolutionFeatureAvailability.IsImageSuperResolutionEnabled;
         IsSuperResolutionAvailable = false;
         IsSuperResolutionGenerating = false;
         SuperResolutionStatusMessage = string.Empty;
@@ -369,6 +390,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private async Task ToggleSuperResolutionAsync()
     {
+        if (!IsSuperResolutionFeatureEnabled)
+        {
+            return;
+        }
+
         if (IsSuperResolutionActive)
         {
             RestoreOriginalImageVariant();
@@ -736,14 +762,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                     await _imageSuperResolutionService.EnsureReadyAsync(cancellationToken);
                 if (preparationResult.Status != ImageSuperResolutionPreparationStatus.Success)
                 {
-                    SuperResolutionStatusMessage = GetPreparationFailureMessage(preparationResult);
+                    ShowSuperResolutionFailure(GetPreparationFailureMessage(preparationResult));
                     UpdateSuperResolutionAvailability();
                     return;
                 }
             }
             else if (readyState != ImageSuperResolutionReadyState.Ready)
             {
-                SuperResolutionStatusMessage = GetReadyStateFailureMessage(readyState);
+                ShowSuperResolutionFailure(GetReadyStateFailureMessage(readyState));
                 UpdateSuperResolutionAvailability();
                 return;
             }
@@ -756,7 +782,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 result.ImageFile is null ||
                 result.ImageSize == Size.Empty)
             {
-                SuperResolutionStatusMessage = GetGenerationFailureMessage(result);
+                ShowSuperResolutionFailure(GetGenerationFailureMessage(result));
                 return;
             }
 
@@ -771,14 +797,23 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         catch (Exception ex)
         {
             _logService.LogException(ex, "Failed to generate super-resolution image.");
-            SuperResolutionStatusMessage = GetLocalizedString("ImageSuperResolutionStatus_Failed");
+            ShowSuperResolutionFailure(GetLocalizedString("ImageSuperResolutionStatus_Failed"));
         }
         finally
         {
             _superResolutionCancellationTokenSource?.Dispose();
             _superResolutionCancellationTokenSource = null;
             IsSuperResolutionGenerating = false;
+            RefreshSuperResolutionToggleState();
             UpdateCanToggleSuperResolution();
+        }
+    }
+
+    private void RefreshSuperResolutionToggleState()
+    {
+        if (!IsSuperResolutionActive)
+        {
+            RaisePropertyChanged(nameof(IsSuperResolutionActive));
         }
     }
 
@@ -838,6 +873,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateSuperResolutionAvailability()
     {
+        IsSuperResolutionFeatureEnabled = _imageSuperResolutionFeatureAvailability.IsImageSuperResolutionEnabled;
+        if (!IsSuperResolutionFeatureEnabled)
+        {
+            IsSuperResolutionAvailable = false;
+            return;
+        }
+
         ImageSuperResolutionReadyState readyState = _imageSuperResolutionService.GetReadyState();
         IsSuperResolutionAvailable = readyState is
             ImageSuperResolutionReadyState.Ready or
@@ -846,7 +888,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void UpdateCanToggleSuperResolution()
     {
-        CanToggleSuperResolution = IsLoaded && IsSuperResolutionAvailable && !IsSuperResolutionGenerating;
+        CanToggleSuperResolution = IsLoaded &&
+            IsSuperResolutionFeatureEnabled &&
+            IsSuperResolutionAvailable &&
+            !IsSuperResolutionGenerating;
     }
 
     private void CancelSuperResolutionWork()
@@ -894,6 +939,15 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
                 : result.ErrorMessage,
             _ => GetLocalizedString("ImageSuperResolutionStatus_Failed")
         };
+    }
+
+    private void ShowSuperResolutionFailure(string message)
+    {
+        SuperResolutionStatusMessage = message;
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            _notificationService.ShowError(message);
+        }
     }
 
     private string GetLocalizedString(string resourceKey)

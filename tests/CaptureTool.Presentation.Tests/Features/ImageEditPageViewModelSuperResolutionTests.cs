@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.ImageEdit;
+using CaptureTool.Presentation.Notifications;
 using FluentAssertions;
 using Moq;
 using System.Drawing;
@@ -21,6 +22,27 @@ namespace CaptureTool.Presentation.Tests.Features;
 [TestClass]
 public sealed class ImageEditPageViewModelSuperResolutionTests
 {
+    [TestMethod]
+    public async Task LoadAsync_WhenSuperResolutionFeatureDisabled_ShouldHideAndDisableToggle()
+    {
+        var service = new Mock<IImageSuperResolutionService>(MockBehavior.Strict);
+        var featureAvailability = new Mock<IImageSuperResolutionFeatureAvailability>();
+        featureAvailability
+            .Setup(x => x.IsImageSuperResolutionEnabled)
+            .Returns(false);
+
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            service: service.Object,
+            featureAvailability: featureAvailability.Object);
+
+        await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
+
+        viewModel.IsSuperResolutionFeatureEnabled.Should().BeFalse();
+        viewModel.IsSuperResolutionAvailable.Should().BeFalse();
+        viewModel.CanToggleSuperResolution.Should().BeFalse();
+        service.VerifyNoOtherCalls();
+    }
+
     [TestMethod]
     public async Task LoadAsync_WhenSuperResolutionUnsupported_ShouldDisableToggle()
     {
@@ -142,6 +164,7 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
     public async Task ToggleSuperResolutionCommand_WhenGenerationFails_ShouldRestoreOriginalAndShowMessage()
     {
         var service = new Mock<IImageSuperResolutionService>();
+        var notifications = new Mock<IAppNotificationService>();
         var original = new ImageFile("original.png");
 
         service
@@ -151,21 +174,29 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
             .Setup(x => x.GenerateAsync(It.IsAny<ImageSuperResolutionRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(ImageSuperResolutionResult.Failed("No model today."));
 
-        ImageEditPageViewModel viewModel = CreateViewModel(service: service.Object);
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            service: service.Object,
+            notifications: notifications.Object);
 
         await viewModel.LoadAsync(original, CancellationToken.None);
+        List<string?> changedProperties = [];
+        viewModel.PropertyChanged += (_, e) => changedProperties.Add(e.PropertyName);
+
         await viewModel.ToggleSuperResolutionCommand.ExecuteAsync(null);
 
         viewModel.IsSuperResolutionActive.Should().BeFalse();
         viewModel.ImageFile.Should().Be(original);
         viewModel.ImageSize.Should().Be(new Size(100, 50));
         viewModel.SuperResolutionStatusMessage.Should().Be("No model today.");
+        changedProperties.Should().Contain(nameof(ImageEditPageViewModel.IsSuperResolutionActive));
+        notifications.Verify(x => x.ShowError("No model today."), Times.Once);
     }
 
     [TestMethod]
     public async Task ToggleSuperResolutionCommand_WhenGenerationIsTooLarge_ShouldShowLocalizedMessage()
     {
         var service = new Mock<IImageSuperResolutionService>();
+        var notifications = new Mock<IAppNotificationService>();
 
         service
             .Setup(x => x.GetReadyState())
@@ -174,18 +205,23 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
             .Setup(x => x.GenerateAsync(It.IsAny<ImageSuperResolutionRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(ImageSuperResolutionResult.TooLarge());
 
-        ImageEditPageViewModel viewModel = CreateViewModel(service: service.Object);
+        ImageEditPageViewModel viewModel = CreateViewModel(
+            service: service.Object,
+            notifications: notifications.Object);
 
         await viewModel.LoadAsync(new ImageFile("original.png"), CancellationToken.None);
         await viewModel.ToggleSuperResolutionCommand.ExecuteAsync(null);
 
         viewModel.SuperResolutionStatusMessage.Should().Be("This image is too large for Super Resolution.");
+        notifications.Verify(x => x.ShowError("This image is too large for Super Resolution."), Times.Once);
     }
 
     private static ImageEditPageViewModel CreateViewModel(
         IImageSuperResolutionService? service = null,
+        IImageSuperResolutionFeatureAvailability? featureAvailability = null,
         IImageSuperResolutionPreparationConsentService? consent = null,
-        ILocalizationService? localizationService = null)
+        ILocalizationService? localizationService = null,
+        IAppNotificationService? notifications = null)
     {
         var imageMetadata = new Mock<IImageMetadataService>();
         imageMetadata
@@ -210,10 +246,12 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
             Mock.Of<IFilePickerService>(),
             imageMetadata.Object,
             service ?? Mock.Of<IImageSuperResolutionService>(),
+            featureAvailability ?? Mock.Of<IImageSuperResolutionFeatureAvailability>(x => x.IsImageSuperResolutionEnabled == true),
             consent ?? Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             Mock.Of<IShareService>(),
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),
+            notifications ?? Mock.Of<IAppNotificationService>(),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, Mock.Of<IChromaKeyService>()),
             new ShapeToolViewModel(),
             new TextToolViewModel());

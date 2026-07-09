@@ -47,7 +47,8 @@
                 x:Uid="ImageEdit_SuperResolutionButton"
                 Command="{x:Bind ViewModel.ToggleSuperResolutionCommand}"
                 IsChecked="{x:Bind ViewModel.IsSuperResolutionActive, Mode=OneWay}"
-                IsEnabled="{x:Bind ViewModel.CanToggleSuperResolution, Mode=OneWay}">
+                IsEnabled="{x:Bind ViewModel.CanToggleSuperResolution, Mode=OneWay}"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsSuperResolutionFeatureEnabled), Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="&#xE945;" />
                 </AppBarToggleButton.Icon>
@@ -344,16 +345,6 @@
                     Text="{x:Bind ViewModel.MirroredDisplayName, Mode=OneWay}"
                     TextAlignment="Right" />
             </StackPanel>
-
-            <TextBlock
-                Grid.Column="1"
-                Margin="12,0"
-                VerticalAlignment="Center"
-                FontSize="12"
-                FontWeight="SemiLight"
-                Text="{x:Bind ViewModel.SuperResolutionStatusMessage, Mode=OneWay}"
-                TextAlignment="Center"
-                TextTrimming="CharacterEllipsis" />
 
             <StackPanel
                 Grid.Column="2"

@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.ImageEdit;
+using CaptureTool.Presentation.Notifications;
 using Moq;
 using System.Drawing;
 using System.Numerics;
@@ -69,10 +70,12 @@ public sealed class ImageEditPageViewModelShareTests
             filePicker.Object,
             imageMetadata.Object,
             Mock.Of<IImageSuperResolutionService>(),
+            Mock.Of<IImageSuperResolutionFeatureAvailability>(x => x.IsImageSuperResolutionEnabled == true),
             Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             shareService.Object,
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),
+            Mock.Of<IAppNotificationService>(),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, chromaKeyService),
             new ShapeToolViewModel(),
             new TextToolViewModel());

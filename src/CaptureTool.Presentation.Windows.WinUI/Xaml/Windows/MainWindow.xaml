@@ -7,6 +7,7 @@
     xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Pages"
+    xmlns:utils="using:CaptureTool.Presentation.Windows.WinUI.Utils"
     xmlns:views="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Views"
     mc:Ignorable="d">
     <Window.SystemBackdrop>
@@ -58,6 +59,55 @@
 
         <Grid Row="2">
             <Frame x:Name="NavigationFrame" SourcePageType="pages:LoadingPage" />
+
+            <Border
+                x:Name="NotificationHost"
+                MaxWidth="440"
+                MinWidth="280"
+                Margin="12"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}"
+                BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1"
+                Canvas.ZIndex="100"
+                CornerRadius="8"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasNotification), Mode=OneWay}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border
+                        Width="4"
+                        Background="{ThemeResource SystemFillColorCriticalBrush}"
+                        CornerRadius="8,0,0,8" />
+
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="12,10,8,10"
+                        VerticalAlignment="Center"
+                        Text="{x:Bind ViewModel.NotificationMessage, Mode=OneWay}"
+                        TextWrapping="WrapWholeWords" />
+
+                    <Button
+                        Grid.Column="2"
+                        Width="32"
+                        Height="32"
+                        Margin="0,4,4,4"
+                        Padding="0"
+                        VerticalAlignment="Top"
+                        AutomationProperties.Name="Dismiss notification"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        Command="{x:Bind ViewModel.DismissNotificationCommand}"
+                        ToolTipService.ToolTip="Dismiss">
+                        <FontIcon FontSize="12" Glyph="{StaticResource Cancel}" />
+                    </Button>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </Window>
