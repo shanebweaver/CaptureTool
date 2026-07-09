@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Capture;
@@ -9,6 +10,7 @@ namespace CaptureTool.Application.Capture.Audio;
 internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
 {
     private readonly IAudioRecorder _audioRecorder;
+    private readonly IFileSystem _fileSystem;
     private readonly ISettingsService _settingsService;
     private readonly IStorageService _storageService;
     private readonly AudioCaptureStateStore _stateStore;
@@ -32,6 +34,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
 
     public AudioCaptureWorkflow(
         IAudioRecorder audioRecorder,
+        IFileSystem fileSystem,
         ISettingsService settingsService,
         IStorageService storageService,
         AudioCaptureStateStore stateStore,
@@ -39,6 +42,7 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         AudioCaptureFileNameGenerator fileNameGenerator)
     {
         _audioRecorder = audioRecorder;
+        _fileSystem = fileSystem;
         _settingsService = settingsService;
         _storageService = storageService;
         _stateStore = stateStore;
@@ -93,6 +97,34 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         return audioFile;
     }
 
+    public void CancelCapture()
+    {
+        AudioCaptureSession? session = _stateStore.GetCancelableSession();
+        if (session is null)
+        {
+            return;
+        }
+
+        AudioFile? audioFile = null;
+
+        try
+        {
+            audioFile = _audioRecorder.StopCapture();
+        }
+        finally
+        {
+            _stateStore.StopSession(session.Id);
+            CaptureStateChanged?.Invoke(this, AudioCaptureState.Stopped);
+        }
+
+        DeleteCanceledAudioFile(session.TempAudioPath);
+        if (audioFile is not null &&
+            !string.Equals(audioFile.FilePath, session.TempAudioPath, StringComparison.OrdinalIgnoreCase))
+        {
+            DeleteCanceledAudioFile(audioFile.FilePath);
+        }
+    }
+
     public void PauseCapture()
     {
         Guid sessionId = _stateStore.GetRequiredActiveSessionId();
@@ -140,6 +172,14 @@ internal sealed class AudioCaptureWorkflow : IAudioCaptureWorkflow
         if (IsRecording && !IsPaused)
         {
             AudioLevelCaptured?.Invoke(this, level);
+        }
+    }
+
+    private void DeleteCanceledAudioFile(string filePath)
+    {
+        if (_fileSystem.FileExists(filePath))
+        {
+            _fileSystem.DeleteFile(filePath);
         }
     }
 }

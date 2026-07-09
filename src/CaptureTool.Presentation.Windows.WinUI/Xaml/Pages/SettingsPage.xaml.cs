@@ -78,6 +78,14 @@ public sealed partial class SettingsPage : SettingsPageBase
         }
     }
 
+    private void CaptureWarnBeforeDiscardToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch toggleSwitch)
+        {
+            _ = ViewModel.UpdateCaptureWarnBeforeDiscardCommand.ExecuteAsync(toggleSwitch.IsOn);
+        }
+    }
+
     private void EditWarnBeforeDiscardToggleSwitch_Toggled(object sender, RoutedEventArgs e)
     {
         if (sender is ToggleSwitch toggleSwitch)

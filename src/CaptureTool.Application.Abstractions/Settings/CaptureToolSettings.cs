@@ -18,4 +18,5 @@ public static partial class CaptureToolSettings
     public static readonly IBoolSettingDefinition Settings_VideoCapture_DefaultLocalAudioEnabled = new BoolSettingDefinition("Settings_VideoCapture_DefaultLocalAudioEnabled", true);
     public static readonly IBoolSettingDefinition Settings_AudioCapture_DefaultLocalAudioEnabled = new BoolSettingDefinition("Settings_AudioCapture_DefaultLocalAudioEnabled", true);
     public static readonly IBoolSettingDefinition Settings_Edit_WarnBeforeDiscard = new BoolSettingDefinition("Settings_Edit_WarnBeforeDiscard", true);
+    public static readonly IBoolSettingDefinition Settings_Capture_WarnBeforeDiscard = new BoolSettingDefinition("Settings_Capture_WarnBeforeDiscard", true);
 }

@@ -1,0 +1,7 @@
+using CaptureTool.Application.Abstractions.UseCases;
+
+namespace CaptureTool.Application.Abstractions.Settings.UpdateCaptureWarnBeforeDiscard;
+
+public interface IUpdateCaptureWarnBeforeDiscardUseCase : IUseCase<UpdateCaptureWarnBeforeDiscardRequest, UpdateCaptureWarnBeforeDiscardResponse>, IConditional<UpdateCaptureWarnBeforeDiscardRequest>
+{
+}

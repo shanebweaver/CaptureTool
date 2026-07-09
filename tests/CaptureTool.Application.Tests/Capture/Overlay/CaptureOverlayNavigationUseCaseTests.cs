@@ -1,11 +1,14 @@
+using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Overlay.CloseCaptureOverlay;
 using CaptureTool.Application.Abstractions.Capture.Overlay.GoBackFromCaptureOverlay;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenCaptureOverlay;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.StopVideoCapture;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCaptureDesktopAudio;
 using CaptureTool.Application.Abstractions.Capture.Video.ToggleVideoCapturePauseResume;
 using CaptureTool.Application.Abstractions.Navigation;
+using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Application.Capture.Audio;
@@ -13,6 +16,7 @@ using CaptureTool.Application.Capture.Overlay.CloseCaptureOverlay;
 using CaptureTool.Application.Capture.Overlay.GoBackFromCaptureOverlay;
 using CaptureTool.Application.Capture.Overlay.OpenCaptureOverlay;
 using CaptureTool.Application.Capture.Overlay.OpenSelectionOverlay;
+using CaptureTool.Application.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Capture.Video.StopVideoCapture;
 using CaptureTool.Application.Capture.Video.ToggleVideoCaptureDesktopAudio;
 using CaptureTool.Application.Capture.Video.ToggleVideoCapturePauseResume;
@@ -69,14 +73,88 @@ public sealed class CaptureOverlayNavigationUseCaseTests
     }
 
     [TestMethod]
+    public async Task CancelVideoCaptureUseCase_WhenCaptureWarningsDisabled_CancelsWithoutPrompt()
+    {
+        var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
+        var confirmationService = new Mock<ICaptureDiscardConfirmationService>();
+        ICancelVideoCaptureUseCase useCase = CreateCancelVideoCaptureUseCase(
+            videoCapture,
+            shouldWarnBeforeDiscard: false,
+            confirmationService: confirmationService.Object);
+
+        CancelVideoCaptureResponse response = (await useCase.ExecuteAsync(
+            new CancelVideoCaptureRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsTrue(response.Succeeded);
+        Assert.AreEqual(1, videoCapture.CancelCallCount);
+        confirmationService.Verify(
+            service => service.ConfirmDiscardActiveCaptureAsync(It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [TestMethod]
+    public async Task CancelVideoCaptureUseCase_WhenCaptureWarningsEnabledAndUserConfirms_Cancels()
+    {
+        var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
+        var confirmationService = new Mock<ICaptureDiscardConfirmationService>();
+        confirmationService
+            .Setup(service => service.ConfirmDiscardActiveCaptureAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        ICancelVideoCaptureUseCase useCase = CreateCancelVideoCaptureUseCase(
+            videoCapture,
+            shouldWarnBeforeDiscard: true,
+            confirmationService: confirmationService.Object);
+
+        CancelVideoCaptureResponse response = (await useCase.ExecuteAsync(
+            new CancelVideoCaptureRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsTrue(response.Succeeded);
+        Assert.AreEqual(1, videoCapture.CancelCallCount);
+        confirmationService.Verify(
+            service => service.ConfirmDiscardActiveCaptureAsync(TestContext.CancellationToken),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task CancelVideoCaptureUseCase_WhenCaptureWarningsEnabledAndUserDeclines_DoesNotCancel()
+    {
+        var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
+        var confirmationService = new Mock<ICaptureDiscardConfirmationService>();
+        confirmationService
+            .Setup(service => service.ConfirmDiscardActiveCaptureAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        ICancelVideoCaptureUseCase useCase = CreateCancelVideoCaptureUseCase(
+            videoCapture,
+            shouldWarnBeforeDiscard: true,
+            confirmationService: confirmationService.Object);
+
+        CancelVideoCaptureResponse response = (await useCase.ExecuteAsync(
+            new CancelVideoCaptureRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Succeeded);
+        Assert.AreEqual(0, videoCapture.CancelCallCount);
+        confirmationService.Verify(
+            service => service.ConfirmDiscardActiveCaptureAsync(TestContext.CancellationToken),
+            Times.Once);
+    }
+
+    [TestMethod]
     public async Task GoBackFromCaptureOverlayUseCase_WhenBackFails_NavigatesToSelectionOverlayAndReportsCancelResult()
     {
-        var videoCapture = new FakeVideoCaptureWorkflow();
+        var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
         var navigation = new Mock<INavigationService>();
         navigation.Setup(service => service.CanGoBack).Returns(true);
         navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
         navigation.Setup(service => service.TryGoBack()).Returns(false);
-        var useCase = new GoBackFromCaptureOverlayUseCase(videoCapture, navigation.Object, TestUseCaseExecutor.Instance);
+        ICancelVideoCaptureUseCase cancelUseCase = CreateCancelVideoCaptureUseCase(videoCapture, shouldWarnBeforeDiscard: false);
+        var useCase = new GoBackFromCaptureOverlayUseCase(
+            videoCapture,
+            cancelUseCase,
+            navigation.Object,
+            TestUseCaseExecutor.Instance);
 
         Assert.IsTrue(useCase.CanExecute(new GoBackFromCaptureOverlayRequest()));
         GoBackFromCaptureOverlayResponse response = (await useCase.ExecuteAsync(new GoBackFromCaptureOverlayRequest(), TestContext.CancellationToken)).Value!;
@@ -87,23 +165,67 @@ public sealed class CaptureOverlayNavigationUseCaseTests
     }
 
     [TestMethod]
-    public async Task GoBackFromCaptureOverlayUseCase_WhenCancelThrows_ReportsNotCanceled()
+    public async Task GoBackFromCaptureOverlayUseCase_WhenCancelFails_DoesNotNavigateBack()
     {
-        var videoCapture = new FakeVideoCaptureWorkflow { ThrowOnCancel = true };
+        var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
+        var cancelUseCase = new Mock<ICancelVideoCaptureUseCase>();
+        cancelUseCase
+            .Setup(useCase => useCase.ExecuteAsync(It.IsAny<CancelVideoCaptureRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<CancelVideoCaptureResponse>.Failure());
         var navigation = new Mock<INavigationService>();
         navigation.Setup(service => service.TryGoBack()).Returns(true);
-        var useCase = new GoBackFromCaptureOverlayUseCase(videoCapture, navigation.Object, TestUseCaseExecutor.Instance);
+        var useCase = new GoBackFromCaptureOverlayUseCase(
+            videoCapture,
+            cancelUseCase.Object,
+            navigation.Object,
+            TestUseCaseExecutor.Instance);
 
         GoBackFromCaptureOverlayResponse response = (await useCase.ExecuteAsync(new GoBackFromCaptureOverlayRequest(), TestContext.CancellationToken)).Value!;
 
         Assert.IsFalse(response.VideoCaptureCanceled);
+        navigation.Verify(service => service.TryGoBack(), Times.Never);
+        navigation.Verify(service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task GoBackFromCaptureOverlayUseCase_WhenRecordingAndUserDeclinesDiscard_DoesNotNavigateBack()
+    {
+        var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
+        var confirmationService = new Mock<ICaptureDiscardConfirmationService>();
+        confirmationService
+            .Setup(service => service.ConfirmDiscardActiveCaptureAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        ICancelVideoCaptureUseCase cancelUseCase = CreateCancelVideoCaptureUseCase(
+            videoCapture,
+            shouldWarnBeforeDiscard: true,
+            confirmationService: confirmationService.Object);
+        var navigation = new Mock<INavigationService>();
+        navigation.Setup(service => service.CanGoBack).Returns(true);
+        navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
+        navigation.Setup(service => service.TryGoBack()).Returns(true);
+        var useCase = new GoBackFromCaptureOverlayUseCase(
+            videoCapture,
+            cancelUseCase,
+            navigation.Object,
+            TestUseCaseExecutor.Instance);
+
+        Assert.IsTrue(useCase.CanExecute(new GoBackFromCaptureOverlayRequest()));
+        GoBackFromCaptureOverlayResponse response = (await useCase.ExecuteAsync(new GoBackFromCaptureOverlayRequest(), TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.VideoCaptureCanceled);
+        Assert.AreEqual(0, videoCapture.CancelCallCount);
+        confirmationService.Verify(
+            service => service.ConfirmDiscardActiveCaptureAsync(TestContext.CancellationToken),
+            Times.Once);
+        navigation.Verify(service => service.TryGoBack(), Times.Never);
         navigation.Verify(service => service.Navigate(It.IsAny<object>(), It.IsAny<object?>(), It.IsAny<bool>()), Times.Never);
     }
 
     [TestMethod]
     public async Task CloseCaptureOverlayUseCase_CancelsCaptureAndShowsMainWindow()
     {
-        var videoCapture = new FakeVideoCaptureWorkflow();
+        var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
+        ICancelVideoCaptureUseCase cancelUseCase = CreateCancelVideoCaptureUseCase(videoCapture, shouldWarnBeforeDiscard: false);
         var showMainWindow = new Mock<IShowMainWindowUseCase>();
         var navigation = new Mock<INavigationService>();
         navigation.Setup(service => service.CanGoBack).Returns(true);
@@ -111,7 +233,12 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         showMainWindow
             .Setup(useCase => useCase.ExecuteAsync(It.IsAny<ShowMainWindowRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UseCaseResponse<ShowMainWindowResponse>.Success(new ShowMainWindowResponse()));
-        var useCase = new CloseCaptureOverlayUseCase(videoCapture, showMainWindow.Object, navigation.Object, TestUseCaseExecutor.Instance);
+        var useCase = new CloseCaptureOverlayUseCase(
+            videoCapture,
+            cancelUseCase,
+            showMainWindow.Object,
+            navigation.Object,
+            TestUseCaseExecutor.Instance);
 
         Assert.IsTrue(useCase.CanExecute(new CloseCaptureOverlayRequest()));
         CloseCaptureOverlayResponse response = (await useCase.ExecuteAsync(new CloseCaptureOverlayRequest(), TestContext.CancellationToken)).Value!;
@@ -119,6 +246,42 @@ public sealed class CaptureOverlayNavigationUseCaseTests
         Assert.IsTrue(response.VideoCaptureCanceled);
         Assert.AreEqual(1, videoCapture.CancelCallCount);
         showMainWindow.Verify(useCase => useCase.ExecuteAsync(It.IsAny<ShowMainWindowRequest>(), TestContext.CancellationToken), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task CloseCaptureOverlayUseCase_WhenRecordingAndUserDeclinesDiscard_DoesNotShowMainWindow()
+    {
+        var videoCapture = new FakeVideoCaptureWorkflow { IsRecording = true };
+        var confirmationService = new Mock<ICaptureDiscardConfirmationService>();
+        confirmationService
+            .Setup(service => service.ConfirmDiscardActiveCaptureAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        ICancelVideoCaptureUseCase cancelUseCase = CreateCancelVideoCaptureUseCase(
+            videoCapture,
+            shouldWarnBeforeDiscard: true,
+            confirmationService: confirmationService.Object);
+        var showMainWindow = new Mock<IShowMainWindowUseCase>();
+        var navigation = new Mock<INavigationService>();
+        navigation.Setup(service => service.CanGoBack).Returns(true);
+        navigation.Setup(service => service.CurrentRequest).Returns(CreateNavigationRequest(NavigationRoute.CaptureOverlay));
+        var useCase = new CloseCaptureOverlayUseCase(
+            videoCapture,
+            cancelUseCase,
+            showMainWindow.Object,
+            navigation.Object,
+            TestUseCaseExecutor.Instance);
+
+        Assert.IsTrue(useCase.CanExecute(new CloseCaptureOverlayRequest()));
+        CloseCaptureOverlayResponse response = (await useCase.ExecuteAsync(new CloseCaptureOverlayRequest(), TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.VideoCaptureCanceled);
+        Assert.AreEqual(0, videoCapture.CancelCallCount);
+        confirmationService.Verify(
+            service => service.ConfirmDiscardActiveCaptureAsync(TestContext.CancellationToken),
+            Times.Once);
+        showMainWindow.Verify(
+            useCase => useCase.ExecuteAsync(It.IsAny<ShowMainWindowRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [TestMethod]
@@ -164,6 +327,23 @@ public sealed class CaptureOverlayNavigationUseCaseTests
 
     private static INavigationRequest CreateNavigationRequest(NavigationRoute route) =>
         new TestNavigationRequest(route);
+
+    private static ICancelVideoCaptureUseCase CreateCancelVideoCaptureUseCase(
+        FakeVideoCaptureWorkflow videoCapture,
+        bool shouldWarnBeforeDiscard,
+        ICaptureDiscardConfirmationService? confirmationService = null)
+    {
+        var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard))
+            .Returns(shouldWarnBeforeDiscard);
+
+        return new CancelVideoCaptureUseCase(
+            videoCapture,
+            confirmationService ?? Mock.Of<ICaptureDiscardConfirmationService>(),
+            settings.Object,
+            TestUseCaseExecutor.Instance);
+    }
 
     private static NewCaptureArgs CreateCaptureArgs()
     {

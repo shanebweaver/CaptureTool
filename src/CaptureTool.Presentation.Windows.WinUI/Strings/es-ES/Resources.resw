@@ -564,6 +564,30 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Guardar automáticamente los vídeos en la carpeta de vídeos después de capturarlos.</value>
   </data>
+  <data name="Settings_CaptureHeaderLabel.Text" xml:space="preserve">
+    <value>Protección de captura</value>
+    <comment>The header for capture protection settings on the settings page.</comment>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_HeaderLabel.Text" xml:space="preserve">
+    <value>Avisar antes de descartar capturas</value>
+    <comment>The header for the warning setting before discarding active captures.</comment>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
+    <value>Preguntar antes de cancelar una captura activa con datos de grabación sin guardar.</value>
+    <comment>The subtitle for the warning setting before discarding active captures.</comment>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
+    <value>Activado</value>
+    <comment>The label for the on state of the capture warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_Toggle.OffContent" xml:space="preserve">
+    <value>Desactivado</value>
+    <comment>The label for the off state of the capture warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Mostrar una confirmación antes de descartar una captura activa.</value>
+    <comment>The tooltip for the capture warning toggle switch on the settings page.</comment>
+  </data>
   <data name="Settings_EditHeaderLabel.Text" xml:space="preserve">
     <value>Protección de edición</value>
     <comment>The header for edit protection settings on the settings page.</comment>
@@ -573,7 +597,7 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
     <comment>The header for the warning setting before leaving dirty edit sessions.</comment>
   </data>
   <data name="Settings_EditWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
-    <value>Preguntar antes de salir o cerrar una sesión de edición de imagen o vídeo con cambios sin guardar.</value>
+    <value>Preguntar antes de salir o cerrar una sesión de edición con cambios sin guardar.</value>
     <comment>The subtitle for the warning setting before leaving dirty edit sessions.</comment>
   </data>
   <data name="Settings_EditWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
@@ -986,6 +1010,18 @@ SOFTWARE.
   <data name="CaptureOverlay_Timer.ToolTipService.ToolTip" xml:space="preserve">
     <value>Duración de la grabación</value>
   </data>
+  <data name="CaptureDiscardConfirmation_Title" xml:space="preserve">
+    <value>¿Descartar grabación?</value>
+  </data>
+  <data name="CaptureDiscardConfirmation_Content" xml:space="preserve">
+    <value>Esto detendrá la captura actual y eliminará la grabación sin guardar. Esta acción no se puede deshacer.</value>
+  </data>
+  <data name="CaptureDiscardConfirmation_DiscardButton" xml:space="preserve">
+    <value>Descartar grabación</value>
+  </data>
+  <data name="CaptureDiscardConfirmation_CancelButton" xml:space="preserve">
+    <value>Seguir grabando</value>
+  </data>
   <data name="SelectionOverlay_CaptureModeSegmentedControl.AutomationProperties.Name" xml:space="preserve">
     <value>Modo de captura</value>
   </data>
@@ -1108,6 +1144,15 @@ SOFTWARE.
   </data>
   <data name="AudioCapture_StopButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Detener grabación</value>
+  </data>
+  <data name="AudioCapture_CancelButton.Label" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="AudioCapture_CancelButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Cancelar grabación</value>
+  </data>
+  <data name="AudioCapture_CancelButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Cancelar y descartar grabación</value>
   </data>
   <data name="Settings_AudioCaptureHeaderLabel.Text" xml:space="preserve">
     <value>Captura de audio</value>

@@ -65,6 +65,14 @@
                 IsEnabled="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
                 Label="Stop" />
 
+            <!--  Cancel  -->
+            <AppBarButton
+                x:Uid="AudioCapture_CancelButton"
+                Command="{x:Bind ViewModel.CancelCommand}"
+                Icon="Cancel"
+                IsEnabled="{x:Bind ViewModel.IsRecording, Mode=OneWay}"
+                Label="Cancel" />
+
             <AppBarSeparator />
 
             <AppBarElementContainer>

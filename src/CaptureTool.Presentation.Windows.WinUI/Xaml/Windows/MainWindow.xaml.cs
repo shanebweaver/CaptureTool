@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Presentation.Shell;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
+using CaptureTool.Presentation.Windows.WinUI.Capture;
 using CaptureTool.Presentation.Windows.WinUI.Edit;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
@@ -31,6 +32,7 @@ public sealed partial class MainWindow : Window
     private readonly IEditSessionGuard _editSessionGuard;
     private readonly IShutdownHandler _shutdownHandler;
     private readonly WinUIAudioCaptureNavigationConfirmationService _audioCaptureNavigationConfirmationService;
+    private readonly WinUICaptureDiscardConfirmationService _captureDiscardConfirmationService;
     private readonly WinUIEditSessionConfirmationService _editSessionConfirmationService;
     private readonly ImageSuperResolutionPreparationConsentService _imageSuperResolutionPreparationConsentService;
     private readonly DispatcherQueueTimer _notificationTimer;
@@ -44,6 +46,7 @@ public sealed partial class MainWindow : Window
         _editSessionGuard = App.Current.ServiceProvider.GetService<IEditSessionGuard>();
         _shutdownHandler = App.Current.ServiceProvider.GetService<IShutdownHandler>();
         _audioCaptureNavigationConfirmationService = App.Current.ServiceProvider.GetService<WinUIAudioCaptureNavigationConfirmationService>();
+        _captureDiscardConfirmationService = App.Current.ServiceProvider.GetService<WinUICaptureDiscardConfirmationService>();
         _editSessionConfirmationService = App.Current.ServiceProvider.GetService<WinUIEditSessionConfirmationService>();
         _imageSuperResolutionPreparationConsentService = App.Current.ServiceProvider.GetService<ImageSuperResolutionPreparationConsentService>();
 
@@ -78,6 +81,7 @@ public sealed partial class MainWindow : Window
     {
         _editSessionConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _audioCaptureNavigationConfirmationService.XamlRoot = RootGrid.XamlRoot;
+        _captureDiscardConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _imageSuperResolutionPreparationConsentService.XamlRoot = RootGrid.XamlRoot;
     }
 

@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture.Overlay.CloseCaptureOverlay;
+using CaptureTool.Application.Abstractions.Capture.Video.CancelVideoCapture;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Windowing.ShowMainWindow;
 using CaptureTool.Application.Abstractions.UseCases;
@@ -13,16 +14,20 @@ internal sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
 
     private readonly IUseCaseExecutor _useCaseExecutor;
     private readonly IVideoCaptureWorkflow _videoCaptureWorkflow;
+    private readonly ICancelVideoCaptureUseCase _cancelVideoCaptureUseCase;
     private readonly IShowMainWindowUseCase _showMainWindow;
     private readonly INavigationService _navigationService;
 
-    public CloseCaptureOverlayUseCase(IVideoCaptureWorkflow videoCaptureWorkflow,
+    public CloseCaptureOverlayUseCase(
+        IVideoCaptureWorkflow videoCaptureWorkflow,
+        ICancelVideoCaptureUseCase cancelVideoCaptureUseCase,
         IShowMainWindowUseCase showMainWindow,
         INavigationService navigationService,
         IUseCaseExecutor useCaseExecutor)
     {
         _useCaseExecutor = useCaseExecutor;
         _videoCaptureWorkflow = videoCaptureWorkflow;
+        _cancelVideoCaptureUseCase = cancelVideoCaptureUseCase;
         _showMainWindow = showMainWindow;
         _navigationService = navigationService;
     }
@@ -39,27 +44,34 @@ internal sealed class CloseCaptureOverlayUseCase : ICloseCaptureOverlayUseCase
     {
         return _useCaseExecutor.ExecuteAsync(
             activityId: ActivityId,
-            useCase: async _ =>
+            useCase: async token =>
             {
-                bool videoCaptureCanceled = TryCancelVideoCapture();
+                CaptureOverlayDiscardResult discardResult = await TryDiscardActiveVideoCaptureAsync(token);
+                if (!discardResult.CanContinue)
+                {
+                    return new CloseCaptureOverlayResponse(false);
+                }
 
                 await _showMainWindow.ExecuteAsync(new ShowMainWindowRequest(), cancellationToken);
 
-                return new CloseCaptureOverlayResponse(videoCaptureCanceled);
+                return new CloseCaptureOverlayResponse(discardResult.VideoCaptureCanceled);
             },
             cancellationToken: cancellationToken);
     }
 
-    private bool TryCancelVideoCapture()
+    private async Task<CaptureOverlayDiscardResult> TryDiscardActiveVideoCaptureAsync(CancellationToken cancellationToken)
     {
-        try
+        if (!_videoCaptureWorkflow.IsRecording)
         {
-            _videoCaptureWorkflow.CancelVideoCapture();
-            return true;
+            return new(CanContinue: true, VideoCaptureCanceled: false);
         }
-        catch (Exception)
-        {
-            return false;
-        }
+
+        UseCaseResponse<CancelVideoCaptureResponse> response =
+            await _cancelVideoCaptureUseCase.ExecuteAsync(new CancelVideoCaptureRequest(), cancellationToken);
+
+        bool canceled = response.Value?.Succeeded == true;
+        return new(CanContinue: canceled, VideoCaptureCanceled: canceled);
     }
+
+    private readonly record struct CaptureOverlayDiscardResult(bool CanContinue, bool VideoCaptureCanceled);
 }

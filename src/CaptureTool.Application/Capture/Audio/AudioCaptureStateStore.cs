@@ -62,6 +62,16 @@ internal sealed class AudioCaptureStateStore
         }
     }
 
+    public AudioCaptureSession? GetCancelableSession()
+    {
+        lock (_lock)
+        {
+            return _activeSession?.IsRecording == true
+                ? _activeSession
+                : null;
+        }
+    }
+
     public void StopSession(Guid sessionId)
     {
         lock (_lock)

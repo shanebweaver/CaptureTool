@@ -576,6 +576,24 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>Videos nach der Aufnahme automatisch im Videoordner speichern.</value>
   </data>
+  <data name="Settings_CaptureHeaderLabel.Text" xml:space="preserve">
+    <value>Aufnahmeschutz</value>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_HeaderLabel.Text" xml:space="preserve">
+    <value>Vor dem Verwerfen von Aufnahmen warnen</value>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
+    <value>Vor dem Abbrechen einer aktiven Aufnahme mit ungespeicherten Aufnahmedaten nachfragen.</value>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
+    <value>Ein</value>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_Toggle.OffContent" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Vor dem Verwerfen einer aktiven Aufnahme eine Bestätigung anzeigen.</value>
+  </data>
   <data name="Settings_EditHeaderLabel.Text" xml:space="preserve">
     <value>Bearbeitungsschutz</value>
     <comment>The header for edit protection settings on the settings page.</comment>
@@ -585,7 +603,7 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
     <comment>The header for the warning setting before leaving dirty edit sessions.</comment>
   </data>
   <data name="Settings_EditWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
-    <value>Vor dem Verlassen oder Schließen einer Bild- oder Videobearbeitung mit ungespeicherten Änderungen nachfragen.</value>
+    <value>Vor dem Verlassen oder Schließen einer Bearbeitungssitzung mit ungespeicherten Änderungen nachfragen.</value>
     <comment>The subtitle for the warning setting before leaving dirty edit sessions.</comment>
   </data>
   <data name="Settings_EditWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
@@ -1046,6 +1064,18 @@ SOFTWARE.
   <data name="AudioCaptureNavigationConfirmation_CancelButton" xml:space="preserve">
     <value>Weiter aufnehmen</value>
   </data>
+  <data name="CaptureDiscardConfirmation_Title" xml:space="preserve">
+    <value>Aufnahme verwerfen?</value>
+  </data>
+  <data name="CaptureDiscardConfirmation_Content" xml:space="preserve">
+    <value>Dadurch wird die aktuelle Aufnahme gestoppt und die ungespeicherte Aufzeichnung gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.</value>
+  </data>
+  <data name="CaptureDiscardConfirmation_DiscardButton" xml:space="preserve">
+    <value>Aufnahme verwerfen</value>
+  </data>
+  <data name="CaptureDiscardConfirmation_CancelButton" xml:space="preserve">
+    <value>Weiter aufnehmen</value>
+  </data>
   <data name="SelectionOverlay_CaptureModeSegmentedControl.AutomationProperties.Name" xml:space="preserve">
     <value>Aufnahmemodus</value>
   </data>
@@ -1108,6 +1138,15 @@ SOFTWARE.
   </data>
   <data name="AudioCapture_StopButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Aufnahme stoppen</value>
+  </data>
+  <data name="AudioCapture_CancelButton.Label" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="AudioCapture_CancelButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Aufnahme abbrechen</value>
+  </data>
+  <data name="AudioCapture_CancelButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Aufnahme abbrechen und verwerfen</value>
   </data>
   <data name="Settings_AudioCaptureHeaderLabel.Text" xml:space="preserve">
     <value>Audioaufnahme</value>

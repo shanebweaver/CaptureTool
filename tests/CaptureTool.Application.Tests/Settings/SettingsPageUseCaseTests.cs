@@ -15,6 +15,7 @@ using CaptureTool.Application.Abstractions.Settings.UpdateAudioCaptureAutoCopy;
 using CaptureTool.Application.Abstractions.Settings.UpdateAudioCaptureAutoSave;
 using CaptureTool.Application.Abstractions.Settings.UpdateAudioCaptureDefaultLocalAudio;
 using CaptureTool.Application.Abstractions.Settings.UpdateAppLanguage;
+using CaptureTool.Application.Abstractions.Settings.UpdateCaptureWarnBeforeDiscard;
 using CaptureTool.Application.Abstractions.Settings.UpdateImageAutoCopy;
 using CaptureTool.Application.Abstractions.Settings.UpdateImageAutoSave;
 using CaptureTool.Application.Abstractions.Settings.UpdateVideoCaptureAutoCopy;
@@ -40,6 +41,7 @@ using CaptureTool.Application.Settings.UpdateAudioCaptureAutoCopy;
 using CaptureTool.Application.Settings.UpdateAudioCaptureAutoSave;
 using CaptureTool.Application.Settings.UpdateAudioCaptureDefaultLocalAudio;
 using CaptureTool.Application.Settings.UpdateAppLanguage;
+using CaptureTool.Application.Settings.UpdateCaptureWarnBeforeDiscard;
 using CaptureTool.Application.Settings.UpdateImageAutoCopy;
 using CaptureTool.Application.Settings.UpdateImageAutoSave;
 using CaptureTool.Application.Settings.UpdateVideoCaptureAutoCopy;
@@ -267,6 +269,8 @@ public sealed class SettingsPageUseCaseTests
             .ExecuteAsync(new UpdateAudioCaptureAutoSaveRequest(true), TestContext.CancellationToken);
         await new UpdateAudioCaptureDefaultLocalAudioUseCase(settings.Object, TestUseCaseExecutor.Instance)
             .ExecuteAsync(new UpdateAudioCaptureDefaultLocalAudioRequest(false), TestContext.CancellationToken);
+        await new UpdateCaptureWarnBeforeDiscardUseCase(settings.Object, TestUseCaseExecutor.Instance)
+            .ExecuteAsync(new UpdateCaptureWarnBeforeDiscardRequest(false), TestContext.CancellationToken);
 
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_ImageCapture_AutoCopy, false), Times.Once);
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_ImageCapture_AutoSave, true), Times.Once);
@@ -276,7 +280,8 @@ public sealed class SettingsPageUseCaseTests
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_AudioCapture_AutoCopy, false), Times.Once);
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_AudioCapture_AutoSave, true), Times.Once);
         settings.Verify(service => service.Set(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled, false), Times.Once);
-        settings.Verify(service => service.TrySaveAsync(TestContext.CancellationToken), Times.Exactly(8));
+        settings.Verify(service => service.Set(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard, false), Times.Once);
+        settings.Verify(service => service.TrySaveAsync(TestContext.CancellationToken), Times.Exactly(9));
     }
 
     private static string CreateTestFolder()

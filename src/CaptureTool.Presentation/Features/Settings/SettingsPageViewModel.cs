@@ -11,6 +11,7 @@ using CaptureTool.Application.Abstractions.Settings.RestartSettingsApplication;
 using CaptureTool.Application.Abstractions.Settings.RestoreDefaults;
 using CaptureTool.Application.Abstractions.Settings.UpdateAppLanguage;
 using CaptureTool.Application.Abstractions.Settings.UpdateAppTheme;
+using CaptureTool.Application.Abstractions.Settings.UpdateCaptureWarnBeforeDiscard;
 using CaptureTool.Application.Abstractions.Settings.UpdateEditWarnBeforeDiscard;
 using CaptureTool.Application.Abstractions.Settings.UpdateImageAutoCopy;
 using CaptureTool.Application.Abstractions.Settings.UpdateImageAutoSave;
@@ -43,6 +44,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     private readonly IUpdateVideoCaptureAutoCopyUseCase _updateVideoCaptureAutoCopyAction;
     private readonly IUpdateVideoCaptureAutoSaveUseCase _updateVideoCaptureAutoSaveAction;
     private readonly IUpdateVideoCaptureDefaultLocalAudioUseCase _updateVideoCaptureDefaultLocalAudioAction;
+    private readonly IUpdateCaptureWarnBeforeDiscardUseCase _updateCaptureWarnBeforeDiscardAction;
     private readonly IUpdateEditWarnBeforeDiscardUseCase _updateEditWarnBeforeDiscardAction;
     private readonly IUpdateAppLanguageUseCase _updateAppLanguageAction;
     private readonly IUpdateAppThemeUseCase _updateAppThemeAction;
@@ -84,6 +86,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
     public IAsyncRelayCommand<bool> UpdateVideoCaptureAutoCopyCommand { get; }
     public IAsyncRelayCommand<bool> UpdateVideoCaptureAutoSaveCommand { get; }
     public IAsyncRelayCommand<bool> UpdateVideoCaptureDefaultLocalAudioCommand { get; }
+    public IAsyncRelayCommand<bool> UpdateCaptureWarnBeforeDiscardCommand { get; }
     public IAsyncRelayCommand<bool> UpdateEditWarnBeforeDiscardCommand { get; }
     public IAsyncRelayCommand<int> UpdateAppLanguageCommand { get; }
     public IAsyncRelayCommand<int> UpdateAppThemeCommand { get; }
@@ -181,6 +184,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         private set => Set(ref field, value);
     }
 
+    public bool CaptureWarnBeforeDiscard
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public string ScreenshotsFolderPath
     {
         get;
@@ -216,6 +225,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         IUpdateVideoCaptureAutoCopyUseCase updateVideoCaptureAutoCopyAction,
         IUpdateVideoCaptureAutoSaveUseCase updateVideoCaptureAutoSaveAction,
         IUpdateVideoCaptureDefaultLocalAudioUseCase updateVideoCaptureDefaultLocalAudioAction,
+        IUpdateCaptureWarnBeforeDiscardUseCase updateCaptureWarnBeforeDiscardAction,
         IUpdateEditWarnBeforeDiscardUseCase updateEditWarnBeforeDiscardAction,
         IUpdateAppLanguageUseCase updateAppLanguageAction,
         IUpdateAppThemeUseCase updateAppThemeAction,
@@ -245,6 +255,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         _updateVideoCaptureAutoCopyAction = updateVideoCaptureAutoCopyAction;
         _updateVideoCaptureAutoSaveAction = updateVideoCaptureAutoSaveAction;
         _updateVideoCaptureDefaultLocalAudioAction = updateVideoCaptureDefaultLocalAudioAction;
+        _updateCaptureWarnBeforeDiscardAction = updateCaptureWarnBeforeDiscardAction;
         _updateEditWarnBeforeDiscardAction = updateEditWarnBeforeDiscardAction;
         _updateAppLanguageAction = updateAppLanguageAction;
         _updateAppThemeAction = updateAppThemeAction;
@@ -287,6 +298,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         UpdateVideoCaptureAutoCopyCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureAutoCopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateVideoCaptureAutoSaveCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureAutoSaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateVideoCaptureDefaultLocalAudioCommand = new AsyncRelayCommand<bool>(UpdateVideoCaptureDefaultLocalAudioAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        UpdateCaptureWarnBeforeDiscardCommand = new AsyncRelayCommand<bool>(UpdateCaptureWarnBeforeDiscardAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateEditWarnBeforeDiscardCommand = new AsyncRelayCommand<bool>(UpdateEditWarnBeforeDiscardAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateAppLanguageCommand = new AsyncRelayCommand<int>(UpdateAppLanguageAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateAppThemeCommand = new AsyncRelayCommand<int>(UpdateAppThemeAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
@@ -359,6 +371,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         AudioCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoCopy);
         AudioCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoSave);
         AudioCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
+        CaptureWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);
@@ -501,6 +514,12 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         await _updateEditWarnBeforeDiscardAction.ExecuteAsync(new UpdateEditWarnBeforeDiscardRequest(value), CancellationToken.None);
     }
 
+    private async Task UpdateCaptureWarnBeforeDiscardAsync(bool value)
+    {
+        CaptureWarnBeforeDiscard = value;
+        await _updateCaptureWarnBeforeDiscardAction.ExecuteAsync(new UpdateCaptureWarnBeforeDiscardRequest(value), CancellationToken.None);
+    }
+
     private async Task ChangeScreenshotsFolderAsync()
     {
         var response = await _changeScreenshotsFolderAction.ExecuteAsync(new ChangeScreenshotsFolderRequest(), CancellationToken.None);
@@ -597,6 +616,7 @@ public sealed partial class SettingsPageViewModel : AsyncLoadableViewModelBase
         AudioCaptureAutoCopy = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoCopy);
         AudioCaptureAutoSave = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_AutoSave);
         AudioCaptureDefaultLocalAudio = _settingsService.Get(CaptureToolSettings.Settings_AudioCapture_DefaultLocalAudioEnabled);
+        CaptureWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard);
         EditWarnBeforeDiscard = _settingsService.Get(CaptureToolSettings.Settings_Edit_WarnBeforeDiscard);
 
         var screenshotsFolder = _settingsService.Get(CaptureToolSettings.Settings_ImageCapture_AutoSaveFolder);

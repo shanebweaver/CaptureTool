@@ -116,6 +116,30 @@ public sealed class AudioCaptureWorkflowTests
     }
 
     [TestMethod]
+    public void CancelCapture_WhenRecording_StopsRecorderDeletesTempFileAndDoesNotRaiseCapturedEvent()
+    {
+        var recorder = new Mock<IAudioRecorder>();
+        var audioFile = new AudioFile(@"C:\Temp\CaptureTool_AudioCapture_2026-01-02_030405.wav");
+        recorder.Setup(service => service.StopCapture()).Returns(audioFile);
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(service => service.FileExists(audioFile.FilePath)).Returns(true);
+        AudioCaptureWorkflow workflow = CreateWorkflow(recorder, fileSystem: fileSystem);
+        AudioFile? raisedFile = null;
+        AudioCaptureState? raisedState = null;
+        workflow.NewAudioCaptured += (_, file) => raisedFile = file;
+        workflow.CaptureStateChanged += (_, state) => raisedState = state;
+        workflow.StartCapture();
+
+        workflow.CancelCapture();
+
+        workflow.CaptureState.Should().Be(AudioCaptureState.Stopped);
+        raisedState.Should().Be(AudioCaptureState.Stopped);
+        raisedFile.Should().BeNull();
+        recorder.Verify(service => service.StopCapture(), Times.Once);
+        fileSystem.Verify(service => service.DeleteFile(audioFile.FilePath), Times.Once);
+    }
+
+    [TestMethod]
     public async Task StopCapture_WhenAutoSaveAndCopyEnabled_PostProcessesCompletedAudio()
     {
         var recorder = new Mock<IAudioRecorder>();
@@ -247,6 +271,7 @@ public sealed class AudioCaptureWorkflowTests
 
         return new AudioCaptureWorkflow(
             recorder.Object,
+            fileSystem?.Object ?? Mock.Of<IFileSystem>(),
             settings.Object,
             storage.Object,
             new AudioCaptureStateStore(),
