@@ -12,6 +12,9 @@ namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Views;
 
 public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
 {
+    private const double CaptureDiscardDialogHostWidth = 560;
+    private const double CaptureDiscardDialogHostHeight = 300;
+
     private readonly MonitorCaptureResult _monitor;
     private readonly System.Drawing.Rectangle _area;
     private readonly WinUICaptureDiscardConfirmationService _captureDiscardConfirmationService;
@@ -39,7 +42,7 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _captureDiscardConfirmationService.XamlRoot = RootPanel.XamlRoot;
-        _captureDiscardConfirmationService.DialogHostBounds = _monitor.MonitorBounds;
+        _captureDiscardConfirmationService.DialogHostBounds = CreateCenteredDialogHostBounds(_monitor);
         ViewModel.Load(new CaptureOverlayViewModelOptions(_monitor, _area));
     }
 
@@ -70,6 +73,17 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
             _shadow = null;
         }
         catch { }
+    }
+
+    private static System.Drawing.Rectangle CreateCenteredDialogHostBounds(MonitorCaptureResult monitor)
+    {
+        System.Drawing.Rectangle monitorBounds = monitor.MonitorBounds;
+        int width = (int)Math.Min(monitorBounds.Width, CaptureDiscardDialogHostWidth * monitor.Scale);
+        int height = (int)Math.Min(monitorBounds.Height, CaptureDiscardDialogHostHeight * monitor.Scale);
+        int x = monitorBounds.X + (monitorBounds.Width - width) / 2;
+        int y = monitorBounds.Y + (monitorBounds.Height - height) / 2;
+
+        return new System.Drawing.Rectangle(x, y, width, height);
     }
 
     private void AddToolbarShadow()

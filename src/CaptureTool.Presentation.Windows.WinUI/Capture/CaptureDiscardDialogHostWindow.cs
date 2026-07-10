@@ -11,7 +11,7 @@ internal sealed class CaptureDiscardDialogHostWindow : Window
     private const double HostWidth = 560;
     private const double HostHeight = 280;
 
-    private readonly Rectangle? _hostBounds;
+    private readonly Rectangle? _windowBounds;
 
     private readonly Grid _root = new()
     {
@@ -20,9 +20,9 @@ internal sealed class CaptureDiscardDialogHostWindow : Window
 
     private readonly TaskCompletionSource _loadedCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    public CaptureDiscardDialogHostWindow(Rectangle? hostBounds = null)
+    public CaptureDiscardDialogHostWindow(Rectangle? windowBounds = null)
     {
-        _hostBounds = hostBounds;
+        _windowBounds = windowBounds;
         Content = _root;
         _root.Loaded += Root_Loaded;
     }
@@ -52,9 +52,9 @@ internal sealed class CaptureDiscardDialogHostWindow : Window
         this.MakeBorderlessToolWindow();
         this.ExcludeFromScreenCapture();
 
-        if (_hostBounds is { } hostBounds)
+        if (_windowBounds is { } windowBounds)
         {
-            this.MoveAndResize(hostBounds);
+            this.MoveAndResize(windowBounds);
         }
         else
         {
