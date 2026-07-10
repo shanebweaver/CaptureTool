@@ -1,5 +1,5 @@
+using CommunityToolkit.Mvvm.Input;
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
@@ -102,8 +102,8 @@ internal sealed class WinUICaptureDiscardConfirmationService : ICaptureDiscardCo
             Message = content,
             ConfirmButtonText = discardButtonText,
             CancelButtonText = cancelButtonText,
-            ConfirmCommand = new ActionCommand(() => Complete(true)),
-            CancelCommand = new ActionCommand(() => Complete(false))
+            ConfirmCommand = new RelayCommand(() => Complete(true)),
+            CancelCommand = new RelayCommand(() => Complete(false))
         };
         root.Children.Add(card);
 

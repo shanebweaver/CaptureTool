@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Input;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI;
@@ -144,8 +145,8 @@ internal sealed class CaptureDiscardConfirmationOverlayHost : IDisposable
             Message = content,
             ConfirmButtonText = discardButtonText,
             CancelButtonText = cancelButtonText,
-            ConfirmCommand = new ActionCommand(() => Complete(true)),
-            CancelCommand = new ActionCommand(() => Complete(false))
+            ConfirmCommand = new RelayCommand(() => Complete(true)),
+            CancelCommand = new RelayCommand(() => Complete(false))
         };
     }
 
