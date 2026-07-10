@@ -42,7 +42,9 @@
                 <canvasui:CanvasControl
                     x:Name="RenderCanvas"
                     CreateResources="CanvasControl_CreateResources"
-                    Draw="CanvasControl_Draw" />
+                    Draw="CanvasControl_Draw"
+                    PointerEntered="RenderCanvas_PointerEntered"
+                    PointerExited="RenderCanvas_PointerExited" />
 
                 <local:CropOverlay
                     x:Name="CropOverlay"
@@ -126,6 +128,26 @@
                     ResizeComplete="ShapeResizeOverlay_ResizeComplete"
                     ResizeStarted="ShapeResizeOverlay_ResizeStarted"
                     Visibility="Collapsed" />
+
+                <Canvas
+                    x:Name="ColorPickerCursorCanvas"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    IsHitTestVisible="False"
+                    Visibility="Collapsed">
+                    <Border
+                        x:Name="ColorPickerCursorVisual"
+                        Width="26"
+                        Height="26"
+                        Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}"
+                        BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                        BorderThickness="1"
+                        CornerRadius="13">
+                        <FontIcon
+                            FontSize="14"
+                            Glyph="{StaticResource Color}" />
+                    </Border>
+                </Canvas>
             </Grid>
         </ScrollView>
     </Grid>

@@ -22,6 +22,20 @@ public sealed class AppNotificationServiceTests
     }
 
     [TestMethod]
+    public void ShowInfo_ShouldPushInfoNotification()
+    {
+        var service = new AppNotificationService();
+
+        service.ShowInfo("Saved");
+
+        service.HasNotification.Should().BeTrue();
+        service.NotificationCount.Should().Be(1);
+        service.CurrentNotification.Should().NotBeNull();
+        service.CurrentNotification!.Kind.Should().Be(AppNotificationKind.Info);
+        service.CurrentNotification.Message.Should().Be("Saved");
+    }
+
+    [TestMethod]
     public void DismissCurrent_ShouldPopCurrentErrorAndRevealNext()
     {
         var service = new AppNotificationService();

@@ -102,6 +102,7 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         SetToolbarHostState(ChromaKeyToolbarHost, ViewModel.IsChromaKeyModeActive);
         SetToolbarHostState(ShapeToolbarHost, ViewModel.IsShapesModeActive);
         SetToolbarHostState(TextToolbarHost, ViewModel.IsTextModeActive);
+        SetToolbarHostState(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -116,6 +117,9 @@ public sealed partial class ImageEditPage : ImageEditPageBase
                 break;
             case nameof(ViewModel.IsTextModeActive):
                 AnimateToolbarHost(TextToolbarHost, ViewModel.IsTextModeActive);
+                break;
+            case nameof(ViewModel.IsColorPickerModeActive):
+                AnimateToolbarHost(ColorPickerToolbarHost, ViewModel.IsColorPickerModeActive);
                 break;
         }
     }
@@ -390,6 +394,16 @@ public sealed partial class ImageEditPage : ImageEditPageBase
         ViewModel.TextTool.ApplyDrawable(e);
     }
 
+    private void ImageCanvas_ColorPickerColorHovered(object? _, Color color)
+    {
+        ViewModel.OnColorPickerColorHovered(color);
+    }
+
+    private async void ImageCanvas_ColorPickerColorPicked(object? _, Color color)
+    {
+        await ViewModel.OnColorPickerColorPickedAsync(color);
+    }
+
     private void ImageCanvas_ImageContextMenuRequested(object? _, Point position)
     {
         UpdateImageContextMenuState();
@@ -506,6 +520,11 @@ public sealed partial class ImageEditPage : ImageEditPageBase
     private void TextToolbar_FontSizeChanged(object _, int e)
     {
         ViewModel.TextTool.UpdateTextFontSizeCommand.Execute(e);
+    }
+
+    private void ColorPickerToolbar_SelectedColorTypeIndexChanged(object _, int e)
+    {
+        ViewModel.ColorPickerTool.UpdateSelectedColorTypeIndexCommand.Execute(e);
     }
 
     private async void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)

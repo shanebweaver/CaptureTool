@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
@@ -239,6 +240,8 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
             .Setup(x => x.IsChromaKeyEnabled)
             .Returns(false);
 
+        IAppNotificationService notificationService = notifications ?? Mock.Of<IAppNotificationService>();
+
         return new ImageEditPageViewModel(
             localizationService ?? CreateLocalizationService(),
             cancellationService.Object,
@@ -254,7 +257,10 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
             Mock.Of<IStorageService>(),
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),
-            notifications ?? Mock.Of<IAppNotificationService>(),
+            notificationService,
+            new ColorPickerToolViewModel(
+                Mock.Of<IClipboardService>(),
+                notificationService),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, Mock.Of<IChromaKeyService>()),
             new ShapeToolViewModel(),
             new TextToolViewModel());

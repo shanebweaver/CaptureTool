@@ -12,5 +12,7 @@ public interface IAppNotificationService : INotifyPropertyChanged
 
     void ShowError(string message);
 
+    void ShowInfo(string message);
+
     void DismissCurrent();
 }

@@ -33,6 +33,10 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public string NotificationMessage => CurrentNotification?.Message ?? string.Empty;
 
+    public bool IsCurrentNotificationError => CurrentNotification?.Kind == AppNotificationKind.Error;
+
+    public bool IsCurrentNotificationInfo => CurrentNotification?.Kind == AppNotificationKind.Info;
+
     private INavigationRequest? _currentRequest;
     private bool _disposed;
 
@@ -63,6 +67,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             RaisePropertyChanged(nameof(CurrentNotification));
             RaisePropertyChanged(nameof(HasNotification));
             RaisePropertyChanged(nameof(NotificationMessage));
+            RaisePropertyChanged(nameof(IsCurrentNotificationError));
+            RaisePropertyChanged(nameof(IsCurrentNotificationInfo));
         }
     }
 

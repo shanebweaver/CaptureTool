@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
@@ -36,6 +37,7 @@ public sealed class ImageEditPageViewModelShareTests
         var shareService = new Mock<IShareService>();
         var externalEditor = Mock.Of<IOpenExternalEditorUseCase>();
         var storage = Mock.Of<IStorageService>();
+        var notifications = Mock.Of<IAppNotificationService>();
 
         using var renderedStream = new MemoryStream([1, 2, 3]);
         using var linkedCts = new CancellationTokenSource();
@@ -80,7 +82,10 @@ public sealed class ImageEditPageViewModelShareTests
             storage,
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),
-            Mock.Of<IAppNotificationService>(),
+            notifications,
+            new ColorPickerToolViewModel(
+                Mock.Of<IClipboardService>(),
+                notifications),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, chromaKeyService),
             new ShapeToolViewModel(),
             new TextToolViewModel());
@@ -116,6 +121,7 @@ public sealed class ImageEditPageViewModelShareTests
         var shareService = Mock.Of<IShareService>();
         var externalEditor = new Mock<IOpenExternalEditorUseCase>();
         var storage = new Mock<IStorageService>();
+        var notifications = Mock.Of<IAppNotificationService>();
 
         using var linkedCts = new CancellationTokenSource();
         var imageFile = new ImageFile("test.png");
@@ -155,7 +161,10 @@ public sealed class ImageEditPageViewModelShareTests
             storage.Object,
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),
-            Mock.Of<IAppNotificationService>(),
+            notifications,
+            new ColorPickerToolViewModel(
+                Mock.Of<IClipboardService>(),
+                notifications),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, chromaKeyService),
             new ShapeToolViewModel(),
             new TextToolViewModel());

@@ -71,11 +71,14 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IRelayCommand<Rectangle> UpdateCropRectCommand { get; }
     public IRelayCommand<bool> SetChromaKeyModeActiveCommand { get; }
     public IRelayCommand ToggleTextModeCommand { get; }
+    public IRelayCommand ToggleColorPickerModeCommand { get; }
     public IRelayCommand<int> UpdateZoomPercentageCommand { get; }
     public IRelayCommand<bool> UpdateAutoZoomLockCommand { get; }
     public IRelayCommand ZoomAndCenterCommand { get; }
 
     public ChromaKeyToolViewModel ChromaKeyTool { get; }
+
+    public ColorPickerToolViewModel ColorPickerTool { get; }
 
     public ShapeToolViewModel ShapeTool { get; }
 
@@ -154,6 +157,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     }
 
     public bool IsChromaKeyModeActive
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    public bool IsColorPickerModeActive
     {
         get;
         private set => Set(ref field, value);
@@ -255,6 +264,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ISettingsService settingsService,
         ILogService logService,
         IAppNotificationService notificationService,
+        ColorPickerToolViewModel colorPickerTool,
         ChromaKeyToolViewModel chromaKeyTool,
         ShapeToolViewModel shapeTool,
         TextToolViewModel textTool)
@@ -276,6 +286,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _notificationService = notificationService;
 
         ChromaKeyTool = chromaKeyTool;
+        ColorPickerTool = colorPickerTool;
         ShapeTool = shapeTool;
         TextTool = textTool;
         ChromaKeyTool.SettingsChanged += ChromaKeyTool_SettingsChanged;
@@ -313,6 +324,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
         SetChromaKeyModeActiveCommand = new RelayCommand<bool>(SetChromaKeyModeActive);
         ToggleTextModeCommand = new RelayCommand(ToggleTextMode);
+        ToggleColorPickerModeCommand = new RelayCommand(ToggleColorPickerMode);
         UpdateZoomPercentageCommand = new RelayCommand<int>(UpdateZoomPercentage);
         UpdateAutoZoomLockCommand = new RelayCommand<bool>(UpdateAutoZoomLock);
         ZoomAndCenterCommand = new RelayCommand(RequestZoomAndCenter);
@@ -387,6 +399,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         SyncImageGeometryFromSession();
         SyncDrawablesFromSession();
         ChromaKeyTool.Reset();
+        ColorPickerTool.Reset();
         UpdateUndoRedoStackProperties();
         base.Dispose();
     }
@@ -435,12 +448,18 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ApplyActiveMode(_modeStateMachine.Toggle(ImageEditMode.Text));
     }
 
+    private void ToggleColorPickerMode()
+    {
+        ApplyActiveMode(_modeStateMachine.Toggle(ImageEditMode.ColorPicker));
+    }
+
     private void ApplyActiveMode(ImageEditMode mode)
     {
         IsCropModeActive = mode == ImageEditMode.Crop;
         IsShapesModeActive = mode == ImageEditMode.Shapes;
         IsTextModeActive = mode == ImageEditMode.Text;
         IsChromaKeyModeActive = mode == ImageEditMode.ChromaKey;
+        IsColorPickerModeActive = mode == ImageEditMode.ColorPicker;
     }
 
     private void ApplyImageSizeBasedDefaults(Size imageSize)
@@ -477,6 +496,27 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         {
             ExecuteEditCommand(new AddDrawableCommand(newText));
         }
+    }
+
+    public void OnColorPickerColorHovered(Color color)
+    {
+        if (!IsColorPickerModeActive)
+        {
+            return;
+        }
+
+        ColorPickerTool.UpdatePickedColorCommand.Execute(color);
+    }
+
+    public async Task OnColorPickerColorPickedAsync(Color color)
+    {
+        if (!IsColorPickerModeActive)
+        {
+            return;
+        }
+
+        ColorPickerTool.UpdatePickedColorCommand.Execute(color);
+        await ColorPickerTool.CopyPickedColorCommand.ExecuteAsync(null);
     }
 
     public void OnShapeDeleted(int shapeIndex)

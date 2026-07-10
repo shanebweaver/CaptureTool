@@ -80,10 +80,18 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <Border
-                        Width="4"
-                        Background="{ThemeResource SystemFillColorCriticalBrush}"
-                        CornerRadius="8,0,0,8" />
+                    <Grid>
+                        <Border
+                            Width="4"
+                            Background="{ThemeResource SystemFillColorCriticalBrush}"
+                            CornerRadius="8,0,0,8"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsCurrentNotificationError), Mode=OneWay}" />
+                        <Border
+                            Width="4"
+                            Background="{ThemeResource AccentFillColorDefaultBrush}"
+                            CornerRadius="8,0,0,8"
+                            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsCurrentNotificationInfo), Mode=OneWay}" />
+                    </Grid>
 
                     <TextBlock
                         Grid.Column="1"

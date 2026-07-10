@@ -277,6 +277,10 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Text</value>
     <comment>The label for the text button on the image edit page.</comment>
   </data>
+  <data name="ImageEdit_ColorPickerButton.Label" xml:space="preserve">
+    <value>Color picker</value>
+    <comment>The label for the color picker button on the image edit page.</comment>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Print</value>
     <comment>The label for the print button on the image edit page.</comment>
@@ -300,6 +304,10 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
     <value>T</value>
     <comment>The access key for the text button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_ColorPickerButton.AccessKey" xml:space="preserve">
+    <value>K</value>
+    <comment>The access key for the color picker button on the image edit page.</comment>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -448,6 +456,10 @@ By using this application, you acknowledge that you are responsible for managing
   <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Draw text</value>
     <comment>The tooltip for the text button on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_ColorPickerButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pick a color from the image</value>
+    <comment>The tooltip for the color picker button on the image edit page.</comment>
   </data>
   <data name="ShapeTypeComboBox.Header" xml:space="preserve">
     <value>Shape Type</value>
@@ -1163,6 +1175,18 @@ SOFTWARE.
     <value>Choose fill color and opacity</value>
     <comment />
     <comment>The tooltip for the fill color picker button in the shape toolbar.</comment>
+  </data>
+  <data name="ColorPickerToolbar_ColorTypeComboBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Color format</value>
+    <comment>The accessibility name for the color format selector in the color picker toolbar.</comment>
+  </data>
+  <data name="ColorPickerToolbar_ColorTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose color format</value>
+    <comment>The tooltip for the color format selector in the color picker toolbar.</comment>
+  </data>
+  <data name="ColorPickerToolbar_ColorValueTextBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Color value</value>
+    <comment>The accessibility name for the selected color value in the color picker toolbar.</comment>
   </data>
   <data name="TextToolbar_FontColorButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Choose text color and opacity</value>
