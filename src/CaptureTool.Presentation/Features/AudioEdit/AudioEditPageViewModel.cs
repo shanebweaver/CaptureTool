@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
+using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.Audio;
 using CaptureTool.Presentation.ViewModels;
@@ -17,6 +18,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand CopyCommand { get; }
     public IAsyncRelayCommand OpenInClipchampCommand { get; }
+    public IAsyncRelayCommand OpenAudioFolderCommand { get; }
 
     public string? AudioPath
     {
@@ -33,6 +35,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     private readonly ISaveAudioFileUseCase _saveAction;
     private readonly ICopyAudioFileUseCase _copyAction;
     private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
+    private readonly IOpenAudioFolderUseCase _openAudioFolderAction;
     private readonly IAudioWaveformHistory _waveformHistory;
 
     public ObservableCollection<AudioWaveformBarViewModel> WaveformBars
@@ -45,16 +48,19 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         ISaveAudioFileUseCase saveAction,
         ICopyAudioFileUseCase copyAction,
         IOpenExternalEditorUseCase openExternalEditorAction,
+        IOpenAudioFolderUseCase openAudioFolderAction,
         IAudioWaveformHistory waveformHistory)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
         _openExternalEditorAction = openExternalEditorAction;
+        _openAudioFolderAction = openAudioFolderAction;
         _waveformHistory = waveformHistory;
 
         SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         OpenInClipchampCommand = new AsyncRelayCommand(OpenInClipchampAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        OpenAudioFolderCommand = new AsyncRelayCommand(OpenAudioFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
 
         IsAudioReady = false;
         WaveformBars = [];
@@ -119,6 +125,11 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         }
 
         await _copyAction.ExecuteAsync(new CopyAudioFileRequest(AudioPath), CancellationToken.None);
+    }
+
+    private async Task OpenAudioFolderAsync()
+    {
+        await _openAudioFolderAction.ExecuteAsync(new OpenAudioFolderRequest(), CancellationToken.None);
     }
 
     private async Task OpenInClipchampAsync()

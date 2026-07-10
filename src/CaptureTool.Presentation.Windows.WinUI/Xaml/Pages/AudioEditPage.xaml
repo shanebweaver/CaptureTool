@@ -50,6 +50,12 @@
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
+
+            <!--  Open audio recordings folder  -->
+            <AppBarButton
+                x:Uid="AudioEdit_OpenAudioFolderButton"
+                Command="{x:Bind ViewModel.OpenAudioFolderCommand}"
+                Icon="Folder" />
         </CommandBar>
 
         <Grid Grid.Row="1" Padding="0">
