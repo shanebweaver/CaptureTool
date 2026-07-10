@@ -1,12 +1,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
-using Microsoft.UI;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using System.Drawing;
 using Windows.ApplicationModel.Resources;
 
@@ -77,72 +72,18 @@ internal sealed class WinUICaptureDiscardConfirmationService : ICaptureDiscardCo
             return false;
         }
 
-        var resultCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        Popup? popup = null;
-
-        void Complete(bool shouldDiscard)
-        {
-            resultCompletion.TrySetResult(shouldDiscard);
-            if (popup is not null)
+        return await ConfirmationCardPopupPresenter.ShowAsync(
+            xamlRoot,
+            false,
+            complete => new ConfirmationCard
             {
-                popup.IsOpen = false;
-            }
-        }
-
-        var root = new Grid
-        {
-            Width = xamlRoot.Size.Width,
-            Height = xamlRoot.Size.Height,
-            Background = new SolidColorBrush(Colors.Transparent)
-        };
-
-        var card = new ConfirmationCard
-        {
-            Title = title,
-            Message = content,
-            ConfirmButtonText = discardButtonText,
-            CancelButtonText = cancelButtonText,
-            ConfirmCommand = new RelayCommand(() => Complete(true)),
-            CancelCommand = new RelayCommand(() => Complete(false))
-        };
-        root.Children.Add(card);
-
-        void Root_PointerPressed(object sender, PointerRoutedEventArgs e)
-        {
-            if (ReferenceEquals(e.OriginalSource, root))
-            {
-                Complete(false);
-            }
-        }
-
-        void XamlRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args)
-        {
-            root.Width = sender.Size.Width;
-            root.Height = sender.Size.Height;
-        }
-
-        popup = new Popup
-        {
-            XamlRoot = xamlRoot,
-            Child = root,
-            IsLightDismissEnabled = false
-        };
-
-        root.PointerPressed += Root_PointerPressed;
-        xamlRoot.Changed += XamlRoot_Changed;
-        popup.IsOpen = true;
-
-        try
-        {
-            return await resultCompletion.Task;
-        }
-        finally
-        {
-            xamlRoot.Changed -= XamlRoot_Changed;
-            root.PointerPressed -= Root_PointerPressed;
-            popup.IsOpen = false;
-            popup.Child = null;
-        }
+                Title = title,
+                Message = content,
+                ConfirmButtonText = discardButtonText,
+                CancelButtonText = cancelButtonText,
+                ConfirmCommand = new RelayCommand(() => complete(true)),
+                CancelCommand = new RelayCommand(() => complete(false))
+            });
     }
 
     private bool CanShowInlineConfirmation()

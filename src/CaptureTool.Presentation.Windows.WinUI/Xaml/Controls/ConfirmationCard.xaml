@@ -27,29 +27,14 @@
             <ThemeShadow />
         </Border.Shadow>
 
-        <Grid ColumnSpacing="16" RowSpacing="16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
+        <Grid RowSpacing="16">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Border
-                Width="36"
-                Height="36"
-                Background="{ThemeResource SystemFillColorCriticalBackgroundBrush}"
-                CornerRadius="18">
-                <SymbolIcon
-                    Foreground="{ThemeResource SystemFillColorCriticalBrush}"
-                    Symbol="Important" />
-            </Border>
-
             <TextBlock
-                Grid.Column="1"
                 VerticalAlignment="Center"
                 FontSize="20"
                 FontWeight="SemiBold"
@@ -59,7 +44,6 @@
 
             <TextBlock
                 Grid.Row="1"
-                Grid.Column="1"
                 FontSize="14"
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 LineHeight="20"
@@ -68,7 +52,6 @@
 
             <StackPanel
                 Grid.Row="2"
-                Grid.ColumnSpan="2"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal"
                 Spacing="8">
@@ -77,6 +60,13 @@
                     Command="{x:Bind CancelCommand, Mode=OneWay}"
                     Content="{x:Bind CancelButtonText, Mode=OneWay}"
                     CornerRadius="4" />
+                <Button
+                    MinWidth="118"
+                    Command="{x:Bind PrimaryCommand, Mode=OneWay}"
+                    Content="{x:Bind PrimaryButtonText, Mode=OneWay}"
+                    CornerRadius="4"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Visibility="{x:Bind PrimaryButtonVisibility, Mode=OneWay}" />
                 <Button
                     MinWidth="132"
                     Background="{ThemeResource SystemFillColorCriticalBrush}"

@@ -29,6 +29,12 @@ public sealed partial class ConfirmationCard : UserControlBase
         typeof(ConfirmationCard),
         new PropertyMetadata(string.Empty));
 
+    public static readonly DependencyProperty PrimaryButtonTextProperty = DependencyProperty.Register(
+        nameof(PrimaryButtonText),
+        typeof(string),
+        typeof(ConfirmationCard),
+        new PropertyMetadata(string.Empty));
+
     public static readonly DependencyProperty ConfirmCommandProperty = DependencyProperty.Register(
         nameof(ConfirmCommand),
         typeof(ICommand),
@@ -37,6 +43,12 @@ public sealed partial class ConfirmationCard : UserControlBase
 
     public static readonly DependencyProperty CancelCommandProperty = DependencyProperty.Register(
         nameof(CancelCommand),
+        typeof(ICommand),
+        typeof(ConfirmationCard),
+        new PropertyMetadata(null));
+
+    public static readonly DependencyProperty PrimaryCommandProperty = DependencyProperty.Register(
+        nameof(PrimaryCommand),
         typeof(ICommand),
         typeof(ConfirmationCard),
         new PropertyMetadata(null));
@@ -70,6 +82,23 @@ public sealed partial class ConfirmationCard : UserControlBase
         set => Set(CancelButtonTextProperty, value);
     }
 
+    public string PrimaryButtonText
+    {
+        get => Get<string>(PrimaryButtonTextProperty);
+        set
+        {
+            Set(PrimaryButtonTextProperty, value);
+            RaisePropertyChanged(nameof(PrimaryButtonVisibility));
+        }
+    }
+
+    public Visibility PrimaryButtonVisibility
+    {
+        get => string.IsNullOrWhiteSpace(PrimaryButtonText)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+    }
+
     public ICommand? ConfirmCommand
     {
         get => Get<ICommand?>(ConfirmCommandProperty);
@@ -80,5 +109,11 @@ public sealed partial class ConfirmationCard : UserControlBase
     {
         get => Get<ICommand?>(CancelCommandProperty);
         set => Set(CancelCommandProperty, value);
+    }
+
+    public ICommand? PrimaryCommand
+    {
+        get => Get<ICommand?>(PrimaryCommandProperty);
+        set => Set(PrimaryCommandProperty, value);
     }
 }
