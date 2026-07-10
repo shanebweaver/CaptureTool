@@ -253,6 +253,14 @@ By using this application, you acknowledge that you are responsible for managing
     <value>Save as</value>
     <comment>The label for the save button on the image edit page.</comment>
   </data>
+  <data name="ImageEdit_OpenScreenshotsFolderButton.Label" xml:space="preserve">
+    <value>Open screenshots folder</value>
+    <comment>The label for the button that opens the screenshots folder on the image edit page.</comment>
+  </data>
+  <data name="ImageEdit_OpenScreenshotsFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Open the screenshots folder in File Explorer.</value>
+    <comment>The tooltip for the button that opens the screenshots folder on the image edit page.</comment>
+  </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>Copy</value>
     <comment>The label for the copy button on the image edit page.</comment>
@@ -918,9 +926,25 @@ SOFTWARE.
     <value>Save as</value>
     <comment>The label for the save button on the video edit page.</comment>
   </data>
+  <data name="VideoEdit_OpenVideosFolderButton.Label" xml:space="preserve">
+    <value>Open screen recordings folder</value>
+    <comment>The label for the button that opens the screen recordings folder on the video edit page.</comment>
+  </data>
+  <data name="VideoEdit_OpenVideosFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Open the screen recordings folder in File Explorer.</value>
+    <comment>The tooltip for the button that opens the screen recordings folder on the video edit page.</comment>
+  </data>
   <data name="AudioEdit_SaveButton.Label" xml:space="preserve">
     <value>Save as</value>
     <comment>The label for the save button on the audio edit page.</comment>
+  </data>
+  <data name="AudioEdit_OpenAudioFolderButton.Label" xml:space="preserve">
+    <value>Open audio recordings folder</value>
+    <comment>The label for the button that opens the audio recordings folder on the audio edit page.</comment>
+  </data>
+  <data name="AudioEdit_OpenAudioFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Open the audio recordings folder in File Explorer.</value>
+    <comment>The tooltip for the button that opens the audio recordings folder on the audio edit page.</comment>
   </data>
   <data name="AudioEdit_CopyButton.Label" xml:space="preserve">
     <value>Copy</value>

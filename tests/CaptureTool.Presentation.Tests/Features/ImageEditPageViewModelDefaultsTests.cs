@@ -7,8 +7,10 @@ using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.ImageEdit;
@@ -98,6 +100,22 @@ public sealed class ImageEditPageViewModelDefaultsTests
     }
 
     [TestMethod]
+    public async Task OpenScreenshotsFolderCommand_ShouldOpenScreenshotsFolder()
+    {
+        var openScreenshotsFolder = new Mock<IOpenScreenshotsFolderUseCase>();
+        openScreenshotsFolder
+            .Setup(service => service.ExecuteAsync(It.IsAny<OpenScreenshotsFolderRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<OpenScreenshotsFolderResponse>.Success(new OpenScreenshotsFolderResponse()));
+        var viewModel = CreateViewModel(openScreenshotsFolderAction: openScreenshotsFolder.Object);
+
+        await viewModel.OpenScreenshotsFolderCommand.ExecuteAsync(null);
+
+        openScreenshotsFolder.Verify(
+            service => service.ExecuteAsync(It.IsAny<OpenScreenshotsFolderRequest>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
     public async Task ChromaKeyInteraction_ShouldUndoAndRedoAsSingleInteraction()
     {
         var imageMetadata = new Mock<IImageMetadataService>();
@@ -171,7 +189,8 @@ public sealed class ImageEditPageViewModelDefaultsTests
         IImageMetadataService? imageMetadata = null,
         ICancellationService? cancellationService = null,
         IChromaKeyAccessService? chromaKeyAccess = null,
-        IChromaKeyService? chromaKeyService = null)
+        IChromaKeyService? chromaKeyService = null,
+        IOpenScreenshotsFolderUseCase? openScreenshotsFolderAction = null)
     {
         return new ImageEditPageViewModel(
             Mock.Of<ILocalizationService>(),
@@ -187,6 +206,7 @@ public sealed class ImageEditPageViewModelDefaultsTests
             Mock.Of<IOpenExternalEditorUseCase>(),
             Mock.Of<IStorageService>(),
             Mock.Of<ISettingsService>(),
+            openScreenshotsFolderAction ?? Mock.Of<IOpenScreenshotsFolderUseCase>(),
             Mock.Of<ILogService>(),
             Mock.Of<IAppNotificationService>(),
             new ChromaKeyToolViewModel(

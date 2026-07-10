@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.Edit.Drawable;
@@ -79,6 +80,7 @@ public sealed class ImageEditPageViewModelShareTests
             externalEditor,
             storage,
             Mock.Of<ISettingsService>(),
+            Mock.Of<IOpenScreenshotsFolderUseCase>(),
             Mock.Of<ILogService>(),
             Mock.Of<IAppNotificationService>(),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, chromaKeyService),
@@ -154,6 +156,7 @@ public sealed class ImageEditPageViewModelShareTests
             externalEditor.Object,
             storage.Object,
             Mock.Of<ISettingsService>(),
+            Mock.Of<IOpenScreenshotsFolderUseCase>(),
             Mock.Of<ILogService>(),
             Mock.Of<IAppNotificationService>(),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, chromaKeyService),
