@@ -1,6 +1,8 @@
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
+using CaptureTool.Application.Abstractions.Settings.OpenAudioFolder;
+using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.Audio;
 using CaptureTool.Presentation.Features.AudioEdit;
@@ -59,12 +61,31 @@ public sealed class AudioEditPageViewModelWaveformTests
             Times.Once);
     }
 
-    private static AudioEditPageViewModel CreateViewModel(IOpenExternalEditorUseCase? openExternalEditorAction = null)
+    [TestMethod]
+    public async Task OpenAudioFolderCommand_ShouldOpenAudioFolder()
+    {
+        var openAudioFolder = new Mock<IOpenAudioFolderUseCase>();
+        openAudioFolder
+            .Setup(service => service.ExecuteAsync(It.IsAny<OpenAudioFolderRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<OpenAudioFolderResponse>.Success(new OpenAudioFolderResponse()));
+        AudioEditPageViewModel viewModel = CreateViewModel(openAudioFolderAction: openAudioFolder.Object);
+
+        await viewModel.OpenAudioFolderCommand.ExecuteAsync(null);
+
+        openAudioFolder.Verify(
+            service => service.ExecuteAsync(It.IsAny<OpenAudioFolderRequest>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    private static AudioEditPageViewModel CreateViewModel(
+        IOpenExternalEditorUseCase? openExternalEditorAction = null,
+        IOpenAudioFolderUseCase? openAudioFolderAction = null)
     {
         return new AudioEditPageViewModel(
             Mock.Of<ISaveAudioFileUseCase>(),
             Mock.Of<ICopyAudioFileUseCase>(),
             openExternalEditorAction ?? Mock.Of<IOpenExternalEditorUseCase>(),
+            openAudioFolderAction ?? Mock.Of<IOpenAudioFolderUseCase>(),
             Mock.Of<IAudioWaveformHistory>());
     }
 }

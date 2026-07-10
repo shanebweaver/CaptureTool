@@ -140,6 +140,11 @@
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
+            <!--  Open screenshots folder  -->
+            <AppBarButton
+                x:Uid="ImageEdit_OpenScreenshotsFolderButton"
+                Command="{x:Bind ViewModel.OpenScreenshotsFolderCommand}"
+                Icon="Folder" />
             <!--  Print  -->
             <AppBarButton
                 x:Uid="ImageEdit_PrintButton"
