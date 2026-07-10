@@ -1,11 +1,11 @@
 using CaptureTool.Presentation.Windows.WinUI.Utils;
+using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using System.Numerics;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -18,7 +18,6 @@ namespace CaptureTool.Presentation.Windows.WinUI.Capture;
 internal sealed class CaptureDiscardConfirmationOverlayHost : IDisposable
 {
     private const string WindowClassName = "CaptureDiscardConfirmationOverlayWindow";
-    private const double CardWidth = 520;
 
     private readonly Rectangle? _windowBounds;
     private readonly TaskCompletionSource<bool> _resultCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -133,110 +132,21 @@ internal sealed class CaptureDiscardConfirmationOverlayHost : IDisposable
         return root;
     }
 
-    private UIElement CreateConfirmationCard(
+    private ConfirmationCard CreateConfirmationCard(
         string title,
         string content,
         string discardButtonText,
         string cancelButtonText)
     {
-        var card = new Border
+        return new ConfirmationCard
         {
-            Width = CardWidth,
-            MaxWidth = CardWidth,
-            Padding = new Thickness(22),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Background = GetBrush("AcrylicBackgroundFillColorDefaultBrush", Colors.White),
-            BorderBrush = GetBrush("CardStrokeColorDefaultBrush", Colors.Transparent),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(12),
-            Shadow = new ThemeShadow(),
-            Translation = new Vector3(0, 0, 32)
+            Title = title,
+            Message = content,
+            ConfirmButtonText = discardButtonText,
+            CancelButtonText = cancelButtonText,
+            ConfirmCommand = new ActionCommand(() => Complete(true)),
+            CancelCommand = new ActionCommand(() => Complete(false))
         };
-
-        var layout = new Grid
-        {
-            RowSpacing = 16,
-            ColumnSpacing = 16
-        };
-        layout.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        layout.ColumnDefinitions.Add(new ColumnDefinition());
-        layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-        var iconHost = new Border
-        {
-            Width = 36,
-            Height = 36,
-            CornerRadius = new CornerRadius(18),
-            Background = GetBrush("SystemFillColorCriticalBackgroundBrush", ColorHelper.FromArgb(0x33, 0xFF, 0x33, 0x40)),
-            Child = new SymbolIcon(Symbol.Important)
-            {
-                Foreground = GetBrush("SystemFillColorCriticalBrush", ColorHelper.FromArgb(0xFF, 0xC4, 0x2B, 0x1C))
-            }
-        };
-        Grid.SetRowSpan(iconHost, 2);
-        layout.Children.Add(iconHost);
-
-        var titleText = new TextBlock
-        {
-            Text = title,
-            FontSize = 20,
-            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-            Foreground = GetBrush("TextFillColorPrimaryBrush", Colors.Black),
-            TextWrapping = TextWrapping.WrapWholeWords
-        };
-        Grid.SetColumn(titleText, 1);
-        layout.Children.Add(titleText);
-
-        var contentText = new TextBlock
-        {
-            Text = content,
-            FontSize = 14,
-            Foreground = GetBrush("TextFillColorSecondaryBrush", Colors.DimGray),
-            TextWrapping = TextWrapping.WrapWholeWords,
-            LineHeight = 20
-        };
-        Grid.SetRow(contentText, 1);
-        Grid.SetColumn(contentText, 1);
-        layout.Children.Add(contentText);
-
-        var buttons = new StackPanel
-        {
-            HorizontalAlignment = HorizontalAlignment.Right,
-            Orientation = Orientation.Horizontal,
-            Spacing = 8
-        };
-
-        var cancelButton = new Button
-        {
-            Content = cancelButtonText,
-            MinWidth = 118,
-            CornerRadius = new CornerRadius(4)
-        };
-        cancelButton.Click += (_, _) => Complete(false);
-
-        var discardButton = new Button
-        {
-            Content = discardButtonText,
-            MinWidth = 132,
-            Background = GetBrush("SystemFillColorCriticalBrush", ColorHelper.FromArgb(0xFF, 0xC4, 0x2B, 0x1C)),
-            BorderBrush = GetBrush("SystemFillColorCriticalBrush", ColorHelper.FromArgb(0xFF, 0xC4, 0x2B, 0x1C)),
-            Foreground = GetBrush("TextOnAccentFillColorPrimaryBrush", Colors.White),
-            CornerRadius = new CornerRadius(4)
-        };
-        discardButton.Click += (_, _) => Complete(true);
-
-        buttons.Children.Add(cancelButton);
-        buttons.Children.Add(discardButton);
-
-        Grid.SetRow(buttons, 2);
-        Grid.SetColumnSpan(buttons, 2);
-        layout.Children.Add(buttons);
-
-        card.Child = layout;
-        return card;
     }
 
     private void Activate()
@@ -278,17 +188,6 @@ internal sealed class CaptureDiscardConfirmationOverlayHost : IDisposable
             info.rcMonitor.top,
             info.rcMonitor.right - info.rcMonitor.left,
             info.rcMonitor.bottom - info.rcMonitor.top);
-    }
-
-    private static Microsoft.UI.Xaml.Media.Brush GetBrush(string key, global::Windows.UI.Color fallback)
-    {
-        if (Microsoft.UI.Xaml.Application.Current.Resources.TryGetValue(key, out object value) &&
-            value is Microsoft.UI.Xaml.Media.Brush brush)
-        {
-            return brush;
-        }
-
-        return new SolidColorBrush(fallback);
     }
 
     [UnmanagedCallersOnly(CallConvs = new Type[] { typeof(System.Runtime.CompilerServices.CallConvStdcall) })]
