@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Capture;
 using CaptureTool.Application.Abstractions.Capture.Audio;
+using CaptureTool.Application.Abstractions.Capture.Audio.CancelAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.MuteAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Capture.Audio.PauseAudioCapture;
@@ -11,6 +12,7 @@ using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Application.Capture.Audio.CancelAudioCapture;
 using CaptureTool.Application.Capture.Audio.MuteAudioCapture;
 using CaptureTool.Application.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Capture.Audio.PauseAudioCapture;
@@ -35,6 +37,7 @@ internal static class AudioServiceCollectionExtensions
         services.AddSingleton<AudioCaptureWorkflow>();
         services.AddSingleton<IAudioCaptureWorkflow>(provider => provider.GetRequiredService<AudioCaptureWorkflow>());
         services.AddSingleton<IAudioCaptureState>(provider => provider.GetRequiredService<AudioCaptureWorkflow>());
+        services.AddTransient<ICancelAudioCaptureUseCase, CancelAudioCaptureUseCase>();
         services.AddTransient<IStartAudioCaptureUseCase, StartAudioCaptureUseCase>();
         services.AddTransient<IStopAudioCaptureUseCase, StopAudioCaptureUseCase>();
         services.AddTransient<IPauseAudioCaptureUseCase, PauseAudioCaptureUseCase>();

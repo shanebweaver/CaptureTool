@@ -7,6 +7,7 @@ internal interface IAudioCaptureWorkflow : IAudioCaptureState
 {
     void StartCapture();
     AudioFile StopCapture();
+    void CancelCapture();
     void PauseCapture();
     void SelectAudioInputSource(string? sourceId);
     void ToggleLocalAudio();

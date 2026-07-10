@@ -564,6 +564,30 @@
   <data name="Settings_VideoAutoSave_SubtitleLabel.Text" xml:space="preserve">
     <value>捕获后自动将视频保存到视频文件夹中。</value>
   </data>
+  <data name="Settings_CaptureHeaderLabel.Text" xml:space="preserve">
+    <value>捕获保护</value>
+    <comment>The header for capture protection settings on the settings page.</comment>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_HeaderLabel.Text" xml:space="preserve">
+    <value>丢弃捕获前警告</value>
+    <comment>The header for the warning setting before discarding active captures.</comment>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
+    <value>在取消包含未保存录制数据的活动捕获前询问。</value>
+    <comment>The subtitle for the warning setting before discarding active captures.</comment>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
+    <value>开</value>
+    <comment>The label for the on state of the capture warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_Toggle.OffContent" xml:space="preserve">
+    <value>关</value>
+    <comment>The label for the off state of the capture warning toggle switch on the settings page.</comment>
+  </data>
+  <data name="Settings_CaptureWarnBeforeDiscard_Toggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>丢弃活动捕获前显示确认。</value>
+    <comment>The tooltip for the capture warning toggle switch on the settings page.</comment>
+  </data>
   <data name="Settings_EditHeaderLabel.Text" xml:space="preserve">
     <value>编辑保护</value>
     <comment>The header for edit protection settings on the settings page.</comment>
@@ -573,7 +597,7 @@
     <comment>The header for the warning setting before leaving dirty edit sessions.</comment>
   </data>
   <data name="Settings_EditWarnBeforeDiscard_SubtitleLabel.Text" xml:space="preserve">
-    <value>在有未保存更改的图像或视频编辑会话中离开或关闭前询问。</value>
+    <value>在离开或关闭有未保存更改的编辑会话前询问。</value>
     <comment>The subtitle for the warning setting before leaving dirty edit sessions.</comment>
   </data>
   <data name="Settings_EditWarnBeforeDiscard_Toggle.OnContent" xml:space="preserve">
@@ -986,6 +1010,18 @@ SOFTWARE.
   <data name="CaptureOverlay_Timer.ToolTipService.ToolTip" xml:space="preserve">
     <value>录制时长</value>
   </data>
+  <data name="CaptureDiscardConfirmation_Title" xml:space="preserve">
+    <value>丢弃录制？</value>
+  </data>
+  <data name="CaptureDiscardConfirmation_Content" xml:space="preserve">
+    <value>这将停止当前捕获并删除未保存的录制内容。此操作无法撤消。</value>
+  </data>
+  <data name="CaptureDiscardConfirmation_DiscardButton" xml:space="preserve">
+    <value>丢弃录制</value>
+  </data>
+  <data name="CaptureDiscardConfirmation_CancelButton" xml:space="preserve">
+    <value>继续录制</value>
+  </data>
   <data name="SelectionOverlay_CaptureModeSegmentedControl.AutomationProperties.Name" xml:space="preserve">
     <value>捕获模式</value>
   </data>
@@ -1108,6 +1144,15 @@ SOFTWARE.
   </data>
   <data name="AudioCapture_StopButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>停止录制</value>
+  </data>
+  <data name="AudioCapture_CancelButton.Label" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="AudioCapture_CancelButton.AutomationProperties.Name" xml:space="preserve">
+    <value>取消录制</value>
+  </data>
+  <data name="AudioCapture_CancelButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>取消并丢弃录制内容</value>
   </data>
   <data name="Settings_AudioCaptureHeaderLabel.Text" xml:space="preserve">
     <value>音频捕获</value>

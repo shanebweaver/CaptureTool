@@ -1,6 +1,7 @@
+using CommunityToolkit.Mvvm.Input;
 using CaptureTool.Application.Abstractions.EditSessions;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
+using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Windows.ApplicationModel.Resources;
 
 namespace CaptureTool.Presentation.Windows.WinUI.EditSessions;
@@ -18,28 +19,25 @@ internal sealed class WinUIEditSessionConfirmationService : IEditSessionConfirma
             return EditSessionLeaveDecision.Cancel;
         }
 
-        ContentDialog dialog = new()
-        {
-            XamlRoot = XamlRoot,
-            Title = _resourceLoader.GetString("EditSessionConfirmation_Title"),
-            Content = _resourceLoader.GetString("EditSessionConfirmation_Content"),
-            PrimaryButtonText = _resourceLoader.GetString("EditSessionConfirmation_SaveAsButton"),
-            SecondaryButtonText = _resourceLoader.GetString("EditSessionConfirmation_DiscardButton"),
-            CloseButtonText = _resourceLoader.GetString("EditSessionConfirmation_CancelButton"),
-            DefaultButton = ContentDialogButton.Primary
-        };
-
-        ContentDialogResult result = await dialog.ShowAsync();
+        EditSessionLeaveDecision decision = await ConfirmationCardPopupPresenter.ShowAsync(
+            XamlRoot,
+            EditSessionLeaveDecision.Cancel,
+            complete => new ConfirmationCard
+            {
+                Title = _resourceLoader.GetString("EditSessionConfirmation_Title"),
+                Message = _resourceLoader.GetString("EditSessionConfirmation_Content"),
+                PrimaryButtonText = _resourceLoader.GetString("EditSessionConfirmation_SaveAsButton"),
+                ConfirmButtonText = _resourceLoader.GetString("EditSessionConfirmation_DiscardButton"),
+                CancelButtonText = _resourceLoader.GetString("EditSessionConfirmation_CancelButton"),
+                PrimaryCommand = new RelayCommand(() => complete(EditSessionLeaveDecision.Save)),
+                ConfirmCommand = new RelayCommand(() => complete(EditSessionLeaveDecision.Discard)),
+                CancelCommand = new RelayCommand(() => complete(EditSessionLeaveDecision.Cancel))
+            });
         if (cancellationToken.IsCancellationRequested)
         {
             return EditSessionLeaveDecision.Cancel;
         }
 
-        return result switch
-        {
-            ContentDialogResult.Primary => EditSessionLeaveDecision.Save,
-            ContentDialogResult.Secondary => EditSessionLeaveDecision.Discard,
-            _ => EditSessionLeaveDecision.Cancel
-        };
+        return decision;
     }
 }

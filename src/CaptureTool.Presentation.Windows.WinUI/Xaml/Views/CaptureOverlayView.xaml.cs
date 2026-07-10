@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Themes;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Presentation.Features.CaptureOverlay;
+using CaptureTool.Presentation.Windows.WinUI.Capture;
 using Microsoft.UI;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
@@ -13,6 +14,7 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
 {
     private readonly MonitorCaptureResult _monitor;
     private readonly System.Drawing.Rectangle _area;
+    private readonly WinUICaptureDiscardConfirmationService _captureDiscardConfirmationService;
     private SpriteVisual? _shadowVisual;
     private DropShadow? _shadow;
 
@@ -20,6 +22,7 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
     {
         _monitor = monitor;
         _area = area;
+        _captureDiscardConfirmationService = App.Current.ServiceProvider.GetService<WinUICaptureDiscardConfirmationService>();
 
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
@@ -35,6 +38,8 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        _captureDiscardConfirmationService.XamlRoot = RootPanel.XamlRoot;
+        _captureDiscardConfirmationService.DialogHostBounds = _monitor.MonitorBounds;
         ViewModel.Load(new CaptureOverlayViewModelOptions(_monitor, _area));
     }
 
@@ -42,6 +47,8 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
     {
         Loaded -= OnLoaded;
         Unloaded -= OnUnloaded;
+
+        _captureDiscardConfirmationService.DialogHostBounds = null;
 
         ViewModel.Dispose();
 

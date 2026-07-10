@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Capture.Audio.CancelAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.MuteAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.PauseAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.SelectAudioCaptureInputSource;
@@ -52,6 +53,7 @@ public sealed class AudioCapturePageViewModelWaveformTests
             audioInputDetectionService.Object,
             Mock.Of<IStartAudioCaptureUseCase>(),
             Mock.Of<IStopAudioCaptureUseCase>(),
+            Mock.Of<ICancelAudioCaptureUseCase>(),
             Mock.Of<IPauseAudioCaptureUseCase>(),
             Mock.Of<IMuteAudioCaptureUseCase>(),
             Mock.Of<ISelectAudioCaptureInputSourceUseCase>(),

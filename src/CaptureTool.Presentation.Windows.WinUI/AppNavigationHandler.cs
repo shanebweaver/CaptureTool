@@ -64,7 +64,11 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                         break;
 
                     case UXHost.CaptureOverlay:
-                        await CancelVideoCaptureAsync();
+                        if (!await TryCancelVideoCaptureAsync())
+                        {
+                            return;
+                        }
+
                         await DisposeCaptureOverlayHostAsync();
                         _mainWindowHost.ExcludeWindowFromCapture(false);
                         break;
@@ -94,7 +98,11 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
                         return;
 
                     case UXHost.CaptureOverlay:
-                        await CancelVideoCaptureAsync();
+                        if (!await TryCancelVideoCaptureAsync())
+                        {
+                            return;
+                        }
+
                         await DisposeCaptureOverlayHostAsync();
                         break;
                 }
@@ -141,9 +149,10 @@ internal partial class AppNavigationHandler : INavigationHandler, IWindowHandleP
         }
     }
 
-    private async Task CancelVideoCaptureAsync()
+    private async Task<bool> TryCancelVideoCaptureAsync()
     {
-        await _cancelVideoCaptureCommand.ExecuteAsync(new CancelVideoCaptureRequest());
+        var response = await _cancelVideoCaptureCommand.ExecuteAsync(new CancelVideoCaptureRequest());
+        return response.Value?.Succeeded == true;
     }
 
     private async Task CreateSelectionOverlayHostAsync(CaptureOptions options)

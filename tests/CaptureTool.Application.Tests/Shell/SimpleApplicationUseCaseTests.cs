@@ -5,6 +5,7 @@ using CaptureTool.Application.Abstractions.Shell.About.LeaveAboutPage;
 using CaptureTool.Application.Abstractions.Shell.About.OpenAboutPage;
 using CaptureTool.Application.Abstractions.Shell.AppMenu.ExitApplication;
 using CaptureTool.Application.Abstractions.Capture.Audio;
+using CaptureTool.Application.Abstractions.Capture.Audio.CancelAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Abstractions.Capture.Audio.PauseAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.StartAudioCapture;
@@ -16,6 +17,7 @@ using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Edit.Image.OpenImageEditPage;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Library.RecentCaptures.OpenRecentCapture;
+using CaptureTool.Application.Abstractions.Settings;
 using CaptureTool.Application.Abstractions.Settings.OpenSettingsPage;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Store.GetChromaKeyAddOn;
@@ -29,6 +31,7 @@ using CaptureTool.Application.Shell.About.LeaveAboutPage;
 using CaptureTool.Application.Shell.About.OpenAboutPage;
 using CaptureTool.Application.Shell.AppMenu.ExitApplication;
 using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Application.Capture.Audio.CancelAudioCapture;
 using CaptureTool.Application.Capture.Audio.OpenAudioCapturePage;
 using CaptureTool.Application.Capture.Audio.PauseAudioCapture;
 using CaptureTool.Application.Capture.Audio.StartAudioCapture;
@@ -144,6 +147,84 @@ public sealed class SimpleApplicationUseCaseTests
         Assert.AreEqual(1, audioCapture.StopCallCount);
         Assert.AreEqual(1, audioCapture.ToggleLocalAudioCallCount);
         navigation.Verify(service => service.Navigate(NavigationRoute.AudioEdit, audioFile, false), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task CancelAudioCaptureUseCase_WhenWarningsDisabled_CancelsWithoutPrompt()
+    {
+        var audioCapture = new FakeAudioCaptureWorkflow { IsRecording = true };
+        var confirmationService = new Mock<ICaptureDiscardConfirmationService>();
+        var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard))
+            .Returns(false);
+        var useCase = new CancelAudioCaptureUseCase(
+            audioCapture,
+            confirmationService.Object,
+            settings.Object,
+            TestUseCaseExecutor.Instance);
+
+        CancelAudioCaptureResponse response = (await useCase.ExecuteAsync(
+            new CancelAudioCaptureRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsTrue(response.Succeeded);
+        Assert.AreEqual(1, audioCapture.CancelCallCount);
+        confirmationService.Verify(
+            service => service.ConfirmDiscardActiveCaptureAsync(It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [TestMethod]
+    public async Task CancelAudioCaptureUseCase_WhenWarningsEnabledAndUserConfirms_Cancels()
+    {
+        var audioCapture = new FakeAudioCaptureWorkflow { IsRecording = true };
+        var confirmationService = new Mock<ICaptureDiscardConfirmationService>();
+        confirmationService
+            .Setup(service => service.ConfirmDiscardActiveCaptureAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard))
+            .Returns(true);
+        var useCase = new CancelAudioCaptureUseCase(
+            audioCapture,
+            confirmationService.Object,
+            settings.Object,
+            TestUseCaseExecutor.Instance);
+
+        CancelAudioCaptureResponse response = (await useCase.ExecuteAsync(
+            new CancelAudioCaptureRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsTrue(response.Succeeded);
+        Assert.AreEqual(1, audioCapture.CancelCallCount);
+    }
+
+    [TestMethod]
+    public async Task CancelAudioCaptureUseCase_WhenWarningsEnabledAndUserDeclines_DoesNotCancel()
+    {
+        var audioCapture = new FakeAudioCaptureWorkflow { IsRecording = true };
+        var confirmationService = new Mock<ICaptureDiscardConfirmationService>();
+        confirmationService
+            .Setup(service => service.ConfirmDiscardActiveCaptureAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        var settings = new Mock<ISettingsService>();
+        settings
+            .Setup(service => service.Get(CaptureToolSettings.Settings_Capture_WarnBeforeDiscard))
+            .Returns(true);
+        var useCase = new CancelAudioCaptureUseCase(
+            audioCapture,
+            confirmationService.Object,
+            settings.Object,
+            TestUseCaseExecutor.Instance);
+
+        CancelAudioCaptureResponse response = (await useCase.ExecuteAsync(
+            new CancelAudioCaptureRequest(),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Succeeded);
+        Assert.AreEqual(0, audioCapture.CancelCallCount);
     }
 
     [TestMethod]

@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Capture.Audio.CancelAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Image.CaptureAllScreensImage;
 using CaptureTool.Application.Abstractions.Capture.Image.CaptureImage;
 using CaptureTool.Application.Abstractions.Capture.Video.StartVideoCapture;
@@ -10,6 +11,7 @@ using CaptureTool.Application.Activation;
 using CaptureTool.Application.DependencyInjection;
 using CaptureTool.Application.EditSessions;
 using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Application.Capture.Audio.CancelAudioCapture;
 using CaptureTool.Application.Capture.Image;
 using CaptureTool.Application.Capture.Image.CaptureAllScreensImage;
 using CaptureTool.Application.Capture.Image.CaptureImage;
@@ -40,6 +42,7 @@ public sealed class ApplicationServiceCollectionExtensionsTests
         AssertHasRegistration<AudioCaptureWorkflow, AudioCaptureWorkflow>(services, ServiceLifetime.Singleton);
         AssertHasFactoryRegistration<IAudioCaptureWorkflow>(services, ServiceLifetime.Singleton);
         AssertHasFactoryRegistration<IAudioCaptureState>(services, ServiceLifetime.Singleton);
+        AssertHasRegistration<ICancelAudioCaptureUseCase, CancelAudioCaptureUseCase>(services, ServiceLifetime.Transient);
         AssertHasRegistration<VideoCaptureWorkflow, VideoCaptureWorkflow>(services, ServiceLifetime.Singleton);
         AssertHasFactoryRegistration<IVideoCaptureWorkflow>(services, ServiceLifetime.Singleton);
         AssertHasFactoryRegistration<IVideoCaptureState>(services, ServiceLifetime.Singleton);

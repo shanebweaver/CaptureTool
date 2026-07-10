@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Application.Abstractions.Capture.Audio.CancelAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.MuteAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.PauseAudioCapture;
 using CaptureTool.Application.Abstractions.Capture.Audio.SelectAudioCaptureInputSource;
@@ -27,6 +28,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
     private static readonly TimeSpan WaveformUpdateInterval = TimeSpan.FromMilliseconds(50);
     public IRelayCommand StartCommand { get; }
     public IRelayCommand StopCommand { get; }
+    public IRelayCommand CancelCommand { get; }
     public IRelayCommand PauseCommand { get; }
     public IRelayCommand MuteCommand { get; }
     public IRelayCommand ToggleDesktopAudioCommand { get; }
@@ -109,6 +111,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
         IAudioInputDetectionService audioInputDetectionService,
         IStartAudioCaptureUseCase startAction,
         IStopAudioCaptureUseCase stopAction,
+        ICancelAudioCaptureUseCase cancelAction,
         IPauseAudioCaptureUseCase pauseAction,
         IMuteAudioCaptureUseCase muteAction,
         ISelectAudioCaptureInputSourceUseCase selectAudioInputSourceAction,
@@ -129,6 +132,7 @@ public sealed partial class AudioCapturePageViewModel : ViewModelBase
 
         StartCommand = startAction.ToRelayCommand(() => new StartAudioCaptureRequest());
         StopCommand = stopAction.ToRelayCommand(() => new StopAudioCaptureRequest());
+        CancelCommand = cancelAction.ToRelayCommand(() => new CancelAudioCaptureRequest());
         PauseCommand = pauseAction.ToRelayCommand(() => new PauseAudioCaptureRequest());
         MuteCommand = muteAction.ToRelayCommand(() => new MuteAudioCaptureRequest());
         ToggleDesktopAudioCommand = toggleDesktopAudioAction.ToRelayCommand(() => new ToggleLocalAudioCaptureRequest());

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<local:UserControlBase
+    x:Class="CaptureTool.Presentation.Windows.WinUI.Xaml.Controls.ConfirmationCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:CaptureTool.Presentation.Windows.WinUI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=local:ConfirmationCard}"
+    HorizontalAlignment="Center"
+    VerticalAlignment="Center"
+    mc:Ignorable="d">
+
+    <Border
+        MinWidth="340"
+        MaxWidth="520"
+        Margin="16"
+        Padding="22"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+        BorderThickness="1"
+        CornerRadius="12"
+        Translation="0,0,32">
+        <Border.Shadow>
+            <ThemeShadow />
+        </Border.Shadow>
+
+        <Grid RowSpacing="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="20"
+                FontWeight="SemiBold"
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                Text="{x:Bind Title, Mode=OneWay}"
+                TextWrapping="WrapWholeWords" />
+
+            <TextBlock
+                Grid.Row="1"
+                FontSize="14"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                LineHeight="20"
+                Text="{x:Bind Message, Mode=OneWay}"
+                TextWrapping="WrapWholeWords" />
+
+            <StackPanel
+                Grid.Row="2"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button
+                    MinWidth="118"
+                    Command="{x:Bind CancelCommand, Mode=OneWay}"
+                    Content="{x:Bind CancelButtonText, Mode=OneWay}"
+                    CornerRadius="4" />
+                <Button
+                    MinWidth="118"
+                    Command="{x:Bind PrimaryCommand, Mode=OneWay}"
+                    Content="{x:Bind PrimaryButtonText, Mode=OneWay}"
+                    CornerRadius="4"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Visibility="{x:Bind PrimaryButtonVisibility, Mode=OneWay}" />
+                <Button
+                    MinWidth="132"
+                    Background="{ThemeResource SystemFillColorCriticalBrush}"
+                    BorderBrush="{ThemeResource SystemFillColorCriticalBrush}"
+                    Command="{x:Bind ConfirmCommand, Mode=OneWay}"
+                    Content="{x:Bind ConfirmButtonText, Mode=OneWay}"
+                    CornerRadius="4"
+                    Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</local:UserControlBase>

@@ -26,6 +26,7 @@ internal sealed class FakeAudioCaptureWorkflow : IAudioCaptureWorkflow
 
     public int StartCallCount { get; private set; }
     public int StopCallCount { get; private set; }
+    public int CancelCallCount { get; private set; }
     public int PauseCallCount { get; private set; }
     public int ToggleMuteCallCount { get; private set; }
     public int ToggleLocalAudioCallCount { get; private set; }
@@ -49,6 +50,15 @@ internal sealed class FakeAudioCaptureWorkflow : IAudioCaptureWorkflow
         CaptureStateChanged?.Invoke(this, CaptureState);
         NewAudioCaptured?.Invoke(this, AudioFile);
         return AudioFile;
+    }
+
+    public void CancelCapture()
+    {
+        CancelCallCount++;
+        IsRecording = false;
+        IsPaused = false;
+        CaptureState = AudioCaptureState.Stopped;
+        CaptureStateChanged?.Invoke(this, CaptureState);
     }
 
     public void PauseCapture()

@@ -1,0 +1,3 @@
+namespace CaptureTool.Application.Abstractions.Settings.UpdateCaptureWarnBeforeDiscard;
+
+public sealed record UpdateCaptureWarnBeforeDiscardRequest(bool IsEnabled);
