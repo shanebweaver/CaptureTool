@@ -19,6 +19,15 @@
 
         <!--  Toolbar  -->
         <CommandBar DefaultLabelPosition="Right" IsOpen="False">
+            <!--  Open in Clipchamp  -->
+            <AppBarButton
+                x:Uid="AudioEdit_OpenInClipchampButton"
+                Command="{x:Bind ViewModel.OpenInClipchampCommand}"
+                Icon="Edit"
+                IsEnabled="{x:Bind ViewModel.IsAudioReady, Mode=OneWay}">
+                <AppBarButton.Label>Open in Clipchamp</AppBarButton.Label>
+            </AppBarButton>
+
             <!--  Copy  -->
             <AppBarButton
                 x:Uid="AudioEdit_CopyButton"

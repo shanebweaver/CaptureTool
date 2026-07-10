@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
@@ -32,6 +33,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageSuperResolutionFeatureAvailability _imageSuperResolutionFeatureAvailability;
     private readonly IImageSuperResolutionPreparationConsentService _imageSuperResolutionPreparationConsentService;
     private readonly IShareService _shareService;
+    private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
+    private readonly IStorageService _storageService;
     private readonly ISettingsService _settingsService;
     private readonly ILogService _logService;
     private readonly IAppNotificationService _notificationService;
@@ -62,6 +65,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IRelayCommand FlipVerticalCommand { get; }
     public IAsyncRelayCommand PrintCommand { get; }
     public IAsyncRelayCommand ShareCommand { get; }
+    public IAsyncRelayCommand EditInPaintCommand { get; }
     public IAsyncRelayCommand ToggleSuperResolutionCommand { get; }
     public IRelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
     public IRelayCommand<Rectangle> UpdateCropRectCommand { get; }
@@ -246,6 +250,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IImageSuperResolutionFeatureAvailability imageSuperResolutionFeatureAvailability,
         IImageSuperResolutionPreparationConsentService imageSuperResolutionPreparationConsentService,
         IShareService shareService,
+        IOpenExternalEditorUseCase openExternalEditorAction,
+        IStorageService storageService,
         ISettingsService settingsService,
         ILogService logService,
         IAppNotificationService notificationService,
@@ -262,6 +268,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _imageSuperResolutionFeatureAvailability = imageSuperResolutionFeatureAvailability;
         _imageSuperResolutionPreparationConsentService = imageSuperResolutionPreparationConsentService;
         _shareService = shareService;
+        _openExternalEditorAction = openExternalEditorAction;
+        _storageService = storageService;
         _imageCanvasExporter = imageCanvasExporter;
         _settingsService = settingsService;
         _logService = logService;
@@ -296,6 +304,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         FlipVerticalCommand = new RelayCommand(() => Flip(FlipDirection.Vertical));
         PrintCommand = new AsyncRelayCommand(PrintAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ShareCommand = new AsyncRelayCommand(ShareAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        EditInPaintCommand = new AsyncRelayCommand(EditInPaintAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleSuperResolutionCommand = new AsyncRelayCommand(
             ToggleSuperResolutionAsync,
             () => CanToggleSuperResolution,
@@ -616,6 +625,27 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
         using MemoryStream renderedStream = await _imageCanvasExporter.RenderToStreamAsync([.. Drawables], options);
         await _shareService.ShareStreamAsync(renderedStream);
+    }
+
+    private async Task EditInPaintAsync()
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        string imagePath = GetTemporaryPaintImagePath();
+        await _imageCanvasExporter.SaveImageAsync(imagePath, [.. Drawables], GetImageCanvasRenderOptions());
+        await _openExternalEditorAction.ExecuteAsync(
+            new OpenExternalEditorRequest(imagePath, ExternalMediaEditor.Paint),
+            CancellationToken.None);
+    }
+
+    private string GetTemporaryPaintImagePath()
+    {
+        return Path.Combine(
+            _storageService.GetApplicationTemporaryFolderPath(),
+            $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}.png");
     }
 
     public void OnCropInteractionComplete(Rectangle oldCropRect)

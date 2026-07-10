@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
 using CaptureTool.Domain.FileSystem;
@@ -15,6 +16,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
 
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand CopyCommand { get; }
+    public IAsyncRelayCommand OpenInClipchampCommand { get; }
 
     public string? AudioPath
     {
@@ -30,6 +32,7 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
 
     private readonly ISaveAudioFileUseCase _saveAction;
     private readonly ICopyAudioFileUseCase _copyAction;
+    private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
     private readonly IAudioWaveformHistory _waveformHistory;
 
     public ObservableCollection<AudioWaveformBarViewModel> WaveformBars
@@ -41,14 +44,17 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
     public AudioEditPageViewModel(
         ISaveAudioFileUseCase saveAction,
         ICopyAudioFileUseCase copyAction,
+        IOpenExternalEditorUseCase openExternalEditorAction,
         IAudioWaveformHistory waveformHistory)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
+        _openExternalEditorAction = openExternalEditorAction;
         _waveformHistory = waveformHistory;
 
         SaveCommand = new AsyncRelayCommand(SaveAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        OpenInClipchampCommand = new AsyncRelayCommand(OpenInClipchampAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
 
         IsAudioReady = false;
         WaveformBars = [];
@@ -113,5 +119,17 @@ public sealed partial class AudioEditPageViewModel : LoadableViewModelBase<Audio
         }
 
         await _copyAction.ExecuteAsync(new CopyAudioFileRequest(AudioPath), CancellationToken.None);
+    }
+
+    private async Task OpenInClipchampAsync()
+    {
+        if (string.IsNullOrEmpty(AudioPath))
+        {
+            return;
+        }
+
+        await _openExternalEditorAction.ExecuteAsync(
+            new OpenExternalEditorRequest(AudioPath, ExternalMediaEditor.Clipchamp),
+            CancellationToken.None);
     }
 }

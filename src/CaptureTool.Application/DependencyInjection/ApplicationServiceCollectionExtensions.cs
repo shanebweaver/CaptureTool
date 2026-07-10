@@ -1,4 +1,6 @@
+using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
+using CaptureTool.Application.Edit.External;
 using CaptureTool.Application.EditSessions;
 using CaptureTool.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +35,7 @@ public static class ApplicationServiceCollectionExtensions
     private static IServiceCollection AddUseCaseServices(this IServiceCollection services)
     {
         services.AddTransient<IUseCaseExecutor, UseCaseExecutor>();
+        services.AddTransient<IOpenExternalEditorUseCase, OpenExternalEditorUseCase>();
         services.AddSingleton<IActiveEditSessionService, ActiveEditSessionService>();
         services.AddSingleton<IEditSessionGuard, EditSessionGuard>();
 
