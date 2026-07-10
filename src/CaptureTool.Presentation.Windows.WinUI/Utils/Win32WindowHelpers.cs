@@ -69,6 +69,34 @@ public static partial class Win32WindowHelpers
         PInvoke.ShowWindow(hwnd, SHOW_WINDOW_CMD.SW_MAXIMIZE);
     }
 
+    public static void MakeBorderlessToolWindow(nint windowHandle)
+    {
+        HWND hwnd = new(windowHandle);
+
+        var style = PInvoke.GetWindowLong(hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
+        style &= ~(int)(
+            WINDOW_STYLE.WS_CAPTION |
+            WINDOW_STYLE.WS_THICKFRAME |
+            WINDOW_STYLE.WS_SYSMENU |
+            WINDOW_STYLE.WS_MINIMIZEBOX |
+            WINDOW_STYLE.WS_MAXIMIZEBOX);
+        PInvoke.SetWindowLong(hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, style);
+
+        var exStyle = PInvoke.GetWindowLong(hwnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+        exStyle |= (int)(WINDOW_EX_STYLE.WS_EX_TOOLWINDOW | WINDOW_EX_STYLE.WS_EX_TOPMOST);
+        exStyle &= ~(int)WINDOW_EX_STYLE.WS_EX_APPWINDOW;
+        PInvoke.SetWindowLong(hwnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, exStyle);
+
+        PInvoke.SetWindowPos(
+            hwnd,
+            HWND_TOPMOST,
+            0, 0, 0, 0,
+            SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+            SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+            SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER |
+            SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED);
+    }
+
     public static void MoveAndResize(nint windowHandle, Rectangle bounds)
     {
         PInvoke.SetWindowPos(

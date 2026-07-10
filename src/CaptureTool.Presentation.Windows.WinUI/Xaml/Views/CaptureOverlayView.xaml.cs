@@ -39,6 +39,7 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _captureDiscardConfirmationService.XamlRoot = RootPanel.XamlRoot;
+        _captureDiscardConfirmationService.DialogHostBounds = _monitor.MonitorBounds;
         ViewModel.Load(new CaptureOverlayViewModelOptions(_monitor, _area));
     }
 
@@ -46,6 +47,8 @@ public sealed partial class CaptureOverlayView : CaptureOverlayViewBase
     {
         Loaded -= OnLoaded;
         Unloaded -= OnUnloaded;
+
+        _captureDiscardConfirmationService.DialogHostBounds = null;
 
         ViewModel.Dispose();
 
