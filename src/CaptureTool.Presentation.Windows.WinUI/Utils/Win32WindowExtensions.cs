@@ -20,9 +20,6 @@ public static partial class Win32WindowExtensions
     public static void MakeBorderlessOverlay(this Window window)
         => Win32WindowHelpers.MakeBorderlessOverlay(window.GetWindowHandle());
 
-    public static void MakeBorderlessToolWindow(this Window window)
-        => Win32WindowHelpers.MakeBorderlessToolWindow(window.GetWindowHandle());
-
     public static void MoveAndResize(this Window window, Rectangle bounds)
         => Win32WindowHelpers.MoveAndResize(window.GetWindowHandle(), bounds);
 

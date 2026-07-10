@@ -58,8 +58,8 @@ internal sealed class WinUICaptureDiscardConfirmationService : ICaptureDiscardCo
             return result == ContentDialogResult.Primary;
         }
 
-        var hostWindow = new CaptureDiscardDialogHostWindow(DialogHostBounds);
-        return await hostWindow.ShowConfirmationAsync(
+        using var overlayHost = new CaptureDiscardConfirmationOverlayHost(DialogHostBounds);
+        return await overlayHost.ShowConfirmationAsync(
             title,
             content,
             discardButtonText,
