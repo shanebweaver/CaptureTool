@@ -18,38 +18,52 @@ internal sealed class WinUICaptureDiscardConfirmationService : ICaptureDiscardCo
 
     public async Task<bool> ConfirmDiscardActiveCaptureAsync(CancellationToken cancellationToken = default)
     {
-        ContentDialog dialog = CreateDialog();
-        ContentDialogResult result = await ShowDialogAsync(dialog);
+        string title = _resourceLoader.GetString("CaptureDiscardConfirmation_Title");
+        string content = _resourceLoader.GetString("CaptureDiscardConfirmation_Content");
+        string discardButtonText = _resourceLoader.GetString("CaptureDiscardConfirmation_DiscardButton");
+        string cancelButtonText = _resourceLoader.GetString("CaptureDiscardConfirmation_CancelButton");
+
+        bool shouldDiscardCapture = await ShowConfirmationAsync(
+            title,
+            content,
+            discardButtonText,
+            cancelButtonText);
         if (cancellationToken.IsCancellationRequested)
         {
             return false;
         }
 
-        return result == ContentDialogResult.Primary;
+        return shouldDiscardCapture;
     }
 
-    private ContentDialog CreateDialog()
-    {
-        return new()
-        {
-            Title = _resourceLoader.GetString("CaptureDiscardConfirmation_Title"),
-            Content = _resourceLoader.GetString("CaptureDiscardConfirmation_Content"),
-            PrimaryButtonText = _resourceLoader.GetString("CaptureDiscardConfirmation_DiscardButton"),
-            CloseButtonText = _resourceLoader.GetString("CaptureDiscardConfirmation_CancelButton"),
-            DefaultButton = ContentDialogButton.Close
-        };
-    }
-
-    private async Task<ContentDialogResult> ShowDialogAsync(ContentDialog dialog)
+    private async Task<bool> ShowConfirmationAsync(
+        string title,
+        string content,
+        string discardButtonText,
+        string cancelButtonText)
     {
         if (CanShowInlineDialog())
         {
-            dialog.XamlRoot = XamlRoot;
-            return await dialog.ShowAsync();
+            ContentDialog dialog = new()
+            {
+                XamlRoot = XamlRoot,
+                Title = title,
+                Content = content,
+                PrimaryButtonText = discardButtonText,
+                CloseButtonText = cancelButtonText,
+                DefaultButton = ContentDialogButton.Close
+            };
+
+            ContentDialogResult result = await dialog.ShowAsync();
+            return result == ContentDialogResult.Primary;
         }
 
         var hostWindow = new CaptureDiscardDialogHostWindow(DialogHostBounds);
-        return await hostWindow.ShowContentDialogAsync(dialog);
+        return await hostWindow.ShowConfirmationAsync(
+            title,
+            content,
+            discardButtonText,
+            cancelButtonText);
     }
 
     private bool CanShowInlineDialog()

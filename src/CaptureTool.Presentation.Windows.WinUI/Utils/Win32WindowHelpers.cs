@@ -83,7 +83,10 @@ public static partial class Win32WindowHelpers
         PInvoke.SetWindowLong(hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, style);
 
         var exStyle = PInvoke.GetWindowLong(hwnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
-        exStyle |= (int)(WINDOW_EX_STYLE.WS_EX_TOOLWINDOW | WINDOW_EX_STYLE.WS_EX_TOPMOST);
+        exStyle |= (int)(
+            WINDOW_EX_STYLE.WS_EX_LAYERED |
+            WINDOW_EX_STYLE.WS_EX_TOOLWINDOW |
+            WINDOW_EX_STYLE.WS_EX_TOPMOST);
         exStyle &= ~(int)WINDOW_EX_STYLE.WS_EX_APPWINDOW;
         PInvoke.SetWindowLong(hwnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, exStyle);
 
