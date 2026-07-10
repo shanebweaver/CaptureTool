@@ -1,5 +1,6 @@
 using CaptureTool.Application.Abstractions.Audio;
 using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Media;
@@ -37,6 +38,7 @@ public static class WindowsInfrastructureServiceCollectionExtensions
         services.AddSingleton<IJsonStorageService, WindowsJsonStorageService>();
         services.AddSingleton<ILocalizationService, WindowsLocalizationService>();
         services.AddSingleton<IShareService, WindowsShareService>();
+        services.AddSingleton<IExternalMediaEditorLauncher, WindowsExternalMediaEditorLauncher>();
         services.AddSingleton<ITaskEnvironment>(_ => new WinUITaskEnvironment(dispatcherQueue));
         services.AddSingleton<IShutdownHandler, WindowsShutdownHandler>();
         services.AddSingleton<IFilePickerService, WindowsFilePickerService>();

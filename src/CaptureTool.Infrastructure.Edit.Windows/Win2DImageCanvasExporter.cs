@@ -40,6 +40,17 @@ public sealed partial class Win2DImageCanvasExporter : IImageCanvasExporter
     {
         using InMemoryRandomAccessStream stream = await RenderToRandomAccessStreamAsync(drawables, options);
 
+        string? directoryPath = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrWhiteSpace(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+
+        if (!File.Exists(filePath))
+        {
+            using FileStream _ = File.Create(filePath);
+        }
+
         StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
         CachedFileManager.DeferUpdates(file);
 

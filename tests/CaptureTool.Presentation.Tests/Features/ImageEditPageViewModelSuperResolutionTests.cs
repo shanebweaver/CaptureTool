@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
@@ -249,6 +250,8 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
             featureAvailability ?? Mock.Of<IImageSuperResolutionFeatureAvailability>(x => x.IsImageSuperResolutionEnabled == true),
             consent ?? Mock.Of<IImageSuperResolutionPreparationConsentService>(),
             Mock.Of<IShareService>(),
+            Mock.Of<IOpenExternalEditorUseCase>(),
+            Mock.Of<IStorageService>(),
             Mock.Of<ISettingsService>(),
             Mock.Of<ILogService>(),
             notifications ?? Mock.Of<IAppNotificationService>(),

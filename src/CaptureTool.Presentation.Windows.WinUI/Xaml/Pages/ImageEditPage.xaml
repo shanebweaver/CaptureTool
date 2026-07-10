@@ -156,6 +156,14 @@
                 Command="{x:Bind ViewModel.ShareCommand}"
                 Icon="Share"
                 IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}" />
+            <!--  Edit in Paint  -->
+            <AppBarButton
+                x:Uid="ImageEdit_EditInPaintButton"
+                Command="{x:Bind ViewModel.EditInPaintCommand}"
+                Icon="Edit"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
+                <AppBarButton.Label>Edit in Paint</AppBarButton.Label>
+            </AppBarButton>
         </CommandBar>
 
         <!--  Canvas  -->

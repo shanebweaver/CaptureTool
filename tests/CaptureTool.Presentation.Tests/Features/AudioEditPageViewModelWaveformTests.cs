@@ -1,5 +1,7 @@
+using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Features.Audio;
 using CaptureTool.Presentation.Features.AudioEdit;
 using FluentAssertions;
@@ -39,11 +41,30 @@ public sealed class AudioEditPageViewModelWaveformTests
         viewModel.WaveformBars[0].Level.Should().Be(.5);
     }
 
-    private static AudioEditPageViewModel CreateViewModel()
+    [TestMethod]
+    public async Task OpenInClipchampCommand_ShouldOpenCurrentAudioInClipchamp()
+    {
+        var externalEditor = new Mock<IOpenExternalEditorUseCase>();
+        AudioEditPageViewModel viewModel = CreateViewModel(openExternalEditorAction: externalEditor.Object);
+        viewModel.Load(new AudioFile("test.wav"));
+
+        await viewModel.OpenInClipchampCommand.ExecuteAsync(null);
+
+        externalEditor.Verify(service =>
+            service.ExecuteAsync(
+                It.Is<OpenExternalEditorRequest>(request =>
+                    request.MediaPath == "test.wav" &&
+                    request.Editor == ExternalMediaEditor.Clipchamp),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    private static AudioEditPageViewModel CreateViewModel(IOpenExternalEditorUseCase? openExternalEditorAction = null)
     {
         return new AudioEditPageViewModel(
             Mock.Of<ISaveAudioFileUseCase>(),
             Mock.Of<ICopyAudioFileUseCase>(),
+            openExternalEditorAction ?? Mock.Of<IOpenExternalEditorUseCase>(),
             Mock.Of<IAudioWaveformHistory>());
     }
 }

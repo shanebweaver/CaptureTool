@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
@@ -15,6 +16,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand CopyCommand { get; }
+    public IAsyncRelayCommand EditInClipchampCommand { get; }
     public IRelayCommand ToggleTrimModeCommand { get; }
 
     public string? VideoPath
@@ -79,6 +81,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
     private readonly ISaveVideoFileUseCase _saveAction;
     private readonly ICopyVideoFileUseCase _copyAction;
+    private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
     private readonly ILogService _logService;
 
     public string EditSessionName => "video edit session";
@@ -92,14 +95,17 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     public VideoEditPageViewModel(
         ISaveVideoFileUseCase saveAction,
         ICopyVideoFileUseCase copyAction,
+        IOpenExternalEditorUseCase openExternalEditorAction,
         ILogService logService)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
+        _openExternalEditorAction = openExternalEditorAction;
         _logService = logService;
 
         SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        EditInClipchampCommand = new AsyncRelayCommand(EditInClipchampAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleTrimModeCommand = new RelayCommand(ToggleTrimMode);
 
         IsVideoReady = false;
@@ -235,6 +241,18 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
 
         await _copyAction.ExecuteAsync(
             new CopyVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
+            CancellationToken.None);
+    }
+
+    private async Task EditInClipchampAsync()
+    {
+        if (string.IsNullOrEmpty(VideoPath))
+        {
+            return;
+        }
+
+        await _openExternalEditorAction.ExecuteAsync(
+            new OpenExternalEditorRequest(VideoPath, ExternalMediaEditor.Clipchamp),
             CancellationToken.None);
     }
 

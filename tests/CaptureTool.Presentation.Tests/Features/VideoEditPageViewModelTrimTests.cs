@@ -1,3 +1,4 @@
+using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Logging;
@@ -139,6 +140,24 @@ public class VideoEditPageViewModelTrimTests
     }
 
     [TestMethod]
+    public async Task EditInClipchampCommand_ShouldOpenCurrentVideoInClipchamp()
+    {
+        var externalEditor = new Mock<IOpenExternalEditorUseCase>();
+        var viewModel = CreateViewModel(openExternalEditorAction: externalEditor.Object);
+        viewModel.Load(new VideoFile("test.mp4"));
+
+        await viewModel.EditInClipchampCommand.ExecuteAsync(null);
+
+        externalEditor.Verify(service =>
+            service.ExecuteAsync(
+                It.Is<OpenExternalEditorRequest>(request =>
+                    request.MediaPath == "test.mp4" &&
+                    request.Editor == ExternalMediaEditor.Clipchamp),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
     public void UpdateTrimRange_ShouldMarkSessionDirty()
     {
         var viewModel = CreateViewModel();
@@ -153,11 +172,13 @@ public class VideoEditPageViewModelTrimTests
     private static VideoEditPageViewModel CreateViewModel(
         ISaveVideoFileUseCase? saveAction = null,
         ICopyVideoFileUseCase? copyAction = null,
+        IOpenExternalEditorUseCase? openExternalEditorAction = null,
         ILogService? logService = null)
     {
         return new(
             saveAction ?? CreateSaveUseCase(),
             copyAction ?? CreateCopyUseCase(),
+            openExternalEditorAction ?? Mock.Of<IOpenExternalEditorUseCase>(),
             logService ?? Mock.Of<ILogService>());
     }
 

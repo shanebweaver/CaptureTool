@@ -30,6 +30,15 @@
 
             <AppBarSeparator />
 
+            <!--  Edit in Clipchamp  -->
+            <AppBarButton
+                x:Uid="VideoEdit_EditInClipchampButton"
+                Command="{x:Bind ViewModel.EditInClipchampCommand}"
+                Icon="Edit"
+                IsEnabled="{x:Bind ViewModel.IsVideoReady, Mode=OneWay}">
+                <AppBarButton.Label>Edit in Clipchamp</AppBarButton.Label>
+            </AppBarButton>
+
             <!--  Copy  -->
             <AppBarButton
                 x:Uid="VideoEdit_CopyButton"

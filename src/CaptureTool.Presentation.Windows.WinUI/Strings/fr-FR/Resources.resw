@@ -1256,4 +1256,13 @@ SOFTWARE.
   <data name="ImageSuperResolutionStatus_Failed" xml:space="preserve">
     <value>Super Resolution failed.</value>
   </data>
+  <data name="ImageEdit_EditInPaintButton.Label" xml:space="preserve">
+    <value>Modifier dans Paint</value>
+  </data>
+  <data name="VideoEdit_EditInClipchampButton.Label" xml:space="preserve">
+    <value>Modifier dans Clipchamp</value>
+  </data>
+  <data name="AudioEdit_OpenInClipchampButton.Label" xml:space="preserve">
+    <value>Ouvrir dans Clipchamp</value>
+  </data>
 </root>

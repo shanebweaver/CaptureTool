@@ -1,6 +1,7 @@
 using CaptureTool.Application.Tests;
 using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Capture.Audio;
+using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Abstractions.Edit.Audio.OpenAudioEditPage;
 using CaptureTool.Application.Abstractions.Edit.Audio.SaveAudioFile;
@@ -11,6 +12,7 @@ using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Media;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Capture.Audio;
+using CaptureTool.Application.Edit.External;
 using CaptureTool.Application.Edit.Audio.CopyAudioFile;
 using CaptureTool.Application.Edit.Audio.OpenAudioEditPage;
 using CaptureTool.Application.Edit.Audio.SaveAudioFile;
@@ -94,6 +96,38 @@ public sealed class MediaEditUseCaseTests
 
         navigation.Verify(service => service.Navigate(NavigationRoute.AudioEdit, audioFile, false), Times.Once);
         navigation.Verify(service => service.Navigate(NavigationRoute.VideoEdit, videoFile, false), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task OpenExternalEditorUseCase_WithExistingFile_LaunchesRequestedEditor()
+    {
+        string imagePath = await CreateTempFileAsync("source.png", "image");
+        var launcher = new Mock<IExternalMediaEditorLauncher>();
+        launcher
+            .Setup(service => service.TryOpenFileAsync(imagePath, ExternalMediaEditor.Paint, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var useCase = new OpenExternalEditorUseCase(launcher.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
+
+        OpenExternalEditorResponse response = (await useCase.ExecuteAsync(
+            new OpenExternalEditorRequest(imagePath, ExternalMediaEditor.Paint),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsTrue(response.Opened);
+        launcher.Verify(service => service.TryOpenFileAsync(imagePath, ExternalMediaEditor.Paint, TestContext.CancellationToken), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task OpenExternalEditorUseCase_WithMissingFile_ReturnsNotOpened()
+    {
+        var launcher = new Mock<IExternalMediaEditorLauncher>();
+        var useCase = new OpenExternalEditorUseCase(launcher.Object, TestFileSystem.Instance, TestUseCaseExecutor.Instance);
+
+        OpenExternalEditorResponse response = (await useCase.ExecuteAsync(
+            new OpenExternalEditorRequest(@"C:\missing.png", ExternalMediaEditor.Paint),
+            TestContext.CancellationToken)).Value!;
+
+        Assert.IsFalse(response.Opened);
+        launcher.Verify(service => service.TryOpenFileAsync(It.IsAny<string>(), It.IsAny<ExternalMediaEditor>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
