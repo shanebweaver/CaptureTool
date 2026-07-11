@@ -1,6 +1,7 @@
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Store;
 using CaptureTool.Application.Abstractions.Files;
 using CaptureTool.Application.Abstractions.Globalization;
@@ -40,6 +41,7 @@ public sealed class InfrastructureServiceCollectionExtensionsTests
         AssertHasRegistration<IStoreFeatureAvailability, StoreFeatureAvailability>(services);
         AssertHasRegistration<IChromaKeyFeatureAvailability, ChromaKeyFeatureAvailability>(services);
         AssertHasRegistration<IImageSuperResolutionFeatureAvailability, ImageSuperResolutionFeatureAvailability>(services);
+        AssertHasRegistration<ITextExtractionFeatureAvailability, TextExtractionFeatureAvailability>(services);
         AssertHasRegistration<IFileSystem, LocalFileSystem>(services);
         AssertHasRegistration<IGlobalizationService, GlobalizationService>(services);
         AssertHasRegistration<INavigationService, NavigationService>(services);

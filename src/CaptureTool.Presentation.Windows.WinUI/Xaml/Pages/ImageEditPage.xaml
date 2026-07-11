@@ -17,7 +17,7 @@
         <converters:ShapeTypeToIntConverter x:Key="ShapeTypeToIntConverter" />
     </Page.Resources>
 
-    <Grid>
+    <Grid AutomationProperties.AutomationId="ImageEditPageRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -27,6 +27,7 @@
 
         <!--  Toolbar  -->
         <CommandBar
+            AutomationProperties.AutomationId="ImageEdit_CommandBar"
             HorizontalAlignment="Center"
             DefaultLabelPosition="Right"
             IsOpen="False">
@@ -45,12 +46,24 @@
             <AppBarSeparator Visibility="{x:Bind ViewModel.ChromaKeyTool.IsChromaKeyAddOnOwned, Mode=OneWay}" />
             <AppBarToggleButton
                 x:Uid="ImageEdit_SuperResolutionButton"
+                AutomationProperties.AutomationId="ImageEdit_SuperResolutionButton"
                 Command="{x:Bind ViewModel.ToggleSuperResolutionCommand}"
                 IsChecked="{x:Bind ViewModel.IsSuperResolutionActive, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.CanToggleSuperResolution, Mode=OneWay}"
                 Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsSuperResolutionFeatureEnabled), Mode=OneWay}">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="&#xE945;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
+            <AppBarToggleButton
+                AutomationProperties.AutomationId="ImageEdit_TextExtractionButton"
+                Command="{x:Bind ViewModel.ToggleTextExtractionModeCommand}"
+                IsChecked="{x:Bind ViewModel.IsTextExtractionModeActive, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.CanToggleTextExtraction, Mode=OneWay}"
+                Label="Text extraction"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsTextExtractionFeatureEnabled), Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE8D2;" />
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
             <AppBarToggleButton
@@ -190,6 +203,7 @@
             Row="2">
             <controls:ImageCanvas
                 x:Name="ImageCanvas"
+                AutomationProperties.AutomationId="ImageEdit_ImageCanvas"
                 CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"
                 ColorPickerColorHovered="ImageCanvas_ColorPickerColorHovered"
                 ColorPickerColorPicked="ImageCanvas_ColorPickerColorPicked"
@@ -202,6 +216,7 @@
                 IsCropModeEnabled="{x:Bind ViewModel.IsCropModeActive, Mode=OneWay}"
                 IsShapesModeEnabled="{x:Bind ViewModel.IsShapesModeActive, Mode=OneWay}"
                 IsTextModeEnabled="{x:Bind ViewModel.IsTextModeActive, Mode=OneWay}"
+                IsTextExtractionOverlayEnabled="{x:Bind ViewModel.IsTextExtractionModeActive, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}"
                 SelectedShapeType="{x:Bind ViewModel.ShapeTool.SelectedShapeType, Mode=OneWay}"
                 ShapeDeleted="ImageCanvas_ShapeDeleted"
@@ -213,6 +228,7 @@
                 ShapeStrokeWidth="{x:Bind ViewModel.ShapeTool.ShapeStrokeWidth, Mode=OneWay}"
                 TextBackgroundColor="{x:Bind ViewModel.TextTool.TextBackgroundColor, Mode=OneWay}"
                 TextBoxDrawn="ImageCanvas_TextBoxDrawn"
+                TextExtractionRegions="{x:Bind ViewModel.TextExtractionRegions, Mode=OneWay}"
                 TextDrawableSelected="ImageCanvas_TextDrawableSelected"
                 TextFontFamily="{x:Bind ViewModel.TextTool.TextFontFamily, Mode=OneWay}"
                 TextFontSize="{x:Bind ViewModel.TextTool.TextFontSize, Mode=OneWay}"
@@ -331,6 +347,16 @@
             VerticalAlignment="Center"
             IsActive="{x:Bind ViewModel.IsSuperResolutionGenerating, Mode=OneWay}"
             Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsSuperResolutionGenerating), Mode=OneWay}" />
+
+        <ProgressRing
+            Grid.Row="2"
+            AutomationProperties.AutomationId="ImageEdit_TextExtractionProgressRing"
+            Width="48"
+            Height="48"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsActive="{x:Bind ViewModel.IsTextExtractionRunning, Mode=OneWay}"
+            Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.IsTextExtractionRunning), Mode=OneWay}" />
 
         <Grid
             MinHeight="38"

@@ -1,9 +1,11 @@
+using CaptureTool.Application.Abstractions.Ai;
 using CaptureTool.Application.Abstractions.Cancellation;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
@@ -11,6 +13,7 @@ using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.FileSystem;
+using CaptureTool.Domain.Ai;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
@@ -33,6 +36,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IImageSuperResolutionService _imageSuperResolutionService;
     private readonly IImageSuperResolutionFeatureAvailability _imageSuperResolutionFeatureAvailability;
     private readonly IImageSuperResolutionPreparationConsentService _imageSuperResolutionPreparationConsentService;
+    private readonly ITextExtractionService _textExtractionService;
+    private readonly ITextExtractionFeatureAvailability _textExtractionFeatureAvailability;
+    private readonly IAiFeatureConsentService _aiFeatureConsentService;
+    private readonly IAiFeatureConsentDialogService _aiFeatureConsentDialogService;
     private readonly IShareService _shareService;
     private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
     private readonly IStorageService _storageService;
@@ -50,8 +57,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private ImageFile? _superResolutionImageFile;
     private Size _superResolutionImageSize;
     private CancellationTokenSource? _superResolutionCancellationTokenSource;
+    private CancellationTokenSource? _textExtractionCancellationTokenSource;
     private bool _hasUnsavedChangesBeforeSuperResolution;
     private bool _hasUserEditsSinceSuperResolutionActivated;
+    private int _editRevision;
+    private int? _textExtractionProcessedRevision;
 
     public event EventHandler? InvalidateCanvasRequested;
     public event EventHandler? ForceZoomAndCenterRequested;
@@ -70,6 +80,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IAsyncRelayCommand ShareCommand { get; }
     public IAsyncRelayCommand EditInPaintCommand { get; }
     public IAsyncRelayCommand ToggleSuperResolutionCommand { get; }
+    public IAsyncRelayCommand ToggleTextExtractionModeCommand { get; }
     public IRelayCommand<ImageOrientation> UpdateOrientationCommand { get; }
     public IRelayCommand<Rectangle> UpdateCropRectCommand { get; }
     public IRelayCommand<bool> SetChromaKeyModeActiveCommand { get; }
@@ -171,6 +182,12 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     }
 
+    public bool IsTextExtractionModeActive
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
     public bool IsSuperResolutionAvailable
     {
         get;
@@ -231,6 +248,66 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         private set => Set(ref field, value);
     } = string.Empty;
 
+    public bool IsTextExtractionFeatureEnabled
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                UpdateCanToggleTextExtraction();
+            }
+        }
+    }
+
+    public bool IsTextExtractionAvailable
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                UpdateCanToggleTextExtraction();
+            }
+        }
+    }
+
+    public bool IsTextExtractionRunning
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                UpdateCanToggleTextExtraction();
+            }
+        }
+    }
+
+    public bool CanToggleTextExtraction
+    {
+        get;
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                ToggleTextExtractionModeCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public string TextExtractionStatusMessage
+    {
+        get;
+        private set => Set(ref field, value);
+    } = string.Empty;
+
+    public IReadOnlyList<RecognizedTextRegion> TextExtractionRegions
+    {
+        get;
+        private set => Set(ref field, value);
+    } = [];
+
     public int ZoomPercentage
     {
         get;
@@ -271,7 +348,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ColorPickerToolViewModel colorPickerTool,
         ChromaKeyToolViewModel chromaKeyTool,
         ShapeToolViewModel shapeTool,
-        TextToolViewModel textTool)
+        TextToolViewModel textTool,
+        IAiFeatureConsentService? aiFeatureConsentService = null,
+        IAiFeatureConsentDialogService? aiFeatureConsentDialogService = null,
+        ITextExtractionService? textExtractionService = null,
+        ITextExtractionFeatureAvailability? textExtractionFeatureAvailability = null)
     {
         _localizationService = localizationService;
         _cancellationService = cancellationService;
@@ -281,6 +362,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _imageSuperResolutionService = imageSuperResolutionService;
         _imageSuperResolutionFeatureAvailability = imageSuperResolutionFeatureAvailability;
         _imageSuperResolutionPreparationConsentService = imageSuperResolutionPreparationConsentService;
+        _textExtractionService = textExtractionService ?? new NullTextExtractionService();
+        _textExtractionFeatureAvailability = textExtractionFeatureAvailability ?? new DisabledTextExtractionFeatureAvailability();
+        _aiFeatureConsentService = aiFeatureConsentService ?? new PermissiveAiFeatureConsentService();
+        _aiFeatureConsentDialogService = aiFeatureConsentDialogService ?? new PermissiveAiFeatureConsentDialogService();
         _shareService = shareService;
         _openExternalEditorAction = openExternalEditorAction;
         _storageService = storageService;
@@ -308,6 +393,8 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         RotationDisplayName = string.Empty;
         ZoomPercentage = 100;
         IsSuperResolutionFeatureEnabled = _imageSuperResolutionFeatureAvailability.IsImageSuperResolutionEnabled;
+        IsTextExtractionFeatureEnabled = _textExtractionFeatureAvailability.IsTextExtractionEnabled;
+        _settingsService.SettingsChanged += SettingsService_SettingsChanged;
 
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
@@ -325,6 +412,10 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ToggleSuperResolutionCommand = new AsyncRelayCommand(
             ToggleSuperResolutionAsync,
             () => CanToggleSuperResolution,
+            AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        ToggleTextExtractionModeCommand = new AsyncRelayCommand(
+            ToggleTextExtractionModeAsync,
+            () => CanToggleTextExtraction,
             AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UpdateOrientationCommand = new RelayCommand<ImageOrientation>(UpdateOrientation);
         UpdateCropRectCommand = new RelayCommand<Rectangle>(UpdateCropRect);
@@ -346,6 +437,17 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         (ChromaKeySettings OldSettings, ChromaKeySettings NewSettings) settings)
     {
         ExecuteEditCommand(new SetChromaKeyCommand(settings.OldSettings, settings.NewSettings));
+    }
+
+    private void SettingsService_SettingsChanged(ISettingDefinition[] settings)
+    {
+        if (settings.Any(setting =>
+            setting.Key == CaptureToolSettings.Settings_AiConsent_TextExtraction.Key ||
+            setting.Key == CaptureToolSettings.Settings_AiConsent_ImageSuperResolution.Key))
+        {
+            UpdateCanToggleSuperResolution();
+            UpdateCanToggleTextExtraction();
+        }
     }
 
     public override async Task LoadAsync(ImageFile imageFile, CancellationToken cancellationToken)
@@ -381,11 +483,15 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         await base.LoadAsync(imageFile, cancellationToken);
         UpdateSuperResolutionAvailability();
         UpdateCanToggleSuperResolution();
+        UpdateTextExtractionAvailability();
+        UpdateCanToggleTextExtraction();
     }
 
     public override void Dispose()
     {
         CancelSuperResolutionWork();
+        CancelTextExtractionWork();
+        _settingsService.SettingsChanged -= SettingsService_SettingsChanged;
         ChromaKeyTool.SettingsChanged -= ChromaKeyTool_SettingsChanged;
         ChromaKeyTool.InteractionCommitted -= ChromaKeyTool_InteractionCommitted;
         _imageDrawable = null;
@@ -398,6 +504,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IsSuperResolutionAvailable = false;
         IsSuperResolutionGenerating = false;
         SuperResolutionStatusMessage = string.Empty;
+        IsTextExtractionFeatureEnabled = _textExtractionFeatureAvailability.IsTextExtractionEnabled;
+        IsTextExtractionAvailable = false;
+        IsTextExtractionRunning = false;
+        TextExtractionStatusMessage = string.Empty;
+        TextExtractionRegions = [];
+        _editRevision = 0;
+        _textExtractionProcessedRevision = null;
         _editHistory.Clear();
         HasUnsavedChanges = false;
         ApplyActiveMode(_modeStateMachine.Reset());
@@ -429,7 +542,36 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
             return;
         }
 
+        if (!await EnsureAiFeatureConsentAsync(AiFeatureId.ImageSuperResolution, CancellationToken.None))
+        {
+            UpdateCanToggleSuperResolution();
+            return;
+        }
+
         await ShowSuperResolutionImageAsync();
+    }
+
+    private async Task ToggleTextExtractionModeAsync()
+    {
+        if (!IsTextExtractionFeatureEnabled || !IsTextExtractionAvailable)
+        {
+            return;
+        }
+
+        if (IsTextExtractionModeActive)
+        {
+            ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.TextExtraction));
+            return;
+        }
+
+        if (!await EnsureAiFeatureConsentAsync(AiFeatureId.TextExtraction, CancellationToken.None))
+        {
+            UpdateCanToggleTextExtraction();
+            return;
+        }
+
+        ApplyActiveMode(_modeStateMachine.Activate(ImageEditMode.TextExtraction));
+        await EnsureTextExtractionCurrentAsync();
     }
 
     private void SetChromaKeyModeActive(bool value)
@@ -461,11 +603,21 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
     private void ApplyActiveMode(ImageEditMode mode)
     {
+        bool wasTextExtractionModeActive = IsTextExtractionModeActive;
         IsCropModeActive = mode == ImageEditMode.Crop;
         IsShapesModeActive = mode == ImageEditMode.Shapes;
         IsTextModeActive = mode == ImageEditMode.Text;
         IsChromaKeyModeActive = mode == ImageEditMode.ChromaKey;
         IsColorPickerModeActive = mode == ImageEditMode.ColorPicker;
+        IsTextExtractionModeActive = mode == ImageEditMode.TextExtraction;
+
+        if (wasTextExtractionModeActive && !IsTextExtractionModeActive)
+        {
+            CancelTextExtractionWork();
+            TextExtractionRegions = [];
+            TextExtractionStatusMessage = string.Empty;
+            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     private void ApplyImageSizeBasedDefaults(Size imageSize)
@@ -563,6 +715,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
 
         _editSession.AddDrawable(drawable);
         SyncDrawablesFromSession();
+        IncrementEditRevision();
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
 
@@ -626,6 +779,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         SyncDrawablesFromSession();
         SyncChromaKeySettingsFromSession();
         UpdateUndoRedoStackProperties();
+        IncrementEditRevision();
         HasUnsavedChanges = true;
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
@@ -641,6 +795,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         SyncDrawablesFromSession();
         SyncChromaKeySettingsFromSession();
         UpdateUndoRedoStackProperties();
+        IncrementEditRevision();
         HasUnsavedChanges = true;
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
@@ -729,6 +884,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         SyncDrawablesFromSession();
         SyncChromaKeySettingsFromSession();
         UpdateUndoRedoStackProperties();
+        IncrementEditRevision();
         MarkUnsavedChanges();
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
     }
@@ -807,6 +963,149 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private void RequestZoomAndCenter()
     {
         ForceZoomAndCenterRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private async Task<bool> EnsureAiFeatureConsentAsync(AiFeatureId featureId, CancellationToken cancellationToken)
+    {
+        AiFeatureConsentState consentState = _aiFeatureConsentService.GetConsentState(featureId);
+        if (consentState == AiFeatureConsentState.Granted)
+        {
+            return true;
+        }
+
+        if (consentState == AiFeatureConsentState.Denied)
+        {
+            return false;
+        }
+
+        bool consented = await _aiFeatureConsentDialogService.RequestConsentAsync(featureId, cancellationToken);
+        await _aiFeatureConsentService.SetConsentAsync(featureId, consented, cancellationToken);
+        UpdateCanToggleSuperResolution();
+        UpdateCanToggleTextExtraction();
+        return consented;
+    }
+
+    private async Task EnsureTextExtractionCurrentAsync()
+    {
+        if (_textExtractionProcessedRevision == _editRevision)
+        {
+            return;
+        }
+
+        await RunTextExtractionAsync();
+    }
+
+    private async Task RunTextExtractionAsync()
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        TextExtractionStatusMessage = string.Empty;
+        TextExtractionRegions = [];
+
+        _textExtractionCancellationTokenSource = new CancellationTokenSource();
+        CancellationToken cancellationToken = _textExtractionCancellationTokenSource.Token;
+        int processedRevision = _editRevision;
+        IsTextExtractionRunning = true;
+
+        try
+        {
+            TextExtractionReadyState readyState = _textExtractionService.GetReadyState();
+            if (readyState == TextExtractionReadyState.PreparationNeeded)
+            {
+                TextExtractionPreparationResult preparationResult =
+                    await _textExtractionService.EnsureReadyAsync(cancellationToken);
+                if (preparationResult.Status != TextExtractionPreparationStatus.Success)
+                {
+                    ShowTextExtractionFailure(GetPreparationFailureMessage(preparationResult));
+                    UpdateTextExtractionAvailability();
+                    return;
+                }
+            }
+            else if (readyState != TextExtractionReadyState.Ready)
+            {
+                ShowTextExtractionFailure(GetReadyStateFailureMessage(readyState));
+                UpdateTextExtractionAvailability();
+                return;
+            }
+
+            string sourceImagePath = GetTemporaryTextExtractionImagePath();
+            ImageCanvasRenderOptions options = GetImageCanvasRenderOptions();
+            await _imageCanvasExporter.SaveImageAsync(sourceImagePath, [.. Drawables], options);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            Size renderedSize = GetTextExtractionRenderedSize(options);
+            TextExtractionResult result = await _textExtractionService.ExtractAsync(
+                new TextExtractionRequest(new ImageFile(sourceImagePath), renderedSize),
+                cancellationToken);
+
+            if (result.Status != TextExtractionStatus.Success || result.Document is null)
+            {
+                ShowTextExtractionFailure(GetExtractionFailureMessage(result));
+                return;
+            }
+
+            TextExtractionRegions = NormalizeTextExtractionRegions(result.Document.Regions, result.Document.ImageSize);
+            _textExtractionProcessedRevision = processedRevision;
+            InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
+        }
+        catch (OperationCanceledException)
+        {
+            TextExtractionStatusMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogException(ex, "Failed to extract text from image.");
+            ShowTextExtractionFailure("Text extraction failed.");
+        }
+        finally
+        {
+            _textExtractionCancellationTokenSource?.Dispose();
+            _textExtractionCancellationTokenSource = null;
+            IsTextExtractionRunning = false;
+            UpdateCanToggleTextExtraction();
+        }
+    }
+
+    private string GetTemporaryTextExtractionImagePath()
+    {
+        return Path.Combine(
+            _storageService.GetApplicationTemporaryFolderPath(),
+            $"{Path.GetFileNameWithoutExtension(_storageService.GetTemporaryFileName())}.text-extraction.png");
+    }
+
+    private static Size GetTextExtractionRenderedSize(ImageCanvasRenderOptions options)
+    {
+        return options.CropRect.Width > 0 && options.CropRect.Height > 0
+            ? new Size(options.CropRect.Width, options.CropRect.Height)
+            : options.CanvasSize;
+    }
+
+    private static IReadOnlyList<RecognizedTextRegion> NormalizeTextExtractionRegions(
+        IReadOnlyList<RecognizedTextRegion> regions,
+        Size imageSize)
+    {
+        if (imageSize.Width <= 0 || imageSize.Height <= 0)
+        {
+            return [];
+        }
+
+        List<RecognizedTextRegion> normalizedRegions = [];
+        RectangleF imageBounds = new(0, 0, imageSize.Width, imageSize.Height);
+        foreach (RecognizedTextRegion region in regions)
+        {
+            RectangleF bounds = region.Bounds;
+            bounds.Inflate(2, 2);
+            RectangleF clampedBounds = RectangleF.Intersect(imageBounds, bounds);
+            if (clampedBounds.Width > 0 && clampedBounds.Height > 0)
+            {
+                normalizedRegions.Add(region with { Bounds = clampedBounds });
+            }
+        }
+
+        return normalizedRegions;
     }
 
     private async Task ShowSuperResolutionImageAsync()
@@ -937,6 +1236,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _imageDrawable.ImageSize = imageSize;
         ImageFile = imageFile;
         IsSuperResolutionActive = isSuperResolutionActive;
+        IncrementEditRevision();
         SyncImageGeometryFromSession();
         SyncDrawablesFromSession();
         InvalidateCanvasRequested?.Invoke(this, EventArgs.Empty);
@@ -972,7 +1272,47 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         CanToggleSuperResolution = IsLoaded &&
             IsSuperResolutionFeatureEnabled &&
             IsSuperResolutionAvailable &&
-            !IsSuperResolutionGenerating;
+            !IsSuperResolutionGenerating &&
+            (IsSuperResolutionActive || IsAiFeatureRequestAllowed(AiFeatureId.ImageSuperResolution));
+    }
+
+    private void UpdateTextExtractionAvailability()
+    {
+        IsTextExtractionFeatureEnabled = _textExtractionFeatureAvailability.IsTextExtractionEnabled;
+        if (!IsTextExtractionFeatureEnabled)
+        {
+            IsTextExtractionAvailable = false;
+            return;
+        }
+
+        TextExtractionReadyState readyState = _textExtractionService.GetReadyState();
+        IsTextExtractionAvailable = readyState is
+            TextExtractionReadyState.Ready or
+            TextExtractionReadyState.PreparationNeeded;
+    }
+
+    private void UpdateCanToggleTextExtraction()
+    {
+        CanToggleTextExtraction = IsLoaded &&
+            IsTextExtractionFeatureEnabled &&
+            IsTextExtractionAvailable &&
+            (IsTextExtractionModeActive ||
+                (!IsTextExtractionRunning && IsAiFeatureRequestAllowed(AiFeatureId.TextExtraction)));
+    }
+
+    private bool IsAiFeatureRequestAllowed(AiFeatureId featureId)
+    {
+        return _aiFeatureConsentService.GetConsentState(featureId) != AiFeatureConsentState.Denied;
+    }
+
+    private void IncrementEditRevision()
+    {
+        _editRevision++;
+
+        if (IsTextExtractionModeActive)
+        {
+            ApplyActiveMode(_modeStateMachine.Deactivate(ImageEditMode.TextExtraction));
+        }
     }
 
     private void CancelSuperResolutionWork()
@@ -980,6 +1320,13 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _superResolutionCancellationTokenSource?.Cancel();
         _superResolutionCancellationTokenSource?.Dispose();
         _superResolutionCancellationTokenSource = null;
+    }
+
+    private void CancelTextExtractionWork()
+    {
+        _textExtractionCancellationTokenSource?.Cancel();
+        _textExtractionCancellationTokenSource?.Dispose();
+        _textExtractionCancellationTokenSource = null;
     }
 
     private string GetReadyStateFailureMessage(ImageSuperResolutionReadyState readyState)
@@ -1031,11 +1378,111 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         }
     }
 
+    private string GetReadyStateFailureMessage(TextExtractionReadyState readyState)
+    {
+        return readyState switch
+        {
+            TextExtractionReadyState.NotSupported => "Text extraction is not supported on this PC.",
+            TextExtractionReadyState.Disabled => "Text extraction is disabled on this PC.",
+            _ => "Text extraction is not available."
+        };
+    }
+
+    private static string GetPreparationFailureMessage(TextExtractionPreparationResult result)
+    {
+        return result.Status switch
+        {
+            TextExtractionPreparationStatus.Cancelled => string.Empty,
+            TextExtractionPreparationStatus.NotSupported => "Text extraction is not supported on this PC.",
+            TextExtractionPreparationStatus.Failed => string.IsNullOrWhiteSpace(result.ErrorMessage)
+                ? "Text extraction could not be prepared."
+                : result.ErrorMessage,
+            _ => "Text extraction could not be prepared."
+        };
+    }
+
+    private static string GetExtractionFailureMessage(TextExtractionResult result)
+    {
+        return result.Status switch
+        {
+            TextExtractionStatus.Cancelled => string.Empty,
+            TextExtractionStatus.NotReady => "Text extraction is not ready.",
+            TextExtractionStatus.NotSupported => "Text extraction is not supported on this PC.",
+            TextExtractionStatus.TooLarge => string.IsNullOrWhiteSpace(result.ErrorMessage)
+                ? "This image is too large for Text Extraction."
+                : result.ErrorMessage,
+            TextExtractionStatus.Failed => string.IsNullOrWhiteSpace(result.ErrorMessage)
+                ? "Text extraction failed."
+                : result.ErrorMessage,
+            _ => "Text extraction failed."
+        };
+    }
+
+    private void ShowTextExtractionFailure(string message)
+    {
+        TextExtractionStatusMessage = message;
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            _notificationService.ShowError(message);
+        }
+    }
+
     private string GetLocalizedString(string resourceKey)
     {
         string value = _localizationService.GetString(resourceKey);
         return string.IsNullOrWhiteSpace(value)
             ? resourceKey
             : value;
+    }
+
+    private sealed class PermissiveAiFeatureConsentService : IAiFeatureConsentService
+    {
+        public IReadOnlyList<AiFeatureConsent> GetFeatureConsents()
+        {
+            return [];
+        }
+
+        public AiFeatureConsentState GetConsentState(AiFeatureId featureId)
+        {
+            return AiFeatureConsentState.Granted;
+        }
+
+        public Task SetConsentAsync(AiFeatureId featureId, bool isGranted, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class PermissiveAiFeatureConsentDialogService : IAiFeatureConsentDialogService
+    {
+        public Task<bool> RequestConsentAsync(AiFeatureId featureId, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(true);
+        }
+    }
+
+    private sealed class DisabledTextExtractionFeatureAvailability : ITextExtractionFeatureAvailability
+    {
+        public bool IsTextExtractionEnabled => false;
+    }
+
+    private sealed class NullTextExtractionService : ITextExtractionService
+    {
+        public TextExtractionReadyState GetReadyState()
+        {
+            return TextExtractionReadyState.NotSupported;
+        }
+
+        public Task<TextExtractionPreparationResult> EnsureReadyAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(TextExtractionPreparationResult.NotSupported);
+        }
+
+        public Task<TextExtractionResult> ExtractAsync(
+            TextExtractionRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(TextExtractionResult.NotSupported);
+        }
     }
 }

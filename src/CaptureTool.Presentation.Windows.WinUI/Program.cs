@@ -1,6 +1,7 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.Win32.SafeHandles;
 using Microsoft.Windows.AppLifecycle;
+using CaptureTool.Presentation.Windows.WinUI.UiTests;
 using System.Diagnostics;
 using Windows.Win32.Foundation;
 
@@ -9,7 +10,6 @@ namespace CaptureTool.Presentation.Windows.WinUI;
 // https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/applifecycle/applifecycle-single-instance
 public class Program
 {
-    private const string SingleInstanceKey = "MySingleInstanceApp";
     private const uint InfiniteTimeout = uint.MaxValue;
     private const uint DefaultFlags = 0;
 
@@ -17,9 +17,11 @@ public class Program
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "App entry point")]
     public static int Main(string[] args)
     {
+        UiTestLaunchOptions.Initialize(args);
+
         // Initialize COM wrappers and single-instance
         WinRT.ComWrappersSupport.InitializeComWrappers();
-        var instance = AppInstance.FindOrRegisterForKey(SingleInstanceKey);
+        var instance = AppInstance.FindOrRegisterForKey(UiTestLaunchOptions.Current.InstanceKey);
 
         if (!instance.IsCurrent)
         {

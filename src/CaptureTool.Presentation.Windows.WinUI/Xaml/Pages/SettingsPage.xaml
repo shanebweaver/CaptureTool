@@ -600,6 +600,56 @@
 
                 </StackPanel>
 
+                <!--  AI consent section  -->
+                <StackPanel Spacing="4">
+                    <TextBlock Margin="0,4" Text="AI consent" />
+
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.AiFeatureConsents, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="settings:AiFeatureConsentViewModel">
+                                <Grid
+                                    Padding="16,12"
+                                    Background="{ThemeResource CardBackgroundFillColorDefault}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                                    BorderThickness="1"
+                                    ColumnSpacing="16"
+                                    CornerRadius="4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="28" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <SymbolIcon Symbol="Permissions" />
+
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock
+                                            MaxLines="2"
+                                            Text="{x:Bind DisplayName}"
+                                            TextTrimming="WordEllipsis"
+                                            TextWrapping="WrapWholeWords" />
+                                        <TextBlock
+                                            FontSize="12"
+                                            MaxLines="2"
+                                            Opacity=".75"
+                                            Text="Allow this AI feature to process images on this device."
+                                            TextTrimming="WordEllipsis"
+                                            TextWrapping="WrapWholeWords" />
+                                    </StackPanel>
+
+                                    <CheckBox
+                                        Grid.Column="2"
+                                        HorizontalAlignment="Right"
+                                        Click="AiFeatureConsentCheckBox_Click"
+                                        IsChecked="{x:Bind IsConsented, Mode=OneWay}"
+                                        />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
                 <!--  Appearance section  -->
                 <StackPanel Spacing="4">
                     <TextBlock x:Uid="Settings_AppearanceHeaderLabel" Margin="0,4" />

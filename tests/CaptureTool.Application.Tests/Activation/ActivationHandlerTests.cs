@@ -1,5 +1,6 @@
 using CaptureTool.Application.Tests;
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Activation;
 using CaptureTool.Application.Abstractions.Capture.Overlay.OpenSelectionOverlay;
 using CaptureTool.Application.Abstractions.Shell.Home.ShowHomePage;
 using CaptureTool.Application.Abstractions.Localization;
@@ -49,6 +50,25 @@ public sealed class ActivationHandlerTests
         fixture.ShowHomePage.Verify(
             useCase => useCase.ExecuteAsync(It.IsAny<ShowHomePageRequest>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
+    }
+
+    [TestMethod]
+    public async Task HandleLaunchActivationAsync_WithLaunchTarget_ShouldNavigateToLaunchTarget()
+    {
+        ActivationHandlerFixture fixture = new();
+        LaunchNavigationTarget target = new("ImageEdit", "image.png");
+        fixture.LaunchNavigationTargetProvider
+            .Setup(provider => provider.GetLaunchNavigationTarget())
+            .Returns(target);
+
+        await fixture.Handler.HandleLaunchActivationAsync();
+
+        fixture.ShowHomePage.Verify(
+            useCase => useCase.ExecuteAsync(It.IsAny<ShowHomePageRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        fixture.NavigationService.Verify(
+            service => service.Navigate(target.Route, target.Parameter, target.ClearHistory),
+            Times.Once);
     }
 
     [TestMethod]
@@ -151,13 +171,17 @@ public sealed class ActivationHandlerTests
                 OpenSelectionOverlay.Object,
                 ShowHomePage.Object,
                 LogService.Object,
-                StartupInitializer);
+                StartupInitializer,
+                LaunchNavigationTargetProvider.Object,
+                NavigationService.Object);
         }
 
         public CaptureToolActivationHandler Handler { get; }
         public Mock<IOpenSelectionOverlayUseCase> OpenSelectionOverlay { get; } = new();
         public Mock<IShowHomePageUseCase> ShowHomePage { get; } = new();
         public Mock<ILogService> LogService { get; } = new();
+        public Mock<ILaunchNavigationTargetProvider> LaunchNavigationTargetProvider { get; } = new();
+        public Mock<INavigationService> NavigationService { get; } = new();
         public FakeStartupInitializer StartupInitializer { get; } = new();
     }
 

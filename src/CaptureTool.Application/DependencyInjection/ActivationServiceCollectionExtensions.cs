@@ -11,6 +11,7 @@ internal static class ActivationServiceCollectionExtensions
     public static IServiceCollection AddActivationServices(this IServiceCollection services)
     {
         services.AddSingleton<IApplicationStartupInitializer, ApplicationStartupInitializer>();
+        services.AddSingleton<ILaunchNavigationTargetProvider, DefaultLaunchNavigationTargetProvider>();
         services.AddSingleton<IActivationHandler, CaptureToolActivationHandler>();
         services.AddTransient<IRestartApplicationUseCase, RestartApplicationUseCase>();
 

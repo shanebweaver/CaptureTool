@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Edit.Image.Rendering;
+using CaptureTool.Application.Abstractions.Edit.Image.TextExtraction;
 using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
@@ -17,6 +18,7 @@ using System.Numerics;
 using Windows.System;
 using Windows.UI.Core;
 using Point = global::Windows.Foundation.Point;
+using Rect = global::Windows.Foundation.Rect;
 using WinUIColor = global::Windows.UI.Color;
 
 namespace CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
@@ -104,6 +106,26 @@ public sealed partial class ImageCanvas : UserControlBase
             {
                 control.HideColorPickerCursor();
             }
+        }
+    }
+
+    public static readonly DependencyProperty IsTextExtractionOverlayEnabledProperty = DependencyProperty.Register(
+        nameof(IsTextExtractionOverlayEnabled),
+        typeof(bool),
+        typeof(ImageCanvas),
+        new PropertyMetadata(false, OnTextExtractionOverlayPropertyChanged));
+
+    public static readonly DependencyProperty TextExtractionRegionsProperty = DependencyProperty.Register(
+        nameof(TextExtractionRegions),
+        typeof(IReadOnlyList<RecognizedTextRegion>),
+        typeof(ImageCanvas),
+        new PropertyMetadata(Array.Empty<RecognizedTextRegion>(), OnTextExtractionOverlayPropertyChanged));
+
+    private static void OnTextExtractionOverlayPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control)
+        {
+            control.UpdateTextExtractionOverlayPath();
         }
     }
 
@@ -313,6 +335,18 @@ public sealed partial class ImageCanvas : UserControlBase
     {
         get => Get<bool>(IsColorPickerModeEnabledProperty);
         set => Set(IsColorPickerModeEnabledProperty, value);
+    }
+
+    public bool IsTextExtractionOverlayEnabled
+    {
+        get => Get<bool>(IsTextExtractionOverlayEnabledProperty);
+        set => Set(IsTextExtractionOverlayEnabledProperty, value);
+    }
+
+    public IReadOnlyList<RecognizedTextRegion> TextExtractionRegions
+    {
+        get => Get<IReadOnlyList<RecognizedTextRegion>>(TextExtractionRegionsProperty) ?? [];
+        set => Set(TextExtractionRegionsProperty, value);
     }
 
     public Rectangle CropRect
@@ -703,6 +737,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
             RenderCanvas.Width = width;
             RenderCanvas.Height = height;
+            UpdateTextExtractionOverlayPath();
             RenderCanvas.Invalidate();
         }
     }
@@ -809,6 +844,45 @@ public sealed partial class ImageCanvas : UserControlBase
 
             Win2DImageCanvasRenderer.Render([.. drawablesToRender], options, args.DrawingSession);
         }
+    }
+
+    private void UpdateTextExtractionOverlayPath()
+    {
+        if (!IsTextExtractionOverlayEnabled || CanvasContainer.Width <= 0 || CanvasContainer.Height <= 0)
+        {
+            TextExtractionOverlayPath.Visibility = Visibility.Collapsed;
+            TextExtractionOverlayPath.Data = null;
+            return;
+        }
+
+        double width = CanvasContainer.Width;
+        double height = CanvasContainer.Height;
+        GeometryGroup geometry = new()
+        {
+            FillRule = FillRule.EvenOdd
+        };
+        geometry.Children.Add(new RectangleGeometry
+        {
+            Rect = new Rect(0, 0, width, height)
+        });
+
+        RectangleF imageBounds = new(0, 0, (float)width, (float)height);
+        foreach (RecognizedTextRegion region in TextExtractionRegions)
+        {
+            RectangleF bounds = RectangleF.Intersect(imageBounds, region.Bounds);
+            if (bounds.Width <= 0 || bounds.Height <= 0)
+            {
+                continue;
+            }
+
+            geometry.Children.Add(new RectangleGeometry
+            {
+                Rect = new Rect(bounds.X, bounds.Y, bounds.Width, bounds.Height)
+            });
+        }
+
+        TextExtractionOverlayPath.Data = geometry;
+        TextExtractionOverlayPath.Visibility = Visibility.Visible;
     }
 
     private Rectangle GetRenderCropRect()

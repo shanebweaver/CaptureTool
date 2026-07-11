@@ -7,5 +7,6 @@ internal enum ImageEditMode
     Shapes,
     Text,
     ChromaKey,
-    ColorPicker
+    ColorPicker,
+    TextExtraction
 }
