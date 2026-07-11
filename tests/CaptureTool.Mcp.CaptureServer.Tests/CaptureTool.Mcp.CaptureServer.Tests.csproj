@@ -1,0 +1,32 @@
+<Project Sdk="MSTest.Sdk/4.0.2">
+
+  <!-- Project properties -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <Platforms>x64;ARM64</Platforms>
+    <UseVSTest>true</UseVSTest>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Domain.Capture\CaptureTool.Domain.Capture.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" />
+    <ProjectReference Include="..\..\src\CaptureTool.Mcp.CaptureServer\CaptureTool.Mcp.CaptureServer.csproj" />
+  </ItemGroup>
+
+  <!-- Package references -->
+  <ItemGroup>
+    <PackageReference Include="CaptureKit.Abstractions" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.CodeCoverage" />
+    <PackageReference Include="ModelContextProtocol" />
+    <PackageReference Include="Moq" />
+    <PackageReference Update="MSTest.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
