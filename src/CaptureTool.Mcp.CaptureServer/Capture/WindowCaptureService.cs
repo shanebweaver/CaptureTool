@@ -23,15 +23,20 @@ public sealed class WindowCaptureService : IWindowCaptureService
     }
 
     public IReadOnlyList<WindowInfoDto> ListWindows()
-        => [.. GetCandidateWindows().Select(window => new WindowInfoDto(
+    {
+        MonitorCaptureResult[] monitors = GetMonitors();
+
+        return [.. GetCandidateWindows(monitors).Select(window => new WindowInfoDto(
             GetWindowId(window.Handle),
             window.Title,
             RectangleDto.FromRectangle(window.Bounds)))];
+    }
 
     public McpCapture CaptureWindow(string windowId)
     {
         nint handle = ParseWindowId(windowId);
-        CaptureWindow window = GetCandidateWindows()
+        MonitorCaptureResult[] monitors = GetMonitors();
+        CaptureWindow window = GetCandidateWindows(monitors)
             .FirstOrDefault(window => window.Handle == handle);
 
         if (window.Handle == 0)
@@ -39,7 +44,6 @@ public sealed class WindowCaptureService : IWindowCaptureService
             throw new InvalidOperationException($"Window '{windowId}' is not available to capture.");
         }
 
-        MonitorCaptureResult[] monitors = _screenCapture.CaptureAllMonitors();
         MonitorCaptureResult referenceMonitor = CaptureTargetSelection.GetBestMonitorForBounds(monitors, window.Bounds);
 
         return _imageCaptureAdapter.Capture(
@@ -55,14 +59,22 @@ public sealed class WindowCaptureService : IWindowCaptureService
             isPrimary: referenceMonitor.IsPrimary);
     }
 
-    private IReadOnlyList<CaptureWindow> GetCandidateWindows()
+    private IReadOnlyList<CaptureWindow> GetCandidateWindows(IReadOnlyList<MonitorCaptureResult> monitors)
         => [.. _displayCaptureService.GetWindows()
             .Where(window =>
                 window.Handle != 0
                 && !string.IsNullOrWhiteSpace(window.Title)
                 && window.Bounds.Width > 0
-                && window.Bounds.Height > 0)
+                && window.Bounds.Height > 0
+                && IsOnCapturedDesktop(window, monitors))
             .OrderBy(window => window.Title, StringComparer.CurrentCultureIgnoreCase)];
+
+    private static bool IsOnCapturedDesktop(CaptureWindow window, IReadOnlyList<MonitorCaptureResult> monitors)
+        => monitors.Count == 0
+            || monitors.Any(monitor => monitor.MonitorBounds.IntersectsWith(window.Bounds));
+
+    private MonitorCaptureResult[] GetMonitors()
+        => _screenCapture.CaptureAllMonitors() ?? [];
 
     private static string GetWindowId(nint handle)
         => $"hwnd:{handle}";

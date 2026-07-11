@@ -17,41 +17,25 @@ public sealed class RegionCaptureServiceTests
     public void Capture_CropsRequestedRegionAndStoresCapture()
     {
         MonitorCaptureResult monitor = CreateMonitor(new Rectangle(0, 0, 10, 10));
+        using var monitorBitmap = new Bitmap(10, 10);
         var screenCapture = new Mock<IScreenCapture>();
         screenCapture.Setup(service => service.CaptureAllMonitors()).Returns([monitor]);
-        var expectedCapture = new McpCapture(
-            [0x89, 0x50, 0x4E, 0x47],
-            McpCaptureMetadata.Create("capture:region", CaptureTime, 4, 4, 96, 1, new Rectangle(2, 3, 4, 4), "region", "png"));
-        var imageCaptureAdapter = new Mock<ICaptureKitImageCaptureAdapter>();
-        imageCaptureAdapter
-            .Setup(adapter => adapter.Capture(
-                It.Is<CaptureKit.Abstractions.CaptureTarget>(target =>
-                    target.Kind == CaptureKit.Abstractions.CaptureTargetKind.Rectangle
-                    && target.MonitorHandle == monitor.HMonitor
-                    && target.Left == 2
-                    && target.Top == 3
-                    && target.Width == 4
-                    && target.Height == 4),
-                new Rectangle(2, 3, 4, 4),
-                "region",
-                monitor.Dpi,
-                monitor.Scale,
-                null,
-                null,
-                monitor.MonitorBounds,
-                monitor.WorkAreaBounds,
-                monitor.IsPrimary))
-            .Returns(expectedCapture);
+        screenCapture.Setup(service => service.CreateBitmapFromMonitorCaptureResult(monitor)).Returns(monitorBitmap);
+        var captureStore = new InMemoryMcpCaptureStore();
         var captureService = new RegionCaptureService(
             screenCapture.Object,
-            imageCaptureAdapter.Object,
-            new InMemoryMcpCaptureStore(),
+            captureStore,
             new ManualTimeProvider(CaptureTime));
 
         McpCapture capture = captureService.Capture(2, 3, 4, 4);
 
-        capture.Should().BeSameAs(expectedCapture);
-        imageCaptureAdapter.VerifyAll();
+        capture.PngBytes.Should().StartWith([0x89, 0x50, 0x4E, 0x47]);
+        capture.Metadata.Width.Should().Be(4);
+        capture.Metadata.Height.Should().Be(4);
+        capture.Metadata.SourceBounds.Should().Be(new RectangleDto(2, 3, 4, 4));
+        capture.Metadata.MonitorBounds.Should().Be(RectangleDto.FromRectangle(monitor.MonitorBounds));
+        captureStore.TryGet(capture.Metadata.CaptureId, out McpCapture storedCapture).Should().BeTrue();
+        storedCapture.Should().BeSameAs(capture);
     }
 
     [TestMethod]
@@ -63,7 +47,6 @@ public sealed class RegionCaptureServiceTests
             .Returns([CreateMonitor(new Rectangle(0, 0, 10, 10))]);
         var captureService = new RegionCaptureService(
             screenCapture.Object,
-            Mock.Of<ICaptureKitImageCaptureAdapter>(),
             new InMemoryMcpCaptureStore(),
             new ManualTimeProvider(CaptureTime));
 

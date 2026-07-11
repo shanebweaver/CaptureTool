@@ -34,17 +34,39 @@ public sealed class WindowCaptureServiceTests
     }
 
     [TestMethod]
+    public void ListWindows_ExcludesWindowsOutsideCapturedDesktop()
+    {
+        var displayCaptureService = new Mock<IDisplayCaptureService>();
+        displayCaptureService
+            .Setup(service => service.GetWindows())
+            .Returns([
+                new CaptureWindow(123, "Visible", new Rectangle(10, 20, 300, 200)),
+                new CaptureWindow(456, "Minimized", new Rectangle(-32000, -32000, 300, 200)),
+            ]);
+        var screenCapture = new Mock<IScreenCapture>();
+        screenCapture
+            .Setup(service => service.CaptureAllMonitors())
+            .Returns([new MonitorCaptureResult(1, [], 96, new Rectangle(0, 0, 1000, 800), new Rectangle(0, 0, 1000, 760), true)]);
+        var service = CreateService(displayCaptureService.Object, screenCapture.Object);
+
+        IReadOnlyList<WindowInfoDto> windows = service.ListWindows();
+
+        windows.Should().ContainSingle();
+        windows[0].WindowId.Should().Be("hwnd:123");
+    }
+
+    [TestMethod]
     public void CaptureWindow_UsesCaptureKitWindowTarget()
     {
         var window = new CaptureWindow(123, "CaptureTool", new Rectangle(10, 20, 300, 200));
-        var monitor = new MonitorCaptureResult(1, [], 144, new Rectangle(0, 0, 1000, 800), new Rectangle(0, 0, 1000, 760), true);
+        var monitor = new MonitorCaptureResult(1, [], 96, new Rectangle(0, 0, 1000, 800), new Rectangle(0, 0, 1000, 760), true);
         var displayCaptureService = new Mock<IDisplayCaptureService>();
         displayCaptureService.Setup(service => service.GetWindows()).Returns([window]);
         var screenCapture = new Mock<IScreenCapture>();
         screenCapture.Setup(service => service.CaptureAllMonitors()).Returns([monitor]);
         var expectedCapture = new McpCapture(
             [0x89, 0x50, 0x4E, 0x47],
-            McpCaptureMetadata.Create("capture:window", CaptureTime, 300, 200, 144, 1.5f, window.Bounds, "window", "png"));
+            McpCaptureMetadata.Create("capture:window", CaptureTime, 300, 200, 96, 1, window.Bounds, "window", "png"));
         var imageCaptureAdapter = new Mock<ICaptureKitImageCaptureAdapter>();
         imageCaptureAdapter
             .Setup(adapter => adapter.Capture(
@@ -71,7 +93,7 @@ public sealed class WindowCaptureServiceTests
     public void CaptureWindow_WhenCaptureKitWindowCaptureFails_PropagatesFailure()
     {
         var window = new CaptureWindow(123, "CaptureTool", new Rectangle(10, 20, 300, 200));
-        var monitor = new MonitorCaptureResult(1, [], 144, new Rectangle(0, 0, 1000, 800), new Rectangle(0, 0, 1000, 760), true);
+        var monitor = new MonitorCaptureResult(1, [], 96, new Rectangle(0, 0, 1000, 800), new Rectangle(0, 0, 1000, 760), true);
         var displayCaptureService = new Mock<IDisplayCaptureService>();
         displayCaptureService.Setup(service => service.GetWindows()).Returns([window]);
         var screenCapture = new Mock<IScreenCapture>();
@@ -96,6 +118,40 @@ public sealed class WindowCaptureServiceTests
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("CaptureKit window capture failed.");
+        imageCaptureAdapter.VerifyAll();
+    }
+
+    [TestMethod]
+    public void CaptureWindow_PreservesPhysicalWindowBoundsOnScaledMonitor()
+    {
+        var window = new CaptureWindow(123, "CaptureTool", new Rectangle(0, 0, 2560, 1380));
+        var monitor = new MonitorCaptureResult(1, [], 120, new Rectangle(0, 0, 2560, 1440), new Rectangle(0, 0, 2560, 1380), true);
+        var displayCaptureService = new Mock<IDisplayCaptureService>();
+        displayCaptureService.Setup(service => service.GetWindows()).Returns([window]);
+        var screenCapture = new Mock<IScreenCapture>();
+        screenCapture.Setup(service => service.CaptureAllMonitors()).Returns([monitor]);
+        var expectedCapture = new McpCapture(
+            [0x89, 0x50, 0x4E, 0x47],
+            McpCaptureMetadata.Create("capture:window", CaptureTime, 2560, 1380, monitor.Dpi, monitor.Scale, window.Bounds, "window", "png"));
+        var imageCaptureAdapter = new Mock<ICaptureKitImageCaptureAdapter>();
+        imageCaptureAdapter
+            .Setup(adapter => adapter.Capture(
+                It.Is<CaptureTarget>(target => target.Kind == CaptureTargetKind.Window && target.WindowHandle == window.Handle),
+                window.Bounds,
+                "window",
+                monitor.Dpi,
+                monitor.Scale,
+                "hwnd:123",
+                "CaptureTool",
+                monitor.MonitorBounds,
+                monitor.WorkAreaBounds,
+                monitor.IsPrimary))
+            .Returns(expectedCapture);
+        var service = CreateService(displayCaptureService.Object, screenCapture.Object, imageCaptureAdapter.Object);
+
+        McpCapture capture = service.CaptureWindow("hwnd:123");
+
+        capture.Should().BeSameAs(expectedCapture);
         imageCaptureAdapter.VerifyAll();
     }
 

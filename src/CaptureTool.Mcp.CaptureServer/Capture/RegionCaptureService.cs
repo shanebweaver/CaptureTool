@@ -1,7 +1,6 @@
 using CaptureTool.Mcp.CaptureServer.Models;
 using CaptureTool.Mcp.CaptureServer.Abstractions;
 using CaptureTool.Application.Abstractions.Capture;
-using CaptureKit.Abstractions;
 using CaptureTool.Domain.Capture;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -11,18 +10,15 @@ namespace CaptureTool.Mcp.CaptureServer.Capture;
 public sealed class RegionCaptureService : IRegionCaptureService
 {
     private readonly IScreenCapture _screenCapture;
-    private readonly ICaptureKitImageCaptureAdapter _imageCaptureAdapter;
     private readonly IMcpCaptureStore _captureStore;
     private readonly TimeProvider _timeProvider;
 
     public RegionCaptureService(
         IScreenCapture screenCapture,
-        ICaptureKitImageCaptureAdapter imageCaptureAdapter,
         IMcpCaptureStore captureStore,
         TimeProvider timeProvider)
     {
         _screenCapture = screenCapture;
-        _imageCaptureAdapter = imageCaptureAdapter;
         _captureStore = captureStore;
         _timeProvider = timeProvider;
     }
@@ -57,23 +53,36 @@ public sealed class RegionCaptureService : IRegionCaptureService
         if (containingMonitor is not null)
         {
             MonitorCaptureResult monitor = containingMonitor.Value;
-            return _imageCaptureAdapter.Capture(
-                CaptureTarget.Rectangle(
-                    monitor.HMonitor,
-                    region.X - monitor.MonitorBounds.X,
-                    region.Y - monitor.MonitorBounds.Y,
-                    region.Width,
-                    region.Height),
+            using Bitmap monitorBitmap = _screenCapture.CreateBitmapFromMonitorCaptureResult(monitor);
+            var monitorRegion = new Rectangle(
+                region.X - monitor.MonitorBounds.X,
+                region.Y - monitor.MonitorBounds.Y,
+                region.Width,
+                region.Height);
+            using Bitmap croppedRegionBitmap = CropBitmap(monitorBitmap, monitorRegion, region.Size);
+            return StoreRegionCapture(
+                croppedRegionBitmap,
                 region,
-                "region",
                 monitor.Dpi,
                 monitor.Scale,
-                monitorBounds: monitor.MonitorBounds,
-                workAreaBounds: monitor.WorkAreaBounds,
-                isPrimary: monitor.IsPrimary);
+                monitor.MonitorBounds,
+                monitor.WorkAreaBounds,
+                monitor.IsPrimary);
         }
 
         using Bitmap regionBitmap = CaptureSpanningRegionBitmap(region, monitors);
+        return StoreRegionCapture(regionBitmap, region, referenceMonitor.Dpi, referenceMonitor.Scale);
+    }
+
+    private McpCapture StoreRegionCapture(
+        Bitmap regionBitmap,
+        Rectangle sourceBounds,
+        uint dpi,
+        float scale,
+        Rectangle? monitorBounds = null,
+        Rectangle? workAreaBounds = null,
+        bool? isPrimary = null)
+    {
         using var stream = new MemoryStream();
         regionBitmap.Save(stream, ImageFormat.Png);
 
@@ -82,15 +91,17 @@ public sealed class RegionCaptureService : IRegionCaptureService
             _timeProvider.GetUtcNow(),
             regionBitmap.Width,
             regionBitmap.Height,
-            referenceMonitor.Dpi,
-            referenceMonitor.Scale,
-            region,
+            dpi,
+            scale,
+            sourceBounds,
             "region",
-            "png");
+            "png",
+            monitorBounds,
+            workAreaBounds,
+            isPrimary);
 
         var capture = new McpCapture(stream.ToArray(), metadata);
         _captureStore.Store(capture);
-
         return capture;
     }
 
