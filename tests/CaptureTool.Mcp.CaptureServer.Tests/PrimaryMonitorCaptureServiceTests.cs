@@ -18,27 +18,45 @@ public sealed class PrimaryMonitorCaptureServiceTests
     {
         MonitorCaptureResult secondary = CreateMonitor(isPrimary: false, x: -1920, y: 0, width: 1920, height: 1080, dpi: 96);
         MonitorCaptureResult primary = CreateMonitor(isPrimary: true, x: 0, y: 0, width: 2560, height: 1440, dpi: 144);
-        using var bitmap = new Bitmap(3, 2);
-        bitmap.SetPixel(0, 0, Color.Red);
         var screenCapture = new Mock<IScreenCapture>();
         screenCapture.Setup(service => service.CaptureAllMonitors()).Returns([secondary, primary]);
-        screenCapture.Setup(service => service.CreateBitmapFromMonitorCaptureResult(primary)).Returns(bitmap);
-        var captureService = new PrimaryMonitorCaptureService(screenCapture.Object, new ManualTimeProvider(CaptureTime));
+        var expectedCapture = new McpCapture(
+            [0x89, 0x50, 0x4E, 0x47],
+            McpCaptureMetadata.Create(
+                "capture:primary",
+                CaptureTime,
+                2560,
+                1440,
+                primary.Dpi,
+                primary.Scale,
+                primary.MonitorBounds,
+                "primaryMonitor",
+                "png",
+                primary.MonitorBounds,
+                primary.WorkAreaBounds,
+                primary.IsPrimary));
+        var imageCaptureAdapter = new Mock<ICaptureKitImageCaptureAdapter>();
+        imageCaptureAdapter
+            .Setup(adapter => adapter.Capture(
+                It.Is<CaptureKit.Abstractions.CaptureTarget>(target =>
+                    target.Kind == CaptureKit.Abstractions.CaptureTargetKind.Monitor
+                    && target.MonitorHandle == primary.HMonitor),
+                primary.MonitorBounds,
+                "primaryMonitor",
+                primary.Dpi,
+                primary.Scale,
+                $"hmonitor:{primary.HMonitor}",
+                "Primary monitor",
+                primary.MonitorBounds,
+                primary.WorkAreaBounds,
+                primary.IsPrimary))
+            .Returns(expectedCapture);
+        var captureService = new PrimaryMonitorCaptureService(screenCapture.Object, imageCaptureAdapter.Object);
 
-        PrimaryMonitorCapture capture = captureService.Capture();
+        McpCapture capture = captureService.Capture();
 
-        capture.PngBytes.Should().StartWith([0x89, 0x50, 0x4E, 0x47]);
-        capture.Metadata.CapturedAtUtc.Should().Be(CaptureTime);
-        capture.Metadata.Width.Should().Be(3);
-        capture.Metadata.Height.Should().Be(2);
-        capture.Metadata.Dpi.Should().Be(144);
-        capture.Metadata.Scale.Should().Be(1.5f);
-        capture.Metadata.MonitorBounds.Should().Be(new RectangleDto(0, 0, 2560, 1440));
-        capture.Metadata.WorkAreaBounds.Should().Be(new RectangleDto(0, 0, 2560, 1392));
-        capture.Metadata.IsPrimary.Should().BeTrue();
-        capture.Metadata.Format.Should().Be("png");
-        screenCapture.Verify(service => service.CreateBitmapFromMonitorCaptureResult(primary), Times.Once);
-        screenCapture.Verify(service => service.CreateBitmapFromMonitorCaptureResult(secondary), Times.Never);
+        capture.Should().BeSameAs(expectedCapture);
+        imageCaptureAdapter.VerifyAll();
     }
 
     [TestMethod]
@@ -48,7 +66,7 @@ public sealed class PrimaryMonitorCaptureServiceTests
         screenCapture
             .Setup(service => service.CaptureAllMonitors())
             .Returns([CreateMonitor(isPrimary: false, x: 0, y: 0, width: 1920, height: 1080, dpi: 96)]);
-        var captureService = new PrimaryMonitorCaptureService(screenCapture.Object, new ManualTimeProvider(CaptureTime));
+        var captureService = new PrimaryMonitorCaptureService(screenCapture.Object, Mock.Of<ICaptureKitImageCaptureAdapter>());
 
         var act = () => captureService.Capture();
 

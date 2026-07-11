@@ -13,20 +13,23 @@ public sealed class PrimaryMonitorCaptureToolTests
     public void CapturePrimaryMonitor_ReturnsImageContentAndStructuredMetadata()
     {
         var captureTime = new DateTimeOffset(2026, 7, 11, 18, 42, 31, TimeSpan.Zero);
-        PrimaryMonitorCaptureMetadata metadata = PrimaryMonitorCaptureMetadata.Create(
+        McpCaptureMetadata metadata = McpCaptureMetadata.Create(
+            "capture:test",
             captureTime,
             width: 2,
             height: 1,
             dpi: 96,
             scale: 1,
             new Rectangle(0, 0, 2, 1),
-            new Rectangle(0, 0, 2, 1),
-            isPrimary: true,
-            format: "png");
+            sourceKind: "primaryMonitor",
+            format: "png",
+            monitorBounds: new Rectangle(0, 0, 2, 1),
+            workAreaBounds: new Rectangle(0, 0, 2, 1),
+            isPrimary: true);
         var captureService = new Mock<IPrimaryMonitorCaptureService>();
         captureService
             .Setup(service => service.Capture())
-            .Returns(new PrimaryMonitorCapture([0x89, 0x50, 0x4E, 0x47], metadata));
+            .Returns(new McpCapture([0x89, 0x50, 0x4E, 0x47], metadata));
         var logger = new Mock<ILogger<PrimaryMonitorCaptureTool>>();
 
         var result = PrimaryMonitorCaptureTool.CapturePrimaryMonitor(captureService.Object, logger.Object, "progress check");
@@ -38,6 +41,7 @@ public sealed class PrimaryMonitorCaptureToolTests
         result.StructuredContent.Should().NotBeNull();
 
         JsonElement structuredContent = result.StructuredContent!.Value;
+        structuredContent.GetProperty("captureId").GetString().Should().Be("capture:test");
         structuredContent.GetProperty("width").GetInt32().Should().Be(2);
         structuredContent.GetProperty("height").GetInt32().Should().Be(1);
         structuredContent.GetProperty("isPrimary").GetBoolean().Should().BeTrue();

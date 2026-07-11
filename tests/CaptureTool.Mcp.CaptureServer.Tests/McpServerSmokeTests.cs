@@ -31,5 +31,25 @@ public sealed class McpServerSmokeTests
             tool.Name == "capture_primary_monitor"
             && tool.Title == "Capture Primary Monitor"
             && tool.Description.Contains("primary monitor", StringComparison.OrdinalIgnoreCase));
+        tools.Should().ContainSingle(tool =>
+            tool.Name == "capture_region"
+            && tool.Title == "Capture Region"
+            && tool.Description.Contains("region", StringComparison.OrdinalIgnoreCase));
+        tools.Should().ContainSingle(tool =>
+            tool.Name == "annotate_image"
+            && tool.Title == "Annotate Image"
+            && tool.Description.Contains("label", StringComparison.OrdinalIgnoreCase));
+        tools.Should().ContainSingle(tool =>
+            tool.Name == "capture_all_screens"
+            && tool.Title == "Capture All Screens"
+            && tool.Description.Contains("monitors", StringComparison.OrdinalIgnoreCase));
+        tools.Should().ContainSingle(tool =>
+            tool.Name == "list_windows"
+            && tool.Title == "List Windows"
+            && tool.Description.Contains("windows", StringComparison.OrdinalIgnoreCase));
+        tools.Should().ContainSingle(tool =>
+            tool.Name == "capture_window"
+            && tool.Title == "Capture Window"
+            && tool.Description.Contains("CaptureKit window", StringComparison.OrdinalIgnoreCase));
     }
 }

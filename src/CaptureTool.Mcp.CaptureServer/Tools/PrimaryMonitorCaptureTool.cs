@@ -1,10 +1,11 @@
+using CaptureTool.Mcp.CaptureServer.Models;
+using CaptureTool.Mcp.CaptureServer.Abstractions;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
-using System.Text.Json;
 
-namespace CaptureTool.Mcp.CaptureServer;
+namespace CaptureTool.Mcp.CaptureServer.Tools;
 
 [McpServerToolType]
 public sealed class PrimaryMonitorCaptureTool
@@ -24,8 +25,8 @@ public sealed class PrimaryMonitorCaptureTool
     {
         try
         {
-            PrimaryMonitorCapture capture = captureService.Capture();
-            PrimaryMonitorCaptureMetadata metadata = capture.Metadata;
+            McpCapture capture = captureService.Capture();
+            McpCaptureMetadata metadata = capture.Metadata;
             string trimmedReason = string.IsNullOrWhiteSpace(reason) ? "No reason provided." : reason.Trim();
 
             logger.LogInformation(
@@ -36,37 +37,15 @@ public sealed class PrimaryMonitorCaptureTool
                 metadata.Format,
                 trimmedReason);
 
-            return new CallToolResult
-            {
-                IsError = false,
-                Content =
-                [
-                    new TextContentBlock
-                    {
-                        Text = $"Captured primary monitor at {metadata.CapturedAtUtc:O}, {metadata.Width}x{metadata.Height} PNG.",
-                    },
-                    ImageContentBlock.FromBytes(capture.PngBytes, "image/png"),
-                ],
-                StructuredContent = JsonSerializer.SerializeToElement(
-                    metadata,
-                    PrimaryMonitorCaptureJsonSerializerContext.Default.PrimaryMonitorCaptureMetadata),
-            };
+            return McpToolResultFactory.Image(
+                capture,
+                $"Captured primary monitor at {metadata.CapturedAtUtc:O}, {metadata.Width}x{metadata.Height} PNG.");
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Primary monitor capture failed. Reason: {Reason}", reason);
 
-            return new CallToolResult
-            {
-                IsError = true,
-                Content =
-                [
-                    new TextContentBlock
-                    {
-                        Text = $"Primary monitor capture failed: {ex.Message}",
-                    },
-                ],
-            };
+            return McpToolResultFactory.TextError($"Primary monitor capture failed: {ex.Message}");
         }
     }
 }

@@ -1,5 +1,6 @@
 using CaptureTool.Infrastructure.Capture.Windows.DependencyInjection;
-using CaptureTool.Mcp.CaptureServer;
+using CaptureTool.Mcp.CaptureServer.DependencyInjection;
+using CaptureTool.Mcp.CaptureServer.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,10 +15,13 @@ builder.Logging.AddConsole(options =>
 
 builder.Services
     .AddWindowsCaptureDomains()
-    .AddSingleton<IPrimaryMonitorCaptureService, PrimaryMonitorCaptureService>()
-    .AddSingleton(TimeProvider.System)
+    .AddCaptureServerServices()
     .AddMcpServer()
     .WithStdioServerTransport()
-    .WithTools<PrimaryMonitorCaptureTool>();
+    .WithTools<PrimaryMonitorCaptureTool>()
+    .WithTools<RegionCaptureTool>()
+    .WithTools<AnnotationTool>()
+    .WithTools<AllScreensCaptureTool>()
+    .WithTools<WindowCaptureTool>();
 
 await builder.Build().RunAsync();
