@@ -305,8 +305,20 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IReadOnlyList<RecognizedTextRegion> TextExtractionRegions
     {
         get;
-        private set => Set(ref field, value);
+        private set
+        {
+            if (Set(ref field, value))
+            {
+                HasTextExtractionRegions = value.Count > 0;
+            }
+        }
     } = [];
+
+    public bool HasTextExtractionRegions
+    {
+        get;
+        private set => Set(ref field, value);
+    }
 
     public int ZoomPercentage
     {

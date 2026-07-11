@@ -1,0 +1,29 @@
+<Project Sdk="MSTest.Sdk/4.0.2">
+
+  <!-- Project properties -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <Platforms>x64;ARM64</Platforms>
+    <UseVSTest>true</UseVSTest>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference
+      Include="..\..\src\CaptureTool.Presentation.Windows.WinUI\CaptureTool.Presentation.Windows.WinUI.csproj"
+      AdditionalProperties="WindowsAppSDKSelfContained=true;WindowsPackageType=None;EnableMsixTooling=false"
+      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- Package references -->
+  <ItemGroup>
+    <PackageReference Include="FlaUI.UIA3" />
+    <PackageReference Include="Microsoft.CodeCoverage" />
+    <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Update="MSTest.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

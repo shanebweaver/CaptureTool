@@ -3,11 +3,13 @@ using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Navigation;
 using CaptureTool.Application.Abstractions.Shutdown;
 using CaptureTool.Application.Abstractions.Themes;
+using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.Shell;
 using CaptureTool.Presentation.Windows.WinUI.AudioCapture;
 using CaptureTool.Presentation.Windows.WinUI.Capture;
 using CaptureTool.Presentation.Windows.WinUI.Edit;
 using CaptureTool.Presentation.Windows.WinUI.EditSessions;
+using CaptureTool.Presentation.Windows.WinUI.UiTests;
 using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Pages;
 using Microsoft.UI;
@@ -15,6 +17,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using System.Runtime.InteropServices;
 using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.Graphics;
@@ -27,6 +30,7 @@ public sealed partial class MainWindow : Window
 {
     private static readonly SizeInt32 DefaultWindowSize = new(720, 540);
     private static readonly SizeInt32 MinWindowSize = new(500, 374);
+    private const int NoPackageIdentityHResult = unchecked((int)0x80073D54);
 
     private readonly IAudioCaptureNavigationGuard _audioCaptureNavigationGuard;
     private readonly IEditSessionGuard _editSessionGuard;
@@ -40,6 +44,7 @@ public sealed partial class MainWindow : Window
 
     public MainWindowViewModel ViewModel { get; } = ViewModelLocator.GetViewModel<MainWindowViewModel>();
     private bool _closeConfirmed;
+    private bool _uiTestLaunchNavigationHandled;
 
     public MainWindow()
     {
@@ -86,6 +91,28 @@ public sealed partial class MainWindow : Window
         _captureDiscardConfirmationService.XamlRoot = RootGrid.XamlRoot;
         _aiFeatureConsentDialogService.XamlRoot = RootGrid.XamlRoot;
         _imageSuperResolutionPreparationConsentService.XamlRoot = RootGrid.XamlRoot;
+        NavigateToUiTestImageWhenRequested();
+    }
+
+    private void NavigateToUiTestImageWhenRequested()
+    {
+        UiTestLaunchOptions options = UiTestLaunchOptions.Current;
+        if (_uiTestLaunchNavigationHandled ||
+            !options.IsEnabled ||
+            string.IsNullOrWhiteSpace(options.ImageFilePath))
+        {
+            return;
+        }
+
+        _uiTestLaunchNavigationHandled = true;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            INavigationService navigationService = App.Current.ServiceProvider.GetService<INavigationService>();
+            navigationService.Navigate(
+                NavigationRoute.ImageEdit,
+                new ImageFile(options.ImageFilePath),
+                true);
+        });
     }
 
     private void UpdateAppTitle()
@@ -94,9 +121,21 @@ public sealed partial class MainWindow : Window
         {
             string appTitle = "Capture Tool";
 
-            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
+            if (!UiTestLaunchOptions.Current.IsEnabled &&
+                OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
             {
-                appTitle = AppInfo.Current.DisplayInfo.DisplayName;
+                try
+                {
+                    appTitle = AppInfo.Current.DisplayInfo.DisplayName;
+                }
+                catch (InvalidOperationException ex) when (ex.HResult == NoPackageIdentityHResult)
+                {
+                    appTitle = "Capture Tool";
+                }
+                catch (COMException ex) when (ex.HResult == NoPackageIdentityHResult)
+                {
+                    appTitle = "Capture Tool";
+                }
             }
 
             Title = appTitle;

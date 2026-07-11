@@ -17,7 +17,9 @@
         <converters:ShapeTypeToIntConverter x:Key="ShapeTypeToIntConverter" />
     </Page.Resources>
 
-    <Grid AutomationProperties.AutomationId="ImageEditPageRoot">
+    <Grid
+        AutomationProperties.AccessibilityView="Control"
+        AutomationProperties.AutomationId="ImageEditPageRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -203,6 +205,7 @@
             Row="2">
             <controls:ImageCanvas
                 x:Name="ImageCanvas"
+                AutomationProperties.AccessibilityView="Control"
                 AutomationProperties.AutomationId="ImageEdit_ImageCanvas"
                 CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"
                 ColorPickerColorHovered="ImageCanvas_ColorPickerColorHovered"
@@ -233,6 +236,20 @@
                 TextFontFamily="{x:Bind ViewModel.TextTool.TextFontFamily, Mode=OneWay}"
                 TextFontSize="{x:Bind ViewModel.TextTool.TextFontSize, Mode=OneWay}"
                 TextForegroundColor="{x:Bind ViewModel.TextTool.TextFontColor, Mode=OneWay}" />
+
+            <Button
+                Width="16"
+                Height="16"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                AutomationProperties.AccessibilityView="Control"
+                AutomationProperties.AutomationId="ImageEdit_TextExtractionOverlayMarker"
+                AutomationProperties.Name="Text extraction overlay ready"
+                Background="Transparent"
+                IsEnabled="False"
+                IsTabStop="False"
+                Opacity=".01"
+                Visibility="{x:Bind utils:VisibilityUtility.BoolToVisibility(ViewModel.HasTextExtractionRegions), Mode=OneWay}" />
 
             <Grid
                 x:Name="FloatingToolbarLayer"

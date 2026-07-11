@@ -43,17 +43,17 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" />
-    <ProjectReference Include="..\CaptureTool.Application\CaptureTool.Application.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Edit.Windows\CaptureTool.Infrastructure.Edit.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain\CaptureTool.Domain.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Capture.Windows\CaptureTool.Infrastructure.Capture.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Domain.Capture\CaptureTool.Domain.Capture.csproj" />
-    <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure.Windows\CaptureTool.Infrastructure.Windows.csproj" />
-    <ProjectReference Include="..\CaptureTool.Infrastructure\CaptureTool.Infrastructure.csproj" />
-    <ProjectReference Include="..\CaptureTool.Presentation\CaptureTool.Presentation.csproj" />
+    <ProjectReference Include="..\CaptureTool.Application.Abstractions\CaptureTool.Application.Abstractions.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.Application\CaptureTool.Application.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Edit.Windows\CaptureTool.Infrastructure.Edit.Windows.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.Domain\CaptureTool.Domain.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.Domain.Edit\CaptureTool.Domain.Edit.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Capture.Windows\CaptureTool.Infrastructure.Capture.Windows.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.Domain.Capture\CaptureTool.Domain.Capture.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.FeatureManagement\CaptureTool.FeatureManagement.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure.Windows\CaptureTool.Infrastructure.Windows.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.Infrastructure\CaptureTool.Infrastructure.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
+    <ProjectReference Include="..\CaptureTool.Presentation\CaptureTool.Presentation.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType;EnableMsixTooling" />
   </ItemGroup>
 
   <!-- Content files -->

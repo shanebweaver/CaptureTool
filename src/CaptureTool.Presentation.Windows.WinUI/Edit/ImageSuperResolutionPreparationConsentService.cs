@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
+using CaptureTool.Presentation.Windows.WinUI.Utils;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.Resources;
@@ -7,7 +8,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.Edit;
 
 internal sealed class ImageSuperResolutionPreparationConsentService : IImageSuperResolutionPreparationConsentService
 {
-    private readonly ResourceLoader _resourceLoader = ResourceLoader.GetForViewIndependentUse();
+    private ResourceLoader? _resourceLoader;
 
     public XamlRoot? XamlRoot { get; set; }
 
@@ -21,10 +22,10 @@ internal sealed class ImageSuperResolutionPreparationConsentService : IImageSupe
         ContentDialog dialog = new()
         {
             XamlRoot = XamlRoot,
-            Title = _resourceLoader.GetString("ImageSuperResolutionPreparation_Title"),
-            Content = _resourceLoader.GetString("ImageSuperResolutionPreparation_Content"),
-            PrimaryButtonText = _resourceLoader.GetString("ImageSuperResolutionPreparation_ContinueButton"),
-            CloseButtonText = _resourceLoader.GetString("ImageSuperResolutionPreparation_CancelButton"),
+            Title = GetString("ImageSuperResolutionPreparation_Title", "Prepare image?"),
+            Content = GetString("ImageSuperResolutionPreparation_Content", "The image will be prepared for super resolution."),
+            PrimaryButtonText = GetString("ImageSuperResolutionPreparation_ContinueButton", "Continue"),
+            CloseButtonText = GetString("ImageSuperResolutionPreparation_CancelButton", "Cancel"),
             DefaultButton = ContentDialogButton.Primary
         };
 
@@ -35,5 +36,10 @@ internal sealed class ImageSuperResolutionPreparationConsentService : IImageSupe
         }
 
         return result == ContentDialogResult.Primary;
+    }
+
+    private string GetString(string resourceKey, string fallback)
+    {
+        return WinUIResourceLoader.GetString(ref _resourceLoader, resourceKey, fallback);
     }
 }

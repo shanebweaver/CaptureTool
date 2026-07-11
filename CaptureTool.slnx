@@ -61,5 +61,9 @@
       <Platform Solution="*|x64" Project="x64" />
     </Project>
     <Project Path="tests/CaptureTool.Presentation.Tests/CaptureTool.Presentation.Tests.csproj" Id="b99a732e-0834-4598-a1c5-7030a36a486d" />
+    <Project Path="tests/CaptureTool.UiTests/CaptureTool.UiTests.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
   </Folder>
 </Solution>

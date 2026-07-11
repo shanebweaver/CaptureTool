@@ -63,10 +63,23 @@
 
                 <Path
                     x:Name="TextExtractionOverlayPath"
+                    AutomationProperties.AccessibilityView="Control"
                     AutomationProperties.AutomationId="ImageCanvas_TextExtractionOverlayPath"
                     Fill="#FF404040"
                     IsHitTestVisible="False"
                     Opacity=".55"
+                    Visibility="Collapsed" />
+
+                <Border
+                    x:Name="TextExtractionOverlayAutomationMarker"
+                    Width="1"
+                    Height="1"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    AutomationProperties.AccessibilityView="Control"
+                    AutomationProperties.AutomationId="ImageCanvas_TextExtractionOverlayMarker"
+                    IsHitTestVisible="False"
+                    Opacity="0"
                     Visibility="Collapsed" />
 
                 <!--  Preview Shape Overlay  -->

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Input;
 using CaptureTool.Application.Abstractions.Capture;
+using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using System.Drawing;
@@ -12,17 +13,17 @@ internal sealed class WinUICaptureDiscardConfirmationService : ICaptureDiscardCo
     private const double MinimumInlineConfirmationWidth = 360;
     private const double MinimumInlineConfirmationHeight = 220;
 
-    private readonly ResourceLoader _resourceLoader = ResourceLoader.GetForViewIndependentUse();
+    private ResourceLoader? _resourceLoader;
 
     public XamlRoot? XamlRoot { get; set; }
     public Rectangle? DialogHostBounds { get; set; }
 
     public async Task<bool> ConfirmDiscardActiveCaptureAsync(CancellationToken cancellationToken = default)
     {
-        string title = _resourceLoader.GetString("CaptureDiscardConfirmation_Title");
-        string content = _resourceLoader.GetString("CaptureDiscardConfirmation_Content");
-        string discardButtonText = _resourceLoader.GetString("CaptureDiscardConfirmation_DiscardButton");
-        string cancelButtonText = _resourceLoader.GetString("CaptureDiscardConfirmation_CancelButton");
+        string title = GetString("CaptureDiscardConfirmation_Title", "Discard capture?");
+        string content = GetString("CaptureDiscardConfirmation_Content", "The current capture will be discarded.");
+        string discardButtonText = GetString("CaptureDiscardConfirmation_DiscardButton", "Discard");
+        string cancelButtonText = GetString("CaptureDiscardConfirmation_CancelButton", "Cancel");
 
         bool shouldDiscardCapture = await ShowConfirmationAsync(
             title,
@@ -95,5 +96,10 @@ internal sealed class WinUICaptureDiscardConfirmationService : ICaptureDiscardCo
 
         return XamlRoot.Size.Width >= MinimumInlineConfirmationWidth
             && XamlRoot.Size.Height >= MinimumInlineConfirmationHeight;
+    }
+
+    private string GetString(string resourceKey, string fallback)
+    {
+        return WinUIResourceLoader.GetString(ref _resourceLoader, resourceKey, fallback);
     }
 }

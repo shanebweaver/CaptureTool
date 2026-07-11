@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CaptureTool.Application.Abstractions.EditSessions;
 using Microsoft.UI.Xaml;
+using CaptureTool.Presentation.Windows.WinUI.Utils;
 using CaptureTool.Presentation.Windows.WinUI.Xaml.Controls;
 using Windows.ApplicationModel.Resources;
 
@@ -8,7 +9,7 @@ namespace CaptureTool.Presentation.Windows.WinUI.EditSessions;
 
 internal sealed class WinUIEditSessionConfirmationService : IEditSessionConfirmationService
 {
-    private readonly ResourceLoader _resourceLoader = ResourceLoader.GetForViewIndependentUse();
+    private ResourceLoader? _resourceLoader;
 
     public XamlRoot? XamlRoot { get; set; }
 
@@ -24,11 +25,11 @@ internal sealed class WinUIEditSessionConfirmationService : IEditSessionConfirma
             EditSessionLeaveDecision.Cancel,
             complete => new ConfirmationCard
             {
-                Title = _resourceLoader.GetString("EditSessionConfirmation_Title"),
-                Message = _resourceLoader.GetString("EditSessionConfirmation_Content"),
-                PrimaryButtonText = _resourceLoader.GetString("EditSessionConfirmation_SaveAsButton"),
-                ConfirmButtonText = _resourceLoader.GetString("EditSessionConfirmation_DiscardButton"),
-                CancelButtonText = _resourceLoader.GetString("EditSessionConfirmation_CancelButton"),
+                Title = GetString("EditSessionConfirmation_Title", "Leave editor?"),
+                Message = GetString("EditSessionConfirmation_Content", "The current edit session has unsaved changes."),
+                PrimaryButtonText = GetString("EditSessionConfirmation_SaveAsButton", "Save as"),
+                ConfirmButtonText = GetString("EditSessionConfirmation_DiscardButton", "Discard"),
+                CancelButtonText = GetString("EditSessionConfirmation_CancelButton", "Cancel"),
                 PrimaryCommand = new RelayCommand(() => complete(EditSessionLeaveDecision.Save)),
                 ConfirmCommand = new RelayCommand(() => complete(EditSessionLeaveDecision.Discard)),
                 CancelCommand = new RelayCommand(() => complete(EditSessionLeaveDecision.Cancel))
@@ -39,5 +40,10 @@ internal sealed class WinUIEditSessionConfirmationService : IEditSessionConfirma
         }
 
         return decision;
+    }
+
+    private string GetString(string resourceKey, string fallback)
+    {
+        return WinUIResourceLoader.GetString(ref _resourceLoader, resourceKey, fallback);
     }
 }

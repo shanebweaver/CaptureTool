@@ -851,6 +851,7 @@ public sealed partial class ImageCanvas : UserControlBase
         if (!IsTextExtractionOverlayEnabled || CanvasContainer.Width <= 0 || CanvasContainer.Height <= 0)
         {
             TextExtractionOverlayPath.Visibility = Visibility.Collapsed;
+            TextExtractionOverlayAutomationMarker.Visibility = Visibility.Collapsed;
             TextExtractionOverlayPath.Data = null;
             return;
         }
@@ -883,6 +884,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
         TextExtractionOverlayPath.Data = geometry;
         TextExtractionOverlayPath.Visibility = Visibility.Visible;
+        TextExtractionOverlayAutomationMarker.Visibility = Visibility.Visible;
     }
 
     private Rectangle GetRenderCropRect()

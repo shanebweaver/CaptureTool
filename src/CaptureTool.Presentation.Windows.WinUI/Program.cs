@@ -21,16 +21,19 @@ public class Program
 
         // Initialize COM wrappers and single-instance
         WinRT.ComWrappersSupport.InitializeComWrappers();
-        var instance = AppInstance.FindOrRegisterForKey(UiTestLaunchOptions.Current.InstanceKey);
-
-        if (!instance.IsCurrent)
+        if (!UiTestLaunchOptions.Current.IsEnabled)
         {
-            RedirectToPrimary(instance);
-            return 0;
-        }
+            var instance = AppInstance.FindOrRegisterForKey(UiTestLaunchOptions.DefaultInstanceKey);
 
-        // Subscribe before app startup
-        instance.Activated += (_, e) => App.Current.Activate(e);
+            if (!instance.IsCurrent)
+            {
+                RedirectToPrimary(instance);
+                return 0;
+            }
+
+            // Subscribe before app startup
+            instance.Activated += (_, e) => App.Current.Activate(e);
+        }
 
         // Start WinUI app
         Microsoft.UI.Xaml.Application.Start(_ =>
