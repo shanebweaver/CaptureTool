@@ -219,6 +219,12 @@ Al utilizar esta aplicación, usted reconoce que es responsable de gestionar el 
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
     <value>Guardar como</value>
   </data>
+  <data name="ImageEdit_OpenScreenshotsFolderButton.Label" xml:space="preserve">
+    <value>Abrir carpeta de capturas de pantalla</value>
+  </data>
+  <data name="ImageEdit_OpenScreenshotsFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Abrir la carpeta de capturas de pantalla en el Explorador de archivos.</value>
+  </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>Copiar</value>
   </data>
@@ -737,6 +743,12 @@ SOFTWARE.
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
     <value>Guardar como</value>
   </data>
+  <data name="VideoEdit_OpenVideosFolderButton.Label" xml:space="preserve">
+    <value>Abrir carpeta de grabaciones de pantalla</value>
+  </data>
+  <data name="VideoEdit_OpenVideosFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Abrir la carpeta de grabaciones de pantalla en el Explorador de archivos.</value>
+  </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>Copiar</value>
   </data>
@@ -1117,6 +1129,12 @@ SOFTWARE.
   </data>
   <data name="AudioEdit_SaveButton.Label" xml:space="preserve">
     <value>Guardar como</value>
+  </data>
+  <data name="AudioEdit_OpenAudioFolderButton.Label" xml:space="preserve">
+    <value>Abrir carpeta de grabaciones de audio</value>
+  </data>
+  <data name="AudioEdit_OpenAudioFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Abrir la carpeta de grabaciones de audio en el Explorador de archivos.</value>
   </data>
   <data name="CaptureMode_Image" xml:space="preserve">
     <value>Imagen</value>

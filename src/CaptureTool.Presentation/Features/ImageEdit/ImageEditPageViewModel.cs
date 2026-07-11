@@ -7,6 +7,7 @@ using CaptureTool.Application.Abstractions.Edit.Image.SuperResolution;
 using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Settings;
+using CaptureTool.Application.Abstractions.Settings.OpenScreenshotsFolder;
 using CaptureTool.Application.Abstractions.Share;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Domain.FileSystem;
@@ -36,6 +37,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
     private readonly IStorageService _storageService;
     private readonly ISettingsService _settingsService;
+    private readonly IOpenScreenshotsFolderUseCase _openScreenshotsFolderAction;
     private readonly ILogService _logService;
     private readonly IAppNotificationService _notificationService;
 
@@ -58,6 +60,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     public IRelayCommand ToggleCropModeCommand { get; }
     public IRelayCommand ToggleShapesModeCommand { get; }
     public IAsyncRelayCommand SaveCommand { get; }
+    public IAsyncRelayCommand OpenScreenshotsFolderCommand { get; }
     public IRelayCommand UndoCommand { get; }
     public IRelayCommand RedoCommand { get; }
     public IRelayCommand RotateCommand { get; }
@@ -262,6 +265,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         IOpenExternalEditorUseCase openExternalEditorAction,
         IStorageService storageService,
         ISettingsService settingsService,
+        IOpenScreenshotsFolderUseCase openScreenshotsFolderAction,
         ILogService logService,
         IAppNotificationService notificationService,
         ColorPickerToolViewModel colorPickerTool,
@@ -282,6 +286,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         _storageService = storageService;
         _imageCanvasExporter = imageCanvasExporter;
         _settingsService = settingsService;
+        _openScreenshotsFolderAction = openScreenshotsFolderAction;
         _logService = logService;
         _notificationService = notificationService;
 
@@ -308,6 +313,7 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
         ToggleCropModeCommand = new RelayCommand(ToggleCropMode);
         ToggleShapesModeCommand = new RelayCommand(ToggleShapesMode);
         SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        OpenScreenshotsFolderCommand = new AsyncRelayCommand(OpenScreenshotsFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         UndoCommand = new RelayCommand(Undo);
         RedoCommand = new RelayCommand(Redo);
         RotateCommand = new RelayCommand(Rotate);
@@ -596,6 +602,11 @@ public sealed partial class ImageEditPageViewModel : AsyncLoadableViewModelBase<
     private async Task SaveCommandAsync()
     {
         await SaveAsync(CancellationToken.None);
+    }
+
+    private async Task OpenScreenshotsFolderAsync()
+    {
+        await _openScreenshotsFolderAction.ExecuteAsync(new OpenScreenshotsFolderRequest(), CancellationToken.None);
     }
 
     private ImageCanvasRenderOptions GetImageCanvasRenderOptions()

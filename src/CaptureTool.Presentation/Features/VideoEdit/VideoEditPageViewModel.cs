@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.EditSessions;
 using CaptureTool.Application.Abstractions.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Logging;
+using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
 using CaptureTool.Domain.Capture;
 using CaptureTool.Domain.FileSystem;
 using CaptureTool.Presentation.ViewModels;
@@ -17,6 +18,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand CopyCommand { get; }
     public IAsyncRelayCommand EditInClipchampCommand { get; }
+    public IAsyncRelayCommand OpenVideosFolderCommand { get; }
     public IRelayCommand ToggleTrimModeCommand { get; }
 
     public string? VideoPath
@@ -82,6 +84,7 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
     private readonly ISaveVideoFileUseCase _saveAction;
     private readonly ICopyVideoFileUseCase _copyAction;
     private readonly IOpenExternalEditorUseCase _openExternalEditorAction;
+    private readonly IOpenVideosFolderUseCase _openVideosFolderAction;
     private readonly ILogService _logService;
 
     public string EditSessionName => "video edit session";
@@ -96,16 +99,19 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         ISaveVideoFileUseCase saveAction,
         ICopyVideoFileUseCase copyAction,
         IOpenExternalEditorUseCase openExternalEditorAction,
+        IOpenVideosFolderUseCase openVideosFolderAction,
         ILogService logService)
     {
         _saveAction = saveAction;
         _copyAction = copyAction;
         _openExternalEditorAction = openExternalEditorAction;
+        _openVideosFolderAction = openVideosFolderAction;
         _logService = logService;
 
         SaveCommand = new AsyncRelayCommand(SaveCommandAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         CopyCommand = new AsyncRelayCommand(CopyAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         EditInClipchampCommand = new AsyncRelayCommand(EditInClipchampAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
+        OpenVideosFolderCommand = new AsyncRelayCommand(OpenVideosFolderAsync, AsyncRelayCommandOptions.FlowExceptionsToTaskScheduler);
         ToggleTrimModeCommand = new RelayCommand(ToggleTrimMode);
 
         IsVideoReady = false;
@@ -242,6 +248,11 @@ public sealed partial class VideoEditPageViewModel : LoadableViewModelBase<Video
         await _copyAction.ExecuteAsync(
             new CopyVideoFileRequest(VideoPath, GetTrimStartForRequest(), GetTrimEndForRequest()),
             CancellationToken.None);
+    }
+
+    private async Task OpenVideosFolderAsync()
+    {
+        await _openVideosFolderAction.ExecuteAsync(new OpenVideosFolderRequest(), CancellationToken.None);
     }
 
     private async Task EditInClipchampAsync()

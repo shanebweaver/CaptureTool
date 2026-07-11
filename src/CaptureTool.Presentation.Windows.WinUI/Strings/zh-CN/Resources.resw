@@ -219,6 +219,12 @@
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
     <value>另存为</value>
   </data>
+  <data name="ImageEdit_OpenScreenshotsFolderButton.Label" xml:space="preserve">
+    <value>打开屏幕截图文件夹</value>
+  </data>
+  <data name="ImageEdit_OpenScreenshotsFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>在文件资源管理器中打开屏幕截图文件夹。</value>
+  </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>复制</value>
   </data>
@@ -737,6 +743,12 @@ SOFTWARE.
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
     <value>另存为</value>
   </data>
+  <data name="VideoEdit_OpenVideosFolderButton.Label" xml:space="preserve">
+    <value>打开屏幕录制文件夹</value>
+  </data>
+  <data name="VideoEdit_OpenVideosFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>在文件资源管理器中打开屏幕录制文件夹。</value>
+  </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>复制</value>
   </data>
@@ -1117,6 +1129,12 @@ SOFTWARE.
   </data>
   <data name="AudioEdit_SaveButton.Label" xml:space="preserve">
     <value>另存为</value>
+  </data>
+  <data name="AudioEdit_OpenAudioFolderButton.Label" xml:space="preserve">
+    <value>打开音频录制文件夹</value>
+  </data>
+  <data name="AudioEdit_OpenAudioFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>在文件资源管理器中打开音频录制文件夹。</value>
   </data>
   <data name="CaptureMode_Image" xml:space="preserve">
     <value>图像</value>

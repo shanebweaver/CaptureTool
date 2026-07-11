@@ -61,6 +61,12 @@
                     <KeyboardAccelerator Key="S" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
+
+            <!--  Open screen recordings folder  -->
+            <AppBarButton
+                x:Uid="VideoEdit_OpenVideosFolderButton"
+                Command="{x:Bind ViewModel.OpenVideosFolderCommand}"
+                Icon="Folder" />
         </CommandBar>
 
         <!--  Content  -->

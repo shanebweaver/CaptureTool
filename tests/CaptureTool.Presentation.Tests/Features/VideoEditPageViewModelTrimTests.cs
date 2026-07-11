@@ -3,6 +3,7 @@ using CaptureTool.Application.Abstractions.Edit.Video.CopyVideoFile;
 using CaptureTool.Application.Abstractions.Edit.Video.SaveVideoFile;
 using CaptureTool.Application.Abstractions.Logging;
 using CaptureTool.Application.Abstractions.Media;
+using CaptureTool.Application.Abstractions.Settings.OpenVideosFolder;
 using CaptureTool.Application.Abstractions.Storage;
 using CaptureTool.Application.Abstractions.UseCases;
 using CaptureTool.Domain.Capture;
@@ -158,6 +159,22 @@ public class VideoEditPageViewModelTrimTests
     }
 
     [TestMethod]
+    public async Task OpenVideosFolderCommand_ShouldOpenVideosFolder()
+    {
+        var openVideosFolder = new Mock<IOpenVideosFolderUseCase>();
+        openVideosFolder
+            .Setup(service => service.ExecuteAsync(It.IsAny<OpenVideosFolderRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UseCaseResponse<OpenVideosFolderResponse>.Success(new OpenVideosFolderResponse()));
+        var viewModel = CreateViewModel(openVideosFolderAction: openVideosFolder.Object);
+
+        await viewModel.OpenVideosFolderCommand.ExecuteAsync(null);
+
+        openVideosFolder.Verify(
+            service => service.ExecuteAsync(It.IsAny<OpenVideosFolderRequest>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
     public void UpdateTrimRange_ShouldMarkSessionDirty()
     {
         var viewModel = CreateViewModel();
@@ -173,12 +190,14 @@ public class VideoEditPageViewModelTrimTests
         ISaveVideoFileUseCase? saveAction = null,
         ICopyVideoFileUseCase? copyAction = null,
         IOpenExternalEditorUseCase? openExternalEditorAction = null,
+        IOpenVideosFolderUseCase? openVideosFolderAction = null,
         ILogService? logService = null)
     {
         return new(
             saveAction ?? CreateSaveUseCase(),
             copyAction ?? CreateCopyUseCase(),
             openExternalEditorAction ?? Mock.Of<IOpenExternalEditorUseCase>(),
+            openVideosFolderAction ?? Mock.Of<IOpenVideosFolderUseCase>(),
             logService ?? Mock.Of<ILogService>());
     }
 

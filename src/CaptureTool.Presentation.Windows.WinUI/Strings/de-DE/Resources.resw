@@ -219,6 +219,12 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="ImageEdit_SaveButton.Label" xml:space="preserve">
     <value>Speichern unter</value>
   </data>
+  <data name="ImageEdit_OpenScreenshotsFolderButton.Label" xml:space="preserve">
+    <value>Screenshot-Ordner öffnen</value>
+  </data>
+  <data name="ImageEdit_OpenScreenshotsFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Screenshot-Ordner im Datei-Explorer öffnen.</value>
+  </data>
   <data name="ImageEdit_CopyButton.Label" xml:space="preserve">
     <value>Kopieren</value>
   </data>
@@ -743,6 +749,12 @@ SOFTWARE.
   <data name="VideoEdit_SaveButton.Label" xml:space="preserve">
     <value>Speichern unter</value>
   </data>
+  <data name="VideoEdit_OpenVideosFolderButton.Label" xml:space="preserve">
+    <value>Ordner für Bildschirmaufzeichnungen öffnen</value>
+  </data>
+  <data name="VideoEdit_OpenVideosFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ordner für Bildschirmaufzeichnungen im Datei-Explorer öffnen.</value>
+  </data>
   <data name="VideoEdit_CopyButton.Label" xml:space="preserve">
     <value>Kopieren</value>
   </data>
@@ -1111,6 +1123,12 @@ SOFTWARE.
   </data>
   <data name="AudioEdit_SaveButton.Label" xml:space="preserve">
     <value>Speichern unter</value>
+  </data>
+  <data name="AudioEdit_OpenAudioFolderButton.Label" xml:space="preserve">
+    <value>Ordner für Audioaufzeichnungen öffnen</value>
+  </data>
+  <data name="AudioEdit_OpenAudioFolderButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ordner für Audioaufzeichnungen im Datei-Explorer öffnen.</value>
   </data>
   <data name="CaptureMode_Image" xml:space="preserve">
     <value>Bild</value>
