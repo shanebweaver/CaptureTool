@@ -8,6 +8,16 @@ namespace CaptureTool.Infrastructure.Windows.Clipboard;
 
 public partial class WindowsClipboardService : IClipboardService
 {
+    public Task CopyTextAsync(string text)
+    {
+        var package = new DataPackage();
+        package.SetText(text);
+        global::Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+        global::Windows.ApplicationModel.DataTransfer.Clipboard.Flush();
+
+        return Task.CompletedTask;
+    }
+
     public async Task CopyBitmapAsync(ClipboardFile clipboardFile)
     {
         if (!File.Exists(clipboardFile.FilePath))

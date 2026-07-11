@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Cancellation;
+using CaptureTool.Application.Abstractions.Clipboard;
 using CaptureTool.Application.Abstractions.Edit.External;
 using CaptureTool.Application.Abstractions.Edit.Image;
 using CaptureTool.Application.Abstractions.Edit.Image.ChromaKey;
@@ -66,24 +67,39 @@ public sealed class ImageEditPageViewModelDefaultsTests
         viewModel.IsCropModeActive.Should().BeFalse();
         viewModel.IsShapesModeActive.Should().BeFalse();
         viewModel.IsChromaKeyModeActive.Should().BeFalse();
+        viewModel.IsColorPickerModeActive.Should().BeFalse();
 
         viewModel.ToggleCropModeCommand.Execute(null);
         viewModel.IsCropModeActive.Should().BeTrue();
         viewModel.IsTextModeActive.Should().BeFalse();
         viewModel.IsShapesModeActive.Should().BeFalse();
         viewModel.IsChromaKeyModeActive.Should().BeFalse();
+        viewModel.IsColorPickerModeActive.Should().BeFalse();
 
         viewModel.ToggleShapesModeCommand.Execute(null);
         viewModel.IsShapesModeActive.Should().BeTrue();
         viewModel.IsCropModeActive.Should().BeFalse();
         viewModel.IsTextModeActive.Should().BeFalse();
         viewModel.IsChromaKeyModeActive.Should().BeFalse();
+        viewModel.IsColorPickerModeActive.Should().BeFalse();
 
         viewModel.SetChromaKeyModeActiveCommand.Execute(true);
         viewModel.IsChromaKeyModeActive.Should().BeTrue();
         viewModel.IsCropModeActive.Should().BeFalse();
         viewModel.IsShapesModeActive.Should().BeFalse();
         viewModel.IsTextModeActive.Should().BeFalse();
+        viewModel.IsColorPickerModeActive.Should().BeFalse();
+
+        viewModel.ToggleColorPickerModeCommand.Execute(null);
+        viewModel.IsColorPickerModeActive.Should().BeTrue();
+        viewModel.IsChromaKeyModeActive.Should().BeFalse();
+        viewModel.IsCropModeActive.Should().BeFalse();
+        viewModel.IsShapesModeActive.Should().BeFalse();
+        viewModel.IsTextModeActive.Should().BeFalse();
+
+        viewModel.ToggleTextModeCommand.Execute(null);
+        viewModel.IsTextModeActive.Should().BeTrue();
+        viewModel.IsColorPickerModeActive.Should().BeFalse();
     }
 
     [TestMethod]
@@ -192,6 +208,8 @@ public sealed class ImageEditPageViewModelDefaultsTests
         IChromaKeyService? chromaKeyService = null,
         IOpenScreenshotsFolderUseCase? openScreenshotsFolderAction = null)
     {
+        IAppNotificationService notifications = Mock.Of<IAppNotificationService>();
+
         return new ImageEditPageViewModel(
             Mock.Of<ILocalizationService>(),
             cancellationService ?? Mock.Of<ICancellationService>(),
@@ -208,7 +226,11 @@ public sealed class ImageEditPageViewModelDefaultsTests
             Mock.Of<ISettingsService>(),
             openScreenshotsFolderAction ?? Mock.Of<IOpenScreenshotsFolderUseCase>(),
             Mock.Of<ILogService>(),
-            Mock.Of<IAppNotificationService>(),
+            notifications,
+            new ColorPickerToolViewModel(
+                Mock.Of<IClipboardService>(),
+                Mock.Of<ILocalizationService>(),
+                notifications),
             new ChromaKeyToolViewModel(
                 chromaKeyAccess ?? Mock.Of<IChromaKeyAccessService>(),
                 chromaKeyService ?? Mock.Of<IChromaKeyService>()),

@@ -243,6 +243,9 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="ImageEdit_TextButton.Label" xml:space="preserve">
     <value>Texte</value>
   </data>
+  <data name="ImageEdit_ColorPickerButton.Label" xml:space="preserve">
+    <value>Sélecteur de couleur</value>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Imprimer</value>
   </data>
@@ -260,6 +263,9 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   </data>
   <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
     <value>T</value>
+  </data>
+  <data name="ImageEdit_ColorPickerButton.AccessKey" xml:space="preserve">
+    <value>K</value>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -407,6 +413,9 @@ En utilisant cette application, vous reconnaissez être seul responsable de la g
   <data name="ShapeToolbar_StrokeWidth.Text" xml:space="preserve">
     <value>Épaisseur du contour</value>
     <comment>The label for the stroke width control in the shape toolbar.</comment>
+  </data>
+  <data name="ImageEdit_ColorPickerButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choisir une couleur dans l’image</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Faire pivoter l’image</value>
@@ -927,6 +936,15 @@ SOFTWARE.
     <comment />
     <comment>The tooltip for the fill color picker button in the shape toolbar.</comment>
   </data>
+  <data name="ColorPickerToolbar_ColorTypeComboBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Format de couleur</value>
+  </data>
+  <data name="ColorPickerToolbar_ColorTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choisir le format de couleur</value>
+  </data>
+  <data name="ColorPickerToolbar_ColorValueTextBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Valeur de couleur</value>
+  </data>
   <data name="TextToolbar_FontColorButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Choisir la couleur et l'opacité du texte</value>
     <comment>The tooltip for the text color picker button in the text toolbar.</comment>
@@ -1276,6 +1294,9 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_EditInPaintButton.Label" xml:space="preserve">
     <value>Modifier dans Paint</value>
+  </data>
+  <data name="ImageEdit_ColorCopiedNotification" xml:space="preserve">
+    <value>Couleur copiée</value>
   </data>
   <data name="VideoEdit_EditInClipchampButton.Label" xml:space="preserve">
     <value>Modifier dans Clipchamp</value>

@@ -53,6 +53,15 @@
                     <FontIcon Glyph="&#xE945;" />
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
+            <AppBarToggleButton
+                x:Uid="ImageEdit_ColorPickerButton"
+                Command="{x:Bind ViewModel.ToggleColorPickerModeCommand}"
+                IsChecked="{x:Bind ViewModel.IsColorPickerModeActive, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.IsLoaded, Mode=OneWay}">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="{StaticResource Color}" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
             <!--  Crop and orientation  -->
             <AppBarToggleButton
                 x:Uid="ImageEdit_CropButton"
@@ -78,6 +87,7 @@
                     <FontIcon Glyph="&#xE8D2;" />
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
+            <AppBarSeparator />
             <AppBarButton
                 x:Uid="ImageEdit_RotateButton"
                 Command="{x:Bind ViewModel.RotateCommand}"
@@ -181,19 +191,22 @@
             <controls:ImageCanvas
                 x:Name="ImageCanvas"
                 CanvasSize="{x:Bind ViewModel.ImageSize, Mode=OneWay}"
+                ColorPickerColorHovered="ImageCanvas_ColorPickerColorHovered"
+                ColorPickerColorPicked="ImageCanvas_ColorPickerColorPicked"
                 CropRect="{x:Bind ViewModel.CropRect, Mode=OneWay}"
                 CropRectChanged="ImageCanvas_CropRectChanged"
                 Drawables="{x:Bind ViewModel.Drawables, Mode=OneWay}"
                 InteractionComplete="ImageCanvas_InteractionComplete"
                 IsAutoZoomLocked="{x:Bind ViewModel.IsAutoZoomLocked, Mode=OneWay}"
+                IsColorPickerModeEnabled="{x:Bind ViewModel.IsColorPickerModeActive, Mode=OneWay}"
                 IsCropModeEnabled="{x:Bind ViewModel.IsCropModeActive, Mode=OneWay}"
                 IsShapesModeEnabled="{x:Bind ViewModel.IsShapesModeActive, Mode=OneWay}"
                 IsTextModeEnabled="{x:Bind ViewModel.IsTextModeActive, Mode=OneWay}"
                 Orientation="{x:Bind ViewModel.Orientation, Mode=OneWay}"
                 SelectedShapeType="{x:Bind ViewModel.ShapeTool.SelectedShapeType, Mode=OneWay}"
                 ShapeDeleted="ImageCanvas_ShapeDeleted"
-                ShapeDrawn="ImageCanvas_ShapeDrawn"
                 ShapeDrawableSelected="ImageCanvas_ShapeDrawableSelected"
+                ShapeDrawn="ImageCanvas_ShapeDrawn"
                 ShapeFillColor="{x:Bind ViewModel.ShapeTool.ShapeFillColor, Mode=OneWay}"
                 ShapeModified="ImageCanvas_ShapeModified"
                 ShapeStrokeColor="{x:Bind ViewModel.ShapeTool.ShapeStrokeColor, Mode=OneWay}"
@@ -283,6 +296,21 @@
                         <TranslateTransform Y="-8" />
                     </controls:TextToolbar.RenderTransform>
                 </controls:TextToolbar>
+
+                <!--  Color picker options  -->
+                <controls:ColorPickerToolbar
+                    x:Name="ColorPickerToolbarHost"
+                    HorizontalAlignment="Center"
+                    Opacity="0"
+                    PickedColor="{x:Bind ViewModel.ColorPickerTool.PickedColor, Mode=OneWay}"
+                    PickedColorValue="{x:Bind ViewModel.ColorPickerTool.PickedColorValue, Mode=OneWay}"
+                    SelectedColorTypeIndex="{x:Bind ViewModel.ColorPickerTool.SelectedColorTypeIndex, Mode=OneWay}"
+                    SelectedColorTypeIndexChanged="ColorPickerToolbar_SelectedColorTypeIndexChanged"
+                    Visibility="Collapsed">
+                    <controls:ColorPickerToolbar.RenderTransform>
+                        <TranslateTransform Y="-8" />
+                    </controls:ColorPickerToolbar.RenderTransform>
+                </controls:ColorPickerToolbar>
             </Grid>
         </Grid>
 

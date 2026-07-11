@@ -3,8 +3,10 @@ using CaptureTool.Domain.Edit;
 using CaptureTool.Domain.Edit.Drawable;
 using CaptureTool.Domain.Edit.Operations;
 using CaptureTool.Infrastructure.Edit.Windows;
+using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -13,6 +15,7 @@ using System.Collections.Specialized;
 using System.Drawing;
 using System.Numerics;
 using Windows.System;
+using Windows.UI.Core;
 using Point = global::Windows.Foundation.Point;
 using WinUIColor = global::Windows.UI.Color;
 
@@ -82,6 +85,25 @@ public sealed partial class ImageCanvas : UserControlBase
         if (d is ImageCanvas control && e.NewValue is bool isEnabled && !isEnabled)
         {
             control.DeselectShape();
+        }
+    }
+
+    public static readonly DependencyProperty IsColorPickerModeEnabledProperty = DependencyProperty.Register(
+        nameof(IsColorPickerModeEnabled),
+        typeof(bool),
+        typeof(ImageCanvas),
+        new PropertyMetadata(false, OnIsColorPickerModeEnabledPropertyChanged));
+
+    private static void OnIsColorPickerModeEnabledPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageCanvas control)
+        {
+            control.InvalidateColorPickerSnapshot();
+
+            if (e.NewValue is not true)
+            {
+                control.HideColorPickerCursor();
+            }
         }
     }
 
@@ -287,6 +309,12 @@ public sealed partial class ImageCanvas : UserControlBase
         set => Set(IsTextModeEnabledProperty, value);
     }
 
+    public bool IsColorPickerModeEnabled
+    {
+        get => Get<bool>(IsColorPickerModeEnabledProperty);
+        set => Set(IsColorPickerModeEnabledProperty, value);
+    }
+
     public Rectangle CropRect
     {
         get => Get<Rectangle>(CropRectProperty);
@@ -356,6 +384,8 @@ public sealed partial class ImageCanvas : UserControlBase
     public event EventHandler<IDrawable>? ShapeDrawableSelected;
     public event EventHandler<(int ShapeIndex, ModifyShapeOperation.ShapeState OldState, ModifyShapeOperation.ShapeState NewState)>? ShapeModified;
     public event EventHandler<TextDrawable>? TextDrawableSelected;
+    public event EventHandler<Color>? ColorPickerColorHovered;
+    public event EventHandler<Color>? ColorPickerColorPicked;
     public event EventHandler<Point>? ImageContextMenuRequested;
     public event EventHandler<Point>? ShapeContextMenuRequested;
 
@@ -400,6 +430,9 @@ public sealed partial class ImageCanvas : UserControlBase
     private bool _isUpdatingTextEditor;
     private XamlRoot? _observedXamlRoot;
     private double _lastRasterizationScale = 1;
+    private CanvasRenderTarget? _colorPickerRenderTarget;
+    private byte[]? _colorPickerPixelBytes;
+    private Size _colorPickerSnapshotSize = Size.Empty;
 
     // Line endpoint manipulation
     private bool _isDraggingLineStart = false;
@@ -464,6 +497,7 @@ public sealed partial class ImageCanvas : UserControlBase
 
         DetachXamlRootChanged();
         SetObservableDrawables(null);
+        InvalidateColorPickerSnapshot();
     }
 
     private void AttachXamlRootChanged()
@@ -743,6 +777,7 @@ public sealed partial class ImageCanvas : UserControlBase
     #region Drawing
     public void InvalidateCanvas()
     {
+        InvalidateColorPickerSnapshot();
         UpdateDrawingCanvasSize();
         ReconcileSelectedShape();
         if (!IsAutoZoomLocked)
@@ -870,9 +905,179 @@ public sealed partial class ImageCanvas : UserControlBase
     }
     #endregion
 
+    #region Color Picker
+    private bool TryHandleColorPickerPointerPressed(PointerRoutedEventArgs e)
+    {
+        var point = e.GetCurrentPoint(RenderCanvas);
+        if (point.Properties.IsRightButtonPressed)
+        {
+            e.Handled = true;
+            return true;
+        }
+
+        if (!point.Properties.IsLeftButtonPressed)
+        {
+            return false;
+        }
+
+        if (TrySampleColor(point.Position, out Color color))
+        {
+            ColorPickerColorPicked?.Invoke(this, color);
+            e.Handled = true;
+            return true;
+        }
+
+        return false;
+    }
+
+    private void HandleColorPickerPointerMoved(PointerRoutedEventArgs e)
+    {
+        Point position = e.GetCurrentPoint(RenderCanvas).Position;
+        UpdateColorPickerCursor(position);
+
+        if (TrySampleColor(position, out Color color))
+        {
+            ColorPickerColorHovered?.Invoke(this, color);
+        }
+
+        e.Handled = true;
+    }
+
+    private bool TrySampleColor(Point point, out Color color)
+    {
+        color = Color.Empty;
+
+        if (!IsColorPickerModeEnabled || !IsPointInsideRenderCanvas(point))
+        {
+            return false;
+        }
+
+        EnsureColorPickerSnapshot();
+
+        if (_colorPickerPixelBytes is null || _colorPickerSnapshotSize.Width <= 0 || _colorPickerSnapshotSize.Height <= 0)
+        {
+            return false;
+        }
+
+        int x = Math.Clamp((int)Math.Floor(point.X), 0, _colorPickerSnapshotSize.Width - 1);
+        int y = Math.Clamp((int)Math.Floor(point.Y), 0, _colorPickerSnapshotSize.Height - 1);
+        int byteIndex = ((y * _colorPickerSnapshotSize.Width) + x) * 4;
+
+        if (byteIndex + 3 >= _colorPickerPixelBytes.Length)
+        {
+            return false;
+        }
+
+        byte b = _colorPickerPixelBytes[byteIndex + 0];
+        byte g = _colorPickerPixelBytes[byteIndex + 1];
+        byte r = _colorPickerPixelBytes[byteIndex + 2];
+        byte a = _colorPickerPixelBytes[byteIndex + 3];
+
+        color = Color.FromArgb(a, r, g, b);
+        return true;
+    }
+
+    private void EnsureColorPickerSnapshot()
+    {
+        if (_colorPickerPixelBytes is not null)
+        {
+            return;
+        }
+
+        Size renderSize = GetImageRenderSize();
+        if (renderSize.Width <= 0 || renderSize.Height <= 0 || Drawables is null)
+        {
+            return;
+        }
+
+        IDrawable[] drawables = [.. Drawables];
+        if (drawables.Length == 0)
+        {
+            return;
+        }
+
+        _colorPickerRenderTarget?.Dispose();
+        _colorPickerRenderTarget = new CanvasRenderTarget(
+            CanvasDevice.GetSharedDevice(),
+            renderSize.Width,
+            renderSize.Height,
+            96f);
+
+        using (CanvasDrawingSession drawingSession = _colorPickerRenderTarget.CreateDrawingSession())
+        {
+            ImageCanvasRenderOptions options = new(Orientation, CanvasSize, GetRenderCropRect());
+            Win2DImageCanvasRenderer.Render(drawables, options, drawingSession);
+        }
+
+        _colorPickerPixelBytes = _colorPickerRenderTarget.GetPixelBytes();
+        _colorPickerSnapshotSize = renderSize;
+    }
+
+    private void InvalidateColorPickerSnapshot()
+    {
+        _colorPickerPixelBytes = null;
+        _colorPickerSnapshotSize = Size.Empty;
+        _colorPickerRenderTarget?.Dispose();
+        _colorPickerRenderTarget = null;
+    }
+
+    private bool IsPointInsideRenderCanvas(Point point)
+    {
+        double width = RenderCanvas.ActualWidth > 0 ? RenderCanvas.ActualWidth : RenderCanvas.Width;
+        double height = RenderCanvas.ActualHeight > 0 ? RenderCanvas.ActualHeight : RenderCanvas.Height;
+
+        return width > 0 &&
+            height > 0 &&
+            point.X >= 0 &&
+            point.Y >= 0 &&
+            point.X < width &&
+            point.Y < height;
+    }
+
+    private void RenderCanvas_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        if (!IsColorPickerModeEnabled)
+        {
+            return;
+        }
+
+        UpdateColorPickerCursor(e.GetCurrentPoint(RenderCanvas).Position);
+    }
+
+    private void RenderCanvas_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        HideColorPickerCursor();
+    }
+
+    private void UpdateColorPickerCursor(Point point)
+    {
+        if (!IsColorPickerModeEnabled || !IsPointInsideRenderCanvas(point))
+        {
+            HideColorPickerCursor();
+            return;
+        }
+
+        ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Cross, 1));
+        ColorPickerCursorCanvas.Visibility = Visibility.Visible;
+        Canvas.SetLeft(ColorPickerCursorVisual, point.X + 10);
+        Canvas.SetTop(ColorPickerCursorVisual, point.Y + 10);
+    }
+
+    private void HideColorPickerCursor()
+    {
+        ProtectedCursor = null;
+        ColorPickerCursorCanvas.Visibility = Visibility.Collapsed;
+    }
+    #endregion
+
     #region Panning
     private void RootContainer_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (IsColorPickerModeEnabled && TryHandleColorPickerPointerPressed(e))
+        {
+            return;
+        }
+
         if (TryHandleContextMenuRequest(e))
         {
             return;
@@ -991,6 +1196,12 @@ public sealed partial class ImageCanvas : UserControlBase
 
     private void RootContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
+        if (IsColorPickerModeEnabled)
+        {
+            HandleColorPickerPointerMoved(e);
+            return;
+        }
+
         if (_isPointerDown)
         {
             // In shapes mode, handle shape drawing

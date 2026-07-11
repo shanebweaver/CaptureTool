@@ -16,7 +16,11 @@ public sealed class AppNotificationService : IAppNotificationService
 
     public int NotificationCount => _notifications.Count;
 
-    public void ShowError(string message)
+    public void ShowError(string message) => Show(AppNotificationKind.Error, message);
+
+    public void ShowInfo(string message) => Show(AppNotificationKind.Info, message);
+
+    private void Show(AppNotificationKind kind, string message)
     {
         string trimmedMessage = message.Trim();
         if (string.IsNullOrWhiteSpace(trimmedMessage))
@@ -26,7 +30,7 @@ public sealed class AppNotificationService : IAppNotificationService
 
         _notifications.Insert(0, new AppNotification(
             Guid.NewGuid(),
-            AppNotificationKind.Error,
+            kind,
             trimmedMessage));
 
         RaiseNotificationStateChanged();
