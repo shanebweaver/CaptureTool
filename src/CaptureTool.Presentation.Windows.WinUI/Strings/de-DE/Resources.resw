@@ -237,6 +237,9 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   <data name="ImageEdit_TextButton.Label" xml:space="preserve">
     <value>Text</value>
   </data>
+  <data name="ImageEdit_ColorPickerButton.Label" xml:space="preserve">
+    <value>Farbauswahl</value>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Drucken</value>
   </data>
@@ -254,6 +257,9 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   </data>
   <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
     <value>T</value>
+  </data>
+  <data name="ImageEdit_ColorPickerButton.AccessKey" xml:space="preserve">
+    <value>K</value>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -413,6 +419,9 @@ Mit der Nutzung dieser Anwendung erkennen Sie an, dass Sie selbst für die Verwa
   </data>
   <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Text zeichnen</value>
+  </data>
+  <data name="ImageEdit_ColorPickerButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Farbe aus dem Bild auswählen</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Bild drehen</value>
@@ -921,6 +930,15 @@ SOFTWARE.
     <comment />
     <comment>The tooltip for the fill color picker button in the shape toolbar.</comment>
   </data>
+  <data name="ColorPickerToolbar_ColorTypeComboBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Farbformat</value>
+  </data>
+  <data name="ColorPickerToolbar_ColorTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Farbformat auswählen</value>
+  </data>
+  <data name="ColorPickerToolbar_ColorValueTextBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Farbwert</value>
+  </data>
   <data name="TextToolbar_FontColorButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Textfarbe und Deckkraft auswählen</value>
     <comment>The tooltip for the text color picker button in the text toolbar.</comment>
@@ -1252,6 +1270,9 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_EditInPaintButton.Label" xml:space="preserve">
     <value>In Paint bearbeiten</value>
+  </data>
+  <data name="ImageEdit_ColorCopiedNotification" xml:space="preserve">
+    <value>Farbe kopiert</value>
   </data>
   <data name="VideoEdit_EditInClipchampButton.Label" xml:space="preserve">
     <value>In Clipchamp bearbeiten</value>

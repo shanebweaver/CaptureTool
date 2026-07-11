@@ -260,6 +260,7 @@ public sealed class ImageEditPageViewModelSuperResolutionTests
             notificationService,
             new ColorPickerToolViewModel(
                 Mock.Of<IClipboardService>(),
+                localizationService ?? CreateLocalizationService(),
                 notificationService),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, Mock.Of<IChromaKeyService>()),
             new ShapeToolViewModel(),

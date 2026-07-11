@@ -237,6 +237,9 @@
   <data name="ImageEdit_TextButton.Label" xml:space="preserve">
     <value>Текст</value>
   </data>
+  <data name="ImageEdit_ColorPickerButton.Label" xml:space="preserve">
+    <value>Пипетка</value>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>Печать</value>
   </data>
@@ -254,6 +257,9 @@
   </data>
   <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
     <value>T</value>
+  </data>
+  <data name="ImageEdit_ColorPickerButton.AccessKey" xml:space="preserve">
+    <value>K</value>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -401,6 +407,9 @@
   </data>
   <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Рисовать текст</value>
+  </data>
+  <data name="ImageEdit_ColorPickerButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Выбрать цвет из изображения</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Повернуть изображение</value>
@@ -915,6 +924,15 @@ SOFTWARE.
     <comment />
     <comment>The tooltip for the fill color picker button in the shape toolbar.</comment>
   </data>
+  <data name="ColorPickerToolbar_ColorTypeComboBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Формат цвета</value>
+  </data>
+  <data name="ColorPickerToolbar_ColorTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Выбрать формат цвета</value>
+  </data>
+  <data name="ColorPickerToolbar_ColorValueTextBox.AutomationProperties.Name" xml:space="preserve">
+    <value>Значение цвета</value>
+  </data>
   <data name="TextToolbar_FontColorButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Выбрать цвет текста и непрозрачность</value>
     <comment>The tooltip for the text color picker button in the text toolbar.</comment>
@@ -1258,6 +1276,9 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_EditInPaintButton.Label" xml:space="preserve">
     <value>Редактировать в Paint</value>
+  </data>
+  <data name="ImageEdit_ColorCopiedNotification" xml:space="preserve">
+    <value>Цвет скопирован</value>
   </data>
   <data name="VideoEdit_EditInClipchampButton.Label" xml:space="preserve">
     <value>Редактировать в Clipchamp</value>

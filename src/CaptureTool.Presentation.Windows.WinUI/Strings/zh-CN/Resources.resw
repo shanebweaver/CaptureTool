@@ -237,6 +237,9 @@
   <data name="ImageEdit_TextButton.Label" xml:space="preserve">
     <value>文本</value>
   </data>
+  <data name="ImageEdit_ColorPickerButton.Label" xml:space="preserve">
+    <value>取色器</value>
+  </data>
   <data name="ImageEdit_PrintButton.Label" xml:space="preserve">
     <value>打印</value>
   </data>
@@ -254,6 +257,9 @@
   </data>
   <data name="ImageEdit_TextButton.AccessKey" xml:space="preserve">
     <value>T</value>
+  </data>
+  <data name="ImageEdit_ColorPickerButton.AccessKey" xml:space="preserve">
+    <value>K</value>
   </data>
   <data name="ImageEdit_RotateButton.AccessKey" xml:space="preserve">
     <value>R</value>
@@ -401,6 +407,9 @@
   </data>
   <data name="ImageEdit_TextButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>绘制文本</value>
+  </data>
+  <data name="ImageEdit_ColorPickerButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>从图像中选取颜色</value>
   </data>
   <data name="ImageEdit_RotateButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>旋转图像</value>
@@ -915,6 +924,15 @@ SOFTWARE.
     <comment />
     <comment>The tooltip for the fill color picker button in the shape toolbar.</comment>
   </data>
+  <data name="ColorPickerToolbar_ColorTypeComboBox.AutomationProperties.Name" xml:space="preserve">
+    <value>颜色格式</value>
+  </data>
+  <data name="ColorPickerToolbar_ColorTypeComboBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>选择颜色格式</value>
+  </data>
+  <data name="ColorPickerToolbar_ColorValueTextBox.AutomationProperties.Name" xml:space="preserve">
+    <value>颜色值</value>
+  </data>
   <data name="TextToolbar_FontColorButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>选择文本颜色和不透明度</value>
     <comment>The tooltip for the text color picker button in the text toolbar.</comment>
@@ -1258,6 +1276,9 @@ SOFTWARE.
   </data>
   <data name="ImageEdit_EditInPaintButton.Label" xml:space="preserve">
     <value>在 Paint 中编辑</value>
+  </data>
+  <data name="ImageEdit_ColorCopiedNotification" xml:space="preserve">
+    <value>颜色已复制</value>
   </data>
   <data name="VideoEdit_EditInClipchampButton.Label" xml:space="preserve">
     <value>在 Clipchamp 中编辑</value>

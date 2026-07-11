@@ -85,6 +85,7 @@ public sealed class ImageEditPageViewModelShareTests
             notifications,
             new ColorPickerToolViewModel(
                 Mock.Of<IClipboardService>(),
+                localization,
                 notifications),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, chromaKeyService),
             new ShapeToolViewModel(),
@@ -164,6 +165,7 @@ public sealed class ImageEditPageViewModelShareTests
             notifications,
             new ColorPickerToolViewModel(
                 Mock.Of<IClipboardService>(),
+                localization,
                 notifications),
             new ChromaKeyToolViewModel(chromaKeyAccess.Object, chromaKeyService),
             new ShapeToolViewModel(),

@@ -209,6 +209,7 @@ public sealed class ImageEditPageViewModelDefaultsTests
             notifications,
             new ColorPickerToolViewModel(
                 Mock.Of<IClipboardService>(),
+                Mock.Of<ILocalizationService>(),
                 notifications),
             new ChromaKeyToolViewModel(
                 chromaKeyAccess ?? Mock.Of<IChromaKeyAccessService>(),

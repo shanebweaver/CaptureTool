@@ -1484,6 +1484,9 @@ SOFTWARE.
   <data name="ImageEdit_EditInPaintButton.Label" xml:space="preserve">
     <value>Edit in Paint</value>
   </data>
+  <data name="ImageEdit_ColorCopiedNotification" xml:space="preserve">
+    <value>Color copied</value>
+  </data>
   <data name="VideoEdit_EditInClipchampButton.Label" xml:space="preserve">
     <value>Edit in Clipchamp</value>
   </data>

@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Presentation.Notifications;
 using CaptureTool.Presentation.ViewModels;
 using CommunityToolkit.Mvvm.Input;
@@ -9,9 +10,10 @@ namespace CaptureTool.Presentation.Features.ImageEdit;
 
 public sealed partial class ColorPickerToolViewModel : ViewModelBase
 {
-    private const string ColorCopiedMessage = "Color copied";
+    private const string ColorCopiedMessageResourceKey = "ImageEdit_ColorCopiedNotification";
 
     private readonly IClipboardService _clipboardService;
+    private readonly ILocalizationService _localizationService;
     private readonly IAppNotificationService _notificationService;
 
     public IRelayCommand<int> UpdateSelectedColorTypeIndexCommand { get; }
@@ -57,9 +59,11 @@ public sealed partial class ColorPickerToolViewModel : ViewModelBase
 
     public ColorPickerToolViewModel(
         IClipboardService clipboardService,
+        ILocalizationService localizationService,
         IAppNotificationService notificationService)
     {
         _clipboardService = clipboardService;
+        _localizationService = localizationService;
         _notificationService = notificationService;
 
         UpdateSelectedColorTypeIndexCommand = new RelayCommand<int>(UpdateSelectedColorTypeIndex);
@@ -101,7 +105,7 @@ public sealed partial class ColorPickerToolViewModel : ViewModelBase
         }
 
         await _clipboardService.CopyTextAsync(PickedColorValue);
-        _notificationService.ShowInfo(ColorCopiedMessage);
+        _notificationService.ShowInfo(GetLocalizedString(ColorCopiedMessageResourceKey));
     }
 
     private void UpdatePickedColorValue()
@@ -109,6 +113,14 @@ public sealed partial class ColorPickerToolViewModel : ViewModelBase
         PickedColorValue = PickedColor.IsEmpty
             ? string.Empty
             : FormatColor(PickedColor, SelectedColorType);
+    }
+
+    private string GetLocalizedString(string resourceKey)
+    {
+        string value = _localizationService.GetString(resourceKey);
+        return string.IsNullOrWhiteSpace(value)
+            ? resourceKey
+            : value;
     }
 
     public static string FormatColor(Color color, ColorPickerColorType colorType)

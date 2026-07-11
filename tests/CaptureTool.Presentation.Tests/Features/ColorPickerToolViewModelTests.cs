@@ -1,4 +1,5 @@
 using CaptureTool.Application.Abstractions.Clipboard;
+using CaptureTool.Application.Abstractions.Localization;
 using CaptureTool.Presentation.Features.ImageEdit;
 using CaptureTool.Presentation.Notifications;
 using FluentAssertions;
@@ -39,8 +40,9 @@ public sealed class ColorPickerToolViewModelTests
     public async Task CopyPickedColorAsync_ShouldCopyFormattedValue_AndShowInfo()
     {
         var clipboard = new Mock<IClipboardService>();
+        var localization = CreateLocalizationService();
         var notifications = new Mock<IAppNotificationService>();
-        var viewModel = CreateViewModel(clipboard.Object, notifications.Object);
+        var viewModel = CreateViewModel(clipboard.Object, localization, notifications.Object);
         viewModel.UpdatePickedColor(Color.Blue);
 
         await viewModel.CopyPickedColorAsync();
@@ -54,7 +56,7 @@ public sealed class ColorPickerToolViewModelTests
     {
         var clipboard = new Mock<IClipboardService>();
         var notifications = new Mock<IAppNotificationService>();
-        var viewModel = CreateViewModel(clipboard.Object, notifications.Object);
+        var viewModel = CreateViewModel(clipboard.Object, notifications: notifications.Object);
 
         await viewModel.CopyPickedColorAsync();
 
@@ -64,10 +66,22 @@ public sealed class ColorPickerToolViewModelTests
 
     private static ColorPickerToolViewModel CreateViewModel(
         IClipboardService? clipboard = null,
+        ILocalizationService? localization = null,
         IAppNotificationService? notifications = null)
     {
         return new(
             clipboard ?? Mock.Of<IClipboardService>(),
+            localization ?? CreateLocalizationService(),
             notifications ?? Mock.Of<IAppNotificationService>());
+    }
+
+    private static ILocalizationService CreateLocalizationService()
+    {
+        var localization = new Mock<ILocalizationService>();
+        localization
+            .Setup(service => service.GetString("ImageEdit_ColorCopiedNotification"))
+            .Returns("Color copied");
+
+        return localization.Object;
     }
 }
